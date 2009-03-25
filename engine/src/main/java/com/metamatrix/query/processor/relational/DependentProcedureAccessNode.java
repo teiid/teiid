@@ -99,6 +99,11 @@ public class DependentProcedureAccessNode extends AccessNode {
         
         return criteriaProcessor.prepareNextCommand();
     }
+    
+    @Override
+    protected boolean processCommandsIndividually() {
+    	return true;
+    }
 
     /**
      * @see com.metamatrix.query.processor.relational.PlanExecutionNode#hasNextCommand()

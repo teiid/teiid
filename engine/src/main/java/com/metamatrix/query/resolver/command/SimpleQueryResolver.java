@@ -523,7 +523,7 @@ public class SimpleQueryResolver implements CommandResolver {
                     StoredProcedureInfo storedProcedureInfo = metadata.getStoredProcedureInfoForProcedure(fullName);
 
                     StoredProcedure storedProcedureCommand = new StoredProcedure();
-                    
+                    storedProcedureCommand.setProcedureRelational(true);
                     storedProcedureCommand.setProcedureName(fullName);
                     
                     List metadataParams = storedProcedureInfo.getParameters();

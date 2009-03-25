@@ -91,10 +91,6 @@ public class SelectNode extends RelationalNode {
             batch = this.getChildren()[0].nextBatch();
         }
                 
-        if(batch.getRowCount() == 0) {
-            return batch;    
-            
-        }   
         boolean doPrepareToProcessTuple = !blockedOnCriteria;             
         int row = blockedRow;
         if(! blockedOnCriteria && ! blockedOnPrepare) {

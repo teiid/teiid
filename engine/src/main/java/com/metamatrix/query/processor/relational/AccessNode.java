@@ -47,7 +47,6 @@ public class AccessNode extends RelationalNode {
 
     // Processing state
 	private TupleSource tupleSource;
-	private boolean needProcessing = true;
 	private boolean isUpdate = false;
     private boolean returnedRows = false;
     
@@ -58,7 +57,6 @@ public class AccessNode extends RelationalNode {
     public void reset() {
         super.reset();
         tupleSource = null;
-		needProcessing = true;
 		isUpdate = false;
         returnedRows = false;
     }
@@ -88,7 +86,7 @@ public class AccessNode extends RelationalNode {
 
         // Copy command and resolve references if necessary
         Command atomicCommand = command;
-        needProcessing = true;
+        boolean needProcessing = true;
         if(shouldEvaluate) {
             atomicCommand = (Command) command.clone();
             needProcessing = prepareNextCommand(atomicCommand);
@@ -123,53 +121,50 @@ public class AccessNode extends RelationalNode {
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         
-        boolean batchDone = false;
-
-        while (!batchDone) {
-            while (!needProcessing && hasNextCommand()) {
-                Command atomicCommand = (Command)command.clone();
-                needProcessing = prepareNextCommand(atomicCommand);
-                if (needProcessing) {
-                	closeSources();
-                    tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, null, getID());
-                }
-            }
-            
-    		if(!needProcessing && !hasNextCommand()) {
-                if(isUpdate && !returnedRows) {
-        			List tuple = new ArrayList(1);
-        			tuple.add(new Integer(0));
-                    // Add tuple to current batch
-                    addBatchRow(tuple);
-                }
-                terminateBatches();
-                return pullBatch();
-    		}
+        while (tupleSource != null || hasNextCommand()) {
+        	//drain the tuple source
+        	while (tupleSource != null) {
+                List<?> tuple = tupleSource.nextTuple();
     
-            //needProcessing must be true after this point
-            
-            // Pull a batch worth of tuples
-            while(!batchDone) {
-        		// Read a tuple
-                List tuple = tupleSource.nextTuple();
-    
-                // Check for termination tuple
                 if(tuple == null) {
                     closeSources();
-                    needProcessing = false;
                     break;
                 } 
                 
                 returnedRows = true;
                 
-                // Add tuple to current batch
                 addBatchRow(tuple);
-                // Check for full batch
-                batchDone = isBatchFull();
-            }
+                
+                if (isBatchFull()) {
+                	return pullBatch();
+                }
+        	}
+        	
+        	//execute another command
+            while (hasNextCommand()) {
+            	if (processCommandsIndividually() && hasPendingRows()) {
+            		return pullBatch();
+            	}
+                Command atomicCommand = (Command)command.clone();
+                if (prepareNextCommand(atomicCommand)) {
+                    tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, null, getID());
+                    break;
+                }
+            }            
         }
-
+        
+        if(isUpdate && !returnedRows) {
+			List tuple = new ArrayList(1);
+			tuple.add(new Integer(0));
+            // Add tuple to current batch
+            addBatchRow(tuple);
+        }
+        terminateBatches();
         return pullBatch();
+	}
+	
+	protected boolean processCommandsIndividually() {
+		return false;
 	}
     
     protected boolean hasNextCommand() {

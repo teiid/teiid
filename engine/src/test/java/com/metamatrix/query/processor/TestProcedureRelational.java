@@ -25,9 +25,12 @@ package com.metamatrix.query.processor;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
+import org.junit.Test;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
+import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
@@ -36,14 +39,17 @@ import com.metamatrix.query.processor.proc.TestProcedureProcessor;
 import com.metamatrix.query.processor.relational.DependentProcedureExecutionNode;
 import com.metamatrix.query.processor.relational.RelationalNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
+import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.SPParameter;
+import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.unittest.FakeMetadataStore;
 
-public class TestProcedureRelational extends TestCase {
+public class TestProcedureRelational {
 
-    public void testProcInExistsSubquery() throws Exception {
+    @Test public void testProcInExistsSubquery() throws Exception {
         String sql = "select pm1.g1.e1 from pm1.g1 where exists (select * from (EXEC pm1.vsp9(pm1.g1.e2 + 1)) x where x.e1 = pm1.g1.e1)"; //$NON-NLS-1$
 
         List[] expected = new List[] { 
@@ -59,7 +65,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testProcInSelectScalarSubquery() throws Exception {
+    @Test public void testProcInSelectScalarSubquery() throws Exception {
         String sql = "select (EXEC pm1.vsp36(pm1.g1.e2)) from pm1.g1 where pm1.g1.e1 = 'a'"; //$NON-NLS-1$
 
         List[] expected = new List[] { 
@@ -76,7 +82,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
     
-    public void testProcAsTable(){
+    @Test public void testProcAsTable(){
         String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -93,7 +99,7 @@ public class TestProcedureRelational extends TestCase {
     }
     
     //virtual group with procedure in transformation
-    public void testAliasedProcAsTable(){
+    @Test public void testAliasedProcAsTable(){
         String sql = "select param1, param2, e1, e2 from pm1.vsp26 as x where param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -109,7 +115,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
 
-    public void testAliasedJoin(){
+    @Test public void testAliasedJoin(){
         String sql = "select x.param1, x.param2, y.param1, y.param2, x.e1 from pm1.vsp26 as x, pm1.vsp26 as y where x.param1=1 and x.param2='a' and y.param1 = 2 and y.param2 = 'b'"; //$NON-NLS-1$
 
         // Create expected results
@@ -126,7 +132,7 @@ public class TestProcedureRelational extends TestCase {
     }
 
     
-    public void testAliasedJoin1(){
+    @Test public void testAliasedJoin1(){
         String sql = "select x.param1, x.param2, y.param1, y.param2, x.e1 from pm1.vsp26 as x, pm1.vsp26 as y where x.param1=1 and x.param2='a' and y.param1 = x.param1 and y.param2 = x.param2"; //$NON-NLS-1$
 
         // Create expected results
@@ -145,7 +151,7 @@ public class TestProcedureRelational extends TestCase {
     /**
      * Will fail due to access pattern validation (missing param2 assignment) 
      */
-    public void testProcAsTable1(){
+    @Test public void testProcAsTable1(){
         String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1=1"; //$NON-NLS-1$
 
         TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), null, false);
@@ -154,13 +160,13 @@ public class TestProcedureRelational extends TestCase {
     /**
      * Will fail since less than does not constitue an input 
      */
-    public void testProcAsTable2(){
+    @Test public void testProcAsTable2(){
         String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1<1 and param2='a'"; //$NON-NLS-1$
 
         TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), null, false); 
     }
     
-    public void testProcAsTable3(){
+    @Test public void testProcAsTable3(){
         String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1 in (1,2,3) and param2 in ('a', 'b')"; //$NON-NLS-1$
 
         // Create expected results
@@ -183,13 +189,13 @@ public class TestProcedureRelational extends TestCase {
     /**
      * Will fail missing param2 assignment 
      */
-    public void testProcAsTable4(){
+    @Test public void testProcAsTable4(){
         String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1=1 and not(param2 = 'a')"; //$NON-NLS-1$
 
         TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), null, false);
     }
     
-    public void testProcAsTableInJoin(){
+    @Test public void testProcAsTableInJoin(){
         String sql = "select param1, param2, pm1.vsp26.e2 from pm1.vsp26, pm1.g1 where param1 = pm1.g1.e2 and param2 = pm1.g1.e1 order by param1, param2, e2"; //$NON-NLS-1$
 
         // Create expected results
@@ -213,7 +219,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
     
-    public void testProcAsTableInSubquery(){
+    @Test public void testProcAsTableInSubquery(){
         String sql = "select param1, param2, pm1.vsp26.e2, (select count(e1) from pm1.vsp26 where param1 = 1 and param2 = 'a') x from pm1.vsp26, pm1.g1 where param1 = pm1.g1.e2 and param2 = pm1.g1.e1 order by param1, param2, e2"; //$NON-NLS-1$
 
         // Create expected results
@@ -269,7 +275,7 @@ public class TestProcedureRelational extends TestCase {
     }
     
     //virtual group with procedure in transaformation
-    public void testProcInVirtualGroup1() {
+    @Test public void testProcInVirtualGroup1() {
         
         String userQuery = "select e1 from pm1.vsp26 where param1=1 and param2='a'"; //$NON-NLS-1$
         String inputCriteria = "(pm1.vsp26.param1 = 1) AND (pm1.vsp26.param2 = 'a')"; //$NON-NLS-1$
@@ -279,7 +285,7 @@ public class TestProcedureRelational extends TestCase {
     }
 
     //virtual group with procedure in transformation
-    public void testCase3403() {        
+    @Test public void testCase3403() {        
         String userQuery = "select e1 from pm1.vsp26 where param1=2 and param2='a' and 'x'='x'"; //$NON-NLS-1$
         String inputCriteria = "(pm1.vsp26.param1 = 2) AND (pm1.vsp26.param2 = 'a')"; //$NON-NLS-1$
         String atomicQuery = "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE (g_0.e2 >= pm1.vsp26.param1) AND (g_0.e1 = pm1.vsp26.param2)"; //$NON-NLS-1$
@@ -287,7 +293,7 @@ public class TestProcedureRelational extends TestCase {
         helpTestProcRelational(userQuery, inputCriteria, atomicQuery);
     }
     
-    public void testCase3448() {
+    @Test public void testCase3448() {
         String userQuery = "select e1 from pm1.vsp26 where (param1=1 and e2=2) and param2='a'"; //$NON-NLS-1$
         String inputCriteria = "(pm1.vsp26.param1 = 1) AND (pm1.vsp26.param2 = 'a')"; //$NON-NLS-1$
         String atomicQuery = "SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE (g_0.e2 >= pm1.vsp26.param1) AND (g_0.e1 = pm1.vsp26.param2)"; //$NON-NLS-1$
@@ -295,7 +301,7 @@ public class TestProcedureRelational extends TestCase {
         helpTestProcRelational(userQuery, inputCriteria, atomicQuery);
     }
     
-    public void testProcAsVirtualGroup2(){
+    @Test public void testProcAsVirtualGroup2(){
         String sql = "select e1 from (SELECT * FROM pm1.vsp26 as P where P.e1='a') x where param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -311,7 +317,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
     
-    public void testProcAsVirtualGroup3(){
+    @Test public void testProcAsVirtualGroup3(){
         String sql = "select e1 from (SELECT * FROM pm1.vsp26 as P where P.e1='a') x where param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -327,7 +333,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
     
-    public void testProcAsVirtualGroup4(){
+    @Test public void testProcAsVirtualGroup4(){
         String sql = "SELECT P.e1 as ve3 FROM pm1.vsp26 as P, pm1.g2 where P.e1=g2.e1 and param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -345,7 +351,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
     
-    public void testProcAsVirtualGroup5(){
+    @Test public void testProcAsVirtualGroup5(){
         String sql = "select e1 from (SELECT * FROM pm1.vsp26 as P where P.e1='a') x where param1=1 and param2='a' and e1='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -361,7 +367,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
     
-    public void testProcAsVirtualGroup6(){
+    @Test public void testProcAsVirtualGroup6(){
         String sql = "SELECT P.e1 as ve3 FROM pm1.vsp26 as P, vm1.g1 where P.e1=g1.e1 and param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -379,7 +385,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
     
-    public void testProcAsVirtualGroup7(){
+    @Test public void testProcAsVirtualGroup7(){
         String sql = "SELECT e1 FROM (SELECT p.e1, param1, param2 FROM pm1.vsp26 as P, vm1.g1 where P.e1=g1.e1) x where param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -397,7 +403,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
     
-    public void testProcAsVirtualGroup10_Defect20164(){
+    @Test public void testProcAsVirtualGroup10_Defect20164(){
         String sql = "select e1 from (SELECT * FROM pm1.vsp26 as P where P.e1='a') x where (param1=1 and param2='a') and e1='c'"; //$NON-NLS-1$
 
         // Create expected results
@@ -411,7 +417,7 @@ public class TestProcedureRelational extends TestCase {
         TestProcessor.helpProcess(plan, dataManager, expected);
     }
 
-    public void testProcAsVirtualGroup8(){
+    @Test public void testProcAsVirtualGroup8(){
         String sql = "SELECT P.e1 as ve3, P.e2 as ve4 FROM pm1.vsp26 as P where param1=1 and param2='a' and e2=3"; //$NON-NLS-1$
 
         // Create expected results
@@ -428,7 +434,7 @@ public class TestProcedureRelational extends TestCase {
     }
 
     //virtual group with procedure in transformation
-    public void testProcAsVirtualGroup9(){
+    @Test public void testProcAsVirtualGroup9(){
         String sql = "SELECT P.e2 as ve3, P.e1 as ve4 FROM pm1.vsp47 as P where param1=1 and param2='a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -489,7 +495,7 @@ public class TestProcedureRelational extends TestCase {
     /**
      *  test for defect 22376
      */
-    public void testParameterPassing() throws Exception {
+    @Test public void testParameterPassing() throws Exception {
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
         
         FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("v1.rs1", v1, new String[] {"e1"}, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -526,7 +532,7 @@ public class TestProcedureRelational extends TestCase {
     }
 
     //virtual group with procedure in transformation
-    public void testCase6395ProcAsVirtualGroup9(){
+    @Test public void testCase6395ProcAsVirtualGroup9(){
         String sql = "SELECT P.e2 as ve3, P.e1 as ve4 FROM pm1.vsp47 as P where param1=1 and param2='a' OPTION DEBUG"; //$NON-NLS-1$
 
         // Create expected results
@@ -546,7 +552,7 @@ public class TestProcedureRelational extends TestCase {
      *  Case 6395 - This test case will now raise a QueryPlannerException.  param2 is required
      *  and not nullable.  This case is expected to fail because of 'param2 is null' 
      */
-    public void testProcAsVirtualGroup2WithNull() throws Exception {
+    @Test public void testProcAsVirtualGroup2WithNull() throws Exception {
         String sql = "select e1 from (SELECT * FROM pm1.vsp26 as P where P.e1='a') x where param1=1 and param2 is null"; //$NON-NLS-1$
 
         // Create expected results
@@ -570,7 +576,7 @@ public class TestProcedureRelational extends TestCase {
      *  Case 6395 - This case is expected to succeed.  param1 and param2 are both required, but nulls 
      *  are acceptable for both.
      */
-    public void testProcAsVirtualGroup2WithNull2() throws Exception {
+    @Test public void testProcAsVirtualGroup2WithNull2() throws Exception {
         String sql = "select * from pm1.vsp47 where param1 is null and param2 is null"; //$NON-NLS-1$
 
         // Create expected results
@@ -589,7 +595,7 @@ public class TestProcedureRelational extends TestCase {
     /**
      *  Case 6395 - This will not throw an exception and the proc will not be invoked.
      */
-    public void testProcAsVirtualGroup2WithNull3() throws Exception {
+    @Test public void testProcAsVirtualGroup2WithNull3() throws Exception {
         String sql = "select e1 from (SELECT * FROM pm1.vsp26 as P where P.e1='a') x where param1=1 and param2 = commandpayload()"; //$NON-NLS-1$
 
         // Create expected results
@@ -609,52 +615,118 @@ public class TestProcedureRelational extends TestCase {
      * procedure input criteria is valid.  This can be addressed later more generally when we do up front validation of
      * access patterns and access patterns have a wider range of semantics.
      * 
-    public void testProcInVirtualGroupDefect14609_1() throws Exception{
+    @Test public void testProcInVirtualGroupDefect14609_1() throws Exception{
         helpValidate("select ve3 from vm1.vgvp1 where ve1=1.1 and ve2='a'", new String[] {"ve1 = 1.1"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
    
-    public void testProcInVirtualGroupDefect14609_2() throws Exception{
+    @Test public void testProcInVirtualGroupDefect14609_2() throws Exception{
         helpValidate("select ve3 from vm1.vgvp1 where convert(ve1, integer)=1 and ve2='a'", new String[] {"convert(ve1, integer) = 1" }, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testProcInVirtualGroupDefect14609_3() throws Exception{
+    @Test public void testProcInVirtualGroupDefect14609_3() throws Exception{
         helpValidate("select ve3 from vm1.vgvp1 where 1.1=ve1 and ve2='a'", new String[] {"1.1 = ve1" }, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testProcInVirtualGroupDefect14609_4() throws Exception{
+    @Test public void testProcInVirtualGroupDefect14609_4() throws Exception{
         helpValidate("select ve3 from vm1.vgvp1 where 1=convert(ve1, integer) and ve2='a'", new String[] {"1 = convert(ve1, integer)" }, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
-    public void testDefect15861() throws Exception{
+    @Test public void testDefect15861() throws Exception{
         helpValidate("select ve3 from vm1.vgvp1 where (ve1=1 or ve1=2) and ve2='a'", new String[] {"(ve1 = 1) OR (ve1 = 2)", "ve1 = 2"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    public void testProcInVirtualGroup1_Defect20164() {
+    @Test public void testProcInVirtualGroup1_Defect20164() {
         helpFailProcedure("select ve3 from vm1.vgvp2 where (ve1=1 and ve2='a') or ve3='c'", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-    public void testProcInVirtualGroup2_Defect20164() {
+    @Test public void testProcInVirtualGroup2_Defect20164() {
         helpFailProcedure("select ve3 from vm1.vgvp2 where ve1=1 or ve2='a'", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-    public void testProcInVirtualGroup3_Defect20164() {
+    @Test public void testProcInVirtualGroup3_Defect20164() {
         helpFailProcedure("select ve3 from vm1.vgvp2, pm1.g1 where ve1=pm1.g1.e2 and ve2='a'", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-    public void testProcInVirtualGroup4_Defect20164() {
+    @Test public void testProcInVirtualGroup4_Defect20164() {
         helpValidate("select ve3 from vm1.vgvp2 where (ve1=1 and ve2='a') and (ve3='a' OR ve3='c')", new String[0], FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-    public void testProcInVirtualGroup5_Defect20164() {
+    @Test public void testProcInVirtualGroup5_Defect20164() {
         helpFailProcedure("select ve3 from vm1.vgvp2 where ve1=1 and NOT(ve2='a')", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-    public void testProcInVirtualGroup6_Defect20164() {
+    @Test public void testProcInVirtualGroup6_Defect20164() {
         helpValidate("select ve3 from vm1.vgvp2 where ve1=1 and ve2 is null", new String[0], FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
-    public void testProcInVirtualGroup7_Defect20164() {
+    @Test public void testProcInVirtualGroup7_Defect20164() {
         helpFailProcedure("select ve3 from vm1.vgvp2 where ve1=1 and ve2 is not null", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }*/
+    
+    /**
+     * Ensures that dependent procedures are processed 1 at a time so that projected input values
+     * are set correctly.
+     */
+    @Test public void testIssue119() throws Exception {
+        FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
+        FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
+        
+        FakeMetadataObject in = FakeMetadataFactory.createParameter("v1.vp1.in1", 2, SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
+        FakeMetadataObject rs1 = FakeMetadataFactory.createResultSet("v1.vp1.rs1", v1, new String[] {"e1", "e2", "e3", "e4", "e5"}, new String[] { DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ 
+        FakeMetadataObject rs1p1 = FakeMetadataFactory.createParameter("ret", 1, SPParameter.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs1);  //$NON-NLS-1$
+
+        QueryNode n1 = new QueryNode("v1.vp1", "CREATE VIRTUAL PROCEDURE BEGIN SELECT vp1.in1 e1, x.in1 e2, x.e1 e3, y.in1 e4, y.e1 e5 FROM pm1.sp119 x, pm1.sp119 y where x.in1 = vp1.in1 and y.in1 = x.e1; END"); //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject vt1 = FakeMetadataFactory.createVirtualProcedure("v1.vp1", v1, Arrays.asList(new FakeMetadataObject[] { rs1p1, in }), n1); //$NON-NLS-1$
+        
+        FakeMetadataObject in1 = FakeMetadataFactory.createParameter("pm1.sp119.in1", 2, SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
+		FakeMetadataObject rs3 = FakeMetadataFactory.createResultSet("pm1.sp119.rs1", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ 
+        FakeMetadataObject rs3p1 = FakeMetadataFactory.createParameter("ret", 1, SPParameter.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs3);  //$NON-NLS-1$
+		FakeMetadataObject sp1 = FakeMetadataFactory.createStoredProcedure("pm1.sp119", pm1, Arrays.asList(new FakeMetadataObject[] { rs3p1, in1 }), "pm1.sp119");  //$NON-NLS-1$ //$NON-NLS-2$
+
+        FakeMetadataStore store = new FakeMetadataStore();
+        store.addObject(pm1);
+        store.addObject(v1);
+        store.addObject(rs1);
+        store.addObject(vt1);
+        store.addObject(sp1);
+        
+        String sql = "select * from (exec v1.vp1(1)) foo order by e4, e5"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List[] {
+        	Arrays.asList(1, 1, 3, 3, 5),	
+        	Arrays.asList(1, 1, 3, 3, 8),
+        	Arrays.asList(1, 1, 6, 6, 8),
+        	Arrays.asList(1, 1, 6, 6, 11),
+        };
+        
+        FakeMetadataFacade metadata = new FakeMetadataFacade(store);
+        
+        // Construct data manager with data 
+        // Plan query 
+        ProcessorPlan plan = TestProcedureProcessor.getProcedurePlan(sql, metadata);        
+        // Run query 
+        HardcodedDataManager dataManager = new HardcodedDataManager() {
+        	@Override
+        	public TupleSource registerRequest(Object processorID,
+        			Command command, String modelName,
+        			String connectorBindingId, int nodeID)
+        			throws MetaMatrixComponentException {
+        		if (command instanceof StoredProcedure) {
+        			StoredProcedure proc = (StoredProcedure)command;
+        			List<SPParameter> params = proc.getInputParameters();
+        			assertEquals(1, params.size());
+        			int value = (Integer)params.get(0).getValue();
+        			return new FakeTupleSource(command.getProjectedSymbols(), new List[] {
+        				Arrays.asList(value+2), Arrays.asList(value+5)
+        			});
+        		}
+        		return super.registerRequest(processorID, command, modelName,
+        				connectorBindingId, nodeID);
+        	}
+        };
+        
+        TestProcedureProcessor.helpTestProcess(plan, expected, dataManager);  
+               
+    }
     
 }

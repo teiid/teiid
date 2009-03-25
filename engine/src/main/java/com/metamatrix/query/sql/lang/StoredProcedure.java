@@ -74,6 +74,8 @@ public class StoredProcedure extends ProcedureContainer {
     
     private boolean isCallableStatement;
     
+    private boolean isProcedureRelational;
+    
     /**
      * Constructs a default instance of this class.
      */
@@ -163,13 +165,13 @@ public class StoredProcedure extends ProcedureContainer {
     * Returns a List of SPParameter objects for this stored procedure
     *
     */
-    public List getParameters(){
-        List listOfParameters = new ArrayList(mapOfParameters.values());
+    public List<SPParameter> getParameters(){
+        List<SPParameter> listOfParameters = new ArrayList<SPParameter>(mapOfParameters.values());
         return listOfParameters;
     }
 
     public SPParameter getParameter(int index){
-        return (SPParameter)mapOfParameters.get(new Integer(index));
+        return mapOfParameters.get(new Integer(index));
     }
 
     public int getNumberOfColumns(){
@@ -232,6 +234,7 @@ public class StoredProcedure extends ProcedureContainer {
         
         copy.displayNamedParameters = displayNamedParameters;
         copy.isCallableStatement = isCallableStatement;
+        copy.isProcedureRelational = isProcedureRelational;
         return copy;
     }
 
@@ -373,11 +376,11 @@ public class StoredProcedure extends ProcedureContainer {
         return paramName;
     }
     
-    public List getInputParameters() {
-    	List parameters = getParameters();
-    	Iterator params = parameters.iterator();
+    public List<SPParameter> getInputParameters() {
+    	List<SPParameter> parameters = getParameters();
+    	Iterator<SPParameter> params = parameters.iterator();
     	while (params.hasNext()) {
-    		SPParameter param = (SPParameter)params.next();
+    		SPParameter param = params.next();
     		if(param.getParameterType() != ParameterInfo.IN && param.getParameterType() != ParameterInfo.INOUT) {
     			params.remove();
     		}
@@ -386,26 +389,12 @@ public class StoredProcedure extends ProcedureContainer {
     }
     
     public boolean isProcedureRelational() {
-        List inputs = getInputParameters();
-        if (inputs.size() == 0) {
-            return false;
-        }
-        
-        for (Iterator params = inputs.iterator(); params.hasNext();) {
-            SPParameter param = (SPParameter)params.next();
-            ElementSymbol symbol = param.getParameterSymbol();
-            Expression input = param.getExpression();
-            if (!(input instanceof Reference)) {
-                return false;
-            }
-            Reference reference = (Reference)input;
-            if (!symbol.equals(reference.getExpression())) {
-                return false;
-            }
-        }
-        
-        return true;
-    }
+		return isProcedureRelational;
+	}
+    
+    public void setProcedureRelational(boolean isProcedureRelational) {
+		this.isProcedureRelational = isProcedureRelational;
+	}
 
 	public boolean isCallableStatement() {
 		return isCallableStatement;

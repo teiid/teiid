@@ -62,40 +62,76 @@ public class TestSelectNode extends TestCase {
     }
     
     public void helpTestSelect(List elements, Criteria criteria, List[] data, List childElements, ProcessorDataManager dataMgr, List[] expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    	helpTestSelect(elements, criteria, childElements, dataMgr, expected, new FakeRelationalNode(2, data));
+    }
+    
+    public void helpTestSelect(List elements, Criteria criteria, List childElements, ProcessorDataManager dataMgr, List[] expected, RelationalNode child) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
-        FakeRelationalNode dataNode = new FakeRelationalNode(2, data);
-        dataNode.setElements(childElements);
-        dataNode.initialize(context, mgr, dataMgr);    
+        child.setElements(childElements);
+        child.initialize(context, mgr, dataMgr);    
         
         SelectNode selectNode = new SelectNode(1);
         selectNode.setCriteria(criteria);
         selectNode.setElements(elements);
-        selectNode.addChild(dataNode);
+        selectNode.addChild(child);
         selectNode.initialize(context, mgr, dataMgr);
         
         selectNode.open();
         
-        int currentRow = 1;
-        while(true) {
-            try {
-                TupleBatch batch = selectNode.nextBatch();
-                if(batch.getRowCount() > 0) {
-                    for(int row = currentRow; row <= batch.getEndRow(); row++) {
-                        //System.out.println(batch.getTuple(row));
-                        assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
-                    }
-                }
-                
-                if(batch.getTerminationFlag()) {
-                    break;
-                }
-                currentRow += batch.getRowCount();    
-            } catch(BlockedException e) {
-                // ignore and retry
-            }
-        }
+        BatchIterator iterator = new BatchIterator(selectNode);
+        
+        for (int i = 0; i < expected.length; i++) {
+        	while (true) {
+	        	try {
+	        		assertEquals("Rows don't match at " + i, expected[i], iterator.next()); //$NON-NLS-1$
+	        		break;
+	        	} catch (BlockedException e) {
+	        		continue;
+	        	}
+        	}
+		}  
+        assertFalse(iterator.hasNext());
+    }
+    
+    /**
+     * Ensures that a final empty batch is reindexed so that the batch iterator works correctly
+     */
+    public void testEmptyBatchIndexing() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+
+        List elements = new ArrayList();
+        elements.add(es1);
+        
+        CompareCriteria crit = new CompareCriteria(new Constant(0), CompareCriteria.EQ, new Constant(new Integer(1)));
+        
+        List childElements = new ArrayList();
+        childElements.add(es1);
+        
+    	RelationalNode child = new RelationalNode(0) {
+    		int i = 0;
+    		
+			@Override
+			public Object clone() {
+				return null;
+			}
+
+			@Override
+			protected TupleBatch nextBatchDirect() throws BlockedException,
+					MetaMatrixComponentException, MetaMatrixProcessingException {
+				if (i++ == 0) {
+					return new TupleBatch(1, new List[] {Arrays.asList(1), Arrays.asList(1)});
+				}
+				TupleBatch batch = new TupleBatch(3, new List[0] );
+				batch.setTerminationFlag(true);
+				return batch;
+			}
+    		
+    	};
+    	
+    	helpTestSelect(elements, crit, childElements, null, new List[0], child);
     }
     
     public void testNoRows() throws MetaMatrixComponentException, MetaMatrixProcessingException {

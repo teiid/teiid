@@ -26,6 +26,7 @@ import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 /**
  * <p>A cursored source of tuples.  The implementation will likely be closely
@@ -38,7 +39,7 @@ public interface TupleSource {
      * Returns the List of ElementSymbol describing the Tuple Source
      * @return the List of elements describing the Tuple Source
      */
-	List getSchema();
+	List<SingleElementSymbol> getSchema();
 	
     /**
      * Returns the next tuple
@@ -48,7 +49,7 @@ public interface TupleSource {
      * exception such as a communication exception, or other such
      * nondeterministic exception
      */
-	List nextTuple()
+	List<?> nextTuple()
 		throws MetaMatrixComponentException, MetaMatrixProcessingException;
 	
     /**

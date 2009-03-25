@@ -187,7 +187,11 @@ public abstract class RelationalNode implements Cloneable, Describable{
     }
 
     protected boolean isBatchFull() {
-        return (this.batchRows != null) && (this.batchRows.size() == this.batchSize);
+        return (this.batchRows != null) && (this.batchRows.size() >= this.batchSize);
+    }
+    
+    protected boolean hasPendingRows() {
+    	return this.batchRows != null;
     }
 
     protected TupleBatch pullBatch() {

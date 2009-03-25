@@ -57,6 +57,7 @@ import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.FakeDataManager;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.processor.TestProcessor;
@@ -111,7 +112,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
     static void helpTestProcess(boolean optimistic, ProcessorPlan procPlan, int rowsUpdated, List[] expectedResults, boolean shouldFail, 
-    				FakeDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
+    		ProcessorDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
         // Process twice, testing reset and clone method of Processor plan
         for (int i=1; i<=2; i++) {
 	        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
@@ -190,7 +191,7 @@ public class TestProcedureProcessor extends TestCase {
         }
     }
     
-    public static void helpTestProcess(ProcessorPlan procPlan, List[] expectedResults, FakeDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
+    public static void helpTestProcess(ProcessorPlan procPlan, List[] expectedResults, ProcessorDataManager dataMgr) throws SQLException, MetaMatrixCoreException {
         helpTestProcess(false, procPlan, expectedResults, dataMgr, false);
     }
     
@@ -199,7 +200,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
     static void helpTestProcess(boolean optimistic, ProcessorPlan procPlan, List[] expectedResults, 
-                    FakeDataManager dataMgr, boolean shouldFail) throws SQLException, MetaMatrixCoreException {
+    		ProcessorDataManager dataMgr, boolean shouldFail) throws SQLException, MetaMatrixCoreException {
         helpTestProcess(optimistic, procPlan, 0, expectedResults, shouldFail, dataMgr);
     }
 
