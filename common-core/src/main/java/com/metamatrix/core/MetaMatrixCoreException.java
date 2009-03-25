@@ -22,12 +22,6 @@
 
 package com.metamatrix.core;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.sql.SQLException;
-
-import com.metamatrix.common.util.exception.SQLExceptionUnroller;
 
 
 /**
@@ -37,8 +31,6 @@ import com.metamatrix.common.util.exception.SQLExceptionUnroller;
  */
 public class MetaMatrixCoreException extends Exception {
 	
-	private transient Throwable realCause;
-
     public MetaMatrixCoreException() {
     }
 
@@ -51,41 +43,7 @@ public class MetaMatrixCoreException extends Exception {
     }
 
     public MetaMatrixCoreException(Throwable e, String message) {
-        super(message);
-        this.realCause = e;
+        super(message, e);
     }
     
-    @Override
-    public Throwable getCause() {
-    	return this.realCause;
-    }
-    
-    @Override
-    public synchronized Throwable initCause(Throwable cause) {
-    	if (this.realCause != null)
-            throw new IllegalStateException("Can't overwrite cause"); //$NON-NSL-1$
-        if (cause == this)
-            throw new IllegalArgumentException("Self-causation not permitted"); //$NON-NSL-1$
-        this.realCause = cause;
-        return this;
-    }
-    
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-    	in.defaultReadObject();
-    	try {
-    		realCause = (Throwable)in.readObject();
-    	} catch (ClassNotFoundException cnfe) {
-    		realCause = new MetaMatrixCoreException(cnfe, CorePlugin.Util.getString("MetaMatrixException.deserialization_exception")); //$NON-NSL-1$
-    	}
-    }
-    
-    private void writeObject(ObjectOutputStream out) throws IOException {
-    	getStackTrace();
-    	out.defaultWriteObject();
-    	if (realCause != this && realCause instanceof SQLException) {
-    		out.writeObject(SQLExceptionUnroller.unRollException((SQLException)realCause));
-    	} else {
-    		out.writeObject(realCause);
-    	}
-    }
 }

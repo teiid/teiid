@@ -84,62 +84,51 @@ public class ServerWorkItem implements Runnable {
 		String service = null;
 		final boolean encrypt = message.getContents() instanceof SealedObject;
         try {
-        	/* Defect 15211
-    		 * If a CNFE occurred while deserializing the packet, the packet message should be a
-    		 * MessageHolder containing the exception. Since we can no longer continue processing,
-    		 * we should notify the client of the problem immediately.
-    		 */
-        	if (message.getContents() instanceof Throwable) {
-        		LogManager.logWarning(SocketVMController.SOCKET_CONTEXT, (Throwable)message.getContents(), 
-		                     "Exception while deserializing message packet."); //$NON-NLS-1$
-                result = message;
-            } else {
-	            message.setContents(this.socketClientInstance.getCryptor().unsealObject(message.getContents()));
-	            
-				if (!(message.getContents() instanceof ServiceInvocationStruct)) {
-					throw new AssertionError("unknown message contents"); //$NON-NLS-1$
-				}
-				final ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
-				Object instance = server.getClientService(serviceStruct.targetClass);
-				if (instance == null) {
-					throw new ComponentNotFoundException(PlatformPlugin.Util.getString("ServerWorkItem.Component_Not_Found", serviceStruct.targetClass)); //$NON-NLS-1$
-				}
-				if (!(instance instanceof ILogon)) {
-					DQPWorkContext workContext = this.socketClientInstance.getWorkContext();
-					sessionService.validateSession(workContext.getSessionId());
-				}
-				service = serviceStruct.targetClass;
-				ReflectionHelper helper = new ReflectionHelper(instance.getClass());
-				Method m = helper.findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
-				Object methodResult;
-				try {
-					methodResult = m.invoke(instance, serviceStruct.args);
-				} catch (InvocationTargetException e) {
-					throw e.getCause();
-				}
-				if (ResultsFuture.class.isAssignableFrom(m.getReturnType()) && methodResult != null) {
-					ResultsFuture<Serializable> future = (ResultsFuture<Serializable>) methodResult;
-					future.addCompletionListener(new ResultsFuture.CompletionListener<Serializable>() {
+            message.setContents(this.socketClientInstance.getCryptor().unsealObject(message.getContents()));
+            
+			if (!(message.getContents() instanceof ServiceInvocationStruct)) {
+				throw new AssertionError("unknown message contents"); //$NON-NLS-1$
+			}
+			final ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
+			Object instance = server.getClientService(serviceStruct.targetClass);
+			if (instance == null) {
+				throw new ComponentNotFoundException(PlatformPlugin.Util.getString("ServerWorkItem.Component_Not_Found", serviceStruct.targetClass)); //$NON-NLS-1$
+			}
+			if (!(instance instanceof ILogon)) {
+				DQPWorkContext workContext = this.socketClientInstance.getWorkContext();
+				sessionService.validateSession(workContext.getSessionId());
+			}
+			service = serviceStruct.targetClass;
+			ReflectionHelper helper = new ReflectionHelper(instance.getClass());
+			Method m = helper.findBestMethodOnTarget(serviceStruct.methodName, serviceStruct.args);
+			Object methodResult;
+			try {
+				methodResult = m.invoke(instance, serviceStruct.args);
+			} catch (InvocationTargetException e) {
+				throw e.getCause();
+			}
+			if (ResultsFuture.class.isAssignableFrom(m.getReturnType()) && methodResult != null) {
+				ResultsFuture<Serializable> future = (ResultsFuture<Serializable>) methodResult;
+				future.addCompletionListener(new ResultsFuture.CompletionListener<Serializable>() {
 
-								public void onCompletion(
-										ResultsFuture<Serializable> completedFuture) {
-									Message asynchResult = new Message();
-									try {
-										asynchResult.setContents(completedFuture.get());
-									} catch (InterruptedException e) {
-										asynchResult.setContents(processException(e, serviceStruct.targetClass));
-									} catch (ExecutionException e) {
-										asynchResult.setContents(processException(e.getCause(), serviceStruct.targetClass));
-									}
-									sendResult(asynchResult, encrypt);
+							public void onCompletion(
+									ResultsFuture<Serializable> completedFuture) {
+								Message asynchResult = new Message();
+								try {
+									asynchResult.setContents(completedFuture.get());
+								} catch (InterruptedException e) {
+									asynchResult.setContents(processException(e, serviceStruct.targetClass));
+								} catch (ExecutionException e) {
+									asynchResult.setContents(processException(e.getCause(), serviceStruct.targetClass));
 								}
+								sendResult(asynchResult, encrypt);
+							}
 
-							});
-				} else { // synch call
-					Message resultHolder = new Message();
-					resultHolder.setContents((Serializable)methodResult);
-					result = resultHolder;
-				}
+						});
+			} else { // synch call
+				Message resultHolder = new Message();
+				resultHolder.setContents((Serializable)methodResult);
+				result = resultHolder;
 			}
 		} catch (Throwable t) {
 			Message holder = new Message();

@@ -1,13 +1,22 @@
 package com.metamatrix.common.comm.exception;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
+import com.metamatrix.common.comm.platform.socket.ObjectInputStreamWithClassloader;
+import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.ReflectionHelper;
 
 /*
  * JBoss, Home of Professional Open Source.
@@ -33,9 +42,6 @@ import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 
 public class ExceptionHolder implements Externalizable {
 	
-	private String message;
-	private String className;
-	private boolean isProcessingException;
 	private Throwable exception;
 	
 	public ExceptionHolder() {
@@ -43,36 +49,63 @@ public class ExceptionHolder implements Externalizable {
 	
 	public ExceptionHolder(Throwable exception) {
 		this.exception = exception;
-		this.isProcessingException = exception instanceof MetaMatrixProcessingException;
-		this.className = exception.getClass().getName();
-		this.message = exception.getMessage();
 	}
 	
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
-		this.className = (String)in.readObject();
-		this.isProcessingException = in.readBoolean();
-		this.message = (String)in.readObject();
-		this.exception = (Throwable)in.readObject();
+		List<String> classNames = (List<String>)in.readObject();
+		String message = (String)in.readObject();
+		StackTraceElement[] stackTrace = (StackTraceElement[])in.readObject();
+		byte[] serializedException = (byte[])in.readObject();
+		ByteArrayInputStream bais = new ByteArrayInputStream(serializedException);
+		ObjectInputStream ois = new ObjectInputStreamWithClassloader(bais, Thread.currentThread().getContextClassLoader());
+		try {
+			this.exception = (Throwable)ois.readObject();
+		} catch (ClassNotFoundException e) {
+			List<String> args = Arrays.asList(CommPlatformPlugin.Util.getString("ExceptionHolder.converted_exception", message, classNames)); //$NON-NLS-1$
+			
+			for (String className : classNames) {
+				try {
+					Throwable result = (Throwable)ReflectionHelper.create(className, args, Thread.currentThread().getContextClassLoader());
+					result.initCause(e);
+					result.setStackTrace(stackTrace);
+					this.exception = result;
+					break;
+				} catch (MetaMatrixCoreException e1) {
+					//
+				}
+			}
+			if (this.exception == null) {
+				throw new MetaMatrixRuntimeException(exception, args.get(0));
+			}
+		}
 	}
 	
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(this.className);
-		out.writeBoolean(this.isProcessingException);
-		out.writeObject(this.message);
-		out.writeObject(this.exception);
+		List<String> classNames = new ArrayList<String>();
+		Class<?> clazz = exception.getClass();
+		while (clazz != null) {
+			if (clazz == Throwable.class || clazz == Exception.class) {
+				break;
+			}
+			classNames.add(clazz.getName());
+			clazz = clazz.getSuperclass();
+		}
+		out.writeObject(classNames);
+		out.writeObject(exception.getMessage());
+		out.writeObject(exception.getStackTrace());
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(this.exception);
+        oos.flush();
+        oos.close();
+		out.writeObject(baos.toByteArray());
 	}
 	
-	public Throwable convertException() {
-		if (exception != null) {
-			return exception;
-		}
-		if (isProcessingException) {
-			return new MetaMatrixProcessingException(CommPlatformPlugin.Util.getString("ExceptionHolder.converted_exception", this.className, this.message));
-		}
-		return new MetaMatrixComponentException(CommPlatformPlugin.Util.getString("ExceptionHolder.converted_exception", this.className, this.message));
+	public Throwable getException() {
+		return exception;
 	}
-	
+		
 }

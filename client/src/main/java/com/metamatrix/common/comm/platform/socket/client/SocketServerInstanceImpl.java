@@ -264,7 +264,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 						try {
 							Object result = getCryptor().unsealObject((Serializable) super.convertResult());
 							if (result instanceof ExceptionHolder) {
-								throw new ExecutionException(((ExceptionHolder)result).convertException());
+								throw new ExecutionException(((ExceptionHolder)result).getException());
 							}
 							if (result instanceof Throwable) {
 								throw new ExecutionException((Throwable)result);

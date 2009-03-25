@@ -34,6 +34,7 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.batch.BatchSerializer;
+import com.metamatrix.common.comm.exception.ExceptionHolder;
 import com.metamatrix.core.util.ExternalizeUtil;
 
 /**
@@ -339,10 +340,17 @@ public class ResultsMessage implements Externalizable {
         // Plan Descriptions
         planDescription = ExternalizeUtil.readMap(in);
 
-        exception = (MetaMatrixException)ExternalizeUtil.readThrowable(in);
-
-        //Warnings
-        warnings = ExternalizeUtil.readList(in);
+        ExceptionHolder holder = (ExceptionHolder)in.readObject();
+        if (holder != null) {
+        	this.exception = (MetaMatrixException)holder.getException();
+        }
+        List<ExceptionHolder> holderList = (List<ExceptionHolder>)in.readObject();
+        if (holderList != null) {
+        	this.warnings = new ArrayList<Exception>(holderList.size());
+        	for (ExceptionHolder exceptionHolder : holderList) {
+        		this.warnings.add((Exception)exceptionHolder.getException());
+			}
+        }
 
         //Schemas
         schemas = ExternalizeUtil.readList(in);
@@ -375,9 +383,20 @@ public class ResultsMessage implements Externalizable {
         // Plan descriptions
         ExternalizeUtil.writeMap(out, planDescription);
 
-        ExternalizeUtil.writeThrowable(out, exception);
-        // Warnings
-        ExternalizeUtil.writeList(out, warnings);
+        if (exception != null) {
+        	out.writeObject(new ExceptionHolder(exception));
+        } else {
+        	out.writeObject(exception);
+        }
+        if (this.warnings != null) {
+        	List<ExceptionHolder> replcement = new ArrayList<ExceptionHolder>(this.warnings.size());
+        	for (Exception warning : warnings) {
+				replcement.add(new ExceptionHolder(warning));
+			}
+        	out.writeObject(replcement);
+        } else {
+        	out.writeObject(this.warnings);
+        }
 
         //Schemas
         ExternalizeUtil.writeCollection(out, schemas);
