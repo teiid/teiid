@@ -40,6 +40,7 @@ import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.MetaMatrixProductNames;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /** 
@@ -205,10 +206,11 @@ public class ServerAdminFactory {
     	return createAdmin(p);
     }
 
-	public ServerAdmin createAdmin(final Properties p)
+	public ServerAdmin createAdmin(Properties p)
 			throws AdminComponentException, AdminException {
+		p = PropertiesUtils.clone(p);
 		p.setProperty(MMURL.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
-    	
+    	p.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
 		ServerAdmin serverAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread()
 				.getContextClassLoader(), new Class[] { ServerAdmin.class }, new ReconnectingProxy(p));
     	

@@ -30,6 +30,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.Iterator;
 import java.util.Map;
@@ -104,11 +105,9 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         }
     }
     
-    /**
-     * Return identifier of the server VM this ServerInstance is associated with. 
-     */
-    public HostInfo getHostInfo() {
-        return this.hostInfo;
+    @Override
+    public SocketAddress getRemoteAddress() {
+    	return this.socketChannel.getRemoteAddress();
     }
     
     static String getVersionInfo() {

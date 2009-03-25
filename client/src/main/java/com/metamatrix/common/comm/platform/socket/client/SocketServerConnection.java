@@ -30,6 +30,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +55,6 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 
@@ -78,6 +78,7 @@ public class SocketServerConnection implements ServerConnection {
     private ILogon logon;
     private Timer pingTimer;
     private boolean closed;
+	private boolean failOver;
     
 	public SocketServerConnection(
 			SocketServerInstanceFactory connectionFactory, boolean secure,
@@ -88,6 +89,7 @@ public class SocketServerConnection implements ServerConnection {
 		this.connProps = connProps;
 		this.secure = secure;
 		this.logon = this.getService(ILogon.class);
+		this.failOver = Boolean.valueOf(connProps.getProperty(MMURL.CONNECTION.AUTO_FAILOVER)).booleanValue();
 		
         authenticate(); 
         
@@ -111,7 +113,7 @@ public class SocketServerConnection implements ServerConnection {
 			if (this.serverInstance.isOpen()) {
 				return this.serverInstance;
 			}
-			this.serverInstance = null;
+			closeServerInstance();
 		}
 		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts());
 		List<HostInfo> hostCopy = new ArrayList<HostInfo>(hostKeys);
@@ -157,7 +159,7 @@ public class SocketServerConnection implements ServerConnection {
         try {
             this.logonResult = logon.logon(connProps);
             if (this.serverDiscovery.setLogonResult(this.logonResult)) {
-            	selectNewServerInstance();
+            	closeServerInstance();
             }
             return;
         } catch (LogonException e) {
@@ -194,20 +196,15 @@ public class SocketServerConnection implements ServerConnection {
 	class ServerConnectionInvocationHandler implements InvocationHandler {
 		
 		private Class<?> targetClass;
-		private SocketServerInstance instance;
 		private Object target;
-		private boolean failOver;
 		
 		public ServerConnectionInvocationHandler(Class<?> targetClass) {
 			this.targetClass = targetClass;
-			this.failOver = Boolean.valueOf(connProps.getProperty(MMURL.CONNECTION.AUTO_FAILOVER)).booleanValue()
-					|| !ClientSideDQP.class.isAssignableFrom(targetClass);
 		}
 		
 		private synchronized Object getTarget() throws CommunicationException {
 			if (this.target == null) {
-				this.instance = selectServerInstance();
-				this.target = this.instance.getService(targetClass);
+				this.target = selectServerInstance().getService(targetClass);
 			}
 			return this.target;
 		}
@@ -240,13 +237,6 @@ public class SocketServerConnection implements ServerConnection {
 		private synchronized void invalidateTarget() {
 			this.target = null;
 		}
-
-		synchronized SocketServerInstance getInstance() throws CommunicationException {
-			if (instance == null) {
-				getTarget();
-			}
-			return instance;
-		}
 	    
 	}
 
@@ -274,10 +264,7 @@ public class SocketServerConnection implements ServerConnection {
 			//ignore
 		}
 		
-		if (this.serverInstance != null) {
-			this.serverInstance.shutdown();
-			this.serverInstance = null;
-		}
+		closeServerInstance();
 
 		this.closed = true;
 		this.serverDiscovery.shutdown();
@@ -298,25 +285,29 @@ public class SocketServerConnection implements ServerConnection {
 		return logonResult;
 	}
 	
-	synchronized void selectNewServerInstance() {
-		this.serverInstance = null;
-	}
-	
-	public static boolean isSameInstance(Object service, Object otherService) throws CommunicationException {
-		try {
-			ServerConnectionInvocationHandler handler = (ServerConnectionInvocationHandler)Proxy.getInvocationHandler(service);
-			ServerConnectionInvocationHandler otherHandler = (ServerConnectionInvocationHandler)Proxy.getInvocationHandler(otherService);
-			return handler.getInstance().getHostInfo().getInetAddress().equals(otherHandler.getInstance().getHostInfo().getInetAddress());
-		} catch (IllegalArgumentException e) {
-			return false;
-		} catch (UnknownHostException e) {
-			throw new CommunicationException(e);
+	synchronized void closeServerInstance() {
+		if (this.serverInstance != null) {
+			this.serverInstance.shutdown();
+			this.serverInstance = null;
 		}
 	}
 	
-	public static void selectNewServerInstance(Object service) {
+	public boolean isSameInstance(SocketServerConnection otherService) throws CommunicationException {
+		SocketAddress address = selectServerInstance().getRemoteAddress();
+		if (address == null) {
+			return false;
+		}
+		return address.equals(otherService.selectServerInstance().getRemoteAddress());
+	}
+	
+	public void selectNewServerInstance(Object service) {
+		closeServerInstance();
 		ServerConnectionInvocationHandler handler = (ServerConnectionInvocationHandler)Proxy.getInvocationHandler(service);
 		handler.invalidateTarget();
+	}
+	
+	public void setFailOver(boolean failOver) {
+		this.failOver = failOver;
 	}
 
 }

@@ -26,6 +26,7 @@
 package com.metamatrix.common.comm.platform.socket.client;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -41,7 +42,6 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -146,6 +146,7 @@ public class TestSocketServerConnection extends TestCase {
 	 */
 	public void testRetry() throws Exception {
 		SocketServerConnection connection = createConnection(new SingleInstanceCommunicationException());
+		connection.setFailOver(true);
 		ILogon logon = connection.getService(ILogon.class);
 		logon.ping();
 	}
@@ -160,9 +161,21 @@ public class TestSocketServerConnection extends TestCase {
 			
 		}
 	}
+	
+	public void testImmediateFail1() throws Exception {
+		SocketServerConnection connection = createConnection(new CommunicationException());
+		connection.setFailOver(true);
+		ILogon logon = connection.getService(ILogon.class);
+		try {
+			logon.ping();
+			fail("expected exception"); //$NON-NLS-1$
+		} catch (MetaMatrixComponentException e) {
+			
+		}
+	}
 
 	private SocketServerConnection createConnection(final Throwable throwException) throws CommunicationException, ConnectionException {
-		return createConnection(throwException, new HostInfo("foo", 1)); //$NON-NLS-1$
+		return createConnection(throwException, new HostInfo("0.0.0.2", 1)); //$NON-NLS-1$
 	}
 	
 	private SocketServerConnection createConnection(final Throwable t, HostInfo hostInfo)
@@ -175,7 +188,7 @@ public class TestSocketServerConnection extends TestCase {
 					boolean ssl) throws CommunicationException, IOException {
 				SocketServerInstance instance = Mockito.mock(SocketServerInstance.class);
 				Mockito.stub(instance.getCryptor()).toReturn(new NullCryptor());
-				Mockito.stub(instance.getHostInfo()).toReturn(info);
+				Mockito.stub(instance.getRemoteAddress()).toReturn(new InetSocketAddress(info.getInetAddress(), info.getPortNumber()));
 				FakeILogon logon = new FakeILogon();
 				logon.t = t;
 				Mockito.stub(instance.getService(ILogon.class)).toReturn(logon);
@@ -191,11 +204,8 @@ public class TestSocketServerConnection extends TestCase {
 		SocketServerConnection conn = createConnection(null, new HostInfo("0.0.0.0", 1)); //$NON-NLS-1$
 		SocketServerConnection conn1 = createConnection(null, new HostInfo("0.0.0.1", 1)); //$NON-NLS-1$
 		
-		ClientSideDQP dqp = conn.getService(ClientSideDQP.class);
-		ClientSideDQP dqp1 = conn1.getService(ClientSideDQP.class);
-		
-		assertFalse(SocketServerConnection.isSameInstance(dqp, dqp1));
-		assertTrue(SocketServerConnection.isSameInstance(dqp, dqp));
+		assertFalse(conn.isSameInstance(conn1));
+		assertTrue(conn.isSameInstance(conn));
 	}
 
 }

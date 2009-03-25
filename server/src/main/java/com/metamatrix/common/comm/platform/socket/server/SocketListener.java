@@ -89,14 +89,17 @@ public class SocketListener implements ChannelListenerFactory {
 				new SynchronousQueue<Runnable>(),
 				new WorkerPoolFactory.DefaultThreadFactory("ServerNio")); //$NON-NLS-1$
         
-        ChannelFactory factory =
-            new NioServerSocketChannelFactory(executor, executor, Runtime.getRuntime().availableProcessors() * 2);
+        ChannelFactory factory = new NioServerSocketChannelFactory(executor, executor);
         
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
         this.channelHandler = new SSLAwareChannelHandler(this, engine, Thread.currentThread().getContextClassLoader());
         bootstrap.setPipelineFactory(channelHandler);
-        bootstrap.setOption("receiveBufferSize", new Integer(inputBufferSize)); //$NON-NLS-1$
-        bootstrap.setOption("sendBufferSize", new Integer(outputBufferSize)); //$NON-NLS-1$
+        if (inputBufferSize != 0) {
+        	bootstrap.setOption("receiveBufferSize", new Integer(inputBufferSize)); //$NON-NLS-1$
+        }
+        if (outputBufferSize != 0) {
+        	bootstrap.setOption("sendBufferSize", new Integer(outputBufferSize)); //$NON-NLS-1$
+        }
         bootstrap.setOption("keepAlive", Boolean.TRUE); //$NON-NLS-1$
         
         this.serverChanel = bootstrap.bind(new InetSocketAddress(bindAddress, port));

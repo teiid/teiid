@@ -68,8 +68,8 @@ public class SocketVMController extends ProcessController {
     private static final int DEFAULT_MAX_THREADS = 15;
     private static final long DEFAULT_TIMETOLIVE = 15000;
     private static final long DEFAULT_WAITFORSERVICES = 500;
-    private static final int DEFAULT_INPUT_BUFFER_SIZE = 102400;
-    private static final int DEFAULT_OUTPUT_BUFFER_SIZE = 102400;
+    private static final int DEFAULT_INPUT_BUFFER_SIZE = 0;
+    private static final int DEFAULT_OUTPUT_BUFFER_SIZE = 0;
 
     private static final String SOCKET_WORKER_POOL_NAME = "SocketWorkerQueue"; //$NON-NLS-1$
     private SocketListener listener; 

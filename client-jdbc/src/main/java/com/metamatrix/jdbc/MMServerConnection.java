@@ -108,7 +108,7 @@ public class MMServerConnection extends MMConnection {
 		super.recycleConnection();
 		//perform load balancing
 		if (this.serverConn instanceof SocketServerConnection) {
-			SocketServerConnection.selectNewServerInstance(this.getDQP());
+			((SocketServerConnection)this.serverConn).selectNewServerInstance(this.getDQP());
 		}
 	}
 
@@ -117,7 +117,7 @@ public class MMServerConnection extends MMConnection {
 		if (conn instanceof MMServerConnection
 				&& this.serverConn instanceof SocketServerConnection
 				&& conn.serverConn instanceof SocketServerConnection) {
-			return SocketServerConnection.isSameInstance(this.getDQP(), conn.getDQP());
+			return ((SocketServerConnection)this.serverConn).isSameInstance((SocketServerConnection)conn.serverConn);
 		}
 		return false;
 	}

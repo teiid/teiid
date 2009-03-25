@@ -54,6 +54,14 @@ import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.platform.security.api.ILogon;
 
+/**
+ * Responsible for creating socket based connections
+ * 
+ * The comm approach is object based and layered.  Connections manage failover and identity.  
+ * ServerInstances represent the service layer to a particular cluster member.  ObjectChannels
+ * abstract the underlying IO.
+ * 
+ */
 public class SocketServerConnectionFactory implements ServerConnectionFactory, SocketServerInstanceFactory {
 
 	private static final String URL = "URL"; //$NON-NLS-1$
