@@ -26,7 +26,7 @@
  */
 -->
 <html>
-<%/*
+<%
 			 
 			List wsdlUrls = (List) session
 					.getAttribute(WSDLServletUtil.DISCOVERED_WSDL);
