@@ -266,8 +266,8 @@ public final class DeployedPscPanel
             Host host = (Host)theAncestors[1];
             txfHost.setText(host.getName());
 
-            ProductType product = getConfigurationManager().getProduct(psc);
-            txfProduct.setText(product.getName());
+//            ProductType product = getConfigurationManager().getProduct(psc);
+//            txfProduct.setText(product.getName());
 
             // populate table
             tblModel.setNumRows(0);

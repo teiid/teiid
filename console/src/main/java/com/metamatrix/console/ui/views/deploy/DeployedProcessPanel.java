@@ -699,9 +699,8 @@ public final class DeployedProcessPanel
                 Iterator pscItr = pscs.iterator();
                 while (pscItr.hasNext()) {
                     ProductServiceConfig psc = (ProductServiceConfig)pscItr.next();
-                    ProductType product = 
-                    		getConfigurationManager().getProduct(psc);
-                    tblModel.setValueAt(psc, findProductRow(product), PSC_COL);
+                     ProductType product = getConfigurationManager().getProduct(psc);
+                    //tblModel.setValueAt(psc, findProductRow(product), PSC_COL);
                     prodRowMap.put(product, psc);
                 }
             }
