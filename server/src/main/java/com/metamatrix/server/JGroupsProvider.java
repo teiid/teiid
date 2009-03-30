@@ -141,9 +141,14 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 
 		    String udpMulticastAddress = configProps.getProperty(UDP_MCAST_ADDR_PROPERTY);
 		    if (udpMulticastAddress == null || udpMulticastAddress.length() == 0) {
-		    	String currentAddr = VMNaming.getBindAddress(); 
-		        String lastNode = currentAddr.substring(0, currentAddr.indexOf('.'));
-		        udpMulticastAddress = DEFAULT_UDP_MCAST_ADDR_PREFIX + lastNode;
+		    	String currentAddr = VMNaming.getBindAddress();
+		    	if (currentAddr.indexOf('.') != -1) {
+		    		String lastNode = currentAddr.substring(currentAddr.indexOf('.')+1);
+		    		udpMulticastAddress = DEFAULT_UDP_MCAST_ADDR_PREFIX + lastNode;
+		    	}
+		    	else {
+		    		throw new ConfigurationException("Failed to set default multicast address"); //$NON-NLS-1$
+		    	}
 		    }
 		
 			if (udpMulticastSupported.equalsIgnoreCase("true")) { //$NON-NLS-1$
