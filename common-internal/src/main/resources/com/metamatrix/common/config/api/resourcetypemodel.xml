@@ -57,18 +57,6 @@
 				<Property Name="CreatedBy">ConfigurationStartup</Property>
 			</ChangeHistory>
 		</ComponentType>
-		<ComponentType Name="WebServices" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
-			<ComponentTypeDefn Deprecated="false">
-				<PropertyDefinition Name="metamatrix.webserver.host" DisplayName="WebServer Host" ShortDescription="The WebServer host name." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
-			</ComponentTypeDefn>
-			<ComponentTypeDefn Deprecated="false">
-				<PropertyDefinition Name="metamatrix.webserver.port" DisplayName="WebServer Port" ShortDescription="The WebServer port number." DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
-			</ComponentTypeDefn>
-			<ChangeHistory>
-				<Property Name="LastChangedBy">ConfigurationStartup</Property>
-				<Property Name="CreatedBy">ConfigurationStartup</Property>
-			</ChangeHistory>
-		</ComponentType>
 		<ComponentType Name="JGroups" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
 			<ComponentTypeDefn Deprecated="false">
 				<PropertyDefinition Name="udp.multicast_supported" DisplayName="Multicast Supported" ShortDescription="Indicates if multicast supported." DefaultValue="true" Multiplicity="1" PropertyType="Boolean" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true"/>
