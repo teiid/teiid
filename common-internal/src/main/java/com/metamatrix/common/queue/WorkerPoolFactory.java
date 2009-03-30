@@ -22,12 +22,19 @@
 
 package com.metamatrix.common.queue;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,208 +46,320 @@ import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.NamedThreadFactory;
 
 /**
- * Creates WorkPools based upon {@link ThreadPoolExecutor}
+ * Creates named, queued, daemon Thread pools.
+ * <br/>
+ * The requirements are:
+ * <ol>
+ * <li>minimize thread creation</li>
+ * <li>allow for proper timeout of idle threads</li>
+ * <li>allow for queuing</li>
+ * </ol>
+ * <br/>
+ * A non-fifo (lifo) {@link SynchronousQueue} based {@link ThreadPoolExecutor} satisfies 1 and 2, but not 3.
+ * A bounded or unbound queue based {@link ThreadPoolExecutor} allows for 3, but will tend to create 
+ * up to the maximum number of threads and makes no guarantee on thread scheduling.
+ * <br/>
+ * So the approach here is to use virtual thread pools off of single shared {@link SynchronousQueue}
+ * backed {@link ThreadPoolExecutor}.
+ * <br/>
+ * There is also only a single master scheduling thread with actual executions deferred to the calling
+ * WorkerPool.
+ * 
+ * TODO: this probably needs to be re-thought, especially since the lifo ordering of a {@link SynchronousQueue} 
+ * is not guaranteed behavior.  also there's a race condition between previously retiring threads and new work - 
+ * prior to being returned to the shared pool we can create extra threads if the shared pool is exhausted.
+ * TODO: bounded queuing - we never bothered bounding in the past with our worker pools, but reasonable
+ * defaults would be a good idea.
  */
 public class WorkerPoolFactory {
 
-	/**
-	 * Attempts to detect when new threads should be created without blocking.
-	 * 
-	 * IMPORTANT NOTE: actual execution ordering is not guaranteed.
-	 */
-	static final class ThreadReuseLinkedBlockingQueue extends
-			LinkedBlockingQueue<Runnable> {
-		private StatsCapturingThreadPoolExecutor executor;
-
-		void setExecutor(StatsCapturingThreadPoolExecutor executor) {
-			this.executor = executor;
-		}
-		
-		@Override
-		public boolean offer(Runnable o) {
-			if (executor.getPoolSize() + executor.getCompletedCount() >= executor.getSubmittedCount()) {
-				/*
-				 * TODO: this strategy suffers from the same possible flaws as the previous implementation of
-				 * WorkerPool.  If the available threads are in the process of dying, we run the risk of
-				 * queuing without starting another thread (fortunately the ThreadPoolExecutor itself will 
-				 * try to mitigate this case as well).
-				 * 
-				 * Since this was never observed to be a problem before, we'll not initially worry about it with
-				 * this implementation.
-				 */
-				return super.offer(o);
-			}
-			return false; //trigger thread creation if possible
-		}
-
-		@Override
-		public boolean add(Runnable arg0) {
-			if (super.offer(arg0)) {
-		        return true;
-			}
-		    throw new IllegalStateException("Queue full"); //$NON-NLS-1$
-		}
-	}
-
-	static class StatsCapturingThreadPoolExecutor extends ThreadPoolExecutor {
-		
-		private AtomicInteger activeCount = new AtomicInteger(0);
-		private AtomicInteger submittedCount = new AtomicInteger(0);
-		private AtomicInteger completedCount = new AtomicInteger(0);
-		
-		public StatsCapturingThreadPoolExecutor(int corePoolSize,
-                              int maximumPoolSize,
-                              long keepAliveTime,
-                              TimeUnit unit,
-                              BlockingQueue<Runnable> workQueue,
-                              ThreadFactory threadFactory) {
-			super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
-		}
-		
-		@Override
-		protected void beforeExecute(Thread t, Runnable r) {
-			activeCount.getAndIncrement();
-		}
-		
+	private static ThreadPoolExecutor tpe = new ThreadPoolExecutor(0,
+			Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
+			new SynchronousQueue<Runnable>(), new NamedThreadFactory("Worker")) { //$NON-NLS-1$ 
 		@Override
 		protected void afterExecute(Runnable r, Throwable t) {
 			if (t != null) {
 				LogManager.logError(LogCommonConstants.CTX_POOLING, t, CommonPlugin.Util.getString("WorkerPool.uncaughtException")); //$NON-NLS-1$
 			}
-			activeCount.getAndDecrement();
-			completedCount.getAndIncrement();
+		}
+	}; 
+	
+	private static ScheduledThreadPoolExecutor stpe = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("Scheduler")); //$NON-NLS-1$
+	
+	/**
+	 * TODO: purge user canceled scheduled tasks.
+	 */
+	static class StatsCapturingSharedThreadPoolExecutor implements WorkerPool {
+		
+		class ScheduledFutureTask extends FutureTask<Void> implements ScheduledFuture<Void> {
+			private ScheduledFuture<?> scheduledFuture;
+			private boolean periodic;
+			private volatile boolean running;
+			
+			public ScheduledFutureTask(Runnable runnable, boolean periodic) {
+				super(runnable, null);
+				this.periodic = periodic;
+			}
+			
+			public void setScheduledFuture(ScheduledFuture<?> scheduledFuture) {
+				scheduledTasks.add(this);
+				this.scheduledFuture = scheduledFuture;
+			}
+			
+			@Override
+			public long getDelay(TimeUnit unit) {
+				return this.scheduledFuture.getDelay(unit);
+			}
+
+			@Override
+			public int compareTo(Delayed o) {
+				return this.scheduledFuture.compareTo(o);
+			}
+			
+			@Override
+			public boolean cancel(boolean mayInterruptIfRunning) {
+				this.scheduledFuture.cancel(false);
+				return super.cancel(mayInterruptIfRunning);
+			}
+			
+			public Runnable getParent() {
+				return new Runnable() {
+					@Override
+					public void run() {
+						if (running || terminated) {
+							return;
+						}
+						running = periodic;
+						execute(ScheduledFutureTask.this);
+					}
+				};
+			}
+			
+			@Override
+			public void run() {
+				if (periodic) {
+					if (!this.runAndReset()) {
+						this.scheduledFuture.cancel(false);
+						scheduledTasks.remove(this);
+					}
+					running = false;
+				} else {
+					scheduledTasks.remove(this);
+					super.run();
+				}
+			}
+		}
+		
+		private volatile int activeCount;
+		private volatile int maxActiveCount;
+		private volatile int maxQueueSize;
+		private volatile boolean terminated;
+		private volatile int submittedCount;
+		private volatile int completedCount;
+		private Object poolLock = new Object();
+		private AtomicInteger threadCounter = new AtomicInteger();
+		private Set<Thread> threads = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<Thread, Boolean>()));
+		private Set<ScheduledFutureTask> scheduledTasks = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<ScheduledFutureTask, Boolean>()));
+		
+		private String poolName;
+		private int maximumPoolSize;
+		private Queue<Runnable> queue = new LinkedList<Runnable>();
+		
+		public StatsCapturingSharedThreadPoolExecutor(String name, int maximumPoolSize) {
+			this.maximumPoolSize = maximumPoolSize;
+			this.poolName = name;
 		}
 		
 		@Override
-		public void execute(Runnable command) {
-			submittedCount.getAndIncrement();
-			super.execute(command);
+		public void execute(final Runnable command) {
+			boolean atMaxThreads = false;
+			boolean newMaxQueueSize = false;
+			synchronized (poolLock) {
+				checkForTermination();
+				submittedCount++;
+				atMaxThreads = activeCount == maximumPoolSize;
+				if (atMaxThreads) {
+					queue.add(command);
+					int queueSize = queue.size();
+					if (queueSize > maxQueueSize) {
+						atMaxThreads = true;
+						maxQueueSize = queueSize;
+					}
+				} else {
+					activeCount++;
+					maxActiveCount = Math.max(activeCount, maxActiveCount);
+				}
+			}
+			if (atMaxThreads) {
+				if (newMaxQueueSize && maximumPoolSize > 1) {
+					LogManager.logWarning(LogCommonConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, maxQueueSize)); //$NON-NLS-1$
+				}
+				return;
+			}
+			tpe.execute(new Runnable() {
+				@Override
+				public void run() {
+					Thread t = Thread.currentThread();
+					threads.add(t);
+					String name = t.getName();
+					t.setName(name + "_" + poolName + threadCounter.getAndIncrement()); //$NON-NLS-1$
+					if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_POOLING, MessageLevel.TRACE)) {
+						LogManager.logTrace(LogCommonConstants.CTX_POOLING, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$ 
+					}
+					Runnable r = command;
+					while (r != null) {
+						boolean success = false;
+						try {
+							r.run();
+							success = true;
+						} finally {
+							synchronized (poolLock) {
+								if (success) {
+									completedCount++;
+									r = queue.poll();		
+								}
+								if (r != null) {
+									continue;
+								}
+								threads.remove(t);
+								activeCount--;
+								if (activeCount == 0 && terminated) {
+									poolLock.notifyAll();
+								}		
+							}
+							t.setName(name);
+						}
+					}
+				};
+			});
+		}
+
+		private void checkForTermination() {
+			if (terminated) {
+				throw new RejectedExecutionException();
+			}
 		}
 		
-		@Override
 		public int getActiveCount() {
-			return activeCount.get();
+			return activeCount;
 		}
 		
 		public int getSubmittedCount() {
-			return submittedCount.get();
+			return submittedCount;
 		}
 		
 		public int getCompletedCount() {
-			return completedCount.get();
+			return completedCount;
 		}
 		
-	}
-	
-	public static class DefaultThreadFactory extends NamedThreadFactory {
-		
-		public DefaultThreadFactory(String name) {
-			super(name);
+		public int getPoolSize() {
+			return maximumPoolSize;
 		}
-
-		public Thread newThread(Runnable r) {
-			Thread result = super.newThread(r);
-			if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_POOLING, MessageLevel.TRACE)) {
-				LogManager.logTrace(LogCommonConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.New_thread", result.getName())); //$NON-NLS-1$
+		
+		public boolean isTerminated() {
+			return terminated;
+		}
+		
+		public void shutdown() {
+			this.terminated = true;
+			synchronized (scheduledTasks) {
+				for (ScheduledFuture<?> future : scheduledTasks) {
+					future.cancel(false);
+				}
+				scheduledTasks.clear();
 			}
-			return result;
-		}
-	}
-	
-	static class ExecutorWorkerPool implements WorkerPool {
-		
-		private String name;
-		private StatsCapturingThreadPoolExecutor executor;
-
-		public ExecutorWorkerPool(final String name, StatsCapturingThreadPoolExecutor executor) {
-			this.name = name;
-			this.executor = executor;
 		}
 		
-		public void execute(Runnable r) {
-			this.executor.execute(r);
+		public int getLargestPoolSize() {
+			return this.maxActiveCount;
 		}
-
-		public void awaitTermination(long timeout, TimeUnit unit)
-				throws InterruptedException {
-			this.executor.awaitTermination(timeout, unit);
-		}
-
+		
+		@Override
 		public WorkerPoolStats getStats() {
 			WorkerPoolStats stats = new WorkerPoolStats();
-			stats.name = name;
-			stats.queued = executor.getQueue().size();
-			stats.threads = executor.getPoolSize();
-			stats.activeThreads = executor.getActiveCount();
-			stats.totalSubmitted = executor.getSubmittedCount();
-			//TODO: highestActiveThreads is misleading for pools that prefer to use new threads
-			stats.highestActiveThreads = executor.getLargestPoolSize();
-			stats.totalCompleted = executor.getCompletedCount();
+			stats.name = poolName;
+			stats.queued = queue.size();
+			stats.threads = getPoolSize();
+			stats.activeThreads = getActiveCount();
+			stats.totalSubmitted = getSubmittedCount();
+			stats.highestActiveThreads = getLargestPoolSize();
+			stats.totalCompleted = getCompletedCount();
 			return stats;
 		}
-
-		public boolean isTerminated() {
-			return this.executor.isTerminated();
-		}
-
-		public void shutdown() {
-			this.executor.shutdown();
-		}
-
+		
+		@Override
 		public boolean hasWork() {
-			return this.executor.getSubmittedCount() - this.executor.getCompletedCount() > 0 && !this.executor.isTerminated();
+			synchronized (poolLock) {
+				return this.getSubmittedCount() - this.getCompletedCount() > 0 && !this.isTerminated();
+			}
 		}
 
 		@Override
 		public List<Runnable> shutdownNow() {
-			return this.executor.shutdownNow();
+			this.shutdown();
+			synchronized (poolLock) {
+				synchronized (threads) {
+					for (Thread t : threads) {
+						t.interrupt();
+					}
+				}
+				List<Runnable> result = new ArrayList<Runnable>(queue);
+				queue.clear();
+				return result;
+			}
+		}
+		
+		@Override
+		public boolean awaitTermination(long timeout, TimeUnit unit)
+				throws InterruptedException {
+			long timeoutMillis = unit.toMillis(timeout);
+			long finalMillis = System.currentTimeMillis() + timeoutMillis;
+			synchronized (poolLock) {
+				while (this.activeCount > 0 || !terminated) {
+					if (timeoutMillis < 1) {
+						return false;
+					}
+					poolLock.wait(timeoutMillis);
+					timeoutMillis = finalMillis - System.currentTimeMillis();
+				}
+			}
+			return true;
+		}
+
+		@Override
+		public ScheduledFuture<?> schedule(final Runnable command, long delay,
+				TimeUnit unit) {
+			checkForTermination();
+			ScheduledFutureTask sft = new ScheduledFutureTask(command, false);
+			synchronized (scheduledTasks) {
+				ScheduledFuture<?> future = stpe.schedule(sft.getParent(), delay, unit);
+				sft.setScheduledFuture(future);
+				return sft;
+			}
+		}
+
+		@Override
+		public ScheduledFuture<?> scheduleAtFixedRate(final Runnable command,
+				long initialDelay, long period, TimeUnit unit) {
+			checkForTermination();
+			ScheduledFutureTask sft = new ScheduledFutureTask(command, true);
+			synchronized (scheduledTasks) {
+				ScheduledFuture<?> future = stpe.scheduleAtFixedRate(sft.getParent(), initialDelay, period, unit);
+				sft.setScheduledFuture(future);
+				return sft;
+			}		
 		}
 	}
-	
+			
 	/**
 	 * Creates a WorkerPool that prefers thread reuse over thread creation based upon the given parameters
 	 * 
 	 * @param name
 	 * @param numThreads the maximum number of worker threads allowed
-	 * @param keepAlive keepAlive time in milliseconds - NOT supported until JDK 1.6 for pools that don't prefer existing threads
 	 * @return 
 	 */
 	public static WorkerPool newWorkerPool(String name, int numThreads, long keepAlive) {
-		return newWorkerPool(name, numThreads, keepAlive, true);
+		return new StatsCapturingSharedThreadPoolExecutor(name, numThreads);
 	}
-	
-    public static WorkerPool newWorkerPool(String name, final int numThreads, long keepAlive, boolean preferExistingThreads) {
-		if (preferExistingThreads && numThreads > 1) {
-			final ThreadReuseLinkedBlockingQueue queue = new ThreadReuseLinkedBlockingQueue();
-			StatsCapturingThreadPoolExecutor executor = 
-				new StatsCapturingThreadPoolExecutor(0, numThreads, keepAlive, TimeUnit.MILLISECONDS, queue, new DefaultThreadFactory(name)) {
-				
-				@Override
-				public void execute(Runnable arg0) {
-					if (this.isShutdown()) {
-						//bypass the rejection handler
-						throw new RejectedExecutionException();
-					}
-					super.execute(arg0);
-				}
-				
-			};
-			queue.setExecutor(executor);
-			executor.setRejectedExecutionHandler(new RejectedExecutionHandler() {
-				public void rejectedExecution(Runnable arg0,
-						ThreadPoolExecutor arg1) {
-					try {
-						queue.add(arg0);
-					} catch (IllegalStateException e) {
-						throw new RejectedExecutionException(e);
-					}
-				}
-			});
-			return new ExecutorWorkerPool(name, executor);
-		}
-		StatsCapturingThreadPoolExecutor executor = new StatsCapturingThreadPoolExecutor(numThreads, numThreads, keepAlive, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), new DefaultThreadFactory(name));
-		executor.allowCoreThreadTimeOut(true);
-		return new ExecutorWorkerPool(name, executor);
-	}
-	
+    
 }

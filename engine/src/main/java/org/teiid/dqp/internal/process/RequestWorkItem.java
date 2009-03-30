@@ -196,9 +196,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	protected void process() {
 		DQPWorkContext.setWorkContext(this.dqpWorkContext);
 		
-        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "############# PW PROCESSING on " + requestID + " with state "+ state +" ###########"); //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$
-        }
+        LogManager.logDetail(LogConstants.CTX_DQP, "############# PW PROCESSING on", requestID, "with state", state, "###########"); //$NON-NLS-1$ //$NON-NLS-2$  //$NON-NLS-3$
         
         try {
             if (this.state == ProcessingState.NEW) {
@@ -217,32 +215,30 @@ public class RequestWorkItem extends AbstractWorkItem {
             }                  	            
         } catch (BlockedOnMemoryException e) {
             moreWork(false);
-            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            	LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on " + requestID + " - reenqueueing for more processing due to lack of available memory ###########"); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+        	LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on", requestID, "- reenqueueing for more processing due to lack of available memory ###########"); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (BlockedException e) {
-            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-                LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on " + requestID + " - processor blocked ###########"); //$NON-NLS-1$ //$NON-NLS-2$
-            }        
+            LogManager.logDetail(LogConstants.CTX_DQP, "############# PW EXITING on", requestID, "- processor blocked ###########"); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (Throwable e) {
+        	LogManager.logDetail(LogConstants.CTX_DQP, e, "############# PW EXITING on", requestID, "- error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
             //if there is a cache, remove temp results if there is any
             if(this.rsCache != null){
             	rsCache.removeTempResults(cid);
             }
             
-            if (isCanceled()) {
-            	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            		LogManager.logDetail(LogConstants.CTX_DQP, e, "############# PW EXITING on " + requestID + " - error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
-            	}
-            } else {
+            if (!isCanceled()) {
             	logCommandError();
                 //Case 5558: Differentiate between system level errors and
                 //processing errors.  Only log system level errors as errors, 
                 //log the processing errors as warnings only
                 if(e instanceof MetaMatrixProcessingException) {                          
-                    LogManager.logWarning(LogConstants.CTX_DQP, e, "############# PW EXITING on " + requestID + " - error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+                	Throwable cause = e;
+                	while (cause.getCause() != null) {
+                		cause = e.getCause();
+                	}
+                	StackTraceElement elem = cause.getStackTrace()[0];
+                    LogManager.logWarning(LogConstants.CTX_DQP, DQPPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
                 }else {
-                    LogManager.logError(LogConstants.CTX_DQP, e, "############# PW EXITING on " + requestID + " - error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logError(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.error", requestID)); //$NON-NLS-1$
                 }                                
             }
             
@@ -536,10 +532,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	}
 
     private void sendError() {
-    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-    		LogManager.logDetail(LogConstants.CTX_DQP, processingException, DQPPlugin.Util.getString("ProcessWorker.send_error", requestID)); //$NON-NLS-1$
-    	}
-        
+		LogManager.logDetail(LogConstants.CTX_DQP, processingException, "Sedning error to client", requestID); //$NON-NLS-1$
         ResultsMessage response = new ResultsMessage(requestMsg);
         response.setException(processingException);
         setAnalysisRecords(response, analysisRecord);

@@ -21,13 +21,12 @@
  */
 package com.metamatrix.connector.salesforce;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 
-import junit.framework.TestCase;
-
-import com.metamatrix.connector.salesforce.connection.SalesforceConnection;
 import com.metamatrix.connector.salesforce.test.util.ObjectFactory;
 
 public class TestConnector extends TestCase {
@@ -51,12 +50,6 @@ public class TestConnector extends TestCase {
 		ConnectorEnvironment env2 = ObjectFactory.getNoCredTestConnectorEnvironment();
 		noCredConnector = new Connector();
 		noCredConnector.start(env2);
-	}
-
-	public void testGetConnection() throws Exception {
-		ExecutionContext secContext = ObjectFactory.getDefaultSecurityContext();
-		SalesforceConnection connection = (SalesforceConnection) connector.getConnection(secContext);
-		assertNotNull("the connection is null", connection);
 	}
 
 	/*
@@ -136,7 +129,6 @@ public class TestConnector extends TestCase {
 
 	public void testGetState() {
 		assertNotNull(connector.getState());
-		assertTrue(connector.getState() instanceof ConnectorState);
 	}
 
 	public void testStopNoInit() {

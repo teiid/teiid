@@ -34,7 +34,6 @@ import javax.crypto.SealedObject;
 
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -77,9 +76,6 @@ public class ServerWorkItem implements Runnable {
 	 */
 	public void run() {
 		DQPWorkContext.setWorkContext(this.socketClientInstance.getWorkContext());
-		if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) {
-			LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "forwarding message to listener:" + message); //$NON-NLS-1$
-		}
 		Message result = null;
 		String service = null;
 		final boolean encrypt = message.getContents() instanceof SealedObject;
@@ -162,20 +158,25 @@ public class ServerWorkItem implements Runnable {
 		// Case 5558: Differentiate between system level errors and
 		// processing errors. Only log system level errors as errors,
 		// log the processing errors as warnings only
-		String msg = PlatformPlugin.Util.getString("ServerWorkItem.Received_exception_processing_request"); //$NON-NLS-1$
 		if (e instanceof MetaMatrixProcessingException) {
-			LogManager.logWarning(context, e, msg);
+        	logProcessingException(e, context);
 		} else if (e instanceof AdminProcessingException) {
-			LogManager.logWarning(context, e, msg);
+			logProcessingException(e, context);
 		} else {
-			LogManager.logError(context, e, msg);
-		}
-		
-		if (e instanceof AdminException) {
-			return e;
+			LogManager.logError(context, e, PlatformPlugin.Util.getString("ServerWorkItem.Received_exception_processing_request", this.socketClientInstance.getWorkContext().getConnectionID())); //$NON-NLS-1$
 		}
 
 		return new ExceptionHolder(e);
+	}
+	
+	private void logProcessingException(Throwable e, String context) {
+		Throwable cause = e;
+		while (cause.getCause() != null) {
+			cause = e.getCause();
+		}
+		StackTraceElement elem = cause.getStackTrace()[0];
+		LogManager.logDetail(context, e, "Processing exception for session", this.socketClientInstance.getWorkContext().getConnectionID()); //$NON-NLS-1$ 
+		LogManager.logWarning(context, PlatformPlugin.Util.getString("ServerWorkItem.processing_error", e.getMessage(), this.socketClientInstance.getWorkContext().getConnectionID(), e.getClass().getName(), elem)); //$NON-NLS-1$
 	}
 
 }

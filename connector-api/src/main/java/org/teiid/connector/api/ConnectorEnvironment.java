@@ -24,6 +24,9 @@ package org.teiid.connector.api;
 
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.teiid.connector.language.ILanguageFactory;
 
@@ -67,4 +70,20 @@ public interface ConnectorEnvironment extends Executor {
      * conversions supplied by the Connector API.
      */
     TypeFacility getTypeFacility();
+    
+    /**
+     * Schedule a command for repeated execution with the same contract as 
+     * {@link ScheduledThreadPoolExecutor#scheduleAtFixedRate(Runnable, long, long, TimeUnit)}
+     * Executions will not happen concurrently.  If an execution takes longer than a period,
+     * the next execution will take place on the first period interval after completion.
+     * @param command
+     * @param initialDelay
+     * @param period
+     * @param unit
+     * @return
+     */
+	ScheduledFuture<?> scheduleAtFixedRate(Runnable command,
+            long initialDelay,
+            long period,
+            TimeUnit unit);
 }

@@ -27,6 +27,8 @@
 package org.teiid.dqp.internal.datamgr.impl;
 
 import java.util.Properties;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorLogger;
@@ -43,7 +45,28 @@ import com.metamatrix.common.queue.WorkerPool;
  */
 public class ConnectorEnvironmentImpl implements ConnectorEnvironment {
     
-    private static final TypeFacility TYPE_FACILITY = new TypeFacilityImpl();
+    private final class ContextClassLoaderPreservingRunnable implements
+			Runnable {
+		private final Runnable arg0;
+		private final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+		private ContextClassLoaderPreservingRunnable(Runnable arg0) {
+			this.arg0 = arg0;
+		}
+
+		@Override
+		public void run() {
+			ClassLoader current = Thread.currentThread().getContextClassLoader();
+			Thread.currentThread().setContextClassLoader(cl);
+			try {
+				arg0.run();
+			} finally {
+				Thread.currentThread().setContextClassLoader(current);
+			}
+		}
+	}
+
+	private static final TypeFacility TYPE_FACILITY = new TypeFacilityImpl();
     
     private ConnectorLogger logger;
     private Properties properties;
@@ -117,12 +140,20 @@ public class ConnectorEnvironmentImpl implements ConnectorEnvironment {
     }
 
 	@Override
-	public void execute(Runnable arg0) {
+	public void execute(Runnable command) {
 		if (this.workerPool != null) {
-			this.workerPool.execute(arg0);
+			this.workerPool.execute(new ContextClassLoaderPreservingRunnable(command));
 		} else {
-			arg0.run();
+			command.run();
 		}
-		
 	}               
+	
+	@Override
+	public ScheduledFuture<?> scheduleAtFixedRate(Runnable command,
+			long initialDelay, long period, TimeUnit unit) {
+		if (this.workerPool != null) {
+			return this.workerPool.scheduleAtFixedRate(new ContextClassLoaderPreservingRunnable(command), initialDelay, period, unit);
+		}
+		return null;
+	}
 }

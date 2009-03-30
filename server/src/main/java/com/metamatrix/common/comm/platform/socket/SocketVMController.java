@@ -34,8 +34,6 @@ import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.net.ServerSocketConfiguration;
-import com.metamatrix.common.queue.WorkerPool;
-import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
@@ -43,9 +41,9 @@ import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.util.PlatformProxyHelper;
+import com.metamatrix.platform.vm.controller.ProcessController;
 import com.metamatrix.platform.vm.controller.ServerEvents;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
-import com.metamatrix.platform.vm.controller.ProcessController;
 import com.metamatrix.server.Configuration;
 import com.metamatrix.server.HostManagement;
 import com.metamatrix.server.Main;
@@ -60,20 +58,16 @@ public class SocketVMController extends ProcessController {
 	
     private static final String SERVER_PORT = VMComponentDefnType.SERVER_PORT; 
     private static final String MAX_THREADS = VMComponentDefnType.MAX_THREADS; 
-    private static final String TIMETOLIVE = VMComponentDefnType.TIMETOLIVE;      
     private static final String INPUT_BUFFER_SIZE = VMComponentDefnType.INPUT_BUFFER_SIZE;       
     private static final String OUTPUT_BUFFER_SIZE = VMComponentDefnType.OUTPUT_BUFFER_SIZE;       
     
     private static final int DEFAULT_SERVER_PORT = 31000;
     private static final int DEFAULT_MAX_THREADS = 15;
-    private static final long DEFAULT_TIMETOLIVE = 15000;
     private static final long DEFAULT_WAITFORSERVICES = 500;
     private static final int DEFAULT_INPUT_BUFFER_SIZE = 0;
     private static final int DEFAULT_OUTPUT_BUFFER_SIZE = 0;
 
-    private static final String SOCKET_WORKER_POOL_NAME = "SocketWorkerQueue"; //$NON-NLS-1$
     private SocketListener listener; 
-    private WorkerPool workerPool;
         
     @Inject
     public SocketVMController(@Named(Configuration.HOST) Host host, @Named(Configuration.PROCESSNAME) String processName, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
@@ -94,17 +88,6 @@ public class SocketVMController extends ProcessController {
     // so that the port can be made available sooner on bounces.
     @Override
     public void shutdown(boolean now) {
-        if (workerPool != null) {
-            try {
-                workerPool.shutdownNow();                
-            } catch (Exception e) {
-                //ignore
-            } finally {
-                workerPool = null;
-            }
-           
-        }
-        
         if (listener != null) {
             try {
                 listener.stop();
@@ -128,7 +111,6 @@ public class SocketVMController extends ProcessController {
         Properties props = getProperties();
         int socketPort = PropertiesUtils.getIntProperty(props, SERVER_PORT, DEFAULT_SERVER_PORT);
         int maxThreads = PropertiesUtils.getIntProperty(props, MAX_THREADS, DEFAULT_MAX_THREADS);
-        long timeToLive = PropertiesUtils.getLongProperty(props, TIMETOLIVE, DEFAULT_TIMETOLIVE);
         int inputBufferSize = PropertiesUtils.getIntProperty(props, INPUT_BUFFER_SIZE, DEFAULT_INPUT_BUFFER_SIZE);
         int outputBufferSize = PropertiesUtils.getIntProperty(props, OUTPUT_BUFFER_SIZE, DEFAULT_OUTPUT_BUFFER_SIZE);
         String bindaddress =  VMNaming.getBindAddress();
@@ -138,11 +120,10 @@ public class SocketVMController extends ProcessController {
         };
         
         logMessage(PlatformPlugin.Util.getString("SocketVMController.1", param)); //$NON-NLS-1$
-        workerPool = WorkerPoolFactory.newWorkerPool(SOCKET_WORKER_POOL_NAME, maxThreads, timeToLive);
         ServerSocketConfiguration helper = new ServerSocketConfiguration();
         try {
 	        helper.init();
-	        listener = new SocketListener(socketPort, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, workerPool, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled(), PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
+	        listener = new SocketListener(socketPort, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, maxThreads, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled(), PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
         } catch (Exception e) {
         	LogManager.logCritical(LogCommonConstants.CTX_CONTROLLER, e, PlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$
             System.exit(1); 
@@ -182,10 +163,7 @@ public class SocketVMController extends ProcessController {
     }    
 
     protected WorkerPoolStats getProcessPoolStats() {
-        if (workerPool == null) {
-            return null;
-        }
-        return workerPool.getStats();
+    	return this.listener.getProcessPoolStats();
     }
     
     @Deprecated

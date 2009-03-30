@@ -23,9 +23,8 @@
 package com.metamatrix.common.comm.platform.socket.server;
 
 import java.net.InetSocketAddress;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.net.ssl.SSLEngine;
 
@@ -43,6 +42,7 @@ import com.metamatrix.common.comm.platform.socket.ChannelListener.ChannelListene
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
+import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
@@ -53,11 +53,12 @@ import com.metamatrix.platform.vm.controller.SocketListenerStats;
  */
 public class SocketListener implements ChannelListenerFactory {
     private ClientServiceRegistry server;
-    private WorkerPool workerPool;
     private SSLAwareChannelHandler channelHandler;
     private Channel serverChanel;
     private boolean isClientEncryptionEnabled;
     private SessionServiceInterface sessionService;
+    private WorkerPool workerPool;
+    private ExecutorService bossService;
     
     /**
      * 
@@ -71,7 +72,7 @@ public class SocketListener implements ChannelListenerFactory {
      */
     public SocketListener(int port, String bindAddress,
 			ClientServiceRegistry server, int inputBufferSize,
-			int outputBufferSize, WorkerPool workerPool, SSLEngine engine, boolean isClientEncryptionEnabled, SessionServiceInterface sessionService) {
+			int outputBufferSize, int maxWorkers, SSLEngine engine, boolean isClientEncryptionEnabled, SessionServiceInterface sessionService) {
     	this.isClientEncryptionEnabled = isClientEncryptionEnabled;
     	this.sessionService = sessionService;
     	if (port < 0 || port > 0xFFFF) {
@@ -79,17 +80,13 @@ public class SocketListener implements ChannelListenerFactory {
         }
 
        	this.server = server;
-        this.workerPool = workerPool;
+        this.workerPool = WorkerPoolFactory.newWorkerPool("SocketWorker", maxWorkers, 120000); //$NON-NLS-1$
+        this.bossService = Executors.newCachedThreadPool();
         if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) { 
             LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "server = " + this.server + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-		ThreadPoolExecutor executor = new ThreadPoolExecutor(0,
-				Integer.MAX_VALUE, 2, TimeUnit.MINUTES,
-				new SynchronousQueue<Runnable>(),
-				new WorkerPoolFactory.DefaultThreadFactory("ServerNio")); //$NON-NLS-1$
-        
-        ChannelFactory factory = new NioServerSocketChannelFactory(executor, executor);
+        ChannelFactory factory = new NioServerSocketChannelFactory(bossService, workerPool, workerPool.getPoolSize());
         
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
         this.channelHandler = new SSLAwareChannelHandler(this, engine, Thread.currentThread().getContextClassLoader());
@@ -105,6 +102,10 @@ public class SocketListener implements ChannelListenerFactory {
         this.serverChanel = bootstrap.bind(new InetSocketAddress(bindAddress, port));
     }
     
+    public WorkerPoolStats getProcessPoolStats() {
+    	return this.workerPool.getStats();
+    }
+    
     public int getPort() {
     	return ((InetSocketAddress)this.serverChanel.getLocalAddress()).getPort();
     }
@@ -115,6 +116,8 @@ public class SocketListener implements ChannelListenerFactory {
     
     public void stop() {
     	this.serverChanel.close();
+    	this.workerPool.shutdownNow();
+    	this.bossService.shutdownNow();
     }
    
     public SocketListenerStats getStats() {
@@ -127,7 +130,7 @@ public class SocketListener implements ChannelListenerFactory {
     }
 
 	public ChannelListener createChannelListener(ObjectChannel channel) {
-		return new SocketClientInstance(channel, this.workerPool, this.server, this.isClientEncryptionEnabled, this.sessionService);
+		return new SocketClientInstance(channel, this.server, this.isClientEncryptionEnabled, this.sessionService);
 	}
 
 }

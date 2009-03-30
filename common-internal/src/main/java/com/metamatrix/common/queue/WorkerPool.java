@@ -24,6 +24,7 @@ package com.metamatrix.common.queue;
 
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public interface WorkerPool extends Executor {
@@ -32,7 +33,7 @@ public interface WorkerPool extends Executor {
 	
 	List<Runnable> shutdownNow();
 
-	void awaitTermination(long timeout, TimeUnit unit)
+	boolean awaitTermination(long timeout, TimeUnit unit)
 			throws InterruptedException;
 
 	boolean isTerminated();
@@ -40,5 +41,16 @@ public interface WorkerPool extends Executor {
 	WorkerPoolStats getStats();
 	
 	boolean hasWork();
+	
+	int getPoolSize();
+	
+	ScheduledFuture<?> schedule(Runnable command,
+            long delay,
+            TimeUnit unit);
+	
+	ScheduledFuture<?> scheduleAtFixedRate(Runnable command,
+            long initialDelay,
+            long period,
+            TimeUnit unit);
 
 }

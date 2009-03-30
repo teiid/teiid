@@ -22,31 +22,42 @@
 
 package org.teiid.dqp.internal.pooling.connector;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.connector.api.ConnectorEnvironment;
+import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.MappedUserIdentity;
+import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWrapper;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
-import org.teiid.dqp.internal.pooling.connector.ConnectionPool;
-import org.teiid.dqp.internal.pooling.connector.ConnectionPoolException;
-import org.teiid.dqp.internal.pooling.connector.ConnectionWrapper;
 
-import junit.framework.TestCase;
+import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.queue.WorkerPool;
+import com.metamatrix.common.queue.WorkerPoolFactory;
 
 
-public class TestConnectionPool extends TestCase{
+public class TestConnectionPool {
     private ConnectionPool userIDPool;
     private ConnectionPool singleIDPool;
     private static ArrayList<Exception> EXCEPTIONS = new ArrayList<Exception>();
-        
-    public TestConnectionPool(String name) {
-        super(name);
+    private static WorkerPool pool = WorkerPoolFactory.newWorkerPool(TestConnectionPool.class.getSimpleName(), 1, 1000);
+    
+    @AfterClass public static void tearDownOnce() {
+    	pool.shutdownNow();
     }
     
-    public void setUp() throws Exception{
+    @Before public void setUp() throws Exception{
         FakeSourceConnectionFactory.alive = true;        
         
         singleIDPool = new ConnectionPool(new ConnectorWrapper(new FakeSourceConnectionFactory()));
@@ -58,12 +69,17 @@ public class TestConnectionPool extends TestCase{
         poolProperties.put(ConnectionPool.LIVE_AND_UNUSED_TIME, "1"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.WAIT_FOR_SOURCE_TIME, "500"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.CLEANING_INTERVAL, "1"); //$NON-NLS-1$
-        poolProperties.put(ConnectionPool.ENABLE_SHRINKING, "true"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, "-1"); //$NON-NLS-1$
-        
-        singleIDPool.initialize(poolProperties);
-        userIDPool.initialize(poolProperties);
+        ConnectorEnvironment env = createConnectorEnvironment(poolProperties);
+        singleIDPool.initialize(env);
+        userIDPool.initialize(env);
     }
+
+	private ConnectorEnvironment createConnectorEnvironment(
+			Properties poolProperties) {
+		ConnectorEnvironment env = new ConnectorEnvironmentImpl(poolProperties, Mockito.mock(ConnectorLogger.class), new ApplicationEnvironment(), pool);
+		return env;
+	}
     
     public void tearDown() throws Exception{
         singleIDPool.shutDown();
@@ -79,7 +95,7 @@ public class TestConnectionPool extends TestCase{
     }
     
     //=== tests ===//
-    public void testPoolUsingSingleIdentity() throws Exception {
+    @Test public void testPoolUsingSingleIdentity() throws Exception {
         ExecutionContext context = createContext("x", false);//$NON-NLS-1$
 
         ConnectionWrapper conn1 = singleIDPool.obtain(context);
@@ -99,7 +115,7 @@ public class TestConnectionPool extends TestCase{
         assertEquals(3, singleIDPool.getTotalConnectionCount());        
     }
 
-    public void testMaxConnectionTest() throws Exception {
+    @Test public void testMaxConnectionTest() throws Exception {
         ConnectionPool pool = new ConnectionPool(new ConnectorWrapper(new FakeSourceConnectionFactory()));
         
         Properties poolProperties = new Properties();
@@ -108,18 +124,17 @@ public class TestConnectionPool extends TestCase{
         poolProperties.put(ConnectionPool.LIVE_AND_UNUSED_TIME, "1"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.WAIT_FOR_SOURCE_TIME, "500"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.CLEANING_INTERVAL, "1"); //$NON-NLS-1$
-        poolProperties.put(ConnectionPool.ENABLE_SHRINKING, "true"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, "-1"); //$NON-NLS-1$
         
         try {
-            pool.initialize(poolProperties);
+            pool.initialize(createConnectorEnvironment(poolProperties));
             fail("should have failed to use 0 as max connections"); //$NON-NLS-1$
         }catch (ConnectionPoolException e) {
             // pass
         }
     }
     
-    public void testMaxConnectionTest1() throws Exception {
+    @Test public void testMaxConnectionTest1() throws Exception {
         ConnectionPool pool = new ConnectionPool(new ConnectorWrapper(new FakeSourceConnectionFactory()));
         
         Properties poolProperties = new Properties();
@@ -128,18 +143,17 @@ public class TestConnectionPool extends TestCase{
         poolProperties.put(ConnectionPool.LIVE_AND_UNUSED_TIME, "1"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.WAIT_FOR_SOURCE_TIME, "500"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.CLEANING_INTERVAL, "1"); //$NON-NLS-1$
-        poolProperties.put(ConnectionPool.ENABLE_SHRINKING, "true"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, "-1"); //$NON-NLS-1$
         
         try {
-            pool.initialize(poolProperties);
+            pool.initialize(createConnectorEnvironment(poolProperties));
             fail("should have failed to use 0 as max connections"); //$NON-NLS-1$
         }catch (ConnectionPoolException e) {
             // pass
         }
     }
     
-    public void testMaxConnectionTest2() throws Exception {
+    @Test public void testMaxConnectionTest2() throws Exception {
         ConnectionPool pool = new ConnectionPool(new ConnectorWrapper(new FakeSourceConnectionFactory()));
         
         Properties poolProperties = new Properties();
@@ -148,18 +162,17 @@ public class TestConnectionPool extends TestCase{
         poolProperties.put(ConnectionPool.LIVE_AND_UNUSED_TIME, "1"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.WAIT_FOR_SOURCE_TIME, "500"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.CLEANING_INTERVAL, "1"); //$NON-NLS-1$
-        poolProperties.put(ConnectionPool.ENABLE_SHRINKING, "true"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, "-1"); //$NON-NLS-1$
         
         try {
-            pool.initialize(poolProperties);
+            pool.initialize(createConnectorEnvironment(poolProperties));
             fail("should have failed to use 0 as max connections"); //$NON-NLS-1$
         }catch (ConnectionPoolException e) {
             // pass
         }
     }
 
-    public void testMessageWhenPoolMaxedOutPerIdentity() throws Exception {
+    @Test public void testMessageWhenPoolMaxedOutPerIdentity() throws Exception {
         ExecutionContext context = createContext("x", false);//$NON-NLS-1$
 
         // Max out the pool - 5 connections for same ID
@@ -176,7 +189,7 @@ public class TestConnectionPool extends TestCase{
         }
     }
     
-    public void testMessageWhenPoolTimedOut() throws Exception {
+    @Test public void testMessageWhenPoolTimedOut() throws Exception {
         FakeSourceConnectionFactory.alive = true;        
         
         singleIDPool = new ConnectionPool(new ConnectorWrapper(new FakeSourceConnectionFactory()));
@@ -186,9 +199,9 @@ public class TestConnectionPool extends TestCase{
         poolProperties.put(ConnectionPool.LIVE_AND_UNUSED_TIME, "1"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.WAIT_FOR_SOURCE_TIME, "1"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.CLEANING_INTERVAL, "1"); //$NON-NLS-1$
-        poolProperties.put(ConnectionPool.ENABLE_SHRINKING, "true"); //$NON-NLS-1$
+        poolProperties.put(ConnectionPool.ENABLE_SHRINKING, Boolean.FALSE.toString());
         poolProperties.put(ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, "-1"); //$NON-NLS-1$
-        singleIDPool.initialize(poolProperties);
+        singleIDPool.initialize(createConnectorEnvironment(poolProperties));
         
         ExecutionContext context = createContext("x", false);//$NON-NLS-1$
 
@@ -204,7 +217,7 @@ public class TestConnectionPool extends TestCase{
         }
     }
 
-    public void testPoolUsingUserIdentity() throws Exception {
+    @Test public void testPoolUsingUserIdentity() throws Exception {
         ExecutionContext context1 = createContext("Jack", true); //$NON-NLS-1$
         ExecutionContext context2 = createContext("Tom", true); //$NON-NLS-1$
         userIDPool.obtain(context1);
@@ -223,7 +236,7 @@ public class TestConnectionPool extends TestCase{
         assertEquals(3, userIDPool.getTotalConnectionCount());        
     }
     
-    public void testPoolCleanUp() throws Exception {
+    @Test public void testPoolCleanUp() throws Exception {
         ExecutionContext context = createContext("x", false);       //$NON-NLS-1$ 
 
         ConnectionWrapper conn1 = singleIDPool.obtain(context);
@@ -247,7 +260,7 @@ public class TestConnectionPool extends TestCase{
         assertEquals(2, singleIDPool.getTotalConnectionCount());           
     }
     
-    public void testMultiThreading() throws Exception {
+    @Test public void testMultiThreading() throws Exception {
     	EXCEPTIONS.clear();
         int runnerNumber = 20;
         int connPerRunner = 20;
@@ -316,7 +329,7 @@ public class TestConnectionPool extends TestCase{
         }
     }
     
-    public void testMaxWithUserPool() throws Exception {
+    @Test public void testMaxWithUserPool() throws Exception {
         userIDPool = new ConnectionPool(new ConnectorWrapper(new FakeUserIdentityConnectionFactory()));   
         Properties poolProperties = new Properties();
         poolProperties.put(ConnectionPool.MAX_CONNECTIONS, "1"); //$NON-NLS-1$
@@ -326,7 +339,7 @@ public class TestConnectionPool extends TestCase{
         poolProperties.put(ConnectionPool.CLEANING_INTERVAL, "1000"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.ENABLE_SHRINKING, "false"); //$NON-NLS-1$
         poolProperties.put(ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, "-1"); //$NON-NLS-1$
-        userIDPool.initialize(poolProperties);
+        userIDPool.initialize(createConnectorEnvironment(poolProperties));
         
         ConnectionWrapper conn = userIDPool.obtain(createContext("x", true)); //$NON-NLS-1$
         userIDPool.release(conn,false);

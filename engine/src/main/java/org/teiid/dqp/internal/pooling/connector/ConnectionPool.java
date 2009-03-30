@@ -32,13 +32,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ExecutionContext;
@@ -122,8 +121,6 @@ public class ConnectionPool {
     private Map<ConnectorIdentity, ConnectionsForId> idConnections = new HashMap<ConnectorIdentity, ConnectionsForId>();
     private Map<ConnectionWrapper, ConnectorIdentity> reverseIdConnections = new IdentityHashMap<ConnectionWrapper, ConnectorIdentity>();
 
-    private Timer cleaningThread;
-    
     private Object lock = new Object();
     
     private Semaphore poolSemaphore;
@@ -148,8 +145,9 @@ public class ConnectionPool {
      * @param poolProperties Properties of the pool as defined in this class. May be empty, but may not be null.
      * @throws ConnectionPoolException if the connection pool fails to initialize.
      */
-    public void initialize(Properties poolProperties) throws ConnectionPoolException {
-        ArgCheck.isNotNull(poolProperties);
+    public void initialize(ConnectorEnvironment env) throws ConnectionPoolException {
+    	ArgCheck.isNotNull(env);
+    	Properties poolProperties = env.getProperties();
 
         maxConnections = PropertiesUtils.getIntProperty(poolProperties, MAX_CONNECTIONS, DEFAULT_MAX_CONNECTION);
         if (maxConnections < 1) {
@@ -170,13 +168,11 @@ public class ConnectionPool {
         testConnectInterval = PropertiesUtils.getIntProperty(poolProperties, SOURCE_CONNECTION_TEST_INTERVAL, DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL);
         
         if (enableShrinking && !this.shuttingDownPool) {
-        	this.cleaningThread = new Timer("ConnectionPoolCleaningThread", true); //$NON-NLS-1$
-        	cleaningThread.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					ConnectionPool.this.cleanUp(false);
-				}
-        	}, cleaningInterval, cleaningInterval);
+        	env.scheduleAtFixedRate(new Runnable() {
+        		public void run() {
+            		cleanUp(false);
+        		};
+        	}, cleaningInterval, cleaningInterval, TimeUnit.MILLISECONDS);
         }
 
         LogManager.logInfo(CTX_CONNECTOR, DataPlugin.Util.getString("ConnectionPool.Connection_pool_created_1")); //$NON-NLS-1$
@@ -216,7 +212,7 @@ public class ConnectionPool {
         ConnectionsForId connLists = null;
 
         synchronized (this.lock) {
-            connLists = (ConnectionsForId) this.idConnections.get(id);
+            connLists = this.idConnections.get(id);
             if ( connLists == null ) {
                 connLists = new ConnectionsForId();
                 if (this.maxConnectionsForEachID < this.maxConnections) {
@@ -325,7 +321,7 @@ public class ConnectionPool {
                     if (connsForId.unused.isEmpty()) {
                         continue;
                     }
-                    ConnectionWrapper conn = (ConnectionWrapper) connsForId.unused.removeFirst();
+                    ConnectionWrapper conn = connsForId.unused.removeFirst();
                     closeSourceConnection(conn, id);
                     break;
                 }
@@ -354,8 +350,8 @@ public class ConnectionPool {
         ConnectionsForId connLists = null;
         ConnectorIdentity id = null;
         synchronized (this.lock) {
-            id = (ConnectorIdentity) this.reverseIdConnections.get(connection);
-            connLists = (ConnectionsForId) this.idConnections.get(id);
+            id = this.reverseIdConnections.get(connection);
+            connLists = this.idConnections.get(id);
         }
             
         if (connLists == null) {
@@ -397,11 +393,6 @@ public class ConnectionPool {
         }
         
         shuttingDownPool = true;
-        
-        //close cleaning thread
-        if (this.cleaningThread != null) {
-	        this.cleaningThread.cancel();
-    	}        
         
         this.cleanUp(true);
     }
@@ -459,8 +450,8 @@ public class ConnectionPool {
     	ConnectorIdentity id = null;
     	ConnectionsForId connLists = null;
     	synchronized (this.lock) {
-            id = (ConnectorIdentity) this.reverseIdConnections.get(connection);
-            connLists = (ConnectionsForId) this.idConnections.get(id);
+            id = this.reverseIdConnections.get(connection);
+            connLists = this.idConnections.get(id);
 		}
         if ( connLists != null ) {
         	synchronized (connLists) {
@@ -475,8 +466,8 @@ public class ConnectionPool {
     	ConnectorIdentity id = null;
     	ConnectionsForId connLists = null;
     	synchronized (this.lock) {
-            id = (ConnectorIdentity) this.reverseIdConnections.get(connection);
-            connLists = (ConnectionsForId) this.idConnections.get(id);
+            id = this.reverseIdConnections.get(connection);
+            connLists = this.idConnections.get(id);
 		}
         if ( connLists != null ) {
         	synchronized (connLists) {

@@ -35,9 +35,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.transaction.xa.XAResource;
 
@@ -123,9 +122,6 @@ public class ConnectorManager implements ApplicationService {
     // known requests
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
 
-    // Lazily created and used for asynch query execution
-    private Timer timer;
-    
     private Properties props;
 	private ClassLoader classloader;
     
@@ -239,7 +235,7 @@ public class ConnectorManager implements ApplicationService {
     	}
 	    workItem.requestClose();
     }
-        
+    
     /**
      * Schedule a task to be executed after the specified delay (in milliseconds) 
      * @param task The task to execute
@@ -247,17 +243,12 @@ public class ConnectorManager implements ApplicationService {
      * @since 4.3.3
      */
     public void scheduleTask(final AsynchConnectorWorkItem state, long delay) {
-        synchronized(this) {
-            if(this.timer == null) {
-                this.timer = new Timer("AsynchRequestThread", true); //$NON-NLS-1$
-            }
-        }
-        
-        this.timer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				state.requestMore();
-			}}, delay);
+        this.connectorWorkerPool.schedule(new Runnable() {
+        	@Override
+        	public void run() {
+        		state.requestMore();
+        	}
+        }, delay, TimeUnit.MILLISECONDS);        
     }
     
     /**
@@ -294,7 +285,6 @@ public class ConnectorManager implements ApplicationService {
     		throw new ApplicationLifecycleException("ConnectorManager.cannot_restart"); //$NON-NLS-1$
     	}
         connectorName = props.getProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, "Unknown_Binding_Name"); //$NON-NLS-1$
-
         String connIDStr = props.getProperty(ConnectorPropertyNames.CONNECTOR_ID);
         connectorID = new ConnectorID(connIDStr);
         
@@ -525,11 +515,6 @@ public class ConnectorManager implements ApplicationService {
                 currentThread.setContextClassLoader(threadContextLoader);
             }
             
-        }
-        
-        if(this.timer != null) {
-            this.timer.cancel();
-            this.timer = null;
         }
         
         if (this.rsCache != null) {

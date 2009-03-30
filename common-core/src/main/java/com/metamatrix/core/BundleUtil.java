@@ -26,6 +26,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.StringUtil;
 
@@ -186,11 +187,7 @@ public class BundleUtil {
      */
     public String getString(final String key,
                             final Object... parameters) {
-        String text = getProductValue(key);
-
-        if (text == null) {
-            text = getString(key);
-        }
+    	String text = getString(key);
 
         // Check the trivial cases ...
         if (text == null) {
@@ -222,6 +219,5 @@ public class BundleUtil {
 
         return value;
     }
-
 
 }

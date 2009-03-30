@@ -46,7 +46,6 @@ import com.metamatrix.common.comm.platform.socket.SocketUtil;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
-import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -74,8 +73,7 @@ public class TestCommSockets {
 		SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
 		csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
 		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
-				csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
-						"testIO", 1, 120000), null, true, sessionService); //$NON-NLS-1$
+				csr, 1024, 1024, 1, null, true, sessionService);
 
 		try {
 			Properties p = new Properties();
@@ -152,8 +150,7 @@ public class TestCommSockets {
 				}
 			}, "foo"); //$NON-NLS-1$
 			listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
-					csr, 1024, 1024, WorkerPoolFactory.newWorkerPool(
-							"testIO", 1, 120000), serverSSL, isClientEncryptionEnabled, sessionService); //$NON-NLS-1$
+					csr, 1024, 1024, 1, serverSSL, isClientEncryptionEnabled, sessionService);
 			SocketListenerStats stats = listener.getStats();
 			assertEquals(0, stats.maxSockets);
 			assertEquals(0, stats.objectsRead);

@@ -37,7 +37,6 @@ import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
@@ -56,7 +55,6 @@ import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 public class SocketClientInstance implements ChannelListener, ClientInstance {
 	
 	private final ObjectChannel objectSocket;
-    private final WorkerPool workerPool;
     private final ClientServiceRegistry server;
     private Cryptor cryptor;
     private boolean usingEncryption; 
@@ -64,9 +62,8 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     private DQPWorkContext workContext = new DQPWorkContext();
     private SessionServiceInterface sessionService;
         
-    public SocketClientInstance(ObjectChannel objectSocket, WorkerPool workerPool, ClientServiceRegistry server, boolean isClientEncryptionEnabled, SessionServiceInterface sessionService) {
+    public SocketClientInstance(ObjectChannel objectSocket, ClientServiceRegistry server, boolean isClientEncryptionEnabled, SessionServiceInterface sessionService) {
         this.objectSocket = objectSocket;
-        this.workerPool = workerPool;
         this.server = server;
         this.usingEncryption = isClientEncryptionEnabled;
         this.sessionService = sessionService;
@@ -146,7 +143,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 		if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) { 
 			LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "processing message:" + packet); //$NON-NLS-1$
         }
-		workerPool.execute(new ServerWorkItem(this, packet.getMessageKey(), packet, this.server, this.sessionService));
+		new ServerWorkItem(this, packet.getMessageKey(), packet, this.server, this.sessionService).run();
 	}
 
 	public void shutdown() throws CommunicationException {

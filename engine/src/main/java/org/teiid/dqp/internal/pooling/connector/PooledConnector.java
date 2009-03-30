@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.pooling.connector;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.transaction.RollbackException;
 import javax.transaction.Synchronization;
@@ -101,10 +100,9 @@ public class PooledConnector extends ConnectorWrapper {
 	@Override
 	public void start(ConnectorEnvironment environment)
 			throws ConnectorException {
-		Properties p = environment.getProperties();
-		pool.initialize(p);
+		pool.initialize(environment);
 		if (xaPool != null) {
-			xaPool.initialize(p);
+			xaPool.initialize(environment);
 		}
 		super.start(environment);
 	}

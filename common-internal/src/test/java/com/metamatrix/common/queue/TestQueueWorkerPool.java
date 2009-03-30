@@ -22,24 +22,21 @@
 
 package com.metamatrix.common.queue;
 
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import junit.framework.*;
+import org.junit.Test;
 
 /**
  */
-public class TestQueueWorkerPool extends TestCase {
+public class TestQueueWorkerPool {
 
-    /**
-     * Constructor for TestQueueWorkerPool.
-     * @param arg0
-     */
-    public TestQueueWorkerPool(String arg0) {
-        super(arg0);
-    }
-    
-    public void testQueuing() throws Exception {
+    @Test public void testQueuing() throws Exception {
         final long SINGLE_WAIT = 50;
         final int WORK_ITEMS = 10;
         final int MAX_THREADS = 5;
@@ -58,7 +55,7 @@ public class TestQueueWorkerPool extends TestCase {
         assertEquals("Expected threads to be maxed out", MAX_THREADS, stats.highestActiveThreads); //$NON-NLS-1$
     }
 
-    public void testThreadReuse() throws Exception {
+    @Test public void testThreadReuse() throws Exception {
         final long SINGLE_WAIT = 50;
         final long NUM_THREADS = 5;
 
@@ -81,15 +78,78 @@ public class TestQueueWorkerPool extends TestCase {
         pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
     }
     
-    public void testShutdown() throws Exception {
+    @Test(expected=RejectedExecutionException.class) public void testShutdown() throws Exception {
     	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
         pool.shutdown();
-        try {
-        	pool.execute(new FakeWorkItem(1));
-        	fail("expected exception"); //$NON-NLS-1$
-        } catch (RejectedExecutionException e) {
-        	
-        }
+    	pool.execute(new FakeWorkItem(1));
+    }
+    
+    @Test public void testScheduleCancel() throws Exception {
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	ScheduledFuture<?> future = pool.scheduleAtFixedRate(new Runnable() {
+    		@Override
+    		public void run() {
+    		}
+    	}, 0, 5, TimeUnit.MILLISECONDS);
+    	future.cancel(true);
+    	assertFalse(future.cancel(true));    	
+    }
+    
+    @Test public void testSchedule() throws Exception {
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+        final ArrayList<String> result = new ArrayList<String>(); 
+    	ScheduledFuture<?> future = pool.schedule(new Runnable() {
+    		@Override
+    		public void run() {
+    			result.add("hello"); //$NON-NLS-1$
+    		}
+    	}, 5, TimeUnit.MILLISECONDS);
+    	future.cancel(true);
+    	Thread.sleep(10);
+    	assertEquals(0, result.size());    
+    	future = pool.schedule(new Runnable() {
+    		@Override
+    		public void run() {
+    			result.add("hello"); //$NON-NLS-1$
+    		}
+    	}, 5, TimeUnit.MILLISECONDS);
+    	Thread.sleep(10);
+    	pool.shutdown();
+    	pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
+    	assertEquals(1, result.size());
+    }
+    
+    @Test(expected=ExecutionException.class) public void testScheduleException() throws Exception {
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	ScheduledFuture<?> future = pool.schedule(new Runnable() {
+    		@Override
+    		public void run() {
+    			throw new RuntimeException();
+    		}
+    	}, 0, TimeUnit.MILLISECONDS);
+    	future.get();
+    }
+    
+    /**
+     * Here each execution exceeds the period, so only half the number of executions are expected.
+     */
+    @Test public void testScheduleRepeated() throws Exception {
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	final ArrayList<String> result = new ArrayList<String>();
+    	ScheduledFuture<?> future = pool.scheduleAtFixedRate(new Runnable() {
+    		@Override
+    		public void run() {
+    			result.add("hello"); //$NON-NLS-1$
+    			try {
+					Thread.sleep(7);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
+				}
+    		}
+    	}, 0, 5, TimeUnit.MILLISECONDS);
+    	Thread.sleep(99);
+    	future.cancel(true);
+    	assertEquals(10, result.size());
     }
         
 }
