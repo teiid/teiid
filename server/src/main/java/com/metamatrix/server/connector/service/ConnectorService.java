@@ -202,8 +202,8 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     */
     private ClassLoader getCustomClassLoader(String urls) throws ApplicationInitializationException{
         if(urls == null || urls.trim().length() == 0){
-            String msg = ServerPlugin.Util.getString("ConnectorService.NoClassPath"); //$NON-NLS-1$
-            throw new ApplicationInitializationException(msg);
+            LogManager.logDetail(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString("ConnectorService.NoClassPath")); //$NON-NLS-1$
+            return null;
         }
         
         synchronized (ConnectorService.class) {
@@ -219,13 +219,13 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         	}
         	
             try {
-                result = new URLFilteringClassLoader(URLFactory.parseURLs(urls, ";")); //$NON-NLS-1$
+                result = new URLFilteringClassLoader(URLFactory.parseURLs(urls, ";"), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
                 if (cacheClassLoaders) {
                     classLoaderCache.put(urls, new WeakReference<NonDelegatingClassLoader>(result));
                 }
                 return result;
             } catch (MalformedURLException e1) {
-                String msg = ServerPlugin.Util.getString("ConnectorService.IllegalClassPath"); //$NON-NLS-1$
+                String msg = ServerPlugin.Util.getString("ConnectorService.IllegalClassPath", urls); //$NON-NLS-1$
                 throw new ApplicationInitializationException(msg);
             }
         }
@@ -239,23 +239,17 @@ public class ConnectorService extends AbstractService implements ConnectorServic
      * @throws ApplicationInitializationException
      */
     private ConnectorManager createConnectorManager(Properties deMaskedProps, ClassLoader loader) throws ApplicationLifecycleException {        
-        try {
-            ConnectorManager connectorManager = (ConnectorManager) ReflectionHelper.create(ConnectorManager.class.getName(), null, loader);
-            
-            // Create a stringified connector ID from the serviceID
-            ServiceID id = this.getID();
-            String connID = id.getHostName()+"|"+ id.getProcessName() + "|" + id.getID();   //$NON-NLS-1$ //$NON-NLS-2$
-            deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_ID, connID);
-            deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, getInstanceName());
-            deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_VM_NAME, VMNaming.getProcessName());
-            connectorManager.setClassloader(loader);
-            connectorManager.initialize(deMaskedProps);
-            return connectorManager;
-            
-        } catch(MetaMatrixCoreException e) {
-            String msg = ServerPlugin.Util.getString("ConnectorService.Unexpected_error_instantiating_ConnectorManagerImpl"); //$NON-NLS-1$
-            throw new ApplicationLifecycleException(e, msg);
-        } 
+        ConnectorManager connectorManager = new ConnectorManager();
+        
+        // Create a stringified connector ID from the serviceID
+        ServiceID id = this.getID();
+        String connID = id.getHostName()+"|"+ id.getProcessName() + "|" + id.getID();   //$NON-NLS-1$ //$NON-NLS-2$
+        deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_ID, connID);
+        deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, getInstanceName());
+        deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_VM_NAME, VMNaming.getProcessName());
+        connectorManager.setClassloader(loader);
+        connectorManager.initialize(deMaskedProps);
+        return connectorManager;
     }
     
     /**
@@ -364,7 +358,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
      */
     public void checkState() throws ServiceStateException {
 
-        if (monitoringEnabled) {
+        if (monitoringEnabled && connectorMgr != null) {
             Boolean status = connectorMgr.getStatus();
             int state = getCurrentState();
             if (state == ServiceState.STATE_OPEN && status == Boolean.FALSE) {

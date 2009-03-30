@@ -29,6 +29,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -61,12 +62,14 @@ import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.extensionmodule.ExtensionModuleEvent;
 import com.metamatrix.common.extensionmodule.protocol.URLFactory;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
+import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -74,6 +77,7 @@ import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
+import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.ZipFileUtil;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
@@ -92,6 +96,7 @@ import com.metamatrix.platform.admin.apiimpl.MembershipAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.SessionAdminAPIImpl;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
+import com.metamatrix.platform.config.event.ConfigurationChangeEvent;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
@@ -161,6 +166,8 @@ public abstract class ProcessController implements ProcessManagement {
     protected ClientServiceRegistry clientServices;
     private Map<ComponentTypeID, Properties> defaultPropertiesCache = new HashMap<ComponentTypeID, Properties>();
     private Properties hostProperties;
+    private ClassLoader commonExtensionClassLoader = null;
+    private String commonExtensionClasspath;
 
     private int force_shutdown_time = DEFAULT_FORCE_SHUTDOWN_TIME;
 
@@ -198,6 +205,8 @@ public abstract class ProcessController implements ProcessManagement {
         this.registerAdmin(hostManagement);
         
         this.registerSubSystemAdminAPIs(hostManagement);
+        
+        manageCommonExtensionClassloader();
         
         addShutdownHook();        
     }
@@ -701,22 +710,63 @@ public abstract class ProcessController implements ProcessManagement {
         }
     }
     
+    /**
+     * Throw away the common extension class loader when there is change in the Extension modules or has a changed extension
+     * classpath.
+     */
+    private void manageCommonExtensionClassloader() throws MessagingException {
+    	this.messageBus.addListener(ExtensionModuleEvent.class, new EventObjectListener() {
+			@Override
+			public void processEvent(EventObject obj) {
+				if (obj instanceof ExtensionModuleEvent) {
+					ProcessController.this.commonExtensionClassLoader = null;
+				}
+			}
+    	});
+    	
+    	this.messageBus.addListener(ConfigurationChangeEvent.class, new EventObjectListener() {
+			@Override
+			public void processEvent(EventObject obj) {
+				if (obj instanceof ConfigurationChangeEvent) {
+					String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH);
+					if (extensionClasspath != null) {
+						if (!extensionClasspath.equals(ProcessController.this.commonExtensionClasspath)) {
+							ProcessController.this.commonExtensionClassLoader = null;	
+						}
+					}
+					else {
+						ProcessController.this.commonExtensionClassLoader = null;
+					}
+				}
+			}
+    	});    	
+    }
+    
+    private ClassLoader getCommonExtensionClassloader() {
+    	if (this.commonExtensionClassLoader == null) {
+	        String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH);
+	        if (extensionClasspath != null && extensionClasspath.length() > 0) {
+	        	try {
+	        		this.commonExtensionClassLoader = new URLFilteringClassLoader(URLFactory.parseURLs(extensionClasspath, ";"), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+	        		this.commonExtensionClasspath = extensionClasspath;
+					logMessage(PlatformPlugin.Util.getString("commonextensionspath_in_use", extensionClasspath)); //$NON-NLS-1$
+				} catch (MalformedURLException e) {
+					logMessage(PlatformPlugin.Util.getString("commonextensionspath_not_in_use",extensionClasspath)); //$NON-NLS-1$
+				}
+	        }
+    	}
+    	return this.commonExtensionClassLoader;
+    }
+    
     private void startService(ClientServiceRegistry serverListenerRegistry, ServiceID serviceID, DeployedComponent deployedComponent,final String serviceClass,ProductServiceConfigID pscID,Properties serviceProps) {
         String serviceInstanceName = null;
 
         ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
         try {
-
-	        String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH);
-	        if (extensionClasspath != null && extensionClasspath.length() > 0) {
-	        	try {
-	        		ClassLoader commonExtensionClassLoader = new URLFilteringClassLoader(URLFactory.parseURLs(extensionClasspath, ";"), currentClassLoader); //$NON-NLS-1$
-					Thread.currentThread().setContextClassLoader(commonExtensionClassLoader);
-					logMessage(PlatformPlugin.Util.getString("commonextensionspath_in_use", extensionClasspath, serviceID)); //$NON-NLS-1$
-				} catch (MalformedURLException e) {
-					logMessage(PlatformPlugin.Util.getString("commonextensionspath_not_in_use",extensionClasspath, serviceID)); //$NON-NLS-1$
-				}
-	        }
+    		ClassLoader commonExtensionClassLoader = getCommonExtensionClassloader(); 
+    		if (commonExtensionClassLoader != null) {
+    			Thread.currentThread().setContextClassLoader(commonExtensionClassLoader);
+    		}
         	
         	if (serviceID == null) {
         		serviceID = this.createServiceID();        		
