@@ -22,9 +22,6 @@
 
 package com.metamatrix.common.messaging.jgroups;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -36,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jgroups.Channel;
 import org.jgroups.ChannelException;
-import org.jgroups.Header;
 import org.jgroups.Message;
 import org.jgroups.ReceiverAdapter;
 import org.jgroups.View;
@@ -63,7 +59,6 @@ public class JGroupsMessageBus implements MessageBus {
 	
 	public static final String MESSAGE_KEY = "MessageKey"; //$NON-NLS-1$
 	public static final int REMOTE_TIMEOUT = 30000; 
-	static final FederateHeader MSG_HEADER = new FederateHeader(456188434); // with some random number	
 	
 	private Channel channel;
 	private volatile boolean shutdown;
@@ -86,9 +81,7 @@ public class JGroupsMessageBus implements MessageBus {
 			@Override
 			public void receive(Message msg) {
 				if (!msg.getSrc().equals(channel.getLocalAddress())) {
-					if (MSG_HEADER.equals(msg.getHeader(MESSAGE_KEY))) {
-						eventBroker.processEvent((EventObject) msg.getObject());
-					}
+					eventBroker.processEvent((EventObject) msg.getObject());
 		        }
 			}
 
@@ -155,7 +148,6 @@ public class JGroupsMessageBus implements MessageBus {
 		if (obj != null) {
 			try {
 				Message msg = new Message(null, null, obj);
-				msg.putHeader(MESSAGE_KEY, MSG_HEADER);
 				this.channel.send(msg);
 			} catch (Exception e) {
 				throw new MessagingException(e, ErrorMessageKeys.MESSAGING_ERR_0004, CommonPlugin.Util.getString(ErrorMessageKeys.MESSAGING_ERR_0004));
@@ -184,22 +176,6 @@ public class JGroupsMessageBus implements MessageBus {
 			throws MessagingException {
 		
 	}
-	
-    public static class FederateHeader extends Header {
-    	int type;
-        public FederateHeader(int type) {
-        	this.type = type;
-        }
-	
-        public void writeExternal(ObjectOutput out) throws IOException {
-            out.writeInt(type);
-        }
-	
-        public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-            type=in.readInt();
-        }
-    }	    
-	
 }
 
 
