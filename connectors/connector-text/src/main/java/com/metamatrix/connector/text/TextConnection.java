@@ -65,6 +65,6 @@ public class TextConnection extends BasicConnection {
     @Override
     public void close() {
         metadataProps = null;
-        env.getLogger().logInfo("Text Connection is successfully closed."); //$NON-NLS-1$
+        env.getLogger().logDetail("Text Connection is successfully closed."); //$NON-NLS-1$
     }
 }
