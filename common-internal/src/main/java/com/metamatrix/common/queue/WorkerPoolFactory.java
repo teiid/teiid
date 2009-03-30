@@ -86,9 +86,6 @@ public class WorkerPoolFactory {
 	
 	private static ScheduledThreadPoolExecutor stpe = new ScheduledThreadPoolExecutor(1, new NamedThreadFactory("Scheduler")); //$NON-NLS-1$
 	
-	/**
-	 * TODO: purge user canceled scheduled tasks.
-	 */
 	static class StatsCapturingSharedThreadPoolExecutor implements WorkerPool {
 		
 		class ScheduledFutureTask extends FutureTask<Void> implements ScheduledFuture<Void> {
@@ -119,6 +116,7 @@ public class WorkerPoolFactory {
 			@Override
 			public boolean cancel(boolean mayInterruptIfRunning) {
 				this.scheduledFuture.cancel(false);
+				scheduledTasks.remove(this);
 				return super.cancel(mayInterruptIfRunning);
 			}
 			
