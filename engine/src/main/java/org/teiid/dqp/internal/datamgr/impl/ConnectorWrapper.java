@@ -98,7 +98,9 @@ public class ConnectorWrapper implements XAConnector {
 			} catch (ConnectorException e) {
 				return Boolean.FALSE;
 			} finally {
-				conn.close();
+				if (conn != null) {
+					conn.close();
+				}
 			}
 		}
 		return null;
