@@ -390,7 +390,7 @@ public class DataServiceWebServiceImpl {
 		StAXOMBuilder builder = null;
 		try {
 			builder = new StAXOMBuilder(ByteArrayHelper.toInputStream(result
-					.getBytes()));
+					.getBytes("UTF-8")));//$NON-NLS-1$
 		} catch (XMLStreamException e) {
 			Object[] params1 = new Object[] { result };
 			Object[] params2 = new Object[] { e.getMessage() };
