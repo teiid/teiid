@@ -25,8 +25,10 @@ package com.metamatrix.common.jdbc.db;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Map;
 
 import com.metamatrix.common.jdbc.JDBCPlatform;
+import com.metamatrix.common.jdbc.syntax.ExpressionOperator;
 
 public class PostgresPlatform extends JDBCPlatform {
 
@@ -42,7 +44,17 @@ public class PostgresPlatform extends JDBCPlatform {
     
     public boolean isDefault() {
         return false;
-    }    
+    }   
+    
+    protected Map buildPlatformOperators() {
+        Map operators = super.buildPlatformOperators();
+
+        // override for Oracle specfic
+        addOperator(ExpressionOperator.simpleFunction("toUpperCase","UPPER")); //$NON-NLS-1$ //$NON-NLS-2$
+
+        return operators;
+
+  }    
 
     public boolean isClosed(Connection connection) {
         
