@@ -86,7 +86,7 @@ public class TestEmbeddedDriver extends TestCase {
         driver.parseURL("jdbc:metamatrix:BQT@c:\\metamatrix\\dqp\\dqp.properties", p); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:/c:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
-        assertEquals(2, p.size());        
+        assertEquals(3, p.size());        
     }
 
     public void testParseURL2() throws SQLException {
@@ -96,7 +96,7 @@ public class TestEmbeddedDriver extends TestCase {
         assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:/metamatrix/dqp/dqp.properties")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("3")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("3")); //$NON-NLS-1$
-        assertEquals(4, p.size());
+        assertEquals(5, p.size());
     }
     
     public void testParseURL3() throws SQLException{
@@ -107,7 +107,7 @@ public class TestEmbeddedDriver extends TestCase {
         assertTrue(p.getProperty(BaseDataSource.VERSION).equals("4")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP).equals("ON")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("YES")); //$NON-NLS-1$
-        assertEquals(6, p.size());        
+        assertEquals(7, p.size());        
     }
     
     public void testParseURL4() throws SQLException{
@@ -116,7 +116,7 @@ public class TestEmbeddedDriver extends TestCase {
         assertTrue(p.getProperty(BaseDataSource.VDB_NAME).equals("BQT")); //$NON-NLS-1$
         assertTrue(p.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE).toString().equals("mmfile:testdata/dqp/dqp.properties")); //$NON-NLS-1$
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true")); //$NON-NLS-1$
-        assertEquals(3, p.size());                
+        assertEquals(4, p.size());                
     }
     
     public void testParseURL5() throws SQLException{
@@ -141,7 +141,7 @@ public class TestEmbeddedDriver extends TestCase {
         assertTrue(p.getProperty(ExecutionProperties.PROP_PARTIAL_RESULTS_MODE).equals("true")); //$NON-NLS-1$
         assertTrue(p.getProperty(BaseDataSource.VDB_VERSION).equals("1")); //$NON-NLS-1$
         assertTrue(p.getProperty("vdb.definition").equals("BQT.vdb")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(6, p.size());                
+        assertEquals(7, p.size());                
         
     }
     
