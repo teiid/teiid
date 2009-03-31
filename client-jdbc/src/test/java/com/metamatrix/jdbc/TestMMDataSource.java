@@ -235,6 +235,17 @@ public class TestMMDataSource extends TestCase {
         assertEquals(result,STD_DATABASE_NAME);
     }
 
+    public void testGetDefaultApplicationName() {
+        final String result = dataSource.getApplicationName();
+        assertEquals(result,BaseDataSource.DEFAULT_APP_NAME);
+    }
+    
+    public void testGetApplicationName() {
+    	dataSource.setApplicationName("ClientApp"); //$NON-NLS-1$
+        final String result = dataSource.getApplicationName();
+        assertEquals(result,"ClientApp"); //$NON-NLS-1$
+    }
+    
     public void testGetPortNumber() {
         final int result = dataSource.getPortNumber();
         assertEquals(result,STD_PORT_NUMBER);
@@ -504,7 +515,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "true"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, 500, false, secure,
-                            "jdbc:metamatrix:vdbName@mm://hostname:7001;fetchSize=500;serverURL=mm://hostname:7001;VirtualDatabaseVersion=1.2.3;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
+                            "jdbc:metamatrix:vdbName@mm://hostname:7001;fetchSize=500;ApplicationName=JDBC;serverURL=mm://hostname:7001;VirtualDatabaseVersion=1.2.3;partialResultsMode=true;VirtualDatabaseName=vdbName"); //$NON-NLS-1$
     }
 
     public void testBuildingURL2() {
@@ -516,7 +527,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, false, secure, 
-                            "jdbc:metamatrix:vdbName@mm://hostname:7001;serverURL=mm://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
+                            "jdbc:metamatrix:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL3() {
@@ -528,7 +539,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mm://hostname:7001;serverURL=mm://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:metamatrix:vdbName@mm://hostname:7001;ApplicationName=JDBC;serverURL=mm://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     // Test secure protocol
@@ -541,7 +552,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,null,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mms://hostname:7001;serverURL=mms://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:metamatrix:vdbName@mms://hostname:7001;ApplicationName=JDBC;serverURL=mms://hostname:7001;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -559,7 +570,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -577,7 +588,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = true;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;serverURL=mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:metamatrix:vdbName@mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mms://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
 
     /*
@@ -596,7 +607,7 @@ public class TestMMDataSource extends TestCase {
         final String partialMode = "false"; //$NON-NLS-1$
         final boolean secure = false;
         helpTestBuildingURL(vdbName,vdbVersion,serverName,portNumber,alternateServers,transactionAutoWrap, partialMode, -1, true, secure,
-                            "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
+                            "jdbc:metamatrix:vdbName@mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;ApplicationName=JDBC;serverURL=mm://hostName:7001,hostName:7002,hostName2:7001,hostName2:7002;txnAutoWrap=PESSIMISTIC;partialResultsMode=false;VirtualDatabaseName=vdbName;sqlOptions=SHOWPLAN"); //$NON-NLS-1$ 
     }
     
     public void testBuildURL_AdditionalProperties() {
@@ -605,7 +616,7 @@ public class TestMMDataSource extends TestCase {
     	ds.setServerName("hostName"); //$NON-NLS-1$
     	ds.setDatabaseName("vdbName"); //$NON-NLS-1$
     	ds.setPortNumber(1);
-    	assertEquals("jdbc:metamatrix:vdbName@mm://hostname:1;fetchSize=2000;serverURL=mm://hostname:1;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL()); //$NON-NLS-1$
+    	assertEquals("jdbc:metamatrix:vdbName@mm://hostname:1;fetchSize=2000;ApplicationName=JDBC;serverURL=mm://hostname:1;a=b;VirtualDatabaseName=vdbName;foo=bar", ds.buildURL()); //$NON-NLS-1$
     }
 
     public void testInvalidDataSource() {

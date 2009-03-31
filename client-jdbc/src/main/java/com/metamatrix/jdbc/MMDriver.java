@@ -177,8 +177,11 @@ public final class MMDriver extends BaseDriver {
             }
             // add the property only if it is new because they could have
             // already been specified either through url or otherwise.
-            if(! info.containsKey(BaseDataSource.VDB_VERSION) && jdbcURL.getVDBVersion() != null) {
+            if(!info.containsKey(BaseDataSource.VDB_VERSION) && jdbcURL.getVDBVersion() != null) {
                 info.setProperty(BaseDataSource.VDB_VERSION, jdbcURL.getVDBVersion());
+            }
+            if(!info.containsKey(BaseDataSource.APP_NAME)) {
+                info.setProperty(BaseDataSource.APP_NAME, BaseDataSource.DEFAULT_APP_NAME);
             }
 
         } catch(IllegalArgumentException iae) {

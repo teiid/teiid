@@ -214,6 +214,9 @@ public final class EmbeddedDriver extends BaseDriver {
             if(! info.containsKey(BaseDataSource.VDB_VERSION) && jdbcURL.getVDBVersion() != null) {
                 info.setProperty(BaseDataSource.VDB_VERSION, jdbcURL.getVDBVersion());
             }
+            if(!info.containsKey(BaseDataSource.APP_NAME)) {
+                info.setProperty(BaseDataSource.APP_NAME, BaseDataSource.DEFAULT_APP_NAME);
+            }
             
             // Add the DQP URL as the configuration URL
             info.put(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, dqpURL);            

@@ -100,7 +100,8 @@ import com.metamatrix.jdbc.util.MMJDBCURL;
  * </p>
  */
 public abstract class BaseDataSource extends WrapperImpl implements javax.sql.DataSource, XADataSource, ConnectionPoolDataSource, java.io.Serializable {
-
+	public static final String DEFAULT_APP_NAME = "JDBC"; //$NON-NLS-1$
+	
     // constant indicating Virtual database name
     public static final String VDB_NAME = MMURL.JDBC.VDB_NAME; 
     // constant indicating Virtual database version
@@ -545,7 +546,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * @return String the application name; may be null or zero-length
      */
     public String getApplicationName() {
-        return applicationName;
+        return applicationName!=null?applicationName:DEFAULT_APP_NAME;
     }
 
     /**
