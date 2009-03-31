@@ -317,4 +317,9 @@ public class ClusteredRegistryState implements CacheListener {
 			l.registryChanged();
 		}		
 	}
+	
+	public void shutdown() {
+		this.cache.removeListener();
+		this.listeners.clear();
+	}
 }

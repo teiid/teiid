@@ -353,10 +353,9 @@ public abstract class ProcessController implements ProcessManagement {
                 DeployedComponent depComp = (DeployedComponent) servicesIterator.next();
                 try {
                     startDeployedService(depComp, null, configuration, true);
-                } catch (Exception e) {
+                } catch (ServiceException e) {
                     errored = true;
-                    // error already logged from startDeployedService method.
-                    // continue starting services.
+                    logException(e, e.getMessage());
                 }
             }
             
@@ -369,9 +368,8 @@ public abstract class ProcessController implements ProcessManagement {
                 DeployedComponent depComp = (DeployedComponent) servicesIterator.next();
                 try {
                     startDeployedService(depComp, null, configuration, false);
-                } catch (Exception e) {
-                    // error already logged from startDeployedService method.
-                    // continue starting services.
+                } catch (ServiceException e) {
+                	logException(e, e.getMessage());
                 }
             }
             logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0016, new Integer(deployedServices.size()),  vmComponentDefnID.getName()));
@@ -404,8 +402,7 @@ public abstract class ProcessController implements ProcessManagement {
         try {
             ConfigurationModelContainer configuration = getConfigurationModel();
             startDeployedService(binding.getDeployedComponent(), serviceID, configuration, true);
-
-        } catch (Exception e) {
+        } catch (ConfigurationException e) {
             throw new ServiceException(e, PlatformPlugin.Util.getString(LogMessageKeys.VM_0022, serviceID));
         }
     }
@@ -421,9 +418,8 @@ public abstract class ProcessController implements ProcessManagement {
             VMComponentDefnID vmComponentDefnID = (VMComponentDefnID)this.vmComponentDefn.getID();
             DeployedComponent deployedService = configuration.getConfiguration().getDeployedServiceForVM(defnID, vmComponentDefnID, (HostID) getConfigHost().getID());
             startDeployedService(deployedService, serviceID, configuration, true);
-        } catch (Exception e) {
-            String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0024, defnID);
-            throw new ServiceException(e, msg);
+        } catch (ConfigurationException e) {
+            throw new ServiceException(e, PlatformPlugin.Util.getString(LogMessageKeys.VM_0024, defnID));
         }
     }
 
@@ -434,7 +430,7 @@ public abstract class ProcessController implements ProcessManagement {
 	 *  If synch is false then start service asynchronously.
 	 * @throws ConfigurationException 
 	 */
-	private void startDeployedService(DeployedComponent deployedService, ServiceID serviceID, ConfigurationModelContainer configModel, boolean synch) throws ConfigurationException {
+	private void startDeployedService(DeployedComponent deployedService, ServiceID serviceID, ConfigurationModelContainer configModel, boolean synch) {
         Properties defaultProps = null;
         synchronized (this) {
             defaultProps = defaultPropertiesCache.get(deployedService.getComponentTypeID());
@@ -496,9 +492,7 @@ public abstract class ProcessController implements ProcessManagement {
         } catch (ServiceException e) {
             logException(e, e.getMessage());
         } 
-
-		JDBCConnectionPoolHelper.getInstance().shutDown();
-
+	
         // unregister VMController
         events.processRemoved(host.getFullName(), this.processName);
         
@@ -697,16 +691,16 @@ public abstract class ProcessController implements ProcessManagement {
             //add work to the pool
             startServicePool.execute( new Runnable() {
 				public void run() {
-					startService(clientServiceRegistry, serviceID, deployedComponent,serviceClassName, pscID, serviceProps);					
+					try {
+						startService(clientServiceRegistry, serviceID, deployedComponent,serviceClassName, pscID, serviceProps);
+					} catch (ServiceException e) {
+						logException(e, e.getMessage());
+					}					
 				}
             });
         } else {
             //start synchronously
-            try {
-            	startService(clientServiceRegistry, serviceID, deployedComponent,serviceClassName, pscID, serviceProps);
-			} catch (Exception e) {
-				throw new ServiceException(e);
-			}  
+            startService(clientServiceRegistry, serviceID, deployedComponent,serviceClassName, pscID, serviceProps);
         }
     }
     
@@ -804,8 +798,12 @@ public abstract class ProcessController implements ProcessManagement {
                                
             logMessage(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0009, serviceType, serviceInstanceName));
 
-        } catch (Exception e) {
-            throw new ServiceException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0028, serviceInstanceName));
+        } catch (ClassNotFoundException e) {
+        	throw new ServiceException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0028, serviceInstanceName));
+        } catch (IllegalAccessException e) {
+        	throw new ServiceException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0028, serviceInstanceName));
+        } catch (InstantiationException e){
+        	throw new ServiceException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0028, serviceInstanceName));
         } finally {
         	Thread.currentThread().setContextClassLoader(currentClassLoader);
         }

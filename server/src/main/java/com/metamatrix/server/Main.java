@@ -28,6 +28,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
@@ -39,6 +40,7 @@ import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.PlatformPlugin;
+import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 
 /**
@@ -54,6 +56,9 @@ public class Main {
 	
 	@Inject
 	LogListener logListener;
+	
+	@Inject	
+	ClusteredRegistryState registry;
 	
 	public static void main(String[] args) {
         
@@ -164,6 +169,8 @@ public class Main {
 		@Override
 		public void run() {
 
+			registry.shutdown();
+			
 			try {
 				messageBus.shutdown();
 			} catch (MessagingException e) {
@@ -175,6 +182,9 @@ public class Main {
      
             // shutdown logging
             logListener.shutdown();
+     
+            // close the connection pool to the DB
+            JDBCConnectionPoolHelper.getInstance().shutDown();            
 		}
     }
 }
