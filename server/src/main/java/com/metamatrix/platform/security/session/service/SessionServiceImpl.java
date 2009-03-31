@@ -234,7 +234,7 @@ public class SessionServiceImpl extends AbstractService implements
         //
         // Validate VDB and version if logging on to server product...
         //
-        if (productName != null && productName.equals(MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME)) {
+        if (productName == null || productName.equals(MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME)) {
             String vdbName = (String)properties.get(ProductInfoConstants.VIRTUAL_DB);
             String vdbVersion = (String)properties.get(ProductInfoConstants.VDB_VERSION);
             VirtualDatabaseID vdbID = null;
