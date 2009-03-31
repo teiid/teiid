@@ -198,7 +198,7 @@ public class JDBCPlatform implements Serializable, Cloneable {
     }
     
     public boolean isPostgres() {
-        return true;
+        return false;
     }    
 
     public boolean isSecure() {
