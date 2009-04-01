@@ -22,12 +22,7 @@
 
 package com.metamatrix.common.config.reader;
 
-import java.util.Properties;
-
-import com.metamatrix.common.config.StartupStateController;
-import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
-import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 
 /**
@@ -44,24 +39,6 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
  */
 public interface CurrentConfigurationReader {
 
-    /**
-     * This method should connect to the repository that holds the current
-     * configuration, using the specified properties.  The implementation
-     * may <i>not</i> use logging but instead should rely upon returning
-     * an exception in the case of any errors.
-     * @param env the environment properties that define the information
-     * @throws ConfigurationConnectionException if there is an error establishing the connection.
-     */
-    void connect( Properties env ) throws ConfigurationConnectionException;
-
-    /**
-     * This method should close the connection to the repository that holds the current
-     * configuration.  The implementation may <i>not</i> use logging but
-     * instead should rely upon returning an exception in the case of any errors.
-     * @throws Exception if there is an error establishing the connection.
-     */
-    void close() throws Exception;
-
     // ------------------------------------------------------------------------------------
     //                     C O N F I G U R A T I O N   I N F O R M A T I O N
     // ------------------------------------------------------------------------------------
@@ -75,46 +52,6 @@ public interface CurrentConfigurationReader {
      * communication with the repository.
      */
     ConfigurationModelContainer getConfigurationModel() throws ConfigurationException;
-
-    /**
-     * This method should be called <i>only</i> by
-     * {@link com.metamatrix.platform.util.MetaMatrixController}
-     * to initialize the system configurations during bootstrapping.
-     * This method will attempt to put the system state into
-     * {@link StartupStateController#STATE_STARTING}, and then
-     * commence with initialization.  If the state is already
-     * {@link StartupStateController#STATE_STARTING}, then another
-     * MetaMatrixController is already currently in the process of
-     * starting the system, and a {@link StartupStateException}
-     * will be thrown.  If this method returns without an
-     * exception, then the system state will be in state
-     * {@link StartupStateController#STATE_STARTING}, and the calling
-     * code should proceed with startup.
-     * @param forceInitialization if the system is in a state other than
-     * {@link StartupStateController#STATE_STOPPED}, and the
-     * administrator thinks the system actually crashed and is
-     * not really running, he can choose to force the
-     * initialization.  Otherwise, if the system is in one of these states,
-     * an exception will be thrown.
-     * @throws StartupStateException if the system is
-     * not in a state in which initialization can proceed.  This
-     * exception will indicate the current system state.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     * 
-     * NOTE: This method replaces the begin... and finish.. SystemInitialization methods
-     * for the new configuration implementations.
-     */
-    void performSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException;
-    
-
-    /**
-     * This will put the system into a state of
-     * {@link com.metamatrix.common.config.StartupStateController#STATE_STOPPED}.
-     * @throws ConfigurationException if an error occurred in communication
-     * with the configuration data source
-     */
-    void indicateSystemShutdown() throws ConfigurationException;
 
 }
 

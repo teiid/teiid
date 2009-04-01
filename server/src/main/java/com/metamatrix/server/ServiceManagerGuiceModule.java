@@ -26,7 +26,6 @@ import com.google.inject.Scopes;
 import com.metamatrix.common.config.api.Host;
 
 class ServiceManagerGuiceModule extends HostControllerGuiceModule {
-	Host host;
 	
 	public ServiceManagerGuiceModule(Host host) {
 		super(host);

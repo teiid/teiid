@@ -39,7 +39,6 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.FileUtils;
@@ -81,7 +80,7 @@ public class PlatformTransactionService implements TransactionService{
             props.putAll(env);
             props.setProperty(TransactionService.TXN_MGR_LOG_DIR, logDir);
             props.setProperty(TransactionService.HOSTNAME, host.getFullName());
-            props.setProperty(TransactionService.VMNAME, VMNaming.getProcessName());
+            props.setProperty(TransactionService.VMNAME, CurrentConfiguration.getInstance().getProcessName());
             props.setProperty(TransactionService.TXN_STORE_DIR, host.getDataDirectory()); 
 
             arjunaTs.init(ArjunaTransactionProvider.getInstance(props));

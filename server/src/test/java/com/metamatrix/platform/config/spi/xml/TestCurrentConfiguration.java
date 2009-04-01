@@ -29,144 +29,93 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.platform.config.BaseTest;
-import com.metamatrix.platform.config.CurrentConfigHelper;
+import com.metamatrix.platform.config.util.CurrentConfigHelper;
 
 public class TestCurrentConfiguration extends BaseTest {
 
-    protected static final String CONFIG_30_FILE = "config_30.xml"; //$NON-NLS-1$
+    protected static final String CONFIG_30_FILE = "config30_ns.xml"; //$NON-NLS-1$
     
-   
-	
 	private static String PRINCIPAL = "TestCurrentConfiguration";       //$NON-NLS-1$
-//		
-//	private static boolean  oneTime = true;
 
     public TestCurrentConfiguration(String name) {
         super(name);
         
         printMessages = false;
-        
-        System.setProperty("metamatrix.encryption.jce.provider","none"); //$NON-NLS-1$ //$NON-NLS-2$$
-        
-             
     }
     
-
 	protected void init(String cfgFile) throws Exception {
-		
-	
-			CurrentConfigHelper.initConfig(cfgFile, this.getPath(), PRINCIPAL);
-		
+		CurrentConfigHelper.initXMLConfig(cfgFile, this.getPath(), PRINCIPAL);
 	}    
-	
     
-    public void testValidateConfiguration() {
+    public void testValidateConfiguration() throws Exception {
     	
     	printMsg("Starting testValidateConfiguration");    	 //$NON-NLS-1$
 
-    	try {
-            init(CONFIG_FILE);
-    		    	                		    		    			    		    			    		
-            validConfigurationModel();
+        init(CONFIG_FILE);
+		    	                		    		    			    		    			    		
+        validConfigurationModel();
     		
-     	} catch (Exception e) {
-    		fail(e.getMessage());
-     	}
-    		printMsg("Completed testValidateConfiguration"); //$NON-NLS-1$
-     	
-
+		printMsg("Completed testValidateConfiguration"); //$NON-NLS-1$
     }
     
-    public void testSystemInitialization() {
+    public void testSystemInitialization() throws Exception {
     	
     	printMsg("Starting testSystemInitialization");    	 //$NON-NLS-1$
 
-    	try {
-            
-            init(CONFIG_FILE);
-   		    			    		    			    		
-    		CurrentConfiguration.getInstance().performSystemInitialization(true); 
+        init(CONFIG_FILE);
+	    			    		    			    		
+        validConfigurationModel();
 
-            validConfigurationModel();
-
-    		
-    		Properties configProps = CurrentConfiguration.getInstance().getProperties();	
-    		if (configProps == null || configProps.isEmpty()) {
-    			fail("No Global Configuration Properties were found"); //$NON-NLS-1$
-    		}
-    		
-  		    		   		
-    		
-     	} catch (Exception e) {
-     		e.printStackTrace();
-    		fail(e.getMessage());
-     	}
-     	
-    		printMsg("Completed testSystemInitialization"); //$NON-NLS-1$
+		Properties configProps = CurrentConfiguration.getInstance().getProperties();	
+		if (configProps == null || configProps.isEmpty()) {
+			fail("No Global Configuration Properties were found"); //$NON-NLS-1$
+		}
+ 	
+		printMsg("Completed testSystemInitialization"); //$NON-NLS-1$
     	
     }
     
     
-    public void testCurrentHost() {
-        
+    public void testCurrentHost() throws Exception {
         printMsg("Starting testCurrentHost");       //$NON-NLS-1$
 
-        try {
-        	System.setProperty(CurrentConfiguration.CONFIGURATION_NAME, "DummyHost"); //$NON-NLS-1$ //$NON-NLS-2$
-            System.setProperty("metamatrix.vmname", "MetaMatrixProcess"); //$NON-NLS-1$ //$NON-NLS-2$
+    	System.setProperty(CurrentConfiguration.CONFIGURATION_NAME, "DummyHost"); //$NON-NLS-1$ 
+        System.setProperty("metamatrix.vmname", "MetaMatrixProcess"); //$NON-NLS-1$ //$NON-NLS-2$
 
-            init(CONFIG_FILE);
-                                                                
-            CurrentConfiguration.getInstance().performSystemInitialization(true); 
-
-            Host host = CurrentConfiguration.getInstance().getDefaultHost();
-            
-            if (!host.getFullName().equals("DummyHost")) { //$NON-NLS-1$
-                fail("DummyHost host was not the default host in the configuration");//$NON-NLS-1$
-            }
-                            
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
+        init(CONFIG_FILE);
+                                                            
+        Host host = CurrentConfiguration.getInstance().getDefaultHost();
+        
+        if (!host.getFullName().equals("DummyHost")) { //$NON-NLS-1$
+            fail("DummyHost host was not the default host in the configuration");//$NON-NLS-1$
         }
         
-            printMsg("Completed testCurrentHost"); //$NON-NLS-1$        
+        printMsg("Completed testCurrentHost"); //$NON-NLS-1$        
     }   
     
      
-    public void test30SystemInitialization() {
+    public void test30SystemInitialization() throws Exception {
         
         printMsg("**** Starting test30SystemInitialization");       //$NON-NLS-1$
 
-        try {
-            init(CONFIG_30_FILE);
-                                                                
-            CurrentConfiguration.getInstance().performSystemInitialization(true); 
-
-            Configuration config = CurrentConfiguration.getInstance().getConfiguration();
-            
-            if (config == null) {
-                fail("Configuration was not obtained from CurrentConfiguration after system initialization is performed."); //$NON-NLS-1$
-            }
-            
-            HelperTestConfiguration.validateConfigContents(config);
-            
-            
-            Properties configProps = CurrentConfiguration.getInstance().getProperties();  
-            if (configProps == null || configProps.isEmpty()) {
-                fail("No Global Configuration Properties were found"); //$NON-NLS-1$
-            }
-            
-                            
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
+        init(CONFIG_30_FILE);
+                                                            
+        Configuration config = CurrentConfiguration.getInstance().getConfiguration();
+        
+        if (config == null) {
+            fail("Configuration was not obtained from CurrentConfiguration after system initialization is performed."); //$NON-NLS-1$
         }
         
-            printMsg("**** Completed test30SystemInitialization"); //$NON-NLS-1$
+        HelperTestConfiguration.validateConfigContents(config);
         
+        
+        Properties configProps = CurrentConfiguration.getInstance().getProperties();  
+        if (configProps == null || configProps.isEmpty()) {
+            fail("No Global Configuration Properties were found"); //$NON-NLS-1$
+        }
+            
+    
+        printMsg("**** Completed test30SystemInitialization"); //$NON-NLS-1$
     }
     
     private void validConfigurationModel() throws Exception {

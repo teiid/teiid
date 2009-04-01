@@ -74,12 +74,9 @@ import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
-import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.event.EventObjectListener;
-import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -246,7 +243,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         String connID = id.getHostName()+"|"+ id.getProcessName() + "|" + id.getID();   //$NON-NLS-1$ //$NON-NLS-2$
         deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_ID, connID);
         deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, getInstanceName());
-        deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_VM_NAME, VMNaming.getProcessName());
+        deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_VM_NAME, CurrentConfiguration.getInstance().getProcessName());
         connectorManager.setClassloader(loader);
         connectorManager.initialize(deMaskedProps);
         return connectorManager;

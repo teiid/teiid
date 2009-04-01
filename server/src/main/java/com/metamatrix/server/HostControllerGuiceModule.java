@@ -36,7 +36,7 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.common.messaging.VMMessageBus;
+import com.metamatrix.common.messaging.jgroups.JGroupsMessageBus;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -89,7 +89,7 @@ class HostControllerGuiceModule extends AbstractModule {
 		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
 		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
 		bind(ClusteredRegistryState.class).in(Scopes.SINGLETON);
-		bind(MessageBus.class).to(VMMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
+		bind(MessageBus.class).to(JGroupsMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
 		bind(HostMonitor.class).in(Scopes.SINGLETON);		
 	}
 

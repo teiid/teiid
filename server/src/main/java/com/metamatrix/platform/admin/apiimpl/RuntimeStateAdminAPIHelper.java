@@ -26,6 +26,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -41,7 +42,6 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.MetaMatrixExceptionUtil;
@@ -55,9 +55,9 @@ import com.metamatrix.platform.admin.api.runtime.SystemStateBuilder;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
@@ -464,7 +464,7 @@ public class RuntimeStateAdminAPIHelper {
     public void setLogConfiguration(Configuration config,
                                            LogConfiguration logConfig,
                                            List actions,
-                                           String principalName) throws ConfigurationLockException,
+                                           String principalName) throws 
                                                                 ConfigurationException,
                                                                 ServiceException,
                                                                 MetaMatrixComponentException {
@@ -644,6 +644,30 @@ public class RuntimeStateAdminAPIHelper {
 	   ProcessRegistryBinding processBinding = this.registry.getProcessBinding(hostName, processName);
        ProcessManagement vmController = processBinding.getProcessController();
        return vmController.exportLogs();
+   }
+   
+   /**
+    * Return all processes.
+    * 
+    * @return List of processes
+    * @throws MetaMatrixComponentException
+    *             if an error occurred in communicating with a component.
+    */
+   public List<ProcessRegistryBinding> getProcesses() throws MetaMatrixComponentException {
+       return registry.getVMs(null);
+   }
+   
+   public Date getEldestProcessStartTime() throws MetaMatrixComponentException {
+	   long start = 0;
+	   for (ProcessRegistryBinding processRegistryBinding : getProcesses()) {
+		   if (processRegistryBinding.isAlive()) {
+			   start = Math.max(start, processRegistryBinding.getStartTime());
+		   }
+	   }
+	   if (start != 0) {
+		   return new Date(start); 
+	   }
+	   return null;
    }
 
 }

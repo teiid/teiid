@@ -42,7 +42,6 @@ import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
@@ -141,7 +140,7 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 
 		    String udpMulticastAddress = configProps.getProperty(UDP_MCAST_ADDR_PROPERTY);
 		    if (udpMulticastAddress == null || udpMulticastAddress.length() == 0) {
-		    	String currentAddr = VMNaming.getBindAddress();
+		    	String currentAddr = CurrentConfiguration.getInstance().getBindAddress();
 		    	if (currentAddr.indexOf('.') != -1) {
 		    		String lastNode = currentAddr.substring(currentAddr.indexOf('.')+1);
 		    		udpMulticastAddress = DEFAULT_UDP_MCAST_ADDR_PREFIX + lastNode;
@@ -183,7 +182,7 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
         // check for command line system property being set from vm.starter.command for jgroup
         String bindAddress = System.getProperty(JGroupsProvider.BIND_ADDRESS_PROPERTY);
         if (bindAddress == null)  { 
-            bindAddress = VMNaming.getBindAddress();
+            bindAddress = CurrentConfiguration.getInstance().getBindAddress();
         }
             
         if (bindAddress == null) {

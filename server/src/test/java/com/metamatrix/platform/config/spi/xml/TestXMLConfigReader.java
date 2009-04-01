@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentType;
@@ -35,17 +34,12 @@ import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.SharedResource;
-import com.metamatrix.common.connection.ManagedConnection;
 import com.metamatrix.platform.config.BaseTest;
-import com.metamatrix.platform.config.CurrentConfigHelper;
+import com.metamatrix.platform.config.util.CurrentConfigHelper;
 
 public class TestXMLConfigReader extends BaseTest {
 
     private static String PRINCIPAL = "TestXMLConfigReader"; //$NON-NLS-1$
-    protected static final String CONFIG_FILE = "config.xml"; //$NON-NLS-1$
-
-    private ManagedConnection conn;
-    private XMLConfigurationConnectorFactory factory;
 
     public TestXMLConfigReader(String name) {
         super(name);
@@ -55,16 +49,12 @@ public class TestXMLConfigReader extends BaseTest {
 
     protected void setUp() throws Exception {
     	super.setUp();
-        CurrentConfigHelper.initConfig(CONFIG_FILE, this.getPath(), PRINCIPAL);
-
-        factory = new XMLConfigurationConnectorFactory();
-
-        conn = factory.createConnection(new Properties(), PRINCIPAL);
+        CurrentConfigHelper.initXMLConfig(CONFIG_FILE, this.getPath(), PRINCIPAL);
     }
 
     public void testValidateReader() throws Exception {
 
-        XMLConfigurationConnector reader = (XMLConfigurationConnector)factory.createTransaction(conn, true);
+        XMLConfigurationConnector reader = XMLConfigurationMgr.getInstance().getTransaction(PRINCIPAL);
 
         printMsg("Validate ComponentTypes Exists"); //$NON-NLS-1$
         Collection compTypes = reader.getAllComponentTypes(true);

@@ -30,9 +30,11 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeDefnID;
 import com.metamatrix.common.config.api.ConnectorBindingID;
+import com.metamatrix.common.config.reader.PropertiesConfigurationReader;
 import com.metamatrix.common.object.PropertyDefinitionImpl;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 
@@ -50,9 +52,7 @@ public class TestComponentCryptoUtil extends TestCase {
 
     
     public void setUp() throws Exception {
-        System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$//$NON-NLS-2$
-        System.setProperty("metamatrix.config.reader", "com.metamatrix.common.config.reader.SystemCurrentConfigurationReader"); //$NON-NLS-1$//$NON-NLS-2$
-        
+        System.setProperty(CurrentConfiguration.CONFIGURATION_READER_CLASS_PROPERTY_NAME, PropertiesConfigurationReader.class.getName());
         ENCRYPTED = new String(CryptoUtil.stringEncrypt("password"));  //$NON-NLS-1$
     }
 

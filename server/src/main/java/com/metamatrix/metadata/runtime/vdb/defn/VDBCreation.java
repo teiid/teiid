@@ -24,7 +24,6 @@ package com.metamatrix.metadata.runtime.vdb.defn;
 
 
 
-import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,7 +51,6 @@ import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
-import com.metamatrix.common.connection.ManagedConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.vdb.api.ModelInfo;
@@ -65,7 +63,7 @@ import com.metamatrix.metadata.runtime.api.RuntimeMetadataPropertyNames;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnector;
-import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnectorFactory;
+import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
 
 
 /**
@@ -85,15 +83,9 @@ public class VDBCreation  {
     private static final String UNDEFINED_PRINCIPAL = "VDBCreation_UndefinedPrincipal"; //$NON-NLS-1$
 
     
-    private static PrintStream logger=null;
-    // properties used to call createVDB
-
     private Properties runtimeProps;
-    private XMLConfigurationConnectorFactory factory = null;
     private boolean updateBindingProperties = false;
     private List vmsToDeployTo = null;    
-
-    private ManagedConnection conn = null;
 
     private String thePrincipal;
 
@@ -146,14 +138,8 @@ public class VDBCreation  {
             }
         }
         
-        try{
-            writer.executeActions(editor.getDestination().popActions(), thePrincipal);
-            writer.commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            writer.rollback();
-            throw e;    
-        }
+        writer.executeActions(editor.getDestination().popActions());
+        writer.commit();
         
         VirtualDatabase vdb = RuntimeMetadataCatalog.getInstance().createVirtualDatabase(vdbArchive, principal);
         VirtualDatabaseID vdbID = (VirtualDatabaseID)vdb.getID();
@@ -510,27 +496,8 @@ public class VDBCreation  {
 
     }
 
-    protected static void log(String msg) {
-        if (logger != null) {
-            logger.println(msg);
-        } else {
-            LogManager.logWarning(LogCommonConstants.CTX_CONFIG, msg);
-        }
-    }
-
-
     private XMLConfigurationConnector getWriter() throws Exception {
-
-        if (factory == null) {
-
-            factory = new XMLConfigurationConnectorFactory();
-
-            conn = factory.createConnection(new Properties(), thePrincipal);
-        }
-
-        XMLConfigurationConnector writer = (XMLConfigurationConnector) factory.createTransaction(conn, false);
-
-        return writer;
+        return XMLConfigurationMgr.getInstance().getTransaction(thePrincipal);
     }
 
 

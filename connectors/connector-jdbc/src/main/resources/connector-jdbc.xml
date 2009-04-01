@@ -5,7 +5,13 @@
             <PropertyDefinition Name="ExtensionCapabilityClass" DisplayName="Extension Capability Class" ShortDescription="" IsExpert="true" />
             <PropertyDefinition Name="ConnectorClass" DisplayName="Connector Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.JDBCConnector" Multiplicity="1" IsExpert="true" />
             <PropertyDefinition Name="DatabaseTimeZone" DisplayName="Database time zone" ShortDescription="Time zone of the database, if different than Integration Server" IsExpert="true" />
-            <PropertyDefinition Name="TransactionIsolationLevel" DisplayName="Transaction Isolation Level" ShortDescription="Set the data source transaction isolation level" DefaultValue="" IsExpert="true" />
+            <PropertyDefinition Name="TransactionIsolationLevel" DisplayName="Transaction Isolation Level" ShortDescription="Set the data source transaction isolation level" DefaultValue="" IsExpert="true" IsConstrainedToAllowedValues="true">
+            	<AllowedValue>TRANSACTION_READ_UNCOMMITTED</AllowedValue>
+            	<AllowedValue>TRANSACTION_READ_COMMITTED</AllowedValue>
+            	<AllowedValue>TRANSACTION_SERIALIZABLE</AllowedValue>
+            	<AllowedValue>TRANSACTION_NONE</AllowedValue>
+            	<AllowedValue></AllowedValue>
+            </PropertyDefinition>
             <PropertyDefinition Name="Password" DisplayName="Password" ShortDescription="" Multiplicity="0" IsConstrainedToAllowedValues="false" IsMasked="true" IsPreferred="true" />
             <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:&lt;protocol&gt;:&lt;url&gt;" Multiplicity="1" IsConstrainedToAllowedValues="false" IsPreferred="true" />
             <PropertyDefinition Name="ExtensionTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.translator.Translator" IsExpert="true" />

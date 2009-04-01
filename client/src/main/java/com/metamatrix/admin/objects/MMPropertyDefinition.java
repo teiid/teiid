@@ -43,7 +43,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     private int maximumMultiplicity = PropertyDefinition.UNBOUNDED_VALUE;
     private String propertyType = "String"; //$NON-NLS-1$
     private String propertyTypeClassName = String.class.getName();
-    private boolean requiresRestart = false;
+    private RestartType requiresRestart = RestartType.NONE;
     private String valueDelimiter = null;
     private boolean constrainedToAllowedValues = false;
     private boolean expert = false;
@@ -175,7 +175,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
      * @see com.metamatrix.admin.api.objects.PropertyDefinition#getRequiresRestart()
      * @since 4.3
      */
-    public boolean getRequiresRestart() {
+    public RestartType getRequiresRestart() {
         return requiresRestart;
     }
 
@@ -376,7 +376,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
      * @param requiresRestart The value of requiresRestart to set.
      * @since 4.3
      */
-    public void setRequiresRestart(boolean requiresRestart) {
+    public void setRequiresRestart(RestartType requiresRestart) {
         this.requiresRestart = requiresRestart;
     }
 

@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import com.metamatrix.common.transaction.TransactionException;
+import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 
 /**
  * Date Oct 10, 2002
@@ -36,16 +36,10 @@ import com.metamatrix.common.transaction.TransactionException;
  * executed because of an error with the transaction.
  */
 
-public class ConfigTransactionException extends TransactionException {
+public class ConfigTransactionException extends ConfigurationException {
 
     //the transState indicates the state of the transaction
     private String transState = ""; //$NON-NLS-1$
-
-    public static final String TRANS_ALREADY_LOCKED = "TRANS_ALREADY_LOCKED"; //$NON-NLS-1$
-
-    public static final String TRANS_NOT_LOCKED_BY_SAME_USER = "TRANS_NOT_LOCKED_BY_SAME_USER"; //$NON-NLS-1$
-
-    public static final String TRANS_PROCESSING_ERROR = "TRANS_PROCESSING_ERROR"; //$NON-NLS-1$
 
     public void setTransactionState(String code) {
         this.transState = code;
@@ -55,22 +49,6 @@ public class ConfigTransactionException extends TransactionException {
         return this.transState;
     }
     
-    /**
-     * No-arg CTOR
-     */
-    public ConfigTransactionException(  ) {
-        super(  );
-    }    
-
-    /**
-     * Construct an instance with the message specified.
-     *
-     * @param message A message describing the exception
-     */
-    public ConfigTransactionException( String message ) {
-        super( message );
-    }
-
     /**
      * Construct an instance with the message and error code specified.
      *

@@ -46,9 +46,7 @@ public class ConfigurationChangeEvent extends EventObject{
 
     public ConfigurationChangeEvent(Object source, Collection baseIDs, int action) {
         super(source);
-        if(baseIDs == null){
-            Assertion.isNotNull(baseIDs, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0007));
-        }
+        Assertion.isNotNull(baseIDs, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0007));
 
         this.action = action;
         this.ids = baseIDs;

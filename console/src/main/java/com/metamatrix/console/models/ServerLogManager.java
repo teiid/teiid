@@ -87,9 +87,6 @@ public class ServerLogManager extends TimedManager {
         Configuration config = null;
         try {
             switch (index) {
-                case SystemLogSetUpPanel.STARTUP_INDEX:
-                    config = getConfigAPI().getStartupConfiguration();
-                    break;
                 case SystemLogSetUpPanel.NEXT_STARTUP_INDEX:
                     config = getConfigAPI().getNextStartupConfiguration();
                     break;

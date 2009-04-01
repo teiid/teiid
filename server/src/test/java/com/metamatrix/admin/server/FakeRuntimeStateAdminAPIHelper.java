@@ -38,7 +38,6 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -105,10 +104,6 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     }
 
     public List getHosts() throws MetaMatrixComponentException {
-        return null;
-    }
-
-    public List getProcesses() throws MetaMatrixComponentException {
         return null;
     }
 
@@ -296,7 +291,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     public void setLogConfiguration(Configuration config,
                                     LogConfiguration logConfig,
                                     List actions,
-                                    String principalName) throws ConfigurationLockException,
+                                    String principalName) throws 
                                                          ConfigurationException,
                                                          ServiceException,
                                                          MetaMatrixComponentException {

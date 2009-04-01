@@ -22,9 +22,7 @@
 
 package com.metamatrix.common.config;
 
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.jdbc.SimplePooledConnectionSource;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
  * Created on May 14, 2002
@@ -40,11 +38,7 @@ public final class JDBCConnectionPoolHelper {
 			
 	public static synchronized SimplePooledConnectionSource getInstance() {
 		if (INSTANCE == null) {
-			try {
-				INSTANCE = new SimplePooledConnectionSource(CurrentConfiguration.getInstance().getBootStrapProperties());
-			} catch (ConfigurationException e) {
-				throw new MetaMatrixRuntimeException(e);
-			}
+			INSTANCE = new SimplePooledConnectionSource(CurrentConfiguration.getInstance().getBootStrapProperties());
 		}
 		return INSTANCE;
 	}

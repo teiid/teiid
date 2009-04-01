@@ -42,6 +42,8 @@ public class ProcessRegistryBinding implements Serializable {
     private String processName;
     
     private boolean alive;
+    
+    private long startTime = System.currentTimeMillis();
 
     /**
      * Local reference to VMController, this is transient to prevent it from
@@ -126,5 +128,13 @@ public class ProcessRegistryBinding implements Serializable {
     public String toString() {
         return "Process<" +this.hostName+"|"+ this.processName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
+    
+    public long getStartTime() {
+		return startTime;
+	}
+    
+    public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
 }
 

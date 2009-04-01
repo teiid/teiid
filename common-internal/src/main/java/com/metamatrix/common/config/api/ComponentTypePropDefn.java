@@ -25,6 +25,7 @@ package com.metamatrix.common.config.api;
 import java.io.Serializable;
 import java.util.List;
 
+import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
 import com.metamatrix.common.object.Multiplicity;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.object.PropertyDefinitionImpl;
@@ -136,7 +137,7 @@ public class ComponentTypePropDefn implements PropertyDefinition, Serializable {
      * @see com.metamatrix.common.object.PropertyDefinition#getRequiresRestart()
      * @since 4.3
      */
-    public boolean getRequiresRestart() {
+    public RestartType getRequiresRestart() {
         return origPropertyDefinition.getRequiresRestart();
     }
 

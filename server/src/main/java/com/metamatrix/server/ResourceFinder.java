@@ -23,8 +23,10 @@
 package com.metamatrix.server;
 
 
+import com.google.inject.Injector;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.NoOpMessageBus;
+import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
 
 public class ResourceFinder extends com.metamatrix.dqp.ResourceFinder {
 	
@@ -33,5 +35,10 @@ public class ResourceFinder extends com.metamatrix.dqp.ResourceFinder {
 			return new NoOpMessageBus();
 		}
 		return injector.getInstance(MessageBus.class);
-	}		
+	}	
+	
+	public static void setInjectorAndCompleteInitialization(Injector injector) {
+		ResourceFinder.setInjector(injector);
+		XMLConfigurationMgr.getInstance().setMessageBus(getMessageBus());
+	}
 }

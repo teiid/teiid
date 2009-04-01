@@ -37,7 +37,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.StartupStateController;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefn;
@@ -46,9 +45,7 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
@@ -87,9 +84,6 @@ public class HostController implements HostManagement {
     		System.exit(-1);
     	}
     	    	
-    	// normal startup.
-    	StartupStateController.performSystemInitialization(true);
-    	
         createTempDirectories();
         
 		Runtime.getRuntime().addShutdownHook(new ShutdownThread());        
@@ -252,22 +246,9 @@ public class HostController implements HostManagement {
 		}
 
         try {
-            LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER,logMsg);
-           
-            Host host = null;
-            try {
-    			host = CurrentConfiguration.getInstance().getDefaultHost();      
-    		} catch (ConfigurationException e) {
-    		}
+	        LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER,logMsg);
+            Host host = CurrentConfiguration.getInstance().getDefaultHost();      
 
-            if (host == null) {
-            	LogManager.logError(LogCommonConstants.CTX_CONTROLLER,"ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001)); //$NON-NLS-1$
-                System.exit(-1);
-            }        
-
-            // VMNaming used in multiple places to get the host-address
-            VMNaming.setup(host.getFullName(), host.getHostAddress(), host.getBindAddress());
-            
             HostController hostController = loadHostcontroller(host);
             if (!shutdown) {
             	hostController.run(startProcesses);
@@ -286,7 +267,7 @@ public class HostController implements HostManagement {
     
 	private static HostController loadHostcontroller(Host host) {
 		Injector injector = Guice.createInjector(new HostControllerGuiceModule(host));
-		ResourceFinder.setInjector(injector); 
+		ResourceFinder.setInjectorAndCompleteInitialization(injector); 
 		return injector.getInstance(HostController.class);
 	}    
     
@@ -491,7 +472,6 @@ public class HostController implements HostManagement {
 		if (isRootHost(hostName)) {
 	    	try {
 				LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "StartVM " + processName); //$NON-NLS-1$
-				CurrentConfiguration.getInstance().verifyBootstrapProperties();
 				ConfigurationModelContainer currentConfig = CurrentConfiguration.getInstance().getConfigurationModel();
 	
 				VMComponentDefn deployedVM = currentConfig.getConfiguration().getVMForHost(this.host.getFullName(), processName);
@@ -520,9 +500,10 @@ public class HostController implements HostManagement {
        	
        	if (isRootHost(hostName)) {
 	        try {
+	       		LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER,"Copying NextStartup configuration to Startup configuration."); //$NON-NLS-1$
+	            
 	        	hostName = this.host.getFullName();
 	        	LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER,"StartAllVMs on Host " + hostName); //$NON-NLS-1$
-				CurrentConfiguration.getInstance().verifyBootstrapProperties();
 				ConfigurationModelContainer currentConfig = CurrentConfiguration.getInstance().getConfigurationModel();
 				Collection deployedVMs = currentConfig.getConfiguration().getVMsForHost(hostName);
 	

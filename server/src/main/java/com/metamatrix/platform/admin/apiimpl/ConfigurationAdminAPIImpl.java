@@ -22,11 +22,8 @@
 
 package com.metamatrix.platform.admin.apiimpl;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -48,10 +45,7 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
-import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
@@ -99,31 +93,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
     }
 
     /**
-     * Returns the <code>ConfigurationID</code> for the current configuration.
-     * 
-     * @param sessionID
-     *            ID of administrator's session
-     * @return ConfigurationID for current configuration
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws InvalidSessionException
-     *             if there is not a valid administrative session
-     * @throws AuthorizationException
-     *             if the administrator does not have privileges to use this method
-     * @throws MetaMatrixComponentException
-     *             if a general remote system problem occurred
-     */
-    public synchronized ConfigurationID getCurrentConfigurationID() throws ConfigurationException,
-                                                                                                      InvalidSessionException,
-                                                                                                      AuthorizationException,
-                                                                                                      MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getCurrentConfigurationID();
-    }
-
-    /**
      * Returns the ID of the next startup <code>Configuration</code>, which should reflect the desired runtime state of the
      * system.
      * 
@@ -147,31 +116,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getNextStartupConfigurationID();
-    }
-
-    /**
-     * Returns the ID of the startup <code>Configuration</code>, which should reflect the desired runtime state of the system.
-     * 
-     * @param sessionID
-     *            ID of administrator's session
-     * @return ID of startup configuration
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws InvalidSessionException
-     *             if there is not a valid administrative session
-     * @throws AuthorizationException
-     *             if the administrator does not have privileges to use this method
-     * @throws MetaMatrixComponentException
-     *             if a general remote system problem occurred
-     */
-    public synchronized ConfigurationID getStartupConfigurationID() throws ConfigurationException,
-                                                                                                      InvalidSessionException,
-                                                                                                      AuthorizationException,
-                                                                                                      MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getStartupConfigurationID();
     }
 
     /**
@@ -212,48 +156,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getNextStartupConfiguration();
-    }
-
-    /**
-     * Returns the current deployed <code>Configuration</code>. Note, this configuration may not match the actual configuration
-     * the system is currently executing under due to administrative task that can be done to tune the system. Those
-     * administrative task <b>do not</b> change the actual <code>Configuration</code> stored in the
-     * <code>ConfigurationService</code>.
-     * 
-     * @return Configuration that is currently in use
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    public synchronized Configuration getStartupConfiguration() throws ConfigurationException,
-                                                                                                  InvalidSessionException,
-                                                                                                  AuthorizationException,
-                                                                                                  MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getStartupConfiguration();
-    }
-
-    /**
-     * Returns the named <code>Configuration</code>.
-     * 
-     * @param configName
-     *            is the name of the Configuration to obtain
-     * @return Configuration
-     * @throws InvalidConfigurationException
-     *             if the specified name does not exist
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    public synchronized Configuration getConfiguration(String configName) throws InvalidConfigurationException,
-                                                                         ConfigurationException,
-                                                                         InvalidSessionException,
-                                                                         AuthorizationException,
-                                                                         MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getConfiguration(configName);
     }
 
     public synchronized ConfigurationModelContainer getConfigurationModel(String configName) throws ConfigurationException,
@@ -330,82 +232,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
     }
 
     /**
-     * <p>
-     * This method will return a Collection of objects that represent the set of global configuration objects currently
-     * represented in the configuration database. This method will generally be used when attempting to import a configuration
-     * into the database as the 'Next Startup' configuration. This information is important when importing a new configuration so
-     * that any global type configuration objects that are to be imported can be resolved against the global objects that
-     * currently exist in the database.
-     * </p>
-     * 
-     * <pre>
-     * 
-     *  The Collection of objects will contain the following configuration
-     *  object types:
-     * 
-     *  ComponentTypes
-     *  ProductTypes
-     *  Hosts
-     *  
-     * </pre>
-     * 
-     * @return a Collection of all of the global configuration objects as they exist in the database.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws InvalidSessionException
-     *             if there is not a valid administrative session
-     * @throws AuthorizationException
-     *             if the administrator does not have privileges to use this method
-     * @throws MetaMatrixComponentException
-     *             if a general remote system problem occurred
-     */
-    public synchronized Collection getAllGlobalConfigObjects() throws ConfigurationException,
-                                                                                                 InvalidSessionException,
-                                                                                                 AuthorizationException,
-                                                                                                 MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getAllGlobalConfigObjects();
-    }
-
-    /**
-     * Baselines the realtime portion of the current (operational) configuration into the next-startup configuration.
-     * 
-     * @param principalName
-     *            the name of the principal that is requesting the baselining
-     */
-    public synchronized void baselineCurrentConfiguration() throws ConfigurationException,
-                                                                                              InvalidSessionException,
-                                                                                              AuthorizationException,
-                                                                                              MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.baselineCurrentConfiguration()"); //$NON-NLS-1$
-        configAdmin.baselineCurrentConfiguration(token.getUsername());
-    }
-
-    /**
-     * Returns a Map of component type definitions for each <code>ComponentTypeID</code> that is contained in the passed
-     * <code>Collection</code>. This does not return the dependent definitions for service type components.
-     * 
-     * @param componentIDs
-     *            is a Collection
-     * @return Map of a Map of component type difinitions keyed by <code>ComponentTypeID</code>
-     * @see getDependentComponentTypeDefintions(Collection)
-     */
-    public synchronized Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException,
-                                                                                InvalidSessionException,
-                                                                                AuthorizationException,
-                                                                                MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getComponentTypeDefinitions(componentIDs);
-    }
-
-    /**
      * Returns the component type definitions for the specified <code>ComponentTypeID</code>. This does not return the
      * dependent definitions for service type components.
      * 
@@ -442,28 +268,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getAllComponentTypeDefinitions(componentTypeID);
-    }
-
-    /**
-     * Returns a <code>List</code> of type <code>ComponentType</code> . that are flagged as being monitored. A component of
-     * this type is considered to be available for monitoring statistics.
-     * 
-     * @param includeDeprecated
-     *            true if class names that have been deprecated should be included in the returned list, or false if only
-     *            non-deprecated constants should be returned.
-     * @return Collection of type <code>ComponentType</code>
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @see #ComponentType
-     */
-    public synchronized Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException,
-                                                                                        InvalidSessionException,
-                                                                                        AuthorizationException,
-                                                                                        MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getMonitoredComponentTypes(includeDeprecated);
     }
 
     /**
@@ -509,35 +313,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
 
     
     /**
-     * Returns a <code>List</code> of type <code>ProductType</code> that represents all the ProductTypes defined.
-     * 
-     * @param includeDeprecated
-     *            true if class names that have been deprecated should be included in the returned list, or false if only
-     *            non-deprecated constants should be returned.
-     * @return Collection of type <code>ProductType</code>
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @see #ProductType
-     */
-    public Collection getAllProductTypes(boolean includeDeprecated) throws ConfigurationException,
-                                                                   InvalidSessionException,
-                                                                   AuthorizationException,
-                                                                   MetaMatrixComponentException {
-        Iterator allTypes = getAllComponentTypes(includeDeprecated).iterator();
-        ArrayList productTypes = new ArrayList();
-        Object aType = null;
-        while (allTypes.hasNext()) {
-            aType = allTypes.next();
-            if (aType instanceof ProductType) {
-                productTypes.add(aType);
-            }
-        }
-        return productTypes;
-    }
-    
-    
-    
-    /**
      * Returns a <code>Host</code> for the specified <code>HostID</code>. </br>
      * 
      * @return Host
@@ -552,50 +327,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getHost(hostID);
-    }
-
-    /**
-     * Returns a <code>Collection</code> of currently defined hosts. This method does not cache, it reretrieves the data
-     * everytime. </br>
-     * 
-     * @return Collection of type Host
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    public synchronized Collection getHosts() throws ConfigurationException,
-                                                                                InvalidSessionException,
-                                                                                AuthorizationException,
-                                                                                MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getHosts();
-    }
-
-    /**
-     * Returns a collection of <code>ComponentDefn</code>s for the specified collection of <code>ComponentDefnID</code>s and
-     * <code>ConfigurationID</code>. If the configuration is null the parent name from the componentID will be used. </br> The
-     * reason for adding the option to specify the configurationID is so that the same collection of componentIDs can be used to
-     * obtain the componentDefns from the different configurations. Otherwise, the requestor would have to create a new set of
-     * componetDefnIDs for each configuration. <br>
-     * 
-     * @param componentDefnIDs
-     *            contains all the ids for which componet defns to be returned
-     * @param configurationID
-     *            is the configuration from which the component defns are to be derived; optional, nullalble
-     * @return Collection of ComponentDefn objects
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    public synchronized Collection getComponentDefns(Collection componentDefnIDs,
-                                                     ConfigurationID configurationID) throws ConfigurationException,
-                                                                                     InvalidSessionException,
-                                                                                     AuthorizationException,
-                                                                                     MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getComponentDefns(componentDefnIDs, configurationID);
     }
 
     public synchronized ComponentDefn getComponentDefn(ConfigurationID configurationID,
@@ -631,29 +362,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         AdminAPIHelper.validateSession(getSessionID());
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getResources();
-    }
-
-    /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} that are of the
-     * specified resource type.
-     * 
-     * @param componentTypeID
-     *            that identifies the type of resources to be returned
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized Collection getResources(ComponentTypeID componentTypeID) throws ConfigurationException,
-                                                                                InvalidSessionException,
-                                                                                AuthorizationException,
-                                                                                MetaMatrixComponentException {
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-        return configAdmin.getResources(componentTypeID);
     }
 
     /**
@@ -703,7 +411,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      *             if an error occurred within or during communication with the Metadata Service.
      */
     public synchronized Set executeTransaction(ActionDefinition action) throws ModificationException,
-                                                                       ConfigurationLockException,
                                                                        ConfigurationException,
                                                                        InvalidSessionException,
                                                                        AuthorizationException,
@@ -732,7 +439,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      *             if an error occurred within or during communication with the Metadata Service.
      */
     public synchronized Set executeTransaction(List actions) throws ModificationException,
-                                                            ConfigurationLockException,
                                                             ConfigurationException,
                                                             InvalidSessionException,
                                                             AuthorizationException,
@@ -742,153 +448,6 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         // Validate caller's role
         AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.executeTransaction(" + actions + ")"); //$NON-NLS-1$ //$NON-NLS-2$
         return configAdmin.executeTransaction(actions, token.getUsername());
-    }
-
-    /**
-     * Execute a list of insert actions and for actions on objects of type ComponentDefn or DeployedComponent object, it will have
-     * its configuration id resassigned, and optionally return the set of objects or object IDs that were affected/modified by the
-     * action. Only insert actions can be performed here because changing a configuration id on a modify action has larger
-     * consiquences.
-     * 
-     * @param assignConfigurationID
-     *            the configuration for which any action for a component object will have its configurationID set to this.
-     * @param actions
-     *            the ordered list of actions that are to be performed on data within the repository.
-     * @return the set of objects that were affected by this transaction.
-     * @throws ModificationException
-     *             if the target of any of the actions is invalid, or an action that is not an insert, or if the target object is
-     *             not a supported class of targets.
-     * @throws IllegalArgumentException
-     *             if the action is null or if the result specification is invalid
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Metadata Service.
-     */
-    public synchronized Set executeInsertTransaction(ConfigurationID assignConfigurationID,
-                                                     List actions) throws ModificationException,
-                                                                  ConfigurationLockException,
-                                                                  ConfigurationException,
-                                                                  InvalidSessionException,
-                                                                  AuthorizationException,
-                                                                  MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.executeInsertTransaction(" + assignConfigurationID + ", " + actions + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        return configAdmin.executeInsertTransaction(assignConfigurationID, actions, token.getUsername());
-    }
-
-    /**
-     * Undo the specified number of previously-committed transactions.
-     * 
-     * @param numberOfActions
-     *            the number of actions in the history that are to be undone.
-     * @param principalName
-     *            of the person executing the transaction
-     * @return the set of objects that were affected by undoing these actions.
-     * @throws IllegalArgumentException
-     *             if the number is negative.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Metadata Service.
-     */
-    public synchronized Set undoActionsAsTransaction(int numberOfActions) throws ConfigurationException,
-                                                                         InvalidSessionException,
-                                                                         AuthorizationException,
-                                                                         MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.undoActionsAsTransaction(" + numberOfActions + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-        return configAdmin.undoActionsAsTransaction(numberOfActions, token.getUsername());
-    }
-
-    /**
-     * Get the history of actions executed in transactions by this editor. The actions at the front of the list will be those most
-     * recently executed.
-     * 
-     * @return the ordered list of actions in the history.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Metadata Service.
-     */
-    public synchronized List getHistory() 	
-    	throws ConfigurationException,InvalidSessionException, AuthorizationException, MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.getHistory()"); //$NON-NLS-1$
-        return configAdmin.getHistory();
-    }
-
-    /**
-     * Clear the history of all actions without undoing any of them.
-     * 
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Metadata Service.
-     */
-    public synchronized void clearHistory() throws ConfigurationException,
-                                                                              InvalidSessionException,
-                                                                              AuthorizationException,
-                                                                              MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.clearHistory()"); //$NON-NLS-1$
-        configAdmin.clearHistory();
-    }
-
-    /**
-     * Get the number of actions that are currently in the history.
-     * 
-     * @return the number of actions in the history.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Metadata Service.
-     */
-    public synchronized int getHistorySize() throws ConfigurationException,
-                                                                               InvalidSessionException,
-                                                                               AuthorizationException,
-                                                                               MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.getHistorySize()"); //$NON-NLS-1$
-        return configAdmin.getHistorySize();
-    }
-
-    /**
-     * Set the limit on the number of actions in the history. Note that the history may at times be greater than this limit,
-     * because when actions are removed from the history, all actions for a transactions are removed at the same time. If doing so
-     * would make the history size smaller than the limit, no actions are removed.
-     * 
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Metadata Service.
-     */
-    public synchronized int getHistoryLimit() throws ConfigurationException,
-                                                                                InvalidSessionException,
-                                                                                AuthorizationException,
-                                                                                MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.getHistoryLimit()"); //$NON-NLS-1$
-        return configAdmin.getHistoryLimit();
-    }
-
-    /**
-     * Set the limit on the number of actions in the history. Note that the history may at times be greater than this limit,
-     * because when actions are removed from the history, all actions for a transactions are removed at the same time. If doing so
-     * would make the history size smaller than the limit, no actions are removed.
-     * 
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Metadata Service.
-     */
-    public synchronized void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException,
-                                                                     InvalidSessionException,
-                                                                     AuthorizationException,
-                                                                     MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.setHistoryLimit(" +maximumHistoryCount + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-        configAdmin.setHistoryLimit(maximumHistoryCount);
     }
 
     /**

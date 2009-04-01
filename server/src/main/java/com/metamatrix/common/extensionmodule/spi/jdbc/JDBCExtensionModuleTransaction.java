@@ -39,13 +39,10 @@ import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundEx
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleOrderingException;
 import com.metamatrix.common.extensionmodule.spi.ExtensionModuleTransaction;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.LogCommonConstants;
 
 public class JDBCExtensionModuleTransaction extends BaseTransaction implements ExtensionModuleTransaction {
 
     private Connection jdbcConnection;
-
-    private static final String CONTEXT = LogCommonConstants.CTX_EXTENSION_SOURCE_JDBC;
 
     /**
      * Create a new instance of a transaction for a managed connection.

@@ -29,7 +29,13 @@ import java.util.Collection;
  */
 public interface PropertyDefinition extends AdminObject {
 
-    
+	public enum RestartType {
+		NONE,
+		SERVICE,
+		PROCESS,
+		ALL_PROCESSES,
+		CLUSTER
+	} 
     /**
      * The value of the maximum multiplicity if the multiplicity is considered unbounded.
      */
@@ -90,7 +96,7 @@ public interface PropertyDefinition extends AdminObject {
      * Get whether this property requires the system to be restarted before it takes effect.
      * @return true if this property requires the system to be restarted before it takes effect.
      */
-    public boolean getRequiresRestart();
+    public RestartType getRequiresRestart();
     
     /**
      * The modifiable flag is used to identify features that may not be changed once

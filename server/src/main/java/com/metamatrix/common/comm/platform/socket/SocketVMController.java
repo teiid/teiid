@@ -29,6 +29,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.platform.socket.server.SocketListener;
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.log.LogManager;
@@ -37,7 +38,6 @@ import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.util.PlatformProxyHelper;
@@ -113,7 +113,7 @@ public class SocketVMController extends ProcessController {
         int maxThreads = PropertiesUtils.getIntProperty(props, MAX_THREADS, DEFAULT_MAX_THREADS);
         int inputBufferSize = PropertiesUtils.getIntProperty(props, INPUT_BUFFER_SIZE, DEFAULT_INPUT_BUFFER_SIZE);
         int outputBufferSize = PropertiesUtils.getIntProperty(props, OUTPUT_BUFFER_SIZE, DEFAULT_OUTPUT_BUFFER_SIZE);
-        String bindaddress =  VMNaming.getBindAddress();
+        String bindaddress = CurrentConfiguration.getInstance().getBindAddress();
         
         final Object[] param = new Object[] {
             this.processName, bindaddress, String.valueOf(socketPort)

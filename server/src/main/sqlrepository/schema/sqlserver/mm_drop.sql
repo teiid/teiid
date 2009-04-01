@@ -66,16 +66,8 @@ if exists (select * from dbo.sysobjects where id = object_id(N'[AUTHREALMS]') an
 DROP TABLE [AUTHREALMS]
 GO
 
-if exists (select * from dbo.sysobjects where id = object_id(N'[CFG_STARTUP_STATE]') and OBJECTPROPERTY(id, N'IsUserTable') = 1)
-DROP TABLE [CFG_STARTUP_STATE]
-GO
-
 if exists (select * from dbo.sysobjects where id = object_id(N'[CS_EXT_FILES]') and OBJECTPROPERTY(id, N'IsUserTable') = 1)
 DROP TABLE [CS_EXT_FILES]
-GO
-
-if exists (select * from dbo.sysobjects where id = object_id(N'[CS_SYSTEM_PROPS]') and OBJECTPROPERTY(id, N'IsUserTable') = 1)
-DROP TABLE [CS_SYSTEM_PROPS]
 GO
 
 if exists (select * from dbo.sysobjects where id = object_id(N'[IDTABLE]') and OBJECTPROPERTY(id, N'IsUserTable') = 1)

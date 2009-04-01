@@ -29,11 +29,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
 import java.util.Properties;
 
-import com.metamatrix.common.config.StartupStateController;
-import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -67,10 +64,6 @@ public class FilePersistentConnection implements PersistentConnection {
      */
     public static final String NEXT_STARTUP_FILE_NAME = "config_ns.xml"; //$NON-NLS-1$
 
-	private int state = StartupStateController.STATE_STOPPED;
-
-	private Date startupTime = null;
-
     private String path;
 
     private String ns_full_path;
@@ -81,8 +74,14 @@ public class FilePersistentConnection implements PersistentConnection {
     private boolean closed = true;
 
 
-    public FilePersistentConnection(Properties props, ConfigurationModelContainerAdapter adapter) {
+    public FilePersistentConnection(Properties props, ConfigurationModelContainerAdapter adapter) throws ConfigurationException {
         this.adapter = adapter;
+        
+		String filename = props.getProperty(FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY);
+		if (filename == null || filename.length() == 0) {
+			throw new ConfigurationException(ErrorMessageKeys.CONFIG_0029, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0029,
+					FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY ));
+		}
 
         path = props.getProperty(CONFIG_FILE_PATH_PROPERTY, ""); //$NON-NLS-1$
         if (props.getProperty(CONFIG_NS_FILE_NAME_PROPERTY, null) != null) {
@@ -144,85 +143,7 @@ public class FilePersistentConnection implements PersistentConnection {
     }
 
 
-	/**
-	 * Call to set the startup state to @see {StartupStateController.STARTING Starting}.
-	 * The server must be in the STOPPED state in order for this to work.  Otherwise,
-	 * a StartpStateException will be thrown.
-	 * @throws StartupStateException is thrown if the server state is not currently
-	 * set to STOPPED.
-	 */
-    public synchronized void setServerStarting() throws StartupStateException, ConfigurationException {
-		if (this.state != StartupStateController.STATE_STOPPED) {
-			throw new StartupStateException(StartupStateController.STATE_STARTING, this.state);
-		}
-
-
-		this.state = StartupStateController.STATE_STARTING;
-
-    }
-
-	/**
-	 * Call to forcibly set the startup state to @see {StartupStateController.STARTING Starting},
-	 * regardless of the current state of the server.
-	 * @throws StartupStateException is thrown if the server state cannot be set.
-	 */
-    public synchronized void setServerStarting( boolean force) throws StartupStateException, ConfigurationException {
-		this.state = StartupStateController.STATE_STARTING;
-
-    }
-
-	/**
-	 * Call to set the startup state to @see {StartupStateController.STARTED Started}.
-	 * The server must be in the STARTING state in order for this to work.  Otherwise,
-	 * a StartpStateException will be thrown.
-	 * @throws StartupStateException is thrown if the server state cannot be set.
-	 */
-    public synchronized void setServerStarted( ) throws StartupStateException, ConfigurationException {
-		if (this.state != StartupStateController.STATE_STARTING) {
-			throw new StartupStateException(StartupStateController.STATE_STARTED, this.state);
-		}
-
-		this.state = StartupStateController.STATE_STARTED;
-		this.startupTime = new Date();
-
-    }
-
-
-	/**
-	 * Call to set the startup state to @see {StartupStateController.STOPPED Stopped}.
-	 * This is normally called when the system is shutdown.
-	 * @throws StartupStateException is thrown if the server state cannot be set.
-	 */
-    public synchronized void setServerStopped() throws StartupStateException, ConfigurationException {
-    	state = StartupStateController.STATE_STOPPED;
-    }
-
-
-
-	/**
-	 * Call to get the current state
-	 * @return int state @see {StartupStateController Controller}
-	 */
-	public int getServerState() throws ConfigurationException {
-		return this.state;
-	}
-
-	/**
-	 * Call to get the current state
-	 * @return int state @see {StartupStateController Controller}
-	 */
-
-	public java.util.Date getStartupTime() throws ConfigurationException {
-		if (getServerState() == StartupStateController.STATE_STARTED) {
-			return startupTime;
-		}
-		// go ahead and return a date, even though its not correct
-		return new Date();
-	}
-
-
-
-    private InputStream readConfigurationFromFile(String fileName) throws ConfigurationException {
+	private InputStream readConfigurationFromFile(String fileName) throws ConfigurationException {
         InputStream inputStream = null;
 
         File configFile = new File(fileName);
@@ -250,13 +171,8 @@ public class FilePersistentConnection implements PersistentConnection {
     }
 
     public synchronized void write(ConfigurationModelContainer model, String principal) throws ConfigurationException {
-       if(model == null){
-            Assertion.isNotNull(model, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0022));
-       }
-       
-       if(principal == null){
-            Assertion.isNotNull(principal, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0023));
-       }
+        Assertion.isNotNull(model, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0022));
+        Assertion.isNotNull(principal, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0023));
 
        init();
 
@@ -284,7 +200,6 @@ public class FilePersistentConnection implements PersistentConnection {
 
 
         } catch(Exception ioe) {
-            ioe.printStackTrace();
             throw new ConfigurationException(ioe, ErrorMessageKeys.CONFIG_0024, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0024, fileName));
         }
 
@@ -301,7 +216,6 @@ public class FilePersistentConnection implements PersistentConnection {
          	deleteFile(fileName);
 
         } catch(Exception ioe) {
-            ioe.printStackTrace();
             throw new ConfigurationException(ioe, ErrorMessageKeys.CONFIG_0025, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0025, fileName));
         }
 
@@ -312,11 +226,8 @@ public class FilePersistentConnection implements PersistentConnection {
 
         if (id.equals(Configuration.NEXT_STARTUP_ID)) {
             return ns_full_path;
-        } else if (id.equals(Configuration.STARTUP_ID)) {
-        	return ns_full_path;
-        } else {
-           throw new ConfigurationException(ErrorMessageKeys.CONFIG_0026, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0026, id));
         }
+       throw new ConfigurationException(ErrorMessageKeys.CONFIG_0026, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0026, id));
     }
 
     private void copyFile(String fromFileName, String toFileName) throws ConfigurationException {
@@ -354,7 +265,6 @@ public class FilePersistentConnection implements PersistentConnection {
 	        }
 
         } catch(Exception ioe) {
-            ioe.printStackTrace();
             throw new ConfigurationException(ioe, ErrorMessageKeys.CONFIG_0028, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0028, fileToDelete ));
         }
 
@@ -369,10 +279,6 @@ public class FilePersistentConnection implements PersistentConnection {
        	File configFile = new File(path, fileName);
        	return configFile.getPath();
     }
-
-	@Override
-	public void beginTransaction() throws ConfigurationException {
-	}
 
 	@Override
 	public void commit() throws ConfigurationException {

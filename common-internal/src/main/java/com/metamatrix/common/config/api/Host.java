@@ -69,7 +69,9 @@ public interface Host extends ComponentDefn {
      * @return
      * @since 4.3
      */
-    String getHostAddress();    
+    String getHostAddress();   
+    
+    String getConfigDirectory();
     
 }
 

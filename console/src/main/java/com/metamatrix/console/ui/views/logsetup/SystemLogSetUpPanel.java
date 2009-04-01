@@ -39,13 +39,11 @@ import com.metamatrix.toolbox.ui.widget.util.IconFactory;
 
 public class SystemLogSetUpPanel extends JPanel implements WorkspacePanel,
         ConfigurationLogSetUpPanelController, NotifyOnExitConsole, Refreshable {
-    public final static int NUM_CONFIGURATIONS = 2;
+    public final static int NUM_CONFIGURATIONS = 1;
     public final static int NEXT_STARTUP_INDEX = 0;
-    public final static int STARTUP_INDEX = 1;
     public final static String[] CONFIGURATION_NAMES = new String[] {
-            "Next Startup", "Startup"}; //$NON-NLS-1$ //$NON-NLS-2$
+            "Next Startup"}; //$NON-NLS-1$
     public final static Icon[] CONFIGURATION_ICONS = new Icon[] {
-            IconFactory.getIconForImageFile("startup_small.gif"), //$NON-NLS-1$
             IconFactory.getIconForImageFile("NextStartUp_small.gif") //$NON-NLS-1$
             };
 
@@ -136,8 +134,7 @@ public class SystemLogSetUpPanel extends JPanel implements WorkspacePanel,
                                                 CONFIGURATION_ICONS[j];
                                     }
                                 }
-                                boolean modifiable = (canModify &&
-                                        (i != STARTUP_INDEX));
+                                boolean modifiable = canModify;
                                 configPanels[i] = new ConfigurationLogSetUpPanel(
                                         CONFIGURATION_NAMES[i], modifiable, this,
                                         otherSourceNames, otherSourceIcons,

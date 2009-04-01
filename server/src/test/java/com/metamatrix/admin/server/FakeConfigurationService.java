@@ -60,7 +60,6 @@ import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.SharedResourceID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidArgumentException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
@@ -433,7 +432,6 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public Set executeTransaction(ActionDefinition action,
                                   String principalName) throws ModificationException,
-                                                       ConfigurationLockException,
                                                        ConfigurationException {
         return null;
     }
@@ -443,7 +441,6 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public Set executeTransaction(List actions,
                                   String principalName) throws ModificationException,
-                                                       ConfigurationLockException,
                                                        ConfigurationException {
         if (actions != null) {
             for (Iterator it=actions.iterator(); it.hasNext();) {
@@ -464,7 +461,6 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     public Set executeInsertTransaction(ConfigurationID assignConfigurationID,
                                         List actions,
                                         String principalName) throws ModificationException,
-                                                             ConfigurationLockException,
                                                              ConfigurationException {
         return null;
     }

@@ -42,8 +42,7 @@ import com.metamatrix.console.util.LogContexts;
 public class ConsolePropertiedEditor implements PropertiedObjectEditor, ChangeListener{
 
     public static final short NSUCONFIGINDICATOR = 2;
-    public static final short STARTUPCONFIGINDICATOR = 3;
-    private Collection allPropDefns, allNSUPropDefns, allSUPropDefns;
+    private Collection allPropDefns, allNSUPropDefns;
     private ArrayList currentPropDefns = new ArrayList();
     private Properties oraginalProperties, allProperties;
     private Properties oldNSUProperties, nsuProperties;
@@ -102,15 +101,7 @@ public class ConsolePropertiedEditor implements PropertiedObjectEditor, ChangeLi
             }
             this.allPropDefns = this.allNSUPropDefns;
             allProperties  =  nsuProperties;
-        } else if (currentTabName == PropertiesMasterPanel.STARTUP) {
-
-           if (allSUPropDefns == null) {
-                getSUDefn();
-                getSUProperty();
-            } 
-            this.allPropDefns = this.allSUPropDefns;
-            allProperties =   oraginalProperties;//TODO: May be using stProperties instead
-        }
+        } 
         if (propHM != null)
             propHM.clear();
     }
@@ -162,34 +153,6 @@ public class ConsolePropertiedEditor implements PropertiedObjectEditor, ChangeLi
     public Collection getPropDefn() {
         return allNSUPropDefns;
     }
-
-    private void getSUDefn() {
-       	try{
-            allSUPropDefns = manager.getStartUpDefn();
-        } catch (Exception ex) {
-            ExceptionUtility.showMessage("Failed getting start up definition", ex);
-            LogManager.logError(LogContexts.PROPERTIES, ex,
-              		"Error creating start up property definition");
-        }
-        if (allSUPropDefns == null) {
-            allSUPropDefns = new ArrayList(0);
-        }   
-        allPropDefns = allSUPropDefns;
-    }
-
-    private void getSUProperty() {
-     try{
-        oraginalProperties = manager.getSUProperties();
-     } catch (Exception ex) {
-                ExceptionUtility.showMessage("Failed getting start up properties", ex);
-                LogManager.logError(LogContexts.PROPERTIES, ex,
-                        "Error creating start up property");
-        }
-        if (oraginalProperties !=null)
-            allProperties = oraginalProperties;
-
-      //TODO currect properties
-    }         
 
     boolean getButtonState() {
         return buttonState;
@@ -287,10 +250,6 @@ public class ConsolePropertiedEditor implements PropertiedObjectEditor, ChangeLi
         return getDefnsFromAll(this.allNSUPropDefns, propDefnsList);
     }
 
-    public List getSUDefns(List propDefnsList) {
-        return getDefnsFromAll(this.allSUPropDefns, propDefnsList);
-    }
-
     private List getDefnsFromAll(Collection allDefns, List defns) {
         List result = new ArrayList();
         Iterator iter = defns.listIterator();
@@ -312,8 +271,6 @@ public class ConsolePropertiedEditor implements PropertiedObjectEditor, ChangeLi
     public void refreshData() {
         if (currentTabName == PropertiesMasterPanel.NEXT_STARTUP) {
             getNSUProperty();
-        } else if (currentTabName == PropertiesMasterPanel.STARTUP) {
-            getSUProperty();
         }
         if (propHM != null) {
             propHM = null;

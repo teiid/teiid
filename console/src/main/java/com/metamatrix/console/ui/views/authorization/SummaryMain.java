@@ -105,7 +105,7 @@ public class SummaryMain extends BasePanel implements WorkspacePanel, Refreshabl
                 new Insets(2, 2, 2, 2), 0, 0));
         
         // Initialize the display to startup config values
-        refresh(Configuration.STARTUP_ID);
+        refresh(Configuration.NEXT_STARTUP_ID);
     }
 
 

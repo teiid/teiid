@@ -22,7 +22,6 @@
 
 package com.metamatrix.common.config.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -75,7 +74,7 @@ import com.metamatrix.core.util.Assertion;
  *  it cannot be changed.  The configuration must be versioned, and then changes can be made to the
  * new versioned copy.
  */
-public class BasicConfiguration extends BasicComponentObject implements Configuration, Serializable {
+public class BasicConfiguration extends BasicComponentObject implements Configuration {
 
 
     /**
@@ -131,15 +130,6 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
      */
     public boolean isNextStartUp() {
         return info.getID().equals(NEXT_STARTUP_ID);
-    }
-
-
-    /**
-     * Does this config represent the Startup config?
-     * @return true if it does, false otherwise.
-     */
-    public boolean isStartUp() {
-        return info.getID().equals(STARTUP_ID);
     }
 
     public ConfigurationInfo getInfo() {

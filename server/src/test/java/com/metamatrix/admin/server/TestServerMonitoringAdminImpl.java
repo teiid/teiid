@@ -64,9 +64,6 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
     
     
     public void setUp() throws Exception {
-        System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-        System.setProperty("metamatrix.message.bus.type", "noop.message.bus"); //$NON-NLS-1$ //$NON-NLS-2$
-
         ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry();
         parent = new FakeServerAdminImpl(registry);
         admin = new ServerMonitoringAdminImpl(parent, registry);        

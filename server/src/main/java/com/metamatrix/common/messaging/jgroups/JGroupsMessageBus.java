@@ -41,6 +41,9 @@ import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.RspList;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
@@ -49,12 +52,17 @@ import com.metamatrix.common.messaging.RemoteMessagingException;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.event.AsynchEventBroker;
 import com.metamatrix.core.event.EventBroker;
+import com.metamatrix.core.event.EventBrokerException;
 import com.metamatrix.core.event.EventObjectListener;
+import com.metamatrix.core.event.EventSourceException;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.server.ChannelProvider;
+import com.metamatrix.server.Configuration;
 
+@Singleton
 public class JGroupsMessageBus implements MessageBus {
 	
 	public static final String MESSAGE_KEY = "MessageKey"; //$NON-NLS-1$
@@ -62,13 +70,16 @@ public class JGroupsMessageBus implements MessageBus {
 	
 	private Channel channel;
 	private volatile boolean shutdown;
+	
+    private EventBroker eventBroker = new AsynchEventBroker("VMMessageBus"); //$NON-NLS-1$
 
 	// these are original objects that implement
 	private ConcurrentHashMap<UUID, RPCStruct> rpcStructs = new ConcurrentHashMap<UUID, RPCStruct>();
 	
 	private RpcDispatcher rpcDispatcher;
 	
-	public JGroupsMessageBus(ChannelProvider channelProvider, final EventBroker eventBroker, final String clusterName) throws ChannelException {
+    @Inject
+    public JGroupsMessageBus(ChannelProvider channelProvider, @Named(Configuration.CLUSTERNAME) final String clusterName) throws ChannelException {
 		Channel c = channelProvider.get(ChannelProvider.ChannelID.RPC);
 		
 		if (c == null || !c.isOpen()) {
@@ -138,8 +149,6 @@ public class JGroupsMessageBus implements MessageBus {
 			}
 		});
 	}
-	
-
 
 	/**
 	 * @see com.metamatrix.common.messaging.MessageBus#processEvent(java.util.EventObject)
@@ -153,30 +162,57 @@ public class JGroupsMessageBus implements MessageBus {
 				throw new MessagingException(e, ErrorMessageKeys.MESSAGING_ERR_0004, CommonPlugin.Util.getString(ErrorMessageKeys.MESSAGING_ERR_0004));
 			}
 		}
+		eventBroker.processEvent(obj);
 	}
 
 	public synchronized void shutdown() throws MessagingException {
+		if (shutdown) {
+			return;
+		}
 		shutdown = true;
 		this.channel.close();
 		this.rpcDispatcher.stop();
 		this.rpcStructs.clear();
+		try {
+			eventBroker.shutdown();
+		} catch (EventBrokerException e) {
+			throw new MessagingException(e, ErrorMessageKeys.MESSAGING_ERR_0014, CommonPlugin.Util.getString(ErrorMessageKeys.MESSAGING_ERR_0014));
+		}
 	}
 
 	public void addListener(Class eventClass, EventObjectListener listener)
 			throws MessagingException {
-		
+    	if (shutdown) {
+    		return;
+    	}
+        try {
+            eventBroker.addListener(eventClass, listener);
+        } catch (EventSourceException e) {
+            throw new MessagingException(e, ErrorMessageKeys.MESSAGING_ERR_0013, CommonPlugin.Util.getString(ErrorMessageKeys.MESSAGING_ERR_0013));
+        }
 	}
 
 	public void removeListener(Class eventClass, EventObjectListener listener)
 			throws MessagingException {
-		
+		if (shutdown) {
+			return;
+		}
+		try {
+			eventBroker.removeListener(eventClass, listener);
+		} catch (EventSourceException e) {
+			throw new MessagingException(e, ErrorMessageKeys.MESSAGING_ERR_0015, CommonPlugin.Util.getString(ErrorMessageKeys.MESSAGING_ERR_0015));
+		}
 	}
 
 	public void removeListener(EventObjectListener listener)
 			throws MessagingException {
-		
+		if (shutdown) {
+    		return;
+    	}
+    	try {
+    		eventBroker.removeListener(listener);
+    	} catch (EventSourceException e) {
+    		throw new MessagingException(e, ErrorMessageKeys.MESSAGING_ERR_0015, CommonPlugin.Util.getString(ErrorMessageKeys.MESSAGING_ERR_0015));
+    	}
 	}
 }
-
-
-

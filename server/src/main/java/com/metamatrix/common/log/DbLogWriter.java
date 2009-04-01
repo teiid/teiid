@@ -30,9 +30,9 @@ import java.util.Date;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.StringUtil;
@@ -309,10 +309,10 @@ public class DbLogWriter {
 			stmt.setString(5, StringUtil.truncString(message.getText(), maxMsgLength));
 
 			// Message hostname column
-			stmt.setString(6, StringUtil.truncString(VMNaming.getConfigName(), maxGeneralLength)); 
+			stmt.setString(6, StringUtil.truncString(CurrentConfiguration.getInstance().getConfigurationName(), maxGeneralLength)); 
 
 			// Message VM ID column
-			stmt.setString(7, StringUtil.truncString(VMNaming.getProcessName(), maxGeneralLength));
+			stmt.setString(7, StringUtil.truncString(CurrentConfiguration.getInstance().getProcessName(), maxGeneralLength));
 
 			// Message thread name column
 			stmt.setString(8, StringUtil.truncString(message.getThreadName(), maxGeneralLength));

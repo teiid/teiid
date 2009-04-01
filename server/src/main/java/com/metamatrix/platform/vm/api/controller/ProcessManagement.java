@@ -23,7 +23,6 @@
 package com.metamatrix.platform.vm.api.controller;
 
 import java.net.InetAddress;
-import java.util.Date;
 
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
@@ -77,7 +76,7 @@ public interface ProcessManagement {
 	/**
 	 * Get the time the VM was initialized.
 	 */
-    Date getStartTime();
+    long getStartTime();
 
 	/**
 	 * Get the address of the host this VM is running on.

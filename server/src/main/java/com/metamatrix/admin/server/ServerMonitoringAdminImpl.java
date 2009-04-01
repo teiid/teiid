@@ -982,7 +982,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         //get state from RuntimeStateAdminAPIHelper, etc.
         try {
 			boolean isStarted = getRuntimeStateAdminAPIHelper().isSystemStarted();
-			Date startTime = getConfigurationServiceProxy().getServerStartupTime();
+			Date startTime = getRuntimeStateAdminAPIHelper().getEldestProcessStartTime();
 			Configuration currentConfiguration = getConfigurationServiceProxy().getCurrentConfiguration(); 
 			
 			system = new MMSystem();

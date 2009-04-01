@@ -59,9 +59,7 @@ public final class AdminConsoleMain {
     //# Static variables
     //############################################################################################################################
     public final static String DEFAULT_LOG_FILE =
-    		"../log/console_%VM_NAME%.log"; //$NON-NLS-1$
-    public final static String VM_STRING = "%VM_NAME%"; //$NON-NLS-1$
-    public final static int VM_STRING_LEN = VM_STRING.length();
+    		"../log/console.log"; //$NON-NLS-1$
     public final static String DEFAULT_ICON = "console.ico"; //$NON-NLS-1$
 
     static {
@@ -222,10 +220,10 @@ public final class AdminConsoleMain {
     	String logFile = System.getProperty(logFileProp);
     	File tmpFile = null;
     	if (logFile == null) {
-    		logFile = substituteVMName(DEFAULT_LOG_FILE);
+    		logFile = DEFAULT_LOG_FILE;
     	} else {
     		try {
-    			tmpFile = new File(substituteVMName(logFile));
+    			tmpFile = new File(logFile);
     		} catch (Exception ex) {
     			logFile = DEFAULT_LOG_FILE;
     		}
@@ -264,15 +262,4 @@ public final class AdminConsoleMain {
         StaticProperties.setLogDirectory(tmpFile.getParentFile());
     }
     
-    private String substituteVMName(String str) {
-		String outputStr;
-    	int index = str.indexOf(VM_STRING);
-    	if (index >= 0) {
-    		String theVM = "MMProcess"; //$NON-NLS-1$
-    		outputStr = str.substring(0, index) + theVM + str.substring(index + VM_STRING_LEN);
-    	} else {
-    		outputStr = str;
-    	}
-    	return outputStr;
-    }
 }

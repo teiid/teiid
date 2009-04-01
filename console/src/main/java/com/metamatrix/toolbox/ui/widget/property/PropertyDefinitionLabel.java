@@ -26,12 +26,13 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.util.EnumSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 
+import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
 import com.metamatrix.common.object.PropertyDefinition;
-
 import com.metamatrix.toolbox.ui.widget.LabelWidget;
 
 /**
@@ -48,8 +49,13 @@ public class PropertyDefinitionLabel extends LabelWidget {
     private final static Color invalidColor = Color.red;
     private final static Color requiresRestartColor = Color.BLUE;
 
-    private final static String REQUIRES_RESTART_LABEL = " [REQUIRES RESTART]"; //$NON-NLS-1$
-    private final static String REQUIRES_RESTART_TOOLTIP = " [Requires a restart or bounce of the server to take effect]"; //$NON-NLS-1$
+    private final static EnumSet<RestartType> uncolored = EnumSet.of(RestartType.NONE, RestartType.SERVICE); 
+    
+    public final static String REQUIRES_NO_RESTART_LABEL = " [IMMEDIATE]"; //$NON-NLS-1$
+    public final static String REQUIRES_PROCESS_RESTART_LABEL = " [REQUIRES PROCESS RESTART]"; //$NON-NLS-1$
+    public final static String REQUIRES_BOUNCE_LABEL = " [REQUIRES BOUNCE]"; //$NON-NLS-1$
+    public final static String REQUIRES_CLUSTER_RESTART_LABEL = " [REQUIRES CLUSTER RESTART]"; //$NON-NLS-1$
+    private final static String REQUIRES_RESTART_TOOLTIP = " [Requires a restart to take effect]"; //$NON-NLS-1$
 
     private static final int VERTICAL_MARGIN = PropertyComponentFactory.PROTOTYPE.getInsets().top;
 
@@ -63,8 +69,21 @@ public class PropertyDefinitionLabel extends LabelWidget {
                                    boolean isInvalid) {
         super();
         String displayName = def.getDisplayName();
-        if (def.getRequiresRestart()) {
-            displayName = displayName + REQUIRES_RESTART_LABEL;
+        switch (def.getRequiresRestart()) {
+        case CLUSTER:
+            displayName = displayName + REQUIRES_CLUSTER_RESTART_LABEL;
+        	break;
+        case NONE:
+        	displayName = displayName + REQUIRES_NO_RESTART_LABEL;
+        	break;
+        case PROCESS:
+            displayName = displayName + REQUIRES_PROCESS_RESTART_LABEL;
+        	break;
+        case SERVICE:
+        	break;
+        case ALL_PROCESSES:
+        	displayName = displayName + REQUIRES_BOUNCE_LABEL;
+        	break;
         }
         super.setText(displayName);
         
@@ -74,7 +93,7 @@ public class PropertyDefinitionLabel extends LabelWidget {
 
         if (showTooltip) {
             String text = def.getShortDescription();
-            if (def.getRequiresRestart()) {
+            if (def.getRequiresRestart() != RestartType.NONE) {
                 text = text + REQUIRES_RESTART_TOOLTIP;
             }
 
@@ -97,7 +116,7 @@ public class PropertyDefinitionLabel extends LabelWidget {
     public void refreshDisplay(boolean isInvalid) {
         if (isInvalid) {
             setForeground(invalidColor);
-        } else if (def.getRequiresRestart()) {
+        } else if (!uncolored.contains(def.getRequiresRestart())) {
             setForeground(requiresRestartColor);
         } else if (showRequiredProperties && def.isRequired()) {
             setForeground(requiredColor);            

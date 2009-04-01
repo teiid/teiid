@@ -28,7 +28,12 @@ import java.awt.Component;
 import javax.swing.Icon;
 import javax.swing.JTree;
 
-import com.metamatrix.common.config.api.*;
+import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.ConfigurationID;
+import com.metamatrix.common.config.api.DeployedComponent;
+import com.metamatrix.common.config.api.ProductType;
+import com.metamatrix.common.config.api.ServiceComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ConfigurationManager;
@@ -46,14 +51,12 @@ public final class ConfigurationTreeCellRenderer
     ///////////////////////////////////////////////////////////////////////////
 
     private static final Icon NEXT_CONFIG_ICON;
-    private static final Icon START_CONFIG_ICON;
     private static final Icon HOST_ICON;
     private static final Icon PROCESS_ICON;
     private static final Icon SERVICE_ICON;
     private static final Icon PSC_ICON;
     private static final Icon DEPLOYMENTS_ICON;
     private static final Icon CONNECTOR_ICON;
-    private static final Icon METADATA_SERVER_ICON;
     private static final Icon METAMATRIX_SERVER_ICON;
     private static final Icon PLATFORM_ICON;
     private static final Icon PSC_HDR_ICON;
@@ -64,14 +67,12 @@ public final class ConfigurationTreeCellRenderer
 
     static {
         NEXT_CONFIG_ICON = DeployPkgUtils.getIcon("icon.nextstartup"); //$NON-NLS-1$
-        START_CONFIG_ICON = DeployPkgUtils.getIcon("icon.startup"); //$NON-NLS-1$
         HOST_ICON = DeployPkgUtils.getIcon("icon.host"); //$NON-NLS-1$
         PROCESS_ICON = DeployPkgUtils.getIcon("icon.process"); //$NON-NLS-1$
         SERVICE_ICON = DeployPkgUtils.getIcon("icon.service"); //$NON-NLS-1$
         PSC_ICON = DeployPkgUtils.getIcon("icon.psc"); //$NON-NLS-1$
         DEPLOYMENTS_ICON = DeployPkgUtils.getIcon("icon.deployments"); //$NON-NLS-1$
         CONNECTOR_ICON = DeployPkgUtils.getIcon("icon.connector"); //$NON-NLS-1$
-        METADATA_SERVER_ICON = DeployPkgUtils.getIcon("icon.mdserver"); //$NON-NLS-1$
         METAMATRIX_SERVER_ICON = DeployPkgUtils.getIcon("icon.mmserver"); //$NON-NLS-1$
         PLATFORM_ICON = DeployPkgUtils.getIcon("icon.platform"); //$NON-NLS-1$
         PSC_HDR_ICON = DeployPkgUtils.getIcon("icon.pschdr"); //$NON-NLS-1$
@@ -119,8 +120,6 @@ public final class ConfigurationTreeCellRenderer
                     (ConfigurationID)((Configuration)userObj).getID();
                 if (getConfigurationManager().isNextStartUpConfig(configId)) {
                 	setIcon(NEXT_CONFIG_ICON);
-                } else if (getConfigurationManager().isStartUpConfig(configId)) {
-                	setIcon(START_CONFIG_ICON);
                 }
             }
         } else if (userObj instanceof ServiceComponentDefn) {

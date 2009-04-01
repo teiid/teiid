@@ -56,10 +56,8 @@ import com.metamatrix.common.config.api.SharedResourceID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.namedobject.BaseID;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class ConfigurationModelContainerImpl implements ConfigurationModelContainer, Serializable {
 
@@ -410,7 +408,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
     }
 
 
-   public void setComponentTypes(Map newCompTypes) throws ConfigurationLockException {
+   public void setComponentTypes(Map newCompTypes) {
         this.compTypes = Collections.synchronizedMap(new HashMap(newCompTypes.size()));
 
    		Iterator it = newCompTypes.values().iterator();
@@ -419,7 +417,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
    		}
      }
 
-   public void setProductTypes(Collection newProdTypes) throws ConfigurationLockException {
+   public void setProductTypes(Collection newProdTypes) {
         this.prodTypes = Collections.synchronizedMap(new HashMap(newProdTypes.size()));
 
    		Iterator it = newProdTypes.iterator();
@@ -745,12 +743,8 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         Configuration config = (Configuration) configuration.clone();
 
         ConfigurationModelContainerImpl newConfig = new ConfigurationModelContainerImpl(config);
-        try {
-			newConfig.setComponentTypes(this.compTypes);
-			newConfig.setProductTypes(this.prodTypes.values());
-		} catch (ConfigurationLockException e) {
-			throw new MetaMatrixRuntimeException(e);
-		}
+		newConfig.setComponentTypes(this.compTypes);
+		newConfig.setProductTypes(this.prodTypes.values());
         newConfig.setResources(this.resources);
 
         return newConfig;

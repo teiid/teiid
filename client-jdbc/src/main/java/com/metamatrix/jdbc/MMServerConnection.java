@@ -38,7 +38,7 @@ import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 public class MMServerConnection extends MMConnection {
 
     // constant value giving product name
-    private final static String SERVER_NAME = "MetaMatrix Enterprise"; //$NON-NLS-1$
+    private final static String SERVER_NAME = "Teiid Server"; //$NON-NLS-1$
     
     private ServerAdmin serverAdmin;
     

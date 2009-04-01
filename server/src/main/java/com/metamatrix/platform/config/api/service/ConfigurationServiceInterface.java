@@ -24,15 +24,10 @@ package com.metamatrix.platform.config.api.service;
 
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.ComponentDefn;
@@ -49,7 +44,6 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.platform.service.api.ServiceInterface;
 
@@ -69,7 +63,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      */
     ConfigurationObjectEditor createEditor() throws ConfigurationException;
 
-
     /**
      * Returns the <code>ConfigurationID</code> for the operational configuration.
      * 
@@ -88,23 +81,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      *             if an error occurred within or during communication with the Configuration Service.
      */
     ConfigurationID getNextStartupConfigurationID() throws ConfigurationException;
-
-    /**
-     * Returns the ID of the startup <code>Configuration</code>, which should reflect the desired runtime state of the system.
-     * 
-     * @return ID of startup configuration
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    ConfigurationID getStartupConfigurationID() throws ConfigurationException;
-
-    /**
-     * Baselines the realtime portion of the current (operational) configuration into the next-startup configuration.
-     * 
-     * @param principalName
-     *            the name of the principal that is requesting the baselining
-     */
-    void baselineCurrentConfiguration(String principalName) throws ConfigurationException;
 
     /**
      * Returns the current deployed <code>Configuration</code>. Note, this configuration may not match the actual configuration
@@ -127,28 +103,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      *             if an error occurred within or during communication with the Configuration Service.
      */
     Configuration getNextStartupConfiguration() throws ConfigurationException;
-
-    /**
-     * Returns the startup <code>Configuration</code>, the Configuration that the system booted up with.
-     * 
-     * @return Configuration that the system booted up with.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    Configuration getStartupConfiguration() throws ConfigurationException;
-
-    /**
-     * Returns the named <code>Configuration</code>.
-     * 
-     * @param configName
-     *            is the name of the Configuration to obtain
-     * @return Configuration
-     * @throws InvalidConfigurationException
-     *             if the specified name does not exist
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    Configuration getConfiguration(String configName) throws InvalidConfigurationException, ConfigurationException;
 
     /**
      * Returns the <code>ConfigurationModelContainer</code> that contains everything (i.e., ComponentTypes, Shared Resources and
@@ -208,52 +162,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
     Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException;
 
     /**
-     * <p>
-     * This method will return a Collection of objects that represent the set of global configuration objects currently
-     * represented in the configuration database. This method will generally be used when attempting to import a configuration
-     * into the database as the 'Next Startup' configuration. This information is important when importing a new configuration so
-     * that any global type configuration objects that are to be imported can be resolved against the global objects that
-     * currently exist in the database.
-     * </p>
-     * 
-     * <pre>
-     * 
-     *  The Collection of objects will contain the following configuration 
-     *  object types:
-     *  
-     *  ComponentTypes
-     *  ProductTypes
-     *  Hosts
-     *  
-     * </pre>
-     * 
-     * @return a Collection of all of the global configuration objects as they exist in the database.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @throws InvalidSessionException
-     *             if there is not a valid administrative session
-     * @throws AuthorizationException
-     *             if the administrator does not have privileges to use this method
-     * @throws MetaMatrixComponentException
-     *             if a general remote system problem occurred
-     */
-    public Collection getAllGlobalConfigObjects()
-    throws ConfigurationException;
-
-    /**
-     * Returns a Map of component type definitions for each <code>ComponentTypeID</code> that is contained in the passed
-     * <code>Collection</code>. This does not return the dependent definitions for service type components.
-     * 
-     * @param componentIDs
-     *            is a Collection
-     * @return Map of a Map of component type difinitions keyed by <code>ComponentTypeID</code>
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @see getDependentComponentTypeDefintions(Collection)
-     */
-    Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException;
-
-    /**
      * Returns the component type definitions for the specified <code>ComponentTypeID</code>. This does not return the
      * dependent definitions for service type components.
      * 
@@ -265,7 +173,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @see getDependentComponentTypeDefinitions(ComponentTypeID)
      */
     Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException;
-
 
     /**
      * Returns the all component type definitions for the specified <code>ComponentTypeID</code>. This includes the dependent
@@ -279,49 +186,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @see getDependentComponentTypeDefinitions(ComponentTypeID)
      */
     Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException;
-
-    /**
-     * Returns a Map of all component type definitions for each <code>ComponentTypeID</code> that is contained in the passed
-     * <code>Collection</code>. This only returns the dependent definitions for service type components where the component
-     * type is defined as having a super component type.
-     * 
-     * @param componentIDs
-     *            is a Collection
-     * @return Map of component type difinitions keyed by <code>ComponentTypeID</code>
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @see getComponentTypeDefinitions(Collection)
-     * @see getDependentComponentTypeDefinitions(ComponentType)
-     */
-    Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException;
-
-    /**
-     * Returns the component type definitions for the specified <code>ComponentTypeID</code>. This only returns the dependent
-     * definitions for service type components where the component type is defined as having a super component type.
-     * 
-     * @param componentTypeID
-     *            is a ComponentTypeID
-     * @return Collection of ComponentTypeDefns
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @see getComponentTypeDefinitions(ComponentTypeID)
-     */
-    Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException;
-
-
-    /**
-     * Returns a <code>List</code> of type <code>ComponentType</code> . that are flagged as being monitored. A component of
-     * this type is considered to be available for monitoring statistics.
-     * 
-     * @param includeDeprecated
-     *            true if class names that have been deprecated should be included in the returned list, or false if only
-     *            non-deprecated constants should be returned.
-     * @return Collection of type <code>ComponentType</code>
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     * @see #ComponentType
-     */
-    Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException;
 
     /**
      * Returns a <code>ComponentType</code> for the specified <code>ComponentTypeID</code>
@@ -383,24 +247,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
     throws ConfigurationException;
     
     /**
-     * Returns a collection of <code>ComponentDefn</code>s for the specified collection of <code>ComponentDefnID</code>s and
-     * <code>ConfigurationID</code>. If the configuration is null the parent name from the componentID will be used. </br> The
-     * reason for adding the option to specify the configurationID is so that the same collection of componentIDs can be used to
-     * obtain the componentDefns from the different configurations. Otherwise, the requestor would have to create a new set of
-     * componetDefnIDs for each configuration. <br>
-     * 
-     * @param componentDefnIDs
-     *            contains all the ids for which componet defns to be returned
-     * @param configurationID
-     *            is the configuration from which the component defns are to be derived; optional, nullalble
-     * @return Collection of ComponentDefn objects
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    Collection getComponentDefns(Collection componentDefnIDs, ConfigurationID configurationID)
-    throws ConfigurationException;
-    
-    /**
      * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} for all internal
      * resources defined to the system. The internal resources are not managed with the other configuration related information.
      * They are not dictated based on which configuration they will operate (i.e., next startup or operational);
@@ -411,18 +257,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
     Collection getResources() throws ConfigurationException;
 
     /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} that are of the
-     * specified resource type.
-     * 
-     * @param componentTypeID
-     *            that identifies the type of resources to be returned
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    Collection getResources(ComponentTypeID componentTypeID) throws ConfigurationException;
-
-
-   /**
      * Save the resource changes based on each {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor} in
      * the collection.
      * 
@@ -466,7 +300,7 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      *             if an error occurred within or during communication with the Configuration Service.
      */
     Set executeTransaction(ActionDefinition action, String principalName ) 
-    	throws ModificationException, ConfigurationLockException, ConfigurationException;
+    	throws ModificationException, ConfigurationException;
 
     /**
      * Execute a list of actions, and optionally return the set of objects or object IDs that were affected/modified by the
@@ -485,105 +319,9 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      *             if an error occurred within or during communication with the Configuration Service.
      */
     Set executeTransaction(List actions, String principalName) 
-    	throws ModificationException, ConfigurationLockException, ConfigurationException;
+    	throws ModificationException, ConfigurationException;
 
 
-    /**
-     * Execute a list of insert actions and for actions on objects of type ComponentDefn or DeployedComponent object, it will have
-     * its configuration id resassigned, and optionally return the set of objects or object IDs that were affected/modified by the
-     * action. Only insert actions can be performed here because changing a configuration id on a modify action has larger
-     * consequences.
-     * 
-     * @param assignConfigurationID
-     *            the configuration for which any action for a component object will have its configurationID set to this.
-     * @param actions
-     *            the ordered list of actions that are to be performed on data within the repository.
-     * @param principalName
-     *            of the person executing the transaction
-     * @return the set of objects that were affected by this transaction.
-     * @throws ModificationException
-     *             if the target of any of the actions is invalid, or an action that is not an insert, or if the target object is
-     *             not a supported class of targets.
-     * @throws IllegalArgumentException
-     *             if the action is null or if the result specification is invalid
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    Set executeInsertTransaction(ConfigurationID assignConfigurationID, List actions, String principalName) 
-    	throws ModificationException, ConfigurationLockException, ConfigurationException;
-
-    /**
-     * Undo the specified number of previously-committed transactions.
-     * 
-     * @param numberOfActions
-     *            the number of actions in the history that are to be undone.
-     * @param principalName
-     *            of the person executing the transaction
-     * @return the set of objects that were affected by undoing these actions.
-     * @throws IllegalArgumentException
-     *             if the number is negative.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    Set undoActionsAsTransaction(int numberOfActions, String principalName) throws ConfigurationException;
-
-    /**
-     * Get the history of actions executed in transactions by this editor. The actions at the front of the list will be those most
-     * recently executed.
-     * 
-     * @return the ordered list of actions in the history.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    List getHistory() throws ConfigurationException;
-
-    /**
-     * Clear the history of all actions without undoing any of them.
-     * 
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    void clearHistory() throws ConfigurationException;
-
-    /**
-     * Get the number of actions that are currently in the history.
-     * 
-     * @return the number of actions in the history.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    int getHistorySize() throws ConfigurationException;
-
-    /**
-     * Set the limit on the number of actions in the history. Note that the history may at times be greater than this limit,
-     * because when actions are removed from the history, all actions for a transactions are removed at the same time. If doing so
-     * would make the history size smaller than the limit, no actions are removed.
-     * 
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    int getHistoryLimit() throws ConfigurationException;
-
-    /**
-     * Set the limit on the number of actions in the history. Note that the history may at times be greater than this limit,
-     * because when actions are removed from the history, all actions for a transactions are removed at the same time. If doing so
-     * would make the history size smaller than the limit, no actions are removed.
-     * 
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException;
-
-
-    /**
-     * Return the time the server was started. If the state of the server is not "Started" then a null is returned.
-     * 
-     * @return Date Time server was started.
-     * @throws ConfigurationException
-     *             if an error occurred within or during communication with the Configuration Service.
-     */
-    Date getServerStartupTime() throws ConfigurationException;
-    
     /**
      * Add Host to Configuration Add a new Host to the System (MetaMatrix Cluster)
      * 
@@ -777,17 +515,5 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @since 4.3
      */
     public List checkPropertiesDecryptable(List defns) throws ConfigurationException;
-
-    /**
-     * Check whether the given properties pertaining to the given component (name and type)
-     * contain at least one value that the server cannot decrypt with its current keystore. 
-     * @param props component properties possibly containing encrypted values. 
-     * @param componentTypeIdentifier The type identifier of the component to which the properties belong.
-     * @return <code>true</code> if all of the encrypted properties, if any, can be decrypted. 
-     * @throws ConfigurationException
-     * @since 4.3
-     */
-    boolean checkPropertiesDecryptable(Properties props,
-                                       String componentTypeIdentifier) throws ConfigurationException;
     
 }

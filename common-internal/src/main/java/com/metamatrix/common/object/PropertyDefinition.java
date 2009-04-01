@@ -24,6 +24,8 @@ package com.metamatrix.common.object;
 
 import java.util.List;
 
+import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
+
 /**
  * Defines the type of property that will be placed in a detail panel or table
  */
@@ -56,7 +58,7 @@ public interface PropertyDefinition extends ObjectDefinition {
      * Get whether this property requires the system to be restarted before it takes effect.
      * @return true if this property requires the system to be restarted before it takes effect.
      */
-    public boolean getRequiresRestart();
+    public RestartType getRequiresRestart();
     
     /**
      * The modifiable flag is used to identify features that may not be changed once

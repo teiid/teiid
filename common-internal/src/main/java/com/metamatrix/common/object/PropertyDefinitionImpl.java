@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.core.util.ArgCheck;
@@ -48,7 +49,7 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
     public static final boolean DEFAULT_IS_MASKED = false;
     public static final boolean DEFAULT_IS_CONSTRAINED = true;
     public static final boolean DEFAULT_IS_MODIFIABLE = true;
-    public static final boolean DEFAULT_REQUIRES_RESTART = false;
+    public static final RestartType DEFAULT_REQUIRES_RESTART = RestartType.SERVICE;
     public static final String DEFAULT_MULTIPLICITY = "0..1"; //$NON-NLS-1$
     public static final String DEFAULT_DEFAULT_VALUE = null; 
     public static final String DEFAULT_DISPLAY_NAME = null; 
@@ -60,7 +61,7 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
     private boolean preferred = DEFAULT_IS_PREFERRED;
     private boolean expert = DEFAULT_IS_EXPERT;
     private boolean masked = DEFAULT_IS_MASKED;
-    private boolean requiresRestart = DEFAULT_REQUIRES_RESTART;
+    private RestartType requiresRestart = RestartType.SERVICE;
 
     private Object defaultValue = DEFAULT_VALUE;
     private List allowedValues = new ArrayList();
@@ -199,14 +200,14 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      * @see com.metamatrix.common.object.PropertyDefinition#getRequiresRestart()
      * @since 4.3
      */
-    public boolean getRequiresRestart () {
+    public RestartType getRequiresRestart () {
         return this.requiresRestart;
     }
 
     /**
      * Set whether this property requires the system to be restarted before it takes effect.
      */
-    public void setRequiresRestart(boolean flag) {
+    public void setRequiresRestart(RestartType flag) {
         this.requiresRestart = flag;
     }
     

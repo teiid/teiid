@@ -56,11 +56,11 @@ import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.BaseTest;
-import com.metamatrix.platform.config.CurrentConfigHelper;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentUtil;
+import com.metamatrix.platform.config.util.CurrentConfigHelper;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 
 
@@ -83,7 +83,7 @@ public class TestXMLConfigImportExport extends BaseTest {
 	private void initializeConfig(String fileName) throws Exception {
 		printMsg("Perform initializeConfig using " + fileName); //$NON-NLS-1$
 	
-		CurrentConfigHelper.initConfig(fileName, this.getPath(), PRINCIPAL);
+		CurrentConfigHelper.initXMLConfig(fileName, this.getPath(), PRINCIPAL);
         
         this.initTransactions(new Properties());
         
@@ -126,18 +126,15 @@ public class TestXMLConfigImportExport extends BaseTest {
 
 		Properties props = PropertiesUtils.clone(properties, false);
 
-        PersistentConnectionFactory pf = PersistentConnectionFactory.createPersistentConnectionFactory(props);
+        PersistentConnectionFactory pf = new PersistentConnectionFactory(props);
 
-//		PersistentConnectionFactory pf = new PersistentConnectionFactory();
-
-
-        PersistentConnection pc = pf.createPersistentConnection();
-
- //       System.out.println("Props: " + PropertiesUtils.prettyPrint(resourcePoolProperties));
+        PersistentConnection pc = pf.createPersistentConnection(false);
 
         // write the models out
         pc.delete(Configuration.NEXT_STARTUP_ID, principal);
       	pc.write(nsModel, principal);
+      	pc.commit();
+      	pc.close();
     }
 
     	

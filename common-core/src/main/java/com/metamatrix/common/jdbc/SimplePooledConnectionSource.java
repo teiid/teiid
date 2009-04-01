@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -67,11 +68,28 @@ public class SimplePooledConnectionSource implements DataSource {
 			try {
 				if (method.getName().equals("close")) { //$NON-NLS-1$
 					boolean isShutdown = shutdown;
-					if (!isShutdown) {
-						connections.add((Connection)proxy);
+					boolean success = false;
+					try {
+						if (!isShutdown) {
+							if (!c.getAutoCommit()) {
+								Logger.getLogger("org.teiid.common.jdbc").warning("Uncommitted connection returned to the pool"); //$NON-NLS-1$ //$NON-NLS-2$
+								c.rollback();
+								c.setAutoCommit(true);
+							}
+							if (c.isReadOnly()) {
+								c.setReadOnly(false);
+							}
+							connections.add((Connection)proxy);
+							success = true;
+						}
+					} finally {
+						connectionLock.release();
+						if (!success) {
+							c.close();
+							return null;
+						}
 					}
-					connectionLock.release();
-					if (!isShutdown) {
+					if (success) {
 						return null;
 					}
 				} else if (method.getName().equals("isValid")) { //$NON-NLS-1$

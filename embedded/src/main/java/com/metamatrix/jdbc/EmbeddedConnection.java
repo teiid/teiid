@@ -52,7 +52,7 @@ import com.metamatrix.dqp.embedded.admin.DQPSecurityAdminImpl;
 public class EmbeddedConnection extends MMConnection {
 
     // constant value giving product name
-    private final static String SERVER_NAME = "MetaMatrix Query"; //$NON-NLS-1$
+    private final static String SERVER_NAME = "Teiid Embedded"; //$NON-NLS-1$
     
     EmbeddedConnectionFactoryImpl manager = null;
     ConnectionListener listener = null;

@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -86,7 +85,6 @@ import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.BasicConnectorArchive;
@@ -1414,8 +1412,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 				ModificationActionQueue maq = coe.getDestination();
 				java.util.List actions = maq.popActions();
 				getRuntimeStateAdminAPIHelper().setLogConfiguration(config, logConfig, actions, getUserName());
-			} catch (ConfigurationLockException e) {
-				throw new AdminComponentException(e);
 			} catch (ConfigurationException e) {
 				throw new AdminComponentException(e);
 			} catch (ServiceException e) {
@@ -2267,11 +2263,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 	@Override
 	public Properties getBootstrapProperties() throws AdminException {
 		Properties p = new Properties();
-		try {
-			p.putAll(CurrentConfiguration.getInstance().getBootStrapProperties());
-		} catch (ConfigurationException e) {
-			throw new AdminComponentException(e);
-		}
+		p.putAll(CurrentConfiguration.getInstance().getBootStrapProperties());
 		return p;
 	}
 

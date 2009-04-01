@@ -130,9 +130,7 @@ public final class ConfigurationManager
     //key=ProductServiceConfigID id, value=value=Collection of service def IDs
     private HashMap serviceDefnMap = new HashMap();
 
-
     private ConfigurationID nextStartUpId = Configuration.NEXT_STARTUP_ID;
-    private ConfigurationID startUpId = Configuration.STARTUP_ID;
 
     private ArrayList listeners = new ArrayList();
 
@@ -1649,20 +1647,6 @@ public final class ConfigurationManager
         return refreshNeeded;
     }
 
-    /**
-     * Indicates if the given parameter is the identifier of the
-     * startup configuration.
-     * @param theId the identifier being compared
-     * @return <code>true</code> if equal to the startup configuration;
-     * <code>false</code> otherwise.
-     */
-    public boolean isStartUpConfig(ConfigurationID theId) {
-        if (theId == null) {
-            return false;
-        }
-        return startUpId.equals(theId);
-    }
-
     private Object modify(
         ComponentObject theObject,
         Properties theProperties)
@@ -1880,17 +1864,6 @@ public final class ConfigurationManager
                 addConfig(nextStartUp);
             }
 
-            ConfigurationModelContainer startup = getAPI().getConfigurationModel(Configuration.STARTUP);
-
-            if (startup == null) {
-                LogManager.logCritical(
-                    LogContexts.CONFIG,
-                    "ConfigurationManager.refreshConfigs:" + //$NON-NLS-1$
-                        "Startup Configuration is null."); //$NON-NLS-1$
-            } else {
-                addConfig(startup);
-            }
-            
 			fireConfigurationChange(
 				new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_END,
 											 this));   

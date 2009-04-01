@@ -663,7 +663,6 @@ public class ConfigurationPropertiedObjectEditor implements PropertiedObjectEdit
         Iterator iterator = componentTypeDefns.iterator();
 
         ConfigurationID nextStartupID = Configuration.NEXT_STARTUP_ID;
-        ConfigurationID startupID = Configuration.STARTUP_ID;
 
         while (iterator.hasNext()) {
             ComponentTypeDefn cDefn = (ComponentTypeDefn)iterator.next();
@@ -672,13 +671,8 @@ public class ConfigurationPropertiedObjectEditor implements PropertiedObjectEdit
                 PropertyDefinitionImpl pDefn = new PropertyDefinitionImpl(propDefn);
                 if(id.equals(nextStartupID)) {
                     pDefn.setModifiable(true);
-                }else if(id.equals(startupID)) {
-                    pDefn.setModifiable(false);
-
                 }else {
                     pDefn.setModifiable(false);
-
-
                 }
                 result.add(pDefn);
             }else {

@@ -22,6 +22,8 @@
 
 package com.metamatrix.common.extensionmodule;
 
+import static org.junit.Assert.*;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,68 +35,39 @@ import java.util.Properties;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
-import junit.extensions.TestSetup;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleOrderingException;
 import com.metamatrix.common.extensionmodule.exception.InvalidExtensionModuleTypeException;
-import com.metamatrix.common.messaging.MessageBusConstants;
-import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.common.extensionmodule.spi.InMemoryExtensionModuleTransactionFactory;
 
 
-public class TestExtensionModuleManager extends TestCase {
+public class TestExtensionModuleManager {
 
     private static final String PRINCIPAL = "TestPrincipal"; //$NON-NLS-1$
 
-    private ExtensionModuleManager manager;
+    private static ExtensionModuleManager manager;
     
-	// ################################## FRAMEWORK ################################
-
-	public TestExtensionModuleManager(String name) {
-		super(name);
-	}
-
     /**
      * Loads most of the extension sources into the ExtensionModuleManager
      * up front, one time, to avoid overhead - this is used by
      * {@link #suite} method
      */
-    public static void setUpOnce() throws Exception{
-    	ExtensionModuleManager.reInit();
-    	resetProperties();
+    @BeforeClass public static void setUpOnce() throws Exception{
+		manager = new ExtensionModuleManager(getExtensionModuleProperties());
         FakeData.init();
     }
 
-	public static void resetProperties() {
-		try {
-			CurrentConfiguration.getInstance().reset();
-		} catch (ConfigurationException e) {
-		}
-		System.setProperty(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
-        boolean deepClone = false;
-        boolean makeUnmodifiable = false;
-        Properties newSystemProps = PropertiesUtils.clone(System.getProperties(), getExtensionModuleProperties(), deepClone, makeUnmodifiable);
-        //flatten
-        newSystemProps = PropertiesUtils.clone(newSystemProps, makeUnmodifiable);
-        System.setProperties(newSystemProps);
-	}
-
     private static Properties getExtensionModuleProperties() {
         Properties BASE_PROPERTIES = new Properties();
-        BASE_PROPERTIES.setProperty("metamatrix.log.captureSystemOut","false"); //$NON-NLS-1$ //$NON-NLS-2$
-        BASE_PROPERTIES.setProperty("metamatrix.log.captureSystemErr","false"); //$NON-NLS-1$ //$NON-NLS-2$
-        BASE_PROPERTIES.setProperty("metamatrix.log","5"); //$NON-NLS-1$ //$NON-NLS-2$
-        BASE_PROPERTIES.setProperty("metamatrix.log.console","true"); //$NON-NLS-1$ //$NON-NLS-2$
-        BASE_PROPERTIES.setProperty("metamatrix.log.consoleFormat","com.metamatrix.common.log.format.ReadableLogMessageFormat"); //$NON-NLS-1$ //$NON-NLS-2$
         
-        BASE_PROPERTIES.setProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY,"com.metamatrix.common.extensionmodule.spi.InMemoryExtensionModuleTransactionFactory"); //$NON-NLS-1$
+        BASE_PROPERTIES.setProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY,InMemoryExtensionModuleTransactionFactory.class.getName()); 
 
         return BASE_PROPERTIES;
     }	
@@ -103,8 +76,7 @@ public class TestExtensionModuleManager extends TestCase {
      * All remaining extension sources are removed - this is used by
      * {@link #suite} method
      */
-    public static void tearDownOnce() throws Exception{
-        ExtensionModuleManager manager = ExtensionModuleManager.getInstance();
+    @AfterClass public static void tearDownOnce() throws Exception{
         Iterator i = manager.getSourceNames().iterator();
         while (i.hasNext()){
             manager.removeSource( PRINCIPAL, i.next().toString());
@@ -115,8 +87,7 @@ public class TestExtensionModuleManager extends TestCase {
      * One of the tests jars will be added here, which clears the cache
      * of ExtensionModuleManager between each test
      */
-	public void setUp() throws Exception{
-		manager = ExtensionModuleManager.getInstance();
+	@Before public void setUp() throws Exception{
 		try {
 			manager.removeSource(PRINCIPAL, FakeData.TestJar1.SOURCE_NAME);
 		} catch (ExtensionModuleNotFoundException e) {
@@ -176,28 +147,14 @@ public class TestExtensionModuleManager extends TestCase {
     /**
      * @see ExtensionModuleManager@addSource
      */
-    public void testAddSource(){
-        manager = ExtensionModuleManager.getInstance();
+    @Test public void testAddSource() throws Exception {
         try{
             manager.removeSource( PRINCIPAL, FakeData.TestJar1.SOURCE_NAME);
         } catch (ExtensionModuleNotFoundException e){
             //ignore
-        } catch (MetaMatrixComponentException e){
-            fail(e.getMessage());
         }
 
-
-        ExtensionModuleDescriptor desc = null;
-        try{
-            desc = manager.addSource( PRINCIPAL, FakeData.TestJar1.TYPE, FakeData.TestJar1.SOURCE_NAME, FakeData.TestJar1.data, FakeData.TestJar1.DESCRIPTION, true);
-            //printDescriptor(desc, System.out);
-        } catch (DuplicateExtensionModuleException e){
-            fail("Source " + FakeData.TestJar1.SOURCE_NAME + " already exists: " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-        } catch (InvalidExtensionModuleTypeException e){
-            fail("Type is invalid: " + e.getMessage()); //$NON-NLS-1$
-        } catch (MetaMatrixComponentException e){
-            fail(e.getMessage());
-        }
+        ExtensionModuleDescriptor desc = manager.addSource( PRINCIPAL, FakeData.TestJar1.TYPE, FakeData.TestJar1.SOURCE_NAME, FakeData.TestJar1.data, FakeData.TestJar1.DESCRIPTION, true);
 
         //check checksum
         assertTrue(desc.getName().equals(FakeData.TestJar1.SOURCE_NAME));
@@ -212,7 +169,7 @@ public class TestExtensionModuleManager extends TestCase {
      * Tests that an DuplicateExtensionModuleException is (correctly) triggered
      * @see ExtensionModuleManager@addSource
      */
-    public void testAddDuplicateSource(){
+    @Test public void testAddDuplicateSource(){
         DuplicateExtensionModuleException exception = null;
         try{
             manager.addSource( PRINCIPAL, FakeData.TestJar1.TYPE, FakeData.TestJar1.SOURCE_NAME, FakeData.TestJar1.data, FakeData.TestJar1.DESCRIPTION, true);
@@ -233,7 +190,7 @@ public class TestExtensionModuleManager extends TestCase {
      * it is asked for after that
      * @see ExtensionModuleManager@removeSource
      */
-    public void testRemoveSource() {
+    @Test public void testRemoveSource() {
         try{
             manager.removeSource( PRINCIPAL, FakeData.TestJar2.SOURCE_NAME);
         } catch (ExtensionModuleNotFoundException e){
@@ -264,7 +221,7 @@ public class TestExtensionModuleManager extends TestCase {
      * Just tests that collection comes back as non-null
      * @see ExtensionModuleManager@getSourceDescriptors
      */
-    public void testGetDescriptors(){
+    @Test public void testGetDescriptors(){
         List descriptors = null;
         try{
             descriptors = manager.getSourceDescriptors( );
@@ -283,7 +240,7 @@ public class TestExtensionModuleManager extends TestCase {
      * @see ExtensionModuleManager@getSourceTypes
      * @see ExtensionModuleManager@getSourceDescriptors
      */
-    public void testGetTypesAndDescriptors(){
+    @Test public void testGetTypesAndDescriptors(){
         Collection types = null;
         try{
             types = manager.getSourceTypes();
@@ -312,7 +269,7 @@ public class TestExtensionModuleManager extends TestCase {
      * Tests that an InvalidExtensionTypeException is (correctly) triggered
      * @see ExtensionModuleManager@getSourceDescriptors
      */
-    public void testGetDescriptorsOfInvalidType(){
+    @Test public void testGetDescriptorsOfInvalidType(){
         InvalidExtensionModuleTypeException exception = null;
         try{
             manager.getSourceDescriptors( "!!BOGUS TYPE!!"); //$NON-NLS-1$
@@ -330,7 +287,7 @@ public class TestExtensionModuleManager extends TestCase {
      * Tests that the descriptor is not null and has the correct source name
      * @see ExtensionModuleManager@getSourceDescriptor
      */
-    public void testGetDescriptor(){
+    @Test public void testGetDescriptor(){
         ExtensionModuleDescriptor result = null;
         try{
             result = manager.getSourceDescriptor( FakeData.TestJar2.SOURCE_NAME);
@@ -355,7 +312,7 @@ public class TestExtensionModuleManager extends TestCase {
     /**
      * @see ExtensionModuleManager@setSearchOrder
      */
-    public void testShuffleSources(){
+    @Test public void testShuffleSources(){
         List sourceNames = null;
         try{
             sourceNames = manager.getSourceNames();
@@ -390,7 +347,7 @@ public class TestExtensionModuleManager extends TestCase {
      * </ul>
      * @see ExtensionModuleManager@setSearchOrder
      */
-    public void testInvalidOrdering(){
+    @Test public void testInvalidOrdering(){
         List sourceNames = null;
         List oneMissing = null;
         List oneTooMany = null;
@@ -474,7 +431,7 @@ public class TestExtensionModuleManager extends TestCase {
     /**
      * @see ExtensionModuleManager@setSearchOrder
      */
-    public void testSetEnabled() throws Exception {
+    @Test public void testSetEnabled() throws Exception {
         List sourceNames = new ArrayList(2);
         sourceNames.add(FakeData.TestJar1.SOURCE_NAME);
         sourceNames.add(FakeData.TestJar2.SOURCE_NAME);
@@ -499,7 +456,7 @@ public class TestExtensionModuleManager extends TestCase {
     /**
      * @see ExtensionModuleManager@getSource
      */
-    public void testGetSource(){
+    @Test public void testGetSource(){
         byte[] source = null;
         try{
             source = manager.getSource( FakeData.TestJar1.SOURCE_NAME);
@@ -520,7 +477,7 @@ public class TestExtensionModuleManager extends TestCase {
      * @see ExtensionModuleManager@setSource
      * @see ExtensionModuleManager@getSource
      */
-    public void testSetSource(){
+    @Test public void testSetSource(){
         ExtensionModuleDescriptor descriptor = null;
         try{
             descriptor = manager.setSource(PRINCIPAL, FakeData.TestTextFile.SOURCE_NAME, FakeData.TestTextFile2.data);
@@ -575,7 +532,7 @@ public class TestExtensionModuleManager extends TestCase {
     /**
      * @see ExtensionModuleManager@setSourceName
      */
-    public void testSetSourceName(){
+    @Test public void testSetSourceName(){
         ExtensionModuleDescriptor descriptor = null;
         String newName = "BOGUS NAME"; //$NON-NLS-1$
         try{
@@ -608,7 +565,7 @@ public class TestExtensionModuleManager extends TestCase {
     /**
      * @see ExtensionModuleManager@setSourceDescription
      */
-    public void testSetSourceDescription(){
+    @Test public void testSetSourceDescription(){
         ExtensionModuleDescriptor descriptor = null;
         String newDesc = "BOGUS DESCRIPTION"; //$NON-NLS-1$
         try{
@@ -633,7 +590,7 @@ public class TestExtensionModuleManager extends TestCase {
      * is the same number as one generated by scratch using the binary
      * data and a java.util.zip.CRC32 instance.
      */
-    public void testChecksum(){
+    @Test public void testChecksum(){
         Checksum algorithm = new CRC32();
         algorithm.update(FakeData.TestJar1.data, 0, FakeData.TestJar1.data.length);
         long thisChecksum = algorithm.getValue();
@@ -650,26 +607,5 @@ public class TestExtensionModuleManager extends TestCase {
             fail(e.getMessage());
         }
     }
-
-	// ################################## TEST SUITE ################################
-
-	/**
-	 * This suite of all tests could be defined in another class but it seems easier to
-	 * maintain it here.
-	 */
-	public static Test suite() {
-
-		TestSuite suite = new TestSuite();
-		suite.addTestSuite(TestExtensionModuleManager.class);
-		//return suite;
-        return new TestSetup(suite){
-            protected void setUp() throws Exception{
-                TestExtensionModuleManager.setUpOnce();
-            }
-            protected void tearDown() throws Exception{
-                TestExtensionModuleManager.tearDownOnce();
-            }
-        };
-	}
 
 }

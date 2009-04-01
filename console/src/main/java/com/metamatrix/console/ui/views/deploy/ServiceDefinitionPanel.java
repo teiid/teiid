@@ -40,6 +40,7 @@ import java.util.Set;
 import javax.swing.JPanel;
 import javax.swing.border.CompoundBorder;
 
+import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ProductServiceConfig;
 import com.metamatrix.common.config.api.ProductType;
@@ -64,6 +65,7 @@ import com.metamatrix.toolbox.ui.widget.LabelWidget;
 import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
 import com.metamatrix.toolbox.ui.widget.TitledBorder;
 import com.metamatrix.toolbox.ui.widget.property.PropertiedObjectPanel;
+import com.metamatrix.toolbox.ui.widget.property.PropertyDefinitionLabel;
 
 /**
  * @version 1.0
@@ -107,7 +109,7 @@ public final class ServiceDefinitionPanel
     
     
     //whether any properties have changed that require a restart
-    private boolean propsDifferentRequiresRestart = false;
+    private RestartType propsDifferentRequiresRestart = RestartType.NONE;
 
     private PscDefinitionPanel parentPanel;
     private boolean editMode;
@@ -383,18 +385,31 @@ public final class ServiceDefinitionPanel
             saveEnabled = chkEnabled.isSelected();
         }
         if (propsDifferent) {
-            String message = "Note change will not take effect until service/connector is restarted in the Runtime panel."; //$NON-NLS-1$         
-            if (propsDifferentRequiresRestart) {
-                message = message + "\n\nYou have changed some properties marked \"[REQUIRES RESTART]\".  These properties will not take effect until the server is restarted or bounced."; //$NON-NLS-1$                    
+        	String message = null;
+            switch (propsDifferentRequiresRestart) {
+            case NONE:
+            	message = "The change will take effect immediately."; //$NON-NLS-1$
+            	break;
+            case SERVICE:
+                message = "The change(s) will not take effect until the affected services/connectors are restarted in the Runtime panel."; //$NON-NLS-1$
+                break;
+            case PROCESS:
+                message = "You have changed some properties marked " + PropertyDefinitionLabel.REQUIRES_PROCESS_RESTART_LABEL + "These properties will not take effect until the server is restarted or bounced."; //$NON-NLS-1$ //$NON-NLS-2$
+            	break;
+            case ALL_PROCESSES:
+            	message = "You have changed some properties marked " + PropertyDefinitionLabel.REQUIRES_BOUNCE_LABEL + "These properties will not take effect until the system is bounced."; //$NON-NLS-1$ //$NON-NLS-2$
+            	break;
+            case CLUSTER:
+            	message = "You have changed some properties marked " + PropertyDefinitionLabel.REQUIRES_CLUSTER_RESTART_LABEL + "These properties will not take effect until the system, including host controllers, is restarted."; //$NON-NLS-1$ //$NON-NLS-2$
+                break;
             }
             
             StaticUtilities.displayModalDialogWithOK("Modify Service Properties", message); //$NON-NLS-1$
-
             
             getConfigurationManager().modifyPropertiedObject(propEditor);
             propValueMap.clear();
             propsDifferent = false;
-            propsDifferentRequiresRestart = false;
+            propsDifferentRequiresRestart = RestartType.NONE;
             changedPropertyNames.clear();
         }
         checkResetState();
@@ -434,18 +449,19 @@ public final class ServiceDefinitionPanel
      * @return
      * @since 4.3
      */
-    private boolean checkPropsDifferentRequiresRestart() {
+    private RestartType checkPropsDifferentRequiresRestart() {
+    	RestartType result = RestartType.NONE;
         if (propsDifferent) {
             Iterator itr = changedPropertyNames.iterator();
             while (itr.hasNext()) {
                 String prop = (String) itr.next();
                 PropertyDefinition def = (PropertyDefinition) propDefsMap.get(prop);
-                if (def != null && def.getRequiresRestart()) {
-                    return true;
+                if (def != null && def.getRequiresRestart().compareTo(result) > 0) {
+                    result = def.getRequiresRestart();
                 }
             }
         }
-        return false;        
+        return result;        
     }
     
     
@@ -466,7 +482,7 @@ public final class ServiceDefinitionPanel
 
     private void resetPropertiedObject() {
         propsDifferent = false;
-        propsDifferentRequiresRestart = false;
+        propsDifferentRequiresRestart = RestartType.NONE;
         changedPropertyNames.clear();
         Iterator itr = propValueMap.keySet().iterator();
         while (itr.hasNext()) {

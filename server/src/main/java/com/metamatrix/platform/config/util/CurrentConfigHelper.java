@@ -1,8 +1,10 @@
 /*
  * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
+ * Copyright (C) 2008 Red Hat, Inc.
+ * Copyright (C) 2000-2007 MetaMatrix, Inc.
+ * Licensed to Red Hat, Inc. under one or more contributor 
+ * license agreements.  See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,26 +22,44 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.config;
+package com.metamatrix.platform.config.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
-import com.metamatrix.common.messaging.MessageBusConstants;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
+import com.metamatrix.platform.config.spi.xml.XMLCurrentConfigurationReader;
 
+/**
+ * The CurrentConfigHelper is used to load a configuration into memory when a repository isn't available.
+ * @author vanhalbert
+ *
+ */
 public class CurrentConfigHelper {
 
-	/**
-	 * Constructor for CurrentConfigHelper.
-	 */
-	protected CurrentConfigHelper() {
-		super();
+	public void loadMetaMatrixPropertiesIntoSystem() throws Exception {
+		loadMetaMatrixPropertiesIntoSystem("metamatrix.properties"); //$NON-NLS-1$
 	}
+	
+	public void loadMetaMatrixPropertiesIntoSystem(String filename) throws Exception {
+		Properties bootstrapProps = new Properties();
+        InputStream bootstrapPropStream = new FileInputStream(new File(filename));
+		bootstrapProps.load(bootstrapPropStream);
+       	bootstrapProps.remove(CurrentConfiguration.CONFIGURATION_READER_CLASS_PROPERTY_NAME);
+       	
+        Properties sys = System.getProperties();
+        sys.putAll(bootstrapProps);
+        System.setProperties(sys);
+	}
+
 
 	/**
 	 * init will do the following:
@@ -53,10 +73,12 @@ public class CurrentConfigHelper {
 	 */
 	public static void initConfig(String fileName, String path, String principal) throws Exception {
 		Properties sysProps = new Properties();
- 		sysProps.put(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
-		sysProps.put(CurrentConfiguration.CONFIGURATION_READER_CLASS_PROPERTY_NAME, "com.metamatrix.platform.config.spi.xml.XMLCurrentConfigurationReader"); //$NON-NLS-1$
-		sysProps.put("metamatrix.security.password.PasswordKeyStore", "c3B1dG5pazEz"); //$NON-NLS-1$ //$NON-NLS-2$
+		initConfig(fileName, path, sysProps, principal);
+	}
 	
+	public static void initXMLConfig(String fileName, String path, String principal) throws Exception {
+		Properties sysProps = new Properties();
+ 		sysProps.put(CurrentConfiguration.CONFIGURATION_READER_CLASS_PROPERTY_NAME, XMLCurrentConfigurationReader.class.getName());
 		initConfig(fileName, path, sysProps, principal);
 	}
 	
@@ -71,78 +93,63 @@ public class CurrentConfigHelper {
 	 * @param principal is the user initializing configuration
 	 */		
 	static void initConfig(String fileName, String path, Properties properties, String principal) throws Exception {
-		Properties sysProps = System.getProperties();
+		File f = new File(path, fileName);
+ 		if (!f.exists()) {
+ 			throw new Exception("Configuration file " + f.getAbsolutePath() + " does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
+ 		}
+		Properties sysProps = PropertiesUtils.clone(System.getProperties(), false);
 
 		sysProps.putAll(properties);		
 		System.setProperties(sysProps);	
 		
 		cleanModelFile(principal, fileName, path);		
-		CurrentConfiguration.getInstance().reset();
+		CurrentConfiguration.reset();
 		
 		createSystemProperties(fileName, path);
 		
-        CurrentConfiguration.getInstance().performSystemInitialization(true);
 		CurrentConfiguration.getInstance().getConfiguration();
-
 	}
 	
 	
 	
    protected static void cleanModelFile(String principal, String fileName, String path) throws Exception {
-			Properties props = createSystemProperties("config.xml", path);
+			Properties props = createSystemProperties(fileName, path);
 
       	    deleteModel(Configuration.NEXT_STARTUP_ID, props, principal);
       	    
-       	    deleteModel(Configuration.STARTUP_ID, props, principal);
-  	
     }
     
     protected static Properties createSystemProperties(String fileName, String path) {
-    		Properties cfg_props = createProperties(fileName, path);
+        Properties props = new Properties();
+        
+        if (fileName != null) {
+        	props.setProperty(FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY,  fileName );
+        	props.setProperty(PersistentConnectionFactory.PERSISTENT_FACTORY_NAME, PersistentConnectionFactory.FILE_FACTORY_NAME);
+        }
+        
+        if (path != null) {
+            props.setProperty(FilePersistentConnection.CONFIG_FILE_PATH_PROPERTY, path  );
+        }
     		    		
-    		// these system props need to be set for the CurrentConfiguration call
+		// these system props need to be set for the CurrentConfiguration call
 
-     		Properties sysProps = System.getProperties();
-     		sysProps.putAll(cfg_props);
-     		System.setProperties(sysProps);
-     		
-     		return cfg_props;
-     		     		
+ 		Properties sysProps = System.getProperties();
+ 		sysProps.putAll(props);
+ 		System.setProperties(sysProps);
+ 		
+ 		return props;
     }
-    
-    
-	protected static Properties createProperties(String fileName, String path) {
-		
-     		          
-            Properties props = new Properties();
-             
-            if (fileName != null) {
-            	props.setProperty(FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY,  fileName );
-            	props.setProperty(PersistentConnectionFactory.PERSISTENT_FACTORY_NAME, PersistentConnectionFactory.FILE_FACTORY_NAME);
-            }
-            
-            if (path != null) {
-	            props.setProperty(FilePersistentConnection.CONFIG_FILE_PATH_PROPERTY, path  );
-            }
-            
-
-			return props;
-			
-			
-			
-	}
-	
-
 
     public static void deleteModel(ConfigurationID configID, Properties props,
 			String principal) throws Exception {
 
-		PersistentConnectionFactory pf = PersistentConnectionFactory
-				.createPersistentConnectionFactory(props);
+		PersistentConnectionFactory pf = new PersistentConnectionFactory(props);
 
-		PersistentConnection readin = pf.createPersistentConnection();
+		PersistentConnection readin = pf.createPersistentConnection(false);
 
 		readin.delete(configID, principal);
+		readin.commit();
+		readin.close();
 
 	}
     

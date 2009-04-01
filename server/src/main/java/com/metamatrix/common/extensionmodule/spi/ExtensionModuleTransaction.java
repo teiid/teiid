@@ -209,19 +209,6 @@ public interface ExtensionModuleTransaction extends TransactionInterface {
     ExtensionModuleDescriptor setSourceDescription(String principalName, String sourceName, String description)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException;
     
-	/**
-	 * Indicates that ExtensionModuleManager should clear its cache and refresh itself because
-	 * the data this object fronts has changed (optional operation).  A service provider 
-	 * is not required to keep track of whether data has changed by outside means, in fact
-	 * it may not even make sense.
-	 * @return whether data has changed since ExtensionModuleManager last accessed this data
-	 * store.
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-	 * @throws UnsupportedOperationException if not supported by this Transaction.
-	 */
-    boolean needsRefresh() throws MetaMatrixComponentException, UnsupportedOperationException;
-    
     /**
      * Indicates if an extension module name is already in used.
      * The method will return <code>true</code> if the source name is already used,

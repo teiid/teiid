@@ -61,7 +61,6 @@ public final class JDBCExtensionModuleUtil {
     static {
        configurationNames = new HashSet();
        configurationNames.add(Configuration.NEXT_STARTUP);
-       configurationNames.add(Configuration.STARTUP);          
     }
     
     
@@ -99,7 +98,7 @@ public final class JDBCExtensionModuleUtil {
 
         Connection connection = null;
         try {
-            connection = JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
+            connection = JDBCConnectionPoolHelper.getInstance().getConnection(); 
 
 
 
@@ -160,7 +159,7 @@ public final class JDBCExtensionModuleUtil {
         Connection connection = null;
 		try {
 
-        	connection = JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
+        	connection = JDBCConnectionPoolHelper.getInstance().getConnection(); 
 
         	byte[] data = JDBCExtensionModuleReader.getSource(sourceName, connection);
 
@@ -197,7 +196,7 @@ public final class JDBCExtensionModuleUtil {
             
             try {
                 connection =
-                    JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
+                    JDBCConnectionPoolHelper.getInstance().getConnection(); 
                          
                 boolean inuse = JDBCExtensionModuleReader.isNameInUse(extName, connection);
                 
@@ -295,12 +294,12 @@ public final class JDBCExtensionModuleUtil {
      * required unless otherwise noted)
      */
     public void deleteExtensionModule(String sourceName)
-    throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
+    throws MetaMatrixComponentException{
 
         Connection connection = null;
         try {
 
-            connection = JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
+            connection = JDBCConnectionPoolHelper.getInstance().getConnection(); 
 
             boolean inuse = JDBCExtensionModuleReader.isNameInUse(sourceName, connection);
             if (!inuse) {
@@ -326,7 +325,7 @@ public final class JDBCExtensionModuleUtil {
     
     
     protected void positionExtensionModule(String extName, String position)  
-    throws ExtensionModuleNotFoundException, DuplicateExtensionModuleException, MetaMatrixComponentException{
+    throws MetaMatrixComponentException{
         int pos = -1;
         if (position == null) {
             return;
@@ -340,7 +339,7 @@ public final class JDBCExtensionModuleUtil {
         Connection connection = null;
         try {
             connection =
-                JDBCConnectionPoolHelper.getInstance().getConnection(); //$NON-NLS-1$
+                JDBCConnectionPoolHelper.getInstance().getConnection(); 
                           
             LinkedList orderList = new LinkedList();                                    
             Collection descriptors = JDBCExtensionModuleReader.getSourceDescriptors(null, true, connection);  

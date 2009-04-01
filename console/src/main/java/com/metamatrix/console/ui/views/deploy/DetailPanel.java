@@ -188,8 +188,6 @@ gbc.insets = new Insets(0, 0, 0, 0);
         String iconId = null;
         if (getConfigurationManager().isNextStartUpConfig(configId)) {
             iconId = "icon.nextstartup.big"; //$NON-NLS-1$
-        } else if (getConfigurationManager().isStartUpConfig(configId)) {
-            iconId = "icon.startup.big"; //$NON-NLS-1$
         }
         if (iconId != null) {
             lblConfig.setIcon(getIcon(iconId));

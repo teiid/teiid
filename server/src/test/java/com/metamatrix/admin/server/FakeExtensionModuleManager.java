@@ -59,7 +59,7 @@ public class FakeExtensionModuleManager extends ExtensionModuleManager {
         return null;
     }
 
-    protected ExtensionModuleTransaction getReadTransaction() throws ManagedConnectionException {
+    public ExtensionModuleTransaction getReadTransaction() throws ManagedConnectionException {
         return null;
     }
 
@@ -120,7 +120,7 @@ public class FakeExtensionModuleManager extends ExtensionModuleManager {
         return null;
     }
 
-    protected ExtensionModuleTransaction getWriteTransaction() throws ManagedConnectionException {
+    public ExtensionModuleTransaction getWriteTransaction() throws ManagedConnectionException {
         return null;
     }
 

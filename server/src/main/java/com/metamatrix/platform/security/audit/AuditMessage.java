@@ -27,11 +27,11 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.common.config.CurrentConfiguration;
 
 public class AuditMessage implements Externalizable {
-    public static final String PROCESS_NAME = VMNaming.getProcessName();
-    public static final String HOST_NAME = VMNaming.getConfigName();
+    public static final String PROCESS_NAME = CurrentConfiguration.getInstance().getProcessName();
+    public static final String HOST_NAME = CurrentConfiguration.getInstance().getConfigurationName();
 
     private static final String RESOURCE_DELIMITER = ", "; //$NON-NLS-1$
 

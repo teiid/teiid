@@ -40,8 +40,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.toolbox.ToolboxPlugin;
 import com.metamatrix.toolbox.ui.widget.AboutPanel;
@@ -112,7 +112,7 @@ public class ConsoleAboutPanel extends AboutPanel {
         setContent(panel);
         registerKeyboardAction(new ActionListener() {
             public void actionPerformed(final ActionEvent event) {
-                final JTextArea box = new JTextArea(VMNaming.getHostInfo());
+                final JTextArea box = new JTextArea(CurrentConfiguration.getInstance().getHostInfo());
                 box.setLineWrap(false);
                 box.setEditable(false);
                 final DialogPanel panel = new DialogPanel(new JScrollPane(box)) {

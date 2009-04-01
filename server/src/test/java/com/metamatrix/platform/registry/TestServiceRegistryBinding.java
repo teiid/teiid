@@ -29,7 +29,6 @@ import junit.framework.TestCase;
 
 import com.metamatrix.admin.server.FakeConfiguration;
 import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.messaging.MessageBusConstants;
 import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
@@ -73,7 +72,6 @@ public class TestServiceRegistryBinding extends TestCase {
 	}
 	
 	public void testStateCheckingProxy() throws Exception {
-		System.setProperty(MessageBusConstants.MESSAGE_BUS_TYPE, MessageBusConstants.TYPE_NOOP);
 		FakeServiceImpl service = new FakeServiceImpl();
 		
     	ProcessRegistryBinding vmBinding2  = FakeRegistryUtil.buildVMRegistryBinding("2.2.2.2", "process2");             //$NON-NLS-1$ //$NON-NLS-2$ 

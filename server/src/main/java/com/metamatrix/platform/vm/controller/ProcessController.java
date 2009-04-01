@@ -28,7 +28,6 @@ import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -47,7 +46,6 @@ import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.platform.socket.server.AdminAuthorizationInterceptor;
 import com.metamatrix.common.comm.platform.socket.server.LogonImpl;
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.DeployedComponent;
@@ -75,7 +73,6 @@ import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.FileUtil;
@@ -98,9 +95,9 @@ import com.metamatrix.platform.admin.apiimpl.SessionAdminAPIImpl;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.config.event.ConfigurationChangeEvent;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
@@ -147,7 +144,7 @@ public abstract class ProcessController implements ProcessManagement {
     protected Host host;
     protected String processName;
     
-	private Date startTime;
+	private long startTime;
 	private Properties vmProps;
 	VMComponentDefn vmComponentDefn;
 
@@ -165,7 +162,6 @@ public abstract class ProcessController implements ProcessManagement {
     
     protected ClientServiceRegistry clientServices;
     private Map<ComponentTypeID, Properties> defaultPropertiesCache = new HashMap<ComponentTypeID, Properties>();
-    private Properties hostProperties;
     private ClassLoader commonExtensionClassLoader = null;
     private String commonExtensionClasspath;
 
@@ -193,10 +189,8 @@ public abstract class ProcessController implements ProcessManagement {
     	
         this.startServicePool = WorkerPoolFactory.newWorkerPool("StartServiceQueue", maxThreads, timeToLive); //$NON-NLS-1$
         
-		initVMProperties(host.getFullName(), processname);
+		initVMProperties();
 		
-        this.startTime = new Date();
-
         this.clientServices = new ClientServiceRegistry();
 
         RuntimeMetadataCatalog.getInstance().init(CurrentConfiguration.getInstance().getProperties(), ResourceFinder.getMessageBus(), ResourceFinder.getCacheFactory());
@@ -279,38 +273,33 @@ public abstract class ProcessController implements ProcessManagement {
      *  - vmComponentDefnID
      *  - vmProps
      */
-	private void initVMProperties(String hostname, String processName) throws Exception {
+	private void initVMProperties() throws Exception {
+		String hostname = host.getFullName();
         ConfigurationModelContainer config = getConfigurationModel();
         
         VMComponentDefn deployedVM = config.getConfiguration().getVMForHost(hostname, processName);
 
-        if (deployedVM != null) {
-        	this.vmComponentDefn = deployedVM;
-        	            
-           vmProps = config.getDefaultPropertyValues(deployedVM.getComponentTypeID());
-           Properties props = config.getConfiguration().getAllPropertiesForComponent(deployedVM.getID());
-           vmProps.putAll(props);
-           
-           // this system property setting will override the setting in the VM
-           // this is done because the command line argument
-           force_shutdown_time = PropertiesUtils.getIntProperty(System.getProperties(), STOP_DELAY_TIME, DEFAULT_FORCE_SHUTDOWN_TIME);
-           if (DEFAULT_FORCE_SHUTDOWN_TIME == force_shutdown_time) {
-               force_shutdown_time = PropertiesUtils.getIntProperty(vmProps, VMComponentDefnType.FORCED_SHUTDOWN_TIME, DEFAULT_FORCE_SHUTDOWN_TIME);
-           }
-           
-           Properties allProps = new Properties();
-           allProps.putAll(System.getProperties());
-           allProps.putAll(config.getConfiguration().getProperties());
-           allProps.putAll(host.getProperties());
-           allProps.putAll(props);
-           System.setProperties(allProps);
-           
-           logMessage(PlatformPlugin.Util.getString("VMController.VM_Force_Shutdown_Time", force_shutdown_time)); //$NON-NLS-1$
-           
-           // add the vm to registry
-           ProcessRegistryBinding binding = new ProcessRegistryBinding(host.getFullName(), this.processName, deployedVM, this, this.messageBus);        
-           this.events.processAdded(binding);
-        }
+    	this.vmComponentDefn = deployedVM;
+    	
+    	vmProps = new Properties(CurrentConfiguration.getInstance().getSystemBootStrapProperties());
+    	PropertiesUtils.putAll(vmProps, config.getConfiguration().getProperties());
+    	PropertiesUtils.putAll(vmProps, host.getProperties());
+    	PropertiesUtils.putAll(vmProps, config.getDefaultPropertyValues(deployedVM.getComponentTypeID()));
+    	PropertiesUtils.putAll(vmProps, config.getConfiguration().getAllPropertiesForComponent(deployedVM.getID()));
+       
+        // this system property setting will override the setting in the VM
+	    // this is done because the command line argument
+	    force_shutdown_time = PropertiesUtils.getIntProperty(System.getProperties(), STOP_DELAY_TIME, DEFAULT_FORCE_SHUTDOWN_TIME);
+	    if (DEFAULT_FORCE_SHUTDOWN_TIME == force_shutdown_time) {
+	    	force_shutdown_time = PropertiesUtils.getIntProperty(vmProps, VMComponentDefnType.FORCED_SHUTDOWN_TIME, DEFAULT_FORCE_SHUTDOWN_TIME);
+	    }
+	   
+	    logMessage(PlatformPlugin.Util.getString("VMController.VM_Force_Shutdown_Time", force_shutdown_time)); //$NON-NLS-1$
+	   
+	    // add the vm to registry
+	    ProcessRegistryBinding binding = new ProcessRegistryBinding(host.getFullName(), this.processName, deployedVM, this, this.messageBus);        
+	    this.startTime = binding.getStartTime();
+	    this.events.processAdded(binding);
 	}
 
     protected void logMessage(String s) {
@@ -436,20 +425,15 @@ public abstract class ProcessController implements ProcessManagement {
             defaultProps = defaultPropertiesCache.get(deployedService.getComponentTypeID());
             
             if (defaultProps == null) {
-                if (hostProperties == null) {
-                    hostProperties = CurrentConfiguration.getInstance().getSystemBootStrapProperties();
-                    hostProperties = new Properties(hostProperties);
-                    PropertiesUtils.putAll(hostProperties, host.getProperties());
-                }
-                defaultProps = new Properties(hostProperties);
-                defaultProps.putAll(configModel.getDefaultPropertyValues(deployedService.getComponentTypeID()));
+                defaultProps = new Properties(vmProps);
+                PropertiesUtils.putAll(defaultProps, configModel.getDefaultPropertyValues(deployedService.getComponentTypeID()));
                 defaultPropertiesCache.put(deployedService.getComponentTypeID(), defaultProps);
             }
         }
         Properties serviceProps = new Properties(defaultProps);
         Properties props = configModel.getConfiguration().getAllPropertiesForComponent(deployedService.getID());
-        serviceProps.putAll(props);
-        PropertiesUtils.setOverrideProperies(serviceProps, hostProperties);
+        PropertiesUtils.putAll(serviceProps, props);
+        PropertiesUtils.setOverrideProperies(serviceProps, vmProps);
         
         ProductServiceConfigID pscID = deployedService.getProductServiceConfigID();
         String serviceClassName = serviceProps.getProperty( ServicePropertyNames.SERVICE_CLASS_NAME );
@@ -538,7 +522,7 @@ public abstract class ProcessController implements ProcessManagement {
 	/**
 	 * Get the time the VM was initialized.
 	 */
-    public Date getStartTime() {
+    public long getStartTime() {
         return this.startTime;
     }
 
@@ -770,13 +754,7 @@ public abstract class ProcessController implements ProcessManagement {
             String componentType = serviceProps.getProperty(ServicePropertyNames.COMPONENT_TYPE_NAME);
             String serviceType = serviceProps.getProperty(ServicePropertyNames.SERVICE_NAME);
             String routingID = serviceProps.getProperty(ServicePropertyNames.SERVICE_ROUTING_ID);
-            String essentialStr = serviceProps.getProperty(ServicePropertyNames.SERVICE_ESSENTIAL);
-
-
-            boolean essential = false;
-            if (essentialStr != null && essentialStr.trim().length() != 0) {
-                essential = Boolean.valueOf(essentialStr).booleanValue();
-            }
+            boolean essential = PropertiesUtils.getBooleanProperty(serviceProps, ServicePropertyNames.SERVICE_ESSENTIAL, false);
 
             // Create an instance of serviceClass
             final ServiceInterface service  = (ServiceInterface) Thread.currentThread().getContextClassLoader().loadClass(serviceClass).newInstance();
@@ -1000,7 +978,7 @@ public abstract class ProcessController implements ProcessManagement {
 
 
 	public InetAddress getAddress() {
-		return VMNaming.getHostAddress();
+		return CurrentConfiguration.getInstance().getHostAddress();
 	}
 
 

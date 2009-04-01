@@ -54,9 +54,9 @@ import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
-import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.ServiceID;
@@ -676,12 +676,7 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      *             if an error occurred in communicating with a component.
      */
     public synchronized Date getServerStartTime() throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
-        try {
-            return configAdmin.getServerStartupTime();
-        } catch (Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0083,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0083));
-        }
+    	return this.helper.getEldestProcessStartTime();
     }
 
     /**

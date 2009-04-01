@@ -22,7 +22,6 @@
 
 package com.metamatrix.platform.config.persistence.api;
 
-import com.metamatrix.common.config.StartupStateException;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
@@ -44,58 +43,6 @@ public interface PersistentConnection {
     boolean isClosed();
 	
 	/**
-	 * Call to set the startup state to @see {StartupStateController.STARTING Starting}.
-	 * The server must be in the STOPPED state in order for this to work.  Otherwise,
-	 * a StartpStateException will be thrown.
-	 * @throws StartupStateException is thrown if the server state is not currently
-	 * set to STOPPED.
-	 */	
-    void setServerStarting() throws StartupStateException, ConfigurationException;
-
-	/**
-	 * Call to forcibly set the startup state to @see {StartupStateController.STARTING Starting},
-	 * regardless of the current state of the server.
-	 * @throws StartupStateException is thrown if the server state cannot be set.
-	 */	
-    void setServerStarting( boolean force) throws StartupStateException, ConfigurationException;
-	
-	/**
-	 * Call to set the startup state to @see {StartupStateController.STARTED Started}.
-	 * The server must be in the STARTING state in order for this to work.  Otherwise,
-	 * a StartpStateException will be thrown.
-	 * @throws StartupStateException is thrown if the server state cannot be set.
-	 */	
-    void setServerStarted( ) throws StartupStateException, ConfigurationException;
-	
-	
-	/**
-	 * Call to set the startup state to @see {StartupStateController.STOPPED Stopped}.
-	 * This is normally called when the system is shutdown.
-	 * @throws StartupStateException is thrown if the server state cannot be set.
-	 */	
-    void setServerStopped() throws StartupStateException, ConfigurationException;
-	
-		
-	
-	/**
-	 * Call to get the current state
-	 * @return int state @see {StartupStateController Controller}
-	 * @throws ConfigurationException if an error occurs
-	 */
-	int getServerState() throws ConfigurationException;
-
-
-	/**
-	 * Call to get the startup time of the server.  If the current state of the server
-	 * is not @see {StartupStateController.STARTED STARTED}, then the return value
-	 * will be null.
-	 * @return time the server stated, may be null if not in a started state
-	 * @throws ConfigurationException if an error occurs
-	 */
-	java.util.Date getStartupTime() throws ConfigurationException;
-
-
-    /**
      * Returns an ConfigurationModelContainer based on how the implementation read configuation information
      * @param configID indicates which configuration to read
      * @return ConfigurationModel
@@ -121,8 +68,6 @@ public interface PersistentConnection {
      */
     
     void delete(ConfigurationID configID, String principal) throws ConfigurationException;
-    
-    void beginTransaction() throws ConfigurationException;
     
     void rollback() throws ConfigurationException;
     

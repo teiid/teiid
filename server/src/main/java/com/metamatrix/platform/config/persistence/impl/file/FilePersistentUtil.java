@@ -48,12 +48,12 @@ public class FilePersistentUtil {
  
     public static ConfigurationModelContainer readModel(Properties props, ConfigurationID configID) throws Exception {
             
-            PersistentConnectionFactory pf = PersistentConnectionFactory.createPersistentConnectionFactory(props);            
+            PersistentConnectionFactory pf = new PersistentConnectionFactory(props);            
             
-            PersistentConnection readin = pf.createPersistentConnection(); 
+            PersistentConnection readin = pf.createPersistentConnection(true); 
                        
             ConfigurationModelContainer model = readin.read(configID); 
-           
+            readin.close();
             return model;
 
 	}

@@ -27,72 +27,53 @@ import java.util.Collection;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.platform.config.BaseTest;
-import com.metamatrix.platform.config.CurrentConfigHelper;
-
+import com.metamatrix.platform.config.util.CurrentConfigHelper;
 
 /**
-*  This only test one call to the CurrentConfiguration because it assumes
-*  nothing else has run to load the configuration in the VM.  
-* 
-*  As with TestCurrentConfiguration, it doesn't know what order the methods will
-*  be called that it has to clear the cache everytime.
-*/
-public class TestInitialConfigurationRead extends BaseTest{  
-	
-	private static String PRINCIPAL = "TestInitialConfigurationRead";       //$NON-NLS-1$
-        
-    public TestInitialConfigurationRead(String name) {
-        super(name);
-       
-    }
+ * This only test one call to the CurrentConfiguration because it assumes
+ * nothing else has run to load the configuration in the VM.
+ * 
+ * As with TestCurrentConfiguration, it doesn't know what order the methods will
+ * be called that it has to clear the cache everytime.
+ */
+public class TestInitialConfigurationRead extends BaseTest {
+
+	private static String PRINCIPAL = "TestInitialConfigurationRead"; //$NON-NLS-1$
+
+	public TestInitialConfigurationRead(String name) {
+		super(name);
+
+	}
 
 	protected void setUp() throws Exception {
 		super.setUp();
-			CurrentConfigHelper.initConfig(CONFIG_FILE, this.getPath(), PRINCIPAL);			    		
+		CurrentConfigHelper.initXMLConfig(CONFIG_FILE, this.getPath(), PRINCIPAL);
 
-	}    
-    
-    
-    /**
-    */
-    public void testValidateReader() {
-    	printMsg("Starting TestInititaltConfigurationRead");    	 //$NON-NLS-1$
+	}
 
-                    
-      try {
-      	
-      		createSystemProperties("config.xml"); //$NON-NLS-1$
-      		
-			// do the reset after setting the system properties
-     		CurrentConfiguration.getInstance().reset();
-      		   		    		      	
-            validConfigurationModel();
- 
-      } catch (Exception e) {
-    		fail(e.getMessage());
-    	}
-    	printMsg("Completed TestInititaltConfigurationRead"); //$NON-NLS-1$
- 
-    }
-    
-    private void validConfigurationModel() throws Exception {
-        ConfigurationModelContainer ccm = CurrentConfiguration.getInstance().getConfigurationModel();
-        if (ccm == null) {
-            fail("Configuration Model was not obtained from CurrentConfiguration"); //$NON-NLS-1$
-        }
-        
-  	 	Collection providers = ccm.getConfiguration().getAuthenticationProviders();
-        if (providers == null || providers.size() == 0) {
-        	fail("no providers"); //$NON-NLS-1$
-        }
-        
-        HelperTestConfiguration.validateModelContents(ccm);
-       
-        System.out.println("Providers "+ providers.size()); //$NON-NLS-1$
-    } 
-    
-        
-    
-    
+	/**
+	 * @throws Exception
+	 */
+	public void testValidateReader() throws Exception {
+		printMsg("Starting TestInititaltConfigurationRead"); //$NON-NLS-1$
+
+		createSystemProperties("config.xml"); //$NON-NLS-1$
+
+		// do the reset after setting the system properties
+		CurrentConfiguration.reset();
+
+		ConfigurationModelContainer ccm = CurrentConfiguration.getInstance().getConfigurationModel();
+		assertNotNull("Configuration Model was not obtained from CurrentConfiguration", ccm); //$NON-NLS-1$
+
+		Collection providers = ccm.getConfiguration()
+				.getAuthenticationProviders();
+		if (providers == null || providers.size() == 0) {
+			fail("no providers"); //$NON-NLS-1$
+		}
+
+		HelperTestConfiguration.validateModelContents(ccm);
+
+		printMsg("Completed TestInititaltConfigurationRead"); //$NON-NLS-1$
+	}
+
 }
-

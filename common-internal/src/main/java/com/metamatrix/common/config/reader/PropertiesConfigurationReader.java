@@ -29,7 +29,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.config.StartupStateException;
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
@@ -62,20 +62,12 @@ public class PropertiesConfigurationReader implements CurrentConfigurationReader
 
     /**
      * Default, no-arg constructor
+     * @throws ConfigurationException 
+     * @throws ConfigurationConnectionException 
      */
-    public PropertiesConfigurationReader(){
-    }
-
-    /**
-     * This method should connect to the repository that holds the current
-     * configuration, using the specified properties.  The implementation
-     * may <i>not</i> use logging but instead should rely upon returning
-     * an exception in the case of any errors.
-     * @param env the environment properties that define the information
-     * @throws ConfigurationConnectionException if there is an error establishing the connection.
-     */
-    public void connect( Properties env ) throws ConfigurationConnectionException{
-        String filename = env.getProperty(FILENAME);
+    public PropertiesConfigurationReader() throws ConfigurationConnectionException, ConfigurationException{
+    	Properties env = CurrentConfiguration.getInstance().getBootStrapProperties();
+    	String filename = env.getProperty(FILENAME);
         Properties p = null;
         if (filename != null) {
         	File f = new File(filename);
@@ -112,15 +104,6 @@ public class PropertiesConfigurationReader implements CurrentConfigurationReader
         c = new ConfigurationModelContainerImpl(currentConfiguration);
     }
 
-    /**
-     * This method should close the connection to the repository that holds the current
-     * configuration.  The implementation may <i>not</i> use logging but
-     * instead should rely upon returning an exception in the case of any errors.
-     * @throws Exception if there is an error establishing the connection.
-     */
-    public void close() throws Exception{
-    }
-
     // ------------------------------------------------------------------------------------
     //                     C O N F I G U R A T I O N   I N F O R M A T I O N
     // ------------------------------------------------------------------------------------
@@ -136,17 +119,6 @@ public class PropertiesConfigurationReader implements CurrentConfigurationReader
     public ConfigurationModelContainer getConfigurationModel() throws ConfigurationException {
     	return c;
     }
-
-	@Override
-	public void indicateSystemShutdown() throws ConfigurationException {
-		
-	}
-
-	@Override
-	public void performSystemInitialization(boolean forceInitialization)
-			throws StartupStateException, ConfigurationException {
-		
-	}
 
 }
 

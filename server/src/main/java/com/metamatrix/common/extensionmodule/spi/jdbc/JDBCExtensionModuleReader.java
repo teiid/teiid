@@ -62,14 +62,10 @@ public class JDBCExtensionModuleReader {
      * @since 4.2
      */
     private static void initFileCache() {
-	    //NOTE: DO NOT PUT LOGGING IN THIS METHOD
-        // Because configuration initializes by getting the source
-        // from the database prior to configuration properties being
-        // available
-    
-        if (fileCache == null) {
+        CurrentConfiguration config = CurrentConfiguration.getInstance();
+        if (config.isAvailable() && fileCache == null) {
             fileCache = new FileCache();
-            String typesToCacheString = CurrentConfiguration.getInstance().getProperties().getProperty(CommonPropertyNames.EXTENSION_TYPES_TO_CACHE);    
+            String typesToCacheString = config.getProperties().getProperty(CommonPropertyNames.EXTENSION_TYPES_TO_CACHE);    
             if (typesToCacheString != null) {
                 StringTokenizer tokenizer = new StringTokenizer(typesToCacheString, ","); //$NON-NLS-1$
                 while (tokenizer.hasMoreTokens()) {
@@ -143,7 +139,7 @@ public class JDBCExtensionModuleReader {
     
         
    private static byte[] getConfigContent(String sourceName, Connection jdbcConnection)
-         throws ExtensionModuleNotFoundException, MetaMatrixComponentException, SQLException {
+         throws MetaMatrixComponentException, SQLException {
        
         String sql = null;
         PreparedStatement statement = null;
@@ -202,11 +198,6 @@ public class JDBCExtensionModuleReader {
     private synchronized static byte[] getFileContent(String sourceName, Connection jdbcConnection)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException, SQLException {
 
-        //NOTE: DO NOT PUT LOGGING IN THIS METHOD
-        // Because configuration initializes by getting the source
-        // from the database prior to configuration properties being
-        // available
-        
         initFileCache();        
         
         CheckSumAndType csat = loadChecksumAndType(sourceName, jdbcConnection);

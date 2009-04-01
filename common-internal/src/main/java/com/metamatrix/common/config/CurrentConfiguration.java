@@ -24,6 +24,8 @@ package com.metamatrix.common.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -35,14 +37,18 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.SharedResource;
+import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicHost;
 import com.metamatrix.common.config.reader.CurrentConfigurationReader;
 import com.metamatrix.common.config.reader.PropertiesConfigurationReader;
 import com.metamatrix.common.properties.UnmodifiableProperties;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.ErrorMessageKeys;
+import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.ReflectionHelper;
 
 /**
  * <p>
@@ -64,8 +70,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
  * information will restart the framework, requiring another eventual
  * shutdown.
  * </p>
- *
- * NOTE: This class should NOT use LogManager because it can cause recursive behavior.
  */
 public final class CurrentConfiguration {
 
@@ -77,6 +81,10 @@ public final class CurrentConfiguration {
 	private CurrentConfigurationReader reader;
     private Properties bootstrapProperties;
     private Properties systemBootstrapProperties;
+	private String bindAddress;
+	private InetAddress hostAddress;
+	private String configurationName;
+	private String processName;
     
     private static CurrentConfiguration INSTANCE = new CurrentConfiguration();
     
@@ -88,7 +96,94 @@ public final class CurrentConfiguration {
      * Private constructor that prevents instantiation.
      */
     private CurrentConfiguration() {
+    	setHostProperties(null);
     }
+    
+    private void setHostProperties(String bind) {
+    	Host host = getDefaultHost();
+    	this.configurationName = host.getFullName();
+    	String hostName = host.getHostAddress();
+    	if (bind == null) {
+    		bind = host.getBindAddress();
+    	}
+    	
+    	boolean bindAddressDefined = (bind != null && bind.length() > 0);
+    	boolean hostNameDefined = (hostName != null && hostName.length() > 0);
+
+    	try {
+	    	if (hostNameDefined) {
+				this.hostAddress = NetUtils.resolveHostByName(hostName);
+			}
+	    	    	
+	    	if (bindAddressDefined) {
+	    		this.bindAddress = bind;
+	    		
+	    		if (!hostNameDefined) { 
+	    			this.hostAddress = InetAddress.getByName(bindAddress);
+	    		}
+	    	}
+	    	else {
+	    		if (!hostNameDefined) {
+		    		this.hostAddress = NetUtils.getInstance().getInetAddress();
+		    	}
+	    		this.bindAddress = this.hostAddress.getHostAddress();
+	    	}
+    	} catch (UnknownHostException e) {
+    		throw new RuntimeException(e);
+    	}
+    }
+    
+    public boolean isAvailable() {
+    	return this.reader != null;
+    }
+    
+    /**
+     * Return the stringified representation of this application information object.
+     * @return the string form of this object; never null
+     */
+    public String getHostInfo() {
+        StringBuffer sb = new StringBuffer("Host Information"); //$NON-NLS-1$ 
+        sb.append('\n');
+        sb.append(" VM Name:               " + processName ); //$NON-NLS-1$
+        sb.append('\n');
+        sb.append(" Hostname:              " + hostAddress.getCanonicalHostName() ); //$NON-NLS-1$
+        sb.append('\n');
+        sb.append(" Version:               ").append(ApplicationInfo.getInstance().getReleaseNumber()); //$NON-NLS-1$
+        sb.append('\n');
+        sb.append(" Build Date:            ").append(ApplicationInfo.getInstance().getBuildDate()); //$NON-NLS-1$
+        return sb.toString();
+    }
+    
+    public void setProcessName(String name) {
+		VMComponentDefn deployedVM;
+		try {
+			deployedVM = getConfiguration().getVMForHost(getDefaultHost().getName(), name);
+		} catch (ConfigurationException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+		
+		if (deployedVM == null) {
+			throw new MetaMatrixRuntimeException(CommonPlugin.Util.getString("CurrentConfiguration.unknown_process", name)); //$NON-NLS-1$ 
+		}
+    	this.processName = name;
+    	setHostProperties(deployedVM.getBindAddress());
+    }
+    
+    public String getBindAddress() {
+		return bindAddress;
+	}
+    
+    public InetAddress getHostAddress() {
+		return hostAddress;
+	}
+    
+    public String getConfigurationName() {
+		return configurationName;
+	}
+    
+    public String getProcessName() {
+		return processName;
+	}
     
     public String getClusterName() throws ConfigurationException {
         Properties props = getResourceProperties(ResourceNames.JGROUPS);
@@ -213,8 +308,8 @@ public final class CurrentConfiguration {
      * communication with the Configuration Service, or if there is no object
      * for the given ID.
      */
-    public Host getDefaultHost() throws ConfigurationException {
-    	String name = getBootStrapProperties().getProperty(CONFIGURATION_NAME);
+    public Host getDefaultHost() {
+    	String name = getBootStrapProperties().getProperty(CONFIGURATION_NAME, "embedded"); //$NON-NLS-1$
     	BasicHost host = new BasicHost(new ConfigurationID(name), new HostID(name), Host.HOST_COMPONENT_TYPE_ID);
         
     	Properties props = new Properties();
@@ -233,64 +328,11 @@ public final class CurrentConfiguration {
      * Reset causes not just a refresh, but the bootstrapping process
      * to occur again.
      */
-    public synchronized final void reset() throws ConfigurationException {
-        reader = null;
-        bootstrapProperties = null;
-        systemBootstrapProperties = null;
+    public static void reset() {
+    	INSTANCE = new CurrentConfiguration();
     }
-
-    /**
-     * This method should be called <i>only</i> by
-     * {@link StartupStateController}, which is used by
-     * MetaMatrixController to initialize the system configurations during bootstrapping.
-     * Once bootstrap properties are verified, this method will use
-     * the {@link #reader} to attempt to put the system state into
-     * {@link StartupStateController#STATE_STARTING}, and then
-     * commence with initialization.  If the state is already
-     * {@link StartupStateController#STATE_STARTING}, then another
-     * MetaMatrixController is already currently in the process of
-     * starting the system, and a {@link StartupStateException}
-     * will be thrown.  If this method returns without an
-     * exception, then the system state will be in state
-     * {@link StartupStateController#STATE_STARTING}, and the calling
-     * code should proceed with startup.
-
-
-     * @param forceInitialization if the system is in a state other than
-     * {@link StartupStateController#STATE_STOPPED}, and the
-     * administrator thinks the system actually crashed and is
-     * not really running, he can choose to force the
-     * initialization.  Otherwise, if the system is in one of these states,
-     * an exception will be thrown.  This method is package-level so
-     * that only StartupStateController can access it.
-     * @throws StartupStateException if the system is
-     * not in a state in which initialization can proceed.  This
-     * exception will indicate the current system state.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-//JBoss fix - method made public to get around a AccessDenied problem with Jboss30
-    public final void performSystemInitialization(boolean forceInitialization) throws StartupStateException, ConfigurationException {
-
-        // this only initializes the persistence of the configuration
-        // (i.e., copying NEXTSTARTUP to OPERATIONAL, etc)
-    	getReader().performSystemInitialization(forceInitialization);
-
-		// perform reset to reload configuration information
-        reset();
-    }
-
-    /**
-     * This will put the system into a state of {@link #STATE_STOPPED}.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-//JBoss fix - method made public to get around a AccessDenied problem with Jboss30
-    public final void indicateSystemShutdown() throws ConfigurationException {
-    	getReader().indicateSystemShutdown();
-    }
-
-	public synchronized Properties getBootStrapProperties() throws ConfigurationException {
+    
+    public synchronized Properties getBootStrapProperties() {
 		if (bootstrapProperties == null) {
 			Properties systemBootStrapProps = getSystemBootStrapProperties();
 			Properties bootstrapProps = new Properties(systemBootStrapProps);
@@ -301,7 +343,7 @@ public final class CurrentConfiguration {
 	        		bootstrapProps.load(bootstrapPropStream);
 	        	}
 	        } catch (IOException e) {
-        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_ERR_0069, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0069, BOOTSTRAP_FILE_NAME));
+        		throw new MetaMatrixRuntimeException(ErrorMessageKeys.CONFIG_ERR_0069, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0069, BOOTSTRAP_FILE_NAME));
 	        } finally {
 		        try {
 		        	if (bootstrapPropStream != null) {
@@ -322,16 +364,6 @@ public final class CurrentConfiguration {
         return systemBootstrapProperties;
     }
 
-    /**
-     * Returns the instance of <code>CofigurationBootMgr</code> to use to
-     * get configuration information.
-     * @throws ConfigurationException if the current configuration and/or
-     * bootstrap properties could not be obtained
-     */
-    public final void verifyBootstrapProperties() throws ConfigurationException {
-    	getReader();
-    }
-    	
     synchronized CurrentConfigurationReader getReader() throws ConfigurationException {
     	if (reader == null) {
             // Get the default bootstrap properties from the System properties ...
@@ -339,15 +371,11 @@ public final class CurrentConfiguration {
 			
             String readerClassName = bootstrap.getProperty( CONFIGURATION_READER_CLASS_PROPERTY_NAME, PropertiesConfigurationReader.class.getName() );
 
-        	CurrentConfigurationReader tempReader;
         	try {
-                Class readerClass = Class.forName(readerClassName);
-                tempReader = (CurrentConfigurationReader) readerClass.newInstance();
+        		reader = (CurrentConfigurationReader)ReflectionHelper.create(readerClassName, null, Thread.currentThread().getContextClassLoader());
         	} catch (Exception e) {
         		throw new ConfigurationException(e);
 			}
-        	tempReader.connect(bootstrap);
-            reader = tempReader;
     	}
 
     	return reader;

@@ -44,21 +44,16 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.VMComponentDefn;
-import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
-import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.ProcessRegistryBinding;
+import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
@@ -1181,7 +1176,7 @@ public class ServiceManager {
     
 	private static ServiceManager loadServiceManager(Host host) {
 		Injector injector = Guice.createInjector(new ServiceManagerGuiceModule(host));
-		ResourceFinder.setInjector(injector); 
+		ResourceFinder.setInjectorAndCompleteInitialization(injector); 
 		return injector.getInstance(ServiceManager.class);
 	}    
    
@@ -1196,18 +1191,7 @@ public class ServiceManager {
         	command = command + args[i] + " "; //$NON-NLS-1$
         }
 
-        Host host = null;
-        try {
-			host = CurrentConfiguration.getInstance().getDefaultHost();      
-		} catch (ConfigurationException e) {
-		}
-
-        if (host == null) {
-        	LogManager.logError(LogCommonConstants.CTX_CONTROLLER,"ERROR " + PlatformPlugin.Util.getString(ErrorMessageKeys.HOST_0001)); //$NON-NLS-1$
-            System.exit(-1);
-        }          
-        
-        VMNaming.setup(host.getFullName(), host.getHostAddress(), host.getBindAddress());
+        Host host = CurrentConfiguration.getInstance().getDefaultHost();      
         
         try {
 			ServiceManager manager = loadServiceManager(host);

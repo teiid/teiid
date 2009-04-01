@@ -56,8 +56,6 @@ public class TransactionLogWriter {
     private static final int WRITE_RETRIES = 3; // # of retries before stop writing
     private static final int RESUME_LOGGING_AFTER_TIME =  180 * 1000; // 3 mins 
     
-    private Properties connProps;
-    
     private static volatile boolean isLogSuspended=false;
     private static volatile long resumeTime=-1;
     private boolean shutdown = false;
@@ -71,7 +69,6 @@ public class TransactionLogWriter {
      *             initialization.
      */
     public TransactionLogWriter(Properties props) {
-        this.connProps = props;
     }
 
     public void print(TransactionLogMessage message) {

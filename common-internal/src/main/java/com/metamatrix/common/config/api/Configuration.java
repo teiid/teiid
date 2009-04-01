@@ -43,14 +43,12 @@ public interface Configuration extends ComponentObject {
     * configuration object represents.
     */
     static final String NEXT_STARTUP = "Next Startup"; //$NON-NLS-1$
-    static final String STARTUP = "Startup"; //$NON-NLS-1$
     
     /**
     * These configuration ID's can be used to determine which Configuration a
     * ConfigurationID represents using equals.
     */
     static final ConfigurationID NEXT_STARTUP_ID = new ConfigurationID(NEXT_STARTUP);
-    static final ConfigurationID STARTUP_ID = new ConfigurationID(STARTUP);
     
     static final String COMPONENT_TYPE_NAME = "Configuration"; //$NON-NLS-1$
     static final ComponentTypeID CONFIG_COMPONENT_TYPE_ID = new ComponentTypeID(COMPONENT_TYPE_NAME);

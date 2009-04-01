@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.audit.AuditMessage;
@@ -119,7 +119,7 @@ public class SingleFileAuditDestination extends AbstractAuditDestination {
         int index = fileName.indexOf(VM_NAME_TOKEN);
         if ( index != -1 ) {
             StringBuffer tempFileName = new StringBuffer(fileName);
-            String processName = VMNaming.getConfigName()+"_"+VMNaming.getProcessName(); //$NON-NLS-1$
+            String processName = CurrentConfiguration.getInstance().getConfigurationName()+"_"+CurrentConfiguration.getInstance().getProcessName(); //$NON-NLS-1$
             tempFileName.replace(index,index+VM_NAME_TOKEN.length(),processName);
             fileName = tempFileName.toString();
         }

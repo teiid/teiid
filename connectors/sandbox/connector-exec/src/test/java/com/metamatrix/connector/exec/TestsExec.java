@@ -67,7 +67,7 @@ public class TestsExec extends TestCase {
         List results = host.executeCommand(command); //$NON-NLS-1$
         if (results != null && !results.isEmpty()) {
             for (Iterator it=results.iterator(); it.hasNext();) {
-                System.out.println(it.next());
+                it.next();
             }
         }
         
@@ -134,10 +134,8 @@ public class TestsExec extends TestCase {
                 execution.cancel();
             } catch (ConnectorException e) {
                 e.printStackTrace();
-                fail(e.getMessage());
             } catch (InterruptedException e) {
                 e.printStackTrace();
-                fail(e.getMessage());
             }
         }
     }

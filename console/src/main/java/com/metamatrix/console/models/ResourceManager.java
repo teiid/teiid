@@ -61,9 +61,6 @@ public class ResourceManager extends Manager {
 				case NEXT_STARTUP_CONFIG:
                     configID = capi.getNextStartupConfigurationID();
 					break;
-				case STARTUP_CONFIG:
-                    configID = capi.getStartupConfigurationID();
-					break;
 	    	}
             
 	    } catch (AuthorizationException ex) {
@@ -81,8 +78,15 @@ public class ResourceManager extends Manager {
 	
 	public ResourcePropertiedObjectEditor getResourcePropertiedObjectEditor() 
 			throws AuthorizationException, ExternalException {
-	    ConfigurationID configID = getConfigurationID(NEXT_STARTUP_CONFIG);
-		return new ResourcePropertiedObjectEditor(getConnection(), configID);
+	    ConfigurationAdminAPI capi = ModelManager.getConfigurationAPI(
+	    		getConnection());
+	    try {
+	    	return new ResourcePropertiedObjectEditor(getConnection(), capi.getNextStartupConfigurationID());
+	    } catch (AuthorizationException ex) {
+	        throw ex;
+	    } catch (Exception ex) {
+	        throw new ExternalException(ex);
+	    }
 	}
 	
 	public SharedResource[] getResources() 

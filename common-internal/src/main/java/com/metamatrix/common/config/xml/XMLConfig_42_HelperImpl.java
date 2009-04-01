@@ -35,6 +35,7 @@ import java.util.Properties;
 
 import org.jdom.Element;
 
+import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.api.AuthenticationProvider;
 import com.metamatrix.common.config.api.ComponentDefn;
@@ -474,9 +475,9 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
                             XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED,
                             defn.isPreferred(), PropertyDefinitionImpl.DEFAULT_IS_PREFERRED);
             
-        setAttributeBoolean(element,
+        setAttributeString(element,
                             XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.REQUIRES_RESTART,
-                            defn.getRequiresRestart(), PropertyDefinitionImpl.DEFAULT_REQUIRES_RESTART);
+                            defn.getRequiresRestart().toString(), PropertyDefinitionImpl.DEFAULT_REQUIRES_RESTART.toString());
         
         
         List allowedValues = defn.getAllowedValues();
@@ -2291,11 +2292,18 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
             XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED,
             PropertyDefinitionImpl.DEFAULT_IS_PREFERRED);
                                                   
-        boolean requiresRestart = getAttributeBoolean(element,
+        String requiresRestart = getAttributeString(element,
             XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.REQUIRES_RESTART,
-            PropertyDefinitionImpl.DEFAULT_REQUIRES_RESTART);
-        
-        
+            PropertyDefinitionImpl.DEFAULT_REQUIRES_RESTART.toString());
+
+        RestartType restartType = null;
+
+        if ("true".equalsIgnoreCase(requiresRestart)) { //$NON-NLS-1$
+        	restartType = RestartType.PROCESS;
+        } else {
+        	restartType = RestartType.valueOf(requiresRestart.toUpperCase());
+        }
+            
         
         // we must retrieve all of the allowed values from the PropertyDefinition
         // element
@@ -2315,7 +2323,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
                 defn.setMasked(isMasked);
                 defn.setConstrainedToAllowedValues(isConstrainedToAllowedValues);
-                defn.setRequiresRestart(requiresRestart);
+                defn.setRequiresRestart(restartType);
         return defn;
 
     }

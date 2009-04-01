@@ -73,7 +73,7 @@ public class PropertyFilterPanel extends BasePanel{
 
     private ButtonGroup groupBE = new ButtonGroup();
     private ButtonGroup groupMR = new ButtonGroup();
-    private NextStartupPanel nextStartupPanel, startupPanel;
+    private NextStartupPanel nextStartupPanel;
     private PropertyFilter suFilter;
     
     private ConsolePropertiedEditor propEditor;
@@ -170,9 +170,6 @@ public class PropertyFilterPanel extends BasePanel{
         nextStartupPanel = new NextStartupPanel(PropertiesMasterPanel.NEXT_STARTUP,
                 PropertiesMasterPanel.NEXT_STARTUP_ICON, this,
                 masterPanel.getConnection());
-        startupPanel = new NextStartupPanel(PropertiesMasterPanel.STARTUP,
-                PropertiesMasterPanel.STARTUP_ICON, this,
-                masterPanel.getConnection());
         suFilter = new PropertyFilter();        
         nextStartupPanel.setPropertiedEditor(propEditor);
         propDefns =  propEditor.getPropDefn();
@@ -185,8 +182,6 @@ public class PropertyFilterPanel extends BasePanel{
         StaticTreeUtilities.expandAll(tree);
         JScrollPane sp = new JScrollPane(tree);
         pnlSystemTree.add(sp, BorderLayout.CENTER);
-        startupPanel.setPropertiedEditor(propEditor);
-
         StaticUtilities.endWait(this);
         propControllProcess();
     }
@@ -209,10 +204,6 @@ public class PropertyFilterPanel extends BasePanel{
 
     NextStartupPanel getNextStartupPanel() {
         return nextStartupPanel;
-    }
-
-    NextStartupPanel getStartupPanel() {
-    	return startupPanel;
     }
 
     public void postRealize() {
@@ -244,9 +235,7 @@ public class PropertyFilterPanel extends BasePanel{
                         
                     if (title.equals(PropertiesMasterPanel.NEXT_STARTUP)) {
                         nextStartupPanel.setGroupName(gn, propEditor.getNSUDefns((java.util.List)propDefns), suFilter);
-                    } else if (title.equals(PropertiesMasterPanel.STARTUP)) {
-                        startupPanel.setGroupName(gn, propEditor.getSUDefns((java.util.List)propDefns), suFilter);
-                    }
+                    } 
 
                     //clear  hashmap that contain property value change  nspFilter, opFilter, suFilter
                     if (nextStartupPanel.getPropertiedEditor().getChangeHM() != null)
@@ -283,15 +272,9 @@ public class PropertyFilterPanel extends BasePanel{
             if (tabIndex.equals(PropertiesMasterPanel.NEXT_STARTUP)|| tabIndex.equals(ALL_TAB)) {
                 nextStartupPanel.setGroupName(ConsolePropertyObjectId.ALL_SYS_PROPS, null, suFilter);
             }
-            if (tabIndex.equals(PropertiesMasterPanel.STARTUP) || tabIndex.equals(ALL_TAB)) {
-                startupPanel.setGroupName(ConsolePropertyObjectId.ALL_SYS_PROPS, null, suFilter);
-            }
         } else {
             if (tabIndex.equals(PropertiesMasterPanel.NEXT_STARTUP)) {
                 nextStartupPanel.setGroupName(gn, propEditor.getNSUDefns((java.util.List)propDefns), suFilter);
-            }
-            if (tabIndex.equals(PropertiesMasterPanel.STARTUP)) {
-                startupPanel.setGroupName(gn, propEditor.getSUDefns((java.util.List)propDefns), suFilter);
             }
         }
     }
@@ -318,8 +301,7 @@ public class PropertyFilterPanel extends BasePanel{
         expertCB.setEnabled(status);
         bothBECB.setEnabled(status);
 
-        if ((propEditor.getCurrentTitle().equals(PropertiesMasterPanel.STARTUP)
-                                                    || (!canModifyServerProperties))) {
+        if (!canModifyServerProperties) {
             return;
         }
 

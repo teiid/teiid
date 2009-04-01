@@ -25,8 +25,6 @@ package com.metamatrix.server.query.service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,11 +42,9 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
-import com.metamatrix.common.extensionmodule.protocol.URLFactory;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.client.ClientSideDQP;
@@ -62,7 +58,6 @@ import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.server.ServerPlugin;
 import com.metamatrix.server.dqp.config.PlatformConfigSource;
 import com.metamatrix.server.util.LogConstants;
-import com.metamatrix.server.util.ServerPropertyNames;
 
 /**
  * Wraps up a QueryServiceEngine to tie it into the platform concept of services.  Is a remote object.
@@ -73,7 +68,6 @@ import com.metamatrix.server.util.ServerPropertyNames;
  */
 public class QueryService extends AbstractService implements QueryServiceInterface {
     
-	private static final String CLASSPATH_DELIMITER = ";"; //$NON-NLS-1$
     private static final String CODE_TABLE_CACHE_NAME = "CodeTableCache"; //$NON-NLS-1$
     private static final String PLAN_CACHE_NAME = "PreparedPlanCache"; //$NON-NLS-1$
     private static final String RESULT_SET_CACHE_NAME = "QueryServiceResultSetCache"; //$NON-NLS-1$
@@ -96,7 +90,7 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
             LogManager.logError(LogConstants.CTX_QUERY_SERVICE, t, ServerPlugin.Util.getString("QueryService.Unable_to_register_user-defined_function_source__{0}_1", udfSource)); //$NON-NLS-1$
         }
 
-        DQPConfigSource configSource = new PlatformConfigSource(props, CurrentConfiguration.getInstance().getProperties(), new Long(getID().getID()), CurrentConfiguration.getInstance().getDefaultHost(), VMNaming.getProcessName());
+        DQPConfigSource configSource = new PlatformConfigSource(props, CurrentConfiguration.getInstance().getProperties(), new Long(getID().getID()), CurrentConfiguration.getInstance().getDefaultHost(), CurrentConfiguration.getInstance().getProcessName());
         dqp = new DQPCore();
         dqp.start(configSource);
     }

@@ -116,6 +116,7 @@ public class FakeRegistryUtil {
 	    
 	    ProcessRegistryBinding binding = new ProcessRegistryBinding(hostName, processName, defn1, vmInterface1, new NoOpMessageBus());
 	    binding.setAlive(true);
+	    binding.setStartTime(new Date(1234).getTime());
 	    return binding;
 	}
 

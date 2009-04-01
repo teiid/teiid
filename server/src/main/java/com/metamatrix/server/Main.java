@@ -23,6 +23,9 @@
 package com.metamatrix.server;
 
 import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.Arrays;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -30,16 +33,14 @@ import com.google.inject.Injector;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.MessagingException;
-import com.metamatrix.common.util.VMNaming;
+import com.metamatrix.core.log.FileLimitSizeLogWriter;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.dqp.ResourceFinder;
-import com.metamatrix.platform.PlatformPlugin;
+import com.metamatrix.platform.config.persistence.impl.file.FilePersistentUtil;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 
@@ -47,6 +48,8 @@ import com.metamatrix.platform.vm.api.controller.ProcessManagement;
  * This is main server starter class.
  */
 public class Main {
+	
+	private static final String CONFIG_PREFIX = "config-"; //$NON-NLS-1$
 
 	@Inject
 	MessageBus messageBus;
@@ -60,55 +63,45 @@ public class Main {
 	@Inject	
 	ClusteredRegistryState registry;
 	
-	public static void main(String[] args) {
-        
-		try {
-			if (args.length != 1) {
-			    System.out.println("Usage: java com.metamatrix.server.Main <vm_name>"); //$NON-NLS-1$
-			    System.exit(1);        	
-			}
+	public static void main(String[] args) throws Exception {
+		if (args.length != 1) {
+		    System.out.println("Usage: java com.metamatrix.server.Main <vm_name>"); //$NON-NLS-1$
+		    System.exit(1);        	
+		}
 
-			String processName = args[0];
+		final String processName = args[0];
 
-			Host host = null;
-			try {
-				host = CurrentConfiguration.getInstance().getDefaultHost();        
-			} catch (ConfigurationException e) {
+		CurrentConfiguration.getInstance().setProcessName(processName);
+
+		final Host host = CurrentConfiguration.getInstance().getDefaultHost();        
+		
+		Thread t = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					saveCurrentConfigurationToFile(host, processName);
+				} catch (ConfigurationException e) {
+					System.out.print("Could not archive start up configuration"); //$NON-NLS-1$
+				}
+				// write info log
+				writeInfoLog(host, processName);
 			}
-			
-			if (host == null) {
-			    System.err.println(PlatformPlugin.Util.getString("SocketVMController.5")); //$NON-NLS-1$
-			    System.exit(-1);
-			}
-			
-			VMComponentDefn deployedVM = CurrentConfiguration.getInstance().getConfiguration().getVMForHost(host.getName(), processName);
-			String bindAddress = deployedVM.getBindAddress();
-			
-			VMNaming.setProcessName(processName);
-			VMNaming.setup(host.getFullName(), host.getHostAddress(), bindAddress);
-			
-			// write info log
-			writeInfoLog(host, processName);
-			        
-			createTempDirectory();                    
-			
-			// wire up guice modules
-			Main main = loadMain(host, processName);
-			
-			// launch the server
-			
-			main.launchServer();
-		} catch (Throwable e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		} 
+		}, "Main Info Thread"); //$NON-NLS-1$
+		t.start();
+		        
+		createTempDirectory();                    
+		
+		// wire up guice modules
+		Main main = loadMain(host, processName);
+		
+		// launch the server
+		main.launchServer();
 	}
-	
 	
 	private static Main loadMain(Host host, String processName) {
 		Injector injector = Guice.createInjector(new ServerGuiceModule(host, processName));
 		// Until we get the all the DI working we have to resort to this kind of stuff..
-		ResourceFinder.setInjector(injector); 
+		ResourceFinder.setInjectorAndCompleteInitialization(injector); 
 		return injector.getInstance(Main.class);
 	}
 
@@ -154,11 +147,32 @@ public class Main {
 	    return hostFileName + "_" + processName; //$NON-NLS-1$
 	}   
 
+    private static void saveCurrentConfigurationToFile(Host host, String processName) throws ConfigurationException {
+        FilePersistentUtil.writeModel(CONFIG_PREFIX+FileLimitSizeLogWriter.getDate()+".xml", host.getConfigDirectory(),  //$NON-NLS-1$ 
+        CurrentConfiguration.getInstance().getConfigurationModel(), 
+                        processName);
+        //remove old instances
+        File f = new File(host.getConfigDirectory());
+        String[] result = f.list(new FilenameFilter() {
+        	@Override
+        	public boolean accept(File dir, String name) {
+        		return name.startsWith(CONFIG_PREFIX);
+        	}
+        });
+        if (result.length > 10) {
+        	Arrays.sort(result);
+        	try {
+				FileUtils.remove(result[0]);
+			} catch (IOException e) {
+				System.out.println("Error removing archived config"); //$NON-NLS-1$
+			}
+        }
+    }
 
     private static void writeInfoLog(Host host, String processName) {
         // trigger the logging of the current application info to a log file for debugging        
         LogApplicationInfo logApplInfo = new LogApplicationInfo(host.getFullName(), processName, host.getLogDirectory(), buildPrefix(host.getFullName(), processName) + "_info.log"); //$NON-NLS-1$
-        logApplInfo.start();        	
+        logApplInfo.run();
     }
     
     /**

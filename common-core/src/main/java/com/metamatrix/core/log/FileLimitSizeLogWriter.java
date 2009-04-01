@@ -356,7 +356,7 @@ public class FileLimitSizeLogWriter  implements LogListener {
         return fileName.toString();
     }
 
-    protected static String getDate(  ) {
+    public synchronized static String getDate(  ) {
         try {
             Date d = Calendar.getInstance().getTime();
             return DATE_FORMATTER.format(d);

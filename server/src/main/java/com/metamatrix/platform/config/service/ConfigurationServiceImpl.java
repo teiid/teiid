@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -40,8 +39,6 @@ import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.actions.ActionDefinition;
-import com.metamatrix.common.actions.AddObject;
-import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
@@ -63,25 +60,20 @@ import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.ConfigurationLockException;
 import com.metamatrix.common.config.api.exceptions.InvalidArgumentException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.ComponentCryptoUtil;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
-import com.metamatrix.common.connection.ManagedConnectionException;
-import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.namedobject.BaseID;
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
-import com.metamatrix.platform.config.api.service.ConfigurationServicePropertyNames;
-import com.metamatrix.platform.config.spi.ConfigurationTransaction;
-import com.metamatrix.platform.config.spi.SystemConfigurationNames;
+import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnector;
+import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.util.ErrorMessageKeys;
@@ -95,23 +87,12 @@ import com.metamatrix.platform.util.LogMessageKeys;
 
 public class ConfigurationServiceImpl extends AbstractService implements ConfigurationServiceInterface {
 
-  /**
-    * The transaction mgr for ManagedConnections.
-    */
-    private TransactionMgr transMgr;
-
-//    private int sessionCount;
-    private ActionHistory actionHistory = new ActionHistory();
-
-    /**
+/**
      * Flag denoting whether this service is closed and may not accept new work.
      */
 //    private boolean serviceIsClosed = false;
 
     private static final String CONTEXT = LogCommonConstants.CTX_CONFIG;
-
-    private static BasicConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(false);
-
 
     public ConfigurationServiceImpl() {
         super();
@@ -121,29 +102,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     //                 S E R V I C E - R E L A T E D    M E T H O D S
     // -----------------------------------------------------------------------------------
 
-    public void initializeForTesting(Properties env) throws Exception {
-        this.initService(env);
-    }
-
     /**
      * Perform initialization and commence processing. This method is called only once.
      */
     protected void initService(Properties env) throws Exception {
-
-        try {
-
-        	if (env.getProperty(ConfigurationServicePropertyNames.CONNECTION_FACTORY) == null) {
-                env.setProperty(ConfigurationServicePropertyNames.CONNECTION_FACTORY, ConfigurationServicePropertyNames.DEFAULT_CONNECTION_FACTORY_CLASS);		
-        	}
-            env.setProperty(TransactionMgr.FACTORY, env.getProperty(ConfigurationServicePropertyNames.CONNECTION_FACTORY));
-
-            transMgr = new TransactionMgr(env, this.getInstanceName());
-
-            I18nLogManager.logInfo(CONTEXT, LogMessageKeys.CONFIG_0002, new Object[] { getInstanceName()});
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e);
-        }
+        I18nLogManager.logInfo(CONTEXT, LogMessageKeys.CONFIG_0002, new Object[] { getInstanceName()});
     }
 
     /**
@@ -199,34 +162,13 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
     /**
-     * Baselines the realtime portion of the current (operational) configuration into the
-     * next-startup configuration.
-     * @param principalName the name of the principal that is requesting the
-     * baselining
-     */
-    public void baselineCurrentConfiguration(String principalName) throws ConfigurationException {
-        throw new UnsupportedOperationException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0039));
-
-    }
-
-    /**
-     * Returns the ID of the startup <code>Configuration</code>, which should reflect
-     * the desired runtime state of the system.
-     * @return ID of startup configuration
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     */
-    public ConfigurationID getStartupConfigurationID() throws ConfigurationException {
-        return this.getDesignatedConfigurationID(SystemConfigurationNames.STARTUP);
-    }
-
-    /**
      * Returns the operational <code>Configuration</code>, which should reflect
      * the desired runtime state of the system.
      * @return Configuration that is currently in use
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public Configuration getCurrentConfiguration() throws ConfigurationException {
-        return this.getDesignatedConfiguration(SystemConfigurationNames.NEXT_STARTUP);
+        return this.getDesignatedConfiguration(Configuration.NEXT_STARTUP);
     }
 
     /**
@@ -236,56 +178,30 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public Configuration getNextStartupConfiguration() throws ConfigurationException{
-        return this.getDesignatedConfiguration(SystemConfigurationNames.NEXT_STARTUP);
-    }
-
-    /**
-     * Returns the startup <code>Configuration</code>, the Configuration
-     * that the system booted up with.
-     * @return Configuration that the system booted up with.
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     */
-    public Configuration getStartupConfiguration() throws ConfigurationException{
-        return this.getDesignatedConfiguration(SystemConfigurationNames.STARTUP);
+        return this.getDesignatedConfiguration(Configuration.NEXT_STARTUP);
     }
 
     private Configuration getDesignatedConfiguration(String designation) throws ConfigurationException {
         // Look in the cache ...
         Configuration config = null;
 
-        ConfigurationTransaction transaction = null;
-        try {
-            transaction = getReadTransaction();
+        XMLConfigurationConnector transaction = null;
+            transaction = getConnection(null);
             config = transaction.getDesignatedConfiguration(designation);
 
             if (config != null) {
                 LogManager.logDetail(CONTEXT, "Found " + designation + " configuration " + config.getName()); //$NON-NLS-1$ //$NON-NLS-2$
             } else {
-                LogManager.logDetail(CONTEXT, "No " + designation + " configuration found "); //$NON-NLS-1$ //$NON-NLS-2$
                 throw new ConfigurationException("No " + designation + " configuration was found"); //$NON-NLS-1$ //$NON-NLS-2$
             }
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0040, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0040, designation));
-        } finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-					I18nLogManager.logError(CONTEXT,  ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
 
         return config;
     }
 
     private ConfigurationID getDesignatedConfigurationID(String designation) throws ConfigurationException {
         ConfigurationID configID = null;
-        ConfigurationTransaction transaction = null;
-        try {
-            transaction = getReadTransaction();
+        XMLConfigurationConnector transaction = null;
+            transaction = getConnection(null);
             configID = transaction.getDesignatedConfigurationID(designation);
 
             if (configID != null) {
@@ -293,19 +209,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             } else {
                 throw new ConfigurationException(ErrorMessageKeys.CONFIG_0042, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0042));
             }
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0042, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0042));
-        } finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-					I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
         return configID;
     }
 
@@ -313,65 +216,21 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         // Look in the cache ...
         ConfigurationModelContainer config = null;
 
-        ConfigurationTransaction transaction = null;
+        XMLConfigurationConnector transaction = null;
         try {
-            transaction = getReadTransaction();
+            transaction = getConnection(null);
             config = transaction.getConfigurationModel(configName);
 
-            if (config != null) {
-            } else {
+            if (config == null) {
                 LogManager.logTrace(CONTEXT, "No configuration model found"); //$NON-NLS-1$
             }
 
         }catch ( Exception e ) {
         	throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0043, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0043));
-        }finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
         }
         return config;
 
 	}
-
-    public Configuration getConfiguration(String configName) throws InvalidConfigurationException, ConfigurationException  {
-        if ( configName == null) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "configName")); //$NON-NLS-1$
-        }
-
-        // Look in the cache ...
-        Configuration config = null;
-
-        ConfigurationTransaction transaction = null;
-        try {
-            transaction = getReadTransaction();
-            config = transaction.getConfiguration(configName);
-
-            if (config != null) {
-                LogManager.logDetail(CONTEXT, "Found current configuration " + configName); //$NON-NLS-1$
-            } else {
-                LogManager.logTrace(CONTEXT, "No current configuration found for " + configName); //$NON-NLS-1$
-            }
-
-        }catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0044, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0044, configName));
-        }finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
-        return config;
-    }
 
     /**
      * <p>Returns a Collection containing the Configuration object for the specified
@@ -429,89 +288,21 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         // Look in the cache ...
         Collection result = null;
 
-        ConfigurationTransaction transaction = null;
-        try {
-            transaction = getReadTransaction();
+        XMLConfigurationConnector transaction = null;
+            transaction = getConnection(null);
             result = transaction.getAllObjectsForConfigurationModel(configID);
 
 			return result;
-
-        }catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0046, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0046, configID));
-        }finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
-
-//        throw new ConfigurationException("Unable to find the configuration and dependent objects from " + configID);
     }
 
-    /**
-    * <p>This method will return a Collection of objects that represent the
-    * set of global configuration objects currently represented in the
-    * configuration database.  This method will generally be used when
-    * attempting to import a configuration into the database as the 'Next Startup'
-    * configuration.  This information is important when importing a new configuration
-    * so that any global type configuration objects that are to be imported can
-    * be resolved against the global objects that currently exist in the
-    * database.</p>
-    *
-    * <pre>
-    * The Collection of objects will contain the following configuration
-    * object types:
-    *
-    * ComponentTypes
-    * ProductTypes
-    * Hosts
-    * </pre>
-    *
-    * @return a Collection of all of the global configuration objects as they
-    * exist in the database.
-    * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-    * @throws InvalidSessionException if there is not a valid administrative session
-    * @throws AuthorizationException if the administrator does not have privileges to use this method
-    * @throws MetaMatrixComponentException if a general remote system problem occurred
-    */
-    public Collection getAllGlobalConfigObjects()
-    throws ConfigurationException{
-        Collection allObjects = new ArrayList();
-        ConfigurationTransaction transaction = null;
-        try {
-            transaction = getReadTransaction();
-            allObjects.addAll(transaction.getAllComponentTypes(true));
-            allObjects.addAll(transaction.getProductTypes(true));
-            allObjects.addAll(transaction.getHosts());
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0047, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0047));
-        } finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
-        return allObjects;
-
-
-    }
     public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException {
         if ( id == null) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "id")); //$NON-NLS-1$
         }
 
         ComponentType type = null;
-        ConfigurationTransaction transaction = null;
-        try {
-            transaction = getReadTransaction();
+        XMLConfigurationConnector transaction = null;
+            transaction = getConnection(null);
             type = transaction.getComponentType(id);
 
             if (type != null) {
@@ -519,28 +310,14 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             } else {
                 LogManager.logDetail(CONTEXT, "No component type found for " + id); //$NON-NLS-1$
             }
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0048, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0048, "id")); //$NON-NLS-1$
-        } finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
         return type;
 
     }
 
     public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-        ConfigurationTransaction transaction = null;
+        XMLConfigurationConnector transaction = null;
         Collection result = new LinkedList();
-        try {
-            transaction = getReadTransaction();
+            transaction = getConnection(null);
             result = transaction.getAllComponentTypes(includeDeprecated);
 
             if (result != null && result.size() > 0) {
@@ -549,58 +326,14 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             } else {
                throw new ConfigurationException(ErrorMessageKeys.CONFIG_0049, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0049));
             }
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0049, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0049));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
         return result;
 
-    }
-
-    public Collection getMonitoredComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-        ConfigurationTransaction transaction = null;
-        Collection result = null;
-        try {
-            transaction = getReadTransaction();
-            result = transaction.getMonitoredComponentTypes(includeDeprecated);
-
-            if (result != null && result.size() > 0) {
-               LogManager.logDetail(CONTEXT, "Found monitored component types"); //$NON-NLS-1$
-
-            } else {
-               LogManager.logTrace(CONTEXT, "No monitored component types found"); //$NON-NLS-1$
-               result = new ArrayList(1);
-            }
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0050, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0050));
-        } finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
-        return result;
     }
 
     public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException {
-        ConfigurationTransaction transaction = null;
+        XMLConfigurationConnector transaction = null;
         Collection result=null;
-        try {
-            transaction = getReadTransaction();
+            transaction = getConnection(null);
             result = transaction.getComponentTypeDefinitions(componentTypeID);
 
             if (result != null && result.size() > 0) {
@@ -609,19 +342,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             } else {
                 LogManager.logTrace(CONTEXT, new Object[] {"Couldn't find component type definitions for ", componentTypeID} ); //$NON-NLS-1$
             }
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0051, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0051, componentTypeID));
-        } finally {
-            if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
 
         if (result == null) {
             result = new ArrayList(1);
@@ -632,94 +352,13 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
 
-    public Map getComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException {
-        Map map = new HashMap();
-        Collection defns;
-        BaseID id = null ;
-        ComponentType type;
-        Iterator it = componentIDs.iterator();
-        while (it.hasNext()) {
-            Object obj = it.next();
-            if (obj instanceof ComponentTypeID) {
-                id = (ComponentTypeID) obj;
-            } else if (obj instanceof ComponentType) {
-                type = (ComponentType) obj;
-                id = type.getID();
-            } else {
-                continue;
-            }
-
-            defns = getComponentTypeDefinitions( (ComponentTypeID) id);
-            map.put(id, defns);
-        }
-
-        return map;
+    private Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException {
+        XMLConfigurationConnector transaction = getConnection(null);
+        Collection defns = getDependentComponentTypeDefinitions(transaction, componentTypeID);
+        return defns;
     }
 
-    public Map getDependentComponentTypeDefinitions(Collection componentIDs) throws ConfigurationException {
-        ConfigurationTransaction transaction = null;
-        Map map = new HashMap(componentIDs.size());
-        BaseID id = null;
-        ComponentType type;
-
-        try {
-            transaction = getReadTransaction();
-            Iterator it = componentIDs.iterator();
-            while (it.hasNext()) {
-
-                Object obj = it.next();
-                if (obj instanceof ComponentTypeID) {
-                    id = (ComponentTypeID) obj;
-                } else if (obj instanceof ComponentType) {
-                    type = (ComponentType) obj;
-                    id = type.getID();
-                } else {
-                    continue;
-                }
-
-                Collection defns = getDependentComponentTypeDefinitions(transaction, (ComponentTypeID) id);
-                map.put(id, defns);
-            }
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0052, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0052));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
-
-        return map;
-
-    }
-
-    public Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException {
-        ConfigurationTransaction transaction = null;
-        try {
-            transaction = getReadTransaction();
-            Collection defns = getDependentComponentTypeDefinitions(transaction, componentTypeID);
-            return defns;
-
-        } catch ( ManagedConnectionException e ) {
-			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0052, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0052));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-           }
-        }
-    }
-
-    private Collection getDependentComponentTypeDefinitions(ConfigurationTransaction transaction, ComponentTypeID componentTypeID) throws ConfigurationException {
+    private Collection getDependentComponentTypeDefinitions(XMLConfigurationConnector transaction, ComponentTypeID componentTypeID) throws ConfigurationException {
 
         Collection result=null;
 
@@ -757,7 +396,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defns,
                                                 Collection componentTypes,
                                                 ComponentTypeID componentTypeID,
-                                                ConfigurationTransaction transaction) throws ConfigurationException {
+                                                XMLConfigurationConnector transaction) throws ConfigurationException {
         if (defnMap == null) {
             defnMap = new HashMap();
         }
@@ -866,23 +505,9 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
     public Collection getHosts() throws ConfigurationException {
         Collection hosts = null;
-        ConfigurationTransaction transaction = null;
-        try {
-                transaction = getReadTransaction();
+        XMLConfigurationConnector transaction = null;
+                transaction = getConnection(null);
                 hosts = transaction.getHosts();
-
-        } catch ( ManagedConnectionException e ) {
-                throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0055, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0055));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
 
         if (hosts == null) {
             hosts = Collections.EMPTY_LIST;
@@ -892,48 +517,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
 
-     public Collection getComponentDefns(Collection componentDefnIDs, ConfigurationID configurationID)
-                        throws ConfigurationException {
-
-
-        if (componentDefnIDs == null || componentDefnIDs.size() == 0) {
-            return Collections.EMPTY_LIST;
-        }
-        Collection defns = new ArrayList(componentDefnIDs.size());
-
-        ConfigurationTransaction transaction = null;
-        try {
-                transaction = getReadTransaction();
-                ComponentDefnID id;
-                ComponentDefn defn = null;
-
-                for (Iterator it=componentDefnIDs.iterator(); it.hasNext(); ) {
-                        id = (ComponentDefnID) it.next();
-                        defn = transaction.getComponentDefinition(id, configurationID);
-                        if (defn != null) {
-                            defns.add(defn);
-                        }
-                }
-
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0056, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0056));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0057, txne);
-                }
-                transaction = null;
-            }
-        }
-
-        return defns;
-
-    }
-
-
-    /**
+     /**
      * Returns a <code>ComponentDefn</code> for the specified <code>ComponentDefnID</code>.
      * </br>
      * @param configurationID is the configuration for which the component exist
@@ -943,26 +527,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      */
     public ComponentDefn getComponentDefn(ConfigurationID configurationID, ComponentDefnID componentDefnID)
     throws ConfigurationException{
-        ConfigurationTransaction transaction = null;
+        XMLConfigurationConnector transaction = null;
         ComponentDefn defn = null;
-        try {
-                transaction = getReadTransaction();
+                transaction = getConnection(null);
 
                 defn = transaction.getComponentDefinition(componentDefnID, configurationID);
-
-
-        } catch ( ManagedConnectionException e ) {
-                throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0058, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0058,componentDefnID.getName()));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0059, txne, new Object[] {componentDefnID.getName()});
-                }
-                transaction = null;
-            }
-        }
 
         return defn;
 
@@ -979,59 +548,13 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      */
     public Collection getResources()
     throws ConfigurationException{
-        ConfigurationTransaction transaction = null;
-        try {
-                transaction = getReadTransaction();
+        XMLConfigurationConnector transaction = null;
+                transaction = getConnection(null);
 
                 return transaction.getResources();
-
-        } catch ( ManagedConnectionException e ) {
-			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-					I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0061, txne);
-                }
-                transaction = null;
-            }
-        }
-
     }
 
     /**
-     * Returns a Collection of {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}
-     * that are of the specified resource type.
-     * @param componentType that identifies the type of resources to be returned
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
-     */
-    public Collection getResources(ComponentTypeID componentTypeID)
-    throws ConfigurationException {
-        ConfigurationTransaction transaction = null;
-        try {
-                transaction = getReadTransaction();
-
-                return transaction.getResources(componentTypeID);
-
-        } catch ( ManagedConnectionException e ) {
-			throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0060, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0060));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-					I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0061, txne);
-                }
-                transaction = null;
-            }
-        }
-
-    }
-
-   /**
      * Save the resource changes based on each {@link com.metamatrix.common.config.api.ResourceDescriptor ResourceDescriptor}
      * in the collection.
      * @param resourceDescriptors for the resources to be changed          *
@@ -1041,36 +564,12 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      */
     public void saveResources(Collection resourceDescriptors, String principalName)
     throws ConfigurationException {
-        ConfigurationTransaction transaction = null;
-        boolean success = false;
-        try {
+        XMLConfigurationConnector transaction = null;
+        transaction = this.getConnection(principalName);
 
-            transaction = this.getWriteTransaction();
+        transaction.saveResources(resourceDescriptors, principalName);
 
-            transaction.saveResources(resourceDescriptors, principalName);
-
-            transaction.commit();                   // commit the transaction
-            success = true;
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e);
-        } finally {
-           if ( transaction != null ) {
-        	   if (!success) {
-	               try {
-	                   transaction.rollback();         // rollback the transaction
-	               } catch ( Exception e2 ) {
-	   				I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0063, e2);
-	               }
-        	   }
-
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-            }
-        }
-
+        transaction.commit();                   // commit the transaction
     }
 
     /**
@@ -1108,7 +607,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * communication with the Configuration Service.
      */
     public Set executeTransaction(ActionDefinition action, String principalName) 
-    	throws ModificationException, ConfigurationLockException, ConfigurationException{
+    	throws ModificationException, ConfigurationException{
         if ( action == null ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "action")); //$NON-NLS-1$
         }
@@ -1131,7 +630,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
      */
-     public Set executeTransaction(List actions, String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException {
+     public Set executeTransaction(List actions, String principalName) throws ModificationException, ConfigurationException {
         if ( actions == null ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "actions")); //$NON-NLS-1$
         }
@@ -1141,242 +640,23 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             return result;
         }
 
-        ConfigurationTransaction transaction = null;
+        XMLConfigurationConnector transaction = null;
 
 
         // Iterate through the actions, and apply all as a single transaction
         try {
-            transaction = this.getWriteTransaction();
-            result = transaction.executeActions(actions,principalName);
+            transaction = this.getConnection(principalName);
+            result = transaction.executeActions(actions);
             transaction.commit();                   // commit the transaction
-
-            // Add the actions to the history ...
-            this.actionHistory.addActionsForTransaction(actions);
-        } catch ( ConfigurationLockException e ) {
-            try {
-                if ( transaction != null ) {
-                    transaction.rollback();         // rollback the transaction
-                }
-            } catch ( Exception e2 ) {
-				I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0065, e,new Object[]{ principalName, printActions(actions)});
-            }
-            throw e;
         } catch ( ConfigurationException e ) {
-        // must increment by 1 because each actionList starts at zero
-            //actionCounter += e.getActionIndex() + 1;
-            //e.setActionIndex(actionCounter);
-
-            try {
-                if ( transaction != null ) {
-                    transaction.rollback();         // rollback the transaction
-                }
-            } catch ( Exception e2 ) {
-				I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0065, e,new Object[]{ principalName, printActions(actions)});
-            }
             throw e;
         } catch ( Exception e ) {
-             try {
-                if ( transaction != null ) {
-                    transaction.rollback();         // rollback the transaction
-                }
-            } catch ( Exception e2 ) {
-				I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0065, e,new Object[]{ principalName, printActions(actions)});
-            }
             throw new ConfigurationException(e);
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
         }
         return result;
     }
 
 
-
-    /**
-     * Execute a list of insert actions and for actions on objects of type component object, it will have its
-     * configuration id resassigned, and optionally
-     * return the set of objects or object IDs that were affected/modified by the action.
-     * @param assignConfigurationID the configuration for which any action for a component object will
-     * have its configurationID set to this.
-     * @param actions the ordered list of actions that are to be performed on data within
-     * the repository.
-     * @param principalName of the person executing the transaction
-     * @return the set of objects that were affected by this transaction.
-     * @throws ModificationException if the target of any of the actions is invalid, or
-     * if the target object is not a supported class of targets.
-     * @throws IllegalArgumentException if the action is null
-     * or if the result specification is invalid
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Metadata Service.
-     */
-    public Set executeInsertTransaction(ConfigurationID assignConfigurationID, List actions, String principalName) 
-    	throws ModificationException, ConfigurationLockException, ConfigurationException {
-        if ( actions == null ) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "actions")); //$NON-NLS-1$
-        }
-        // Iterate through the actions, and set the ConfigurationID on the
-        // arg if necessary
-        ActionDefinition currentAction = null;
-        Iterator iter = actions.iterator();
-        Object argObj;
-        boolean chk = false;
-        while ( iter.hasNext() ) {
-            currentAction = (ActionDefinition) iter.next();
-            if ( currentAction instanceof CreateObject) {
-                chk = true;
-            } else if (currentAction instanceof AddObject) {
-                chk = false;
-            } else {
-                throw new ModificationException(ErrorMessageKeys.CONFIG_0066, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0066));
-            }
-
-            // only CreateObjects have arguments
-            if (chk && assignConfigurationID != null)  {
-                Object args[] = currentAction.getArguments();
-                argObj = args[0];
-                editor.assignConfigurationID(argObj,assignConfigurationID);
-            }
-        }
-
-        //Pass this on through to the executeTransaction method
-        return this.executeTransaction(actions, principalName);
-    }
-
-    /**
-     * Undo the specified number of previously-committed transactions.
-     * @param numberOfActions the number of actions in the history that are to be undone.
-     * @return the set of objects that were affected by undoing these actions.
-     * @throws IllegalArgumentException if the number is negative.
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service.
-     */
-    public Set undoActionsAsTransaction(int numberOfActions, String principalName) throws ConfigurationException {
-        if ( numberOfActions < 0 ) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0068, numberOfActions ));
-        }
-        LogManager.logDetail(CONTEXT, new Object[]{"Undoing ",new Integer(numberOfActions)," action(s)"}); //$NON-NLS-1$ //$NON-NLS-2$
-
-        Set result = null;
-        synchronized( this.actionHistory ) {
-            List actions = this.actionHistory.pop(numberOfActions);
-            List undoActions = new ArrayList();
-            Iterator iter = actions.iterator();
-            while ( iter.hasNext() ) {
-                ActionDefinition action = (ActionDefinition) iter.next();
-                undoActions.add( action.getUndoActionDefinition() );
-            }
-
-            try {
-                result = this.executeTransaction(undoActions, principalName);
-                I18nLogManager.logInfo(CONTEXT, LogMessageKeys.CONFIG_0004,  new Object[]{new Integer(numberOfActions)});
-            } catch ( ConfigurationException e ) {
-                // put the actions back on the history ...
-                this.actionHistory.addActionsForTransaction(actions);
-                throw e;
-            } catch ( ModificationException e ) {
-                ConfigurationException me = new ConfigurationException(e,ErrorMessageKeys.CONFIG_0069, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0069));
-                // put the actions back on the history ...
-                this.actionHistory.addActionsForTransaction(actions);
-                throw me;
-            }
-        }
-        return result;
-   }
-
-    /**
-     * Get the history of actions executed in transactions by this editor.
-     * The actions at the front of the list will be those most recently executed.
-     * @return the ordered list of actions in the history.
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service.
-     */
-    public List getHistory() throws ConfigurationException {
-        return this.actionHistory.getHistory();
-    }
-
-
-    /**
-     * Clear the history of all actions without undoing any of them.
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service.
-     */
-    public void clearHistory() throws ConfigurationException {
-        this.actionHistory.clearHistory();
-    }
-
-
-    /**
-     * Get the number of actions that are currently in the history.
-     * @return the number of actions in the history.
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service.
-     */
-    public int getHistorySize() throws ConfigurationException {
-        return this.actionHistory.getHistorySize();
-    }
-
-
-    /**
-     * Set the limit on the number of actions in the history.  Note that the
-     * history may at times be greater than this limit, because when actions
-     * are removed from the history, all actions for a transactions are
-     * removed at the same time.  If doing so would make the history size
-     * smaller than the limit, no actions are removed.
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service.
-     */
-    public int getHistoryLimit() throws ConfigurationException {
-        return this.actionHistory.getHistoryLimit();
-    }
-
-
-    /**
-     * Set the limit on the number of actions in the history.  Note that the
-     * history may at times be greater than this limit, because when actions
-     * are removed from the history, all actions for a transactions are
-     * removed at the same time.  If doing so would make the history size
-     * smaller than the limit, no actions are removed.
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service.
-     */
-    public void setHistoryLimit(int maximumHistoryCount) throws ConfigurationException {
-        this.actionHistory.setHistoryLimit(maximumHistoryCount);
-    }
-
-    /**
-     * Return the time the server was started. If the state of the server is not "Started"
-     * then a null is returned.
-     *
-     * @return Date Time server was started.
-     * @throws ConfigurationException if an error occurred within or during
-     * communication with the Configuration Service.
-     */
-    public Date getServerStartupTime() throws ConfigurationException {
-        ConfigurationTransaction transaction = null;
-        Date timestamp = null;
-        try {
-            transaction = getReadTransaction();
-            timestamp = transaction.getServerStartupTime();
-        } catch ( ManagedConnectionException e ) {
-            throw new ConfigurationException(e, ErrorMessageKeys.CONFIG_0070, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0070));
-        } finally {
-           if ( transaction != null ) {
-                try {
-                    transaction.close();
-                } catch ( Exception txne ) {
-                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-                }
-                transaction = null;
-            }
-        }
-        return timestamp;
-    }
 
     protected void addProperty(Properties source, String sourceName, Properties props, String propName) {
         String value = source.getProperty(sourceName);
@@ -1392,88 +672,9 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     // ----------------------------------------------------------------------------------------
 
 
-    protected String printActions( List actions ) {
-        StringBuffer sb = new StringBuffer();
-        Iterator iter = actions.iterator();
-        if ( iter.hasNext() ) {
-            sb.append( iter.next().toString() );
-        }
-        while ( iter.hasNext() ) {
-            sb.append("; "); //$NON-NLS-1$
-            sb.append( iter.next().toString() );
-        }
-        return sb.toString();
+    protected XMLConfigurationConnector getConnection(String principal) throws ConfigurationException {
+    	return XMLConfigurationMgr.getInstance().getTransaction(principal==null?this.getInstanceName():principal);
     }
-
-    protected ConfigurationTransaction getReadTransaction() throws ManagedConnectionException {
-        return (ConfigurationTransaction) this.transMgr.getReadTransaction();
-    }
-
-    protected ConfigurationTransaction getWriteTransaction() throws ManagedConnectionException {
-        return (ConfigurationTransaction) this.transMgr.getWriteTransaction();
-    }
-
-    
-    
-    
-//    /**
-//     * Return the list of allowable values for the specified type.
-//     * @param type the allowable type
-//     * @return the map of values (keys) and descriptions (values) for the specified type.
-//     * @throws ConfigurationException if an error occurred within or during communication with this connection.
-//     */
-//    private List getAllowableValues( Integer type, boolean includeDeprecated ) throws ConfigurationException {
-//        if ( this.serviceIsClosed ) {
-//            throw new ConfigurationException("This ConfigurationService instance is closed and may not accept requests");
-//        }
-//
-//        Collection values = null;
-//
-//        ConfigurationTransaction transaction = null;
-//        try {
-//            transaction = getReadTransaction();
-////                values = transaction.getAllowableValues(type);
-//        } catch ( Exception e ) {
-//            ConfigurationException e2 = new ConfigurationException(e,"Unable to find the allowable values");
-//            LogManager.logError(CONTEXT, e2, "Error reading allowable values");
-//            throw e2;
-//        } finally {
-//           if ( transaction != null ) {
-//                try {
-//                    transaction.close();
-//                } catch ( Exception txne ) {
-//                    I18nLogManager.logError(CONTEXT, ErrorMessageKeys.CONFIG_0041, txne);
-//                }
-//                transaction = null;
-//            }
-//        }
-//
-//        List result = new LinkedList(values);
-//        if ( !includeDeprecated ) {
-//            Iterator iter = result.iterator();
-//            while ( iter.hasNext() ) {
-//                ComponentType cType = (ComponentType) iter.next();
-//                if ( cType.isDeprecated() ) {
-//                    iter.remove();
-//                }
-//            }
-//        }
-//
-//        return result;
-//    }
-
-
-//    protected boolean isClosed() {
-//        return this.serviceIsClosed;
-//    }
-
-//    protected SessionToken getSessionToken() {
-//        return this.token;
-//    }
-
-    //
-    // Configuration Admin Methods
-    //
 
     /**
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#addHost(java.lang.String,
@@ -1750,7 +951,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     
     public Object modify(ComponentObject theObject,
                          Properties theProperties,
-                         String principalName) throws ModificationException, ConfigurationLockException, ConfigurationException{
+                         String principalName) throws ModificationException, ConfigurationException{
         ConfigurationObjectEditor editor = null;
         try {
             editor = createEditor();
@@ -1974,34 +1175,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         }
         
         return results;
-    }
-
-
-    /** 
-     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#checkPropertiesDecryptable(java.util.Properties, java.lang.String)
-     * @since 4.3
-     */
-    public boolean checkPropertiesDecryptable(Properties props,
-                                              String componentTypeIdentifier) throws ConfigurationException {
-        Collection componentTypes = getAllComponentTypes(false);
-
-        ComponentType actualType = null; 
-        for ( Iterator typeItr = componentTypes.iterator(); typeItr.hasNext(); ) {
-            ComponentType aType = (ComponentType)typeItr.next();
-            if (aType.getName().equals(componentTypeIdentifier)) {
-                actualType = aType;
-                break;
-            }
-        }
-        
-        if ( actualType == null ) {
-            throw new ConfigurationException(PlatformPlugin.Util.getString("ConfigurationServiceImpl.ConnectorType_not_found",  //$NON-NLS-1$
-                                       new Object[] {componentTypeIdentifier})); 
-        }
-
-        Collection maskedPropertyNames = actualType.getMaskedPropertyNames();
-
-        return ComponentCryptoUtil.checkPropertiesDecryptable(props, maskedPropertyNames);
     }   
 }
 

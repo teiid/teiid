@@ -125,9 +125,6 @@ public class NextStartupPanel extends DefaultComponentSelector
         propObjPanel.setShowExpertProperties(true);
         propObjPanel.setShowHiddenProperties(true);
 
-        if (getTitle().equals(PropertiesMasterPanel.STARTUP)) {
-            propObjPanel.setReadOnlyForced(true);
-        }
         if (!parent.isModifyServerProperties()) {
             propObjPanel.setReadOnlyForced(true);
         }

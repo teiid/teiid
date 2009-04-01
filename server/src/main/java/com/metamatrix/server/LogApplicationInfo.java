@@ -45,12 +45,11 @@ import com.metamatrix.common.extensionmodule.ExtensionModuleTypes;
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.util.VMNaming;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.TempDirectory;
 import com.metamatrix.core.util.ZipFileUtil;
 
-class LogApplicationInfo extends Thread {
+class LogApplicationInfo implements Runnable {
 	String applFileName = null;
     String logPath = null;
     String hostName;
@@ -75,7 +74,7 @@ class LogApplicationInfo extends Thread {
             ApplicationInfo info = ApplicationInfo.getInstance();
             StringBuffer sb = new StringBuffer();
 
-            sb.append(VMNaming.getHostInfo());
+            sb.append(CurrentConfiguration.getInstance().getHostInfo());
                             
             sb.append("\n---- System Properties ----\n");  //$NON-NLS-1$             
             sb.append(PropertiesUtils.prettyPrint(System.getProperties()));

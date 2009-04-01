@@ -24,7 +24,6 @@ package com.metamatrix.common.config.model;
 
 
 import java.io.File;
-import java.io.Serializable;
 import java.util.Properties;
 
 import com.metamatrix.common.config.api.ComponentTypeID;
@@ -34,7 +33,7 @@ import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.core.util.FileUtils;
 
-public class BasicHost extends BasicComponentDefn implements Host, Serializable {
+public class BasicHost extends BasicComponentDefn implements Host {
 
 
     public BasicHost(ConfigurationID configID, HostID hostID, ComponentTypeID typeID) {
@@ -53,6 +52,11 @@ public class BasicHost extends BasicComponentDefn implements Host, Serializable 
     public String getDataDirectory() {
         return getProperty(HostType.HOST_DIRECTORY)+File.separator+ "data"; //$NON-NLS-1$
     }
+    
+    public String getConfigDirectory() {
+        return getProperty(HostType.HOST_DIRECTORY)+File.separator+ "config"; //$NON-NLS-1$
+    }
+
     /** 
      * @see com.metamatrix.common.config.api.Host#getLogDirectory()
      * @since 4.3
@@ -68,7 +72,6 @@ public class BasicHost extends BasicComponentDefn implements Host, Serializable 
     public String getTempDirectory() {
         String datadir = getDataDirectory();
         return FileUtils.buildDirectoryPath(new String[] {datadir, "temp"}); //$NON-NLS-1$
-        
     }
 
 /**

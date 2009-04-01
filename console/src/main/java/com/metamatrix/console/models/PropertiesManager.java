@@ -215,65 +215,6 @@ public class PropertiesManager extends Manager {
 //		cfgCurrConfig.getID();
     }
 
-    public  Configuration getStartUpConfiguration()
-            throws AuthorizationException, InvalidSessionException,
-            ComponentNotFoundException, ConfigurationException,
-            ModificationException,
-            MetaMatrixComponentException {
-        Configuration suConfig = ModelManager.getConfigurationManager(getConnection()).getConfig(Configuration.STARTUP_ID);
-        
-//        Configuration suConfig = configAPI.getStartupConfiguration();
-        return suConfig;
-    }
-
-    public Collection getStartUpDefn() throws ExternalException,
-            AuthorizationException, ComponentNotFoundException {
-        ArrayList startupDefn = new ArrayList();
-        ComponentTypeDefn compTypeDefn = null;
-        PropertyDefinition nDefinition = null;
-        try {
-            Configuration startupConfig = getStartUpConfiguration();   //loads from server
-            ComponentTypeID configTypeID = startupConfig.getComponentTypeID();
-            Collection componentTypeDefns = 
-                    getConfigAPI().getAllComponentTypeDefinitions(configTypeID); //loads from server
-            Iterator iterator = componentTypeDefns.iterator();
-
-            while (iterator.hasNext()) {
-                compTypeDefn = (ComponentTypeDefn)iterator.next();
-                nDefinition = compTypeDefn.getPropertyDefinition();
-                if (!undisplayed(nDefinition)) {
-                    startupDefn.add(nDefinition);
-                }
-            }
-
-        } catch (AuthorizationException e) {
-            throw(e);
-        } catch (ComponentNotFoundException e) {
-            throw(e);
-        } catch (Exception e) {
-            throw new ExternalException(e);
-        }
-        return startupDefn;
-    }
-
-    public Properties getSUProperties() throws ExternalException,
-            AuthorizationException, ComponentNotFoundException {
-        Properties startupProps = null;
-        try {
-            
-            Configuration startupConfig = getStartUpConfiguration();
- //           Configuration startupConfig = getConfigAPI().getStartupConfiguration();   //loads from server
-            startupProps = startupConfig.getProperties();
-//		} catch (AuthorizationException e) {
-//            throw(e);
-//        } catch (ComponentNotFoundException e) {
-//            throw(e);
-        } catch (Exception e) {
-            throw new ExternalException(e);
-        }
-        return  startupProps;
-    }
-
     private Configuration getConfiguration() throws AuthorizationException,
             InvalidSessionException, ComponentNotFoundException,
             ConfigurationException, ModificationException,

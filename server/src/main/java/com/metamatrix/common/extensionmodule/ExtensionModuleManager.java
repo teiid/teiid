@@ -46,6 +46,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
 import com.metamatrix.server.ResourceFinder;
@@ -129,16 +130,6 @@ public class ExtensionModuleManager {
      */
     private static ExtensionModuleManager extensionModuleManager;
 
-    /**
-     * Prevents access to this instance if it is not initialized.
-     */
-    private boolean isInitialized = false;
-
-    /**
-     * Error message used with Assertion if the instance was not initialized
-     */
-    private static final String NOT_INITIALIZED_MESSAGE = CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0007);
-    
     //===================================================================
     //PUBLIC INTERFACE
     //===================================================================
@@ -150,27 +141,11 @@ public class ExtensionModuleManager {
      */
     public static synchronized ExtensionModuleManager getInstance(){
         if (extensionModuleManager == null){
-            extensionModuleManager = new ExtensionModuleManager();
-            extensionModuleManager.init();
+			extensionModuleManager = new ExtensionModuleManager();
         }
         return extensionModuleManager;
     }
 
-    /**
-     * <p>Return a cached ExtensionModuleManager instance for this
-     * process, fully initialized and ready for use.  This is not
-     * a singleton, it is merely cached for convenience.  This package-level
-     * method allows trusted code to instantiate this object with
-     * an alternate set of Properties.</p>
-     */
-    static synchronized ExtensionModuleManager getInstance(Properties env){
-        if (extensionModuleManager == null){
-            extensionModuleManager = new ExtensionModuleManager();
-            extensionModuleManager.init(env);
-        }
-        return extensionModuleManager;
-    }
-    
     static synchronized void reInit() {
     	extensionModuleManager = null;
     }
@@ -205,7 +180,6 @@ public class ExtensionModuleManager {
      */
     public ExtensionModuleDescriptor addSource(String principalName, String type, String sourceName, byte[] source, String description, boolean enabled)
     throws DuplicateExtensionModuleException, InvalidExtensionModuleTypeException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(principalName);
         ArgCheck.isNotNull(type);
         ArgCheck.isNotNull(sourceName);
@@ -270,7 +244,6 @@ public class ExtensionModuleManager {
      */
     public void removeSource(String principalName, String sourceName)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(principalName);
         ArgCheck.isNotNull(sourceName);
         ArgCheck.isNotZeroLength(principalName);
@@ -308,7 +281,6 @@ public class ExtensionModuleManager {
      * @throws ExtensionModuleRuntimeException if this object wasn't initialized properly
      */
     public Collection getSourceTypes() throws MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         return ExtensionModuleTypes.ALL_TYPES;
     }
 
@@ -322,7 +294,6 @@ public class ExtensionModuleManager {
      * @throws ExtensionModuleRuntimeException if this object wasn't initialized properly
      */
     public List getSourceNames() throws MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         List result = null;
         ExtensionModuleTransaction transaction = null;
         try {
@@ -356,7 +327,6 @@ public class ExtensionModuleManager {
      * @throws ExtensionModuleRuntimeException if this object wasn't initialized properly
      */
     public List getSourceDescriptors() throws MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         List result = null;
         ExtensionModuleTransaction transaction = null;
         try {
@@ -395,7 +365,6 @@ public class ExtensionModuleManager {
      */
     public List getSourceDescriptors(String type)
     throws InvalidExtensionModuleTypeException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(type);
         ArgCheck.isNotZeroLength(type);
         ExtensionModuleTypes.checkTypeIsValid(type);
@@ -437,7 +406,6 @@ public class ExtensionModuleManager {
      */
     public boolean isSourceInUse(String sourceName)
     throws MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(sourceName);
         ArgCheck.isNotZeroLength(sourceName);
         ExtensionModuleTransaction transaction = null;
@@ -476,7 +444,6 @@ public class ExtensionModuleManager {
      */
     public ExtensionModuleDescriptor getSourceDescriptor(String sourceName)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(sourceName);
         ArgCheck.isNotZeroLength(sourceName);
         ExtensionModuleDescriptor result = null;
@@ -521,7 +488,6 @@ public class ExtensionModuleManager {
      */
     public List setSearchOrder(String principalName, List sourceNames)
     throws ExtensionModuleOrderingException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(principalName);
         ArgCheck.isNotNull(sourceNames);
         ArgCheck.isNotZeroLength(principalName);
@@ -577,7 +543,6 @@ public class ExtensionModuleManager {
      */
     public List setEnabled(String principalName, Collection sourceNames, boolean enabled)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(principalName);
         ArgCheck.isNotNull(sourceNames);
         ArgCheck.isNotZeroLength(principalName);
@@ -636,7 +601,6 @@ public class ExtensionModuleManager {
      */
     public byte[] getSource(String sourceName)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(sourceName);
         ArgCheck.isNotZeroLength(sourceName);
         LogManager.logDetail(LOG_CONTEXT, new Object[]{"Attempting to load extension module", sourceName}); //$NON-NLS-1$
@@ -682,7 +646,6 @@ public class ExtensionModuleManager {
      */
     public ExtensionModuleDescriptor setSource(String principalName, String sourceName, byte[] source)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(principalName);
         ArgCheck.isNotNull(sourceName);
         ArgCheck.isNotZeroLength(principalName);
@@ -729,7 +692,6 @@ public class ExtensionModuleManager {
      */
     public ExtensionModuleDescriptor setSourceName(String principalName, String sourceName, String newName)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(principalName);
         ArgCheck.isNotNull(sourceName);
         ArgCheck.isNotNull(newName);
@@ -779,7 +741,6 @@ public class ExtensionModuleManager {
      */
     public ExtensionModuleDescriptor setSourceDescription(String principalName, String sourceName, String description)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        checkIsTrue(isInitialized, NOT_INITIALIZED_MESSAGE);
         ArgCheck.isNotNull(principalName);
         ArgCheck.isNotNull(sourceName);
         ArgCheck.isNotZeroLength(principalName);
@@ -816,57 +777,35 @@ public class ExtensionModuleManager {
 
     /**
      * constructor
+     * @throws ManagedConnectionException 
      */
-    public ExtensionModuleManager(){}
-
-    /**
-     * <p>Initializes this object by assembling the necessary properties
-     * together - combines resource properties gotten from
-     * {@link com.metamatrix.common.config.CurrentConfiguration CurrentConfiguration}
-     * with
-     * {@link #DEFAULT_PROPERTIES default Properties} defined by this class.</p>
-     */
-    public void init(){
-
-        Properties resourceProps = new Properties();
-
-			//If this is being used by a tool such as the CDK, then resource properties
-			//are not supported by CurrentConfiguration; these two essential properties
-			//will be checked for in ordinary CurrentConfiguration properties
-            String key = ExtensionModulePropertyNames.CONNECTION_FACTORY;
-            if (resourceProps.getProperty(key) == null){
-                String value = CurrentConfiguration.getInstance().getProperties().getProperty(key);
-                if (value != null) {
-                	resourceProps.setProperty(key, value);
-                }
-            }	
+    public ExtensionModuleManager() {
+    	Properties resourceProps = new Properties();
+        String key = ExtensionModulePropertyNames.CONNECTION_FACTORY;
+        resourceProps.setProperty(key, CurrentConfiguration.getInstance().getBootStrapProperties().getProperty(key, ExtensionModulePropertyNames.DEFAULT_CONNECTION_FACTORY_CLASS));
         init(resourceProps);
+    }
+    
+    public ExtensionModuleManager(Properties p) {
+    	init(p);
     }
 
     /**
      * Initializes this object, given the necessary Properties.
      * @param env the necessary Properties to initialize this class,
      * see {@link ExtensionModulePropertyNames}
+     * @throws ManagedConnectionException 
      */
-    protected void init(Properties env){
-
-        LogManager.logDetail(LOG_CONTEXT, new Object[]{"Initializing with Properties:", env}); //$NON-NLS-1$
-        isInitialized = true;
-
+    protected void init(Properties env) {
+    	if (env.getProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY) == null) {
+    		env.setProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY, ExtensionModulePropertyNames.DEFAULT_CONNECTION_FACTORY_CLASS);
+    	}
+        env.setProperty(TransactionMgr.FACTORY, env.getProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY));
         try {
-        	if (env.getProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY) == null) {
-        		env.setProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY, ExtensionModulePropertyNames.DEFAULT_CONNECTION_FACTORY_CLASS);
-        	}
-            env.setProperty(TransactionMgr.FACTORY, env.getProperty(ExtensionModulePropertyNames.CONNECTION_FACTORY));
-            transMgr = new TransactionMgr(env, "ExtensionModuleManager"); //$NON-NLS-1$
-        } catch ( ManagedConnectionException e ) {
-            LogManager.logError(LOG_CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0028));
-            isInitialized = false;
-        }
-
-        if (!isInitialized){
-			LogManager.logDetail(LOG_CONTEXT, new Object[]{"ExtensionModuleManager could not be initialized with properties ",env}); //$NON-NLS-1$
-        }
+			transMgr = new TransactionMgr(env, "ExtensionModuleManager"); //$NON-NLS-1$
+		} catch (ManagedConnectionException e) {
+			throw new MetaMatrixRuntimeException(e);
+		} 
     }
 
     //===================================================================
@@ -882,32 +821,14 @@ public class ExtensionModuleManager {
     	return algorithm.getValue();
 	}
 
-    protected ExtensionModuleTransaction getReadTransaction() throws ManagedConnectionException {
+    public ExtensionModuleTransaction getReadTransaction() throws ManagedConnectionException {
         return (ExtensionModuleTransaction) this.transMgr.getReadTransaction();
     }
 
-    protected ExtensionModuleTransaction getWriteTransaction() throws ManagedConnectionException {
+    public ExtensionModuleTransaction getWriteTransaction() throws ManagedConnectionException {
         return (ExtensionModuleTransaction) this.transMgr.getWriteTransaction();
     }
 
-
-    //===================================================================
-    //ADDITIONAL UTILITIES - designed to check input parameters and
-    //throw runtime exceptions if parameters or state is invalid
-    //===================================================================
-
-    /**
-     * Checks condition
-     * @throws ExtensionModuleRuntimeException if false
-     */
-	private static final void checkIsTrue(boolean condition, String failMessage) {
-		if(! condition) {
-		    throw new ExtensionModuleRuntimeException(failMessage);
-		}
-	}
-
-    
-    
     /**
      * Notifies listeners when JDBCNames.ExtensionFilesTable.ColumnName.FILE_TYPE
      * has changed.   

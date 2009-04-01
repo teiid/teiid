@@ -30,14 +30,12 @@ import junit.framework.TestCase;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
-import com.metamatrix.common.connection.ManagedConnection;
-import com.metamatrix.common.messaging.MessageBusConstants;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
 import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnector;
-import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnectorFactory;
+import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
 
 public abstract class BaseTest extends TestCase {
 
@@ -53,22 +51,11 @@ public abstract class BaseTest extends TestCase {
 
 	private static BasicConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(
 			true);
-	private static XMLConfigurationConnectorFactory factory = new XMLConfigurationConnectorFactory();
 	private XMLConfigurationConnector writer = null;
-	private ManagedConnection conn = null;
 
 	public BaseTest(String name) {
 		super(name);
 		initData();
-		// must remove the system property that is being set for every junit
-		// test
-		// the indicates to use no configuration
-		Properties sysProps = System.getProperties();
-		sysProps.put(MessageBusConstants.MESSAGE_BUS_TYPE,
-				MessageBusConstants.TYPE_NOOP);
-
-		System.setProperties(sysProps);
-
 	}
 
 	public BaseTest(String name, boolean useNoOpConfig) {
@@ -127,9 +114,7 @@ public abstract class BaseTest extends TestCase {
 	// configuration transactions.
 	public void initTransactions(Properties props) throws Exception {
 
-		conn = factory.createConnection(props, getName());
-		writer = (XMLConfigurationConnector) factory.createTransaction(conn,
-				false);
+		writer = XMLConfigurationMgr.getInstance().getTransaction("test"); //$NON-NLS-1$
 
 	}
 
@@ -145,19 +130,10 @@ public abstract class BaseTest extends TestCase {
 	}
 
 	public void commit() throws Exception {
+		writer.executeActions(editor.getDestination().popActions());
+		writer.commit();
 
-		try {
-			writer.executeActions(editor.getDestination().popActions(),
-					getName());
-			writer.commit();
-		} catch (Exception e) {
-			writer.rollback();
-			throw e;
-		}
-
-		writer = (XMLConfigurationConnector) factory.createTransaction(conn,
-				false);
-
+		writer = XMLConfigurationMgr.getInstance().getTransaction("test"); //$NON-NLS-1$
 	}
 
 	protected XMLConfigurationConnector getWriter() {

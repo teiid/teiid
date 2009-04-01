@@ -233,9 +233,8 @@ public class JDBCExtensionModuleWriter {
             } catch (SQLException e) {
                 if (!firstException) {
                     throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0054, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, sourceName,sql));
-                } else {
-                	LogManager.logDetail(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, new Object[]{sourceName, sql}));
                 }
+            	LogManager.logDetail(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, new Object[]{sourceName, sql}));
             }
         }
         

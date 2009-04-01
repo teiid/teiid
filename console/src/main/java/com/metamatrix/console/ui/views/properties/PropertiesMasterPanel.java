@@ -57,12 +57,8 @@ public class PropertiesMasterPanel extends BasePanel
 		implements WorkspacePanel, ManagerListener, ChangeListener, 
 		NotifyOnExitConsole, Refreshable {
     public static final String NEXT_STARTUP = "Next Startup";
-    public static final String STARTUP = "Startup";
     public static final Icon NEXT_STARTUP_ICON =
             IconFactory.getIconForImageFile("NextStartUp_small.gif");
-    public static final Icon STARTUP_ICON =
-            IconFactory.getIconForImageFile("startup_small.gif");
-
     private NextStartupPanel nextStartupPanel/*, startupPanel*/;
     private JTabbedPane masterTabbedPane;
     private HashMap htSelectors = new HashMap();
@@ -108,11 +104,8 @@ public class PropertiesMasterPanel extends BasePanel
         masterTabbedPane.addChangeListener(editor);
 
         nextStartupPanel = pfPanel.getNextStartupPanel();
-//        startupPanel = 
-            pfPanel.getStartupPanel();
 
         addSelector(pfPanel.getNextStartupPanel());
-        addSelector(pfPanel.getStartupPanel());
 
         propDetailPanel = new JPanel();
         propDetailPanel.setLayout(new BorderLayout());
@@ -167,7 +160,7 @@ public class PropertiesMasterPanel extends BasePanel
         if (previousTitle.equals(NEXT_STARTUP)) {
             nextStartupPanel.getApplyButton().setEnabled(false);
         }
-        if (sSelectedTitle.equals(STARTUP) || !canModifyServerProperties) {
+        if (!canModifyServerProperties) {
             pfPanel.setMRBStatus(true);
         } else {
             pfPanel.setMRBStatus(false);

@@ -111,7 +111,7 @@ public class XMLActionUpdateStrategy  {
     }
 
 
-   public Set executeActionsOnTarget(Object target, List actions, ConfigTransaction transaction )
+   public Set executeActionsOnTarget(Object target, List actions, XMLConfigurationConnector transaction )
                            throws ConfigTransactionException,  ConfigurationException {
  //     	System.out.println("STRATEGY: Start Execute on Target " + target + " of type " + target.getClass().getName());
 
@@ -306,7 +306,7 @@ public class XMLActionUpdateStrategy  {
 		return affectedIDs;
 	}
 
-    private ConfigurationModelContainerImpl getConfigModel(BaseID id, ConfigTransaction transaction) throws ConfigurationException {
+    private ConfigurationModelContainerImpl getConfigModel(BaseID id, XMLConfigurationConnector  transaction) throws ConfigurationException {
 
 		String name;
 		if (id instanceof ConfigurationID) {
@@ -358,7 +358,7 @@ public class XMLActionUpdateStrategy  {
 
     public Set executeActions(ConfigurationModelContainerImpl config,
 			AuthenticationProviderID targetID, List actions,
-			ConfigTransaction transaction)
+			XMLConfigurationConnector transaction)
 			throws InvalidConfigurationException, ConfigurationException {
 
 		Set affectedIDs = new HashSet();
@@ -462,7 +462,7 @@ public class XMLActionUpdateStrategy  {
     
 
 
-    public  Set executeActions(ConfigurationModelContainerImpl config, DeployedComponentID targetID, List actions, ConfigTransaction transaction) throws InvalidDeployedComponentException, ConfigurationException{
+    public  Set executeActions(ConfigurationModelContainerImpl config, DeployedComponentID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidDeployedComponentException, ConfigurationException{
     Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -556,7 +556,7 @@ public class XMLActionUpdateStrategy  {
     }
 
 
-    public  Set executeActions(ConfigurationModelContainerImpl config, ProductServiceConfigID targetID, List actions, ConfigTransaction transaction) throws InvalidDeployedComponentException, ConfigurationException{
+    public  Set executeActions(ConfigurationModelContainerImpl config, ProductServiceConfigID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidDeployedComponentException, ConfigurationException{
     Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -713,7 +713,7 @@ public class XMLActionUpdateStrategy  {
 
 
 
-    public  Set executeActions(ConfigurationModelContainerImpl config,  ServiceComponentDefnID targetID, List actions, ConfigTransaction transaction) throws InvalidDeployedComponentException, ConfigurationException{
+    public  Set executeActions(ConfigurationModelContainerImpl config,  ServiceComponentDefnID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidDeployedComponentException, ConfigurationException{
     Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -867,7 +867,7 @@ public class XMLActionUpdateStrategy  {
 
     }
 
-    public  Set executeActions( ConfigurationModelContainerImpl config,  VMComponentDefnID targetID, List actions, ConfigTransaction transaction) throws InvalidDeployedComponentException, ConfigurationException{
+    public  Set executeActions( ConfigurationModelContainerImpl config,  VMComponentDefnID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidDeployedComponentException, ConfigurationException{
     Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -1010,7 +1010,7 @@ public class XMLActionUpdateStrategy  {
     }
 
 
-    public  Set executeActions( ConfigurationModelContainerImpl config,  ConnectorBindingID targetID, List actions, ConfigTransaction transaction) throws InvalidDeployedComponentException, ConfigurationException{
+    public  Set executeActions( ConfigurationModelContainerImpl config,  ConnectorBindingID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidDeployedComponentException, ConfigurationException{
     Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -1175,7 +1175,7 @@ public class XMLActionUpdateStrategy  {
 
 
 
-    public  Set executeActions( ConfigurationID targetID, List actions, ConfigTransaction transaction) throws InvalidConfigurationException, ConfigurationException{
+    public  Set executeActions( ConfigurationID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidConfigurationException, ConfigurationException{
     Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -1299,7 +1299,7 @@ public class XMLActionUpdateStrategy  {
     }
 
 
-    public  Set executeActions(ConfigurationModelContainerImpl config,ComponentTypeID  targetID, List actions, ConfigTransaction transaction) throws InvalidConfigurationException, ConfigurationException {
+    public  Set executeActions(ConfigurationModelContainerImpl config,ComponentTypeID  targetID, List actions, XMLConfigurationConnector transaction) throws InvalidConfigurationException, ConfigurationException {
         Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -1449,7 +1449,7 @@ public class XMLActionUpdateStrategy  {
     }
 
 
-    public  Set executeActions(ConfigurationModelContainerImpl config, ComponentTypeDefnID  targetID, List actions, ConfigTransaction transaction) throws InvalidConfigurationException, ConfigurationException {
+    public  Set executeActions(ConfigurationModelContainerImpl config, ComponentTypeDefnID  targetID, List actions, XMLConfigurationConnector transaction) throws InvalidConfigurationException, ConfigurationException {
 
 	/**
 	 * This method is used for the mass importing of a configuration, instead of
@@ -1547,7 +1547,7 @@ public class XMLActionUpdateStrategy  {
      }
 
 
-    public  Set executeActions(ConfigurationModelContainerImpl config,PropDefnAllowedValueID targetID, List actions, ConfigTransaction transaction ) throws InvalidConfigurationException, ConfigurationException {
+    public  Set executeActions(ConfigurationModelContainerImpl config,PropDefnAllowedValueID targetID, List actions, XMLConfigurationConnector transaction ) throws InvalidConfigurationException, ConfigurationException {
     Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -1563,7 +1563,7 @@ public class XMLActionUpdateStrategy  {
 
 
 
-    public  Set executeActions(ConfigurationModelContainerImpl config, HostID targetID, List actions, ConfigTransaction transaction) throws InvalidComponentException, ConfigurationException{
+    public  Set executeActions(ConfigurationModelContainerImpl config, HostID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidComponentException, ConfigurationException{
         Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
             return affectedIDs;
@@ -1663,7 +1663,7 @@ public class XMLActionUpdateStrategy  {
      * @param componentTypes is the configuration to be updated
      */
 
-    public Set executeActions(ConfigurationModelContainerImpl config, SharedResourceID targetID, List actions, ConfigTransaction transaction )
+    public Set executeActions(ConfigurationModelContainerImpl config, SharedResourceID targetID, List actions, XMLConfigurationConnector transaction )
                         throws InvalidConfigurationException, ConfigurationException{
 
     	Set affectedIDs = new HashSet();
@@ -1764,7 +1764,7 @@ public class XMLActionUpdateStrategy  {
         return affectedIDs;
     }
 
-    public void updateSharedResource(SharedResource resource, ConfigTransaction transaction) throws  ConfigurationException{
+    public void updateSharedResource(SharedResource resource, XMLConfigurationConnector transaction) throws  ConfigurationException{
 
 		Collection trans = transaction.getObjects();
 		for (Iterator it=trans.iterator(); it.hasNext(); ) {
@@ -1804,7 +1804,7 @@ public class XMLActionUpdateStrategy  {
      * @param componentTypes is the configuration to be updated
      */
 
-    public Set executeActions(ConfigurationModelContainerImpl config, ProductTypeID targetID, List actions, ConfigTransaction transaction )
+    public Set executeActions(ConfigurationModelContainerImpl config, ProductTypeID targetID, List actions, XMLConfigurationConnector transaction )
                         throws InvalidConfigurationException, ConfigurationException{
 
         Set affectedIDs = new HashSet();
