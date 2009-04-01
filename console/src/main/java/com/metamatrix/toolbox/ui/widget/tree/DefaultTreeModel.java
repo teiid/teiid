@@ -27,13 +27,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.swing.SwingUtilities;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
-import javax.swing.SwingUtilities;
-
-import com.metamatrix.api.exception.MultipleRuntimeException;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.transaction.TransactionException;
@@ -43,7 +41,6 @@ import com.metamatrix.common.tree.TreeNodeEditor;
 import com.metamatrix.common.tree.TreeView;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
-
 import com.metamatrix.toolbox.property.VetoedChangeEvent;
 import com.metamatrix.toolbox.property.VetoedChangeListener;
 import com.metamatrix.toolbox.ui.widget.TreeWidget;
@@ -207,9 +204,7 @@ implements TreeConstants, TreeModel {
 	            } catch (final TransactionException err) {
 					if (delayedErr == null) {
 		            	delayedErr = err;
-					} else {
-					    delayedErr = new MultipleRuntimeException(new Throwable[] {delayedErr, err});
-					}
+					} 
                 } finally {
     	            if (delayedErr != null) {
                         if (!(delayedErr instanceof RuntimeException)) {

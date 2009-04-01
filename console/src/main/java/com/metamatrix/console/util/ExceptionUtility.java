@@ -32,7 +32,6 @@ import java.util.Iterator;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MultipleException;
-import com.metamatrix.api.exception.MultipleRuntimeException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -551,10 +550,6 @@ public class ExceptionUtility {
             result = unRollException(((MetaMatrixRuntimeException)throwable).getChild());
         } else if (throwable instanceof MultipleException) {
             for (Iterator iter = ((MultipleException)throwable).getExceptions().iterator(); iter.hasNext();) {
-                result = unRollException((Throwable)iter.next());
-            }
-        } else if (throwable instanceof MultipleRuntimeException) {
-            for (Iterator iter = ((MultipleRuntimeException)throwable).getThrowables().iterator(); iter.hasNext();) {
                 result = unRollException((Throwable)iter.next());
             }
         } else if (throwable instanceof InvocationTargetException) {

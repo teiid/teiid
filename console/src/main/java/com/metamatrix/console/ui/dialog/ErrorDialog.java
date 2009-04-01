@@ -61,7 +61,6 @@ import javax.swing.JTextArea;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MultipleException;
-import com.metamatrix.api.exception.MultipleRuntimeException;
 import com.metamatrix.common.tree.TreeNode;
 import com.metamatrix.common.tree.directory.FileSystemFilter;
 import com.metamatrix.common.tree.directory.FileSystemView;
@@ -545,10 +544,6 @@ public class ErrorDialog extends JDialog {
             result = parseThrowable(((MetaMatrixRuntimeException)throwable).getChild(), depth+1);
         } else if (throwable instanceof MultipleException) {
             for (Iterator iter = ((MultipleException)throwable).getExceptions().iterator(); iter.hasNext();) {
-                result = parseThrowable((Throwable)iter.next(), depth+1);
-            }
-        } else if (throwable instanceof MultipleRuntimeException) {
-            for (Iterator iter = ((MultipleRuntimeException)throwable).getThrowables().iterator(); iter.hasNext();) {
                 result = parseThrowable((Throwable)iter.next(), depth+1);
             }
         } else if (throwable instanceof InvocationTargetException) {
