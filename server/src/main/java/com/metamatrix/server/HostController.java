@@ -23,6 +23,7 @@
 package com.metamatrix.server;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -61,7 +62,7 @@ public class HostController implements HostManagement {
  
     private Host host;
     
-    private Map processMap = new HashMap(3);
+    private Map<String, Process> processMap = new HashMap<String, Process>();
         
     private ClusteredRegistryState registry;
     
@@ -78,8 +79,12 @@ public class HostController implements HostManagement {
     }
     
     public void run(boolean startProcesses) throws Throwable {
+    	HostControllerRegistryBinding hc = getRunningHost();
     	
-    	if (isHostRunning()) {
+    	if (hc != null) {
+    		if (startProcesses) {
+    			hc.getHostController().startServers(host.getFullName());
+    		}
     		System.err.println(PlatformPlugin.Util.getString("HostController.Host_is_already_running_startprocesses", host.getFullName())); //$NON-NLS-1$
     		System.exit(-1);
     	}
@@ -120,13 +125,7 @@ public class HostController implements HostManagement {
     }
     
     private boolean isHostRunning() {
-    	List<HostControllerRegistryBinding> hosts = this.registry.getHosts();
-    	for(HostControllerRegistryBinding host:hosts) {
-    		if (host.getHostName().equalsIgnoreCase(this.host.getFullName())) {
-    			return true;
-    		}
-    	}
-    	return false;
+    	return getRunningHost() != null;
     }
     
     private HostControllerRegistryBinding getRunningHost() {
@@ -353,7 +352,7 @@ public class HostController implements HostManagement {
 	            }
 	        }
 	        
-	        Process process = (Process) processMap.get(processName.toUpperCase());
+	        Process process = processMap.get(processName.toUpperCase());
 	        if (process != null) {
 	            processMap.remove(processName.toUpperCase());
 	            process.destroy();
@@ -379,15 +378,9 @@ public class HostController implements HostManagement {
 	        // must copy the map so that when
 	        // doKillVM tries to remove it from the map
 	        // while its being iterated over.
-	        Map copyMap = new HashMap();
-	        copyMap.putAll(processMap);
-	
-	        Iterator processes = copyMap.keySet().iterator();
-	        while (processes.hasNext()) {
-	            String processName = (String) processes.next();
+	    	for (String processName : new ArrayList<String>(processMap.keySet())) {
 	            killServer(hostName, processName, stopNow);
 	        }
-	        processMap.clear();
 		}
 		else {
 			HostManagement remoteHost = getRemoteHost(hostName);
