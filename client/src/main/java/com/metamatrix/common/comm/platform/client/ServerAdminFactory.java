@@ -214,10 +214,7 @@ public class ServerAdminFactory {
 		ServerAdmin serverAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread()
 				.getContextClassLoader(), new Class[] { ServerAdmin.class }, new ReconnectingProxy(p));
     	
-        //make a method call, to test that we are connected 
-    	serverAdmin.getSystem();
-        
-        return serverAdmin;
+       return serverAdmin;
     }
     
 }
