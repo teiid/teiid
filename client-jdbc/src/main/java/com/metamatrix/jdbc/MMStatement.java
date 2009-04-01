@@ -305,7 +305,7 @@ public class MMStatement extends WrapperImpl implements Statement {
         // Remove link from connection to statement
         this.driverConnection.closeStatement(this);
 
-        logger.info(JDBCPlugin.Util.getString("MMStatement.Close_stmt_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMStatement.Close_stmt_success")); //$NON-NLS-1$
         driverConnection = null;
     }
 
@@ -439,7 +439,7 @@ public class MMStatement extends WrapperImpl implements Statement {
             createResultSet(resultsMsg);
         }
         
-        logger.info(JDBCPlugin.Util.getString("MMStatement.Success_query", reqMessage.getCommandString())); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMStatement.Success_query", reqMessage.getCommandString())); //$NON-NLS-1$
     }
 
 	protected RequestMessage createRequestMessage(String[] commands,

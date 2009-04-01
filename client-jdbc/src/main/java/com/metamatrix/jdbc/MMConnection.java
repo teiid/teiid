@@ -164,7 +164,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
             info.put(ExecutionProperties.ALLOW_DBL_QUOTED_VARIABLE, Boolean.FALSE.toString());
         }
                 
-        logger.info(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMConnection.Session_success")); //$NON-NLS-1$
         logConnectionProperties(url, info);
                 
         // properties object used in obtaining connection
@@ -197,7 +197,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
 	                modifiedUrl.append(";").append(connUrl.substring(endIndex)); //$NON-NLS-1$
 	            }
 	        }
-	        logger.info("Connection Url="+modifiedUrl); //$NON-NLS-1$
+	        logger.fine("Connection Url="+modifiedUrl); //$NON-NLS-1$
         }
         
         // Now clone the properties object and remove password and trusted token
@@ -208,7 +208,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
                 Object anObj = info.get(key);
                 // Log each property except for password and token.
                 if (!MMURL.JDBC.CREDENTIALS.equalsIgnoreCase(key) && !MMURL.CONNECTION.PASSWORD.equalsIgnoreCase(key) && !MMURL.CONNECTION.CLIENT_TOKEN_PROP.equalsIgnoreCase(key)) { 
-                    logger.info(key+"="+anObj); //$NON-NLS-1$
+                    logger.fine(key+"="+anObj); //$NON-NLS-1$
                 }
             }
         }                              
@@ -278,7 +278,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         } catch (SQLException se) {
             throw MMSQLException.create(se, JDBCPlugin.Util.getString("MMConnection.Err_connection_close", se.getMessage())); //$NON-NLS-1$
         } finally {
-            logger.info(JDBCPlugin.Util.getString("MMConnection.Connection_close_success")); //$NON-NLS-1$
+            logger.fine(JDBCPlugin.Util.getString("MMConnection.Connection_close_success")); //$NON-NLS-1$
             // set the status of the connection to closed
             closed = true;            
         }
@@ -345,7 +345,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
 		} catch (XATransactionException e) {
 			throw MMSQLException.create(e);
 		}
-        logger.info(JDBCPlugin.Util.getString("MMConnection.Commit_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMConnection.Commit_success")); //$NON-NLS-1$
     }
 
     private void beginLocalTxn() throws SQLException {
@@ -710,7 +710,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         		} catch (XATransactionException e) {
         			throw MMSQLException.create(e);
         		}
-                logger.info(JDBCPlugin.Util.getString("MMConnection.Rollback_success")); //$NON-NLS-1$
+                logger.fine(JDBCPlugin.Util.getString("MMConnection.Rollback_success")); //$NON-NLS-1$
             } finally {
                 if (startTxn) {
                     beginLocalTxn();

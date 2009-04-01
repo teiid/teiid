@@ -131,7 +131,7 @@ public final class MMDriver extends BaseDriver {
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
-        logger.info(logMsg);
+        logger.fine(logMsg);
 
         return myConnection;
     }

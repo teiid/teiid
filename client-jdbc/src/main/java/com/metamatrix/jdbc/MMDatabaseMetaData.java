@@ -478,7 +478,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.Best_row_sucess", table); //$NON-NLS-1$
-        logger.info(logMsg);
+        logger.fine(logMsg);
 
         // construct results object from column values and their metadata
         return createResultSet(records, metadataList);
@@ -506,7 +506,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.Catalog_success"); //$NON-NLS-1$
-        logger.info(logMsg);
+        logger.fine(logMsg);
 
         // construct results object from column values and their metadata
         return createResultSet(records, metadataList);
@@ -695,7 +695,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCols_success", columnNamePattern, tableNamePattern); //$NON-NLS-1$
-        logger.info(logMsg);
+        logger.fine(logMsg);
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -813,7 +813,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // logging
         String logMsg = JDBCPlugin.Util.getString("MMDatabaseMetadata.getCrossRef_success", primaryTable, foreignTable); //$NON-NLS-1$
-        logger.info(logMsg);
+        logger.fine(logMsg);
 
         return resultSet;
     }
@@ -997,7 +997,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         ResultSet resultSet = getReferenceKeys(results);
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_success", table));//$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getExpKey_success", table));//$NON-NLS-1$
 
         return resultSet;
     }
@@ -1071,7 +1071,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         ResultSet resultSet = getReferenceKeys(results);
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getImpKey_success", table)); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getImpKey_success", table)); //$NON-NLS-1$
 
         return resultSet;
     }
@@ -1143,7 +1143,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_error", table, e.getMessage())); //$NON-NLS-1$
         }
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_success", table)); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getIndex_success", table)); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -1439,7 +1439,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_error", table, e.getMessage())); //$NON-NLS-1$
         }
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getPrimaryKey_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -1533,7 +1533,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
            throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_error", columnNamePattern, e.getMessage())); //$NON-NLS-1$
         }
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_success", columnNamePattern, procedureNamePattern)); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProcCol_success", columnNamePattern, procedureNamePattern)); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -1640,7 +1640,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_error", procedureNamePattern, e.getMessage())); //$NON-NLS-1$
         }
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_success", procedureNamePattern)); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getProc_success", procedureNamePattern)); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -1721,7 +1721,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             throw MMSQLException.create(e, JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_error", e.getMessage())); //$NON-NLS-1$
         }
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getschema_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -2013,7 +2013,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         // manually send out a close request is very necessary for PreparedStatement.
         //prepareQuery.close();
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_success", tableNamePattern)); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTable_success", tableNamePattern)); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -2080,7 +2080,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         metadataList[0] = getColumnMetadata(null, JDBCColumnNames.TABLE_TYPES.TABLE_TYPE, 
                             MMJDBCSQLTypeInfo.STRING, ResultsMetadataConstants.NULL_TYPES.NOT_NULL);
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTableType_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTableType_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, metadataList);
@@ -2147,7 +2147,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         ResultSetMetaData rmetadata = ResultsMetadataWithProvider.newInstance(StaticMetadataProvider.createWithData(metadataList, 0));
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTypes_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getTypes_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
@@ -2232,7 +2232,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         // Method not supported, retuning empty ResultSet
         ResultSet resultSet = getBestRowIdentifier(catalog, schema, table, 0, true);
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getVersionCols_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getVersionCols_success")); //$NON-NLS-1$
 
        return resultSet;
     }
@@ -3211,7 +3211,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         // close the resultset and driver connection
         //results.close();
 
-        logger.info(JDBCPlugin.Util.getString("MMDatabaseMetadata.getRefKey_success")); //$NON-NLS-1$
+        logger.fine(JDBCPlugin.Util.getString("MMDatabaseMetadata.getRefKey_success")); //$NON-NLS-1$
 
         // construct results object from column values and their metadata
         return createResultSet(records, rmetadata);
