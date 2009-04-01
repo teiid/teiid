@@ -307,9 +307,8 @@ public class RuntimeStateAdminAPIHelper {
             if (hData.isDeployed() && !hData.isRegistered()) {
                 try {
                 	this.hostManagement.startServers(hData.getName());
-                } catch (Exception e) {
+                } catch (MetaMatrixComponentException e) {
                     exceptions.add(e);
-                    // errorMsg.append(e.getMessage());
                 }
                 newHosts.add(hData);
             }
@@ -349,9 +348,8 @@ public class RuntimeStateAdminAPIHelper {
                     try {
                     	ProcessRegistryBinding vmBinding = this.registry.getProcessBinding(pData.getHostName(), pData.getName());
                         vmController = vmBinding.getProcessController();
-                    } catch (Exception e) {
-                        exceptions.add(e); // if we can't get the vmController then go to next process
-                        // errorMsg.append(e.getMessage());
+                    } catch (ResourceNotBoundException e) {
+                    	exceptions.add(new MetaMatrixComponentException(e, e.getMessage()));
                         break;
                     }
                 }
@@ -359,7 +357,7 @@ public class RuntimeStateAdminAPIHelper {
                 if (pData.isDeployed() && !pData.isRegistered()) {
                     try {
                     	this.hostManagement.startServer(hostName, pData.getName());
-                    } catch (Exception e) {
+                    } catch (MetaMatrixComponentException e) {
                         exceptions.add(e);
                     }
                     // not deployed/Running - stopVM and then kill via MetaMatrixController
@@ -377,43 +375,35 @@ public class RuntimeStateAdminAPIHelper {
                         Iterator sIter = services.iterator();
                         // looping thru services
                         while (sIter.hasNext()) {
-                            ServiceData sData = (ServiceData)sIter.next();
-                            // if not deployed but running then kill, kill, kill
-                            if (!sData.isDeployed() && sData.isRegistered()) {
-                                try {
-                                    vmController.stopService(sData.getServiceID(), false, true);
-                                } catch (Exception e) {
-                                    exceptions.add(e);
-                                }
-                                // if deployed but not running then start
-                            } else if (sData.isDeployed() && !sData.isRegistered()) {
-                                try {
-                                    vmController.startDeployedService((ServiceComponentDefnID)sData.getComponentDefnID());
-                                } catch (Exception e) {
-                                    exceptions.add(e);
-                                }
-                                // deployed and registered
-                                // make sure we are running
-                            } else if (sData.isDeployed() && sData.isRegistered()) {
-                                ServiceID serviceID = sData.getServiceID();
-                                try {
-                                    switch (sData.getCurrentState()) {
-                                        case ServiceState.STATE_CLOSED:
-                                        case ServiceState.STATE_FAILED:
-                                        case ServiceState.STATE_INIT_FAILED:
-                                            vmController.startService(serviceID);
-                                            break;
-
-                                        case ServiceState.STATE_DATA_SOURCE_UNAVAILABLE:
-                                            vmController.checkService(serviceID);
-                                            break;
-
-                                        default:
-                                    }
-                                } catch (Exception e) {
-                                    exceptions.add(e);
-                                }
-                            }
+	                        try {
+	                            ServiceData sData = (ServiceData)sIter.next();
+	                            // if not deployed but running then kill, kill, kill
+	                            if (!sData.isDeployed() && sData.isRegistered()) {
+	                                vmController.stopService(sData.getServiceID(), false, true);
+	                                // if deployed but not running then start
+	                            } else if (sData.isDeployed() && !sData.isRegistered()) {
+	                                vmController.startDeployedService((ServiceComponentDefnID)sData.getComponentDefnID());
+	                                // deployed and registered
+	                                // make sure we are running
+	                            } else if (sData.isDeployed() && sData.isRegistered()) {
+	                                ServiceID serviceID = sData.getServiceID();
+	                                switch (sData.getCurrentState()) {
+	                                    case ServiceState.STATE_CLOSED:
+	                                    case ServiceState.STATE_FAILED:
+	                                    case ServiceState.STATE_INIT_FAILED:
+	                                        vmController.startService(serviceID);
+	                                        break;
+	
+	                                    case ServiceState.STATE_DATA_SOURCE_UNAVAILABLE:
+	                                        vmController.checkService(serviceID);
+	                                        break;
+	
+	                                    default:
+	                                }
+	                            }
+	                        } catch (ServiceException e) {
+	                        	exceptions.add(new MetaMatrixComponentException(e, e.getMessage()));
+	                        }
                         }
                     }
                 }
