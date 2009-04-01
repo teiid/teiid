@@ -216,14 +216,13 @@ public class WorkerPoolFactory {
 									completedCount++;
 									r = queue.poll();		
 								}
-								if (r != null) {
-									continue;
+								if (!success || r == null) {
+									threads.remove(t);
+									activeCount--;
+									if (activeCount == 0 && terminated) {
+										poolLock.notifyAll();
+									}		
 								}
-								threads.remove(t);
-								activeCount--;
-								if (activeCount == 0 && terminated) {
-									poolLock.notifyAll();
-								}		
 							}
 							t.setName(name);
 						}
@@ -261,7 +260,7 @@ public class WorkerPoolFactory {
 		public void shutdown() {
 			this.terminated = true;
 			synchronized (scheduledTasks) {
-				for (ScheduledFuture<?> future : scheduledTasks) {
+				for (ScheduledFuture<?> future : new ArrayList<ScheduledFuture<?>>(scheduledTasks)) {
 					future.cancel(false);
 				}
 				scheduledTasks.clear();
