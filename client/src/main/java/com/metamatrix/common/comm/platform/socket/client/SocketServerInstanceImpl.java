@@ -275,9 +275,12 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 					}
 					
 					@Override
-					public synchronized Object get()
-							throws InterruptedException, ExecutionException {
-						throw new UnsupportedOperationException();
+					public synchronized Object get() throws InterruptedException, ExecutionException {
+						try {
+							return this.get(SocketServerConnectionFactory.getInstance().getSynchronousTtl(), TimeUnit.MILLISECONDS);
+						} catch (TimeoutException e) {
+							throw new ExecutionException(e);
+						} 
 					}
 					
 					/**
