@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 
@@ -150,6 +151,20 @@ public class TestQueueWorkerPool {
     	Thread.sleep(99);
     	future.cancel(true);
     	assertEquals(10, result.size());
+    }
+    
+    @Test public void testFailingWork() throws Exception {
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	final AtomicInteger count = new AtomicInteger();
+    	pool.execute(new Runnable() {
+    		@Override
+    		public void run() {
+    			count.getAndIncrement();
+    			throw new RuntimeException();
+    		}
+    	});
+    	Thread.sleep(10);
+    	assertEquals(1, count.get());
     }
         
 }
