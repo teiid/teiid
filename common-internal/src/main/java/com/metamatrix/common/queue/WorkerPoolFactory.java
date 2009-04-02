@@ -149,8 +149,8 @@ public class WorkerPoolFactory {
 		}
 		
 		private volatile int activeCount;
-		private volatile int maxActiveCount;
-		private volatile int maxQueueSize;
+		private volatile int highestActiveCount;
+		private volatile int highestQueueSize;
 		private volatile boolean terminated;
 		private volatile int submittedCount;
 		private volatile int completedCount;
@@ -179,18 +179,18 @@ public class WorkerPoolFactory {
 				if (atMaxThreads) {
 					queue.add(command);
 					int queueSize = queue.size();
-					if (queueSize > maxQueueSize) {
+					if (queueSize > highestQueueSize) {
 						atMaxThreads = true;
-						maxQueueSize = queueSize;
+						highestQueueSize = queueSize;
 					}
 				} else {
 					activeCount++;
-					maxActiveCount = Math.max(activeCount, maxActiveCount);
+					highestActiveCount = Math.max(activeCount, highestActiveCount);
 				}
 			}
 			if (atMaxThreads) {
 				if (newMaxQueueSize && maximumPoolSize > 1) {
-					LogManager.logWarning(LogCommonConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, maxQueueSize)); //$NON-NLS-1$
+					LogManager.logWarning(LogCommonConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize)); //$NON-NLS-1$
 				}
 				return;
 			}
@@ -250,7 +250,7 @@ public class WorkerPoolFactory {
 		}
 		
 		public int getPoolSize() {
-			return maximumPoolSize;
+			return activeCount;
 		}
 		
 		public boolean isTerminated() {
@@ -268,7 +268,7 @@ public class WorkerPoolFactory {
 		}
 		
 		public int getLargestPoolSize() {
-			return this.maxActiveCount;
+			return this.highestActiveCount;
 		}
 		
 		@Override
@@ -276,8 +276,9 @@ public class WorkerPoolFactory {
 			WorkerPoolStats stats = new WorkerPoolStats();
 			stats.name = poolName;
 			stats.queued = queue.size();
-			stats.threads = getPoolSize();
+			stats.highestQueued = highestQueueSize;
 			stats.activeThreads = getActiveCount();
+			stats.maxThreads = this.maximumPoolSize;
 			stats.totalSubmitted = getSubmittedCount();
 			stats.highestActiveThreads = getLargestPoolSize();
 			stats.totalCompleted = getCompletedCount();

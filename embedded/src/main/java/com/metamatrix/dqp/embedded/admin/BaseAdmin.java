@@ -30,13 +30,14 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.teiid.dqp.internal.process.Util;
+
 import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.Cache;
 import com.metamatrix.admin.api.objects.ExtensionModule;
-import com.metamatrix.admin.api.objects.QueueWorkerPool;
 import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.objects.MMAdminObject;
@@ -46,7 +47,6 @@ import com.metamatrix.admin.objects.MMExtensionModule;
 import com.metamatrix.admin.objects.MMLogConfiguration;
 import com.metamatrix.admin.objects.MMModel;
 import com.metamatrix.admin.objects.MMPropertyDefinition;
-import com.metamatrix.admin.objects.MMQueueWorkerPool;
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSystem;
@@ -58,7 +58,6 @@ import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.log.config.BasicLogConfiguration;
 import com.metamatrix.common.object.PropertyDefinition;
-import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -223,7 +222,7 @@ abstract class BaseAdmin {
         }
         else if (src != null && src instanceof com.metamatrix.common.queue.WorkerPoolStats) {
             com.metamatrix.common.queue.WorkerPoolStats stats = (com.metamatrix.common.queue.WorkerPoolStats)src;
-            return convertStats(stats);
+            return Util.convertStats(stats, stats.getQueueName());
         }
         else if (src != null && src instanceof ServerConnection) {
         	ServerConnection conn = (ServerConnection)src;
@@ -260,21 +259,6 @@ abstract class BaseAdmin {
         session.setVDBName(src.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB));
         session.setVDBVersion(src.getLogonResult().getProductInfo(ProductInfoConstants.VDB_VERSION));        
         return session;
-    }
-    
-    private QueueWorkerPool convertStats(final WorkerPoolStats src) {        
-        MMQueueWorkerPool pool = new MMQueueWorkerPool(new String[] {src.name}); 
-        pool.setDeployed(true);
-        pool.setRegistered(true);
-        pool.setDequeues(0);
-        pool.setEnqueues(0);
-        pool.setHighwaterMark(0);
-        pool.setQueued(src.queued);
-        pool.setThreads(src.threads);
-        pool.setTotalDequeues(src.totalCompleted);
-        pool.setTotalEnqueues(src.totalSubmitted);
-        pool.setTotalHighwaterMark(0);
-        return pool;
     }
     
     /**

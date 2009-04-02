@@ -37,6 +37,7 @@ import java.util.Map;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.console.ui.ViewManager;
 import com.metamatrix.console.util.StaticUtilities;
 
@@ -69,7 +70,7 @@ public class QueueStatisticsDisplayHandler extends JPanel{
      * The caller must subsequently call QueueStatisticsFrame.show() to display the frame.
      */
     public QueueStatisticsFrame startDisplayForService(String serviceDisplayName, ServiceData sd,
-            QueueStatistics[] queueStatistics) {
+            WorkerPoolStats[] queueStatistics) {
         QueueStatisticsPanel panel = new QueueStatisticsPanel(caller,
                 sd, queueStatistics);
         statisticsFrame = new QueueStatisticsFrame(this,
@@ -83,7 +84,7 @@ public class QueueStatisticsDisplayHandler extends JPanel{
     }
 
     public void refreshDisplayForService(String serviceDisplayName, ServiceData sd,
-            QueueStatistics[] queueStatistics) {
+            WorkerPoolStats[] queueStatistics) {
         QueueStatisticsFrame statisticsFrame =
                 (QueueStatisticsFrame)currentlyShowing.get(sd);
         QueueStatisticsPanel panel = statisticsFrame.getPanel();

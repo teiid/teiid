@@ -42,8 +42,6 @@ public interface WorkerPool extends Executor {
 	
 	boolean hasWork();
 	
-	int getPoolSize();
-	
 	ScheduledFuture<?> schedule(Runnable command,
             long delay,
             TimeUnit unit);

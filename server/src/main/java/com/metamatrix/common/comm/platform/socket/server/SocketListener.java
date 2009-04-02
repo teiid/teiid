@@ -86,7 +86,7 @@ public class SocketListener implements ChannelListenerFactory {
             LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "server = " + this.server + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
-        ChannelFactory factory = new NioServerSocketChannelFactory(bossService, workerPool, workerPool.getPoolSize());
+        ChannelFactory factory = new NioServerSocketChannelFactory(bossService, workerPool, maxWorkers);
         
         ServerBootstrap bootstrap = new ServerBootstrap(factory);
         this.channelHandler = new SSLAwareChannelHandler(this, engine, Thread.currentThread().getContextClassLoader());

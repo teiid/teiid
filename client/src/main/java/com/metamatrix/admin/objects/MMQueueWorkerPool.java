@@ -34,18 +34,11 @@ public class MMQueueWorkerPool extends MMAdminObject implements QueueWorkerPool 
     private int queued = 0;
     private int threads = 0;
     
-    // Counts since last stats retrieval
-    private int enqueues = 0;
-    private int dequeues = 0;
-    private int highwaterMark = 0;
-    
     // Total counts, never reset
-    private int totalHighwaterMark = 0;
-    private long totalEnqueues = 0;
-    private long totalDequeues = 0;
-    
-   
-    
+    private int highestThreads;
+    private int highestQueued = 0;
+    private long totalSubmitted = 0;
+    private long totalCompleted = 0;
     
     /**
      * Construct a new MMQueueWorkerPool 
@@ -55,8 +48,6 @@ public class MMQueueWorkerPool extends MMAdminObject implements QueueWorkerPool 
     public MMQueueWorkerPool(String[] identifierParts) {
         super(identifierParts);
     }
-	
-	
    
     /**
      * Get string for display purposes 
@@ -68,63 +59,15 @@ public class MMQueueWorkerPool extends MMAdminObject implements QueueWorkerPool 
         
         str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.MMQueueWorkerPool") + getIdentifier()); //$NON-NLS-1$
         str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.queued") + queued); //$NON-NLS-1$
-        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.enqueues") + enqueues); //$NON-NLS-1$
-        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.dequeues") + dequeues); //$NON-NLS-1$
-        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.highwaterMark") + highwaterMark);  //$NON-NLS-1$
-        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.totalEnqueues") + totalEnqueues);  //$NON-NLS-1$
-        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.totalDequeues") + totalDequeues);  //$NON-NLS-1$
-        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.totalHighwaterMark") + totalHighwaterMark); //$NON-NLS-1$
+        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.highestQueued") + highestQueued);  //$NON-NLS-1$
+        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.totalSubmitted") + totalSubmitted); //$NON-NLS-1$
+        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.totalCompleted") + totalCompleted); //$NON-NLS-1$
         str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.threads") + threads);     //$NON-NLS-1$
+        str.append(AdminPlugin.Util.getString("MMQueueWorkerPool.highestThreads") + highestThreads);  //$NON-NLS-1$
         
         return str.toString();
     }
-
     
-    
-    
-    
-    /** 
-     * @return Returns the dequeues.
-     * @since 4.3
-     */
-    public int getDequeues() {
-        return this.dequeues;
-    }
-    /** 
-     * @param dequeues The dequeues to set.
-     * @since 4.3
-     */
-    public void setDequeues(int dequeues) {
-        this.dequeues = dequeues;
-    }
-    /** 
-     * @return Returns the enqueues.
-     * @since 4.3
-     */
-    public int getEnqueues() {
-        return this.enqueues;
-    }
-    /** 
-     * @param enqueues The enqueues to set.
-     * @since 4.3
-     */
-    public void setEnqueues(int enqueues) {
-        this.enqueues = enqueues;
-    }
-    /** 
-     * @return Returns the highwaterMark.
-     * @since 4.3
-     */
-    public int getHighwaterMark() {
-        return this.highwaterMark;
-    }
-    /** 
-     * @param highwaterMark The highwaterMark to set.
-     * @since 4.3
-     */
-    public void setHighwaterMark(int highwaterMark) {
-        this.highwaterMark = highwaterMark;
-    }
     /** 
      * @return Returns the number of requests queued.
      * @since 4.3
@@ -158,42 +101,54 @@ public class MMQueueWorkerPool extends MMAdminObject implements QueueWorkerPool 
      * @since 4.3
      */
     public long getTotalDequeues() {
-        return this.totalDequeues;
-    }
-    /** 
-     * @param totalDequeues The number of totalDequeues to set.
-     * @since 4.3
-     */
-    public void setTotalDequeues(long totalDequeues) {
-        this.totalDequeues = totalDequeues;
+    	return getTotalCompleted();
     }
     /** 
      * @return Returns the number of totalEnqueues.
      * @since 4.3
      */
     public long getTotalEnqueues() {
-        return this.totalEnqueues;
-    }
-    /** 
-     * @param totalEnqueues The number of totalEnqueues to set.
-     * @since 4.3
-     */
-    public void setTotalEnqueues(long totalEnqueues) {
-        this.totalEnqueues = totalEnqueues;
+        return getTotalSubmitted();
     }
     /** 
      * @return Returns the totalHighwaterMark.
      * @since 4.3
      */
     public int getTotalHighwaterMark() {
-        return this.totalHighwaterMark;
+        return getHighestQueued();
     }
-    /** 
-     * @param totalHighwaterMark The totalHighwaterMark to set.
-     * @since 4.3
-     */
-    public void setTotalHighwaterMark(int totalHighwaterMark) {
-        this.totalHighwaterMark = totalHighwaterMark;
-    }
+
+	public int getHighestThreads() {
+		return highestThreads;
+	}
+
+	public void setHighestThreads(int highestThreads) {
+		this.highestThreads = highestThreads;
+	}
+
+	public int getHighestQueued() {
+		return highestQueued;
+	}
+
+	public void setHighestQueued(int highestQueued) {
+		this.highestQueued = highestQueued;
+	}
+
+	public long getTotalSubmitted() {
+		return totalSubmitted;
+	}
+
+	public void setTotalSubmitted(long totalSubmitted) {
+		this.totalSubmitted = totalSubmitted;
+	}
+
+	public void setTotalCompleted(long totalCompleted) {
+		this.totalCompleted = totalCompleted;
+	}
+
+	public long getTotalCompleted() {
+		return totalCompleted;
+	}
+
 }
 

@@ -32,21 +32,16 @@ import java.awt.event.ActionListener;
 import javax.swing.AbstractButton;
 import javax.swing.JPanel;
 
-import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
-import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.platform.vm.controller.ProcessStatistics;
+import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
-import com.metamatrix.toolbox.ui.widget.LabelWidget;
-import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
-import com.metamatrix.toolbox.ui.widget.TitledBorder;
 
 public class VMStatisticsPanel extends JPanel{
     private ProcessData processData;
     private QueueStatisticsRefreshRequestHandler controller;
     private ProcessStatistics vmStatistics;
     private ProcessVMStatisticsPanel processPanel;
-    private QueueVMStatisticsPanel queuePanel;
     private SocketVMStatisticsPanel socketPanel;
     private AbstractButton closeButton;
     
@@ -88,13 +83,10 @@ public class VMStatisticsPanel extends JPanel{
         JPanel statsPanel = new JPanel(statsLayout);
         processPanel = new ProcessVMStatisticsPanel(vmStatistics.name);
         processPanel.populate(vmStatistics);
-        queuePanel = new QueueVMStatisticsPanel();
-        queuePanel.populate(vmStatistics);
         socketPanel = new SocketVMStatisticsPanel();
         socketPanel.populate(vmStatistics);
         
         statsPanel.add(processPanel);
-        statsPanel.add(queuePanel);
         statsPanel.add(socketPanel);
         
         this.add(statsPanel);
@@ -108,9 +100,6 @@ public class VMStatisticsPanel extends JPanel{
         statsLayout.setConstraints(processPanel, new GridBagConstraints(0, 0, 1, 1,
             1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
             new Insets(4, 4, 4, 4), 0, 0));
-        statsLayout.setConstraints(queuePanel, new GridBagConstraints(0, 1, 1, 1,
-            0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
-            new Insets(4, 4, 4, 4), 0, 0));        
         statsLayout.setConstraints(socketPanel, new GridBagConstraints(0, 2, 1, 1,
             0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
             new Insets(4, 4, 4, 4), 0, 0));
@@ -127,7 +116,6 @@ public class VMStatisticsPanel extends JPanel{
     public void repopulate(ProcessStatistics vmStat) {
         vmStatistics = vmStat;
         processPanel.populate(vmStatistics);
-        queuePanel.populate(vmStatistics);
         socketPanel.populate(vmStatistics);
     }
 
@@ -136,68 +124,7 @@ public class VMStatisticsPanel extends JPanel{
     }
 }//end QueueStatisticsPanel
 
-
-
-
-abstract class AbstractVMStatisticsPanel extends JPanel {
-
-    protected TextFieldWidget[] textFieldWidgets;
-    
-    /**Get title of the panel.*/
-    public abstract String getTitle();
-
-    /**Get titles of the displayed fields.*/    
-    public abstract String[] getLabelStrings();
-
-    /**Populate the displayed fields from the specified VMStatistics.*/    
-    public abstract void populate(ProcessStatistics vmStats);
-    
-    
-    public AbstractVMStatisticsPanel() {
-        super();
-    }
-
-    protected void init() {
-        this.setBorder(new TitledBorder(getTitle()));
-        GridBagLayout layout = new GridBagLayout();
-        this.setLayout(layout);
-        
-        String[] labelStrings = getLabelStrings();
-        int nfields = labelStrings.length;
-
-        textFieldWidgets = new TextFieldWidget[nfields];
-        LabelWidget[] labelWidgets = new LabelWidget[nfields]; 
-        
-        
-        for (int i=0; i<nfields; i++) {        
-            labelWidgets[i] = new LabelWidget(labelStrings[i]);
-            textFieldWidgets[i] = new TextFieldWidget(0);
-            textFieldWidgets[i].setEditable(false);
-            this.add(labelWidgets[i]);
-        }
-        
-        for (int i=0; i<nfields; i++) {
-            this.add(textFieldWidgets[i]);
-        }
-            
-        for (int i=0; i<nfields; i++) {
-            layout.setConstraints(labelWidgets[i], new GridBagConstraints(0, i, 1, 1,
-                0.0, 0.0, GridBagConstraints.EAST, GridBagConstraints.NONE,
-                new Insets(4, 4, 4, 4), 0, 0));
-        }
-        
-        for (int i=0; i<nfields; i++) {
-            layout.setConstraints(textFieldWidgets[i], new GridBagConstraints(1, i, 1, 1,
-                1.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL,
-                new Insets(4, 4, 4, 4), 0, 0));
-        }
-    }
-      
-}
-
-
-
-class ProcessVMStatisticsPanel extends AbstractVMStatisticsPanel {
+class ProcessVMStatisticsPanel extends AbstractStatisticsPanel<ProcessStatistics> {
     private String processName;
     
     private static final String[] labelStrings = {
@@ -232,55 +159,15 @@ class ProcessVMStatisticsPanel extends AbstractVMStatisticsPanel {
     }   
 }
 
-
-
-class QueueVMStatisticsPanel extends AbstractVMStatisticsPanel {
+class SocketVMStatisticsPanel extends AbstractStatisticsPanel<ProcessStatistics> {
 
     private static final String[] labelStrings = {
-        "Current Size",
-        "Highest Size",
-        "Total Enqueued",
-        "Total Dequeued",
-        "Num. Threads",
-    };
-    
-    
-    public QueueVMStatisticsPanel() {
-        super();
-        init();
-    }
-
-    /**Get title of the panel.*/
-    public String getTitle() {
-        return "Socket Worker Queue";
-    }
-
-    /**Get titles of the displayed fields.*/    
-    public String[] getLabelStrings() {
-        return labelStrings;
-    }
-
-    /**Populate the displayed fields from the specified VMStatistics.*/    
-        public void populate(ProcessStatistics vmStats) {
-        WorkerPoolStats poolStats = vmStats.processPoolStats;
-        textFieldWidgets[0].setText(Integer.toString(poolStats.queued));        
-        textFieldWidgets[1].setText(Integer.toString(0));
-        textFieldWidgets[2].setText(Long.toString(poolStats.totalSubmitted));
-        textFieldWidgets[3].setText(Long.toString(poolStats.totalCompleted));        
-        textFieldWidgets[4].setText(Integer.toString(poolStats.threads));
-    }
-}
-
-
-class SocketVMStatisticsPanel extends AbstractVMStatisticsPanel {
-
-    private static final String[] labelStrings = {
-        "MetaMatrix Packets Read",
-        "MetaMatrix Packets Written",
+        "Message Packets Read",
+        "Message Packets Written",
         "Num. Sockets",
         "Highest Num. Sockets",
-        "Num. Client Connections",
-        "Highest Num. Client Connections",
+        "Current Thread Count",
+        "Highest Thread Count",
     };
     
     
@@ -305,9 +192,8 @@ class SocketVMStatisticsPanel extends AbstractVMStatisticsPanel {
         textFieldWidgets[1].setText(Long.toString(listenerStats.objectsWritten));
         textFieldWidgets[2].setText(Integer.toString(listenerStats.sockets));
         textFieldWidgets[3].setText(Integer.toString(listenerStats.maxSockets));
-        textFieldWidgets[4].setText("0"); //$NON-NLS-1$
-        textFieldWidgets[5].setText("0"); //$NON-NLS-1$
-        
+        textFieldWidgets[4].setText(Integer.toString(vmStats.processPoolStats.getActiveThreads()));
+        textFieldWidgets[5].setText(Integer.toString(vmStats.processPoolStats.getHighestActiveThreads()));
     }
 
 }

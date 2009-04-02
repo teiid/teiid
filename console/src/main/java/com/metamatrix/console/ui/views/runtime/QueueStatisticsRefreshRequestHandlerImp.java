@@ -68,7 +68,7 @@ public class QueueStatisticsRefreshRequestHandlerImp
                     sd = currentServiceData;
                 }
             }
-            QueueStatistics[] qss = getQueueStatistics(sd);
+            WorkerPoolStats[] qss = getQueueStatistics(sd);
             if (qss.length != 0) {
                 qsdh.refreshDisplayForService(sd.getName(),sd,qss);
             }
@@ -113,25 +113,16 @@ public class QueueStatisticsRefreshRequestHandlerImp
     }
 
 
-    public QueueStatistics[] getQueueStatistics(ServiceData sd) {
+    public WorkerPoolStats[] getQueueStatistics(ServiceData sd) {
         Collection serviceCollection = null;
         serviceCollection = getServiceCollection(sd);
-        QueueStatistics[] qss = new QueueStatistics[serviceCollection.size()];
+        WorkerPoolStats[] qss = new WorkerPoolStats[serviceCollection.size()];
         if (serviceCollection.isEmpty() ) {
             return qss;
         }
-        if (serviceCollection != null) {
-        	Iterator iter = serviceCollection.iterator();
-            int i = 0;
-            while ( i < serviceCollection.size()) {
-                if (iter.hasNext()) {
-                    WorkerPoolStats wps = (WorkerPoolStats)iter.next();
-                    qss[i] = new QueueStatistics(wps.name, wps.queued,
-                            0, (int)wps.totalSubmitted,
-                            (int)wps.totalCompleted, wps.threads);
-                    i++;
-                }
-            }
+    	Iterator iter = serviceCollection.iterator();
+        for (int i = 0; i < serviceCollection.size(); i++) {
+            qss[i] = (WorkerPoolStats)iter.next();
         }
         return qss;
     }

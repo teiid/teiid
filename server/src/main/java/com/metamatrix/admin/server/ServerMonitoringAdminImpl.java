@@ -22,6 +22,8 @@
 
 package com.metamatrix.admin.server;
 
+import static org.teiid.dqp.internal.process.Util.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -93,10 +95,9 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.ProductInfoConstants;
-import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.platform.vm.controller.ProcessStatistics;
+import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.server.serverapi.RequestInfo;
-
 /**
  * @since 4.3
  */
@@ -611,16 +612,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		                               
 		                           WorkerPoolStats workerStats = statistics.processPoolStats;
 		                           if (workerStats != null) {
-		                               String[] workerPoolIdentifierParts = new String[] {hostName, processName, workerStats.name};
-		                               MMQueueWorkerPool workerPool = new MMQueueWorkerPool(workerPoolIdentifierParts);                          
-		                               workerPool.setDequeues(0);
-		                               workerPool.setEnqueues(0);
-		                               workerPool.setHighwaterMark(0);
-		                               workerPool.setThreads(workerStats.threads);
-		                               workerPool.setQueued(workerStats.queued);
-		                               workerPool.setTotalDequeues(workerStats.totalCompleted);
-		                               workerPool.setTotalEnqueues(workerStats.totalSubmitted);
-		                               workerPool.setTotalHighwaterMark(0);
+		                               MMQueueWorkerPool workerPool = convertStats(workerStats, hostName, processName, workerStats.name);
 		                               
 		                               process.setQueueWorkerPool(workerPool);
 		                           }
@@ -741,18 +733,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			                binding.getDeployedName(),
 			                name};                
 			            if (identifierMatches(identifier, identifierParts)) {
-			                MMQueueWorkerPool pool = new MMQueueWorkerPool(identifierParts);
-			                pool.setDeployed(true);
-			                pool.setRegistered(true);
-			                pool.setDequeues(0);
-			                pool.setEnqueues(0);
-			                pool.setHighwaterMark(0);
-			                pool.setQueued(stats.queued);
-			                pool.setThreads(stats.threads);
-			                pool.setTotalDequeues(stats.totalCompleted);
-			                pool.setTotalEnqueues(stats.totalSubmitted);
-			                pool.setTotalHighwaterMark(0);
-			                
+			                MMQueueWorkerPool pool = convertStats(stats, identifierParts);
 			                results.add(pool);
 			            }
 			        }

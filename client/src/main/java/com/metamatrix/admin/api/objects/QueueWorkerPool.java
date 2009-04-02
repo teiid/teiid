@@ -24,7 +24,7 @@ package com.metamatrix.admin.api.objects;
 
 
 /** 
- * All the metamatrix server modules use queue based processing inside them. This
+ * All server modules use queue based processing inside them. This
  * object holds the statisics of those queues, as per how many of them queued, dequeued, 
  * processed etc.
  * <p>An identifier for QueueWorkerPool, is nothing but the modules it self, like "DQP", 
@@ -33,21 +33,6 @@ package com.metamatrix.admin.api.objects;
  * @since 4.3
  */
 public interface QueueWorkerPool extends AdminObject {
-    /** 
-     * @return Returns the number of dequeues.
-     * @since 4.3
-     */
-    public int getDequeues();
-    /** 
-     * @return Returns the number of enqueues.
-     * @since 4.3
-     */
-    public int getEnqueues();
-    /** 
-     * @return Returns the highwaterMark.
-     * @since 4.3
-     */
-    public int getHighwaterMark();
     /** 
      * @return Returns the number of requests queued.
      * @since 4.3
@@ -61,20 +46,43 @@ public interface QueueWorkerPool extends AdminObject {
     public int getThreads();
     
     /** 
+     * @return Returns the highest number of active threads
+     */
+    public int getHighestThreads();
+    
+    /** 
      * @return Returns the number of totalDequeues.
      * @since 4.3
+     * @deprecated see {@link #getTotalCompleted()}
      */
     public long getTotalDequeues();
+    
+    /**
+     * @return The number of completed tasks
+     */
+    long getTotalCompleted();
     
     /** 
      * @return Returns the number of totalEnqueues.
      * @since 4.3
+     * @deprecated see {@link #getTotalSubmitted()}
      */
     public long getTotalEnqueues();
+    
+    /**
+     * @return The number of submitted tasks
+     */
+    long getTotalSubmitted();
     
     /** 
      * @return Returns the totalHighwaterMark.
      * @since 4.3
+     * @deprecated see {@link #getHighestQueued()}
      */
     public int getTotalHighwaterMark();
+
+    /** 
+     * @return Returns the highest queue size
+     */
+    public int getHighestQueued();
 }

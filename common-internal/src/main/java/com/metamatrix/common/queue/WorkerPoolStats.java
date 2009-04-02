@@ -33,7 +33,8 @@ public class WorkerPoolStats implements Serializable {
 
     // Current state    
     public int queued;
-    public int threads;
+    int highestQueued;
+    public int maxThreads;
     public int activeThreads;
     public int highestActiveThreads;
     public long totalSubmitted;
@@ -42,15 +43,48 @@ public class WorkerPoolStats implements Serializable {
     public String toString() {
         StringBuffer str = new StringBuffer();
         
-        str.append("WorkerPoolStats:\n"); //$NON-NLS-1$
+        str.append(name + " WorkerPoolStats:\n"); //$NON-NLS-1$
         str.append("\tqueued = " + queued); //$NON-NLS-1$
-        str.append("\tthreads = " + threads);     //$NON-NLS-1$
+        str.append("\thighestQueued = " + highestQueued); //$NON-NLS-1$
+        str.append("\tmaxThreads = " + maxThreads);     //$NON-NLS-1$
         str.append("\tactiveThreads = " + activeThreads);     //$NON-NLS-1$
         str.append("\thighestActiveThreads = " + highestActiveThreads);     //$NON-NLS-1$
         str.append("\ttotalSubmitted = " + totalSubmitted);     //$NON-NLS-1$
-        
+        str.append("\ttotalCompleted = " + totalCompleted);     //$NON-NLS-1$
         return str.toString();
     }
+    
+    public int getActiveThreads() {
+		return activeThreads;
+	}
+    
+    public int getHighestActiveThreads() {
+		return highestActiveThreads;
+	}
+    
+    public long getTotalCompleted() {
+		return totalCompleted;
+	}
+    
+    public long getTotalSubmitted() {
+		return totalSubmitted;
+	}
+    
+    public String getQueueName() {
+		return name;
+	}
+    
+    public int getQueued() {
+		return queued;
+	}
+    
+    public int getHighestQueued() {
+		return highestQueued;
+	}
+    
+    public int getMaxThreads() {
+		return maxThreads;
+	}
 
 }
 

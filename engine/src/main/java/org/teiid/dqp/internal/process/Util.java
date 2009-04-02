@@ -20,48 +20,24 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.console.ui.views.runtime;
+package org.teiid.dqp.internal.process;
 
-public class QueueStatistics {
-    String queueName;
-    int currentSize;
-    int highestSize;
-    int totalEnqueued;
-    int totalDequeued;
-    int numThreads;
-    
-    public QueueStatistics(String qName, int curSize, int highSize,
-            int totEnqueued, int totDequeued, int numThreads) {
-        super();
-        queueName = qName;
-        currentSize = curSize;
-        highestSize = highSize;
-        totalEnqueued = totEnqueued;
-        totalDequeued = totDequeued;
-        this.numThreads = numThreads;
-   	}
+import com.metamatrix.admin.objects.MMQueueWorkerPool;
+import com.metamatrix.common.queue.WorkerPoolStats;
 
-    public String getQueueName() {
-        return queueName;
-    }
+public class Util {
 
-    public int getCurrentSize() {
-        return currentSize;
-    }
-
-    public int getHighestSize() {
-        return highestSize;
-    }
-
-    public int getTotalEnqueued() {
-        return totalEnqueued;
-    }
-    
-    public int getTotalDequeued() {
-        return totalDequeued;
-    }
-
-	public int getNumThreads() {
-		return numThreads;
+	public static MMQueueWorkerPool convertStats(final WorkerPoolStats src, String ... identifier) {        
+	    MMQueueWorkerPool pool = new MMQueueWorkerPool(identifier); 
+	    pool.setDeployed(true);
+	    pool.setRegistered(true);
+	    pool.setQueued(src.getQueued());
+	    pool.setThreads(src.getActiveThreads());
+	    pool.setHighestQueued(src.getHighestQueued());
+	    pool.setHighestThreads(src.getHighestActiveThreads());
+	    pool.setTotalCompleted(src.getTotalCompleted());
+	    pool.setTotalSubmitted(src.getTotalSubmitted());
+	    return pool;
 	}
+
 }
