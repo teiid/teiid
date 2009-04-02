@@ -75,7 +75,7 @@ public class Main {
 
 		final Host host = CurrentConfiguration.getInstance().getDefaultHost();        
 		
-		Thread t = new Thread(new Runnable() {
+		Thread t = new Thread("Main Info Thread") { //$NON-NLS-1$
 			@Override
 			public void run() {
 				try {
@@ -86,7 +86,7 @@ public class Main {
 				// write info log
 				writeInfoLog(host, processName);
 			}
-		}, "Main Info Thread"); //$NON-NLS-1$
+		};
 		t.start();
 		        
 		createTempDirectory();                    
@@ -148,11 +148,13 @@ public class Main {
 	}   
 
     private static void saveCurrentConfigurationToFile(Host host, String processName) throws ConfigurationException {
-        FilePersistentUtil.writeModel(CONFIG_PREFIX+FileLimitSizeLogWriter.getDate()+".xml", host.getConfigDirectory(),  //$NON-NLS-1$ 
+    	String configDir = host.getConfigDirectory();
+    	File f = new File(configDir);
+    	f.mkdirs();
+        FilePersistentUtil.writeModel(CONFIG_PREFIX+FileLimitSizeLogWriter.getDate()+".xml", configDir,  //$NON-NLS-1$ 
         CurrentConfiguration.getInstance().getConfigurationModel(), 
                         processName);
         //remove old instances
-        File f = new File(host.getConfigDirectory());
         String[] result = f.list(new FilenameFilter() {
         	@Override
         	public boolean accept(File dir, String name) {

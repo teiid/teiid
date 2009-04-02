@@ -140,6 +140,10 @@
 					</excludes>
 					<systemProperties>
 						<property>
+							<name>user.dir</name>
+							<value>${basedir}/target</value>
+						</property>
+						<property>
 							<name>java.io.tmpdir</name>
 							<value>${basedir}/target</value>
 						</property>
