@@ -22,14 +22,18 @@
 
 package com.metamatrix.server;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -46,6 +50,7 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -58,11 +63,71 @@ import com.metamatrix.platform.util.LogMessageKeys;
 @Singleton
 public class HostController implements HostManagement {
 
+	private final static class StreamLogger extends Thread {
+		private BufferedReader r;
+		private boolean error;
+		
+		private StreamLogger(InputStream is, boolean error, String processName) {
+			r = new BufferedReader(new InputStreamReader(is));
+			this.error = error;
+			this.setName(processName + (error?" error":" stdout") + " reader"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+			this.setDaemon(true);
+		}
+
+		@Override
+		public void run() {
+			String s = null;
+			try { 
+				while ((s = r.readLine()) != null) {
+					LogManager.log(error?MessageLevel.ERROR:MessageLevel.INFO, LogCommonConstants.CTX_CONTROLLER, s);
+				}
+			} catch (IOException e) {
+				LogManager.logDetail(LogCommonConstants.CTX_CONTROLLER, e, "Error reading stream"); //$NON-NLS-1$				
+			} finally {
+				try {
+					r.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
+	
+	protected class MonitoredProcess {
+		private Process process;
+		private Thread errorReader;
+		private Thread stdoutReader;
+		
+		MonitoredProcess(Process p, final String processName) {
+			this.process = p;
+			errorReader = new StreamLogger(p.getErrorStream(), true, processName);
+			errorReader.start();
+			stdoutReader = new StreamLogger(p.getInputStream(), false, processName);
+			stdoutReader.start();
+			Thread monitorThread = new Thread(processName + " monitor") { //$NON-NLS-1$
+				@Override
+				public void run() {
+					try {
+						int outputValue = process.waitFor();
+						LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "Exiting "+ processName +" with value " +outputValue); //$NON-NLS-1$ //$NON-NLS-2$
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					} finally {
+						errorReader.interrupt();
+						stdoutReader.interrupt();
+						processMap.remove(processName);
+					}
+				}
+			};
+			monitorThread.start();
+		}
+		
+	}
+
     private static final String DEFAULT_JAVA_MAIN = "com.metamatrix.server.Main"; //$NON-NLS-1$
  
     private Host host;
     
-    private Map<String, Process> processMap = new HashMap<String, Process>();
+    private Map<String, Process> processMap = new ConcurrentHashMap<String, Process>();
         
     private ClusteredRegistryState registry;
     
@@ -273,7 +338,9 @@ public class HostController implements HostManagement {
    private Process startDeployVM( String processName, String hostName, Properties vmprops) {
 	   LogManager.logInfo(LogCommonConstants.CTX_CONTROLLER, "Start deploy VM = " + processName + " on host = "+ hostName); //$NON-NLS-1$ //$NON-NLS-2$
        String command = buildVMCommand(processName, vmprops);
-       return execCommand(command);
+       Process p = execCommand(command);
+       new MonitoredProcess(p, processName);
+       return p;
    }
 
    private String buildVMCommand(String processName, Properties vmprops) {
@@ -354,7 +421,6 @@ public class HostController implements HostManagement {
 	        
 	        Process process = processMap.get(processName.toUpperCase());
 	        if (process != null) {
-	            processMap.remove(processName.toUpperCase());
 	            process.destroy();
 	        }
 		}

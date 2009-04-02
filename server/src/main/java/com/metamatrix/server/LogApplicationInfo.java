@@ -123,6 +123,7 @@ class LogApplicationInfo implements Runnable {
             is.close();
             
         } catch (Exception e) {
+        	e.printStackTrace();
             System.err.println("Error writing application info to " + applFileName + ", msg: " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
             //Ignore, we are dieing anyway.
         } finally {
