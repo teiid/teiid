@@ -57,6 +57,10 @@ public class XMLConnector extends AbstractCachingConnector {
 	}
 
 	public Connection getConnection(ExecutionContext context) throws ConnectorException {
+		if(null == context) {
+			return null;
+		}
+		
 		if (m_state == null) {
 			throw new ConnectorException(Messages.getString("XMLConnector.state.not.set")); //$NON-NLS-1$
 		}
