@@ -97,11 +97,6 @@ class LogApplicationInfo implements Runnable {
             configprops = configmodel.getResource(ResourceNames.JGROUPS).getProperties();
             sb.append(PropertiesUtils.prettyPrint(configprops));
             
-            sb.append("\n---- WebServices Resource Properties ----\n");  //$NON-NLS-1$             
-            configprops = configmodel.getResource(ResourceNames.WEB_SERVICES).getProperties();
-            sb.append(PropertiesUtils.prettyPrint(configprops));
-            
-            
             sb.append(info.getClasspathInfo());
             
             

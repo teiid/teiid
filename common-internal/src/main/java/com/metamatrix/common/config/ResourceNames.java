@@ -38,7 +38,6 @@ public interface ResourceNames {
     public static final String MEMBERSHIP_SERVICE = "MembershipService"; //$NON-NLS-1$
     public static final String XA_TRANSACTION_MANAGER = "XATransactionManager"; //$NON-NLS-1$
     public static final String INDEXING_SERVICE = "IndexingService"; //$NON-NLS-1$
-    public static final String WEB_SERVICES = "WebServices"; //$NON-NLS-1$
     public static final String JGROUPS = "JGroups"; //$NON-NLS-1$
     public static final String SSL = "SSL"; //$NON-NLS-1$
 }
