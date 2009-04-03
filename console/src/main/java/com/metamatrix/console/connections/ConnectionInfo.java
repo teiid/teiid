@@ -42,7 +42,6 @@ import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.MetaMatrixProductNames;
-import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.HashCodeUtil;
@@ -60,60 +59,6 @@ public class ConnectionInfo {
     private String connectedPort;
     private MMURL mmurl;
     private ServerAdmin serverAdmin;
-    
-    // DEFAULT Initial delay before trying to connect
-    private static final long INIT_RETRY_DELAY_DEFAULT_VAL = 1000*10;
-    // DEFAULT number of milliseconds to wait between retries
-    private static final long MAX_RETRY_DELAY_DEFAULT_VAL = 1000;
-    // DEFAULT number of times the login should retry before giving up
-    private static final int MAX_RETRY_DEFAULT_VAL = 240;
-    
-    // Initial delay before trying to connect
-    private static long INIT_RETRY_DELAY_VAL = INIT_RETRY_DELAY_DEFAULT_VAL;
-    // The number of milliseconds to wait between retries
-    private static long MAX_RETRY_DELAY_VAL = MAX_RETRY_DELAY_DEFAULT_VAL;
-    // The number of times the login should retry before giving up
-    private static int MAX_RETRY_VAL = MAX_RETRY_DEFAULT_VAL;
-    
-    
-    static {
-        // Initial delay before trying to connect
-        long initRetryMS = -1;
-        try {
-            String initialRetryDelay = ConsolePlugin.Util.getString("ConnectionInfo.initialRetryDelayMS"); //$NON-NLS-1$
-            initRetryMS = Long.parseLong(initialRetryDelay);
-        } catch (NumberFormatException err) {
-            err.printStackTrace();
-        }
-        if(initRetryMS>0) {
-            INIT_RETRY_DELAY_VAL = initRetryMS;
-        } 
-        
-        //  The number of milliseconds to wait between retries
-        long retryDelayMS = -1;
-        try {
-            String retryDelayStr = ConsolePlugin.Util.getString("ConnectionInfo.retryDelayMS"); //$NON-NLS-1$
-            retryDelayMS = Long.parseLong(retryDelayStr);
-        } catch (NumberFormatException err) {
-            err.printStackTrace();
-        }
-        if(retryDelayMS>0) {
-            MAX_RETRY_DELAY_VAL = retryDelayMS;
-        } 
-          
-        // The number of times the login should retry before giving up
-        int maxRetrys = -1;
-        try {
-            String maxRetryStr = ConsolePlugin.Util.getString("ConnectionInfo.maxRetrys"); //$NON-NLS-1$
-            maxRetrys = Integer.parseInt(maxRetryStr);
-        } catch (NumberFormatException err) {
-            err.printStackTrace();
-        }
-        if(maxRetrys>0) {
-            MAX_RETRY_VAL = maxRetrys;
-        } 
-
-    }
     
 	public ConnectionInfo(String serverURL,
                           String user,
@@ -225,7 +170,7 @@ public class ConnectionInfo {
 	    }
 	    try {
             // Case 4793 - changed to true - network latency issues causing problems with reconnect
-            connection = relogin(true);
+            connection = relogin();
 
             return connection;
         } catch (MetaMatrixComponentException e) {
@@ -320,53 +265,31 @@ public class ConnectionInfo {
         return connection;
     }
 
-    private ServerConnection relogin(boolean sleepFirst) throws MetaMatrixComponentException {
+    public ServerConnection relogin() throws MetaMatrixComponentException {
 
-        if (sleepFirst) {
-	        try {
-	            Thread.sleep(INIT_RETRY_DELAY_VAL);
-	        } catch (InterruptedException ie) { /* Try again. */
-	        }
-        }
-        
-        
         close();
         
-                              
         Exception e = null;
         connection = null;
-        for (int i = 0; i < MAX_RETRY_VAL; i++) {
-            // Retry MAX_RETRY_VAL times...
+        try {              
+            connection = login();
+            boolean initSucceeded = ModelManager.init(this);    
 
-            try {              
-                connection = login();
-                boolean initSucceeded = ModelManager.init(this);    
-
-                if (initSucceeded) {
-                    return connection;
-                }                
-            } catch (Exception ex) {
-                e = ex;
-            }
-
-            // I guess we do not need to sleep at all
-            if (sleepFirst) {
-	            try {
-	                Thread.sleep(MAX_RETRY_DELAY_VAL);
-	            } catch (InterruptedException ie) { /* Try again. */
-	            }
-            }
-        }        
+            if (initSucceeded) {
+                return connection;
+            }                
+        } catch (Exception ex) {
+            e = ex;
+        }
         // If we're here we've retried the maximum number of times
         String msg = "Lost communication with Server."; //$NON-NLS-1$
+        if (e instanceof LogonException) {
+        	msg = "Current credentials are no longer valid.  This connection should be closed."; //$NON-NLS-1$
+        }
         ComponentCommunicationException cce = new ComponentCommunicationException(e, msg);
         throw cce;        
     }
-    
-    public ServerConnection relogin() throws MetaMatrixComponentException {
-        return relogin(true);
-    }
-    
+        
     
     /**
      * Close the underlying connection. 
