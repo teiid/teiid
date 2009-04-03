@@ -66,7 +66,6 @@ import com.metamatrix.core.util.TempDirectory;
 public class ExecAntExecution extends BasicExecution implements ResultSetExecution {
 
 	private static final Random random = new Random(System.currentTimeMillis());
-	private static TempDirectory TEMPDIR = null;
 
 	private static String INSTALL_DIR = ".";//$NON-NLS-1$
 
@@ -90,21 +89,6 @@ public class ExecAntExecution extends BasicExecution implements ResultSetExecuti
 
 	private List exclusionList;
 	private IQuery query;
-
-	static {
-		String hosttempdir = ".";//$NON-NLS-1$
-		try {
-			Host host = CurrentConfiguration.getInstance().getDefaultHost();
-			if ( host != null) {
-				INSTALL_DIR = host.getProperty(CommonPropertyNames.INSTALLATION_DIRECTORY);
-				hosttempdir = host.getTempDirectory();
-			} 
-			TEMPDIR = new TempDirectory(hosttempdir,System.currentTimeMillis(), random.nextLong());
-		} catch (Exception e) {
-			TEMPDIR = new TempDirectory(System.currentTimeMillis(), random.nextLong());
-		}
-		TEMPDIR.create();
-	}
 
 	public ExecAntExecution(IQuery query, ConnectorEnvironment env, RuntimeMetadata metadata, ConnectorLogger logger, List exclusionThese) {
 		this.env = env;
@@ -253,8 +237,6 @@ public class ExecAntExecution extends BasicExecution implements ResultSetExecuti
 	 */
 	public void close() throws ConnectorException {
 		// nothing to do
-
-		TEMPDIR.remove();
 
 		exclusionList = null;
 		responses = null;
