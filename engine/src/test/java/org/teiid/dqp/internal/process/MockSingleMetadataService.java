@@ -28,6 +28,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
@@ -58,5 +59,10 @@ public class MockSingleMetadataService implements MetadataService {
     public void stop() throws ApplicationLifecycleException {
 
     }
+
+	@Override
+	public IObjectSource getMetadataObjectSource(String vdbName,String vdbVersion) throws MetaMatrixComponentException {
+		return null;
+	}
 
 }

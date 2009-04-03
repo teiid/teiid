@@ -25,6 +25,8 @@ package com.metamatrix.dqp.service;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
@@ -70,5 +72,11 @@ public class FakeMetadataService extends FakeAbstractService implements Metadata
     public synchronized QueryMetadataInterface lookupMetadata(String vdbName, String vdbVersion) {
         return (QueryMetadataInterface) vdbMap.get(getKey(vdbName, vdbVersion));
     }
+
+	@Override
+	public IObjectSource getMetadataObjectSource(String vdbName,
+			String vdbVersion) throws MetaMatrixComponentException {
+		return null;
+	}
 
 }

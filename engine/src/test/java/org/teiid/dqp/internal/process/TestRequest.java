@@ -45,6 +45,7 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
+import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -283,6 +284,11 @@ public class TestRequest extends TestCase {
         public synchronized QueryMetadataInterface lookupMetadata(String vdbName, String vdbVersion) {
             return metadata;
         }
+
+		@Override
+		public IObjectSource getMetadataObjectSource(String vdbName,String vdbVersion) throws MetaMatrixComponentException {
+			return null;
+		}
     }
     
 }

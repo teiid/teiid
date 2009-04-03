@@ -34,7 +34,6 @@ import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
 import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
@@ -42,7 +41,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 /** 
  * @since 4.3
  */
-public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements MetadataService, IndexSelectorSource {
+public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements MetadataService {
 
     private QueryMetadataCache metadataCache = null;    
     private VDBLifeCycleListener listener = new VDBLifeCycleListener() {

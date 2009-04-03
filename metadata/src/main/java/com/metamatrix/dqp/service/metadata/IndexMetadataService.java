@@ -49,7 +49,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 /** 
  * @since 4.2
  */
-public class IndexMetadataService implements MetadataService, IndexSelectorSource {
+public class IndexMetadataService implements MetadataService {
 
     private VDBService vdbService;
     private boolean started = false;

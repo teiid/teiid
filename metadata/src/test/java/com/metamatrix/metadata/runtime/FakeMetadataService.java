@@ -40,7 +40,6 @@ import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.core.util.TempDirectoryMonitor;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
 import com.metamatrix.modeler.core.index.IndexSelector;
 import com.metamatrix.modeler.internal.core.index.CompositeIndexSelector;
 import com.metamatrix.modeler.internal.core.index.RuntimeIndexSelector;
@@ -48,7 +47,7 @@ import com.metamatrix.modeler.transformation.metadata.ServerMetadataFactory;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 
-public class FakeMetadataService implements ApplicationService, MetadataService, IndexSelectorSource {
+public class FakeMetadataService implements ApplicationService, MetadataService {
     private IndexSelector systemIndexSelector;
     private RuntimeIndexSelector runtimeIndexSelector;
     private boolean useOnlySystemVdb = false;
