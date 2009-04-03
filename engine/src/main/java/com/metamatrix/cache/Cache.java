@@ -28,7 +28,7 @@ import java.util.Set;
 
 
 /**
- * Federate abstraction over cache providers
+ * Abstraction over cache providers
  */
 public interface Cache<K, V>  {
 	
