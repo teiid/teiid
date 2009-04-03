@@ -462,6 +462,7 @@
 		<module>connector-metadata</module>
 		<module>cache-jbosscache</module>
 		<module>server-installer</module>
+		<module>hibernate-dialect</module>
 	</modules>
 	<distributionManagement>
 		<repository>
