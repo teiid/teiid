@@ -31,7 +31,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.connector.metadata.adapter.ObjectConnector;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.metadata.IndexSelectorSource;
+import com.metamatrix.dqp.service.MetadataService;
 
 /**
  * Connector whose source is metadata index files stored in vdbs aviailable to
@@ -45,8 +45,9 @@ public class IndexConnector extends ObjectConnector {
      */
     protected IObjectSource getMetadataObjectSource(final ExecutionContext context) throws ConnectorException {
         ConnectorEnvironmentImpl internalEnvironment = (ConnectorEnvironmentImpl) this.getEnvironment();
+        
         // lookup indesService
-        IndexSelectorSource metadataService = (IndexSelectorSource) internalEnvironment.findResource(DQPServiceNames.METADATA_SERVICE);
+        MetadataService metadataService = (MetadataService) internalEnvironment.findResource(DQPServiceNames.METADATA_SERVICE);
         
         try {
 			return metadataService.getMetadataObjectSource(context.getVirtualDatabaseName(), context.getVirtualDatabaseVersion());
