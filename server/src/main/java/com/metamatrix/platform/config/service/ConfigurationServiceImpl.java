@@ -117,8 +117,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     protected void closeService() throws Exception {
         String instanceName = this.getInstanceName().toString();
         LogManager.logDetail(CONTEXT, instanceName + ": closing"); //$NON-NLS-1$
-//        this.serviceIsClosed = true;
-        I18nLogManager.logInfo(CONTEXT, LogMessageKeys.CONFIG_0003, new Object[]{ instanceName});
     }
 
     /**

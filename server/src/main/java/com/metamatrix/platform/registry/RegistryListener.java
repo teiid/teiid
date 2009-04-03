@@ -24,4 +24,5 @@ package com.metamatrix.platform.registry;
 
 public interface RegistryListener {
 	void registryChanged();
+	void registryShutdown();
 }

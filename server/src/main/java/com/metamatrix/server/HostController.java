@@ -118,6 +118,7 @@ public class HostController implements HostManagement {
 					}
 				}
 			};
+			monitorThread.setDaemon(true);
 			monitorThread.start();
 		}
 		

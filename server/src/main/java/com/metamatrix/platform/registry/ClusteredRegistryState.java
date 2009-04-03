@@ -24,8 +24,9 @@ package com.metamatrix.platform.registry;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -46,7 +47,7 @@ public class ClusteredRegistryState implements CacheListener {
 	private static final String NAME = "Name"; //$NON-NLS-1$
 	
 	Cache cache;
-	private List<RegistryListener> listeners = Collections.synchronizedList(new ArrayList<RegistryListener>());
+	private Queue<RegistryListener> listeners = new ConcurrentLinkedQueue<RegistryListener>();
 	
 	@Inject
 	public ClusteredRegistryState(CacheFactory cacheFactory) {
@@ -320,6 +321,9 @@ public class ClusteredRegistryState implements CacheListener {
 	
 	public void shutdown() {
 		this.cache.removeListener();
+		for(RegistryListener l:this.listeners) {
+			l.registryShutdown();
+		}
 		this.listeners.clear();
 	}
 }

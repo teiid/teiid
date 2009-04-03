@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -201,8 +202,6 @@ public abstract class ProcessController implements ProcessManagement {
         this.registerSubSystemAdminAPIs(hostManagement);
         
         manageCommonExtensionClassloader();
-        
-        addShutdownHook();        
     }
 
 	
@@ -245,18 +244,6 @@ public abstract class ProcessController implements ProcessManagement {
     private void registerILogonAPI() throws ConfigurationException, ServiceException {
     	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getInstance().getClusterName()), LogCommonConstants.CTX_LOGON);
     }    
-
-	private void addShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-            	try {
-					shutdown(false);
-				} catch (Exception e) {
-					// ignore
-				}
-            }            	
-        });
-	}
     
     /**
      * Lazily get Current Configuration
@@ -796,25 +783,25 @@ public abstract class ProcessController implements ProcessManagement {
      */
     private void stopServices(boolean now, boolean shutdown) throws MultipleException {
 
-        MultipleException multipleException = new MultipleException();
-
         List<ServiceRegistryBinding> bindings = this.registry.getServiceBindings(host.getFullName(), this.processName);
+        
+        List<ServiceException> exceptions = new LinkedList<ServiceException>();
         
         for (ServiceRegistryBinding binding:bindings) {
             try {
                 stopService(binding, now, shutdown);
             } catch (ServiceException se) {
-                multipleException.getExceptions().add(se);
+            	exceptions.add(se);
             }
         }
 
-        int numExceptions = multipleException.getExceptions().size();
+        int numExceptions = exceptions.size();
         if (numExceptions == 1) {
             //if there is one ServiceException, throw it
-            throw (ServiceException) multipleException.getExceptions().get(0);
+            throw exceptions.get(0);
         } else if (numExceptions > 1) {
             //if there are many, throw the MultipleException containing all of them
-            throw multipleException;
+            throw new MultipleException(exceptions, "Multiple errors stopping services"); //$NON-NLS-1$
         }
     }
 

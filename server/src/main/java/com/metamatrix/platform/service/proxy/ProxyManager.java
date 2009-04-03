@@ -36,6 +36,7 @@ import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.RegistryListener;
+import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.ServiceMessages;
 import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.ServiceInterface;
@@ -49,7 +50,7 @@ import com.metamatrix.server.Configuration;
 public class ProxyManager implements RegistryListener{
 	
     // Map of all SelectionPolicies.
-    private Map<ServiceSelectionPolicyKey, ServiceSelectionPolicy> policyRegistry = new HashMap();
+    private Map<ServiceSelectionPolicyKey, ServiceSelectionPolicy> policyRegistry = new HashMap<ServiceSelectionPolicyKey, ServiceSelectionPolicy>();
 
     /**
      * Thread that updates the service instances of the service selection policies
@@ -71,7 +72,12 @@ public class ProxyManager implements RegistryListener{
     	this.registry.addListener(this);
     }
     
+    @Override
+    public void registryShutdown() {
+    	this.updatePool.shutdownNow();
+    }
     
+    @Override
 	public void registryChanged() {
     	updatePool.execute(new Runnable() {public void run() { doUpdate(); } });
 	}
@@ -214,8 +220,8 @@ public class ProxyManager implements RegistryListener{
      * @param serviceType The type of the service of interest.
      */
     private void setServiceInstances(ServiceSelectionPolicy policy, String serviceType) {
-        List localServiceBindings = this.registry.getActiveServiceBindings(this.hostName, this.processName, serviceType);
-        List serviceBindings = this.registry.getActiveServiceBindings(null, null, serviceType);
+        List<ServiceRegistryBinding> localServiceBindings = this.registry.getActiveServiceBindings(this.hostName, this.processName, serviceType);
+        List<ServiceRegistryBinding> serviceBindings = this.registry.getActiveServiceBindings(null, null, serviceType);
         serviceBindings.removeAll(localServiceBindings);
         policy.updateServices(localServiceBindings, serviceBindings);
     }
