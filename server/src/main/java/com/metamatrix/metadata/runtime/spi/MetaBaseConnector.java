@@ -24,10 +24,11 @@ package com.metamatrix.metadata.runtime.spi;
 
 import java.util.*;
 
+import com.metamatrix.common.connection.TransactionInterface;
 import com.metamatrix.metadata.runtime.api.*;
 import com.metamatrix.metadata.runtime.exception.*;
 
-public interface MetaBaseConnector extends RuntimeBaseConnector {
+public interface MetaBaseConnector extends TransactionInterface {
 
 /**
  * Set the <code>VirtualDatabase</code> status.
