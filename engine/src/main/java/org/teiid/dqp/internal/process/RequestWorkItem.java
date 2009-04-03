@@ -453,7 +453,7 @@ public class RequestWorkItem extends AbstractWorkItem {
             response.setSchemas(this.schemas);
             
             // send any warnings with the response object
-            List<Exception> responseWarnings = new ArrayList<Exception>();
+            List<Throwable> responseWarnings = new ArrayList<Throwable>();
     		List<Exception> currentWarnings = processor.getAndClearWarnings();
     	    if (currentWarnings != null) {
     	    	responseWarnings.addAll(currentWarnings);

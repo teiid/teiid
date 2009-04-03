@@ -44,12 +44,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.comm.api.Message;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ExceptionHolder;
 import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;

@@ -32,9 +32,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.batch.BatchSerializer;
-import com.metamatrix.common.comm.exception.ExceptionHolder;
 import com.metamatrix.core.util.ExternalizeUtil;
 
 /**
@@ -55,7 +55,7 @@ public class ResultsMessage implements Externalizable {
     private MetaMatrixException exception;
 
     /** Warning could be schema validation errors or partial results warnings */
-    private List<Exception> warnings;
+    private List<Throwable> warnings;
 
     /** Schemas associated with xml results. */
     private Collection schemas;
@@ -262,7 +262,7 @@ public class ResultsMessage implements Externalizable {
     /**
      * @param list
      */
-    public void setWarnings(List<Exception> list) {
+    public void setWarnings(List<Throwable> list) {
         warnings = list;
     }
 
@@ -346,10 +346,7 @@ public class ResultsMessage implements Externalizable {
         }
         List<ExceptionHolder> holderList = (List<ExceptionHolder>)in.readObject();
         if (holderList != null) {
-        	this.warnings = new ArrayList<Exception>(holderList.size());
-        	for (ExceptionHolder exceptionHolder : holderList) {
-        		this.warnings.add((Exception)exceptionHolder.getException());
-			}
+        	this.warnings = ExceptionHolder.toThrowables(holderList);
         }
 
         //Schemas
@@ -389,11 +386,7 @@ public class ResultsMessage implements Externalizable {
         	out.writeObject(exception);
         }
         if (this.warnings != null) {
-        	List<ExceptionHolder> replcement = new ArrayList<ExceptionHolder>(this.warnings.size());
-        	for (Exception warning : warnings) {
-				replcement.add(new ExceptionHolder(warning));
-			}
-        	out.writeObject(replcement);
+        	out.writeObject(ExceptionHolder.toExceptionHolders(this.warnings));
         } else {
         	out.writeObject(this.warnings);
         }

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.comm.platform.socket;
+package com.metamatrix.core.util;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -36,10 +36,10 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
+import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.Message;
-import com.metamatrix.common.comm.exception.ExceptionHolder;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.comm.platform.socket.client.ServiceInvocationStruct;
 import com.metamatrix.common.log.LogManager;

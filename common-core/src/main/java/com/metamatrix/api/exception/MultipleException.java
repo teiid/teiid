@@ -22,27 +22,28 @@
 
 package com.metamatrix.api.exception;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.*;
 
 /**
  * Exception that represents the occurrence of multiple exceptions.
  */
-public class MultipleException extends Exception {
-    // =========================================================================
-    //                       C O N S T R U C T O R S
-    // =========================================================================
+public class MultipleException extends Exception implements Externalizable {
 
-//    private int attribute1;
-    /**
+	/**
      *The set of Throwable instances that make up this exception
      * @link aggregation
      * @associates <b>java.lang.Throwable</b>
      * @supplierCardinality 1..*
      */
-    private List throwablesList = new ArrayList();
+    private List throwablesList = null;
 
     /** An error code. */
     private String code;
+    
     /** Construct a default instance of this class. */
     public MultipleException() {
         super();
@@ -139,5 +140,17 @@ public class MultipleException extends Exception {
     public void setExceptions( Collection throwables ){
         this.throwablesList = new ArrayList(throwables);
     }
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,ClassNotFoundException {
+		this.code = (String)in.readObject();
+		this.throwablesList = ExceptionHolder.toThrowables((List<ExceptionHolder>)in.readObject());
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(code);
+		out.writeObject(ExceptionHolder.toExceptionHolders(throwablesList));
+	}
 }
 
