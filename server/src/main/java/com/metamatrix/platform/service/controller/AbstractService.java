@@ -587,6 +587,9 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      *      */
     public void setInitException(Throwable error) {
     	this.initException = error;
+    	if (error != null) {
+    		state = ServiceState.STATE_INIT_FAILED;
+    	}
     }
 
     public Throwable getInitException() {
