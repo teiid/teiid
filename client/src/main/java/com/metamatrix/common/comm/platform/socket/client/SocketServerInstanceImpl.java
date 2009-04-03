@@ -106,6 +106,11 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     }
     
     @Override
+    public HostInfo getHostInfo() {
+    	return this.hostInfo;
+    }
+    
+    @Override
     public SocketAddress getRemoteAddress() {
     	return this.socketChannel.getRemoteAddress();
     }

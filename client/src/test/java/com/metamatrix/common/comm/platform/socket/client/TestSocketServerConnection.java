@@ -78,7 +78,7 @@ public class TestSocketServerConnection extends TestCase {
 				Properties connectionProperties)
 				throws LogonException,
 				MetaMatrixComponentException {
-			return new LogonResult(new MetaMatrixSessionID(1), "fooUser", new Properties(), 1, "fake"); //$NON-NLS-1$ //$NON-NLS-2$
+			return new LogonResult(new MetaMatrixSessionID(1), "fooUser", new Properties(), "fake"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		@Override

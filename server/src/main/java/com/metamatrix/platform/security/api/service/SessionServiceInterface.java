@@ -55,7 +55,7 @@ import com.metamatrix.platform.service.api.ServiceInterface;
  * </p>
  */
 public interface SessionServiceInterface extends ServiceInterface {
-    public static String NAME = "SessionService";
+    public static String NAME = "SessionService"; //$NON-NLS-1$
 
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.
@@ -154,5 +154,4 @@ public interface SessionServiceInterface extends ServiceInterface {
      */
     public void pingServer(MetaMatrixSessionID sessionID) throws InvalidSessionException;
     
-    public long getPingInterval();
 }

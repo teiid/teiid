@@ -24,6 +24,7 @@ package com.metamatrix.common.comm.platform.socket.client;
 
 import java.net.SocketAddress;
 
+import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.util.crypto.Cryptor;
 
 public interface SocketServerInstance {
@@ -33,6 +34,8 @@ public interface SocketServerInstance {
 	void shutdown();
 
 	SocketAddress getRemoteAddress();
+	
+	HostInfo getHostInfo();
 	
 	boolean isOpen();
 	

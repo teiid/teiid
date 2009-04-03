@@ -36,9 +36,7 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
     private SessionToken sessionToken;  // immutable
     private long lastPingTime;
     private long timeCreated;
-    private long timeStateChanged;
     private String applicationName;
-    private int state;
     private String product;
     private Properties productInfo;
     private String clientIp;
@@ -49,11 +47,10 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
      * Master constructor, allows a MetaMatrixSessionInfo to be created with
      * any state and any timestamps.
      */
-    public MetaMatrixSessionInfo(MetaMatrixSessionID sessionID, String userName, long timeCreated, String applicationName, int state, String clusterName, Properties productInfo, String product, String clientIp, String clientHostname){
+    public MetaMatrixSessionInfo(MetaMatrixSessionID sessionID, String userName, long timeCreated, String applicationName, Properties productInfo, String product, String clientIp, String clientHostname){
         this.timeCreated = timeCreated;
         this.lastPingTime = timeCreated;
         this.applicationName = applicationName;
-        this.state = state;
         this.product = product;
         this.sessionToken = new SessionToken(sessionID, userName);
         this.productInfo = productInfo;
@@ -100,16 +97,8 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
         return this.product;
     }
 
-    public boolean isOpen() {
-        return (this.state == MetaMatrixSessionState.ACTIVE);
-    }
-
     public SessionToken getSessionToken(){
         return this.sessionToken;
-    }
-
-    public int getState(){
-        return this.state;
     }
 
     /**
@@ -135,12 +124,8 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
         s.append(", "); //$NON-NLS-1$
         s.append("application:"); //$NON-NLS-1$
         s.append(this.applicationName);
-        s.append(", state:"); //$NON-NLS-1$
-        s.append(this.state);
         s.append(", created:"); //$NON-NLS-1$
         s.append(this.timeCreated);
-        s.append(", state changed:"); //$NON-NLS-1$
-        s.append(this.timeStateChanged);
         s.append(", last pinged server:"); //$NON-NLS-1$
         s.append(this.lastPingTime);
         s.append("]"); //$NON-NLS-1$

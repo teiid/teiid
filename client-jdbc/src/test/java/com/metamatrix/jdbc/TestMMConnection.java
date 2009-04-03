@@ -45,10 +45,9 @@ public class TestMMConnection extends TestCase {
 
     public TestMMConnection(String name) {
         super(name);
-        System.setProperty("metamatrix.config.none", "true");
     }
     
-    public static MMServerConnection getMMConnection() throws SQLException {
+    public static MMServerConnection getMMConnection() {
     	ServerConnection mock = mock(ServerConnection.class);
     	stub(mock.getService(ClientSideDQP.class)).toReturn(mock(ClientSideDQP.class));
     	Properties props = new Properties();
@@ -58,7 +57,7 @@ public class TestMMConnection extends TestCase {
     	Properties productInfo = new Properties();
     	productInfo.setProperty(ProductInfoConstants.VIRTUAL_DB, STD_DATABASE_NAME);
     	productInfo.setProperty(ProductInfoConstants.VDB_VERSION, STD_DATABASE_VERSION);
-    	stub(mock.getLogonResult()).toReturn(new LogonResult(new MetaMatrixSessionID(1), "metamatrixadmin", productInfo, 1, "fake")); //$NON-NLS-1$
+    	stub(mock.getLogonResult()).toReturn(new LogonResult(new MetaMatrixSessionID(1), "metamatrixadmin", productInfo, "fake")); //$NON-NLS-1$
     	return new MMServerConnection(mock, props, serverUrl);
     }
 

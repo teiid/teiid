@@ -42,6 +42,7 @@ public class VMStatisticsPanel extends JPanel{
     private QueueStatisticsRefreshRequestHandler controller;
     private ProcessStatistics vmStatistics;
     private ProcessVMStatisticsPanel processPanel;
+    private SingleQueueStatisticsPanel queuePanel;
     private SocketVMStatisticsPanel socketPanel;
     private AbstractButton closeButton;
     
@@ -83,10 +84,13 @@ public class VMStatisticsPanel extends JPanel{
         JPanel statsPanel = new JPanel(statsLayout);
         processPanel = new ProcessVMStatisticsPanel(vmStatistics.name);
         processPanel.populate(vmStatistics);
+        queuePanel = new SingleQueueStatisticsPanel("Socket Worker");
+        queuePanel.populate(vmStatistics.processPoolStats);
         socketPanel = new SocketVMStatisticsPanel();
         socketPanel.populate(vmStatistics);
         
         statsPanel.add(processPanel);
+        statsPanel.add(queuePanel);
         statsPanel.add(socketPanel);
         
         this.add(statsPanel);
@@ -100,6 +104,9 @@ public class VMStatisticsPanel extends JPanel{
         statsLayout.setConstraints(processPanel, new GridBagConstraints(0, 0, 1, 1,
             1.0, 1.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
             new Insets(4, 4, 4, 4), 0, 0));
+        statsLayout.setConstraints(queuePanel, new GridBagConstraints(0, 1, 1, 1,
+            0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
+            new Insets(4, 4, 4, 4), 0, 0));        
         statsLayout.setConstraints(socketPanel, new GridBagConstraints(0, 2, 1, 1,
             0.0, 0.0, GridBagConstraints.CENTER, GridBagConstraints.BOTH,
             new Insets(4, 4, 4, 4), 0, 0));
@@ -116,6 +123,7 @@ public class VMStatisticsPanel extends JPanel{
     public void repopulate(ProcessStatistics vmStat) {
         vmStatistics = vmStat;
         processPanel.populate(vmStatistics);
+        queuePanel.populate(vmStatistics.processPoolStats);
         socketPanel.populate(vmStatistics);
     }
 
@@ -166,8 +174,6 @@ class SocketVMStatisticsPanel extends AbstractStatisticsPanel<ProcessStatistics>
         "Message Packets Written",
         "Num. Sockets",
         "Highest Num. Sockets",
-        "Current Thread Count",
-        "Highest Thread Count",
     };
     
     
@@ -192,8 +198,6 @@ class SocketVMStatisticsPanel extends AbstractStatisticsPanel<ProcessStatistics>
         textFieldWidgets[1].setText(Long.toString(listenerStats.objectsWritten));
         textFieldWidgets[2].setText(Integer.toString(listenerStats.sockets));
         textFieldWidgets[3].setText(Integer.toString(listenerStats.maxSockets));
-        textFieldWidgets[4].setText(Integer.toString(vmStats.processPoolStats.getActiveThreads()));
-        textFieldWidgets[5].setText(Integer.toString(vmStats.processPoolStats.getHighestActiveThreads()));
     }
 
 }

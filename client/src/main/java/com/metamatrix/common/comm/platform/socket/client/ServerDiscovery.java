@@ -31,27 +31,39 @@ import com.metamatrix.platform.security.api.LogonResult;
 
 /**
  * Customizable ServerDiscovery interface
- * 
- * TODO: add knowledge of the cluster/ServerConnection in the getKnownHosts calls 
  */
 public interface ServerDiscovery {
 	
+	/**
+	 * Initialize the {@link ServerDiscovery}
+	 * @param url
+	 * @param p
+	 */
 	void init(MMURL url, Properties p);
 	
-	List<HostInfo> getKnownHosts();
-	
-	void connectionSuccessful(HostInfo info, SocketServerInstance instance);
-	
-	void markInstanceAsBad(HostInfo info);
-	
-	void shutdown();
+	/**
+	 * Get the currently known hosts. 
+	 * @param result, the current {@link LogonResult} - may be null if unauthenticated 
+	 * @param instance, the currently connected instance - may be null if not connected
+	 * @return
+	 */
+	List<HostInfo> getKnownHosts(LogonResult result, SocketServerInstance instance);
 	
 	/**
-	 * Sets the {@link LogonResult} after authentication.  The {@link LogonResult} will contain information
-	 * such as the cluster name that can be used for more efficient discovery.
-	 * @param result
-	 * @return <code>true</code> if the connection should select another instance after logon.
+	 * Indicates that a connection was made successfully to the given host.
+	 * @param info
 	 */
-	boolean setLogonResult(LogonResult result);
+	void connectionSuccessful(HostInfo info);
 	
+	/**
+	 * Indicates that a connection could not be made to the given host.
+	 * @param info
+	 */
+	void markInstanceAsBad(HostInfo info);
+	
+	/**
+	 * Shutdown this {@link ServerDiscovery}
+	 */
+	void shutdown();
+		
 }

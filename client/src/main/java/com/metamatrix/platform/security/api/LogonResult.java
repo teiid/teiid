@@ -40,7 +40,6 @@ public class LogonResult implements Serializable {
     private TimeZone timeZone = TimeZone.getDefault();
     private final Properties productInfo;
     private String userName;
-    private long pingInterval;
     private String clusterName;
 
     public LogonResult() {
@@ -48,11 +47,10 @@ public class LogonResult implements Serializable {
 	}
     
     public LogonResult(MetaMatrixSessionID sessionID,
-			String userName, Properties productInfo, long pingInterval, String clusterName) {
+			String userName, Properties productInfo, String clusterName) {
 		this.sessionID = sessionID;
 		this.userName = userName;
 		this.productInfo = productInfo;
-		this.pingInterval = pingInterval;
 		this.clusterName = clusterName;
 	}
 
@@ -75,10 +73,6 @@ public class LogonResult implements Serializable {
 
 	public String getUserName() {
 		return userName;
-	}
-
-	public long getPingInterval() {
-		return pingInterval;
 	}
 
 	public String getClusterName() {

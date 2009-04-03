@@ -44,7 +44,8 @@ public class UrlServerDiscovery implements ServerDiscovery {
 	}
 	
 	@Override
-	public List<HostInfo> getKnownHosts() {
+	public List<HostInfo> getKnownHosts(LogonResult result,
+			SocketServerInstance instance) {
 		return url.getHostInfo();
 	}
 
@@ -52,10 +53,9 @@ public class UrlServerDiscovery implements ServerDiscovery {
 	public void init(MMURL url, Properties p) {
 		this.url = url;
 	}
-
+	
 	@Override
-	public void connectionSuccessful(HostInfo info,
-			SocketServerInstance instance) {
+	public void connectionSuccessful(HostInfo info) {
 		
 	}
 
@@ -63,12 +63,7 @@ public class UrlServerDiscovery implements ServerDiscovery {
 	public void markInstanceAsBad(HostInfo info) {
 		
 	}
-
-	@Override
-	public boolean setLogonResult(LogonResult result) {
-		return false;
-	}
-	
+		
 	@Override
 	public void shutdown() {
 		

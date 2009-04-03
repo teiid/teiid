@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.comm.platform.socket.client;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -42,33 +43,36 @@ public class TestAdminApiServerDiscovery extends TestCase {
 		AdminApiServerDiscovery discovery = new AdminApiServerDiscovery();
 		Properties p = new Properties();
 		p.setProperty(AdminApiServerDiscovery.USE_URL_HOST, Boolean.TRUE.toString());
-		MMURL mmurl = new MMURL("foo", 1, false);
+		MMURL mmurl = new MMURL("foo", 1, false); //$NON-NLS-1$
 		discovery.init(mmurl, p);
-		
+		HostInfo knownHost = mmurl.getHostInfo().get(0);
 		//we will start off using the url host
-		assertEquals(1, discovery.getKnownHosts().size()); 
+		assertEquals(1, discovery.getKnownHosts(null, null).size()); 
 		
 		SocketServerInstance instance = Mockito.mock(SocketServerInstance.class);
 		ServerAdmin serverAdmin = Mockito.mock(ServerAdmin.class);
 		
 		List<ProcessObject> processes = new ArrayList<ProcessObject>();
 		ProcessObject p1 = Mockito.mock(ProcessObject.class);
-		Mockito.stub(p1.isEnabled()).toReturn(false);
 		Mockito.stub(p1.getPort()).toReturn(5);
 		processes.add(p1);
 		ProcessObject p2 = Mockito.mock(ProcessObject.class);
 		Mockito.stub(p2.isEnabled()).toReturn(true);
+		Mockito.stub(p2.isRunning()).toReturn(true);
 		Mockito.stub(p2.getPort()).toReturn(6);
+		Mockito.stub(p2.getInetAddress()).toReturn(InetAddress.getByName("0.0.0.0")); //$NON-NLS-1$
 		processes.add(p2);
-		
-		Mockito.stub(serverAdmin.getProcesses("*")).toReturn(processes);
+		Mockito.stub(serverAdmin.getProcesses("*")).toReturn(processes); //$NON-NLS-1$
 		Mockito.stub(instance.getService(ServerAdmin.class)).toReturn(serverAdmin);
-		discovery.connectionSuccessful(discovery.getKnownHosts().get(0), instance);
-		discovery.setLogonResult(new LogonResult());
-		List<HostInfo> knownHosts = discovery.getKnownHosts();
+		Mockito.stub(instance.getHostInfo()).toReturn(knownHost);
+		
+		discovery.connectionSuccessful(knownHost);
+		List<HostInfo> knownHosts = discovery.getKnownHosts(new LogonResult(), instance);
+		
 		assertEquals(1, knownHosts.size());
 		HostInfo h = knownHosts.get(0);
-		assertEquals("foo", h.getHostName());
+		//the returned host should have the url name, but the process port
+		assertEquals("foo", h.getHostName()); //$NON-NLS-1$
 		assertEquals(6, h.getPortNumber());
 	}
 	

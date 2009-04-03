@@ -38,11 +38,10 @@ import java.util.Timer;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
@@ -67,7 +66,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	private static final String URL = "URL"; //$NON-NLS-1$
 	
 	private static SocketServerConnectionFactory INSTANCE;
-	
+	private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
+
 	private final class ShutdownHandler implements InvocationHandler {
 		private final CachedInstance key;
 
@@ -200,11 +200,8 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 					Future<?> success = logon.ping();
 					success.get(this.channelFactory.getSoTimeout(), TimeUnit.MICROSECONDS);
 					valid = true;
-				} catch (MetaMatrixComponentException e) {
-				} catch (InvalidSessionException e) {
-				} catch (InterruptedException e) {
-				} catch (ExecutionException e) {
-				} catch (TimeoutException e) {
+				} catch (Exception e) {
+					log.log(Level.FINE, "Error performing ping, will select another instance", e); //$NON-NLS-1$
 				}
 				if (valid) {
 					return instance.proxy;

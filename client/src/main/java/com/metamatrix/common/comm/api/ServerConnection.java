@@ -25,6 +25,8 @@ package com.metamatrix.common.comm.api;
 import com.metamatrix.platform.security.api.LogonResult;
 
 public interface ServerConnection {
+	
+	public static final int PING_INTERVAL = 120000;
 
 	<T> T getService(Class<T> iface);
 	

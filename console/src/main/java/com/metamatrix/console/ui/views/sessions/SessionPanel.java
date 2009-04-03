@@ -76,7 +76,6 @@ import com.metamatrix.console.util.StaticProperties;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
-import com.metamatrix.platform.security.api.MetaMatrixSessionState;
 import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.toolbox.ui.widget.TableWidget;
 import com.metamatrix.toolbox.ui.widget.table.EnhancedTableColumn;
@@ -400,23 +399,7 @@ public class SessionPanel
             }
 		    
 		    data[i][SessionTableModel.VDB_VERSION_COLUMN_NUM] = vdbVersStr;
-		    String sessionState;
-		    switch (u.getState()){
-		        case MetaMatrixSessionState.EXPIRED:
-		            sessionState = EXPIRED_TEXT; 
-		            break;
-		        case MetaMatrixSessionState.ACTIVE:
-		            sessionState = ACTIVE_TEXT; 
-		            break;
-		        case MetaMatrixSessionState.CLOSED:
-		            sessionState = CLOSED_TEXT; 
-		            break;
-		        case MetaMatrixSessionState.TERMINATED:
-		            sessionState = TERMINATED_TEXT; 
-		            break;
-		        default:
-		            sessionState = DEFAULT_TEXT; 
-		    }
+		    String sessionState = ACTIVE_TEXT;  
 		    data[i][SessionTableModel.STATE_COLUMN_NUM] = sessionState;
 		    data[i][SessionTableModel.PRODUCT_COLUMN_NUM]= u.getProductName();
 		

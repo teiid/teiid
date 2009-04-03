@@ -92,6 +92,7 @@ import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
+import com.metamatrix.platform.security.api.MetaMatrixSessionState;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.ProductInfoConstants;
@@ -920,7 +921,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        session.setVDBVersion(vdbVersionString); 
 			        session.setProductName(info.getProductName()); 
 			        session.setLastPingTime(info.getLastPingTime());
-			        session.setSessionState(info.getState());
+			        session.setSessionState(MetaMatrixSessionState.ACTIVE);
 			        session.setIPAddress(info.getClientIp());
 			        session.setHostName(info.getClientHostname());
 			        results.add(session);

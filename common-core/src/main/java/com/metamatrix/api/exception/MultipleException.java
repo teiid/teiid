@@ -44,42 +44,6 @@ public class MultipleException extends Exception implements Externalizable {
     /** An error code. */
     private String code;
     
-    /** Construct a default instance of this class. */
-    public MultipleException() {
-        super();
-    }
-
-    /**
-     * Construct an instance with the error message specified.
-     *
-     * @param message The error message
-     */
-    public MultipleException( String message ) {
-        super( message );
-    }
-
-    /**
-     * Construct an instance with an error code and message specified.
-     *
-     * @param message The error message
-     * @param code    The error code
-     */
-    public MultipleException( String code, String message ) {
-        super( message );
-        setCode( code );
-    }
-
-    /**
-     * Construct an instance with the set of exceptions specified.
-     *
-     * @param throwables the set of exceptions that is to comprise
-     * this exception
-     */
-    public MultipleException( Collection throwables ) {
-        super();
-        setExceptions(throwables);
-    }
-
     /**
      * Construct an instance with the set of exceptions and error message
      * specified.
@@ -89,8 +53,7 @@ public class MultipleException extends Exception implements Externalizable {
      * @param message The error message
      */
     public MultipleException( Collection throwables, String message ) {
-        super( message );
-        setExceptions(throwables);
+        this( throwables, null, message );
     }
 
     /**
@@ -102,9 +65,9 @@ public class MultipleException extends Exception implements Externalizable {
      * @param message The error message
      * @param code    The error code
      */
-    public MultipleException( Collection throwables, String code, String message ) {
+    public MultipleException( Collection<Throwable> throwables, String code, String message ) {
         super( message );
-        setExceptions(throwables);
+        this.throwablesList = Collections.unmodifiableList(new ArrayList<Throwable>(throwables));
         setCode( code );
     }
 
@@ -130,15 +93,6 @@ public class MultipleException extends Exception implements Externalizable {
      */
     public List getExceptions() {
     	return this.throwablesList;
-    }
-
-    /**
-     * Set the exceptions that comprise this exception.
-     * @param throwables the set of exceptions that is to comprise
-     * this exception
-     */
-    public void setExceptions( Collection throwables ){
-        this.throwablesList = new ArrayList(throwables);
     }
 
 	@Override

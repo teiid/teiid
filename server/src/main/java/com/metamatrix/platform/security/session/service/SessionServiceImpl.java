@@ -44,6 +44,7 @@ import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.CacheConfiguration.Policy;
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.log.LogManager;
@@ -62,7 +63,6 @@ import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
-import com.metamatrix.platform.security.api.MetaMatrixSessionState;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionTerminationHandler;
@@ -91,13 +91,10 @@ public class SessionServiceImpl extends AbstractService implements
     private static final String SESSION_TIME_LIMIT = "metamatrix.session.time.limit"; //$NON-NLS-1$
     public static final String SESSION_MONITOR_ACTIVITY_INTERVAL = "metamatrix.session.sessionMonitor.ActivityInterval"; //$NON-NLS-1$
 
-    private static long CLIENT_PING_INTERVAL = 600000;
-
     private MembershipServiceInterface membershipService;
     private Cache<MetaMatrixSessionID, MetaMatrixSessionInfo> sessionCache;
     private long sessionMaxLimit;
     private long sessionTimeLimit;
-    private String clusterName;
     
     // Product name -> ServiceTerminationHandler
     private Map<String, SessionTerminationHandler> terminationHandlerMap = new HashMap<String, SessionTerminationHandler>();
@@ -128,21 +125,20 @@ public class SessionServiceImpl extends AbstractService implements
         Properties nextProperties = config.getProperties();
         this.sessionMaxLimit = PropertiesUtils.getIntProperty(nextProperties, MAX_ACTIVE_SESSIONS, 0);
         this.sessionTimeLimit = PropertiesUtils.getIntProperty(nextProperties, SESSION_TIME_LIMIT, 0) * 60000;
-        this.clusterName = CurrentConfiguration.getInstance().getClusterName();
         this.sessionMonitor = new Timer("SessionMonitor", true); //$NON-NLS-1$
         this.sessionMonitor.schedule(new TimerTask() {
         	@Override
         	public void run() {
         		monitorSessions();
         	}
-        }, this.sessionTimeLimit > 0 ? this.sessionTimeLimit : CLIENT_PING_INTERVAL * 4, CLIENT_PING_INTERVAL);
+        }, 0, ServerConnection.PING_INTERVAL * 5);
     }
 
     private void monitorSessions() {
 		long currentTime = System.currentTimeMillis();
 		for (MetaMatrixSessionInfo info : sessionCache.values()) {
 			try {
-    			if (currentTime - info.getLastPingTime() > CLIENT_PING_INTERVAL * 4) {
+    			if (currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
     				LogManager.logInfo(LogSecurityConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionID())); //$NON-NLS-1$
     				closeSession(info.getSessionID());
     			} else if (sessionTimeLimit > 0 && currentTime - info.getTimeCreated() > sessionTimeLimit) {
@@ -269,11 +265,9 @@ public class SessionServiceImpl extends AbstractService implements
         										authenticatedUserName,
         										creationTime,
         										applicationName,
-        										MetaMatrixSessionState.ACTIVE,
-                                                clusterName,
-                                                productInfo,
-        										productName, 
-        										properties.getProperty(MMURL.CONNECTION.CLIENT_IP_ADDRESS), 
+        										productInfo,
+                                                productName,
+                                                properties.getProperty(MMURL.CONNECTION.CLIENT_IP_ADDRESS),
         										properties.getProperty(MMURL.CONNECTION.CLIENT_HOSTNAME));
         newSession.setTrustedToken(trustedToken);
         if (this.sessionCache.put(newSession.getSessionID(), newSession) != null) {
@@ -345,11 +339,6 @@ public class SessionServiceImpl extends AbstractService implements
 	@Override
 	public int getActiveSessionsCount() throws SessionServiceException{
 		return this.sessionCache.size();
-	}
-
-	@Override
-	public long getPingInterval() {
-		return CLIENT_PING_INTERVAL;
 	}
 
 	@Override
@@ -428,10 +417,6 @@ public class SessionServiceImpl extends AbstractService implements
 	void setSessionCache(
 			Cache<MetaMatrixSessionID, MetaMatrixSessionInfo> sessionCache) {
 		this.sessionCache = sessionCache;
-	}
-
-	void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
 	}
 
 }

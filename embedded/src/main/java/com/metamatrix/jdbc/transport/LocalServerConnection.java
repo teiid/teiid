@@ -49,7 +49,7 @@ public class LocalServerConnection implements ServerConnection {
 	private ServerConnectionListener listener;
 
 	public LocalServerConnection(MetaMatrixSessionID sessionId, Properties connectionProperties, ClientSideDQP dqp, ServerConnectionListener listener) {
-		result = new LogonResult(sessionId, connectionProperties.getProperty(MMURL.CONNECTION.USER_NAME), connectionProperties, -1, "local"); //$NON-NLS-1$
+		result = new LogonResult(sessionId, connectionProperties.getProperty(MMURL.CONNECTION.USER_NAME), connectionProperties, "local"); //$NON-NLS-1$
 		
 		//Initialize the workContext
 		workContext = new DQPWorkContext();

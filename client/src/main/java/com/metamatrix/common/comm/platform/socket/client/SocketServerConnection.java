@@ -94,8 +94,27 @@ public class SocketServerConnection implements ServerConnection {
         authenticate(); 
         
         this.pingTimer = pingTimer;
-        if (this.pingTimer != null && logonResult.getPingInterval() > 0) {
-        	schedulePing();
+        schedulePing();
+	}
+
+	private void schedulePing() {
+		if (this.pingTimer != null) {
+        	this.pingTimer.schedule(new TimerTask() {
+    			@Override
+    			public void run() {
+    				try {
+    					if (isOpen()) {
+    						logon.ping();
+    						return;
+    					} 
+    				} catch (InvalidSessionException e) {
+    					shutdown();
+    				} catch (MetaMatrixComponentException e) {
+    					shutdown();
+    				} 
+    				this.cancel();
+    			}
+        	}, PING_INTERVAL, PING_INTERVAL);
         }
 	}
 	
@@ -113,9 +132,9 @@ public class SocketServerConnection implements ServerConnection {
 			if (this.serverInstance.isOpen()) {
 				return this.serverInstance;
 			}
-			closeServerInstance();
 		}
-		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts());
+		List<HostInfo> hostKeys = new ArrayList<HostInfo>(this.serverDiscovery.getKnownHosts(logonResult, this.serverInstance));
+		closeServerInstance();
 		List<HostInfo> hostCopy = new ArrayList<HostInfo>(hostKeys);
 		int knownHosts = hostKeys.size();
 		while (hostKeys.size() > 0) {
@@ -128,7 +147,7 @@ public class SocketServerConnection implements ServerConnection {
 					ILogon newLogon = instance.getService(ILogon.class);
 					newLogon.assertIdentity(logonResult.getSessionID());
 				}
-				this.serverDiscovery.connectionSuccessful(hostInfo, instance);
+				this.serverDiscovery.connectionSuccessful(hostInfo);
 				this.serverInstance = instance;
 				return this.serverInstance;
 			} catch (IOException e) {
@@ -158,7 +177,8 @@ public class SocketServerConnection implements ServerConnection {
         // Log on to server
         try {
             this.logonResult = logon.logon(connProps);
-            if (this.serverDiscovery.setLogonResult(this.logonResult)) {
+            if (this.serverDiscovery.getKnownHosts(logonResult, this.serverInstance).size() > 1) {
+            	//if there are multiple instances, allow for load-balancing
             	closeServerInstance();
             }
             return;
@@ -172,25 +192,6 @@ public class SocketServerConnection implements ServerConnection {
         	}
             throw new CommunicationException(e, CommPlatformPlugin.Util.getString("PlatformServerConnectionFactory.Unable_to_find_a_component_used_in_logging_on_to_MetaMatrix")); //$NON-NLS-1$
         } 	
-	}
-	
-	private void schedulePing() {
-		this.pingTimer.schedule(new TimerTask() {
-
-			@Override
-			public void run() {
-				try {
-					if (isOpen()) {
-						logon.ping();
-						schedulePing();
-					}
-				} catch (InvalidSessionException e) {
-					shutdown();
-				} catch (MetaMatrixComponentException e) {
-					shutdown();
-				}
-				
-			}}, logonResult.getPingInterval());
 	}
 	
 	class ServerConnectionInvocationHandler implements InvocationHandler {

@@ -24,7 +24,10 @@ package com.metamatrix.common.comm.platform.socket.client;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.admin.api.exception.AdminException;
@@ -36,7 +39,6 @@ import com.metamatrix.platform.security.api.LogonResult;
 
 /**
  * Will discover hosts based upon an anon admin api call.
- * TODO: perform active polling
  */
 public class AdminApiServerDiscovery extends UrlServerDiscovery {
 	
@@ -46,62 +48,56 @@ public class AdminApiServerDiscovery extends UrlServerDiscovery {
 	 */
 	public static final String USE_URL_HOST = "AdminApiServerDiscovery.useUrlHost"; //$NON-NLS-1$
 	
-	private volatile List<HostInfo> knownHosts;
+	public static final int DISCOVERY_TIMEOUT = 120000;
 	
-	private volatile boolean discoveredHosts;
-	private volatile boolean authenticated;
+	static class ClusterInfo {
+		volatile long lastDiscoveryTime;
+		volatile List<HostInfo> knownHosts = new ArrayList<HostInfo>();
+	}
 	
-	private HostInfo lastHostInfo;
-	private SocketServerInstance lastServerInstance;
+	private static Map<String, ClusterInfo> clusterInfo = Collections.synchronizedMap(new HashMap<String, ClusterInfo>());
 	
 	private boolean useUrlHost;
 	
 	@Override
-	public List<HostInfo> getKnownHosts() {
-		if (!discoveredHosts) {
-			return super.getKnownHosts();
-		}
-		return knownHosts;
-	}
-	
-	@Override
 	public void init(MMURL url, Properties p) {
 		super.init(url, p);
+		//TODO: this could be on a per cluster basis
 		useUrlHost = Boolean.valueOf(p.getProperty(USE_URL_HOST)).booleanValue();
-	}
-		
-	@Override
-	public synchronized void connectionSuccessful(HostInfo info, SocketServerInstance instance) {
-		super.connectionSuccessful(info, instance);
-		this.lastHostInfo = info;
-		this.lastServerInstance = instance;
-		discoverHosts();
-	}
-
-	private synchronized void discoverHosts() {
-		if (discoveredHosts || !authenticated) {
-			return;
-		}
-		ServerAdmin serverAdmin = lastServerInstance.getService(ServerAdmin.class);
-		try {
-			Collection<ProcessObject> processes = serverAdmin.getProcesses("*");
-			this.knownHosts = new ArrayList<HostInfo>(processes.size());
-			for (ProcessObject processObject : processes) {
-				if (!processObject.isEnabled()) {
-					continue;
-				}
-				this.knownHosts.add(new HostInfo(useUrlHost?lastHostInfo.getHostName():processObject.getInetAddress().getHostName(), processObject.getPort()));
-			}
-			discoveredHosts = true;
-		} catch (AdminException e) {
-			//ignore - will get an update on the next successful connection
-		}
 	}
 	
 	@Override
-	public boolean setLogonResult(LogonResult result) {
-		this.authenticated = true;
-		discoverHosts();
-		return this.discoveredHosts;
+	public List<HostInfo> getKnownHosts(LogonResult result,
+			SocketServerInstance instance) {
+		if (result == null) {
+			return super.getKnownHosts(result, instance);
+		}
+		ClusterInfo info = clusterInfo.get(result.getClusterName());
+		if (info == null) {
+			info = new ClusterInfo();
+		}
+		synchronized (info) {
+			if (instance != null 
+					&& (info.lastDiscoveryTime < System.currentTimeMillis() - DISCOVERY_TIMEOUT || info.knownHosts.isEmpty())) {
+				ServerAdmin serverAdmin = instance.getService(ServerAdmin.class);
+				try {
+					Collection<ProcessObject> processes = serverAdmin.getProcesses("*");
+					info.knownHosts.clear();
+					for (ProcessObject processObject : processes) {
+						if (!processObject.isEnabled() || !processObject.isRunning()) {
+							continue;
+						}
+						info.knownHosts.add(new HostInfo(useUrlHost?instance.getHostInfo().getHostName():processObject.getInetAddress().getHostName(), processObject.getPort()));
+					}
+					info.lastDiscoveryTime = System.currentTimeMillis();
+				} catch (AdminException e) {
+					//ignore - will get an update on the next successful connection
+				}
+			}
+			if (info.knownHosts.size() == 0) {
+				return super.getKnownHosts(result, instance);
+			}
+			return new ArrayList<HostInfo>(info.knownHosts);
+		}
 	}
 }

@@ -91,7 +91,7 @@ public class LogonImpl implements ILogon {
 			MetaMatrixSessionID sessionID = updateDQPContext(sessionInfo);
 			LogManager.logDetail(LogSecurityConstants.CTX_SESSION, new Object[] {
 					"Logon successful for \"", user, "\" - created SessionID \"", "" + sessionID, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			return new LogonResult(sessionID, sessionInfo.getUserName(), sessionInfo.getProductInfo(), service.getPingInterval(), clusterName);
+			return new LogonResult(sessionID, sessionInfo.getUserName(), sessionInfo.getProductInfo(), clusterName);
 		} catch (MetaMatrixAuthenticationException e) {
 			throw new LogonException(e, e.getMessage());
 		} catch (ServiceException e) {
