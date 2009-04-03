@@ -18,13 +18,7 @@
       <artifactId>teiid-common-core</artifactId>
       <type>test-jar</type>
     </dependency>
-    
-    <dependency>
-      <groupId>org.jboss.teiid</groupId>
-      <artifactId>teiid-common-internal</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
+     
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client-jdbc</artifactId>
