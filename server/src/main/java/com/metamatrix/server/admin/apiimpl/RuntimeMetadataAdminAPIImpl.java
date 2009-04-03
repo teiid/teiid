@@ -256,43 +256,6 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
     }
 
     /**
-     * Get connector binding names for a given virtual database.
-     *
-     * @param vdbID ID of the VirtualDatabase.
-     * @return Map of ModelIDs and String connector binding names.
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws VirtualDatabaseException if an error occurs while setting the state.
-     * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     */
-    public synchronized Map getConnectorBindingNames(VirtualDatabaseID vdbID)
-        throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
-
-        Collection models = RuntimeMetadataCatalog.getInstance().getModels(vdbID);
-        Map modelIDsCBNames = new HashMap();
-        Iterator iter = models.iterator();
-        while (iter.hasNext()) {
-            Model model = (Model) iter.next();
-            List cbNames = model.getConnectorBindingNames();
-            for (Iterator mit=cbNames.iterator(); mit.hasNext();) {
-                String cbName = (String) mit.next();
-                modelIDsCBNames.put(model.getID(), cbName);
-                
-            }
-
-            // Filter connector bindings that we don't want to see in Console
-//            if (!HIDDEN_CONNECTORS.contains(cbName)) {
-//            }
-        }
-
-        return modelIDsCBNames;
-    }
-
-    /**
      * Given a routing ID, find all VDBs whose models use the connector binding.
      * @param callerSessionID The caller's session ID.
      * @param routingID ID of the connector binding.

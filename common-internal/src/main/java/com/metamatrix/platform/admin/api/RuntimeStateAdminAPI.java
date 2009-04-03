@@ -58,40 +58,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
                              MetaMatrixComponentException;
 
     /**
-     * Return all services running in mm system.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @return List of ServiceIDs.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    List getServices() throws AuthorizationException,
-                      InvalidSessionException,
-                      MetaMatrixComponentException;
-
-    /**
-     * Return all hosts running in mm system.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @return List of String Host names..
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    List getHosts() throws AuthorizationException,
-                   InvalidSessionException,
-                   MetaMatrixComponentException;
-
-    /**
      * Stop service once work is complete.
      * 
      * @param callerSessionID
@@ -381,24 +347,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
                                  List actions) throws AuthorizationException,
                                               InvalidSessionException,
                                               MetaMatrixComponentException;
-
-    /**
-     * Sets the <code>LogConfiguration</code> on the <code>LogManager</code> running in the given VM.
-     * 
-     * @param logConfig
-     *            The log configuration with which to affect the log properties.
-     * @param vmID
-     *            The ID of the VM for which to set log configuration used to affect the configuration database.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    void setLoggingConfiguration(LogConfiguration logConfig, String hostName, String processName) throws AuthorizationException,
-                                                     InvalidSessionException,
-                                                     MetaMatrixComponentException;
 
     /**
      * Return Collection of QueueStats for service.

@@ -96,19 +96,6 @@ public interface RuntimeMetadataAdminAPI extends SubSystemAdminAPI {
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException;
 
     /**
-     * Get connector binding names for a given virtual database.
-     *
-     * @param vdbID ID of the VirtualDatabase.
-     * @return Map of ModelIDs and String connector binding names.
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws VirtualDatabaseException if an error occurs while setting the state.
-     * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     */
-    Map getConnectorBindingNames(VirtualDatabaseID vdbID)
-        throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException;
-
-    /**
      * Given a routing ID, find all VDBs whose models use the connector binding.
      *
      * @param routingID ID of the connector binding.
@@ -267,21 +254,6 @@ public interface RuntimeMetadataAdminAPI extends SubSystemAdminAPI {
      */
 //    public void setModelVisibilityLevels(VirtualDatabaseID vdbID, Map modelAndVLevels)
 //        throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException;
-
-    /**
-     * Get the visibility levels for models in a given virtual database.
-     *
-     * @param vdbID ID of the VirtualDatabase.
-     * @return Map of ModelIDs and Short visibility levels.
-     * Visibility levels are defined in MetadataConstants.VISIBILITY_TYPES.
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws VirtualDatabaseException if an error occurs while setting the state.
-     * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     */
-    public Map getModelVisibilityLevels(VirtualDatabaseID vdbID)
-        throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException;
-
 
     /**
      * Call to obtain the VDB Definition that can be used

@@ -73,9 +73,6 @@ import com.metamatrix.server.HostManagement;
 
 public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements RuntimeStateAdminAPI {
 
-    // Config svc proxy
-    private ConfigurationServiceInterface configAdmin;
-
     protected Set listeners = new HashSet();
 
     private RuntimeStateAdminAPIHelper helper;
@@ -93,7 +90,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
      */
     private RuntimeStateAdminAPIImpl(ClusteredRegistryState registry, HostManagement hostManagement) throws MetaMatrixComponentException {
     	this.registry = registry;
-        configAdmin = PlatformProxyHelper.getConfigurationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);       
         helper = RuntimeStateAdminAPIHelper.getInstance(registry, hostManagement);
     }
 
@@ -148,27 +144,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
     }
 
-
-    /**
-     * Return all hosts running in mm system.
-     * 
-     * @return List of HostRegistryBindings.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized List<String> getHosts() throws AuthorizationException,
-                                                                          InvalidSessionException,
-                                                                          MetaMatrixComponentException {
-
-        // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
-        
-        return helper.getHosts();
-    }
 
     /**
      * Stop service once work is complete.

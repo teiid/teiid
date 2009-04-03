@@ -168,26 +168,6 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
     }
 
     /**
-     * Returns List of ExtensionSourceDescriptor objects of indicated type,
-     * in order of their search ordering
-     * @param type one of the known types of extension file
-     * @return List of ExtensionSourceDescriptor objects of indicated type,
-     * in order of their search ordering
-     * @throws InvalidSessionException if there is not a valid administrative session
-     * @throws AuthorizationException if the administrator does not have privileges to use this method
-     * @throws InvalidExtensionTypeException if the indicated type is not one
-     * of the currently-supported extension source types
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     */
-    public synchronized List getSourceDescriptors(String type)
-    throws InvalidSessionException, AuthorizationException, InvalidExtensionModuleTypeException, MetaMatrixComponentException{
-//        SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
-        return getExtensionSourceManager().getSourceDescriptors(type);
-    }
-
-    /**
      * Returns the ExtensionSourceDescriptor object for the extension
      * source indicated by sourceName
      * @param sourceName name (e.g. filename) of extension source
