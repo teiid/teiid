@@ -815,7 +815,7 @@ public class ExtensionModuleManager {
 	/**
 	 * Retrieves a checksum value for the contents of an extension module
 	 */
-	private long getChecksum(byte[] data){
+	public static long getChecksum(byte[] data){
 	    Checksum algorithm = new CRC32();
 	    algorithm.update(data, 0, data.length);
     	return algorithm.getValue();

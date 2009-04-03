@@ -35,8 +35,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.common.jdbc.JDBCPlatform;
-import com.metamatrix.common.jdbc.syntax.ExpressionOperator;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CorePlugin;
@@ -61,12 +59,6 @@ public final class JDBCRuntimeMetadataReader {
 //    private static String IS_TRUE = "1";
 //    private static String IS_FALSE = "0";
 //    private static int MAX_COLUMN_WIDTH = 255;
-
-    private static JDBCPlatform platform;
-
-    public static void setJDBCPlatform(JDBCPlatform jdbcPlatform) {
-        platform = jdbcPlatform;
-    }
 
     /**
      * returns the <code>VirtualDatabase</code> based on the virtual database id.
@@ -342,31 +334,26 @@ public final class JDBCRuntimeMetadataReader {
         return result;
     }
 
-
     protected static  VirtualDatabaseID getVirtualDatabaseID(String fullName, String version, boolean isActive, Connection jdbcConnection) throws VirtualDatabaseDoesNotExistException, VirtualDatabaseException {
         PreparedStatement statement = null;
         String sql = null;
         VirtualDatabaseID result = null;
 
-        String uVdbName = platform.getOperator(ExpressionOperator.ToUpperCase).buildExpression(JDBCNames.VirtualDatabases.ColumnName.VDB_NM);
         int nParms = 2;
 
         try{
             if(isActive){
                 if(version == null){
-                    sql = replace(JDBCTranslator.SELECT_ACTIVE_VIRTUAL_DATABASE_ID_LV, JDBCTranslator.PLATFORM_DEPENDENT_MARK, uVdbName);
-                    sql = replace(sql, JDBCTranslator.PLATFORM_DEPENDENT_MARK, uVdbName);
-                    sql = replace(sql, JDBCTranslator.PLATFORM_DEPENDENT_MARK, uVdbName);
+                    sql = JDBCTranslator.SELECT_ACTIVE_VIRTUAL_DATABASE_ID_LV;
                     nParms = 3;
                 }else{
-                    sql = replace(JDBCTranslator.SELECT_ACTIVE_VIRTUAL_DATABASE_ID, JDBCTranslator.PLATFORM_DEPENDENT_MARK, uVdbName);
+                    sql = JDBCTranslator.SELECT_ACTIVE_VIRTUAL_DATABASE_ID;
                 }
             }else{
                 if(version == null){
-                    sql = replace(JDBCTranslator.SELECT_VIRTUAL_DATABASE_ID_LV, JDBCTranslator.PLATFORM_DEPENDENT_MARK, uVdbName);
-                    sql = replace(sql, JDBCTranslator.PLATFORM_DEPENDENT_MARK, uVdbName);
+                    sql = JDBCTranslator.SELECT_VIRTUAL_DATABASE_ID_LV;
                 }else
-                    sql = replace(JDBCTranslator.SELECT_VIRTUAL_DATABASE_ID, JDBCTranslator.PLATFORM_DEPENDENT_MARK, uVdbName);
+                    sql = JDBCTranslator.SELECT_VIRTUAL_DATABASE_ID;
             }
             statement = jdbcConnection.prepareStatement(sql);
             statement.setString(1, fullName.toUpperCase());

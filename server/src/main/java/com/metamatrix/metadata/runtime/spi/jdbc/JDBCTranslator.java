@@ -52,32 +52,30 @@ public class JDBCTranslator {
     public static long NA_LONG = 0;
     public static int NA_INT = 0;
     public static short NA_SHORT = 0;
-    public static String PLATFORM_DEPENDENT_MARK = "??";
     
-    
-    private static String IS_TRUE = "1";
+    private static String IS_TRUE = "1"; //$NON-NLS-1$
     
 
 //    private static final String DELIMITER = ".";
 //    private static final String BLANK = MetadataConstants.BLANK;
-    private static final String MAX = "MAX";
-    private static final String INSERT      = JDBCReservedWords.INSERT + " ";
-    private static final String UPDATE      = JDBCReservedWords.UPDATE + " ";
-    private static final String DELETE      = JDBCReservedWords.DELETE + " ";
-    private static final String SELECT      = JDBCReservedWords.SELECT + " ";
-    private static final String FROM        = " " + JDBCReservedWords.FROM + " ";
-    private static final String WHERE       = " " + JDBCReservedWords.WHERE + " ";
+    private static final String MAX = "MAX"; //$NON-NLS-1$
+    private static final String INSERT      = JDBCReservedWords.INSERT + " "; //$NON-NLS-1$
+    private static final String UPDATE      = JDBCReservedWords.UPDATE + " "; //$NON-NLS-1$
+    private static final String DELETE      = JDBCReservedWords.DELETE + " "; //$NON-NLS-1$
+    private static final String SELECT      = JDBCReservedWords.SELECT + " "; //$NON-NLS-1$
+    private static final String FROM        = " " + JDBCReservedWords.FROM + " "; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String WHERE       = " " + JDBCReservedWords.WHERE + " "; //$NON-NLS-1$ //$NON-NLS-2$
 //    private static final String LIKE        = " " + JDBCReservedWords.LIKE + " ";
-    private static final String ORDER_BY    = " " + JDBCReservedWords.ORDER_BY + " ";
-    private static final String SET         = " " + JDBCReservedWords.SET + " ";
+    private static final String ORDER_BY    = " " + JDBCReservedWords.ORDER_BY + " "; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String SET         = " " + JDBCReservedWords.SET + " "; //$NON-NLS-1$ //$NON-NLS-2$
 //    private static final String ON          = " " + JDBCReservedWords.ON + " ";
-    private static final String INTO        = " " + JDBCReservedWords.INTO + " ";
-    private static final String DISTINCT    = " " + JDBCReservedWords.DISTINCT + " ";
-    private static final String VALUES      = " " + JDBCReservedWords.VALUES + " ";
-    private static final String AND         = " " + JDBCReservedWords.AND + " ";
-    private static final String IN          = " " + JDBCReservedWords.IN + " ";
-    private static final String NOT_IN      = " " + JDBCReservedWords.NOT + " " + JDBCReservedWords.IN + " ";
-    private static final String OR         = " " + JDBCReservedWords.OR + " ";
+    private static final String INTO        = " " + JDBCReservedWords.INTO + " "; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String DISTINCT    = " " + JDBCReservedWords.DISTINCT + " "; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String VALUES      = " " + JDBCReservedWords.VALUES + " "; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String AND         = " " + JDBCReservedWords.AND + " "; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String IN          = " " + JDBCReservedWords.IN + " "; //$NON-NLS-1$ //$NON-NLS-2$
+    private static final String NOT_IN      = " " + JDBCReservedWords.NOT + " " + JDBCReservedWords.IN + " "; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    private static final String OR         = " " + JDBCReservedWords.OR + " "; //$NON-NLS-1$ //$NON-NLS-2$
 //    private static final String IS         = " " + JDBCReservedWords.IS + " ";
 //    private static final String IS_NOT_NULL = IS + " " + JDBCReservedWords.NOT + " " + JDBCReservedWords.NULL;
 
@@ -89,87 +87,87 @@ public class JDBCTranslator {
     // ---------------------------------------------------------------------------------
     //select IDs
     public static final String SELECT_ACTIVE_VIRTUAL_DATABASE_ID
-                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + ","
-                                    	+ JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ","
+                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "," //$NON-NLS-1$
+                                    	+ JDBCNames.VirtualDatabases.ColumnName.VDB_NM + "," //$NON-NLS-1$
                                     	+ JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + PLATFORM_DEPENDENT_MARK + "=?"
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
                                         + AND
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "=?"
-                                        + AND + "(" + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE 
-                                        + OR + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE_DEFAULT
-                                        + ")";
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "=?" //$NON-NLS-1$
+                                        + AND + "(" + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE  //$NON-NLS-1$ //$NON-NLS-2$
+                                        + OR + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE_DEFAULT //$NON-NLS-1$
+                                        + ")"; //$NON-NLS-1$
 
     public static final String SELECT_VIRTUAL_DATABASE_ID
-                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + ","
-                                    	+ JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ","
+                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "," //$NON-NLS-1$
+                                    	+ JDBCNames.VirtualDatabases.ColumnName.VDB_NM + "," //$NON-NLS-1$
                                     	+ JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + PLATFORM_DEPENDENT_MARK + "=?"
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
                                         + AND
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "=?";
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "=?"; //$NON-NLS-1$
 
     public static final String SELECT_ACTIVE_VIRTUAL_DATABASE_ID_LV
-                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + ","
-                                    	+ JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ","
+                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "," //$NON-NLS-1$
+                                    	+ JDBCNames.VirtualDatabases.ColumnName.VDB_NM + "," //$NON-NLS-1$
                                         + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + PLATFORM_DEPENDENT_MARK + "=?"
-                                        + AND + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE + "=("
-                                        + SELECT + MAX + "("
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +")"
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + AND + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE + "=(" //$NON-NLS-1$
+                                        + SELECT + MAX + "(" //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +")" //$NON-NLS-1$
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + PLATFORM_DEPENDENT_MARK + "=?"
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
                                         + AND
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "="
-                                        + "(" + SELECT + MAX + "(" + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + ")" 
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" //$NON-NLS-1$
+                                        + "(" + SELECT + MAX + "(" + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + ")"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                                         + FROM 
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + PLATFORM_DEPENDENT_MARK + "=?"
-                                        + AND + "(" + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE 
-                                        + OR + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE_DEFAULT
-                                        +")))";
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + AND + "(" + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE  //$NON-NLS-1$ //$NON-NLS-2$
+                                        + OR + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE_DEFAULT //$NON-NLS-1$
+                                        +")))"; //$NON-NLS-1$
 
     public static final String SELECT_VIRTUAL_DATABASE_ID_LV
-                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + ","
-                                    	+ JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ","
+                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "," //$NON-NLS-1$
+                                    	+ JDBCNames.VirtualDatabases.ColumnName.VDB_NM + "," //$NON-NLS-1$
                                         + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + PLATFORM_DEPENDENT_MARK + "=?"
-                                        + AND + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE + "=("
-                                        + SELECT + MAX + "("
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +")"
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + AND + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE + "=(" //$NON-NLS-1$
+                                        + SELECT + MAX + "(" //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +")" //$NON-NLS-1$
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + PLATFORM_DEPENDENT_MARK + "=?)";
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?"; //$NON-NLS-1$ //$NON-NLS-2$
 
     //select objects
     public static final String SELECT_VIRTUAL_DATABASES
-                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.DESCRIPTION + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.PROJECT_GUID +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.WSDL_DEFINED +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_BY +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.CREATED_BY +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.CREATION_DATE+","
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY+","
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE+","
+                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_NM + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.DESCRIPTION + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.PROJECT_GUID +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.WSDL_DEFINED +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_BY +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.CREATED_BY +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.CREATION_DATE+"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY+"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE+"," //$NON-NLS-1$
                                         + JDBCNames.VirtualDatabases.ColumnName.VDB_FILE_NAME
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME;
@@ -181,189 +179,189 @@ public class JDBCTranslator {
                                     	+ FROM
                                     	+ JDBCNames.VDBModels.TABLE_NAME
                                     	+ WHERE
-                                    	+ JDBCNames.VDBModels.ColumnName.VDB_UID + "=?";
+                                    	+ JDBCNames.VDBModels.ColumnName.VDB_UID + "=?"; //$NON-NLS-1$
 
     public static final String SELECT_DELETED_VIRTUAL_DATABASES
-                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + ","
+                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_NM + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "," //$NON-NLS-1$
                                         + JDBCNames.VirtualDatabases.ColumnName.VDB_UID
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=4";
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=4"; //$NON-NLS-1$
 
     public static final String SELECT_VIRTUAL_DATABASE
-                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.DESCRIPTION + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.PROJECT_GUID +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.WSDL_DEFINED +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_BY +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.CREATED_BY +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.CREATION_DATE+","
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY+","
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE + ","
+                                    = SELECT + JDBCNames.VirtualDatabases.ColumnName.DESCRIPTION + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.PROJECT_GUID +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.WSDL_DEFINED +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_BY +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.CREATED_BY +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.CREATION_DATE+"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY+"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE + "," //$NON-NLS-1$
                                         + JDBCNames.VirtualDatabases.ColumnName.VDB_FILE_NAME
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?";
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?"; //$NON-NLS-1$
 
     public static final String SELECT_MODELS
-                                    = SELECT + JDBCNames.VDBModels.TABLE_NAME + "."
-                                        + JDBCNames.Models.ColumnName.MDL_UID +","
-                                        + JDBCNames.Models.ColumnName.MDL_NM +","
-                                        + JDBCNames.Models.ColumnName.MDL_VERSION +","
-                                        + JDBCNames.Models.ColumnName.MDL_UUID +","
-                                        + JDBCNames.Models.ColumnName.MDL_TYPE +","
-                                        + JDBCNames.Models.ColumnName.MDL_URI +","
-                                        + JDBCNames.Models.ColumnName.DESCRIPTION +","
-                                        + JDBCNames.Models.ColumnName.IS_PHYSICAL +","
-                                        + JDBCNames.Models.ColumnName.MULTI_SOURCED +","
-                                        + JDBCNames.Models.ColumnName.VISIBILITY +","
+                                    = SELECT + JDBCNames.VDBModels.TABLE_NAME + "." //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_UID +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_NM +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_VERSION +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_UUID +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_TYPE +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_URI +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.DESCRIPTION +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.IS_PHYSICAL +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MULTI_SOURCED +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.VISIBILITY +"," //$NON-NLS-1$
                                         + JDBCNames.VDBModels.ColumnName.CNCTR_BNDNG_NM 
-                                        + FROM + JDBCNames.Models.TABLE_NAME + ","
+                                        + FROM + JDBCNames.Models.TABLE_NAME + "," //$NON-NLS-1$
                                         + JDBCNames.VDBModels.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.VDBModels.TABLE_NAME + "."
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "="
-                                        + JDBCNames.Models.TABLE_NAME + "."
+                                        + JDBCNames.VDBModels.TABLE_NAME + "." //$NON-NLS-1$
+                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=" //$NON-NLS-1$
+                                        + JDBCNames.Models.TABLE_NAME + "." //$NON-NLS-1$
                                         + JDBCNames.Models.ColumnName.MDL_UID
                                         + AND
-                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?"
+                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?" //$NON-NLS-1$
                                         + ORDER_BY
                                         + JDBCNames.Models.ColumnName.MDL_NM
                                         ;
 
     public static final String SELECT_MODEL_IDS
-                                    = SELECT + JDBCNames.Models.ColumnName.MDL_UID +","
-                                        + JDBCNames.Models.ColumnName.MDL_VERSION +","
-                                        + JDBCNames.Models.ColumnName.MDL_NM +","
+                                    = SELECT + JDBCNames.Models.ColumnName.MDL_UID +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_VERSION +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_NM +"," //$NON-NLS-1$
                                         + JDBCNames.Models.ColumnName.MDL_UUID
                                         + FROM + JDBCNames.Models.TABLE_NAME;
 
     public static final String SELECT_MODEL_IDS_ONLY_IN_VDB
-                                    = SELECT + JDBCNames.Models.TABLE_NAME + "."
-                                        + JDBCNames.Models.ColumnName.MDL_UID +","
-                                        + JDBCNames.Models.ColumnName.MDL_VERSION +","
-                                        + JDBCNames.Models.ColumnName.MDL_NM +","
+                                    = SELECT + JDBCNames.Models.TABLE_NAME + "." //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_UID +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_VERSION +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_NM +"," //$NON-NLS-1$
                                         + JDBCNames.Models.ColumnName.MDL_UUID
                                         + FROM + JDBCNames.Models.TABLE_NAME
                                         + WHERE
                                         + JDBCNames.Models.ColumnName.MDL_UID
-                                        + NOT_IN +"("
-                                        + SELECT + JDBCNames.Models.TABLE_NAME + "."
+                                        + NOT_IN +"(" //$NON-NLS-1$
+                                        + SELECT + JDBCNames.Models.TABLE_NAME + "." //$NON-NLS-1$
                                         + JDBCNames.Models.ColumnName.MDL_UID
-                                        + FROM + JDBCNames.Models.TABLE_NAME + ","
+                                        + FROM + JDBCNames.Models.TABLE_NAME + "," //$NON-NLS-1$
                                         + JDBCNames.VDBModels.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.VDBModels.TABLE_NAME + "."
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "="
-                                        + JDBCNames.Models.TABLE_NAME + "."
+                                        + JDBCNames.VDBModels.TABLE_NAME + "." //$NON-NLS-1$
+                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=" //$NON-NLS-1$
+                                        + JDBCNames.Models.TABLE_NAME + "." //$NON-NLS-1$
                                         + JDBCNames.Models.ColumnName.MDL_UID
                                         + AND
-                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + " !=?)";
+                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + " !=?)"; //$NON-NLS-1$
 
 
  
     //a special one
     public static final String SELECT_PROPERTIES
-                                    = SELECT + JDBCNames.VCommonProperties.ColumnName.PRP_NM + ","
+                                    = SELECT + JDBCNames.VCommonProperties.ColumnName.PRP_NM + "," //$NON-NLS-1$
                                         + JDBCNames.VCommonProperties.ColumnName.PRP_VL
-                                        + FROM + "?"
+                                        + FROM + "?" //$NON-NLS-1$
                                         + WHERE
-                                        + "="
+                                        + "=" //$NON-NLS-1$
                                         + AND
-                                        + "?=?"
+                                        + "?=?" //$NON-NLS-1$
                                         + ORDER_BY
-                                        + JDBCNames.VCommonProperties.ColumnName.PRP_NM + ","
+                                        + JDBCNames.VCommonProperties.ColumnName.PRP_NM + "," //$NON-NLS-1$
                                         + JDBCNames.VCommonProperties.ColumnName.PART_ID;
 
     //insert statement
     public static final String INSERT_VIRTUAL_DATABASE
-                                    = INSERT + INTO + JDBCNames.VirtualDatabases.TABLE_NAME + "("
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.DESCRIPTION + ","
-                                        + JDBCNames.VirtualDatabases.ColumnName.PROJECT_GUID +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.WSDL_DEFINED +","                                        
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_BY +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.CREATED_BY +","
-                                        + JDBCNames.VirtualDatabases.ColumnName.CREATION_DATE+","
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY+","
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE+","
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_FILE_NAME + ")"
+                                    = INSERT + INTO + JDBCNames.VirtualDatabases.TABLE_NAME + "(" //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_NM + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.DESCRIPTION + "," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.PROJECT_GUID +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.WSDL_DEFINED +","                                         //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_BY +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.CREATED_BY +"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.CREATION_DATE+"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY+"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE+"," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_FILE_NAME + ")" //$NON-NLS-1$
                                         + VALUES
-                                        + "(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                                        + "(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"; //$NON-NLS-1$
 
     public static final String INSERT_MODELS
-                                    = INSERT + INTO + JDBCNames.Models.TABLE_NAME + "("
-                                        + JDBCNames.Models.ColumnName.MDL_UID +","
-                                        + JDBCNames.Models.ColumnName.MDL_NM +","
-                                        + JDBCNames.Models.ColumnName.MDL_VERSION +","
-                                        + JDBCNames.Models.ColumnName.DESCRIPTION +","
-                                        + JDBCNames.Models.ColumnName.IS_PHYSICAL +","
-                                        + JDBCNames.Models.ColumnName.MULTI_SOURCED +","
-                                        + JDBCNames.Models.ColumnName.VISIBILITY +","
-                                        + JDBCNames.Models.ColumnName.MDL_UUID +","
-                                        + JDBCNames.Models.ColumnName.MDL_TYPE +","
-                                        + JDBCNames.Models.ColumnName.MDL_URI + ")"
+                                    = INSERT + INTO + JDBCNames.Models.TABLE_NAME + "(" //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_UID +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_NM +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_VERSION +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.DESCRIPTION +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.IS_PHYSICAL +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MULTI_SOURCED +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.VISIBILITY +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_UUID +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_TYPE +"," //$NON-NLS-1$
+                                        + JDBCNames.Models.ColumnName.MDL_URI + ")" //$NON-NLS-1$
                                         + VALUES
-                                        + "(?,?,?,?,?,?,?,?,?,?)";
+                                        + "(?,?,?,?,?,?,?,?,?,?)"; //$NON-NLS-1$
 
 
     public static final String INSERT_VDB_MODELS
-                                    = INSERT + INTO + JDBCNames.VDBModels.TABLE_NAME + "("
-                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + ","
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + ")"
+                                    = INSERT + INTO + JDBCNames.VDBModels.TABLE_NAME + "(" //$NON-NLS-1$
+                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "," //$NON-NLS-1$
+                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + ")" //$NON-NLS-1$
                                         + VALUES
-                                        + "(?,?)";
+                                        + "(?,?)"; //$NON-NLS-1$
     
     public static final String INSERT_VDB_MODELS_WITH_BINDING
-                                        = INSERT + INTO + JDBCNames.VDBModels.TABLE_NAME + "("
-                                            + JDBCNames.VDBModels.ColumnName.VDB_UID + ","
-                                            + JDBCNames.VDBModels.ColumnName.MDL_UID + ","
-                                            + JDBCNames.VDBModels.ColumnName.CNCTR_BNDNG_NM + ")"
+                                        = INSERT + INTO + JDBCNames.VDBModels.TABLE_NAME + "(" //$NON-NLS-1$
+                                            + JDBCNames.VDBModels.ColumnName.VDB_UID + "," //$NON-NLS-1$
+                                            + JDBCNames.VDBModels.ColumnName.MDL_UID + "," //$NON-NLS-1$
+                                            + JDBCNames.VDBModels.ColumnName.CNCTR_BNDNG_NM + ")" //$NON-NLS-1$
                                             + VALUES
-                                            + "(?,?,?)";
+                                            + "(?,?,?)"; //$NON-NLS-1$
                                         
 
     public static final String INSERT_PROP_NAMES
-                                    = INSERT + INTO + "?" + "("
-                                        + JDBCNames.VCommonProperties.ColumnName.PRP_UID + ","
-                                        + "?," + JDBCNames.VCommonProperties.ColumnName.PRP_NM + ")"
+                                    = INSERT + INTO + "?" + "(" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + JDBCNames.VCommonProperties.ColumnName.PRP_UID + "," //$NON-NLS-1$
+                                        + "?," + JDBCNames.VCommonProperties.ColumnName.PRP_NM + ")" //$NON-NLS-1$ //$NON-NLS-2$
                                         + VALUES
-                                        + "(?,?,?)";
+                                        + "(?,?,?)"; //$NON-NLS-1$
 
     public static final String INSERT_PROP_VALUES
-                                    = INSERT + INTO + "?" + "("
-                                        + JDBCNames.VCommonProperties.ColumnName.PRP_UID + ","
-                                        + JDBCNames.VCommonProperties.ColumnName.PART_ID + ","
-                                        + JDBCNames.VCommonProperties.ColumnName.PRP_VL + ")"
+                                    = INSERT + INTO + "?" + "(" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + JDBCNames.VCommonProperties.ColumnName.PRP_UID + "," //$NON-NLS-1$
+                                        + JDBCNames.VCommonProperties.ColumnName.PART_ID + "," //$NON-NLS-1$
+                                        + JDBCNames.VCommonProperties.ColumnName.PRP_VL + ")" //$NON-NLS-1$
                                         + VALUES
-                                        + "(?,?,?)";
+                                        + "(?,?,?)"; //$NON-NLS-1$
 
     //update statement
     public static final String UPDATE_SET_STATUS
                                     = UPDATE + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + SET
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=?,"
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY + "=?,"
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE + "=?"
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=?," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY + "=?," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE + "=?" //$NON-NLS-1$
                                         + WHERE
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?";
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?"; //$NON-NLS-1$
 
     public static final String UPDATE_CONNECTOR_BINGING_NAME
                                     = UPDATE + JDBCNames.VDBModels.TABLE_NAME
                                         + SET
-                                        + JDBCNames.VDBModels.ColumnName.CNCTR_BNDNG_NM + "=?"
+                                        + JDBCNames.VDBModels.ColumnName.CNCTR_BNDNG_NM + "=?" //$NON-NLS-1$
                                         + WHERE
-                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?"
+                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?" //$NON-NLS-1$
                                         + AND
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?";
+                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?"; //$NON-NLS-1$
 
 //    public static final String UPDATE_VISIBILITY_LEVELS
 //                                    = UPDATE + JDBCNames.VDBModels.TABLE_NAME
@@ -377,33 +375,33 @@ public class JDBCTranslator {
     public static final String UPDATE_VDB
                                     = UPDATE + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + SET
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY + "=?,"
-                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE + "=?"
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_BY + "=?," //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.UPDATED_DATE + "=?" //$NON-NLS-1$
                                         + WHERE
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?";
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?"; //$NON-NLS-1$
 
     public static final String UPDATE_VDB_VERSION
                                     = UPDATE + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + SET
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "=?"
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "=?" //$NON-NLS-1$
                                         + WHERE
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?";
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?"; //$NON-NLS-1$
 
     public static final String UPDATE_VDB_MODELS
                                     = UPDATE + JDBCNames.VDBModels.TABLE_NAME
                                         + SET
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?"
+                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?" //$NON-NLS-1$
                                         + WHERE
-                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?"
+                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?" //$NON-NLS-1$
                                         + AND
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?";
+                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?"; //$NON-NLS-1$
 
     public static final String UPDATE_MODEL_NAME
                                     = UPDATE + JDBCNames.Models.TABLE_NAME
                                         + SET
-                                        + JDBCNames.Models.ColumnName.MDL_NM + "=?"
+                                        + JDBCNames.Models.ColumnName.MDL_NM + "=?" //$NON-NLS-1$
                                         + WHERE
-                                        + JDBCNames.Models.ColumnName.MDL_UID + "=?";
+                                        + JDBCNames.Models.ColumnName.MDL_UID + "=?"; //$NON-NLS-1$
 
 
 
@@ -411,41 +409,41 @@ public class JDBCTranslator {
                                     = DELETE + FROM + JDBCNames.ModelPropValues.TABLE_NAME
                                         + WHERE
                                         + JDBCNames.ModelPropValues.ColumnName.PRP_UID
-                                        + IN + "("
+                                        + IN + "(" //$NON-NLS-1$
                                         + SELECT
                                         + JDBCNames.ModelPropValues.ColumnName.PRP_UID
                                         + FROM
                                         + JDBCNames.ModelPropNames.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.ModelPropNames.ColumnName.MDL_UID +"=?)";
+                                        + JDBCNames.ModelPropNames.ColumnName.MDL_UID +"=?)"; //$NON-NLS-1$
 
     public static final String DELETE_MODEL_PROP_NMS
                                     = DELETE + FROM + JDBCNames.ModelPropNames.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.ModelPropNames.ColumnName.MDL_UID + "=?";
+                                        + JDBCNames.ModelPropNames.ColumnName.MDL_UID + "=?"; //$NON-NLS-1$
 
     public static final String DELETE_VDB_MODELS
                                     = DELETE + FROM + JDBCNames.VDBModels.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?";
+                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?"; //$NON-NLS-1$
 
     public static final String DELETE_VDB_MODEL
                                     = DELETE + FROM + JDBCNames.VDBModels.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?"
+                                        + JDBCNames.VDBModels.ColumnName.VDB_UID + "=?" //$NON-NLS-1$
                                         + AND
-                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?";
+                                        + JDBCNames.VDBModels.ColumnName.MDL_UID + "=?"; //$NON-NLS-1$
 
     public static final String DELETE_MODEL
                                     = DELETE + FROM + JDBCNames.Models.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.Models.ColumnName.MDL_UID + "=?";
+                                        + JDBCNames.Models.ColumnName.MDL_UID + "=?"; //$NON-NLS-1$
 
 
     public static final String DELETE_VDB
                                     = DELETE + FROM + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?";
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "=?"; //$NON-NLS-1$
 
 
 
@@ -639,20 +637,20 @@ public class JDBCTranslator {
 
         int i;
         if(id instanceof ModelID){
-            i = sql.indexOf("?");
+            i = sql.indexOf("?"); //$NON-NLS-1$
             if(queryID == 1){
                 sql = sql.substring(0,i) + JDBCNames.VModelProperties.TABLE_NAME + sql.substring(i+1);
-                int j = sql.indexOf("=");
-                sql = sql.substring(0,j) + JDBCNames.ModelPropNames.TABLE_NAME + "."
-                    + JDBCNames.VCommonProperties.ColumnName.PRP_UID + "="
-                    + JDBCNames.ModelPropValues.TABLE_NAME + "."
+                int j = sql.indexOf("="); //$NON-NLS-1$
+                sql = sql.substring(0,j) + JDBCNames.ModelPropNames.TABLE_NAME + "." //$NON-NLS-1$
+                    + JDBCNames.VCommonProperties.ColumnName.PRP_UID + "=" //$NON-NLS-1$
+                    + JDBCNames.ModelPropValues.TABLE_NAME + "." //$NON-NLS-1$
                     + JDBCNames.VCommonProperties.ColumnName.PRP_UID + sql.substring(j+1);
             }else if(queryID ==2)
                 sql = sql.substring(0,i) + JDBCNames.ModelPropNames.TABLE_NAME + sql.substring(i+1);
             else
                 sql = sql.substring(0,i) + JDBCNames.ModelPropValues.TABLE_NAME + sql.substring(i+1);
             if(queryID != 3){
-                i = sql.indexOf("?");
+                i = sql.indexOf("?"); //$NON-NLS-1$
                 sql = sql.substring(0,i) + JDBCNames.VModelProperties.ColumnName.MDL_UID + sql.substring(i+1);
             }
         }

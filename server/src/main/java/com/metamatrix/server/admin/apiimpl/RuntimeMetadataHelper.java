@@ -36,10 +36,9 @@ import java.util.Set;
 
 import com.metamatrix.admin.api.objects.AdminOptions;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.jdbc.JDBCPlatform;
-import com.metamatrix.common.jdbc.JDBCPlatformFactory;
+import com.metamatrix.common.jdbc.JDBCPlatform.Supported;
 import com.metamatrix.common.tree.basic.BasicTreeNode;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -836,25 +835,22 @@ public class RuntimeMetadataHelper {
         // Example: jdbc:mmx:oracle://host:port;SID=sid
         if ( url != null ) {
             
-            try {
-                JDBCPlatform platform = JDBCPlatformFactory.getPlatform(url, driver);
-                if (platform != null) {
-                    if (platform.isDB2()) {
-                        return DatabaseDialect.DB2.getType().toLowerCase();
-                    } else if (platform.isOracle()) {
-                        return DatabaseDialect.ORACLE.getType().toLowerCase();
-                    } else if (platform.isSybase()) {
-                        return DatabaseDialect.SYBASE.getType().toLowerCase();
-                    } else if (platform.isMSSQL()) {
-                        return DatabaseDialect.SQL_SERVER.getType().toLowerCase();
-                    } else if (platform.isMYSQL()) {
-                        return DatabaseDialect.MYSQL.getType().toLowerCase();
-                    } 
-                }
-            } catch (MetaMatrixException err) {
-                err.printStackTrace();
+            Supported supported = JDBCPlatform.getSupportedByProtocol(url);
+            if (supported != null) {
+            	switch (supported) {
+            	case DB2:
+                    return DatabaseDialect.DB2.getType().toLowerCase();
+            	case MM_ORACLE:
+            	case ORACLE:
+                    return DatabaseDialect.ORACLE.getType().toLowerCase();
+            	case SYBASE:
+                    return DatabaseDialect.SYBASE.getType().toLowerCase();
+            	case MSSQL:
+                    return DatabaseDialect.SQL_SERVER.getType().toLowerCase();
+            	case MYSQL:
+                    return DatabaseDialect.MYSQL.getType().toLowerCase();
+            	}
             }
-            
             
             Object[] urlParts = StringUtil.split(url, ":").toArray(); //$NON-NLS-1$
             

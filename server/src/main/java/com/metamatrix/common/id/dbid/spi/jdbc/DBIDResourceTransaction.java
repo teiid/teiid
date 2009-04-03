@@ -36,7 +36,6 @@ import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.id.dbid.ReservedIDBlock;
 import com.metamatrix.common.id.dbid.spi.DBIDSourceTransaction;
 import com.metamatrix.common.jdbc.JDBCPlatform;
-import com.metamatrix.common.jdbc.JDBCPlatformFactory;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
@@ -46,8 +45,6 @@ import com.metamatrix.common.util.LogCommonConstants;
  */
 public class DBIDResourceTransaction extends BaseTransaction implements DBIDSourceTransaction {
     private Connection jdbcConnection;
-
-    private JDBCPlatform platform=null;
 
 //    private static long columnMax=-1;
     private static long columnMax=999999999;
@@ -73,8 +70,6 @@ public class DBIDResourceTransaction extends BaseTransaction implements DBIDSour
         try {
         	JDBCMgdResourceConnection jdbcManagedConnection = (JDBCMgdResourceConnection) connection;
         	jdbcConnection = jdbcManagedConnection.getConnection();
-
-            platform = JDBCPlatformFactory.getPlatform(jdbcConnection);
 
         } catch ( Exception e ) {
             throw new ManagedConnectionException(e,ErrorMessageKeys.ID_ERR_0016, CommonPlugin.Util.getString(ErrorMessageKeys.ID_ERR_0016));
@@ -261,7 +256,7 @@ public class DBIDResourceTransaction extends BaseTransaction implements DBIDSour
 
           if (columnMax > -1) return;
 
-          int s = platform.getDatabaseColumnSize(JDBCNames.IDTable.TABLE_NAME, 
+          int s = JDBCPlatform.getDatabaseColumnSize(JDBCNames.IDTable.TABLE_NAME, 
                                 JDBCNames.IDTable.ColumnName.NEXT_ID,
                                 jdbcConnection);     
 //        Map columns = platform.getDatabaseColumns(JDBCNames.IDTable.TABLE_NAME, jdbcConnection);

@@ -108,16 +108,6 @@ final class JDBCExtensionModuleTranslator {
                                     +  JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME + PARAM
                                     ;
     
-    public static final String SELECT_CONFIG_FILE_DATA_BY_NAME
-                                   = SELECT
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.CONFIG_CONTENTS
-                                    + FROM
-                                    +   JDBCNames.ExtensionFilesTable.TABLE_NAME
-                                    + WHERE
-                                    +  JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME + PARAM
-                                    ;
-                                    
-
     public static final String SELECT_MAX_SEARCH_POSITION
                                    = SELECT
                                     +   MAX + OPEN_PAREN
@@ -231,23 +221,6 @@ final class JDBCExtensionModuleTranslator {
                                        + VALUES
                                        ;
 
-
-    public static final String ADD_CONFIG_FILE_DATA
-                                    = INSERT + INTO + JDBCNames.ExtensionFilesTable.TABLE_NAME + OPEN_PAREN
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.UID + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.CHECKSUM + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.SEARCH_POSITION + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.IS_ENABLED + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.FILE_DESCRIPTION + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.CREATED_BY + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.CREATION_DATE + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.UPDATED_BY + "," //$NON-NLS-1$
-                                        + JDBCNames.ExtensionFilesTable.ColumnName.UPDATED + "," //$NON-NLS-1$
-                                         + JDBCNames.ExtensionFilesTable.ColumnName.FILE_TYPE + CLOSED_PAREN
-                                        //+ JDBCNames.ExtensionFilesTable.ColumnName.CONFIG_CONTENTS + CLOSED_PAREN
-                                        + VALUES
-                                        ;
     public static final String ADD_SOURCE_FILE_DATA_PARAMS
                                         = "(?,?,?,?,?,?,?,?,?,?,?)"; //$NON-NLS-1$
     public static final String ADD_SOURCE_FILE_DATA_ORACLE_PARAMS
@@ -264,32 +237,7 @@ final class JDBCExtensionModuleTranslator {
                                     + WHERE
                                     +   JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME + "= ? "; //$NON-NLS-1$
 
-    public static final String UPDATE_SOURCE_CONFIG_DATA_DEFAULT
-                                    = UPDATE
-                                    +   JDBCNames.ExtensionFilesTable.TABLE_NAME + " " //$NON-NLS-1$
-                                    + SET
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.UPDATED_BY + "= ?, " //$NON-NLS-1$
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.UPDATED + "= ?, " //$NON-NLS-1$
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.CHECKSUM + "= ?, " //$NON-NLS-1$
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.CONFIG_CONTENTS + "= ? " //$NON-NLS-1$
-                                    + WHERE
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME + "= ? "; //$NON-NLS-1$
-    
-    
-    public static final String UPDATE_SOURCE_CONFIG_DATA_ORACLE
-                                    = UPDATE
-                                    +   JDBCNames.ExtensionFilesTable.TABLE_NAME + " " //$NON-NLS-1$
-                                    + SET
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.UPDATED_BY + "= ?, " //$NON-NLS-1$
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.UPDATED + "= ?, " //$NON-NLS-1$
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.CHECKSUM + "= ?, " //$NON-NLS-1$
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.CONFIG_CONTENTS + "= empty_clob() " //$NON-NLS-1$
-                                    + WHERE
-                                    +   JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME + "= ? "; //$NON-NLS-1$
-
-
-
-    public static final String UPDATE_SOURCE_FILE_DATA_ORACLE
+	public static final String UPDATE_SOURCE_FILE_DATA_ORACLE
                                     = UPDATE
                                     +   JDBCNames.ExtensionFilesTable.TABLE_NAME + " " //$NON-NLS-1$
                                     + SET
@@ -299,7 +247,7 @@ final class JDBCExtensionModuleTranslator {
                                     +   JDBCNames.ExtensionFilesTable.ColumnName.FILE_CONTENTS + "= empty_blob() " //$NON-NLS-1$
                                     + WHERE
                                     +   JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME + "= ? "; //$NON-NLS-1$
-
+                                    
     public static final String UPDATE_SOURCE_NAME
                                     = UPDATE
                                     +   JDBCNames.ExtensionFilesTable.TABLE_NAME + " " //$NON-NLS-1$
@@ -344,20 +292,6 @@ final class JDBCExtensionModuleTranslator {
                                   = DELETE + FROM + JDBCNames.ExtensionFilesTable.TABLE_NAME
                                       + WHERE
                                       + JDBCNames.ExtensionFilesTable.ColumnName.FILE_NAME + "=?"; //$NON-NLS-1$
-
-
-
-//*******************************
-//
-//   I N S E R T      S Q L
-//
-//*******************************
-
-
-
-    // ---------------------------------------------------------------------------------
-    //                     TRANSLATE RESULT SETS
-    // ---------------------------------------------------------------------------------
 
 
 

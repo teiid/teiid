@@ -22,7 +22,7 @@
 
 package com.metamatrix.common.extensionmodule.spi.jdbc;
 
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -39,8 +39,6 @@ import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleE
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleOrderingException;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
-import com.metamatrix.common.jdbc.JDBCPlatform;
-import com.metamatrix.common.jdbc.JDBCPlatformFactory;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
@@ -134,23 +132,16 @@ public class JDBCExtensionModuleWriter {
 
 
         PreparedStatement statement = null;
-        String sql = null;
+        String sql = JDBCExtensionModuleTranslator.ADD_SOURCE_FILE_DATA;
         ExtensionModuleDescriptor descriptor = null;
 
         description = StringUtil.truncString(description, MAX_DESC_LEN);
 
         int position = getNextPosition(jdbcConnection);
-        boolean isConfigModel = JDBCExtensionModuleUtil.isConfigurationModel(sourceName);
         
         boolean orignalAutocommit=true;
         boolean firstException = false;
         try{
-            if (isConfigModel) {
-                sql = JDBCExtensionModuleTranslator.ADD_CONFIG_FILE_DATA;
-            } else {
-                sql = JDBCExtensionModuleTranslator.ADD_SOURCE_FILE_DATA;
-            }
-            
             long longUID = DBIDGenerator.getInstance().getID(JDBCNames.ExtensionFilesTable.TABLE_NAME);
             
             orignalAutocommit=jdbcConnection.getAutoCommit();
@@ -185,12 +176,7 @@ public class JDBCExtensionModuleWriter {
                     throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0054, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0054, sourceName,sql));
                 }
                 
-            if (isConfigModel) {
-                updateConfig(updatedBy, sourceName, data, checksum, jdbcConnection, JDBCExtensionModuleTranslator.UPDATE_SOURCE_CONFIG_DATA_DEFAULT);
-            } else {
-                updateFile(updatedBy, sourceName, data, checksum, jdbcConnection, JDBCExtensionModuleTranslator.UPDATE_SOURCE_FILE_DATA_ORACLE);
-            }
-            
+            updateFile(updatedBy, sourceName, data, checksum, jdbcConnection, JDBCExtensionModuleTranslator.UPDATE_SOURCE_FILE_DATA_ORACLE);
             
             jdbcConnection.commit();
 
@@ -246,243 +232,36 @@ public class JDBCExtensionModuleWriter {
 
     public static void setSource(String principalName, String sourceName, byte[] data, long checksum, Connection jdbcConnection)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-
-        if (JDBCExtensionModuleUtil.isConfigurationModel(sourceName)) {
-                updateConfig(principalName, sourceName, data, checksum, jdbcConnection, JDBCExtensionModuleTranslator.UPDATE_SOURCE_CONFIG_DATA_DEFAULT);
-            } else {
-                updateFile(principalName, sourceName, data, checksum, jdbcConnection, JDBCExtensionModuleTranslator.UPDATE_SOURCE_FILE_DATA_ORACLE);
-            }
-
+        updateFile(principalName, sourceName, data, checksum, jdbcConnection, JDBCExtensionModuleTranslator.UPDATE_SOURCE_FILE_DATA_ORACLE);
     }
 
-    private static void updateConfig(String principalName, String sourceName, byte[] data, long checksum, Connection jdbcConnection, String sql)
-    throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
-
-        
-        LogManager.logTrace(CONTEXT, "setting extension module file " + sourceName + " containing # bytes: " + data.length); //$NON-NLS-1$ //$NON-NLS-2$
-        JDBCPlatform platform = getPlatform(jdbcConnection);
-
-        PreparedStatement statement = null;
-        boolean original_autocommit = true;
-        try{
-            original_autocommit = jdbcConnection.getAutoCommit();
-            // Oracle specific handling
-            if(platform.usesStreamsForClobBinding()) {
-               
-                jdbcConnection.setAutoCommit(false);
-                
-                
-                sql = JDBCExtensionModuleTranslator.UPDATE_SOURCE_CONFIG_DATA_ORACLE;
-                statement = jdbcConnection.prepareStatement(sql);
-
-                statement.setString(1, principalName);
-                statement.setString(2, DateUtil.getCurrentDateAsString());
-                statement.setLong(3, checksum);
-                statement.setString(4, sourceName);
-                
-
-                if (statement.executeUpdate() != 1){
-                    if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                        throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
-                    }
-                    throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
-                }
-                
-                statement.close();
-
-                sql = JDBCExtensionModuleTranslator.SELECT_CONFIG_FILE_DATA_BY_NAME;
-                sql = sql + " FOR UPDATE"; //$NON-NLS-1$
-                
-                statement = jdbcConnection.prepareStatement(sql);
-
-                statement.setString(1, sourceName);
-                
-                if ( ! statement.execute() ) {
-                    //already checked if name wasn't in use above, shouldn't be a problem here
-                    throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0072, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0072, sourceName,sql));
-                }
-
-                ResultSet results = statement.getResultSet();
-                try {
-                    if ( results.next() ) {
-                        // the inputstream is closed in the oracle implementation
-                        platform.setClob(results, data, JDBCNames.ExtensionFilesTable.ColumnName.CONFIG_CONTENTS); 
-                        
-                        jdbcConnection.commit();
-                    } else {
-                        throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0064, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0064,sourceName));
-                    }
-                } catch (SQLException se){
-                    try {
-                        jdbcConnection.rollback();
-                    } catch (SQLException sr) {
-                        // do nothing
-                    }
-                    throw se;
-                } finally {
-                    if( results != null) {
-                        try {
-                            results.close();
-                        } catch(SQLException e) {
-                            LogManager.logWarning(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0073));
-                        }
-                    }
-                    
-                    try {
-                        jdbcConnection.setAutoCommit(original_autocommit);
-                    } catch (SQLException sr) {
-                        // do nothing
-                    }                    
-                                     
-                }
-                
-                               
-                
-            } else {
-                statement = jdbcConnection.prepareStatement(sql);
-                
-                statement.setString(1, principalName);
-                statement.setString(2, DateUtil.getCurrentDateAsString());
-                statement.setLong(3, checksum);                
-                                
-                platform.setClob(statement, data, 4);
-                
-                statement.setString(5, sourceName);   
-                int r = statement.executeUpdate();
-
-                if (r != 1){
-                    if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                        throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
-                    }
-                    throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
-                }
-                               
-            }
-        } catch (SQLException se){
-
-            //check if name is in use
-            if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                throw new ExtensionModuleNotFoundException(sourceName);
-            }
-            throw new MetaMatrixComponentException(se, ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
-
-        } catch (IOException e) {            
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
-        } finally {
-            if ( statement != null ) {
-                try {
-                    statement.close();
-                    statement = null;
-                } catch ( SQLException e ) {
-                    LogManager.logWarning(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0048));
-                }                
-            }
-            
-        }
-
-    }
-    
     private static void updateFile(String principalName, String sourceName, byte[] data, long checksum, Connection jdbcConnection, String sql)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException{
 
         LogManager.logTrace(CONTEXT, "setting extension module file " + sourceName + " containing # bytes: " + data.length); //$NON-NLS-1$ //$NON-NLS-2$
-        JDBCPlatform platform = getPlatform(jdbcConnection);
 
         PreparedStatement statement = null;
         ResultSet results = null;
 
-        boolean original_autocommit = true;
         try{
-            original_autocommit = jdbcConnection.getAutoCommit();
-            // Oracle specific handling
-            if(platform.usesStreamsForClobBinding()) {
-               
-                jdbcConnection.setAutoCommit(false);
-                
-                statement = jdbcConnection.prepareStatement(sql);
+            sql = JDBCExtensionModuleTranslator.UPDATE_SOURCE_FILE_DATA_DEFAULT;
+            statement = jdbcConnection.prepareStatement(sql);
 
-                statement.setString(1, principalName);
-                statement.setString(2, DateUtil.getCurrentDateAsString());
-                statement.setLong(3, checksum);
-                statement.setString(4, sourceName);
-                
-                if (statement.executeUpdate() != 1) {
-                    if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                        throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
-                    }
-                    throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0060, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0060, sourceName,sql));
+            statement.setString(1, principalName);
+            statement.setString(2, DateUtil.getCurrentDateAsString());
+            statement.setLong(3, checksum);
+            
+            statement.setBinaryStream(4, new ByteArrayInputStream(data), data.length);
+            
+            // DBstatement.setBytes(4, data);
+            statement.setString(5, sourceName);
+
+            if (statement.executeUpdate() != 1){
+                if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
+                    throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
                 }
-                LogManager.logTrace(CONTEXT, "SUCCESS-reset Blob: " + sql); //$NON-NLS-1$
-
-                statement.close();
-
-                sql = JDBCExtensionModuleTranslator.SELECT_SOURCE_FILE_DATA_BY_NAME;
-                sql = sql + " FOR UPDATE"; //$NON-NLS-1$
-                statement = jdbcConnection.prepareStatement(sql);
-
-                statement.setString(1, sourceName);
-
-                if ( ! statement.execute() ) {
-                    //already checked if name wasn't in use above, shouldn't be a problem here
-                    throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0062, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0062, sourceName,sql));
-                }
-                
-                try {
-
-                    results = statement.getResultSet();
-                    if ( results.next() ) {
-    
-                        platform.setBlob(results, data, JDBCNames.ExtensionFilesTable.ColumnName.FILE_CONTENTS);
-                        jdbcConnection.commit();
-    
-                    } else {
-                        throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0064, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0064,sourceName));
-                    }
-                } catch (SQLException se){
-                    try {
-                        jdbcConnection.rollback();
-                    } catch (SQLException sr) {
-                        // do nothing
-                    }
-                    throw se;
-                } finally {
-                    if( results != null) {
-                        try {
-                            results.close();
-                        } catch(SQLException e) {
-                            LogManager.logWarning(CONTEXT, e, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0073));
-                        }
-                    }
-                    
-                    try {
-                        jdbcConnection.setAutoCommit(original_autocommit);
-                    } catch (SQLException sr) {
-                        // do nothing
-                    }                    
-                    
-                }
-                    
-                   
-            } else {
-                sql = JDBCExtensionModuleTranslator.UPDATE_SOURCE_FILE_DATA_DEFAULT;
-                statement = jdbcConnection.prepareStatement(sql);
-
-                statement.setString(1, principalName);
-                statement.setString(2, DateUtil.getCurrentDateAsString());
-                statement.setLong(3, checksum);
-                
-                platform.setBlob(statement, data, 4);
-                
-                // DBstatement.setBytes(4, data);
-                statement.setString(5, sourceName);
-
-                if (statement.executeUpdate() != 1){
-                    if (!JDBCExtensionModuleReader.isNameInUse(sourceName, jdbcConnection)){
-                        throw new ExtensionModuleNotFoundException(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0059, sourceName));
-                    }
-                    throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
-                }                
-            }
+                throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
+            }                
         } catch (SQLException se){
 
             //check if name is in use
@@ -491,8 +270,6 @@ public class JDBCExtensionModuleWriter {
             }
             throw new MetaMatrixComponentException(se, ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
 
-        } catch (IOException e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0065, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0065, sql));
         } finally {
             if ( statement != null ) {
                 try {
@@ -716,19 +493,6 @@ public class JDBCExtensionModuleWriter {
         
       }      
     
-   
-
-
-    private static JDBCPlatform getPlatform(Connection jdbcConnection) throws MetaMatrixComponentException {
-        try {
-            return JDBCPlatformFactory.getPlatform(jdbcConnection);
-
-        } catch(Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0067, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0067));
-        }
-    }
-
-
     /**
      * Deletes a module from the list of modules
      * @param principalName name of principal requesting this addition

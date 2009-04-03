@@ -32,6 +32,7 @@ import java.util.Properties;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
+import com.metamatrix.common.jdbc.JDBCPlatform;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.util.DateUtil;
@@ -160,7 +161,7 @@ public class DbLogWriter {
 	private int maxExceptionLength  = DEFAULT_MAX_EXCEPTION_LENGTH;
 
 	private Properties connProps;
-	private StringBuffer insertStr;
+	private String insert;
        
     private boolean shutdown = false;
 
@@ -223,30 +224,7 @@ public class DbLogWriter {
 			// ignore and use default
 		}
 
-		// construct the insert string
-		insertStr = new StringBuffer(INSERT_INTO);
-		insertStr.append(getTableName(connProps));
-		insertStr.append(LEFT_PAREN);
-		insertStr.append( ColumnName.TIMESTAMP );
-		insertStr.append(COMMA);
-		insertStr.append( ColumnName.SEQUENCE_NUMBER );
-		insertStr.append(COMMA);
-		insertStr.append( ColumnName.CONTEXT );
-		insertStr.append(COMMA);
-		insertStr.append( ColumnName.LEVEL );
-		insertStr.append(COMMA);
-		insertStr.append( ColumnName.MESSAGE );
-		insertStr.append(COMMA);
-		insertStr.append( ColumnName.HOST );
-		insertStr.append(COMMA);
-		insertStr.append( ColumnName.VM );
-		insertStr.append(COMMA);
-		insertStr.append( ColumnName.THREAD );
-		insertStr.append(COMMA);
-		insertStr.append( '"'+ ColumnName.EXCEPTION +'"' );
-		insertStr.append(VALUES);
 	}
-	
 
 	public synchronized void logMessage(LogMessage msg) {
 		write(msg);	
@@ -275,6 +253,36 @@ public class DbLogWriter {
 		}
 	}
 	
+	private String getInsertStr(Connection c) throws SQLException {
+		if (this.insert == null) {
+			// construct the insert string
+			StringBuffer insertStr = new StringBuffer(INSERT_INTO);
+			insertStr.append(getTableName(connProps));
+			insertStr.append(LEFT_PAREN);
+			insertStr.append( ColumnName.TIMESTAMP );
+			insertStr.append(COMMA);
+			insertStr.append( ColumnName.SEQUENCE_NUMBER );
+			insertStr.append(COMMA);
+			insertStr.append( ColumnName.CONTEXT );
+			insertStr.append(COMMA);
+			insertStr.append( ColumnName.LEVEL );
+			insertStr.append(COMMA);
+			insertStr.append( ColumnName.MESSAGE );
+			insertStr.append(COMMA);
+			insertStr.append( ColumnName.HOST );
+			insertStr.append(COMMA);
+			insertStr.append( ColumnName.VM );
+			insertStr.append(COMMA);
+			insertStr.append( ColumnName.THREAD );
+			insertStr.append(COMMA);
+			String quote = JDBCPlatform.getIdentifierQuoteString(c);
+			insertStr.append( quote+ ColumnName.EXCEPTION +quote );
+			insertStr.append(VALUES);
+			this.insert = insertStr.toString();
+		}
+		return this.insert;
+	}
+	
 	private void printMsg(LogMessage message) throws SQLException {
         if (this.shutdown) {
             return;
@@ -289,7 +297,7 @@ public class DbLogWriter {
 		PreparedStatement stmt = null;
 		try {
 			connection = JDBCConnectionPoolHelper.getInstance().getConnection();
-			stmt = connection.prepareStatement(insertStr.toString());  
+			stmt = connection.prepareStatement(getInsertStr(connection));  
 
 			// Add values to Prepared statement
             

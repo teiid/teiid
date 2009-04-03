@@ -33,8 +33,6 @@ import com.metamatrix.common.connection.BaseTransaction;
 import com.metamatrix.common.connection.ManagedConnection;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.jdbc.JDBCMgdResourceConnection;
-import com.metamatrix.common.jdbc.JDBCPlatform;
-import com.metamatrix.common.jdbc.JDBCPlatformFactory;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.DateUtil;
@@ -56,10 +54,9 @@ import com.metamatrix.metadata.util.ErrorMessageKeys;
 
 public class JDBCConnector extends BaseTransaction implements MetaBaseConnector {
 
-    private static String IS_TRUE = "1";
-    private static String IS_FALSE = "0";
+    private static String IS_TRUE = "1"; //$NON-NLS-1$
+    private static String IS_FALSE = "0"; //$NON-NLS-1$
     private Connection jdbcConnection;
-    private JDBCPlatform platform;
     /**
      * Create a new instance of a transaction for a managed connection.
      * @param connection the connection that should be used and that was created using this
@@ -74,12 +71,10 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
 
             JDBCMgdResourceConnection jdbcManagedConnection = (JDBCMgdResourceConnection) connection;
             this.jdbcConnection = jdbcManagedConnection.getConnection();
-            platform = JDBCPlatformFactory.getPlatform(jdbcConnection);
         } catch ( Exception e ) {
             throw new ManagedConnectionException(ErrorMessageKeys.JDBCC_0002, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0002, JDBCMgdResourceConnection.class.getName() ) );
         }
 
-        JDBCRuntimeMetadataReader.setJDBCPlatform(this.platform);
     }
 
     /**
@@ -192,7 +187,7 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
                 if (statement.executeUpdate() != 1) {
 	                throw new VirtualDatabaseException(ErrorMessageKeys.JDBCC_0009, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0009) );
                 }
-                LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,new Object[]{"Inserted Model with DBID ",new Long(modelID.getUID())});
+                LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,new Object[]{"Inserted Model with DBID ",new Long(modelID.getUID())}); //$NON-NLS-1$
 
                 
 //                Properties prop;
@@ -203,16 +198,16 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
             
         }catch (SQLException se){
             BasicModelID modelID = (BasicModelID)model.getID();
-            sql = StringUtil.replace(sql, "?", Long.toString(modelID.getUID()) );
-            sql = StringUtil.replace(sql, "?", model.getName());
-            sql = StringUtil.replace(sql, "?", ((ModelID)model.getID()).getVersion());
-            sql = StringUtil.replace(sql, "?", (adjustLengthToFit(model.getDescription())==null?"NULL" : adjustLengthToFit(model.getDescription())));
-            sql = StringUtil.replace(sql, "?", (model.isPhysical()? IS_TRUE : IS_FALSE));
-            sql = StringUtil.replace(sql, "?", (model.isMultiSourceBindingEnabled()? IS_TRUE : IS_FALSE));
-            sql = StringUtil.replace(sql, "?", (model.isVisible()? IS_TRUE : IS_FALSE));
-            sql = StringUtil.replace(sql, "?", ((BasicModelID)model.getID()).getUuid());
-            sql = StringUtil.replace(sql, "?", Integer.toString(model.getModelType()));
-            sql = StringUtil.replace(sql, "?", model.getModelURI());
+            sql = StringUtil.replace(sql, "?", Long.toString(modelID.getUID()) ); //$NON-NLS-1$
+            sql = StringUtil.replace(sql, "?", model.getName()); //$NON-NLS-1$
+            sql = StringUtil.replace(sql, "?", ((ModelID)model.getID()).getVersion()); //$NON-NLS-1$
+            sql = StringUtil.replace(sql, "?", (adjustLengthToFit(model.getDescription())==null?"NULL" : adjustLengthToFit(model.getDescription()))); //$NON-NLS-1$ //$NON-NLS-2$
+            sql = StringUtil.replace(sql, "?", (model.isPhysical()? IS_TRUE : IS_FALSE)); //$NON-NLS-1$
+            sql = StringUtil.replace(sql, "?", (model.isMultiSourceBindingEnabled()? IS_TRUE : IS_FALSE)); //$NON-NLS-1$
+            sql = StringUtil.replace(sql, "?", (model.isVisible()? IS_TRUE : IS_FALSE)); //$NON-NLS-1$
+            sql = StringUtil.replace(sql, "?", ((BasicModelID)model.getID()).getUuid()); //$NON-NLS-1$
+            sql = StringUtil.replace(sql, "?", Integer.toString(model.getModelType())); //$NON-NLS-1$
+            sql = StringUtil.replace(sql, "?", model.getModelURI()); //$NON-NLS-1$
 
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCC_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0003, sql) );
         }finally {
@@ -255,7 +250,7 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
             if (statement.executeUpdate() != 1) {
                 throw new VirtualDatabaseException(ErrorMessageKeys.JDBCC_0023, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0023, vdb.getName() ) );
             }
-            LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,new Object[]{"Inserted VirtualDatabase with DBID ",new Long(((BasicVirtualDatabaseID)vdb.getID()).getUID())});
+            LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA,new Object[]{"Inserted VirtualDatabase with DBID ",new Long(((BasicVirtualDatabaseID)vdb.getID()).getUID())}); //$NON-NLS-1$
 
         }catch (SQLException se){
             throw new VirtualDatabaseException(se, ErrorMessageKeys.JDBCC_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.JDBCC_0003, sql) );
@@ -365,7 +360,7 @@ public class JDBCConnector extends BaseTransaction implements MetaBaseConnector 
             I18nLogManager.logError(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, ErrorMessageKeys.GEN_0008, e);
         }
 
-        LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "" + lines + " rows deleted.");
+        LogManager.logTrace(LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA, "" + lines + " rows deleted."); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     private String adjustLengthToFit(String oriString){

@@ -37,7 +37,6 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.jdbc.JDBCPlatform;
-import com.metamatrix.common.jdbc.JDBCPlatformFactory;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.common.util.ErrorMessageKeys;
@@ -125,65 +124,9 @@ public class JDBCExtensionModuleReader {
     public static byte[] getSource(String sourceName, Connection jdbcConnection)
     throws ExtensionModuleNotFoundException, MetaMatrixComponentException, SQLException {
 
-        //NOTE: DO NOT PUT LOGGING IN THIS METHOD
-        // Because configuration initializes by getting the source
-        // from the database prior to configuration properties being
-        // available
-       
-        if (JDBCExtensionModuleUtil.isConfigurationModel(sourceName)) {
-            return getConfigContent(sourceName, jdbcConnection);
-        }
         return getFileContent(sourceName, jdbcConnection);
     }
     
-    
-        
-   private static byte[] getConfigContent(String sourceName, Connection jdbcConnection)
-         throws MetaMatrixComponentException, SQLException {
-       
-        String sql = null;
-        PreparedStatement statement = null;
-        ResultSet results = null;
-        sql = JDBCExtensionModuleTranslator.SELECT_CONFIG_FILE_DATA_BY_NAME;
-        JDBCPlatform platform = getPlatform(jdbcConnection);
-
-        byte[] data = null;
-
-        try{
-                  
-
-            statement = jdbcConnection.prepareStatement(sql);
-            statement.setString(1, sourceName);
-
-            if ( ! statement.execute() ) {
-                throw new MetaMatrixComponentException(ErrorMessageKeys.EXTENSION_0046, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0046, sql));
-            }
-            results = statement.getResultSet();
-            try {
-                if (results.next()) {
-                    data = platform.convertClobToByteArray(results, JDBCNames.ExtensionFilesTable.ColumnName.CONFIG_CONTENTS);
-                } else {
-                    throw new ExtensionModuleNotFoundException(sourceName);
-                }
-            } catch( Throwable e) {
-                throw new MetaMatrixComponentException(e.getMessage());
-            }
-            
-        } catch (SQLException se){
-            throw se;
-        } catch ( MetaMatrixComponentException e ) {
-            throw e;
-        } catch (Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0047, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0047, sql));
-        } finally {
-            close(results);
-            close(statement);
-        }
-
-        return data;
-    }
-    
-   
     /**
      * Get file resource.  Caches files in memory.  Checks memory cache by checksum.  
      * If it's not in the cache or the checksum has changed, load from the DB.
@@ -203,16 +146,20 @@ public class JDBCExtensionModuleReader {
         CheckSumAndType csat = loadChecksumAndType(sourceName, jdbcConnection);
         long checksum = csat.getChecksum();
         String type = csat.getType();
-        long cachedChecksum = fileCache.getChecksum(sourceName);
-        
         byte[] bytes = null;
-        if (cachedChecksum == checksum) {
-            bytes = fileCache.getBytes(sourceName);
-        } 
+        if (fileCache != null) {
+	        long cachedChecksum = fileCache.getChecksum(sourceName);
+	        
+	        if (cachedChecksum == checksum) {
+	            bytes = fileCache.getBytes(sourceName);
+	        }
+        }
         
         if (bytes == null) {
             bytes = loadBytes(sourceName, jdbcConnection);
-            fileCache.put(sourceName, checksum, bytes, type);            
+            if (fileCache != null) {
+            	fileCache.put(sourceName, checksum, bytes, type);
+            }
         }
         
         return bytes;
@@ -304,9 +251,7 @@ public class JDBCExtensionModuleReader {
 
         byte[] data = null;
         try{
-            JDBCPlatform platform = JDBCPlatformFactory.getPlatform(jdbcConnection);
-
-            data = platform.convertToByteArray(dataObj);
+            data = JDBCPlatform.convertToByteArray(dataObj);
             
         } catch (Exception e) {
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0049, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0049));
@@ -528,22 +473,6 @@ public class JDBCExtensionModuleReader {
         }
     }
     
-    /**
-     * Get the Platform for JDBC that is representive of the type of
-     * connection.
-     * 
-     * @since 4.2
-     */
-    private static JDBCPlatform getPlatform(Connection jdbcConnection) throws MetaMatrixComponentException {
-        try {
-            return JDBCPlatformFactory.getPlatform(jdbcConnection);
-
-        } catch(Exception e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.EXTENSION_0067, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0067));
-        }
-    }
-    
-
     public static ExtensionModuleDescriptor buildExtensionDescriptor (ResultSet resultSet) throws MetaMatrixComponentException {
         try{
         	ExtensionModuleDescriptor module = new ExtensionModuleDescriptor(

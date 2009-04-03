@@ -33,19 +33,15 @@ import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Properties;
-import java.util.Set;
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
-import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
+import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleException;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.util.ByteArrayHelper;
@@ -56,14 +52,6 @@ public final class JDBCExtensionModuleUtil {
 
     private static final String PRINCIPAL = "JDBCExtensionUtil"; //$NON-NLS-1$
 
-    private static Set configurationNames;
-    
-    static {
-       configurationNames = new HashSet();
-       configurationNames.add(Configuration.NEXT_STARTUP);
-    }
-    
-    
 	private Properties properties;
 	/**
 	 * Instantiates this class with any Properties that need to override
@@ -221,9 +209,9 @@ public final class JDBCExtensionModuleUtil {
                 }
                 
                 if (inuse) {
-                    JDBCExtensionModuleWriter.setSource(PRINCIPAL, extName, data, getChecksum(data), connection);          
+                    JDBCExtensionModuleWriter.setSource(PRINCIPAL, extName, data, ExtensionModuleManager.getChecksum(data), connection);          
                 } else {  
-                    JDBCExtensionModuleWriter.addSource(PRINCIPAL, extType, extName, data, getChecksum(data), extDesc, true, connection);
+                    JDBCExtensionModuleWriter.addSource(PRINCIPAL, extType, extName, data, ExtensionModuleManager.getChecksum(data), extDesc, true, connection);
                 }
                  
             } catch (MetaMatrixComponentException mce) {
@@ -250,32 +238,6 @@ public final class JDBCExtensionModuleUtil {
             connection = null;            
 
     }
-    
-    public static boolean isConfigurationModel(String sourceName) {
-        return configurationNames.contains(sourceName);
-    }
-    
-    /**
-     * Adds an element to the list of filenames considered to be configuration models
-     * (and therefore stored as clobs). 
-     * 
-     * @since 4.2
-     */
-    static void addConfigurationModelName(String sourceName) {
-        configurationNames.add(sourceName);
-    }
-    
-    /**
-     * Removes an element from the list of filenames considered to be configuration models
-     * (and therefore stored as clobs). 
-     * 
-     * @since 4.2
-     */
-    static void removeConfigurationModelName(String sourceName) {
-        configurationNames.remove(sourceName);
-    }
-    
-    
     
     public void importExtensionModule(String importFileName, String extName, String extType, String extDesc, String position) 
     throws ExtensionModuleNotFoundException, DuplicateExtensionModuleException, MetaMatrixComponentException{
@@ -388,22 +350,4 @@ public final class JDBCExtensionModuleUtil {
 
   }
     
-    
-    
-    
-    /**
-     * this checksum method is the same as the one in ExtensionMangaer
-     * 
-     * @param data
-     * @return
-     */
-    private long getChecksum(byte[] data){
-        Checksum algorithm = new CRC32();
-        algorithm.update(data, 0, data.length);
-        return algorithm.getValue();
-    } 
-    
-
-
-
 }

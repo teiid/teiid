@@ -11,6 +11,7 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
 import com.metamatrix.common.connection.ManagedConnectionException;
+import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.extensionmodule.ExtensionModuleTypes;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.spi.ExtensionModuleTransaction;
@@ -113,12 +114,12 @@ public class ExtensionModuleConnection implements PersistentConnection {
             boolean inUse = trans.isNameInUse(model.getConfigurationID().getFullName());
 
             if (inUse) {
-                trans.setSource(principal, model.getConfigurationID().getFullName(), data, data.length);
+                trans.setSource(principal, model.getConfigurationID().getFullName(), data, ExtensionModuleManager.getChecksum(data));
             } else {
                 trans.addSource(principal, ExtensionModuleTypes.CONFIGURATION_MODEL_TYPE,
                                     model.getConfigurationID().getFullName(),
                                     data,
-                                    data.length,
+                                    ExtensionModuleManager.getChecksum(data),
                                     model.getConfigurationID().getFullName() + " Configuration Model", //$NON-NLS-1$
                                     true);
 
