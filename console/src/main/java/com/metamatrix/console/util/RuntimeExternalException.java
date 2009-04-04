@@ -26,15 +26,9 @@ package com.metamatrix.console.util;
  * Class to wrap an ExternalException within a RuntimeException.
  */
 public class RuntimeExternalException extends RuntimeException {
-    private Exception theException;
 
     public RuntimeExternalException(Exception e) {
-        super();
-        theException = e;
-    }
-
-    public Exception getTheException() {
-        return theException;
+        super(e);
     }
 
     public String toString() {

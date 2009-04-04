@@ -31,8 +31,6 @@ import com.metamatrix.admin.AdminMessages;
 import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.server.ServerAdmin;
-import com.metamatrix.api.exception.ComponentCommunicationException;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
@@ -173,10 +171,7 @@ public class ConnectionInfo {
             connection = relogin();
 
             return connection;
-        } catch (MetaMatrixComponentException e) {
-            throw new MetaMatrixRuntimeException(e);
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
             throw new MetaMatrixRuntimeException(e);
         }
 	}
@@ -265,29 +260,11 @@ public class ConnectionInfo {
         return connection;
     }
 
-    public ServerConnection relogin() throws MetaMatrixComponentException {
-
+    public ServerConnection relogin() throws Exception {
         close();
-        
-        Exception e = null;
-        connection = null;
-        try {              
-            connection = login();
-            boolean initSucceeded = ModelManager.init(this);    
-
-            if (initSucceeded) {
-                return connection;
-            }                
-        } catch (Exception ex) {
-            e = ex;
-        }
-        // If we're here we've retried the maximum number of times
-        String msg = "Lost communication with Server."; //$NON-NLS-1$
-        if (e instanceof LogonException) {
-        	msg = "Current credentials are no longer valid.  This connection should be closed."; //$NON-NLS-1$
-        }
-        ComponentCommunicationException cce = new ComponentCommunicationException(e, msg);
-        throw cce;        
+        connection = login();
+        ModelManager.init(this);    
+        return connection;
     }
         
     
@@ -311,7 +288,7 @@ public class ConnectionInfo {
      * TODO: cache this?  Need to make sure it gets closed when the console exits. 
      * @throws CommunicationException 
 	 */
-    public synchronized ServerAdmin getServerAdmin() throws AdminException, LogonException, CommunicationException {
+    public synchronized ServerAdmin getServerAdmin() throws AdminException, CommunicationException {
     	if (this.serverAdmin == null) {
     		this.serverAdmin = ServerAdminFactory.getInstance().createAdmin(user, password, url, applicationName);
     	}

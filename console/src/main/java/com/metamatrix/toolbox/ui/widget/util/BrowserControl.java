@@ -24,6 +24,8 @@ package com.metamatrix.toolbox.ui.widget.util;
 
 import java.io.IOException;
 
+import com.metamatrix.console.util.ExceptionUtility;
+
 /**
  * BrowserControl is a static class that enables code to invoke the default web browser
  * on the user's machine, either Windows or Unix.
@@ -92,15 +94,11 @@ public class BrowserControl {
                     }
                 }
                 catch(InterruptedException x) {
-                    System.err.println("Error bringing up browser, cmd='" + cmd + "'");
-                    System.err.println("Caught: " + x);
                 }
             }
         }
         catch(IOException x) {
-            // couldn't exec browser
-            System.err.println("Could not invoke browser, command=" + cmd);
-            System.err.println("Caught: " + x);
+        	ExceptionUtility.showMessage("Could not invoke browser, command=" + cmd, x);
         }
     }
 

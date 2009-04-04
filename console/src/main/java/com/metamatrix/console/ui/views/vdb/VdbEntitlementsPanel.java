@@ -41,12 +41,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.models.VdbManager;
 import com.metamatrix.console.ui.ViewManager;
 import com.metamatrix.console.ui.views.DefaultConsoleTableComparator;
 import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.platform.security.api.AuthorizationPolicyID;
@@ -94,7 +96,7 @@ public class VdbEntitlementsPanel extends JPanel implements
             this.frParent = ViewManager.getMainFrame();
             jbInit();
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

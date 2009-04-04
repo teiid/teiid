@@ -1103,12 +1103,9 @@ public class StaticTreeUtilities {
         
         if ( !LogManager.isMessageToBeRecorded( StaticTreeUtilities.CONTEXT_FOR_DUPE_CHECKING,
                                                 StaticTreeUtilities.MSGLEVEL_FOR_DUPE_CHECKING ) ) {
-//            System.out.println("[userTabPaintProblemDuplicateNodeCheck] Will NOT check dupes in tree");
             return;
         } 
         
-//        System.out.println("[userTabPaintProblemDuplicateNodeCheck] WILL check dupes in tree");
-
         java.util.List nodesList = StaticTreeUtilities.descendantsOfNode(
                 (javax.swing.tree.TreeNode)tree.getModel().getRoot(), true);
         int listLen = nodesList.size();

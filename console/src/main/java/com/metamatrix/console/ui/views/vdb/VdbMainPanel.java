@@ -78,6 +78,7 @@ import com.metamatrix.console.util.DialogUtility;
 import com.metamatrix.console.util.ExceptionUtility;
 import com.metamatrix.console.util.Refreshable;
 import com.metamatrix.console.util.StaticUtilities;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
@@ -1061,7 +1062,7 @@ public class VdbMainPanel extends BasePanel implements
         try {
             vdbSelected = (VirtualDatabase)getDisplayedVdbs().get(iRow);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new MetaMatrixRuntimeException(e);
         }
         setSelectedVdb(vdbSelected);
         alignVisibleDetailPanelWithTableChoice();

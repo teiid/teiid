@@ -56,6 +56,7 @@ import com.metamatrix.console.ui.util.NoMinTextFieldWidget;
 import com.metamatrix.console.ui.util.WizardInterface;
 import com.metamatrix.console.ui.util.property.TypeConstants;
 import com.metamatrix.console.util.ExternalException;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.toolbox.ui.widget.AccumulatorPanel;
@@ -217,15 +218,8 @@ public class NewGroupsWizardSelectionPanel extends BasicWizardSubpanelContainer
         Collection allDomains = null;
 		try {
 			allDomains = getGroupsManager().getDomainNames();
-		} catch (AuthorizationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ComponentNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExternalException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			throw new MetaMatrixRuntimeException(e);
 		}
 		if(allDomains!=null) {
             Iterator iter = allDomains.iterator();

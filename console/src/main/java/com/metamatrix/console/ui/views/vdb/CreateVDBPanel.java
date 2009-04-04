@@ -1407,7 +1407,6 @@ public class CreateVDBPanel extends WizardInterfaceImpl {
         } catch (VirtualDatabaseDoesNotExistException dne) {
             return null;
         } catch (Exception ex) {
-            ex.printStackTrace();
             String msg = "An error occurred retrieving VDB version information"; //$NON-NLS-1$
             LogManager.logError("Information Retrieval Error", ex, msg); //$NON-NLS-1$
             ExceptionUtility.showMessage(msg, ex);

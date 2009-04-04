@@ -492,13 +492,11 @@ public final class PscDefinitionPanel
         
         List pscServiceNames = null;
         if (pscDef.getComponentTypeID().getName().equals(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME)) {
-//          System.out.println("NEW PSC - use bindings");
 
             Collection bindings = config.getConnectorBindings();
 
             // get all the names of the available bindings to choose from
             if (bindings != null) {
-//              System.out.println("NEW PSC - bindings found " + bindings.size());
                                         
                 pscServiceNames = new ArrayList(bindings.size());
                 Iterator itCbs = bindings.iterator();
@@ -507,7 +505,6 @@ public final class PscDefinitionPanel
                     pscServiceNames.add(cb.getID());                                                    
                 }
             } else {
-//              System.out.println("NEW PSC - no bindings found ");
                 
                 pscServiceNames = Collections.EMPTY_LIST;
             }           

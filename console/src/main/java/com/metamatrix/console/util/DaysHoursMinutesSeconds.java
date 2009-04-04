@@ -30,18 +30,6 @@ import java.util.Date;
  */
 public class DaysHoursMinutesSeconds implements Serializable {
 
-    public static void printMethodCallDurationMessage(String methodName,
-            Date startingTime, Date endingTime) {
-        long startingTimeAsLong = startingTime.getTime();
-        long endingTimeAsLong = endingTime.getTime();
-        long timeDiffInMilliseconds = endingTimeAsLong - startingTimeAsLong;
-        DaysHoursMinutesSeconds dhms = new DaysHoursMinutesSeconds(
-                timeDiffInMilliseconds);
-        String timeAsString = dhms.toDisplayString(true);
-        String message = ">>>>Call to " + methodName + " took " + timeAsString;
-        System.err.println(message);
-    }
-
     //Number of days
     private int days;
 

@@ -164,13 +164,6 @@ public class SeparatorWidget extends JSeparator {
     public void paint(Graphics g){
         Dimension s = getSize();
 
-        /*
-        System.out.println("insets: "+getInsets());
-        System.out.println("size: "+getSize());
-        System.out.println("horiz?: "+(getOrientation()==JSeparator.HORIZONTAL));
-        System.out.println("parent: "+new Dimension(getParentWidth(), getParentHeight()));
-        */
-
         int firstLine;
         int secondLine;
 

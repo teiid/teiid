@@ -22,24 +22,36 @@
 
 package com.metamatrix.console.ui.views.vdb;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.models.VdbManager;
 import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
-import com.metamatrix.toolbox.ui.widget.*;
+import com.metamatrix.toolbox.ui.widget.ButtonWidget;
+import com.metamatrix.toolbox.ui.widget.LabelWidget;
+import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
 import com.metamatrix.toolbox.ui.widget.text.DefaultTextFieldModel;
 
 public class VdbDetailPanel extends JPanel implements
@@ -91,7 +103,7 @@ public class VdbDetailPanel extends JPanel implements
             jbInit();
             addListeners();
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

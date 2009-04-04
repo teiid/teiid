@@ -39,6 +39,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ModelManager;
@@ -46,6 +47,7 @@ import com.metamatrix.console.models.VdbManager;
 import com.metamatrix.console.ui.util.BasicWizardSubpanelContainer;
 import com.metamatrix.console.ui.util.WizardInterface;
 import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 
@@ -78,7 +80,7 @@ public class VdbWizardEditConnBindPanel extends BasicWizardSubpanelContainer {
         try {
             init();
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 
@@ -92,7 +94,7 @@ public class VdbWizardEditConnBindPanel extends BasicWizardSubpanelContainer {
         try {
             init();
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

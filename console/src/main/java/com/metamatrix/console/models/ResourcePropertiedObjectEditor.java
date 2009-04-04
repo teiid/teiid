@@ -210,11 +210,6 @@ public class ResourcePropertiedObjectEditor extends ConfigurationPropertiedObjec
 
         componentObject = getObject(componentObject);
 
-//System.out.println("setValue(" + obj + ", " + def + ", " + value + ")");
-//if (value != null) {
-//    System.out.println("value obj type = " + value.getClass().getName());
-//}
-
             if ( value == null ) {
                 //If the value is null, this most likely means that the user
                 //of the PropertiedObjectPanel has entered in the default

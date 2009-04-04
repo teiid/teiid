@@ -385,7 +385,6 @@ public class ConnectorPanel extends BasePanel implements WorkspacePanel,
                     
                 }
 			} catch (Exception theException) {
-                theException.printStackTrace();
               	DeployPkgUtils.getString("ecp.msg.exporterrordetail", //$NON-NLS-1$
               			new Object[] {selectedConnectorName, filename});
              	ExceptionUtility.showMessage("Unable to Export Connector Type",  //$NON-NLS-1$

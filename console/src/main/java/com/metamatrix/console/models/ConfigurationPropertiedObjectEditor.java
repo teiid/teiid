@@ -350,10 +350,6 @@ public class ConfigurationPropertiedObjectEditor implements PropertiedObjectEdit
             Assertion.isNotNull(def,AdminPlugin.Util.getString(AdminMessages.ADMIN_0018, "PropertyDefinition")); //$NON-NLS-1$
         }
 
-//System.out.println("setValue(" + obj + ", " + def + ", " + value + ")");
-//if (value != null) {
-//    System.out.println("value obj type = " + value.getClass().getName());
-//}
         try{
             ComponentTypeDefn typeDefn = getConfigurationManager().getComponentTypeDefn(def, componentObject);
             if (!typeDefn.getComponentTypeID().equals(componentObject.getComponentTypeID())){
@@ -412,7 +408,6 @@ public class ConfigurationPropertiedObjectEditor implements PropertiedObjectEdit
         } catch (MetaMatrixComponentException e){
             throw new MetaMatrixRuntimeException(e, AdminMessages.ADMIN_0028, AdminPlugin.Util.getString(AdminMessages.ADMIN_0028));
         } catch (ClassCastException e){
-//            e.printStackTrace();
             throw new MetaMatrixRuntimeException(e, AdminMessages.ADMIN_0029, AdminPlugin.Util.getString(AdminMessages.ADMIN_0029));
         }
     }

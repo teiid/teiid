@@ -30,7 +30,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.util.Date;
 import java.util.Enumeration;
 import java.util.Iterator;
 
@@ -42,15 +41,15 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.ui.layout.ConsoleMainFrame;
 import com.metamatrix.console.ui.tree.TreePathExpansion;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.StaticTreeUtilities;
 import com.metamatrix.console.util.StaticUtilities;
-
 import com.metamatrix.platform.admin.api.PermissionNode;
 import com.metamatrix.platform.admin.api.PermissionTreeView;
 import com.metamatrix.platform.security.api.AuthorizationActions;
-
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 import com.metamatrix.toolbox.ui.widget.CheckBox;
 import com.metamatrix.toolbox.ui.widget.LabelWidget;
@@ -107,21 +106,8 @@ public class DataNodeAuthorizationsControl extends JPanel
         		canModifyEntitlements, rootVisible);
         TreePathExpansion[] tpe = null;
         try {
-            Date startingTime = new Date();
             tpe = StaticTreeUtilities.expansionState(treeTable.getTree());
-            Date endingTime = new Date();
-            long startingTimeLong = startingTime.getTime();
-            long endingTimeLong = endingTime.getTime();
-            long timeDiffLong = endingTimeLong - startingTimeLong;
-            double timeDiff = ((double)timeDiffLong) / 1000;
-            if (timeDiff >= 2.0) {
-//                String message = "DNAC..setTreeView() expansionState() call took "
-//                        + timeDiff + " seconds";
-//                LogManager.logInfo(LogContexts.ENTITLEMENTS, message);
-//System.err.println(message);
-            }
         } catch (Exception ex) {
-//System.err.println("expansionState() threw exception of " + ex);
         }
         createComponent();
         if (tpe != null) {
@@ -269,7 +255,7 @@ public class DataNodeAuthorizationsControl extends JPanel
         }
         DataNodesTreeNode changedNode = treeTable.anyAuthorizationsChangesMade();
         if (changedNode != null) {
-            System.err.println("missed resetting node " + changedNode +
+        	LogManager.logError(LogContexts.INITIALIZATION, "missed resetting node " + changedNode +
                     ", initial CRUD states: " + changedNode.getInitialCreateState() +
                     changedNode.getInitialReadState() + changedNode.getInitialUpdateState() +
                     changedNode.getInitialDeleteState() + ", current CRUD states: " +

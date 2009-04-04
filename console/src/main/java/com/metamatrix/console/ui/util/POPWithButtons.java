@@ -214,17 +214,6 @@ public class POPWithButtons extends JPanel
             StaticUtilities.startWait( ViewManager.getMainFrame() );
             PropertiedObject propObj = thePanel.getThePanel().getPropertiedObject();
             
-//Was attempting to save scroll bar position then reposition after reset, because
-//process of resetting was always repositioning scroll bar to the top, which is
-//annoying.  But commenting out because nothing I've tried is working.
-//BWP 07/17/02
-//            int scrollValue = -1;
-//            JScrollBar scrollBar = 
-//            		thePanel.getThePanel().getScrollPane().getVerticalScrollBar();
-//            if (scrollBar != null) {
-//            	scrollValue = scrollBar.getValue();
-//System.err.println("scrollValue retrieved as " + scrollValue);            	
-//            }
 			Iterator it = valuesMap.entrySet().iterator();
             while (it.hasNext()) {
                 Map.Entry me = (Map.Entry)it.next();

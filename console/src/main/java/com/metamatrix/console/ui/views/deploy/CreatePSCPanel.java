@@ -151,7 +151,6 @@ public final class CreatePSCPanel
            
       		if (serviceNames == null) {
       			Exception theException = new Exception("Null ServiceNames"); //$NON-NLS-1$
-                theException.printStackTrace();
                 LogManager.logError(
                     LogContexts.USERS,
                     theException,

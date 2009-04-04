@@ -192,19 +192,6 @@ public class ComboButtonWidget extends JPanel {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /**
-    @return The desired menu item by index
-    @since Golden Gate
-    */
-    public JRadioButtonMenuItem getChoiceMenuItem(int index){
-        if (index <= choicesMenuItemArray.length) {
-            return choicesMenuItemArray[index];
-        }
-        System.out.println("CombButtonWidget: throw exception here");
-        return null;
-    }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
     @return The desired menu item by the text it was created with
     @since Golden Gate
     */

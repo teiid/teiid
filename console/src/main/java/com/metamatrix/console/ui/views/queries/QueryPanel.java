@@ -59,7 +59,6 @@ import com.metamatrix.console.ui.views.deploy.util.DeployPkgUtils;
 import com.metamatrix.console.util.AutoRefreshable;
 import com.metamatrix.console.util.AutoRefresher;
 import com.metamatrix.console.util.ExceptionUtility;
-import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.StaticProperties;
 import com.metamatrix.console.util.StaticUtilities;
@@ -396,11 +395,8 @@ public final class QueryPanel
                 }
             };
             StaticUtilities.invokeLaterSafe(runnable);
-            
-		} catch (ExternalException ee) {
-            ExceptionUtility.showUnspecifiedFailureMessage(ConsolePlugin.Util.getString("QueryPanel.Could_not_refresh_query_table_1"), ee); //$NON-NLS-1$
         } catch (Throwable e) {
-			ExceptionUtility.showUnspecifiedFailureMessage(ConsolePlugin.Util.getString("QueryPanel.Could_not_refresh_query_table_1"), e); //$NON-NLS-1$
+			ExceptionUtility.showMessage(ConsolePlugin.Util.getString("QueryPanel.Could_not_refresh_query_table_1"), e); //$NON-NLS-1$
 		} finally {
 			StaticUtilities.endWait(ConsoleMainFrame.getInstance());
 		}

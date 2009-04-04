@@ -32,6 +32,16 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class ExceptionUtil {
 	
+    public static <T extends Throwable> T getExceptionOfType(Throwable ex, Class<T> cls) {
+        while (ex != null) {
+            if (cls.isAssignableFrom(ex.getClass())) {
+                return (T)ex;
+            } 
+            ex = ex.getCause();
+        }
+        return null;
+    }
+	
 	public static Throwable convertException(Method method, Throwable exception) {
 		boolean canThrowXATransactionException = false;
         Class<?>[] exceptionClasses = method.getExceptionTypes();

@@ -62,19 +62,11 @@ public class ColumnSortInfo {
         	try {
             	col = (EnhancedTableColumn)table.getColumn(csi[i].getColHeader());
         	} catch (Exception ex) {
-//System.err.println("exception occured:");
-//ex.printStackTrace();
         	}
         	if (col != null) {
             	boolean addToExistingSortColumns = (!firstSortCol);
          		if (csi[i].isAscending()) {
-//System.err.println("before call to setColumnSortedAscending(), col = " + 
-// col.getIdentifier() + ", addToExistingSortColumns = " + addToExistingSortColumns +
-// ", table contents:");
-//System.err.println(StaticTableUtilities.tableContents(table));	         	    
 					table.setColumnSortedAscending(col, addToExistingSortColumns);
-//System.err.println("after call, table contents:");
-//System.err.println(StaticTableUtilities.tableContents(table));					
 				} else {
          	    	table.setColumnSortedDescending(col, addToExistingSortColumns);
          		}

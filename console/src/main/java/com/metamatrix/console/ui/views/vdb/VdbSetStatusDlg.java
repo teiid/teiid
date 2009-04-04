@@ -34,11 +34,13 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.models.VdbManager;
 import com.metamatrix.console.ui.ViewManager;
 import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
@@ -70,7 +72,7 @@ public class VdbSetStatusDlg extends JDialog {
         try {
             init();
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
     

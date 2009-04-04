@@ -27,9 +27,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.ui.util.property.PropertyProvider;
 import com.metamatrix.console.util.ExternalException;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.PSCData;
@@ -78,7 +80,7 @@ public final class RuntimeMgmtManager
             // get QueryManager listeners.
             List qmListeners = ModelManager.getQueryManager(connection).getEventListeners();
 
-            getAPI().bounceServer();
+            connection.getServerAdmin().bounceSystem(true);
             
             ModelManager.removeConnection(connection);
             connection.relogin();
@@ -91,7 +93,6 @@ public final class RuntimeMgmtManager
             	qm.addManagerListener((ManagerListener) iter.next());
             }
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("bounceServer", theException), //$NON-NLS-1$
                 theException);
@@ -146,7 +147,7 @@ public final class RuntimeMgmtManager
             return getAPI().getSystemState();
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("getServerState", theException), //$NON-NLS-1$
                 theException);
@@ -231,7 +232,7 @@ public final class RuntimeMgmtManager
                 } // end if Hosts
 
         } catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("getHostNamesWhereServiceiSRunning", theException), //$NON-NLS-1$
                 theException);
@@ -254,7 +255,7 @@ public final class RuntimeMgmtManager
         	getAPI().shutdownServer();
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("shutdownServer", theException), //$NON-NLS-1$
                 theException);
@@ -268,7 +269,7 @@ public final class RuntimeMgmtManager
         	getAPI().startHost(theHost.getName());
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("startHost", "host=" + theHost, theException), //$NON-NLS-1$ //$NON-NLS-2$
                 theException);
@@ -282,7 +283,7 @@ public final class RuntimeMgmtManager
         	getAPI().startProcess(theProcess.getHostName(), theProcess.getName());
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("startProcess", //$NON-NLS-1$
                                "process=" + theProcess, //$NON-NLS-1$
@@ -298,7 +299,7 @@ public final class RuntimeMgmtManager
         	getAPI().startPSC(thePsc.getPscID());
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("startPsc", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
                 theException);
@@ -312,7 +313,7 @@ public final class RuntimeMgmtManager
         	getAPI().restartService(theService.getServiceID());
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("startService", //$NON-NLS-1$
                                "service=" + theService, //$NON-NLS-1$
@@ -327,8 +328,8 @@ public final class RuntimeMgmtManager
         try {
         	getAPI().stopHost(theHost.getName());
         }
-        catch (Exception theException) {
-            theException.printStackTrace();
+        catch (Exception ex) {
+        	LogManager.logDetail(LogContexts.GENERAL, ex, ex.getMessage());
             //don't rethrow: stopping the host you're connected to can cause an error 
         }
     }
@@ -339,8 +340,8 @@ public final class RuntimeMgmtManager
         try {
         	getAPI().stopHostNow(theHost.getName());
         }
-        catch (Exception theException) {
-            theException.printStackTrace();
+        catch (Exception ex) {
+        	LogManager.logDetail(LogContexts.GENERAL, ex, ex.getMessage());
             //don't rethrow: stopping the host you're connected to can cause an error 
         }
     }
@@ -351,8 +352,8 @@ public final class RuntimeMgmtManager
         try {
         	getAPI().stopProcess(theProcess.getHostName(), theProcess.getName(), true);
         }
-        catch (Exception theException) {
-            theException.printStackTrace();
+        catch (Exception ex) {
+        	LogManager.logDetail(LogContexts.GENERAL, ex, ex.getMessage());
             //don't rethrow: stopping the host you're connected to can cause an error 
         }
     }
@@ -363,8 +364,8 @@ public final class RuntimeMgmtManager
         try {
         	getAPI().stopProcess(theProcess.getHostName(), theProcess.getName(), true);
         }
-        catch (Exception theException) {
-            theException.printStackTrace();
+        catch (Exception ex) {
+        	LogManager.logDetail(LogContexts.GENERAL, ex, ex.getMessage());
             //don't rethrow: stopping the host you're connected to can cause an error 
         }
     }
@@ -376,7 +377,6 @@ public final class RuntimeMgmtManager
         	getAPI().stopPSC(thePsc.getPscID());
         }
         catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("stopPsc", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
                 theException);
@@ -390,7 +390,6 @@ public final class RuntimeMgmtManager
         	getAPI().stopPSCNow(thePsc.getPscID());
         }
         catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("stopPscNow", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
                 theException);
@@ -404,7 +403,7 @@ public final class RuntimeMgmtManager
         	getAPI().stopService(theService.getServiceID());
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("stopService", //$NON-NLS-1$
                                "service=" + theService, //$NON-NLS-1$
@@ -420,7 +419,7 @@ public final class RuntimeMgmtManager
         	getAPI().stopServiceNow(theService.getServiceID());
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("stopServiceNow", //$NON-NLS-1$
                                "service=" + theService, //$NON-NLS-1$
@@ -506,7 +505,7 @@ public final class RuntimeMgmtManager
             }
         }
         catch (Exception theException) {
-            theException.printStackTrace();
+            
             throw new ExternalException(
                 formatErrorMsg("synchronizeServer", theException), //$NON-NLS-1$
                 theException);

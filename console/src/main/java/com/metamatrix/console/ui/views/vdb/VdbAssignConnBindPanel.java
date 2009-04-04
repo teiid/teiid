@@ -126,7 +126,7 @@ public class VdbAssignConnBindPanel extends JPanel implements
             tblModels.setSortable(true);
             setInitialTableSorting();
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

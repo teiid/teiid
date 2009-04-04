@@ -204,18 +204,6 @@ public final class AdminConsoleMain {
     }
     
     private void setUpLogging() {
-    	String captureSystemOutProp = 
-    			"metamatrix.log.captureSystemOut"; //$NON-NLS-1$
-    	String captureSystemErrProp =
-    			"metamatrix.log.captureSystemErr"; //$NON-NLS-1$
-    	String captureSystemOutVal = System.getProperty(
-    			captureSystemOutProp, "false");
-    	boolean captureSystemOut = captureSystemOutVal.equalsIgnoreCase(
-    			"true"); //$NON-NLS-1$
-    	String captureSystemErrVal = System.getProperty(
-    			captureSystemErrProp, "false");
-    	boolean captureSystemErr = captureSystemErrVal.equalsIgnoreCase(
-    			"true"); //$NON-NLS-1$
     	String logFileProp = "metamatrix.log.file"; //$NON-NLS-1$
     	String logFile = System.getProperty(logFileProp);
     	File tmpFile = null;
@@ -245,12 +233,8 @@ public final class AdminConsoleMain {
     	try {
     		FileOutputStream fos = new FileOutputStream(tmpFile);
     		PrintStream log = new PrintStream(fos);
-    		if (captureSystemOut) {
-    			System.setOut(log);
-    		}
-    		if (captureSystemErr) {
-    			System.setErr(log);
-    		}
+			System.setOut(log);
+			System.setErr(log);
     		FileLogWriter flw = new FileLogWriter(tmpFile);
     		PlatformLog logger = new PlatformLog();
     		logger.addListener(flw);

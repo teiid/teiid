@@ -210,7 +210,6 @@ public class QueryRequestPanel extends BasePanel {
 				ModelManager.getQueryManager(connection).cancelQueryRequests(
 					getCurrentSelections());
 			} catch (Exception theException) {
-				theException.printStackTrace();
 				throw new ExternalException(theException);
 			}
 		}

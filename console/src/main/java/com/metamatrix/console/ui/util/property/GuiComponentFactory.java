@@ -23,24 +23,18 @@
 //#############################################################################
 package com.metamatrix.console.ui.util.property;
 
-import java.beans.BeanInfo;
-import java.beans.IndexedPropertyDescriptor;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Method;
 import java.text.ParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.text.Document;
 
 import com.metamatrix.core.util.StringUtil;
-
 import com.metamatrix.toolbox.ui.Validator;
 import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
 import com.metamatrix.toolbox.ui.widget.text.DefaultTextFieldModel;
@@ -138,109 +132,6 @@ public class GuiComponentFactory {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
-     * Creates a <code>JComponent</code> and initializes it's properties using
-     * properties file(s).
-     * @param theKey the properties file key
-     * @param thePropProvider the provider that determines the file(s) to look
-     * at
-     * @return the newly created component
-     * @throws IllegalArgumentException if either input parameter is
-     * <code>null</code>, the key cannot be found, the value is not a
-     * {@link String} object, the value is not a class name, or the class is
-     * not an <code>instanceof JComponent</code>.
-     * .
-     */
-    public static JComponent createComponent(
-        String theKey,
-        PropertyProvider thePropProvider) {
-
-        if ((theKey == null) || (thePropProvider == null)) {
-            throw new IllegalArgumentException(
-                "Either the key <" + theKey + //$NON-NLS-1$
-                ">, or the property provider <" + thePropProvider + //$NON-NLS-1$
-                "> is null."); //$NON-NLS-1$
-        }
-
-        String className = thePropProvider.getString(theKey, true);
-        if (className == null) {
-            throw new IllegalArgumentException(
-                "The key <" + theKey + "> cannot be found."); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
-        Class objClass = null;
-        try {
-            objClass = Class.forName(className);
-        }
-        catch (Exception theException) {
-            throw new IllegalArgumentException(
-                "The class <" + className + "> cannot be loaded."); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
-        if (!(JComponent.class.isAssignableFrom(objClass))) {
-            throw new IllegalArgumentException(
-                "Class is not instanceof JComponent <" + objClass + ">."); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-
-        try {
-            // create JComponent
-            JComponent newComp = (JComponent)objClass.newInstance();
-            setProperties(theKey, newComp, thePropProvider);
-            return newComp;
-        }
-        catch (Exception theException) {
-            theException.printStackTrace();
-            return null;
-        }
-    }
-
-    /**
-     * Creates a <code>JPasswordField</code> and initializes it by using the
-     * given type. If the type is not found by the provider, a default field
-     * is returned. The default provider is used.
-     * @param theType the data type key
-     * @return the newly created JPasswordField
-     * @throws IllegalArgumentException if input parameter is <code>null</code>
-     * @see #createTextField(String, PropertyProvider)
-     */
-    public static JPasswordField createPasswordField(String theType) {
-        return createPasswordField(theType, propProvider);
-    }
-
-    /**
-     * Creates a <code>JPasswordField</code> and initializes it by using the
-     * given type. If the type is not found by the provider, a default field
-     * is returned.
-     * @param theType the data type key
-     * @param thePropProvider the provider that determines the file(s) to look
-     * at for properties
-     * @return the newly created JPasswordField
-     * @throws IllegalArgumentException if either input parameter is
-     * <code>null</code>
-     * @see #createTextField(String, PropertyProvider)
-     */
-    public static JPasswordField createPasswordField(
-        String theType,
-        PropertyProvider thePropProvider) {
-
-        if ((theType == null) || (thePropProvider == null)) {
-            throw new IllegalArgumentException(
-                "Either the type <" + theType + //$NON-NLS-1$
-                ">, or the property provider <" + thePropProvider + //$NON-NLS-1$
-                "> is null."); //$NON-NLS-1$
-        }
-
-        JPasswordField txf = new JPasswordField();
-        DefaultTextFieldModel doc = new DefaultTextFieldModel();
-        txf.setDocument(doc);
-
-        ValidationProps props =
-            getValidationProperties(theType, thePropProvider);
-        new TextFieldInitializer(props, txf);
-
-        return txf;
-    }
-
-    /**
      * Creates a <code>TextFieldWidget</code> and initializes it by using the
      * given type. If the type is not found by the provider, a default textfield
      * is returned. The default provider is used.
@@ -289,34 +180,6 @@ public class GuiComponentFactory {
             getValidationProperties(theType, thePropProvider);
         new TextFieldInitializer(props, txf);
 
-        return txf;
-    }
-
-    /**
-     * Creates a <code>TextFieldWidget</code> and initializes by using the given
-     * type. Also, properties are set based on the given key. If the type is not
-     * found by the provider, a default  textfield is returned.
-     * @param theType the data type key
-     * @param theKey the properties key to use to set JavaBean properties
-     * @param thePropProvider the provider that determines the file(s) to look
-     * at for properties
-     * @return the newly created TextFieldWidget
-     * @throws IllegalArgumentException if any input parameter is
-     * <code>null</code>
-     * @see #createTextField(String, PropertyProvider)
-     * @see #setProperties(String, JComponent, PropertyProvider)
-     */
-    public static TextFieldWidget createTextField(
-        String theType,
-        String theKey,
-        PropertyProvider thePropProvider) {
-
-        if (theKey == null) {
-            throw new IllegalArgumentException("The key is null."); //$NON-NLS-1$
-        }
-
-        TextFieldWidget txf = createTextField(theType, thePropProvider);
-        setProperties(theKey, txf, thePropProvider);
         return txf;
     }
 
@@ -473,76 +336,6 @@ public class GuiComponentFactory {
                                          VALID_CHARS,
                                          true);
     }
-
-    /**
-     * Sets the JavaBean properties of a component based on entries in one or
-     * more properties files.
-     * @param theKey the properties key to used as a prefix to set JavaBean
-     * properties
-     * @param theComponent the component whose properties are being set
-     * @param thePropProvider the provider that determines the file(s) to look
-     * at for properties
-     * @throws IllegalArgumentException if any input parameter is
-     * <code>null</code>
-     */
-    public static void setProperties(
-        String theKey,
-        JComponent theComponent,
-        PropertyProvider thePropProvider) {
-
-        if ((theKey == null) ||
-            (thePropProvider == null) ||
-            (theComponent == null)) {
-            throw new IllegalArgumentException(
-                "Either the key <" + theKey + //$NON-NLS-1$
-                ">, the property provider <" + thePropProvider + //$NON-NLS-1$
-                ">, or the component <" + theComponent + //$NON-NLS-1$
-                "> is null."); //$NON-NLS-1$
-        }
-
-        Class objClass = theComponent.getClass();
-        PropertyDescriptor[] propDescriptors =
-            (PropertyDescriptor[])descriptorMap.get(objClass);
-        if (!descriptorMap.containsKey(objClass)) {
-            try {
-                BeanInfo beanInfo = Introspector.getBeanInfo(objClass);
-                propDescriptors = beanInfo.getPropertyDescriptors();
-            }
-            catch (IntrospectionException theException) {}
-            descriptorMap.put(objClass, propDescriptors);
-        }
-
-        if (propDescriptors != null) {
-            for (int i=0; i<propDescriptors.length; i++) {
-                Method setMethod = null;
-                if (propDescriptors[i] instanceof IndexedPropertyDescriptor) {
-                    IndexedPropertyDescriptor ipd =
-                        (IndexedPropertyDescriptor)propDescriptors[i];
-                    setMethod = ipd.getIndexedWriteMethod();
-                }
-                else {
-                    setMethod = propDescriptors[i].getWriteMethod();
-                }
-
-                //
-                // invoke method if property being set in properties file
-                String prop = propDescriptors[i].getName();
-                String propSuffix = theKey + SEPARATOR + prop;
-                // see if property is being set by a value in properties file
-                Object value = thePropProvider.getObject(propSuffix);
-                if (value != null) {
-                    try {
-                        setMethod.invoke(theComponent, new Object[] {value});
-                    }
-                    catch (Exception theException) {}
-                }
-            }
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // INNER CLASSES
-    ///////////////////////////////////////////////////////////////////////////
 
     private static class ValidationProps {
         public boolean collapse = true;

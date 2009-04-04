@@ -1056,7 +1056,6 @@ is called within each block below. need to investigate this later.
             			path);
             	UserPreferences.getInstance().saveChanges();
             } catch (Exception theException) {
-                theException.printStackTrace();
                 ExceptionUtility.showMessage(theException.getMessage(),
                                              theException);
                 LogManager.logError(LogContexts.SYSTEMLOGGING,
@@ -1103,7 +1102,6 @@ is called within each block below. need to investigate this later.
                 String consoleLogDir = StaticProperties.getLogDirectory().getAbsolutePath();
                 ZipFileUtil.addAll(new File(filename), consoleLogDir, "console"); //$NON-NLS-1$
             } catch (Exception theException) {
-                theException.printStackTrace();
                 ExceptionUtility.showMessage(theException.getMessage(), theException);
                 LogManager.logError(LogContexts.SYSTEMLOGGING, theException, getClass() + ":exportLogs"); //$NON-NLS-1$
             } 

@@ -263,7 +263,6 @@ public final class ConfigurationManager
 			importEditor.createConfiguration(nextStartUpId, theImportedObjects);			
 			getAPI().executeTransaction(importEditor.getDestination().getActions());
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("commitImportedObjects", theException), //$NON-NLS-1$
                 theException);
@@ -309,7 +308,6 @@ public final class ConfigurationManager
             if (editor != null) {
                 editor.getDestination().popActions();
             }
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("createHost", "host=" + theHostName, theException), //$NON-NLS-1$ //$NON-NLS-2$
                 theException);
@@ -399,7 +397,6 @@ public final class ConfigurationManager
             if (editor != null) {
                 editor.getDestination().popActions();
             }
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("createProcess", //$NON-NLS-1$
                                "process=" + theProcessName + //$NON-NLS-1$
@@ -466,7 +463,6 @@ public final class ConfigurationManager
             if (editor != null) {
                 editor.getDestination().popActions();
             }
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("createPscDef", //$NON-NLS-1$
                                "psc name=" + thePscDefName + //$NON-NLS-1$
@@ -530,7 +526,6 @@ public final class ConfigurationManager
                 if (editor != null) {
                     editor.getDestination().popActions();
                 }
-                theException.printStackTrace();
                 throw new ExternalException(
                     formatErrorMsg("updatePscDef", //$NON-NLS-1$
                                    "psc name=" + thePscDef.getName() + //$NON-NLS-1$
@@ -606,7 +601,6 @@ public final class ConfigurationManager
             if (editor != null) {
                 editor.getDestination().popActions();
             }
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("createPscDef", //$NON-NLS-1$
                                "psc name=" + thePscDefName + //$NON-NLS-1$
@@ -709,7 +703,6 @@ public final class ConfigurationManager
             if (editor != null) {
                 editor.getDestination().popActions();
             }
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("deleteDeployedPsc", //$NON-NLS-1$
                                "PSC=" + thePsc + ", process=" + theProcess + //$NON-NLS-1$ //$NON-NLS-2$
@@ -741,7 +734,6 @@ public final class ConfigurationManager
                     "ConfigurationManager.deleteHost:" + theHost); //$NON-NLS-1$
         }
         catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("deleteHost", //$NON-NLS-1$
                                "host=" + theHost +", config=" + theConfigId, //$NON-NLS-1$ //$NON-NLS-2$
@@ -816,7 +808,6 @@ public final class ConfigurationManager
                    
             //fireModelChangedEvent(MODEL_CHANGED);
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("deleteProcess", //$NON-NLS-1$
                                "process=" + theProcess + ", config=" + theConfigId, //$NON-NLS-1$ //$NON-NLS-2$
@@ -850,7 +841,6 @@ public final class ConfigurationManager
                     new Object[] {theProduct,
                                   getConfig(theConfigId)}));
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("deletePscDefinition", //$NON-NLS-1$
                                "PSC=" + thePsc + //$NON-NLS-1$
@@ -926,7 +916,6 @@ public final class ConfigurationManager
             if (editor != null) {
                 editor.getDestination().popActions();
             }
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("deployPsc", //$NON-NLS-1$
                                "PSC=" + thePsc + //$NON-NLS-1$
@@ -983,7 +972,6 @@ public final class ConfigurationManager
  //           return getConfigModel(theConfigId).getAllObjects();
              return getAPI().getConfigurationAndDependents(theConfigId);
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("getConfigObjects", //$NON-NLS-1$
                                "config=" + theConfigId, //$NON-NLS-1$
@@ -991,28 +979,6 @@ public final class ConfigurationManager
                 theException);
         }
     }
-
-//    public ConflictObjectNode getConflictObjectNode(
-//        Collection theImportedObjects)
-//        throws ExternalException {
-//
-//        try {
-//            Collection currentObjs = api.getAllGlobalConfigObjects();
-//            ConflictStrategy strategy =
-//                new ReplaceConfigurationConflictStrategy();
-//            ConflictObjectNode node =
-//                ConfigurationObjectsImportHelper.getConflicts(
-//                    theImportedObjects, currentObjs, strategy);
-// 
-//            return node;
-//        }
-//        catch (Exception theException) {
-//            theException.printStackTrace();
-//            throw new ExternalException(
-//                formatErrorMsg("getConflictObjectNode", theException), //$NON-NLS-1$
-//                theException);
-//        }
-//    }
 
     public Collection getDeployedPscs(VMComponentDefn theProcess)
         throws ExternalException {
@@ -1075,7 +1041,6 @@ public final class ConfigurationManager
                                
                             }
                         } catch (Exception theException) {
-                            theException.printStackTrace();
                             throw new ExternalException(
                                 formatErrorMsg("getDeployedPscs", //$NON-NLS-1$
                                                "process=" + theProcess, //$NON-NLS-1$
@@ -1154,7 +1119,6 @@ public final class ConfigurationManager
                     map.put(theProcess.getID(), ids);
                     deployedServices.put(pscId, map);                    
                   } catch (Exception theException) {
-                    theException.printStackTrace();
                     throw new ExternalException(
                         formatErrorMsg("getDeployedServices", //$NON-NLS-1$
                                        "PSC=" + thePsc + //$NON-NLS-1$
@@ -1192,7 +1156,6 @@ public final class ConfigurationManager
             configEditor.getDestination().clear();
             return configEditor;
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("getEditor", theException), //$NON-NLS-1$
                 theException);
@@ -1313,7 +1276,6 @@ public final class ConfigurationManager
             }  // end of where config = null
             return result;
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("getHostProcesses", //$NON-NLS-1$
                                "host=" + theHost + ", config=" + theConfigId, //$NON-NLS-1$ //$NON-NLS-2$
@@ -1371,7 +1333,6 @@ public final class ConfigurationManager
             ConfigurationPropertiedObjectEditor propEditor = new ConfigurationPropertiedObjectEditor(getConnection(), queue);
             return propEditor;
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("getPropertiedObjectEditor", theException), //$NON-NLS-1$
                 theException);
@@ -1601,7 +1562,6 @@ public final class ConfigurationManager
                                                   Configuration.NEXT_STARTUP);                            
             return configObjs;
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("importObjects", //$NON-NLS-1$
                                "file name=" + theFileName, //$NON-NLS-1$
@@ -1693,7 +1653,6 @@ public final class ConfigurationManager
 
                         return host;
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("modifyHost", "host=" + theHost, theException), //$NON-NLS-1$ //$NON-NLS-2$
                 theException);
@@ -1721,7 +1680,6 @@ public final class ConfigurationManager
                     new Object[] {host, config}));
             return process;
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("modifyProcess", //$NON-NLS-1$
                                "process=" + theProcess, //$NON-NLS-1$
@@ -1737,7 +1695,6 @@ public final class ConfigurationManager
             ModificationActionQueue queue = editor.getQueue();
             getAPI().executeTransaction(queue.popActions());
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("modifyPropertiedObject", theException), //$NON-NLS-1$
                 theException);
@@ -1767,7 +1724,6 @@ public final class ConfigurationManager
                     new Object[] {product, config}));
             return pscDef;
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("modifyPsc", "PSC=" + thePscDef, theException), //$NON-NLS-1$ //$NON-NLS-2$
                 theException);
@@ -1799,7 +1755,6 @@ public final class ConfigurationManager
             }
             return service;
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("modifyService", //$NON-NLS-1$
                                "service=" + theService, //$NON-NLS-1$
@@ -1870,7 +1825,6 @@ public final class ConfigurationManager
             
             refreshNeeded = false;            
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("refreshConfigs", theException), //$NON-NLS-1$
                 theException);
@@ -1920,7 +1874,6 @@ public final class ConfigurationManager
                 }
             }
         } catch (Exception theException) {
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("refreshHosts", theException), //$NON-NLS-1$
                 theException);
@@ -2012,7 +1965,6 @@ public final class ConfigurationManager
             if (editor != null) {
                 editor.getDestination().popActions();
             }
-            theException.printStackTrace();
             throw new ExternalException(
                 formatErrorMsg("setEnabled", //$NON-NLS-1$
                                "service=" + theService + //$NON-NLS-1$

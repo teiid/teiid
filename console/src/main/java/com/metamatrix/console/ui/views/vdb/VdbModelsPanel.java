@@ -40,11 +40,13 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.models.VdbManager;
 import com.metamatrix.console.ui.views.DefaultConsoleTableComparator;
 import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
@@ -80,7 +82,7 @@ public class VdbModelsPanel extends JPanel implements
         try {
             init();
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

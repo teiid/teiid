@@ -100,7 +100,7 @@ public class VdbWizardEntitlementsPanel extends BasicWizardSubpanelContainer imp
         try {
             jbInit(stepNum);
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
 
         setSourceVdb(vdb);
@@ -578,7 +578,6 @@ public class VdbWizardEntitlementsPanel extends BasicWizardSubpanelContainer imp
             try {
                 getEntitlementMigrationReport().writeReport(result.getNamespace());
             } catch (Exception theException) {
-                theException.printStackTrace();
                 ExceptionUtility.showMessage(theException.getMessage(), theException);
                 LogManager.logError(LogContexts.SYSTEMLOGGING, theException, getClass() + ":writeFile");
             }

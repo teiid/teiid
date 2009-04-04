@@ -138,8 +138,8 @@ public class VdbWizardEntitlementsSelectPanel extends BasicWizardSubpanelContain
         try  {
             jbInit();
             setWizardStuff(stepNum);
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch(Exception ex) {
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 
@@ -169,8 +169,8 @@ public class VdbWizardEntitlementsSelectPanel extends BasicWizardSubpanelContain
         try  {
             jbInit();
             setWizardStuff(stepNum);
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch(Exception ex) {
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
     
@@ -194,8 +194,8 @@ public class VdbWizardEntitlementsSelectPanel extends BasicWizardSubpanelContain
         try  {
             jbInit();
             setWizardStuff(stepNum);
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch(Exception ex) {
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

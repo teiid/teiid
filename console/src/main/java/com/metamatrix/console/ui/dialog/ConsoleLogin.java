@@ -31,9 +31,6 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.AbstractButton;
 
-import com.metamatrix.api.exception.security.LogonException;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.util.ExceptionUtility;
@@ -266,28 +263,13 @@ public class ConsoleLogin {
         String url = getUrl();
         
         String failureHdrMsg = ConsolePlugin.Util.getString("ConsoleLogin.failureHdrMsg");  //$NON-NLS-1$
-        String logonExceptionMsg = ConsolePlugin.Util.getString("ConsoleLogin.logonFailureMsg"); //$NON-NLS-1$
-        String serverNotRunningMsg = ConsolePlugin.Util.getString("ConsoleLogin.serverNotRunningMsg");  //$NON-NLS-1$       
-        String generalExceptionMsg = ConsolePlugin.Util.getString("ConsoleLogin.generalErrorMsg"); //$NON-NLS-1$
 
         try {
             connectionInfo = new ConnectionInfo(url, userName, password, APPLICATION_NAME);
             connectionInfo.login();
             result = LOGON_SUCCEEDED;
-        } catch (ConnectionException ex) {
-            ExceptionUtility.showMessage(failureHdrMsg, logonExceptionMsg, ex);
-        } catch (CommunicationException ex) {
-            if (ExceptionUtility.containsExceptionOfType(ex, LogonException.class)) {
-                ExceptionUtility.showMessage(failureHdrMsg, logonExceptionMsg, ex);
-            } else {
-                ExceptionUtility.showMessage(failureHdrMsg, serverNotRunningMsg, ex);
-            } 
         } catch (Throwable t) {
-            String msg = null;
-            if (t instanceof Exception) {
-                msg = generalExceptionMsg;
-            }
-            ExceptionUtility.showMessage(failureHdrMsg, msg, t);
+            ExceptionUtility.showMessage(failureHdrMsg, t);
         }
     }
 

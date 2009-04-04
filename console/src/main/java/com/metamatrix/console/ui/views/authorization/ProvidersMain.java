@@ -85,6 +85,7 @@ import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.Refreshable;
 import com.metamatrix.console.util.StaticUtilities;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.toolbox.ui.UIDefaults;
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 import com.metamatrix.toolbox.ui.widget.Splitter;
@@ -386,22 +387,11 @@ public class ProvidersMain extends BasePanel implements
     }
     
     private List getAuthenticationOrder() {
-    	List domainOrder = null;
-    	
     	try {
-			domainOrder = getGroupsManager().getDomainNames();
-		} catch (AuthorizationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ComponentNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExternalException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			return getGroupsManager().getDomainNames();
+		} catch (Exception e) {
+			throw new MetaMatrixRuntimeException(e);
 		}
-
-    	return domainOrder;
     }
     
     private void setAuthenticationOrder(List authOrder) {
@@ -411,15 +401,8 @@ public class ProvidersMain extends BasePanel implements
 			
 			// Updates the next startup configuration
 			updateConfiguration(authOrder);
-		} catch (AuthorizationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ComponentNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExternalException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (Exception e) {
+			throw new MetaMatrixRuntimeException(e);
 		}
     }
 

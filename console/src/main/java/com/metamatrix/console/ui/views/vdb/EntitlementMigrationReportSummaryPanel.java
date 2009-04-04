@@ -172,7 +172,6 @@ class DetailButtonActionListener implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent ev) {
-System.err.println("in actionPerformed() for button " + subscript); //$NON-NLS-1$
         panel.detailsRequestedForEntitlement(subscript);
     }
 }//end DetailButtonActionListener
@@ -205,11 +204,6 @@ class MigrationSummaryTableWidget extends TableWidget implements TableCellRender
             }
         });
         this.setRowHeight(30);
-    }
-
-    public Class getColumnClass(int index) {
-System.err.println("in table's getColumnClass() method"); //$NON-NLS-1$
-        return super.getColumnClass(index);
     }
 
     /**

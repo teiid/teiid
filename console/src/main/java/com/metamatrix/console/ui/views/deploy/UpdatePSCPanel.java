@@ -112,7 +112,6 @@ public final class UpdatePSCPanel
         this.serviceNames = serviceNames;
         JPanel mainPanel = new JPanel(new BorderLayout());
 
- //       System.out.println("LABEL: " + theLabelId);
         JPanel pnl = new JPanel();
         JLabel lbl = new LabelWidget(DeployPkgUtils.getString(theLabelId));
         pnl.add(lbl);
@@ -179,7 +178,6 @@ public final class UpdatePSCPanel
             
       		if (serviceNames == null) {
       			Exception theException = new Exception("Null ServiceNames"); //$NON-NLS-1$
-                theException.printStackTrace();
                 LogManager.logError(
                     LogContexts.USERS,
                     theException,

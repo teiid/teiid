@@ -30,8 +30,10 @@ import java.awt.Insets;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.ui.util.BasicWizardSubpanelContainer;
 import com.metamatrix.console.ui.util.WizardInterface;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.toolbox.ui.widget.CheckBox;
@@ -83,8 +85,8 @@ public class VdbWizardConfirmPanel extends BasicWizardSubpanelContainer {
         try {
             jbInit();
             setWizardStuff(stepNum);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 
@@ -99,8 +101,8 @@ public class VdbWizardConfirmPanel extends BasicWizardSubpanelContainer {
         try {
             jbInit();
             setWizardStuff(stepNum);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

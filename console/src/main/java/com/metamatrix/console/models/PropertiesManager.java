@@ -178,7 +178,6 @@ public class PropertiesManager extends Manager {
         } catch (ComponentNotFoundException e) {
             throw(e);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new ExternalException(e);
         }
         return nextStartUpDefn;

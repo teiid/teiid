@@ -143,35 +143,4 @@ public class PropertyLoader {
     }
 
 
-    // unit test
-    public static void main(String[] args) {
-        try {
-
-            Properties testProps = new Properties();
-            testProps.setProperty("TestA.A.A", "TestA.A.A value");
-            testProps.setProperty("TestA.B.A", "TestA.B.A value");
-            testProps.setProperty("TestA.C.A", "TestA.C.A value");
-            testProps.setProperty("TestA.D.A", "TestA.D.A value");
-            testProps.setProperty("TestA.E.A", "TestA.E.A value");
-            testProps.setProperty("TestB.A.A", "TestB.A.A value");
-            testProps.setProperty("TestB.B.A", "TestB.B.A value");
-            testProps.setProperty("TestB.C.A", "TestB.C.A value");
-            testProps.setProperty("TestB.D.A", "TestB.D.A value");
-            testProps.setProperty("TestB.E.A", "TestB.E.A value");
-
-            PropertyLoader loader = new PropertyLoader(testProps);
-            Properties p = loader.getPropertiesBranch("TestB.");
-
-            Iterator iter = p.keySet().iterator();
-            while(iter.hasNext()) {
-                String key = (String)iter.next();
-                String val = (String)p.get(key);
-                System.out.print(key + " = " + val + "\n");
-            }
-
-        } catch (PropertyLoaderException e) {
-            e.printStackTrace();
-        }
-    }
-
 }

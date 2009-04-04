@@ -36,6 +36,9 @@ import java.lang.reflect.Method;
 
 import javax.swing.tree.TreeNode;
 
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.console.util.LogContexts;
+
 /**
  * An implementation of TreeTableModel that uses reflection to answer
  * TableModel methods. This works off a handful
@@ -242,7 +245,7 @@ public class DynamicTreeTableModel extends AbstractTreeTableModel {
 		        }
 	        }
 	    } catch (Throwable th) {
-	        System.out.println("exception: " + th); //$NON-NLS-1$
+	    	LogManager.logError(LogContexts.INITIALIZATION, th, th.getMessage());
 	    }
 	    if (found) {
 	        // The value changed, fire an event to notify listeners.

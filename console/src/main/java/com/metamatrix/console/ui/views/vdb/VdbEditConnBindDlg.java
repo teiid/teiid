@@ -32,10 +32,12 @@ import java.util.Map;
 
 import javax.swing.JDialog;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.models.VdbManager;
 import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.toolbox.ui.widget.DialogPanel;
@@ -57,7 +59,7 @@ public class VdbEditConnBindDlg extends JDialog {
         try {
             init();
         } catch (Exception ex) {
-            ex.printStackTrace();
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

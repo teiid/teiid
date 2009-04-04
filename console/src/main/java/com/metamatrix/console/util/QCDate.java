@@ -116,7 +116,6 @@ public class QCDate implements Serializable {
 
     public static int numberOfDaysInMonth(int aYear, int aMonth) {
         if ((aYear < BASE_YEAR) || (aYear > MAX_YEAR)) {
-            System.err.println("Illegal year passed to QCDate.numberOfDaysInMonth()");
             return -1;
         }
         if (aMonth == 2) {
@@ -153,7 +152,6 @@ public class QCDate implements Serializable {
 
     public static int dayNumberWithinYear(int aYear, int aMonth, int aDay) {
         if (!legalDate(aYear, aMonth, aDay)) {
-            System.err.println("Illegal date passed to QCDate.dayNumberWithinYear()");
             return -1;
         }
         int numDaysBeforeMonth = NUM_DAYS_BEFORE_MONTH_NON_LEAP_YEAR[aMonth - 1];
@@ -171,7 +169,6 @@ public class QCDate implements Serializable {
     public static int dayNumber(int aYear, int aMonth, int aDay) {
         //Counts starting with Jan 01, BASE_YEAR being 1, not 0.
         if (!legalDate(aYear, aMonth, aDay)) {
-            System.err.println("Illegal date passed to QCDate.dayNumber()");
             return -1;
         }
         int numDaysBeforeCurYearExclFeb29 = 365 * (aYear - BASE_YEAR);
@@ -193,7 +190,6 @@ public class QCDate implements Serializable {
     public static int weekdayNumber(int aYear, int aMonth, int aDay) {
         //Counts starting with Jan 01, BASE_YEAR (which must be a Monday) being 1, not 0.
         if (!legalDate(aYear, aMonth, aDay)) {
-            System.err.println("illegal date passed to QCDate.weekdayNumber()");
             return -1;
         }
         int numAllDays = dayNumber(aYear, aMonth, aDay);
@@ -208,7 +204,6 @@ public class QCDate implements Serializable {
 
     public static int dayOfWeek(int aYear, int aMonth, int aDay) {
         if (!legalDate(aYear, aMonth, aDay)) {
-            System.err.println("Illegal date passed to QCDate.dayOfWeek()");
             return -1;
         }
         return ((dayNumber(aYear, aMonth, aDay) - 1) % 7);
@@ -232,7 +227,6 @@ public class QCDate implements Serializable {
     public static int weekNumber(int aYear, int aMonth, int aDay) {
         //Counts starting from week of January 1, BASE_YEAR being 1, not 0.
         if (!legalDate(aYear, aMonth, aDay)) {
-            System.err.println("illegal date passed to QCDate.weekNumber()");
             return -1;
         }
         int d = ((dayNumber(aYear, aMonth, aDay) - 1) / 7) + 1;
@@ -246,7 +240,6 @@ public class QCDate implements Serializable {
     public static int monthNumber(int aYear, int aMonth) {
         //Counts starting with January, BASE_YEAR being 1, not 0.
         if (!legalDate(aYear, aMonth, 1)) {
-            System.err.println("Illegal date passed to QCDate.monthNumber()");
             return -1;
         }
         return ((aYear - BASE_YEAR) * 12 + aMonth);
@@ -259,7 +252,6 @@ public class QCDate implements Serializable {
     public static int quarterNumber(int aYear, int aMonth) {
         //Stipulates that quarters only begin in Jan, Apr, Jul, and Oct.
         if (!legalDate(aYear, aMonth, 1)) {
-            System.err.println("illegal date passed to QCDate.quarterNumber()");
             return -1;
         }
         int qtrsBeforeCurYear = 4 * (aYear - BASE_YEAR);
@@ -284,7 +276,6 @@ public class QCDate implements Serializable {
         int DAY_NUMBER_OF_DEC_31_1998  = dayNumber(1998, 12, 31);
 
         if ((aDayNumber < 1) || (aDayNumber > dayNumber(MAX_YEAR, 12, 31))) {
-            System.err.println("Illegal date passed to dateOfDayNumber");
             return null;
         }
         QCDate date = new QCDate();

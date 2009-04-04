@@ -564,7 +564,6 @@ public final class DeployMainPanel
                 props.put(ConfigurationPropertyNames.USER_CREATED_BY, userName);
                 xmlUtil.exportConfiguration(fileOutput, exportObjs, props);
             } catch (Exception theException) {
-                theException.printStackTrace();
                 String detail =
                     DeployPkgUtils.getString("dmp.msg.exporterrordetail", //$NON-NLS-1$
                                              new Object[] {configId, filename});

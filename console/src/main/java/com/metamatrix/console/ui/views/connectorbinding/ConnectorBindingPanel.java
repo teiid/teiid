@@ -610,8 +610,6 @@ public class ConnectorBindingPanel extends BasePanel implements
 
                 xmlUtil.exportConnectorBindings(fileOutput, bindingArray, typeArray, props);
             } catch (Exception theException) {
-                theException.printStackTrace();
-
                 ExceptionUtility.showMessage("Unable to Export Connector Binding", //$NON-NLS-1$
                                              theException);
                 LogManager.logError(LogContexts.CONNECTOR_BINDINGS, theException, "Error exporting connector bindings"); //$NON-NLS-1$

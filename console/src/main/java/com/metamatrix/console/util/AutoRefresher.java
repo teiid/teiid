@@ -163,12 +163,8 @@ public class AutoRefresher implements ActionListener {
      * @see AutoRefresher#startTimer
      */
     public void refresh(final boolean setIsStale) {
-        //System.out.println("AutoRefresher.refresh...TOP, in: " + refTarget.getName());
-        //System.out.println("AutoRefresher.refresh...TOP, setIsStale is: " + setIsStale);
-
         // Quit if this panel is not visible
         if (!isTargetCurrentPanel(refTarget)) {
-            //System.out.println("AutoRefresher.refresh...skipping refresh, this panel not visible, in: " + refTarget.getName());
             return;
         }
 
@@ -178,14 +174,12 @@ public class AutoRefresher implements ActionListener {
                 try {
                     // Quit if session is not valid
                     if (!ModelManager.getSessionManager(connection).isSignedOnUserSessionValid()) {
-                        //System.out.println("AutoRefresher.refresh...skipping refresh, SESSION HAS DIED" + refTarget.getName());
                         setAutoRefreshEnabled(false);
                         return;
                     }
             
                     getTimer().stop();
                     if (setIsStale) {
-                        //System.out.println("AutoRefresher.refresh...About to call refTarget.refresh() inside an InvokeLater");        
                         refTarget.refresh();
                     }
                 } catch (Exception e) {
@@ -195,7 +189,6 @@ public class AutoRefresher implements ActionListener {
 
                 
                 if (isAutoRefreshEnabled()) {
-                    //System.out.println("AutoRefresher.refresh...AutoRefresh enabled, about to start timer, in: " + refTarget.getName());
                     startTimer();
                 }
             }

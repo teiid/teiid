@@ -337,9 +337,7 @@ public class EntitlementManager extends Manager implements EntitlementsDataInter
         try {
             AuthorizationPolicyID policyID = new AuthorizationPolicyID(
                     entName, vdbName, vdbVersion);
-//System.err.println("in getEntitlementInfo(), policyID is " + policyID);
             AuthorizationPolicy policy = this.getPolicy(policyID);
-//System.err.println("description for policy is " + policy.getDescription());
             Collection coll = this.getPrincipalsForEntitlement(policyID);
             PermissionDataNodeTreeView tv = this.getTreeViewForData(vdbName, vdbVersion, policyID);
 			EntitlementInfo entInfo = new EntitlementInfo(tv, policyID, policy,
@@ -396,9 +394,6 @@ public class EntitlementManager extends Manager implements EntitlementsDataInter
                 aoe.modifyPermissions(treeView, policy);
             }
             ModificationActionQueue maq = aoe.getDestination();
-//System.err.println("Connected to " + getConnection().getURL());          
-//System.err.println("ModificationActionQueue for " + policy.getAuthorizationPolicyID().getName() + " is:");
-//System.err.println(maq);
             List actions = maq.popActions();
             AuthorizationAdminAPI api = ModelManager.getAuthorizationAPI(
             		getConnection());
@@ -476,7 +471,6 @@ public class EntitlementManager extends Manager implements EntitlementsDataInter
             try {
             	PermissionNode pNode = perms.getCorrespondingNode();
 				pNode.setActions(actions);
-//System.err.println("setting actions for node " + pNode + " to " + actions);
             } catch (com.metamatrix.platform.admin.api.exception.PermissionNodeNotActionableException ex) {
                 LogManager.logError(LogContexts.ENTITLEMENTS, ex,
                         "On modifying entitlement recvd " + //$NON-NLS-1$

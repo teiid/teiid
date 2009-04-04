@@ -75,7 +75,6 @@ public class DataNodesTreeModel extends javax.swing.tree.DefaultTreeModel
 //for (int ix = 0; ix < actualLabels.length; ix++) {
 // actualLabelsStr += " " + actualLabels[ix];
 //}	
-//System.err.println("allowed actions for node " + curNodePDN.getName() + ": " + allowedLabelsStr + ",  actual: " + actualLabelsStr); 
 
             java.util.List children = treeView.getChildren((PermissionNode)curNode);
             if (children.size() > 0) {
@@ -135,7 +134,6 @@ public class DataNodesTreeModel extends javax.swing.tree.DefaultTreeModel
                     "createDefaultTreeModelFromTreeView() is " + timeDiff +
                     " seconds for model containing " + numNodes + " nodes";
             LogManager.logInfo(LogContexts.ENTITLEMENTS, message);
-//System.err.println(message);
         }
         return ourModel;
     }

@@ -33,11 +33,13 @@ import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.ui.util.BasicWizardSubpanelContainer;
 import com.metamatrix.console.ui.util.WizardInterface;
 import com.metamatrix.console.ui.util.property.GuiComponentFactory;
 import com.metamatrix.console.ui.util.property.TypeConstants;
 import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.LogContexts;
 
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 
@@ -83,7 +85,7 @@ public class VdbWizardIdPanel extends BasicWizardSubpanelContainer
         try  {
             jbInit();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
 
         setSourceVdb(vdb);
@@ -104,7 +106,7 @@ public class VdbWizardIdPanel extends BasicWizardSubpanelContainer
         try  {
             jbInit();
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
         this.enableForwardButton(false);
                

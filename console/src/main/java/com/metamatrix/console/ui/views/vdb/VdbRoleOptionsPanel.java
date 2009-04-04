@@ -36,9 +36,11 @@ import javax.swing.JTextArea;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.ui.util.BasicWizardSubpanelContainer;
 import com.metamatrix.console.ui.util.WizardInterface;
+import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 
@@ -93,8 +95,8 @@ public class VdbRoleOptionsPanel extends BasicWizardSubpanelContainer {
         try  {
             jbInit();
             setWizardStuff(stepNum);
-        } catch(Exception e) {
-            e.printStackTrace();
+        } catch(Exception ex) {
+        	LogManager.logError(LogContexts.INITIALIZATION, ex, ex.getMessage());
         }
     }
 

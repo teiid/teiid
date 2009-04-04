@@ -201,7 +201,6 @@ public class TransactionsPanel extends BasePanel
      */
     public String  getName()
     {
-        //System.out.println( "TransactionsPanel.getName..TOP" );
         return StaticProperties.DATA_TRANSACTION;
     }
 
@@ -211,7 +210,6 @@ public class TransactionsPanel extends BasePanel
      */
     public void setAutoRefreshEnabled( boolean b )
     {
-        //System.out.println( "TransactionsPanel.setAutoRefreshEnabled..TOP to: " + b );
         arRefresher.setAutoRefreshEnabled( b );
     }
 
@@ -221,7 +219,6 @@ public class TransactionsPanel extends BasePanel
      */
     public void setRefreshRate( int iRate )
     {
-        //System.out.println( "TransactionsPanel.setRefreshRate..TOP to: " + iRate );
         arRefresher.setRefreshRate( iRate );
     }
 
