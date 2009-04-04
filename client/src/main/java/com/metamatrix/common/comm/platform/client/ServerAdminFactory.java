@@ -33,11 +33,13 @@ import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.api.exception.security.LogonException;
+import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.common.util.PropertiesUtils;
@@ -49,12 +51,12 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
  */
 public class ServerAdminFactory {
 	
-    private static final int BOUNCE_WAIT = 2000;
+    private static final int DEFAULT_BOUNCE_WAIT = 2000;
         
-    private final static class ReconnectingProxy implements InvocationHandler {
+    private final class ReconnectingProxy implements InvocationHandler {
 
     	private ServerAdmin target;
-    	private SocketServerConnection registry;
+    	private ServerConnection registry;
     	private Properties p;
     	private boolean closed;
     	
@@ -70,7 +72,7 @@ public class ServerAdminFactory {
     			return target;
     		}
     		try {
-    			registry = SocketServerConnectionFactory.getInstance().createConnection(p);
+    			registry = serverConnectionFactory.createConnection(p);
     		} catch (ConnectionException e) {
     			throw new AdminComponentException(e.getMessage());
     		}
@@ -90,14 +92,14 @@ public class ServerAdminFactory {
 				try {
 					return method.invoke(getTarget(), args);
 				} catch (InvocationTargetException e) {
+					if (method.getName().endsWith("bounceSystem") && ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) { //$NON-NLS-1$
+						bounceSystem(((Boolean)args[0]).booleanValue());
+						return null;
+					}
 					throw e.getTargetException();
 				} catch (CommunicationException e) {
 					t = e;
 				}
-			}
-			if (method.getName().endsWith("bounceSystem")) { //$NON-NLS-1$
-				bounceSystem(((Boolean)args[1]).booleanValue());
-				return null;
 			}
 			throw t;
 		}
@@ -113,38 +115,43 @@ public class ServerAdminFactory {
 		}
 		
 		public void bounceSystem(boolean waitUntilDone) {
-	        if (waitUntilDone) {
-	        	//we'll wait 2 seconds for the server to go down
-	        	try {
-					Thread.sleep(BOUNCE_WAIT);
-				} catch (InterruptedException e) {
-					throw new MetaMatrixRuntimeException(e);
-				}
-				//we'll wait 30 seconds for the server to come back up
-	        	for (int i = 0; i < 15; i++) {
-	        		try {
-	        			getTarget().getSystem();
-	        		} catch (Exception e) {
-	        			
-	        		} finally {
-	                    //reestablish a connection and retry
-	                    try {
-							Thread.sleep(BOUNCE_WAIT);
-						} catch (InterruptedException e) {
-							throw new MetaMatrixRuntimeException(e);
-						}                                        
-	                }
-	        	}
+	        if (!waitUntilDone) {
+	        	return;
 	        }
+        	//we'll wait 2 seconds for the server to come up
+        	try {
+				Thread.sleep(bounceWait);
+			} catch (InterruptedException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}
+			//we'll wait 30 seconds for the server to come back up
+        	for (int i = 0; i < 15; i++) {
+        		try {
+        			getTarget().getSystem();
+        			return;
+        		} catch (Exception e) {
+                    //reestablish a connection and retry
+                    try {
+						Thread.sleep(bounceWait);
+					} catch (InterruptedException ex) {
+						throw new MetaMatrixRuntimeException(ex);
+					}                                        
+        		}
+        	}
 		}
     }
 
 	public static final String DEFAULT_APPLICATION_NAME = "Admin"; //$NON-NLS-1$
 
     /**Singleton instance*/
-    private static ServerAdminFactory instance = new ServerAdminFactory();
+    private static ServerAdminFactory instance = new ServerAdminFactory(SocketServerConnectionFactory.getInstance(), DEFAULT_BOUNCE_WAIT);
     
-    private ServerAdminFactory() {        
+    private ServerConnectionFactory serverConnectionFactory;
+    private int bounceWait;
+    
+    ServerAdminFactory(ServerConnectionFactory connFactory, int bounceWait) {
+    	this.serverConnectionFactory = connFactory;
+    	this.bounceWait = bounceWait;
     }
     
     /**Get the singleton instance*/

@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
-import com.metamatrix.api.exception.ComponentCommunicationException;
+import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.SessionServiceException;
@@ -131,9 +131,9 @@ public abstract class AbstractVDBDeleteUtility {
         try {
             sessionIDs = getSessionServiceProxy().getSessionsLoggedInToVDB(VDBName, VDBVersion);
         } catch (SessionServiceException e) {
-            throw new ComponentCommunicationException(e, ErrorMessageKeys.VDBDU_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.VDBDU_0003));
+            throw new MetaMatrixComponentException(e, ErrorMessageKeys.VDBDU_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.VDBDU_0003));
         } catch (ServiceException e) {
-            throw new ComponentCommunicationException(e, ErrorMessageKeys.VDBDU_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.VDBDU_0003));
+            throw new ComponentNotFoundException(e, ErrorMessageKeys.VDBDU_0003, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.VDBDU_0003));
         }
         return sessionIDs;
     }

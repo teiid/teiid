@@ -29,7 +29,6 @@ import java.util.Set;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
-import com.metamatrix.api.exception.ComponentCommunicationException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
@@ -499,7 +498,7 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         } catch (ServiceException e) {
             throw new ComponentNotFoundException(e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$
         } catch (ConfigurationException e) {
-            throw new ComponentCommunicationException(e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$ 
+            throw new MetaMatrixComponentException(e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$ 
         }
         return result;
     }
