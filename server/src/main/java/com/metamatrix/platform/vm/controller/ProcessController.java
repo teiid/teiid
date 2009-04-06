@@ -83,13 +83,11 @@ import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.AuthorizationAdminAPI;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
 import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
-import com.metamatrix.platform.admin.api.MembershipAdminAPI;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.apiimpl.AdminHelper;
 import com.metamatrix.platform.admin.apiimpl.AuthorizationAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.ConfigurationAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.ExtensionSourceAdminAPIImpl;
-import com.metamatrix.platform.admin.apiimpl.MembershipAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIImpl;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.config.event.ConfigurationChangeEvent;
@@ -210,7 +208,6 @@ public abstract class ProcessController implements ProcessManagement {
     private void registerSubSystemAdminAPIs(HostManagement hostManagement) throws MetaMatrixComponentException {
         this.clientServices.registerClientService(ConfigurationAdminAPI.class, ConfigurationAdminAPIImpl.getInstance(this.registry), PlatformAdminConstants.CTX_CONFIGURATION_ADMIN_API);
         this.clientServices.registerClientService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry, hostManagement), PlatformAdminConstants.CTX_RUNTIME_STATE_ADMIN_API);
-        this.clientServices.registerClientService(MembershipAdminAPI.class, MembershipAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
         this.clientServices.registerClientService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_AUTHORIZATION_ADMIN_API);
         this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
         this.clientServices.registerClientService(RuntimeMetadataAdminAPI.class, RuntimeMetadataAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_RUNTIME_METADATA_ADMIN_API);

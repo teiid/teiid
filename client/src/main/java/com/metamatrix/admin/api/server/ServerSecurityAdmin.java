@@ -22,7 +22,9 @@
 
 package com.metamatrix.admin.api.server;
 
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 
 import com.metamatrix.admin.api.core.CoreSecurityAdmin;
 import com.metamatrix.admin.api.exception.AdminException;
@@ -55,7 +57,7 @@ public interface ServerSecurityAdmin extends CoreSecurityAdmin {
      *             if there's a system error.
      * @since 4.3
      */
-    Collection getRolesForGroup(String groupIdentifier) throws AdminException;
+    Collection<Role> getRolesForGroup(String groupIdentifier) throws AdminException;
     
         /**
      * Get the Collection of administrative role names possessed by the given user, if any.
@@ -64,12 +66,12 @@ public interface ServerSecurityAdmin extends CoreSecurityAdmin {
      *            The unique identifier for the user. This is generally a user name. A user is a {@link Principal} and a
      *            Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains.
      *             The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
-     * @return The Collection of <code>String</code> role names.
+     * @return The Collection of {@link Role}s
      * @throws AdminException
      *             if there's a system error.
      * @since 4.3
      */
-    Collection getRolesForUser(String userIdentifier) throws AdminException;
+    Collection<Role> getRolesForUser(String userIdentifier) throws AdminException;
 
     /**
      * Get the group memberships for the given user. 
@@ -83,7 +85,7 @@ public interface ServerSecurityAdmin extends CoreSecurityAdmin {
      *             if there's a system error.
      * @since 4.3
      */
-    Collection getGroupsForUser(String userIdentifier) throws AdminException;
+    Collection<Group> getGroupsForUser(String userIdentifier) throws AdminException;
     
     
     /**
@@ -94,12 +96,12 @@ public interface ServerSecurityAdmin extends CoreSecurityAdmin {
      *            a Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains. <br>
      *            Note that by supplying the {@link AdminObject#WILDCARD WILDCARD} identifier, all all users in the system will
      *            retrieved.</br>
-     * @return The Collection of users.
+     * @return The Collection of groups.
      * @throws AdminException
      *             if there's a system error.
      * @since 4.3
      */
-    Collection getGroups(String groupIdentifier) throws AdminException;
+    Collection<Group> getGroups(String groupIdentifier) throws AdminException;
 
     /**
      * Assign to the given {@link Group} the given Administrative Role.
@@ -142,11 +144,42 @@ public interface ServerSecurityAdmin extends CoreSecurityAdmin {
         throws AdminException;
     
     /**
-     * Export the data roles defined for the given vdb fromthe current system
+     * Export the data roles defined for the given vdb from the current system
      * @param vdbName - Name of the vdb
      * @param vdbVersion - version of the vdb
      * @return - char[] stream containing the XML contents of the roles.
      * @throws AdminException
      */
     char[] exportDataRoles(String vdbName, String vdbVersion) throws AdminException;
+    
+    /**
+     * Authenticate a user with the specified user name and credentials
+     * for use with the specified application. The application name may also
+     * be used by the Membership Service to determine the appropriate authentication
+     * mechanism.
+     * @param username the user name that is to be authenticated
+     * @param credential
+     * @param trustePayload
+     * @param applicationName the name of the application for which the user
+     * is authenticating
+     * @return true if the authentication is successful
+     * @throws AdminException
+     */
+    boolean authenticateUser(String username, char[] credentials, Serializable trustePayload, String applicationName) throws AdminException;
+    
+    /**
+     * Returns the active authorization provider domain names, in authentication order.
+     * @return List<String>
+     * @throws AdminException
+     */
+	List<String> getDomainNames( ) throws AdminException;
+
+	/**
+	 * Return the {@link Group}s for a given domain.  The domain name must be an specified
+	 * exactly.  See {@link #getActiveDomainNames()} for possible domain names.
+	 * @param domainName
+	 * @return
+	 * @throws AdminException
+	 */
+	Collection<Group> getGroupsForDomain(String domainName) throws AdminException;
 }

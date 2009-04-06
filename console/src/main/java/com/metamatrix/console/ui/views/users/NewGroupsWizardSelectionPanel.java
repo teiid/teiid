@@ -48,14 +48,12 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.security.AuthorizationException;
+import com.metamatrix.admin.api.objects.Group;
 import com.metamatrix.console.models.GroupsManager;
 import com.metamatrix.console.ui.util.BasicWizardSubpanelContainer;
 import com.metamatrix.console.ui.util.NoMinTextFieldWidget;
 import com.metamatrix.console.ui.util.WizardInterface;
 import com.metamatrix.console.ui.util.property.TypeConstants;
-import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
@@ -254,13 +252,12 @@ public class NewGroupsWizardSelectionPanel extends BasicWizardSubpanelContainer
     	// --------------------------------------------
     	String selectedDomain = (String)cbxDomainSelection.getSelectedItem();
 
-    	Collection allDomainGroups = getGroupsManager().getGroupsForDomain(selectedDomain);
+    	Collection<Group> allDomainGroups = getGroupsManager().getGroupsForDomain(selectedDomain);
     	    	
     	// Remove any that are in the supplied 'remove' list
     	this.currentDomainGroups = new ArrayList(allDomainGroups.size());
-    	Iterator iter = allDomainGroups.iterator();
-    	while(iter.hasNext()) {
-    		String currentGroup = (String)iter.next()+"@"+selectedDomain;
+    	for (Group group : allDomainGroups) {
+    		String currentGroup = group.getIdentifier();
     		if(this.listToRemoveFromAvailable != null && !this.listToRemoveFromAvailable.contains(currentGroup)) {
     			this.currentDomainGroups.add(currentGroup);
     		}

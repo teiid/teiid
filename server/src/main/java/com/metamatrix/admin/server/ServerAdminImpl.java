@@ -22,13 +22,16 @@
 
 package com.metamatrix.admin.server;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminOptions;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
+import com.metamatrix.admin.api.objects.Group;
 import com.metamatrix.admin.api.objects.LogConfiguration;
 import com.metamatrix.admin.api.objects.ScriptsContainer;
 import com.metamatrix.admin.api.objects.SystemObject;
@@ -949,4 +952,21 @@ public class ServerAdminImpl implements ServerAdmin {
     	return getConfigurationAdmin().getClusterKey();
     }
 
+	@Override
+	public boolean authenticateUser(String username, char[] credentials,
+			Serializable trustePayload, String applicationName)
+			throws AdminException {
+		return getSecurityAdmin().authenticateUser(username, credentials, trustePayload, applicationName);
+	}
+	
+	@Override
+	public List<String> getDomainNames() throws AdminException {
+		return getSecurityAdmin().getDomainNames();
+	}
+	
+	@Override
+	public Collection<Group> getGroupsForDomain(String domainName)
+			throws AdminException {
+		return getSecurityAdmin().getGroupsForDomain(domainName);
+	}
 }

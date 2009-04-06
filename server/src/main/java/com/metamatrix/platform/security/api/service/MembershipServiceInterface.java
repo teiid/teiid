@@ -68,6 +68,8 @@ public interface MembershipServiceInterface extends ServiceInterface {
     
     public static final String DOMAIN_PROPERTIES = "propertiesFile"; //$NON-NLS-1$
 
+	public static final String AT = "@"; //$NON-NLS-1$
+
     /**
      * Authenticate a user with the specified username and credential
      * for use with the specified application. The application name may also
@@ -100,17 +102,17 @@ public interface MembershipServiceInterface extends ServiceInterface {
      * 
      * The username should be fully qualified
      */
-    Set getGroupsForUser(String username)
+    Set<String> getGroupsForUser(String username)
     throws MembershipServiceException, InvalidPrincipalException;
     
     /**
      * Obtain the collection of group names. 
      */
-    Set getGroupNames() throws MembershipServiceException;
+    Set<String> getGroupNames() throws MembershipServiceException;
 
-    List getDomainNames() throws MembershipServiceException;
+    List<String> getDomainNames() throws MembershipServiceException;
 
-    Set getGroupsForDomain(String domainName) throws MembershipServiceException;
+    Set<String> getGroupsForDomain(String domainName) throws MembershipServiceException;
     
     boolean isSuperUser(String username) throws MembershipServiceException;
     

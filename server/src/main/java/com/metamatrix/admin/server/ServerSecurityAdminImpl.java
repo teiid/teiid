@@ -22,9 +22,11 @@
 
 package com.metamatrix.admin.server;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import com.metamatrix.admin.api.exception.AdminComponentException;
@@ -34,6 +36,7 @@ import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.AdminOptions;
+import com.metamatrix.admin.api.objects.Group;
 import com.metamatrix.admin.api.objects.Principal;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.admin.api.server.ServerSecurityAdmin;
@@ -41,11 +44,13 @@ import com.metamatrix.admin.objects.MMGroup;
 import com.metamatrix.admin.objects.MMRole;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
+import com.metamatrix.api.exception.security.MembershipServiceException;
 import com.metamatrix.common.actions.ModificationActionQueue;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.security.api.AuthorizationObjectEditor;
 import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.api.AuthorizationPolicyID;
+import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
@@ -124,6 +129,14 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
 
         //Execute the transactions
         executeAuthorizationActions(aoe);
+    }
+    
+    public boolean authenticateUser(String username, char[] credentials, Serializable trustePayload, String applicationName) throws AdminException {
+        try {
+			return getMembershipServiceProxy().authenticateUser(username, new Credentials(credentials), trustePayload, applicationName).isAuthenticated();
+		} catch (MembershipServiceException e) {
+			throw new AdminComponentException(e);
+		} 
     }
     
     /** 
@@ -209,12 +222,12 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
      * @see com.metamatrix.admin.api.server.ServerSecurityAdmin#getGroups(java.lang.String)
      * @since 4.3
      */
-    public Collection getGroups(String groupIdentifier) throws AdminException {
+    public Collection<Group> getGroups(String groupIdentifier) throws AdminException {
         if (groupIdentifier == null) {
             throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
         }
         
-        Collection groups = new ArrayList();
+        Collection<Group> groups = new ArrayList<Group>();
         Collection allGroups = null;
         // Add all groups from internal membership domain
         try {
@@ -292,9 +305,6 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
         return super.importDataRoles(vdbName, vdbVersion, xmlContents, options);
     }
 
-
-
-
     /**
      * @see com.metamatrix.admin.api.server.ServerSecurityAdmin#exportDataRoles(java.lang.String, java.lang.String)
      */
@@ -309,5 +319,32 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
             throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerSecurityAdminImpl.vdbVersion_can_not_be_null")); //$NON-NLS-1$
         }
         return super.exportDataRoles(vdbName, vdbVersion);
+    }
+    
+    @Override
+    public List<String> getDomainNames() throws AdminException {
+    	try {
+			return this.getMembershipServiceProxy().getDomainNames();
+		} catch (MembershipServiceException e) {
+			throw new AdminComponentException(e);
+		}
+    }
+    
+    @Override
+    public Collection<Group> getGroupsForDomain(String domainName)
+    		throws AdminException {
+        if (domainName == null) {
+            throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
+        }
+        try {
+        	Collection<String> groupNames = this.getMembershipServiceProxy().getGroupsForDomain(domainName);
+        	List<Group> result = new ArrayList<Group>(groupNames.size());
+        	for (String groupName : groupNames) {
+        		result.add(new MMGroup(new String[] {groupName}));
+			}
+        	return result;
+        } catch (MembershipServiceException e) {
+        	throw new AdminComponentException(e);
+        }
     }
 }

@@ -30,9 +30,9 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
+import com.metamatrix.admin.api.objects.Group;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.console.connections.ConnectionInfo;
@@ -268,94 +268,24 @@ public class GroupsManager extends Manager {
         }
     }
 
-    public Collection /*<String>*/ getAllGroupNames()
-            throws ExternalException, AuthorizationException,
-            ComponentNotFoundException {
-        /*try {
-            MetaMatrixPrincipalNames enterprisePrincipals =
-                    ModelManager.getMembershipAPI(getConnection())
-                    .getReadonlyPrincipalNames();
-            Collection groups = enterprisePrincipals.getGroupPrincipalNames();
-            MetaMatrixPrincipalNames metaMatrixPrincipals =
-                    ModelManager.getMembershipAPI(getConnection())
-                    .getEditablePrincipalNames();
-            Collection metaMatrixGroups = metaMatrixPrincipals
-                    .getGroupPrincipalNames();
-            groups.addAll(metaMatrixGroups);
-            return groups;
-        } catch (AuthorizationException e) {
-            throw(e);
-        } catch (ComponentNotFoundException e) {
-            throw(e);
-        } catch (Exception e) {
-            throw new ExternalException(e);
-        }*/
-        return Collections.EMPTY_LIST;
-    }
-    
-    public List /*<String>*/ getDomainNames()
-    		throws ExternalException, AuthorizationException,
-    		ComponentNotFoundException {
-    	List domainNames = Collections.EMPTY_LIST;
+    public List<String> getDomainNames() {
+    	List<String> domainNames = Collections.emptyList();
     	try {
-    		domainNames = ModelManager.getMembershipAPI(getConnection()).getDomainNames();
+    		domainNames = getConnection().getServerAdmin().getDomainNames();
     	} catch (Exception e) {
     		return domainNames;
     	}
     	return domainNames;
     }
     
-    public void setDomainOrder(List domainNames)
-			throws ExternalException, AuthorizationException,
-			ComponentNotFoundException {
-    	try {
-    		//ModelManager.getMembershipAPI(getConnection()).setDomainOrder(domainNames);
-    	} catch (Exception e) {
-    	}
-    }
-
-    public void setEnableSecurity(boolean enabled)
-			throws ExternalException, AuthorizationException,
-			ComponentNotFoundException {
-    	try {
-    		//ModelManager.getMembershipAPI(getConnection()).setEnableSecurity(enabled);
-    	} catch (Exception e) {
-    	}
-    }
-
-    public void setAdminUsername(String username)
-			throws ExternalException, AuthorizationException,
-			ComponentNotFoundException {
-    	try {
-    		//ModelManager.getMembershipAPI(getConnection()).setAdminUsername(username);
-    	} catch (Exception e) {
-    	}
-    }
-    
-    public void setAdminPassword(String password)
-			throws ExternalException, AuthorizationException,
-			ComponentNotFoundException {
-    	try {
-    		//ModelManager.getMembershipAPI(getConnection()).setAdminPassword(password);
-    	} catch (Exception e) {
-    	}
-    }
-    
-    public Collection getGroupsForDomain (String theDomain) {    	
-    	Set groupNames = null;
+    public Collection<Group> getGroupsForDomain (String theDomain) {    	
         try {
-
-        	groupNames = ModelManager.getMembershipAPI(getConnection()).getGroupsForDomain(theDomain);
-        	
+        	return getConnection().getServerAdmin().getGroupsForDomain(theDomain);
 	    } catch (Exception e) {
-	        return Collections.EMPTY_SET;
-	    }
-	    
-	    if(groupNames!=null) {
-	    	return groupNames;
+	    	
 	    }
     
-	    return Collections.EMPTY_SET;
+	    return Collections.emptyList();
     }
 
     public Map getMetaMatrixPropNamesForGroups() {

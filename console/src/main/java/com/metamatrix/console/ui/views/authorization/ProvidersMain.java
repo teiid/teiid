@@ -55,8 +55,6 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.AuthenticationProvider;
 import com.metamatrix.common.config.api.Configuration;
@@ -396,9 +394,6 @@ public class ProvidersMain extends BasePanel implements
     
     private void setAuthenticationOrder(List authOrder) {
 		try {
-			// Sets the order on the MembershipService
-			getGroupsManager().setDomainOrder(authOrder);
-			
 			// Updates the next startup configuration
 			updateConfiguration(authOrder);
 		} catch (Exception e) {

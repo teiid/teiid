@@ -56,8 +56,6 @@ import com.metamatrix.console.util.Refreshable;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.admin.api.AuthorizationAdminAPI;
-import com.metamatrix.platform.admin.api.MembershipAdminAPI;
-import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 import com.metamatrix.toolbox.ui.widget.CheckBox;
 import com.metamatrix.toolbox.ui.widget.DialogPanel;
@@ -466,9 +464,8 @@ public class SummaryMain extends BasePanel implements WorkspacePanel, Refreshabl
                 return;
     		} 
     		
-			final MembershipAdminAPI membershipAPI = ModelManager.getMembershipAPI(this.connection );
 	        try {
-	            if(! membershipAPI.authenticateUser(this.connection.getUser(), new Credentials(currentPass), null, null) ) {
+	            if(! this.getConnection().getServerAdmin().authenticateUser(this.connection.getUser(), currentPass, null, null) ) {
 	    			String title = ConsolePlugin.Util.getString("SummaryMain.authErrorDialog.title"); //$NON-NLS-1$
 	    			String msg = ConsolePlugin.Util.getString("SummaryMain.authErrorDialog.msg"); //$NON-NLS-1$
 	                StaticUtilities.displayModalDialogWithOK(title, msg);

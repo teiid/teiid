@@ -40,7 +40,6 @@ import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.platform.admin.api.AuthorizationAdminAPI;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
 import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
-import com.metamatrix.platform.admin.api.MembershipAdminAPI;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.api.SubSystemAdminAPI;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
@@ -319,11 +318,6 @@ public class ModelManager {
         
         return (ConfigurationAdminAPI) getSubSystemAdminAPI(ConfigurationAdminAPI.class, conn);
     }
-
-    public static MembershipAdminAPI getMembershipAPI(ConnectionInfo conn) {
-        
-        return (MembershipAdminAPI) getSubSystemAdminAPI(MembershipAdminAPI.class, conn);
-	}
 
     public static RuntimeStateAdminAPI getRuntimeStateAPI(ConnectionInfo conn) {
         

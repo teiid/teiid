@@ -78,9 +78,7 @@ import com.metamatrix.platform.util.LogMessageKeys;
  */
 public class MembershipServiceImpl extends AbstractService implements MembershipServiceInterface {
 
-	private static final String AT = "@"; //$NON-NLS-1$
-    
-    static class MembershipDomainHolder {
+	static class MembershipDomainHolder {
 
         private MembershipDomain membershipDomain;
         private String domainName;
@@ -338,7 +336,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
                     if (auth.getDomainName() != null) {
                         domain = auth.getDomainName();
                     }
-                    return new SuccessfulAuthenticationToken(auth.getPayload(), baseUsername + AT + domain);
+                    return new SuccessfulAuthenticationToken(auth.getPayload(), baseUsername + MembershipServiceInterface.AT + domain);
                 }
                 String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.Null_authentication", entry.getDomainName(), username ); //$NON-NLS-1$
                 LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, msg);
@@ -378,7 +376,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
         }
         
         //strip the escape character from the remaining ats
-        return result.replaceAll("\\\\"+AT, AT); //$NON-NLS-1$
+        return result.replaceAll("\\\\"+MembershipServiceInterface.AT, MembershipServiceInterface.AT); //$NON-NLS-1$
     }
     
     static String escapeName(String name) {
@@ -386,7 +384,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
             return name;
         }
         
-        return name.replaceAll(AT, "\\\\"+AT); //$NON-NLS-1$
+        return name.replaceAll(MembershipServiceInterface.AT, "\\\\"+MembershipServiceInterface.AT); //$NON-NLS-1$
     }
     
     static String getDomainName(String username) {
@@ -405,7 +403,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
     
     static int getQualifierIndex(String username) {
         int index = username.length();
-        while ((index = username.lastIndexOf(AT, --index)) != -1) {
+        while ((index = username.lastIndexOf(MembershipServiceInterface.AT, --index)) != -1) {
             if (index > 0 && username.charAt(index - 1) != '\\') {
                 return index;
             }
@@ -515,14 +513,14 @@ public class MembershipServiceImpl extends AbstractService implements Membership
     	throw new InvalidPrincipalException(PlatformPlugin.Util.getString("MembershipServiceImpl.principal_does_not_exist", name, domain.getDomainName())); //$NON-NLS-1$
     }
     
-    private Set getDomainSpecificGroups(Set groups, String domainName) {
+    private Set<String> getDomainSpecificGroups(Set<String> groups, String domainName) {
         if (groups == null) {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
-        Set results = new HashSet();
+        Set<String> results = new HashSet<String>();
         
-        for (Iterator i = groups.iterator(); i.hasNext();) {
-            results.add(escapeName((String)i.next()) + AT + domainName);
+        for (Iterator<String> i = groups.iterator(); i.hasNext();) {
+            results.add(escapeName(i.next()) + MembershipServiceInterface.AT + domainName);
         }
         return results;
     }
@@ -600,7 +598,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
     	return names;
     }
     
-    public Set getGroupsForDomain(String domainName) throws MembershipServiceException {
+    public Set<String> getGroupsForDomain(String domainName) throws MembershipServiceException {
     	
         LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {"getGroupsForDomain", domainName}); //$NON-NLS-1$
         
@@ -614,10 +612,10 @@ public class MembershipServiceImpl extends AbstractService implements Membership
     		}
     	}
     	if(dHolder==null) {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
 		try {
-            return dHolder.getMembershipDomain().getGroupNames();
+            return getDomainSpecificGroups(dHolder.getMembershipDomain().getGroupNames(), domainName);
         } catch (Throwable e) {
             String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.source_exception", dHolder.getDomainName()); //$NON-NLS-1$
             LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, e, msg); 

@@ -48,7 +48,6 @@ import com.metamatrix.console.ui.util.property.PropertyProvider;
 import com.metamatrix.console.util.ExceptionUtility;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
-import com.metamatrix.toolbox.ui.widget.ButtonWidget;
 import com.metamatrix.toolbox.ui.widget.Splitter;
 
 /**
@@ -65,7 +64,6 @@ public class GroupsTabMainPanel extends BasePanel implements RepaintController,
 
     private GroupsManager manager;
     private RolesList rolesList;
-    private ButtonWidget addButton;
     private JPanel rightPanel = new JPanel();
     private GroupTabSelectionHandler selectionHandler;
     private boolean canViewPrincipalInfo;
@@ -125,11 +123,6 @@ public class GroupsTabMainPanel extends BasePanel implements RepaintController,
 		return showingRolesList;
 	}
 	
-    public void setAddUser(boolean enableAddUser){
-        if (addButton != null)
-            addButton.setEnabled(enableAddUser);
-    }
-
     public String getTitle() {
         //Unused-- needed by WorkspacePanel
         return "";
