@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
@@ -480,9 +482,16 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
         }
         
+        long sessionIDStringLong = -1;
         try {
-        	MetaMatrixSessionID sessionID = new MetaMatrixSessionID(identifier);
-			getSessionServiceProxy().terminateSession(sessionID, null);
+            sessionIDStringLong = Long.parseLong(identifier);
+        } catch (Exception e) {
+            throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Session_Identifier", new Object[] {identifier});  //$NON-NLS-1$
+        } 
+        
+        try {
+        	MetaMatrixSessionID sessionID = new MetaMatrixSessionID(sessionIDStringLong);
+			getSessionServiceProxy().terminateSession(sessionID, DQPWorkContext.getWorkContext().getSessionId());
         } catch(IllegalArgumentException e) {
         	throw new AdminProcessingException(e);
 		} catch (InvalidSessionException e) {

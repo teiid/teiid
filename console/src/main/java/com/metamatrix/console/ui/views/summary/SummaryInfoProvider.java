@@ -24,8 +24,6 @@ package com.metamatrix.console.ui.views.summary;
 
 import java.util.Date;
 
-import com.metamatrix.common.config.api.ReleaseInfo;
-
 public interface SummaryInfoProvider {
     public final static int GREEN = 1;
     public final static int YELLOW = 2;
@@ -37,6 +35,5 @@ public interface SummaryInfoProvider {
     Date getSystemStartUpTime() throws Exception;
     int getActiveSessionCount() throws Exception;
     SummaryHostInfo[] getHostInfo() throws Exception;
-    SummaryConnectionInfo[] getConnectionInfo() throws Exception;
-    ReleaseInfo[] getProductReleaseInfo() throws Exception;
+    Date getLastSessionStartUp() throws Exception;
 }

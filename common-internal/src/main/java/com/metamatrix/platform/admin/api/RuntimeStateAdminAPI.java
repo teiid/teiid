@@ -128,22 +128,6 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
                          MetaMatrixComponentException;
 
     /**
-     * Shutdown server and restart.
-     * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    void bounceServer() throws AuthorizationException,
-                       InvalidSessionException,
-                       MetaMatrixComponentException;
-
-    /**
      * Return the running state of the system.
      * 
      * @return SysteState object that represents the system.

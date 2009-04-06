@@ -26,23 +26,18 @@ package com.metamatrix.console.models;
  * All Rights Reserved.
  */
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import com.metamatrix.api.exception.security.AuthorizationException;
+import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ReleaseInfo;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.console.connections.ConnectionInfo;
-import com.metamatrix.console.ui.views.summary.SummaryConnectionInfo;
 import com.metamatrix.console.ui.views.summary.SummaryHostInfo;
 import com.metamatrix.console.ui.views.summary.SummaryInfoProvider;
-import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.api.runtime.HostData;
@@ -65,7 +60,7 @@ public class SummaryManager extends TimedManager implements SummaryInfoProvider 
         super.init();
     }
 
-    public String getSysURL() throws ExternalException{
+    public String getSysURL() {
     	return getConnection().getURL();
     }
     
@@ -100,8 +95,7 @@ public class SummaryManager extends TimedManager implements SummaryInfoProvider 
     }
 
     public int getActiveSessionCount() throws Exception {
-        return ModelManager.getSessionAPI(getConnection())
-        		.getActiveSessionsCount();
+        return ModelManager.getSessionManager(this.getConnection()).getSessions().size();
     }
 
     public SummaryHostInfo[] getHostInfo() throws Exception {
@@ -123,43 +117,6 @@ public class SummaryManager extends TimedManager implements SummaryInfoProvider 
         return info;
     }
 
-    public SummaryConnectionInfo[] getConnectionInfo() throws Exception {
-        Collection /*<ReleaseInfo>*/ products =
-        		ModelManager.getConfigurationAPI(getConnection()).getProducts();
-        Collection /*<SummaryConnectionInfo>*/ sum = new ArrayList(5);
-        Iterator it = products.iterator();
-        while (it.hasNext()) {
-            ReleaseInfo ri = (ReleaseInfo)it.next();
-            String productName = ri.getName();
-            if (!(productName.equals(MetaMatrixProductNames.Platform.PRODUCT_NAME) ||
-                    productName.equals(MetaMatrixProductNames.ConnectorProduct.PRODUCT_NAME))) {
-                SummaryConnectionInfo sci = new SummaryConnectionInfo(productName,
-                        ModelManager.getSessionAPI(getConnection())
-                        		.getActiveConnectionsCountForProduct(productName));
-                sum.add(sci);
-            }
-        }
-        SummaryConnectionInfo[] summaryInfo = new SummaryConnectionInfo[sum.size()];
-        it = sum.iterator();
-        for (int i = 0; it.hasNext(); i++) {
-            summaryInfo[i] = (SummaryConnectionInfo)it.next();
-        }
-        return summaryInfo;
-    }
-
-    public Collection getHostName() throws AuthorizationException,
-    		ExternalException{
-        Collection hostList = null;
-        try {
-            hostList = getHosts();
-        } catch (AuthorizationException e) {
-            throw(e);
-        } catch (Exception e) {
-            throw new ExternalException(e);
-        }
-        return hostList;
-    }
-
     public Collection getHosts() throws Exception {
         Collection hosts = new HashSet();
         Iterator itDeployedHostIDs = ModelManager.getConfigurationAPI(
@@ -174,17 +131,6 @@ public class SummaryManager extends TimedManager implements SummaryInfoProvider 
             hosts.add(host);
         }
         return hosts;
-    }
-
-    public ReleaseInfo[] getProductReleaseInfo() throws Exception {
-        Collection /*<ReleaseInfo>*/ products =
-        		ModelManager.getConfigurationAPI(getConnection()).getProducts();
-        ReleaseInfo[] ri = new ReleaseInfo[products.size()];
-        Iterator it = products.iterator();
-        for (int i = 0; it.hasNext(); i++) {
-            ri[i] = (ReleaseInfo)it.next();
-        }
-        return ri;
     }
 
 /******************************
@@ -216,4 +162,17 @@ public class SummaryManager extends TimedManager implements SummaryInfoProvider 
         }
         return status;
     }
+
+	@Override
+	public Date getLastSessionStartUp() throws Exception {
+		Collection<Session> sessions = ModelManager.getSessionManager(this.getConnection()).getSessions();
+		Date start = null;
+		for (Session session : sessions) {
+			Date createDate = session.getCreatedDate();
+			if (start == null || start.compareTo(createDate) > 0) {
+				start = createDate;
+			}
+		}
+		return start;
+	}
 }

@@ -39,6 +39,7 @@ import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 
 public class LocalServerConnection implements ServerConnection {
 	
@@ -49,11 +50,11 @@ public class LocalServerConnection implements ServerConnection {
 	private ServerConnectionListener listener;
 
 	public LocalServerConnection(MetaMatrixSessionID sessionId, Properties connectionProperties, ClientSideDQP dqp, ServerConnectionListener listener) {
-		result = new LogonResult(sessionId, connectionProperties.getProperty(MMURL.CONNECTION.USER_NAME), connectionProperties, "local"); //$NON-NLS-1$
+		result = new LogonResult(new SessionToken(sessionId, connectionProperties.getProperty(MMURL.CONNECTION.USER_NAME)), connectionProperties, "local"); //$NON-NLS-1$
 		
 		//Initialize the workContext
 		workContext = new DQPWorkContext();
-		workContext.setSessionId(result.getSessionID());
+		workContext.setSessionToken(result.getSessionToken());
 		workContext.setVdbName(connectionProperties.getProperty(MMURL.JDBC.VDB_NAME));
 		workContext.setVdbVersion(connectionProperties.getProperty(MMURL.JDBC.VDB_VERSION));
 		DQPWorkContext.setWorkContext(workContext);
@@ -66,6 +67,7 @@ public class LocalServerConnection implements ServerConnection {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T getService(Class<T> iface) {
 		if (iface != ClientSideDQP.class) {
 			throw new IllegalArgumentException("unknown service"); //$NON-NLS-1$

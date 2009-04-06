@@ -76,21 +76,18 @@ public class SummaryPanel extends JPanel
     private String sysURL;
     private String sysName;
     private int activeSessionCount, systemState;
-    private Date startTime;
+    private Date lastSessionStart, startTime;
     private SummaryHostInfo[] hostInfo;
-    private SummaryConnectionInfo[] connectionInfo;
     private JPanel hostPanel;
     private JPanel sessionsPanel;
-    private JPanel connectionsPanel;
     private JPanel systemStatePanel;
     private TextFieldWidget runningTFW;
     private TextFieldWidget startTimeTFW;
     private LabelWidget runJL;
     private LabelWidget startedJL;
 	private TextFieldWidget activeSessionCountTFW;
-    private TableWidget connectionsTable;
+	private TextFieldWidget lastSessionTFW;
     private JPanel stopLightPanel;
-	private String[] connectionsTableColumns = {"Product", "Connections"};
     private TableWidget hostTable;
     private String[] hostTableColumns = {"Host Identifier", "Status"};
     private GridBagLayout sysStateLayout;
@@ -223,12 +220,6 @@ public class SummaryPanel extends JPanel
         tBorder.setTitleFont(tBorder.getTitleFont().deriveFont(Font.BOLD));
         sessionsPanel.setBorder(tBorder);
 
-        connectionsPanel = buildConnectionsPanel();
-        tBorder = new TitledBorder("Connections");
-        tBorder.setTitleJustification(TitledBorder.LEFT);
-        tBorder.setTitleFont(tBorder.getTitleFont().deriveFont(Font.BOLD));
-        connectionsPanel.setBorder(tBorder);
-
         ButtonWidget refreshButton = new ButtonWidget("Refresh");
         refreshButton.addActionListener(new ActionListener() {
         	public void actionPerformed(ActionEvent ev) {
@@ -247,7 +238,6 @@ public class SummaryPanel extends JPanel
         JPanel lowerBoxPanel = new JPanel();
         lowerBoxPanel.setLayout(new GridLayout(1, 2, 10, 0));
         lowerBoxPanel.add(hostPanel);
-        lowerBoxPanel.add(connectionsPanel);
         pnlOuterLayout.setConstraints(upperBoxPanel, new GridBagConstraints(
                 0, 1, 1, 1, 1, 0, GridBagConstraints.CENTER, 
                 GridBagConstraints.BOTH, new Insets(10, 10, 10, 10), 0, 0));
@@ -440,6 +430,13 @@ public class SummaryPanel extends JPanel
             LogManager.logError(LogContexts.SUMMARY, e,
                     "Error retrieving active session count.");
         }
+        
+        try {
+            lastSessionStart = summaryInfoProvider.getLastSessionStartUp();
+        } catch (Exception e) {
+            LogManager.logError(LogContexts.SUMMARY, e,
+                    "Error retrieving last session start time.");
+        }
 
 	}
 
@@ -472,6 +469,13 @@ public class SummaryPanel extends JPanel
         activeSessionCountTFW.setEditable(false);
         activeSessionCountTFW.setText(""+activeSessionCount);
         
+        lastSessionTFW = new TextFieldWidget(105);
+        lastSessionTFW.setEditable(false);
+        if (lastSessionStart == null) {
+            lastSessionTFW.setText("");
+        } else {
+            lastSessionTFW.setText(lastSessionStart.toString());
+        }
         
         LabelWidget lastSessionJL = new LabelWidget("Last Logged In:");
         lastSessionJL.setName("SummaryPanel.sessionState1");
@@ -489,64 +493,18 @@ public class SummaryPanel extends JPanel
         		1, 1, 0, 0, GridBagConstraints.EAST, GridBagConstraints.NONE,
                 new Insets(5, 5, 5, 5), 0, 0));
 
+        sessionLayout.setConstraints(lastSessionTFW , new GridBagConstraints(
+                1, 1, GridBagConstraints.REMAINDER, 1, 1 , 0,
+                GridBagConstraints.WEST, GridBagConstraints.HORIZONTAL,
+                new Insets(5, 5, 5, 10), 0, 0));
+
         sessionPanel.add(activeSessionCountJL);
         sessionPanel.add(activeSessionCountTFW);
         sessionPanel.add(lastSessionJL);
+        sessionPanel.add(lastSessionTFW);
 
         return sessionPanel;
 	}
-
-    private void getConnectionInfo() {
-        try {
-            connectionInfo = summaryInfoProvider.getConnectionInfo();
-        } catch (Exception e) {
-            LogManager.logError(LogContexts.SUMMARY, e,
-                    "Error retrieving current connection information.");
-            connectionInfo = null;
-        }
-    }
-
-    private JPanel buildConnectionsPanel() {
-        Object[][] data = getConnectionsTableData();
-        DefaultTableModel tableModel = new DefaultTableModel(data, 
-        		connectionsTableColumns);
-        connectionsTable = new SummaryTableWidget(tableModel);
-        connectionsTable.setEditable(false);
-        connectionsTable.setName("System Summary connection table");
-        JScrollPane scrollPane = new JScrollPane(connectionsTable) {
-            public void setBounds(final int x, final int y, final int width, final int height) {
-                super.setBounds(x, y, width, height);
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        connectionsTable.sizeColumnsToFitData();
-                    }
-                });
-            }
-        };
-        JPanel cPanel = new JPanel(new BorderLayout());
-        cPanel.add(scrollPane, BorderLayout.CENTER);
-        return cPanel;
-    }
-
-    private Object[][] getConnectionsTableData() {
-        Object[][] data;
-        if ((connectionInfo == null) || (connectionInfo.length == 0)) {
-			data = new Object[1][2];
-            data[0][0] ="";
-            data[0][1]  = "";
-		} else {
-			data = new Object[connectionInfo.length + 1][2];
-            int totalCurrent = 0;
-            for (int i = 0; i < connectionInfo.length; i++) {
-                data[i][0] = connectionInfo[i].getProductName();
-                data[i][1] = new Integer(connectionInfo[i].getCurrentCount());
-                totalCurrent += connectionInfo[i].getCurrentCount();
-            }
-            data[connectionInfo.length][0] = "Total";
-            data[connectionInfo.length][1] = new Integer(totalCurrent);
-		}
-        return data;
-    }
 
     public void refreshData() {
         PanelsTree tree = PanelsTree.getInstance(getConnection());
@@ -561,7 +519,6 @@ public class SummaryPanel extends JPanel
         getSessionInfo();
         getSystemStateInfo();
         getHostsInfo();
-        getConnectionInfo();
         JPanel stopLightIcon;
 		if (systemState == SummaryInfoProvider.GREEN) {
             stopLightIcon = GREEN_LIGHT;
@@ -579,16 +536,14 @@ public class SummaryPanel extends JPanel
 		}
         activeSessionCountTFW.setText(
         		(new Integer(activeSessionCount)).toString());
+        if (lastSessionStart != null) {
+            lastSessionTFW.setText(lastSessionStart.toString());
+        }
         Object[][] hostData = getHostTableData();
         ((DefaultTableModel)hostTable.getModel()).setNumRows(0);
         ((DefaultTableModel)hostTable.getModel()).setDataVector(hostData,
                 hostTableColumns);
         hostTable.setEditable(false);
-        Object[][] connectionData = getConnectionsTableData();
-        ((DefaultTableModel)connectionsTable.getModel()).setNumRows(0);
-        ((DefaultTableModel)connectionsTable.getModel()).setDataVector(
-                connectionData, connectionsTableColumns);
-		connectionsTable.setEditable(false);                
         updateRunning();
         if (!columnsSized) {
         	updateTableColumnWidths();
@@ -608,7 +563,6 @@ public class SummaryPanel extends JPanel
     }
     
     public void updateTableColumnWidths() {
-		connectionsTable.sizeColumnsToFitData();
         hostTable.sizeColumnsToFitData();
     }
     

@@ -59,6 +59,7 @@ import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.FakeBufferService;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -127,7 +128,7 @@ public class TestDataTierManager extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName("MyVDB"); //$NON-NLS-1$
         workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionId(new MetaMatrixSessionID(1));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
         RequestID requestID = workContext.getRequestID(original.getExecutionId());
         
         context = new CommandContext();

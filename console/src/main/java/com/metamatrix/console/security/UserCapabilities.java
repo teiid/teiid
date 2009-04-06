@@ -37,7 +37,6 @@ import com.metamatrix.console.ui.views.users.RoleDisplay;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 
 /**
  * This is a singleton for accessing user capabilities.
@@ -113,15 +112,7 @@ public class UserCapabilities {
         boolean systemAdminMMS = false;
         boolean viewOnly = false;
         
-        // 1. Get the Session ID
-        MetaMatrixSessionID mmsidSessionID = conn.getSessionID();
-        // 2. Get the principal
-        MetaMatrixPrincipal mmpPrincipal = ModelManager.getSessionAPI(conn).getPrincipal(
-                mmsidSessionID);
-
-        // 3. Get this Principal's Roles
-        RoleDisplay[] rd = ModelManager.getGroupsManager(conn).getRolesForPrincipal(
-                mmpPrincipal, true);
+        RoleDisplay[] rd = ModelManager.getGroupsManager(conn).getRolesForPrincipal(getLoggedInUser(conn), true);
 
         // From the roles set the Role booleans
         for (int i = 0; i < rd.length; i++) {
@@ -322,13 +313,8 @@ public class UserCapabilities {
 	}
 
     public static MetaMatrixPrincipalName getLoggedInUser(
-    		ConnectionInfo connection) throws Exception {
-        MetaMatrixSessionID mmsidSessionID  = 
-        		connection.getSessionID();
-        MetaMatrixPrincipal mmpPrincipal = ModelManager.getSessionAPI(
-        		connection).getPrincipal(mmsidSessionID);
-        MetaMatrixPrincipalName loggedInUser = 
-        		mmpPrincipal.getMetaMatrixPrincipalName();
+    		ConnectionInfo connection) {
+        MetaMatrixPrincipalName loggedInUser = new MetaMatrixPrincipalName(connection.getServerConnection().getLogonResult().getUserName(), MetaMatrixPrincipal.TYPE_ADMIN);
         return loggedInUser;
     }
 }

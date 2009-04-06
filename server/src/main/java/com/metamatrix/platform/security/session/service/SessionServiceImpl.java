@@ -47,6 +47,8 @@ import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.id.dbid.DBIDController;
+import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.common.util.PropertiesUtils;
@@ -83,7 +85,7 @@ public class SessionServiceImpl extends AbstractService implements
                                                        SessionServiceInterface {
 	
     /**
-     * Comma delimeted string containing a list of SessionTerminationHandlers to be called when a session
+     * Comma delimited string containing a list of SessionTerminationHandlers to be called when a session
      * is terminated.
      */
     private static final String SESSION_TERMINATION_HANDLERS = "security.session.terminationHandlers"; //$NON-NLS-1$
@@ -91,6 +93,8 @@ public class SessionServiceImpl extends AbstractService implements
     private static final String SESSION_TIME_LIMIT = "metamatrix.session.time.limit"; //$NON-NLS-1$
     public static final String SESSION_MONITOR_ACTIVITY_INTERVAL = "metamatrix.session.sessionMonitor.ActivityInterval"; //$NON-NLS-1$
 
+    private static final String SESSION_ID = "SESSION_ID"; //$NON-NLS-1$
+    
     private MembershipServiceInterface membershipService;
     private Cache<MetaMatrixSessionID, MetaMatrixSessionInfo> sessionCache;
     private long sessionMaxLimit;
@@ -100,6 +104,7 @@ public class SessionServiceImpl extends AbstractService implements
     private Map<String, SessionTerminationHandler> terminationHandlerMap = new HashMap<String, SessionTerminationHandler>();
     
     private Timer sessionMonitor;
+    private DBIDController idGenerator = DBIDGenerator.getInstance();
 
     // -----------------------------------------------------------------------------------
     // S E R V I C E - R E L A T E D M E T H O D S
@@ -258,7 +263,7 @@ public class SessionServiceImpl extends AbstractService implements
 
         
         // Get a new ID for this new session record
-        MetaMatrixSessionID id = new MetaMatrixSessionID();
+        MetaMatrixSessionID id = new MetaMatrixSessionID(getUniqueSessionID());
 
         // Return a new session info object
         MetaMatrixSessionInfo newSession = new MetaMatrixSessionInfo(id,
@@ -270,16 +275,21 @@ public class SessionServiceImpl extends AbstractService implements
                                                 properties.getProperty(MMURL.CONNECTION.CLIENT_IP_ADDRESS),
         										properties.getProperty(MMURL.CONNECTION.CLIENT_HOSTNAME));
         newSession.setTrustedToken(trustedToken);
-        if (this.sessionCache.put(newSession.getSessionID(), newSession) != null) {
-        	try {
-				this.closeSession(newSession.getSessionID());
-			} catch (InvalidSessionException e) {
-				LogManager.logDetail(LogSecurityConstants.CTX_SESSION, e, "Error closing invalidated session"); //$NON-NLS-1$
-			}
-        	throw new AssertionError("duplicate session id"); //$NON-NLS-1$
-        }
+        this.sessionCache.put(newSession.getSessionID(), newSession);
         return newSession;
 	}
+	
+	public void setIdGenerator(DBIDController idGenerator) {
+		this.idGenerator = idGenerator;
+	}
+	
+    private long getUniqueSessionID() throws SessionServiceException {
+        try {
+            return idGenerator.getID(SESSION_ID);
+        } catch (Exception e) {
+            throw new SessionServiceException(ErrorMessageKeys.SEC_SESSION_0107, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0107));
+        }
+    }
 	
     private AuthenticationToken authenticateUser(String userName,
 			Credentials credentials, Serializable trustedToken,
@@ -288,7 +298,7 @@ public class SessionServiceImpl extends AbstractService implements
 		AuthenticationToken authenticatedToken = null;
 		// Authenticate the principal ...
 		try {
-			authenticatedToken = (AuthenticationToken) this.membershipService.authenticateUser(userName,
+			authenticatedToken = this.membershipService.authenticateUser(userName,
 							credentials, trustedToken, applicationName);
 		} catch (ServiceException e) {
 			String msg = PlatformPlugin.Util
@@ -316,21 +326,6 @@ public class SessionServiceImpl extends AbstractService implements
 		return authenticatedToken;
 	}
 	
-	@Override
-	public int getActiveConnectionsCountForProduct(String product)
-			throws SessionServiceException {
-		if (product == null) {
-			return 0;
-		}
-		int result = 0;
-		for (MetaMatrixSessionInfo info : this.sessionCache.values()) {
-			if (product.equalsIgnoreCase(info.getProductName())) {
-				result++;
-			}
-		}
-		return result;
-	}
-
 	@Override
 	public Collection<MetaMatrixSessionInfo> getActiveSessions() throws SessionServiceException {
 		return new ArrayList<MetaMatrixSessionInfo>(this.sessionCache.values());

@@ -80,9 +80,7 @@ public class JDBCNames {
                                     + SET
                                     +   JDBCNames.IDTable.ColumnName.NEXT_ID + "= ?" //$NON-NLS-1$
                                     + WHERE
-                                    +   JDBCNames.IDTable.ColumnName.ID_CONTEXT + "= ?" //$NON-NLS-1$
-                                    + AND
-                                    +   JDBCNames.IDTable.ColumnName.NEXT_ID + "= ?"; //$NON-NLS-1$
+                                    +   JDBCNames.IDTable.ColumnName.ID_CONTEXT + "= ?"; //$NON-NLS-1$
 
     /** Sql statement use to insert an ID in the TransactionID table */
     public static final String INSERT_ID_BLOCK

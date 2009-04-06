@@ -8,6 +8,7 @@ import org.mockito.Mockito;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.cache.FakeCache;
+import com.metamatrix.common.id.dbid.spi.InMemoryIDController;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
@@ -17,6 +18,7 @@ public class TestSessionServiceImpl extends TestCase {
 	
 	public void testValidateSession() throws Exception {
 		SessionServiceImpl ssi = new SessionServiceImpl();
+		ssi.setIdGenerator(new InMemoryIDController());
 		ssi.setSessionCache(new FakeCache<MetaMatrixSessionID, MetaMatrixSessionInfo>());
 		MembershipServiceInterface msi = Mockito.mock(MembershipServiceInterface.class);
 		Mockito.stub(msi.authenticateUser("steve", null, null, "foo")).toReturn(new SuccessfulAuthenticationToken(null, "steve@somedomain")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -35,8 +37,6 @@ public class TestSessionServiceImpl extends TestCase {
 		ssi.validateSession(id1);
 		
 		assertEquals(1, ssi.getActiveSessionsCount());
-		assertEquals(0, ssi.getActiveConnectionsCountForProduct("x")); //$NON-NLS-1$
-		assertEquals(1, ssi.getActiveConnectionsCountForProduct("test")); //$NON-NLS-1$
 		assertEquals(0, ssi.getSessionsLoggedInToVDB("a", "1").size()); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		ssi.closeSession(id1);

@@ -42,6 +42,7 @@ import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -58,7 +59,7 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestPreparedStatement extends TestCase{
 	
-	private static final long SESSION_ID = 6;
+	private static final int SESSION_ID = 6;
 	
 	private static boolean DEBUG = false;
 	
@@ -171,7 +172,7 @@ public class TestPreparedStatement extends TestCase{
     }
 	
 	private ProcessorPlan helpGetProcessorPlan(String preparedSql, List values,
-			PreparedPlanCache prepPlanCache, long conn)
+			PreparedPlanCache prepPlanCache, int conn)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {
@@ -181,7 +182,7 @@ public class TestPreparedStatement extends TestCase{
 	}
 
 	static ProcessorPlan helpGetProcessorPlan(String preparedSql, List values,
-			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, PreparedPlanCache prepPlanCache, long conn, boolean callableStatement, boolean limitResults)
+			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, PreparedPlanCache prepPlanCache, int conn, boolean callableStatement, boolean limitResults)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {
@@ -196,10 +197,9 @@ public class TestPreparedStatement extends TestCase{
         }
 
         DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setVdbName("example1");
-        workContext.setVdbVersion("1");
-        workContext.setSessionId(new MetaMatrixSessionID(conn));
-        
+        workContext.setVdbName("example1"); //$NON-NLS-1$
+        workContext.setVdbVersion("1"); //$NON-NLS-1$
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(conn), "foo")); //$NON-NLS-1$        
         PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache) {
         	@Override
         	protected void createProcessor()
@@ -207,7 +207,7 @@ public class TestPreparedStatement extends TestCase{
         		//don't bother
         	}
         };
-        FakeApplicationEnvironment env = new FakeApplicationEnvironment(metadata, "example1", "1", "pm1", "1", "BINDING");
+        FakeApplicationEnvironment env = new FakeApplicationEnvironment(metadata, "example1", "1", "pm1", "1", "BINDING"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         serverRequest.initialize(request, env, BufferManagerFactory.getStandaloneBufferManager(), null, new HashMap(), null, DEBUG, null, workContext, 101024);
         serverRequest.setMetadata(capFinder, metadata, null);
         serverRequest.processRequest();

@@ -46,6 +46,7 @@ import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.service.api.exception.ServiceException;
@@ -91,7 +92,7 @@ public class LogonImpl implements ILogon {
 			MetaMatrixSessionID sessionID = updateDQPContext(sessionInfo);
 			LogManager.logDetail(LogSecurityConstants.CTX_SESSION, new Object[] {
 					"Logon successful for \"", user, "\" - created SessionID \"", "" + sessionID, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			return new LogonResult(sessionID, sessionInfo.getUserName(), sessionInfo.getProductInfo(), clusterName);
+			return new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getProductInfo(), clusterName);
 		} catch (MetaMatrixAuthenticationException e) {
 			throw new LogonException(e, e.getMessage());
 		} catch (ServiceException e) {
@@ -145,9 +146,7 @@ public class LogonImpl implements ILogon {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		workContext.setSessionToken(sessionInfo.getSessionToken());
 		workContext.setAppName(sessionInfo.getApplicationName());
-		workContext.setSessionId(sessionInfo.getSessionID());
 		workContext.setTrustedPayload(sessionInfo.getTrustedToken());
-		workContext.setUserName(sessionInfo.getUserName());
 		workContext.setVdbName(sessionInfo.getProductInfo(ProductInfoConstants.VIRTUAL_DB));
 		workContext.setVdbVersion(sessionInfo.getProductInfo(ProductInfoConstants.VDB_VERSION));
 		return sessionID;
@@ -175,15 +174,18 @@ public class LogonImpl implements ILogon {
 	}
 
 	@Override
-	public void assertIdentity(MetaMatrixSessionID sessionId)
+	public void assertIdentity(SessionToken sessionId)
 			throws InvalidSessionException, MetaMatrixComponentException {
 		MetaMatrixSessionInfo sessionInfo;
 		try {
-			sessionInfo = this.service.validateSession(sessionId);
+			sessionInfo = this.service.validateSession(sessionId.getSessionID());
 		} catch (SessionServiceException e) {
 			throw new MetaMatrixComponentException(e);
 		} catch (ServiceException e) {
 			throw new MetaMatrixComponentException(e);
+		}
+		if (!sessionInfo.getSessionToken().equals(sessionInfo.getSessionToken())) {
+			throw new InvalidSessionException();
 		}
 		this.updateDQPContext(sessionInfo);
 	}

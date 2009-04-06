@@ -37,13 +37,14 @@ public class RequestInfo implements Serializable {
 
 	private RequestID requestID;
     private String command;
-    private SessionToken token;
     private Date submittedTimestamp;
     private Date processingTimestamp;
     private boolean isSubscription;
     private int nodeID = Integer.MIN_VALUE;
     private String connectorBindingUUID;
     private String transactionId;
+    private String userName;
+    private String sessionId;
     
     public RequestInfo(RequestID requestId, String originalCommand, Date submittedTime, Date processingTime) {
         this.requestID = requestId;
@@ -59,14 +60,6 @@ public class RequestInfo implements Serializable {
      */
     public RequestID getRequestID() {
         return this.requestID;
-    }
-
-    /**
-     * Returns the session token that the request was submitted under.
-     * @return The session token
-     */
-    public SessionToken getSessionToken() {
-        return this.token;
     }
 
     /**
@@ -122,8 +115,17 @@ public class RequestInfo implements Serializable {
      * Set the session token that the request was submitted under.
      */
     public void setSessionToken(SessionToken token) {
-        this.token = token;
+    	this.userName = token.getUsername();
+    	this.sessionId = token.getSessionIDValue();
     }
+    
+    public String getSessionId() {
+		return sessionId;
+	}
+    
+    public String getUserName() {
+		return userName;
+	}
     
     /**
      * Set the connector binding UUID.

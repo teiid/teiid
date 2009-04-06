@@ -54,6 +54,7 @@ import com.metamatrix.dqp.service.FakeAuthorizationService;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
@@ -96,7 +97,7 @@ public class TestRequest extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName(VDB); 
         workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionId(new MetaMatrixSessionID(5));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
         FakeApplicationEnvironment environment = 
             new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
         Request request = helpProcessMessage(environment, message, null, workContext);
@@ -123,7 +124,7 @@ public class TestRequest extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName(VDB); 
         workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionId(new MetaMatrixSessionID(5));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
         FakeApplicationEnvironment environment = 
             new FakeApplicationEnvironment(metadata, VDB, VDB_VERSION, MODEL, BINDING_ID, BINDING_NAME);        
         
@@ -153,7 +154,7 @@ public class TestRequest extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName(VDB); 
         workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionId(new MetaMatrixSessionID(5));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
 
         helpProcessMessage(environment, message, null, workContext);
         
@@ -176,9 +177,9 @@ public class TestRequest extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName(VDB); 
         workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionId(new MetaMatrixSessionID(5));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
         Request request = helpProcessMessage(environment, message, null, workContext);
-        assertEquals("00000000-0000-0005-0000-000000000005", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID));
+        assertEquals("5", request.context.getEnvironmentProperties().get(ContextProperties.SESSION_ID)); //$NON-NLS-1$
     }
 
     private Request helpProcessMessage(FakeApplicationEnvironment environment,
@@ -223,7 +224,7 @@ public class TestRequest extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName(VDB); 
         workContext.setVdbVersion(VDB_VERSION); 
-        workContext.setSessionId(new MetaMatrixSessionID(5));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(5), "foo")); //$NON-NLS-1$
         message.setPreparedStatement(true);
         message.setParameterValues(new ArrayList());
         

@@ -36,22 +36,19 @@ import java.util.TimeZone;
  */
 public class LogonResult implements Serializable {
         
-    private MetaMatrixSessionID sessionID;
     private TimeZone timeZone = TimeZone.getDefault();
     private final Properties productInfo;
-    private String userName;
     private String clusterName;
+    private SessionToken sessionToken;
 
     public LogonResult() {
 		this.productInfo = new Properties();
 	}
     
-    public LogonResult(MetaMatrixSessionID sessionID,
-			String userName, Properties productInfo, String clusterName) {
-		this.sessionID = sessionID;
-		this.userName = userName;
+    public LogonResult(SessionToken token, Properties productInfo, String clusterName) {
 		this.productInfo = productInfo;
 		this.clusterName = clusterName;
+		this.sessionToken = token;
 	}
 
 	/**
@@ -60,7 +57,7 @@ public class LogonResult implements Serializable {
      * @since 4.3
      */
     public MetaMatrixSessionID getSessionID() {
-        return this.sessionID;
+        return this.sessionToken.getSessionID();
     }
 
 	public TimeZone getTimeZone() {
@@ -72,11 +69,15 @@ public class LogonResult implements Serializable {
 	}
 
 	public String getUserName() {
-		return userName;
+		return this.sessionToken.getUsername();
 	}
 
 	public String getClusterName() {
 		return clusterName;
+	}
+	
+	public SessionToken getSessionToken() {
+		return sessionToken;
 	}
     
 }

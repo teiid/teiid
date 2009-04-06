@@ -57,7 +57,6 @@ import com.metamatrix.console.ui.util.property.PropertyProvider;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.server.serverapi.RequestInfo;
 import com.metamatrix.toolbox.ui.widget.DialogPanel;
 import com.metamatrix.toolbox.ui.widget.DialogWindow;
@@ -268,11 +267,8 @@ public class QueryRequestPanel extends BasePanel {
             String requestStr = getRequestInfoDisplayString(q);
 			rowData[QueryTableModel.REQUEST_ID_COL] = requestStr;
 			tempRequestsMap.put(requestStr, q);
-			SessionToken st = q.getSessionToken();
-			if (st != null) {
-				rowData[QueryTableModel.USER_COL] = st.getUsername();
-				rowData[QueryTableModel.SESSION_ID_COL] = st.getSessionIDValue();
-			}
+			rowData[QueryTableModel.USER_COL] = q.getUserName();
+			rowData[QueryTableModel.SESSION_ID_COL] = q.getSessionId();
             rowData[QueryTableModel.CONNECTOR_BINDING_COL] =
                     getConnectorBindingForUUID(q.getConnectorBindingUUID());
             Vector innerVec = StaticUtilities.arrayToVector(rowData);

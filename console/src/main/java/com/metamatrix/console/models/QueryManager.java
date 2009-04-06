@@ -34,17 +34,12 @@ import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
-
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.ui.ViewManager;
 import com.metamatrix.console.util.AutoRefresher;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.InvalidRequestException;
-
-import com.metamatrix.platform.admin.api.SessionAdminAPI;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
-
 import com.metamatrix.server.admin.api.QueryAdminAPI;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -72,10 +67,6 @@ public class QueryManager extends TimedManager implements ManagerListener{
         return ModelManager.getQueryAPI(getConnection());
     }
     
-    private SessionAdminAPI getSessionAdminAPI() {
-        return ModelManager.getSessionAPI(getConnection());
-    }
-
     /**
      * The QueryManager listens for changes to the SessionManager.  If, for
      *example, a session is terminated, the QueryManager needs to know so
@@ -164,14 +155,6 @@ public class QueryManager extends TimedManager implements ManagerListener{
         return (Collection) getQueryRequests().clone();
     }
 
-    public Collection getRequestsForSession(MetaMatrixSessionInfo session)
-            throws AuthorizationException, ExternalException {
-        Collection result;
-        loadRealData(session.getSessionToken().getSessionID());
-        result = (Collection) getQueryRequests().clone();
-        return result;
-    }
-
     public void setAutoRefresher(AutoRefresher autoRefresher){
         ar = autoRefresher;
     }
@@ -199,46 +182,6 @@ public class QueryManager extends TimedManager implements ManagerListener{
                     setQueryRequests(new HashSet(0));
                 setIsStale(false);
                 super.startTimer();
-            } finally {
-                ViewManager.endBusy();
-            }
-        }
-    }
-
-    /**
-     * TODO: Need to fix this to only load query data for a given session,
-     *but to know when queries for a DIFFERENT session are requested.
-     *Currently, this just loads ALL active queries - i.e. calls loadRealData()
-     */
-    private void loadRealData(MetaMatrixSessionID token)
-            throws ExternalException, AuthorizationException {
-            Collection col = null;
-        if (getIsStale() || !token.equals(currentToken)){
-            try{
-                currentToken = token;
-                ViewManager.startBusy(); //ADJUSTS STATUS BAR
-
-                //THIS COULD FAIL SILENTLY
-
-                if (getSessionAdminAPI().isSessionValid(token).booleanValue()){
-                    col = getQueryAdminAPI().getRequestsForSession(token);
-                }
-                else{
-                    //Session ID: "+token.getValue()+" is invalid");
-                }
-
-                if (col!= null)
-                    setQueryRequests(new HashSet(col));
-                else
-                    setQueryRequests(new HashSet(0));
-                setIsStale(false);
-                super.startTimer();
-            } catch (InvalidSessionException e) {
-                setQueryRequests(new HashSet(0));
-            } catch (AuthorizationException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new ExternalException(e);
             } finally {
                 ViewManager.endBusy();
             }

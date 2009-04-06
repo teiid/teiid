@@ -23,61 +23,21 @@
 package com.metamatrix.platform.security.api;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 /**
- * This immutable class represents an identifier for a unique MetaMatrix session within a given MetaMatrix System. This object
- * will be returned to the Client when login to the MetaMatrix Server
+ * This immutable class represents an identifier for a unique session.
  */
 public final class MetaMatrixSessionID implements
-                                      Serializable,
-                                      Comparable<MetaMatrixSessionID> {
+                                      Serializable {
 
     public final static long serialVersionUID = -7872739911360962975L;
     
-    private UUID id;
+    private long id;
     
-    /**
-     * Used to create a deterministic id, mostly called by tests
-     */
     public MetaMatrixSessionID(long id) {
-    	this.id = new UUID(id, id);
+    	this.id = id;
     }
     
-    public MetaMatrixSessionID() {
-    	this.id = UUID.randomUUID();
-    }
-    
-    /**
-     * Converts the given string into a session id.
-     * @throws IllegalArgumentException if id is not valid
-     * @param id
-     */
-    public MetaMatrixSessionID(String id) {
-    	this.id = UUID.fromString(id);
-    }
-
-    /**
-     * Compares this object to another. If the specified object is an instance of the MetaMatrixSessionID class, then this method
-     * compares the contents; otherwise, it throws a ClassCastException (as instances are comparable only to instances of the same
-     *  class).
-     * <p>
-     * Note: this method <i>is </i> consistent with <code>equals()</code>, meaning that
-     * <code>(compare(x, y)==0) == (x.equals(y))</code>.
-     * <p>
-     * 
-     * @param obj
-     *            the object that this instance is to be compared to.
-     * @return a negative integer, zero, or a positive integer as this object is less than, equal to, or greater than the
-     *         specified object, respectively.
-     * @throws NullPointerException
-     *             if the specified object reference is null
-     * @throws ClassCastException
-     *             if the specified object's type prevents it from being compared to this instance.
-     */
-    public int compareTo(MetaMatrixSessionID obj) {
-        return this.id.compareTo(obj.id);
-    }
     /**
      * Returns true if the specified object is semantically equal to this instance. Note: this method is consistent with
      * <code>compareTo()</code>.
@@ -96,7 +56,7 @@ public final class MetaMatrixSessionID implements
         // (this includes checking for null ) ...
         if (obj instanceof MetaMatrixSessionID) {
             MetaMatrixSessionID that = (MetaMatrixSessionID)obj;
-        	return this.id.equals(that.id);
+        	return this.id == that.id;
         }
 
         // Otherwise not comparable ...
@@ -109,7 +69,7 @@ public final class MetaMatrixSessionID implements
      * @return a hash code value for this object.
      */
     public final int hashCode() {
-        return id.hashCode();
+        return (int)id;
     }
 
     /**
@@ -118,7 +78,7 @@ public final class MetaMatrixSessionID implements
      * @return the string representation of this instance.
      */
     public final String toString() {
-        return id.toString();
+        return String.valueOf(id);
     }
 
 }

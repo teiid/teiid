@@ -24,9 +24,6 @@ package com.metamatrix.common.id.dbid;
 
 import java.io.Serializable;
 
-import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.util.ErrorMessageKeys;
-
 /**
  * Used by DBIDGenerator to reserve a block of uniqueIDs used
  * to create ID objects.
@@ -38,18 +35,10 @@ public class ReservedIDBlock implements Serializable {
      */
     public final static long NO_ID_AVAILABLE = -1;
 
-    private String context;
-
-    private long first;
-    private long last;
-    private long next;
+    private long sequence;
 
     // indicates the maximum number this context can have
     private long max;
-
-    // controlls if when the max number is reached, whether the
-    // numbers will wrap around and start over.
-    private boolean wrappable = false;
 
     /**
      * Construct a new instance with the first ID and last ID in the block.
@@ -57,22 +46,12 @@ public class ReservedIDBlock implements Serializable {
      * @param last Defines the last id in the block.
      * @throws IllegalArgumentException if first > last
      */
-    public ReservedIDBlock(String context, long first, long last, long max) {
-
-        if (first > last) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.ID_ERR_0013,
-            		new Object[] {String.valueOf(first), String.valueOf(last)}));
-        }
-
-        this.context = context;
-
-        this.first = first;
-        this.next = first;
-        if (last > max) {
-            last = max;
-        }
-
-        this.last = last;
+    public ReservedIDBlock() {
+    	
+    }
+    
+    public void setBlockValues(long first, long max) {
+    	this.sequence = first;
         this.max = max;
     }
 
@@ -82,88 +61,15 @@ public class ReservedIDBlock implements Serializable {
      * @return long nextID in block
      */
     public long getNextID() {
-        if (next > last) {
+    	if (max == 0) {
+    		return NO_ID_AVAILABLE;
+    	}
+    	long result = sequence++;
+        if (result > max) {
             return NO_ID_AVAILABLE;
         }
-        next++;
-        return next-1;
+        return result;
     }
 
-    /**
-     * Return the last ID that will be used in the block;
-     * @return long lastID in block
-     */
-    public long getLast() {
-        return last;
-    }
-
-    /**
-     * Return the context for this ID block;
-     * @return String context
-     */
-
-    public String getContext() {
-        return context;
-    }
-
-    /**
-     * Returns boolean indicating if block is all used up.
-     * @return true if block is depleted.
-     */
-     public boolean isDepleted() {
-        return (next > last);
-    }
-
-    public boolean isAtMaximum()  {
-        if (isDepleted()) {
-          return (last >= max ? true : false);
-        }
-        return false;
-    }
-
-    /**
-     * Call to enable this context to reuse its numbers
-     * when the maximum number is reached.
-     */
-    public void setIsWrappable(boolean enableWrapping) {
-        wrappable = enableWrapping;
-    }
-
-    /**
-     * Returns boolean indicating if the numbers can be reused
-     * when the maximum number is reached.
-     * @return true if block is wrappable
-     */
-    public boolean isWrappable() {
-        return wrappable;
-    }
-
-    /**
-     * Sets the maximum number allowed for this context
-     * @param long nexMax is the new maximum number allowed
-     */
-//    public void setMax(long newMax) {
-//        this.max = newMax;
- //   }
-
-    /**
-     * Return the maximum number allowed for this context
-     * @return long maximum number
-     */
-    public long getMax() {
-        return max;
-    }
-
-    /**
-     * Return String representation of this instance
-     * @return String representation
-     */
-    public String toString() {
-        return "ReservedIDBlock: first = " + first + //$NON-NLS-1$
-                                 " last = " + last + //$NON-NLS-1$
-                                 " next = " + next + //$NON-NLS-1$
-                                 " max = " + max + //$NON-NLS-1$
-                                 " wrappable = " + wrappable; //$NON-NLS-1$
-    }
 }
 

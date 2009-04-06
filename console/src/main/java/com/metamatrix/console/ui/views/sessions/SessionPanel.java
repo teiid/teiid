@@ -35,8 +35,8 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -51,6 +51,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableColumn;
 
+import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.connections.ConnectionInfo;
@@ -75,8 +76,6 @@ import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.StaticProperties;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
-import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.toolbox.ui.widget.TableWidget;
 import com.metamatrix.toolbox.ui.widget.table.EnhancedTableColumn;
 
@@ -132,7 +131,7 @@ public class SessionPanel
     private AutoRefresher arRefresher = null;
 
 	//the original universe of current sessions
-    private java.util.List /*<MetaMatrixSessionInfo>*/ allSessions;
+    private List<Session> allSessions;
 
     private boolean programaticSelectionChange = false;
 
@@ -373,25 +372,21 @@ public class SessionPanel
 	}
 
 	private Object[][] getSessionData() {
-		Iterator iterator = allSessions.iterator();
 		Object[][] data = new Object[allSessions.size()][SessionTableModel.COLUMN_COUNT];
 		
 		// Populate the table data.
-		MetaMatrixSessionInfo u;
-		for (int i=0; iterator.hasNext(); i++){
-		    u = (MetaMatrixSessionInfo)iterator.next();
+		for (int i=0; i < allSessions.size(); i++){
+		    Session u = allSessions.get(i);
 		
 		    //match these up with column names
 		    data[i][SessionTableModel.SESSION_ID_COLUMN_NUM] = u.getSessionID().toString();
 		    data[i][SessionTableModel.USER_NAME_COLUMN_NUM] = u.getUserName();
 		    data[i][SessionTableModel.APPLICATION_COLUMN_NUM] = u.getApplicationName();
-		    data[i][SessionTableModel.LOGGED_IN_COLUMN_NUM] = new Date(u.getTimeCreated());
-		    data[i][SessionTableModel.LAST_PING_TIME] = new Date(u.getLastPingTime());
-		    String vdbName = u.getProductInfo(
-		            ProductInfoConstants.VIRTUAL_DB);
+		    data[i][SessionTableModel.LOGGED_IN_COLUMN_NUM] = u.getCreatedDate();
+		    data[i][SessionTableModel.LAST_PING_TIME] = u.getLastPingTime();
+		    String vdbName = u.getVDBName();
 		    data[i][SessionTableModel.VDB_NAME_COLUMN_NUM] = (vdbName!=null?vdbName:"");//$NON-NLS-1$
-		    String vdbVersStr = u.getProductInfo(
-		            ProductInfoConstants.VDB_VERSION);
+		    String vdbVersStr = u.getVDBVersion();
 		    if (vdbVersStr != null) {
 		        vdbVersStr = vdbVersStr.trim();
  		    } else {
@@ -433,11 +428,8 @@ public class SessionPanel
         ListSelectionModel lsm = sessionTable.getSelectionModel();
         for (int i = lsm.getMinSelectionIndex(); i <= lsm.getMaxSelectionIndex(); i++){
             if (lsm.isSelectedIndex(i)){
-                MetaMatrixSessionInfo sessInfo;
-                int modelIndex;
-
-                modelIndex = sessionTable.convertRowIndexToModel(i);
-                sessInfo = (MetaMatrixSessionInfo)allSessions.get(modelIndex);
+                int modelIndex = sessionTable.convertRowIndexToModel(i);
+                Session sessInfo = allSessions.get(modelIndex);
                 result.add(new SessionInfoIndexPair(sessInfo,modelIndex));
             }
         }
@@ -482,7 +474,7 @@ public class SessionPanel
         } else {
             int tableRow = sessionTable.getSelectedRow();
             int modelRow = sessionTable.convertRowIndexToModel(tableRow);
-            MetaMatrixSessionInfo sessToKill = (MetaMatrixSessionInfo) allSessions.get(modelRow);
+            Session sessToKill = allSessions.get(modelRow);
             String session = sessToKill.toString(); //$NON-NLS-1$
             confirmed = DialogUtility.yesNoDialog(null,
                     ConsolePlugin.Util.getString("SessionPanel.Terminate_Session__23") + session + "?", //$NON-NLS-1$ //$NON-NLS-2$
@@ -498,11 +490,11 @@ public class SessionPanel
             try {
                 while (it.hasNext()) {
                     SessionInfoIndexPair pair = (SessionInfoIndexPair)it.next();
-                    MetaMatrixSessionInfo sessInfo = pair.sessInfo;
+                    Session sessInfo = pair.sessInfo;
                     int modelIndex =pair.modelIndex;
-                    MetaMatrixSessionID id = sessInfo.getSessionID();
-                    if (!id.equals(connection.getSessionID())) {
-                        getSessionManager().terminateSession(sessInfo);
+                    String id = sessInfo.getSessionID();
+                    if (!id.equals(connection.getSessionID().toString())) {
+                        getSessionManager().terminateSession(id);
 
                         //Sanity check here- our index and sessinfo should still mesh
                         //once we terminate it, we should yank it from the model and display
@@ -535,9 +527,9 @@ public class SessionPanel
      */
 	public void refreshTable() {
 		boolean continuing = true;
-		Collection /*<MetaMatrixSessionInfo>*/	sessions = null;
+		Collection<Session>	sessions = null;
 		try {
-			sessions = getSessionManager().getSessions();
+			sessions = getSessionManager().getSessions(true);
 		} catch (Exception ex) {
 			LogManager.logError(LogContexts.SESSIONS, ex, ConsolePlugin.Util.getString("SessionPanel.Error_retrieving_sessions_information_28")); //$NON-NLS-1$
 			ExceptionUtility.showMessage(ConsolePlugin.Util.getString("SessionPanel.Error_retrieving_session_information_29"), //$NON-NLS-1$
@@ -573,12 +565,12 @@ public class SessionPanel
         }
         while (iter.hasNext()) {
             SessionInfoIndexPair pair = (SessionInfoIndexPair)iter.next();
-            MetaMatrixSessionInfo sessInfo = pair.sessInfo;
-            MetaMatrixSessionID id = sessInfo.getSessionID();
+            Session sessInfo = pair.sessInfo;
+            String id = sessInfo.getSessionID();
             int rowCount = sessionTable.getRowCount();
             for (int i = 0; i < rowCount ; i++){
                 String rowId = (String)sessionTable.getValueAt(i,SessionTableModel.SESSION_ID_COLUMN_NUM);
-                if (id.toString().equals(rowId)){
+                if (id.equals(rowId)){
                     sessionTable.addRowSelectionInterval(i,i);
 
                 }
@@ -698,10 +690,10 @@ class SessionTableWidget extends TableWidget {
 	
 		
 class SessionInfoIndexPair implements Comparable{
-    public MetaMatrixSessionInfo sessInfo;
+    public Session sessInfo;
     public int modelIndex;
 
-    public SessionInfoIndexPair(MetaMatrixSessionInfo sessInfo, int modelIndex){
+    public SessionInfoIndexPair(Session sessInfo, int modelIndex){
         this.sessInfo=sessInfo;
         this.modelIndex=modelIndex;
     }

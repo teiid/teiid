@@ -56,7 +56,7 @@ import com.metamatrix.platform.service.api.ServiceInterface;
  */
 public interface SessionServiceInterface extends ServiceInterface {
     public static String NAME = "SessionService"; //$NON-NLS-1$
-
+    
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.
      */
@@ -107,13 +107,6 @@ public interface SessionServiceInterface extends ServiceInterface {
      * @return int
      */
     int getActiveSessionsCount() throws SessionServiceException;
-
-    /**
-     * Get the number of active connections for the product.
-     * @param product String name of product
-     * @return int
-     */
-    int getActiveConnectionsCountForProduct(String product) throws SessionServiceException;
 
     /**
      * Returns a MetaMatrixPrincipal object describing the owner (user) of the

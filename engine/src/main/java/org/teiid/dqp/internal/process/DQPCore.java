@@ -193,6 +193,7 @@ public class DQPCore extends Application implements ClientSideDQP {
             
             if(holder != null && !holder.isCanceled()) {
             	RequestInfo req = new RequestInfo(holder.requestID, holder.requestMsg.getCommandString(), holder.requestMsg.getSubmittedTimestamp(), holder.requestMsg.getProcessingTimestamp());
+            	req.setSessionToken(holder.dqpWorkContext.getSessionToken());
             	if (holder.getTransactionContext() != null && holder.getTransactionContext().isInTransaction()) {
             		req.setTransactionId(holder.getTransactionContext().getTxnID());
             	}
@@ -207,7 +208,8 @@ public class DQPCore extends Application implements ClientSideDQP {
                     // add all the subrequest messages
                 	AtomicRequestMessage arm = conInfo.getAtomicRequestMessage();
                 	RequestInfo info = new RequestInfo(arm.getRequestID(), arm.getCommand().toString(), arm.getSubmittedTimestamp(), arm.getProcessingTimestamp());
-        			info.setConnectorBindingUUID(arm.getConnectorBindingID());
+                	info.setSessionToken(holder.dqpWorkContext.getSessionToken());
+                	info.setConnectorBindingUUID(arm.getConnectorBindingID());
         			info.setNodeID(arm.getAtomicRequestID().getNodeID());
         			results.add(info);
                 }

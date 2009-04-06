@@ -24,23 +24,8 @@ package com.metamatrix.common.id.dbid;
 
 public interface DBIDController {
 
-    // call to set the block size increments for a given context.
-    void setContextBlockSize(String context, long size);
-
     // call to get a unique id for the given context and by default
     // the id numbers cannot be rolled over and reused.
-    long getUniqueID(String context) throws DBIDGeneratorException;
-
-    // call to get a unique id for the given context and pass true if
-    // the id numbers can be rolled over and reused.
-    long getUniqueID(String context, boolean enableRollOver) throws DBIDGeneratorException;
-
-
-    /**
-    * Call when the DBIDGenerator is no longer needed and the database connections
-    * can be closed.
-    */
-    void shutDown();
-
+    long getID(String context) throws DBIDGeneratorException;
 
 } 

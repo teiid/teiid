@@ -24,9 +24,8 @@ package com.metamatrix.jdbc.transport;
 
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.api.ServerConnectionListener;
@@ -36,14 +35,14 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 
 public class LocalTransportHandler implements ServerConnectionFactory {
     
-    private AtomicLong SESSION_ID = new AtomicLong(1);
+    private AtomicInteger SESSION_ID = new AtomicInteger();
     private ConnectionListenerList listenerList = new ConnectionListenerList();
     private ClientSideDQP dqp;
     
     /**
      * Default constructor - used by reflection to create a new instance. 
      */
-    public LocalTransportHandler(ClientSideDQP dqp) throws ApplicationInitializationException {
+    public LocalTransportHandler(ClientSideDQP dqp) {
 		this.dqp = dqp;
     }
     

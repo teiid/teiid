@@ -85,14 +85,12 @@ import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
 import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
 import com.metamatrix.platform.admin.api.MembershipAdminAPI;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
-import com.metamatrix.platform.admin.api.SessionAdminAPI;
 import com.metamatrix.platform.admin.apiimpl.AdminHelper;
 import com.metamatrix.platform.admin.apiimpl.AuthorizationAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.ConfigurationAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.ExtensionSourceAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.MembershipAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIImpl;
-import com.metamatrix.platform.admin.apiimpl.SessionAdminAPIImpl;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.config.event.ConfigurationChangeEvent;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -128,6 +126,8 @@ import com.metamatrix.server.util.ServerPropertyNames;
  * configured under this server
  */
 public abstract class ProcessController implements ProcessManagement {
+	
+    public final static String SERVICE_ID = "Service"; //$NON-NLS-1$
 
     public static final String STARTER_MAX_THREADS = "vm.starter.maxThreads"; //$NON-NLS-1$
     /**Time-to-live for threads used to start services (ms)*/    
@@ -213,7 +213,6 @@ public abstract class ProcessController implements ProcessManagement {
         this.clientServices.registerClientService(ConfigurationAdminAPI.class, ConfigurationAdminAPIImpl.getInstance(this.registry), PlatformAdminConstants.CTX_CONFIGURATION_ADMIN_API);
         this.clientServices.registerClientService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry, hostManagement), PlatformAdminConstants.CTX_RUNTIME_STATE_ADMIN_API);
         this.clientServices.registerClientService(MembershipAdminAPI.class, MembershipAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
-        this.clientServices.registerClientService(SessionAdminAPI.class, SessionAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
         this.clientServices.registerClientService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_AUTHORIZATION_ADMIN_API);
         this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
         this.clientServices.registerClientService(QueryAdminAPI.class, QueryAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
@@ -930,7 +929,7 @@ public abstract class ProcessController implements ProcessManagement {
      */
     private ServiceID createServiceID() {
         try {
-            return new ServiceID(DBIDGenerator.getInstance().getID(DBIDGenerator.SERVICE_ID), host.getFullName(), this.processName);
+            return new ServiceID(DBIDGenerator.getInstance().getID(SERVICE_ID), host.getFullName(), this.processName);
         } catch (DBIDGeneratorException e) {
             throw new ServiceException(e, ErrorMessageKeys.SERVICE_0025, PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0025));
         }

@@ -34,6 +34,7 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.util.ProductInfoConstants;
 
 public class TestMMConnection extends TestCase {
@@ -57,7 +58,7 @@ public class TestMMConnection extends TestCase {
     	Properties productInfo = new Properties();
     	productInfo.setProperty(ProductInfoConstants.VIRTUAL_DB, STD_DATABASE_NAME);
     	productInfo.setProperty(ProductInfoConstants.VDB_VERSION, STD_DATABASE_VERSION);
-    	stub(mock.getLogonResult()).toReturn(new LogonResult(new MetaMatrixSessionID(1), "metamatrixadmin", productInfo, "fake")); //$NON-NLS-1$
+    	stub(mock.getLogonResult()).toReturn(new LogonResult(new SessionToken(new MetaMatrixSessionID(1), "metamatrixadmin"), productInfo, "fake")); //$NON-NLS-1$
     	return new MMServerConnection(mock, props, serverUrl);
     }
 

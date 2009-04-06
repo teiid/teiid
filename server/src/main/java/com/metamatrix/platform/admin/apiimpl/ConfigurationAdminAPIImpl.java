@@ -483,23 +483,4 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         return configAdmin.checkPropertiesDecryptable(defns);
     }
     
-    
-    
-    /**
-     * @see com.metamatrix.platform.admin.api.ConfigurationAdminAPI#getProducts(com.metamatrix.platform.security.api.MetaMatrixSessionID)
-     * @since 4.2
-     */
-    public Collection getProducts() throws AuthorizationException,
-                                                                InvalidSessionException,
-                                                                MetaMatrixComponentException {
-        Collection result = null;
-        try {
-            result = configAdmin.getProductReleaseInfos();
-        } catch (ServiceException e) {
-            throw new ComponentNotFoundException(e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$
-        } catch (ConfigurationException e) {
-            throw new MetaMatrixComponentException(e, PlatformPlugin.Util.getString("ConfigurationAdminAPIImpl.Problem_getting_Product_Release_Infos", e.getMessage())); //$NON-NLS-1$ 
-        }
-        return result;
-    }
 }

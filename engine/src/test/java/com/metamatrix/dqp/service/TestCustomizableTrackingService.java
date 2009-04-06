@@ -50,6 +50,7 @@ import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;
 import com.metamatrix.dqp.spi.TrackerLogConstants;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.TestQuery;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
@@ -248,8 +249,7 @@ public class TestCustomizableTrackingService extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName(vdbName);
         workContext.setVdbVersion(vdbVersion);
-        workContext.setSessionId(sessionID);
-        workContext.setUserName(principal);
+        workContext.setSessionToken(new SessionToken(sessionID, principal)); 
         DQPWorkContext.setWorkContext(workContext);
         
         RequestMessage reqMsg = new RequestMessage(command);

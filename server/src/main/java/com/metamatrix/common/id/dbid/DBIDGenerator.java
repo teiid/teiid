@@ -22,37 +22,18 @@
 
 package com.metamatrix.common.id.dbid;
 
-import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.id.dbid.spi.InMemoryIDController;
 import com.metamatrix.common.id.dbid.spi.jdbc.PersistentIDController;
-import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
-public class DBIDGenerator {
-
-    public final static String VM_ID = "VM"; //$NON-NLS-1$
-    public final static String SERVICE_ID = "Service"; //$NON-NLS-1$
+public class DBIDGenerator implements DBIDController {
 
     private static DBIDGenerator generator = new DBIDGenerator();
     private DBIDController controller;
 
     private DBIDGenerator() {
 	    setUseMemoryIDGeneration(false);
-    }
-    /**
-     * call to get a unique id for the given context and pass true if
-     * the id numbers can be rolled over and reused.
-     * @param context that identifies a unique entity
-     * @param enableRollOver is true if the ids can reused
-     * @return long is the next id
-     */
-    public long getID(String context, boolean enableRollOver) throws DBIDGeneratorException {
-        try {
-            return getUniqueID(context, enableRollOver);
-        } catch (Exception e) {
-            throw new DBIDGeneratorException(e, "Error creating id for " + context + " context."); //$NON-NLS-1$ //$NON-NLS-2$
-        }
     }
 
     /**
@@ -63,38 +44,10 @@ public class DBIDGenerator {
      */
     public long getID(String context) throws DBIDGeneratorException {
         try {
-            return getUniqueID(context, true);
+        	return controller.getID(context);
         } catch (Exception e) {
-            throw new DBIDGeneratorException(e, ErrorMessageKeys.ID_ERR_0011, CommonPlugin.Util.getString(ErrorMessageKeys.ID_ERR_0011, context));
+            throw new DBIDGeneratorException(e, "Error creating id for " + context + " context."); //$NON-NLS-1$ //$NON-NLS-2$
         }
-    }
-
-    /**
-     * Call to set the incremental block size for a specific context.  This
-     * is a way to tune the caching which will reduce the number of database
-     * reads that occur.  By increasing the cache, it should reduce the
-     * number of database reads.
-     * @param context that identifies a unique entity
-     * @param cache is the size of the blocks to use
-
-     */
-    public void setCacheBlockSize(String context, long cache) throws DBIDGeneratorException {
-        try {
-            setContextBlockSize(context, cache);
-        } catch (Exception e) {
-            throw new DBIDGeneratorException(e, ErrorMessageKeys.ID_ERR_0012, CommonPlugin.Util.getString(ErrorMessageKeys.ID_ERR_0012, context));
-        }
-    }
-
-    /**
-    *  Call when the persistent storage of ID's is not to be used.  This will cause
-    *  the id's to be generated in memory and will not be written to the database
-    *  for later use for a starting point.
-    *  This was made available for the CDK because it needs to load runtime metadata
-    *  disconnected from the application server or database.
-    */
-    public void setUseMemoryIDGeneration()  {
-        controller = new InMemoryIDController();
     }
 
     /**
@@ -113,28 +66,8 @@ public class DBIDGenerator {
         }
     }
 
-    /**
-    * Call when the DBIDGenerator is no longer needed and the database connections
-    * can be closed.
-    */
-    public void shutDown() {
-        if (controller != null) {
-            controller.shutDown();
-        }
-    }
-
     public static DBIDGenerator getInstance() {
         return generator;
     }
 
-    private synchronized long getUniqueID(String context, boolean enableRollOver) throws DBIDGeneratorException {
-        return controller.getUniqueID(context, enableRollOver);
-    }
-    private void setContextBlockSize(String context, long size) {
-          controller.setContextBlockSize(context, size);
-    }
-
 }
-
-
-

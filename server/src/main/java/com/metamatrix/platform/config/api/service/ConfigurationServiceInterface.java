@@ -267,18 +267,6 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      */
     void saveResources(Collection resourceDescriptors, String principalName) throws ConfigurationException;
 
-    
-
-    /**
-     * Obtain the List of {@link com.metamatrix.common.config.api.ReleaseInfo} objects which represent the products of the system.
-     * Each ReleaseInfo contains the name of the product, as well as release info.
-     * 
-     * @return Collection of ReleaseInfo objects of licensed products.
-     * @throws ConfigurationException
-     *             if an business error occurred within or during communication with the Configuration Service.
-     */
-    Collection getProductReleaseInfos() throws ConfigurationException;
-
     // --------------------------------------------------------------
     // A C T I O N M E T H O D S
     // --------------------------------------------------------------

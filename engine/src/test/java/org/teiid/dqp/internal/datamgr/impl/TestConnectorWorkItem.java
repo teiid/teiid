@@ -37,12 +37,6 @@ import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.xa.api.TransactionContext;
-import org.teiid.dqp.internal.datamgr.impl.AsynchConnectorWorkItem;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
-import org.teiid.dqp.internal.datamgr.impl.ConnectorWrapper;
-import org.teiid.dqp.internal.datamgr.impl.ProcedureBatchHandler;
-import org.teiid.dqp.internal.datamgr.impl.SynchConnectorWorkItem;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
@@ -56,6 +50,8 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.FakeMetadataService;
 import com.metamatrix.dqp.util.LogConstants;
+import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -87,7 +83,7 @@ public class TestConnectorWorkItem extends TestCase {
 			int nodeid) throws Exception {
 		RequestMessage rm = new RequestMessage();
 		DQPWorkContext workContext = new DQPWorkContext();
-		workContext.setUserName("foo"); //$NON-NLS-1$
+		workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
 		AtomicRequestMessage request = new AtomicRequestMessage(rm,
 				workContext, nodeid);
 		request.setCommand(helpGetCommand(

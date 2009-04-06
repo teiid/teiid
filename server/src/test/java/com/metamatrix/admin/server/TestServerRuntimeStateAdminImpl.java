@@ -48,11 +48,7 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
     
     
     public void setUp() throws Exception {
-        System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$ //$NON-NLS-2$
-        System.setProperty("metamatrix.message.bus.type", "noop.message.bus"); //$NON-NLS-1$ //$NON-NLS-2$
-        
         DBIDGenerator.getInstance().setUseMemoryIDGeneration(true);
-        
         
         FakeQueryService.clearState();
         FakeCacheAdmin.clearState();
@@ -404,9 +400,9 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         //positive case
         assertTrue(FakeServerSessionService.terminatedSessions.isEmpty());
         
-        admin.terminateSession("00000000-0000-0001-0000-000000000001");  //$NON-NLS-1$
+        admin.terminateSession("1");  //$NON-NLS-1$
         
-        assertTrue(FakeServerSessionService.terminatedSessions.contains("00000000-0000-0001-0000-000000000001")); //$NON-NLS-1$
+        assertTrue(FakeServerSessionService.terminatedSessions.contains("1")); //$NON-NLS-1$
         
         //failure case: invalid session ID
         boolean failed = false;

@@ -45,6 +45,7 @@ import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
@@ -73,7 +74,7 @@ public class TestMetaDataProcessor extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName("MyVDB"); //$NON-NLS-1$
         workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionId(new MetaMatrixSessionID(1));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
 
         // Initialize components
         RequestID requestID = workContext.getRequestID(1);  
@@ -156,7 +157,7 @@ public class TestMetaDataProcessor extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName("MyVDB"); //$NON-NLS-1$
         workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionId(new MetaMatrixSessionID(1));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
         return mdProc.processMessage(workContext.getRequestID(1), workContext, sql, true);    
     }
 

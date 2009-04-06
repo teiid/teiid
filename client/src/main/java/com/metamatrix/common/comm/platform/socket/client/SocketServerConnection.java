@@ -145,7 +145,7 @@ public class SocketServerConnection implements ServerConnection {
 				SocketServerInstance instance = connectionFactory.getServerInstance(hostInfo, secure);
 				if (this.logonResult != null) {
 					ILogon newLogon = instance.getService(ILogon.class);
-					newLogon.assertIdentity(logonResult.getSessionID());
+					newLogon.assertIdentity(logonResult.getSessionToken());
 				}
 				this.serverDiscovery.connectionSuccessful(hostInfo);
 				this.serverInstance = instance;

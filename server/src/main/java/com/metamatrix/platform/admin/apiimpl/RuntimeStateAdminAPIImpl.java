@@ -52,7 +52,6 @@ import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.PscID;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
-import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
@@ -66,7 +65,6 @@ import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.LogPlatformConstants;
-import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.platform.vm.controller.ProcessStatistics;
 import com.metamatrix.server.HostManagement;
@@ -303,30 +301,6 @@ public class RuntimeStateAdminAPIImpl extends SubSystemAdminAPIImpl implements R
 
     }
 
-    /**
-     * Shutdown server and restart.
-     * 
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException
-     *             if an error occurred in communicating with a component.
-     */
-    public synchronized void bounceServer() throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        LogManager.logCritical(LogPlatformConstants.CTX_RUNTIME_ADMIN, CorePlugin.Util.getString(LogMessageKeys.ADMIN_0016, token.getUsername()));
-
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeStateAdminAPIImpl.bounceServer()"); //$NON-NLS-1$
-
-        
-        helper.bounceServer();
-    }
-
- 
     /**
      * Restart a failed or stopped service.
      * 

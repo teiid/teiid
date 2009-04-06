@@ -172,7 +172,7 @@ public interface Session extends
     
     /**
      * Get the IPAddress for this Session
-     * @return IPAddress
+     * @return
      */
     public String getIPAddress();
       
@@ -180,9 +180,15 @@ public interface Session extends
     /**
      * Get the host name of the machine the client is 
      * accessing from
-     * @return IPAddress
+     * @return 
      */
     public String getHostName() ;
+    
+    /**
+     * Get the time the {@link Session} was created.
+     * @return
+     */
+    public Date getCreatedDate();
 
 
 }

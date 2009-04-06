@@ -32,6 +32,7 @@ import junit.framework.TestCase;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 
 public class TestAtomicRequestMessage extends TestCase {
 
@@ -46,7 +47,7 @@ public class TestAtomicRequestMessage extends TestCase {
     public static AtomicRequestMessage example() {
         RequestMessage rm = new RequestMessage();
         DQPWorkContext workContext = new DQPWorkContext();
-        workContext.setSessionId(new MetaMatrixSessionID(2));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(2), "foo")); //$NON-NLS-1$
         AtomicRequestMessage message = new AtomicRequestMessage(rm, workContext, 1000);
         message.setCommand(TestQueryImpl.helpExample());
         message.setFetchSize(100);
@@ -68,7 +69,7 @@ public class TestAtomicRequestMessage extends TestCase {
 
         assertEquals(new Date(12345678L), copy.getProcessingTimestamp());
         assertEquals(new RequestID(5000L), copy.getRequestID());
-        assertEquals("00000000-0000-0002-0000-000000000002", copy.getWorkContext().getConnectionID()); //$NON-NLS-1$
+        assertEquals("2", copy.getWorkContext().getConnectionID()); //$NON-NLS-1$
         //AtomicRequestMessage-specific stuff
         assertEquals("connectorBindingID", copy.getConnectorBindingID()); //$NON-NLS-1$
         assertEquals(new ConnectorID("10000"), copy.getConnectorID()); //$NON-NLS-1$

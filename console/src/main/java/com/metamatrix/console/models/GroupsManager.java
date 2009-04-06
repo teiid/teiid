@@ -41,7 +41,6 @@ import com.metamatrix.console.ui.views.entitlements.PrincipalChangeListener;
 import com.metamatrix.console.ui.views.users.RoleDisplay;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.platform.admin.api.AuthorizationAdminAPI;
-import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 
 public class GroupsManager extends Manager {
@@ -205,10 +204,10 @@ public class GroupsManager extends Manager {
      * @return array of RoleDisplays for the provided principal
      */
     public RoleDisplay[] getRolesForPrincipal(
-            MetaMatrixPrincipal principal, boolean includeImplicit)
+            MetaMatrixPrincipalName principal, boolean includeImplicit)
             throws ComponentNotFoundException, AuthorizationException,
             ExternalException, MetaMatrixSecurityException {
-        return getRolesForPrincipal(principal.getMetaMatrixPrincipalName());
+        return getRolesForPrincipal(principal);
     }
 
     /**

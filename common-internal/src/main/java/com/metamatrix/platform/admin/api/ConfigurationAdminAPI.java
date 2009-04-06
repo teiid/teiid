@@ -24,7 +24,6 @@ package com.metamatrix.platform.admin.api;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -44,7 +43,6 @@ import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 
 
 public interface ConfigurationAdminAPI extends SubSystemAdminAPI {
@@ -316,22 +314,5 @@ public interface ConfigurationAdminAPI extends SubSystemAdminAPI {
     List checkPropertiesDecryptable(List defns) 
     throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
 
-    
-    
-    /**
-     * Obtain the Collection of {@link com.metamatrix.common.config.api.ReleaseInfo} objects
-     * which represent the products of the system.  Each ReleaseInfo contains
-     * the name of the product, as well as release info.
-     * @return Collection of ReleaseInfo objects containing names of licensed
-     * products, as well as other release info
-     * @throws AuthorizationException if caller is not authorized to perform this method.
-     * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
-     * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
-     */
-    public abstract Collection getProducts() throws AuthorizationException,
-        InvalidSessionException,
-        MetaMatrixComponentException;
-
-    
 }
 

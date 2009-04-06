@@ -55,7 +55,6 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ProductServiceConfig;
 import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ReleaseInfo;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
@@ -67,7 +66,6 @@ import com.metamatrix.common.config.model.ComponentCryptoUtil;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.platform.PlatformPlugin;
@@ -569,22 +567,6 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
         transaction.commit();                   // commit the transaction
     }
-
-    /**
-     * Obtain the List of {@link com.metamatrix.common.config.api.ReleaseInfo} objects
-     * which represent the products of the system.  Each ReleaseInfo contains
-     * the name of the product, as well as release info.
-     * @return Collection of ReleaseInfo objects of licensed products.
-     * @throws ConfigurationException if an business error occurred within or during communication with the Configuration Service.
-     */
-    public Collection getProductReleaseInfos() throws ConfigurationException {
-    	ApplicationInfo build = ApplicationInfo.getInstance();
-    	ReleaseInfo info = new ReleaseInfo("Server", build.getReleaseNumber(), build.getBuildDate(), build.getBuildNumber()); //$NON-NLS-1$
-    	List l = new ArrayList();
-    	l.add(info);
-        return l;
-    }
-
 
     // --------------------------------------------------------------
     //                A C T I O N     M E T H O D S

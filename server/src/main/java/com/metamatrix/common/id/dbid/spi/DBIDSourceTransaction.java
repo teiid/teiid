@@ -31,19 +31,7 @@ import com.metamatrix.common.id.dbid.ReservedIDBlock;
  */
 public interface DBIDSourceTransaction extends TransactionInterface {
 
-
-    /**
-     * <p>Create and return a new ReservedIDBlock.</p>
-     * <p>Read in nextID from database, createIDBlock, then update nextID in database.
-     *
-     * @param blockSize size of id block
-     * @param context
-     * @param wrapNumber is true when the context is at its maximum limit and
-     *    the next block should start over at the beginning
-     * @return ReservedIDBlock
-     * @throws Exception when an error updating or reading the database occurs
-     */
-    ReservedIDBlock createIDBlock(long blockSize, String context, boolean wrapNumber) throws Exception;
-
+    void createIDBlock(long blockSize, String context, ReservedIDBlock block) throws Exception;
+    
 }
 

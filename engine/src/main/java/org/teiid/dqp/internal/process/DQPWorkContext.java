@@ -46,8 +46,6 @@ public class DQPWorkContext implements Serializable {
 		CONTEXTS.set(context);
 	}
 	
-    private MetaMatrixSessionID sessionId;
-    private String userName;
     private Serializable trustedPayload;
     private String vdbName;
     private String vdbVersion;
@@ -70,7 +68,10 @@ public class DQPWorkContext implements Serializable {
      * @return
      */
     public String getUserName() {
-        return userName;
+		if (this.sessionToken == null) {
+			return null;
+		}
+        return this.sessionToken.getUsername();
     }
 
     /**
@@ -97,13 +98,6 @@ public class DQPWorkContext implements Serializable {
     /**
      * @param string
      */
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    /**
-     * @param string
-     */
     public void setVdbName(String vdbName) {
         this.vdbName = vdbName;
     }
@@ -116,15 +110,17 @@ public class DQPWorkContext implements Serializable {
     }
 
 	public String getConnectionID() {
-		return this.sessionId!=null?this.sessionId.toString():null;
+		if (this.sessionToken == null) {
+			return null;
+		}
+		return this.sessionToken.getSessionIDValue();
 	}
 	
 	public MetaMatrixSessionID getSessionId() {
-		return this.sessionId;
-	}
-
-	public void setSessionId(MetaMatrixSessionID sessionId) {
-		this.sessionId = sessionId;
+		if (this.sessionToken == null) {
+			return null;
+		}
+		return this.sessionToken.getSessionID();
 	}
 
 	public void setAppName(String appName) {

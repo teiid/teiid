@@ -49,6 +49,7 @@ import com.metamatrix.dqp.service.FakeMetadataService;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
@@ -67,7 +68,7 @@ public class TestDQPCore extends TestCase {
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName("bqt"); //$NON-NLS-1$
         workContext.setVdbVersion("1"); //$NON-NLS-1$
-        workContext.setSessionId(new MetaMatrixSessionID(1));
+        workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "foo")); //$NON-NLS-1$
         DQPWorkContext.setWorkContext(workContext);
         
         String vdbName = "bqt"; //$NON-NLS-1$
@@ -169,14 +170,14 @@ public class TestDQPCore extends TestCase {
         String sql = "SELECT env('sessionid') as SessionID"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         ResultsMessage rm = helpExecute(sql, userName);
-        assertEquals("00000000-0000-0001-0000-000000000001", rm.getResults()[0].get(0));
+        assertEquals("1", rm.getResults()[0].get(0)); //$NON-NLS-1$
     }
     
     public void testEnvSessionIdMixedCase() throws Exception {
         String sql = "SELECT env('sEsSIonId') as SessionID"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         ResultsMessage rm = helpExecute(sql, userName);
-        assertEquals("00000000-0000-0001-0000-000000000001", rm.getResults()[0].get(0));
+        assertEquals("1", rm.getResults()[0].get(0)); //$NON-NLS-1$
     }
     
     public void testTxnAutoWrap() throws Exception {
@@ -256,8 +257,7 @@ public class TestDQPCore extends TestCase {
 
     private ResultsMessage helpExecute(String sql, String userName, int sessionid, boolean txnAutoWrap) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql);
-        DQPWorkContext.getWorkContext().setUserName(userName);
-        DQPWorkContext.getWorkContext().setSessionId(new MetaMatrixSessionID(sessionid));
+        DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(sessionid), userName));
         if (txnAutoWrap) {
         	reqMsg.setTxnAutoWrapMode(ExecutionProperties.AUTO_WRAP_ON);
         }

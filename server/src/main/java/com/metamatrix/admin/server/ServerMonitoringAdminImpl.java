@@ -48,6 +48,7 @@ import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.Model;
 import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.api.objects.Resource;
+import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.api.server.ServerMonitoringAdmin;
@@ -786,8 +787,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			results = new ArrayList(requests.size());
 			for (Iterator iter = requests.iterator(); iter.hasNext();) {
 			    RequestInfo info = (RequestInfo)iter.next();
-			    SessionToken st = info.getSessionToken();
-
 			    
 			    String[] identifierParts = new String[2];
 			    identifierParts[0] = info.getRequestID().getConnectionID();
@@ -815,9 +814,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        if (info.getTransactionId() != null) {
 			            request.setTransactionID(info.getTransactionId());
 			        }
-			        if (st != null && st.getSessionID() != null) { 
-			            request.setUserName(st.getUsername());
-			        }
+		            request.setUserName(info.getUserName());
 			        
 			        results.add(request);
 			    }
@@ -888,15 +885,14 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
      * @return a <code>Collection</code> of <code>com.metamatrix.admin.api.Session</code>
      * @since 4.3
      */
-    public Collection getSessions(String identifier) throws AdminException  {
+    public Collection<Session> getSessions(String identifier) throws AdminException  {
         if (identifier == null) {
             throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
         }
         
         ArrayList results = null;
         try {
-			Collection sessions = null;
-			sessions = getSessionServiceProxy().getActiveSessions();
+			Collection sessions = getSessionServiceProxy().getActiveSessions();
 			
 			//convert results into MMSession objects
 			results = new ArrayList(sessions.size());

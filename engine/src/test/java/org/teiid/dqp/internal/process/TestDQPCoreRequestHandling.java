@@ -41,6 +41,7 @@ import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.lang.Command;
@@ -147,7 +148,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
      
     	if (workContext == null) {
 	    	workContext = new DQPWorkContext();
-	    	workContext.setSessionId(new MetaMatrixSessionID(id.getConnectionID()));
+	    	workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(Long.valueOf(id.getConnectionID())), "foo")); //$NON-NLS-1$
     	}
         RequestWorkItem workItem = new RequestWorkItem(rm, requestMsg, null, null, id, workContext);
         workItem.setOriginalCommand(originalCommand);

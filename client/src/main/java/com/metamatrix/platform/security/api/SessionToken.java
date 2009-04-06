@@ -23,140 +23,138 @@
 package com.metamatrix.platform.security.api;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * This class is an immutable identifier for a unique session that also
- * maintains the name of the principal for that session.  It is used internally
- * to MetaMatrix to allow association of a principal name to various activities.
+ * maintains the name of the principal for that session.
  * 
- * Server-side object should not be returned to the client
+ * Since this class can be used to authenticate a user, it must be secure in 
+ * transit if sent to the client.  Also it should only be sent to the client 
+ * who creates the session.
  */
-public class SessionToken implements Serializable, Comparable<SessionToken>, Cloneable {
-    public final static long serialVersionUID = -2853708320435636107L;
+public class SessionToken implements Serializable,
+		Cloneable {
+	public final static long serialVersionUID = -2853708320435636107L;
 
-    /** The session ID */
-    private MetaMatrixSessionID sessionID;
-    private String userName;
-    
-    /**
-     * Fake SessionToken representing a trusted user
-     */
-    public SessionToken() {
-    	this.sessionID = new MetaMatrixSessionID(-1);
-    	this.userName = "trusted"; //$NON-NLS-1$
-    }
+	/** The session ID */
+	private MetaMatrixSessionID sessionID;
+	private String userName;
+	private UUID secret;
 
-    /**
-    * The primary constructor that specifies the id, userName, and product info
-    * for the session represented by this token.
-    * @param id (long) the unique identifier for the session
-     * @param userName (String) the userName for this session
-     * @throws IllegalArgumentException
-     */
-     public SessionToken(MetaMatrixSessionID id, String userName){
-         this.sessionID = id;
-         this.userName = userName;
-     }    
-
-    /**
-     * Returns unique session identifier
-     * @return the session ID
-     */
-    public MetaMatrixSessionID getSessionID() {
-        return this.sessionID;
-    }
-
-    /**
-     * Returns unique session identifier
-     * @return the session ID value
-     */
-    public String getSessionIDValue() {
-        return this.sessionID.toString();
-    }
-
-    /**
-     * Get the principal name for this session's user.
-     * @return the user name
-     */
-    public String getUsername() {
-        return this.userName;
-    }
-    
 	/**
-     * Compares this SessionToken to another Object. If the Object is a SessionToken,
-     * this function compares the ID and the user account ID.  Otherwise, it throws a
-     * ClassCastException (as SessionToken instances are comparable only to
-     * other SessionToken instances).  Note:  this method is consistent with
-     * <code>equals()</code>.
-	 * <p>
-     * @param o the object that this instance is to be compared to.
-	 * @return a negative integer, zero, or a positive integer as this object
-     *      is less than, equal to, or greater than the specified object, respectively.
-	 * @throws ClassCastException if the specified object's type prevents it
-     *      from being compared to this UserID.
+	 * Fake SessionToken representing a trusted user
 	 */
-	public int compareTo(SessionToken that) {
-        if ( that == this ) {
-            return 0;
-        }
-
-        // Check if everything else is equal ...
-        int result = this.sessionID.compareTo(that.sessionID);
-        return result;
-    }
+	public SessionToken() {
+		this.sessionID = new MetaMatrixSessionID(-1);
+		this.userName = "trusted"; //$NON-NLS-1$
+		this.secret = new UUID(1,1);
+	}
 
 	/**
-     * Returns true if the specified object is semantically equal to this instance.
-     * Note:  this method is consistent with <code>compareTo()</code>.
+	 * The primary constructor that specifies the id, userName, and product info
+	 * for the session represented by this token.
+	 * 
+	 * @param id
+	 * 		(long) the unique identifier for the session
+	 * @param userName
+	 * 		(String) the userName for this session
+	 * @throws IllegalArgumentException
+	 */
+	public SessionToken(MetaMatrixSessionID id, String userName) {
+		this.sessionID = id;
+		this.userName = userName;
+		this.secret = UUID.randomUUID();
+	}
+
+	public UUID getSecret() {
+		return secret;
+	}
+
+	/**
+	 * Returns unique session identifier
+	 * 
+	 * @return the session ID
+	 */
+	public MetaMatrixSessionID getSessionID() {
+		return this.sessionID;
+	}
+
+	/**
+	 * Returns unique session identifier
+	 * 
+	 * @return the session ID value
+	 */
+	public String getSessionIDValue() {
+		return this.sessionID.toString();
+	}
+
+	/**
+	 * Get the principal name for this session's user.
+	 * 
+	 * @return the user name
+	 */
+	public String getUsername() {
+		return this.userName;
+	}
+
+	/**
+	 * Returns true if the specified object is semantically equal to this
+	 * instance. Note: this method is consistent with <code>compareTo()</code>.
 	 * <p>
-     * @param obj the object that this instance is to be compared to.
+	 * 
+	 * @param obj
+	 * 		the object that this instance is to be compared to.
 	 * @return whether the object is equal to this object.
 	 */
 	public boolean equals(Object obj) {
-        // Check if instances are identical ...
-        if (this == obj) {
-            return true;
-        }
+		// Check if instances are identical ...
+		if (this == obj) {
+			return true;
+		}
 
-        // Check if object can be compared to this one
-        // (this includes checking for null ) ...
-        if ( obj instanceof SessionToken ) {
-            SessionToken that = (SessionToken)obj;
-        	return ( this.sessionID.equals(that.sessionID)  );
-        }
+		// Check if object can be compared to this one
+		// (this includes checking for null ) ...
+		if (!(obj instanceof SessionToken)) {
+			return false;
+		}
+		SessionToken that = (SessionToken) obj;
+		return (this.sessionID.equals(that.sessionID))
+				&& this.userName.equals(that.userName)
+				&& this.secret.equals(that.secret);
+	}
 
-        // Otherwise not comparable ...
-        return false;
-    }
-
-    /**
-     * Overrides Object hashCode method.
-     * @return  a hash code value for this object.
-     * @see     Object#hashCode()
-     * @see     Object#equals(Object)
+	/**
+	 * Overrides Object hashCode method.
+	 * 
+	 * @return a hash code value for this object.
+	 * @see Object#hashCode()
+	 * @see Object#equals(Object)
 	 */
 	public int hashCode() {
-        return this.sessionID.hashCode();
-    }
+		return this.sessionID.hashCode();
+	}
 
-    /**
-     * Returns a string representing the current state of the object.
-     */
-    public String toString() {
-        return "SessionToken[" + getUsername() + "," + getSessionIDValue() + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
+	/**
+	 * Returns a string representing the current state of the object.
+	 */
+	public String toString() {
+		return "SessionToken[" + getUsername() + "," + getSessionIDValue() + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
 
-    /**
-     * Return a cloned instance of this object.
-     * @return the object that is the clone of this instance.
-     */
-    public Object clone() {
-        try {
-            // Everything is immutable, so bit-wise copy (of references) is okay!
-            return super.clone();
-        } catch ( CloneNotSupportedException e ) {
-        }
-        return null;
-    }
+	/**
+	 * Return a cloned instance of this object.
+	 * 
+	 * @return the object that is the clone of this instance.
+	 */
+	public Object clone() {
+		try {
+			// Everything is immutable, so bit-wise copy (of references) is okay
+			// !
+			return super.clone();
+		} catch (CloneNotSupportedException e) {
+		}
+		return null;
+	}
 
 }

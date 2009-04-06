@@ -63,7 +63,6 @@ import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.StaticProperties;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.server.serverapi.RequestInfo;
 import com.metamatrix.toolbox.ui.widget.LabelWidget;
 import com.metamatrix.toolbox.ui.widget.Splitter;
@@ -303,21 +302,14 @@ public final class QueryPanel
     public void displayQuery(RequestInfo request) {
         if (request != null) {
             txfRequestId.setText(String.valueOf(request.getRequestID()));
-            SessionToken sessionToken = request.getSessionToken();
-            String sessionIDStr = StringUtil.Constants.EMPTY_STRING;
-            if (sessionToken != null) {
-                sessionIDStr = sessionToken.getSessionIDValue();
-            }
+            String sessionIDStr = request.getSessionId();
             txfSessionId.setText(sessionIDStr);
             Date date = request.getProcessingTimestamp();
 			txfSubmitted.setText((date == null) ? StringUtil.Constants.EMPTY_STRING : 
                     FORMATTER.format(date));
 			String transId = request.getTransactionId();
 			txfTransactionId.setText((transId == null) ? StringUtil.Constants.EMPTY_STRING : transId);
-            String userStr = StringUtil.Constants.EMPTY_STRING;
-            if (sessionToken != null) {
-                userStr = sessionToken.getUsername();
-            }
+            String userStr = request.getUserName();
 			txfUser.setText(userStr);
             
             String bindingUUID = request.getConnectorBindingUUID();

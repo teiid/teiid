@@ -29,10 +29,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import org.teiid.dqp.internal.process.DQPWorkContext;
-
 import junit.framework.TestCase;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -58,7 +57,7 @@ import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 public class TestSocketRemoting extends TestCase {
@@ -150,7 +149,7 @@ public class TestSocketRemoting extends TestCase {
 				public ResultsFuture<?> logoff()
 						throws InvalidSessionException,
 						MetaMatrixComponentException {
-					ResultsFuture<?> result = new ResultsFuture();
+					ResultsFuture<?> result = new ResultsFuture<Void>();
 					result.getResultsReceiver().exceptionOccurred(new MetaMatrixComponentException("some exception")); //$NON-NLS-1$
 					return result;
 				}
@@ -165,15 +164,15 @@ public class TestSocketRemoting extends TestCase {
 						MetaMatrixComponentException {
 					return null;
 				}
-
+				
 				@Override
-				public void assertIdentity(MetaMatrixSessionID sessionId)
-						throws InvalidSessionException,
-						MetaMatrixComponentException {
-					
+				public void assertIdentity(SessionToken sessionId)
+					throws InvalidSessionException,
+					MetaMatrixComponentException {
 				}
-			}, "foo");
-		csr.registerClientService(FakeService.class, new FakeServiceImpl(), "foo");
+
+			}, "foo"); //$NON-NLS-1$
+		csr.registerClientService(FakeService.class, new FakeServiceImpl(), "foo"); //$NON-NLS-1$
 		final FakeClientServerInstance serverInstance = new FakeClientServerInstance(csr);
 		SocketServerConnection connection = createFakeConnection(serverInstance);
 		ILogon logon = connection.getService(ILogon.class);

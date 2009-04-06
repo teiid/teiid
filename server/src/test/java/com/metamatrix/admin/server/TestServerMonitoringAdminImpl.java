@@ -33,6 +33,7 @@ import junit.framework.TestCase;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
+import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorType;
 import com.metamatrix.admin.objects.MMDQP;
@@ -463,11 +464,11 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
      * @since 4.3
      */
     public void testGetSessions() throws AdminException {
-        Collection results = admin.getSessions(AdminObject.WILDCARD);  
+        Collection<Session> results = admin.getSessions(AdminObject.WILDCARD);  
         assertEquals(2, results.size());
 
         MMSession session = (MMSession) results.iterator().next();
-        assertEquals("00000000-0000-0001-0000-000000000001", session.getIdentifier()); //$NON-NLS-1$
+        assertEquals("1", session.getIdentifier()); //$NON-NLS-1$
         assertEquals("vdb1", session.getVDBName()); //$NON-NLS-1$
         assertEquals("1", session.getVDBVersion()); //$NON-NLS-1$
         assertEquals("app1", session.getApplicationName()); //$NON-NLS-1$
@@ -475,7 +476,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
                
         
         
-        results = admin.getSessions("00000000-0000-0001-0000-000000000001");  //$NON-NLS-1$
+        results = admin.getSessions("1");  //$NON-NLS-1$
         assertEquals(1, results.size());
     }
     

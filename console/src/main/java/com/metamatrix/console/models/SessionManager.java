@@ -24,15 +24,11 @@ package com.metamatrix.console.models;
 
 import java.util.Collection;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.security.AuthorizationException;
-
+import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.ui.ViewManager;
 import com.metamatrix.console.util.ExternalException;
-
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
+import com.metamatrix.platform.security.api.ILogon;
 
 /**
  * Facade for GUI client to Session objects and Session-related functionality
@@ -49,6 +45,9 @@ public class SessionManager extends TimedManager{
      * @see SessionManager#terminateSession
      */
     public static final String SESSION_TERMINATED= "A Session was terminated."; //$NON-NLS-1$
+    
+    private Collection<Session> sessions;
+    private long lastReferesh;
 
 	public SessionManager(ConnectionInfo connection) {
 		super(connection);
@@ -66,58 +65,48 @@ public class SessionManager extends TimedManager{
         super.setIsAutoRefreshEnabled(false);
     }
 
-    public Collection /*<MetaMatrixSessionInfo >*/ getActiveSessions() throws Exception {
-        Collection result = null;
-        result = ModelManager.getSessionAPI(getConnection()).getActiveSessions();
-        return result;
-    }
-    
     /**
      * Terminates, on remote system, the session specified by the parameter.
      *Fires a ModelChangedEvent with message
      *SessionManager.TERMINATE_SESSION and arg SessionToken.
      * @param userSessionInfo identifies session to be terminated
      */
-    public void terminateSession(MetaMatrixSessionInfo userSessionInfo)
-            throws ExternalException, AuthorizationException,
-            ComponentNotFoundException {
+    public void terminateSession(String userSessionInfo)
+            throws ExternalException {
         try {
             ViewManager.startBusy(); //ADJUSTS STATUS BAR
-            ModelManager.getSessionAPI(getConnection()).terminateSession(
-            		userSessionInfo.getSessionID());
-        } catch (ComponentNotFoundException e) {
-            throw e;
-        } catch (AuthorizationException e) {
-            throw e;
+            getConnection().getServerAdmin().terminateSession(userSessionInfo);
         } catch (Exception e) {
             throw new ExternalException(e);
         } finally {
             ViewManager.endBusy(); //ADJUSTS STATUS BAR
         }
-        super.fireModelChangedEvent(SESSION_TERMINATED, userSessionInfo.getSessionToken());
+        super.fireModelChangedEvent(SESSION_TERMINATED, userSessionInfo);
     }
 
-    public Collection /*<MetaMatrixSessionInfo>*/ getSessions() throws Exception {
-        return getActiveSessions();
+    public Collection<Session> getSessions() throws Exception {
+        return getSessions(false);
+    }
+    
+    public Collection<Session> getSessions(boolean refresh) throws Exception {
+    	if (refresh || lastReferesh + 30000 < System.currentTimeMillis()) {
+    		this.sessions = getConnection().getServerAdmin().getSessions("*"); //$NON-NLS-1$
+    	}
+    	return this.sessions;
     }
 
     public boolean isSignedOnUserSessionValid()  {
-        Boolean BIsValid = Boolean.FALSE;
         try {
             ViewManager.startBusy(); //ADJUSTS STATUS BAR
-            MetaMatrixSessionID mmsidSessionID
-                    = getConnection().getServerConnection().getLogonResult().getSessionID();
-
-            BIsValid = ModelManager.getSessionAPI(getConnection())
-                            .isSessionValid( mmsidSessionID );
-
+            getConnection().getServerConnection().getService(ILogon.class).ping();
+            return true;
         } catch (Exception e) {
             // no action, exception interpreted as FALSE
         } finally {
             ViewManager.endBusy(); //ADJUSTS STATUS BAR
         }
 
-        return BIsValid.booleanValue();
+        return false;
     }
 }
 

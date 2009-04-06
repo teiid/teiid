@@ -30,7 +30,6 @@ import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.id.dbid.DBIDController;
-import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.id.dbid.ReservedIDBlock;
 import com.metamatrix.common.util.ErrorMessageKeys;
@@ -39,54 +38,37 @@ public class PersistentIDController implements DBIDController {
 
     private static TransactionMgr transMgr;
 
-//    private static ManagedConnectionPool connectionPool;
-
-    private static Map idBlockMap = new HashMap();
-    private static Map blockSizeMap = new HashMap();
-
-    // Contexts
-    public final static String VM_ID = DBIDGenerator.VM_ID;
-    public final static String SERVICE_ID = DBIDGenerator.SERVICE_ID;
-    
-    private final static long VM_ID_BLOCK_SIZE = 1;
-    private final static long SERVICE_ID_BLOCK_SIZE = 10;
+    private static Map<String, ReservedIDBlock> idBlockMap = new HashMap<String, ReservedIDBlock>();
 
     private static final long DEFAULT_ID_BLOCK_SIZE = 100;
-//    private static final String DEFAULT_MAXIMUM_CONCURRENT_USERS = "1";
 
     private static final String FACTORY = "com.metamatrix.common.id.dbid.spi.jdbc.DBIDResourceTransactionFactory"; //$NON-NLS-1$
 
 	private static final String PRINCIPAL = "DBID_GENERATOR"; //$NON-NLS-1$
 
     public PersistentIDController() throws ManagedConnectionException {
+        // get the resource connection properties, if system properties where set
+        // prior to this being called they will override.
 
-            // get the resource connection properties, if system properties where set
-            // prior to this being called they will override.
+        Properties props = new Properties(); 
+        	//PropertiesUtils.clone(cfgProps, false);
+        props.setProperty(TransactionMgr.FACTORY, FACTORY);
 
-            Properties props = new Properties(); 
-            	//PropertiesUtils.clone(cfgProps, false);
-            props.setProperty(TransactionMgr.FACTORY, FACTORY);
-
-            transMgr = new TransactionMgr(props, PRINCIPAL);
-
-
-            // Initialize block size for known contexts.
-            blockSizeMap.put(VM_ID, new Long(VM_ID_BLOCK_SIZE));
-            blockSizeMap.put(SERVICE_ID, new Long(SERVICE_ID_BLOCK_SIZE));
+        transMgr = new TransactionMgr(props, PRINCIPAL);
     }
 
 
-    private ReservedIDBlock createIDBlock(long blockSize, String context, boolean wrap) throws DBIDGeneratorException {
-
-        ReservedIDBlock block = null;
+    private void setNextBlockValues(long blockSize, String context, ReservedIDBlock block) throws DBIDGeneratorException {
         DBIDResourceTransaction transaction = null;
         try {
             transaction = (DBIDResourceTransaction) transMgr.getWriteTransaction();
-            block = transaction.createIDBlock(blockSize, context, wrap);
+            transaction.createIDBlock(blockSize, context, block);
             transaction.commit();
         } catch (Exception e) {
             try {
-                transaction.rollback();
+            	if (transaction != null) { 
+            		transaction.rollback();
+            	}
             } catch (Exception sqle) {
             }
 
@@ -97,64 +79,27 @@ public class PersistentIDController implements DBIDController {
                 transaction.close();
             }
         }
-        return block;
     }
 
-    public void setContextBlockSize(String context, long size) {
-          blockSizeMap.put(context, new Long(size));
-    }
-
-
-    public long getUniqueID(String context) throws DBIDGeneratorException {
-        return getUniqueID(context, false);
-    }
-
-    public long getUniqueID(String context, boolean enableRollOver) throws DBIDGeneratorException {
-
-        ReservedIDBlock idBlock = (ReservedIDBlock) idBlockMap.get(context);
-
-        if (idBlock == null) {
-            long bSize = getBlockSize(context);
-            idBlock = createIDBlock(bSize, context, false);
-
-            idBlock.setIsWrappable(enableRollOver);
-            idBlockMap.put(context, idBlock);
-
-         } else if (idBlock.isDepleted()) {
-            long bSize = getBlockSize(context);
-            if (idBlock.isAtMaximum()) {
-                if(idBlock.isWrappable()) {
-                   idBlock = createIDBlock(bSize, context, true);
-                } else {
-                    throw new DBIDGeneratorException(ErrorMessageKeys.ID_ERR_0015, CommonPlugin.Util.getString(ErrorMessageKeys.ID_ERR_0015,
-                    		new Object[] {context, String.valueOf(idBlock.getMax())} ));
-                }
-            } else {
-                idBlock = createIDBlock(bSize, context, false);
-            }
-            idBlock.setIsWrappable(enableRollOver);
-            idBlockMap.put(context, idBlock);
-        }
-
-        return idBlock.getNextID();
-    }
-
-    private long getBlockSize(String context) {
-            // get block size for context
-            // if no block size exists then use default.
-
-        Long bs = (Long) blockSizeMap.get(context);
-        long bSize = DEFAULT_ID_BLOCK_SIZE;
-        if (bs != null) {
-            bSize = bs.longValue();
-        }
-
-        return bSize;
-    }
-
-    public void shutDown() {
-    }
-
-
+    public long getID(String context)
+			throws DBIDGeneratorException {
+    	ReservedIDBlock idBlock = null;
+    	synchronized (idBlockMap) {
+			idBlock = idBlockMap.get(context);
+			
+			if (idBlock == null) {
+				idBlock = new ReservedIDBlock();
+				idBlockMap.put(context, idBlock);
+			}
+    	}
+		synchronized (idBlock) {
+	    	long result = idBlock.getNextID();
+	    	if (result != ReservedIDBlock.NO_ID_AVAILABLE) {
+	    		return result;
+	    	}
+	    	setNextBlockValues(DEFAULT_ID_BLOCK_SIZE, context, idBlock);
+	    	return idBlock.getNextID();
+		}
+	}
 
 }

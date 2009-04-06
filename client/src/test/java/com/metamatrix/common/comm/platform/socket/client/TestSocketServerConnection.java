@@ -46,6 +46,7 @@ import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.SessionToken;
 
 /**
  * <code>TestCase</case> for <code>SocketServerConnection</code>
@@ -59,10 +60,8 @@ public class TestSocketServerConnection extends TestCase {
 		Throwable t;
 		
 		@Override
-		public void assertIdentity(
-				MetaMatrixSessionID sessionId)
-				throws InvalidSessionException,
-				MetaMatrixComponentException {
+		public void assertIdentity(SessionToken sessionId)
+				throws InvalidSessionException, MetaMatrixComponentException {
 			
 		}
 
@@ -78,7 +77,7 @@ public class TestSocketServerConnection extends TestCase {
 				Properties connectionProperties)
 				throws LogonException,
 				MetaMatrixComponentException {
-			return new LogonResult(new MetaMatrixSessionID(1), "fooUser", new Properties(), "fake"); //$NON-NLS-1$ //$NON-NLS-2$
+			return new LogonResult(new SessionToken(new MetaMatrixSessionID(1), "fooUser"), new Properties(), "fake"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		@Override
@@ -138,7 +137,7 @@ public class TestSocketServerConnection extends TestCase {
 	
 	public void testLogon() throws Exception {
 		SocketServerConnection connection = createConnection(null);
-		assertEquals("00000000-0000-0001-0000-000000000001", connection.getLogonResult().getSessionID().toString()); //$NON-NLS-1$
+		assertEquals("1", connection.getLogonResult().getSessionID().toString()); //$NON-NLS-1$
 	}
 	
 	/**
