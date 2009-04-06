@@ -279,14 +279,13 @@ public class ConnectionInfo {
         }
         if (this.serverAdmin != null) {
         	this.serverAdmin.close();
+        	this.serverAdmin = null;
         }
     }
     
     
     /**
-	 * Get a ServerAdmin object.  Make sure to call ServerAdmin.close() when you're done with it.
-     * TODO: cache this?  Need to make sure it gets closed when the console exits. 
-     * @throws CommunicationException 
+	 * Get a ServerAdmin object.
 	 */
     public synchronized ServerAdmin getServerAdmin() throws AdminException, CommunicationException {
     	if (this.serverAdmin == null) {
