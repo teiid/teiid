@@ -46,7 +46,6 @@ import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.Model;
-import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.api.objects.Resource;
 import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.api.objects.SystemObject;
@@ -63,7 +62,6 @@ import com.metamatrix.admin.objects.MMQueueWorkerPool;
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMResource;
 import com.metamatrix.admin.objects.MMSession;
-import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.SessionServiceException;
@@ -753,7 +751,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 
     /**
      * Get monitoring information about requests.
-     * @see com.metamatrix.admin.api.server.ServerMonitoringAdmin#getRequests(java.lang.String)
      * @param identifier Identifier of a session or request to get information for.
      * For example "sessionID" or "sessionID.requestID".   
      * <p>If identifier is "*", this method returns information about all requests in the system.
@@ -787,25 +784,24 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			results = new ArrayList(requests.size());
 			for (Iterator iter = requests.iterator(); iter.hasNext();) {
 			    RequestInfo info = (RequestInfo)iter.next();
-			    
-			    String[] identifierParts = new String[2];
-			    identifierParts[0] = info.getRequestID().getConnectionID();
+			    if (source ^ info.isAtomicQuery()) {
+			    	continue;
+			    }
+			    String[] identifierParts = null;
 
 			    MMRequest request;
-			    boolean correctType;
-			    if (source) {
-			        identifierParts[1] = info.getRequestID().getExecutionID() + Request.DELIMITER + info.getNodeID();
-			        request = new MMSourceRequest(identifierParts);
-			        
-			        correctType = info.isAtomicQuery();
+			    if (info.isAtomicQuery()) {
+			    	identifierParts = new String[3];
+			    	identifierParts[2] = String.valueOf(info.getNodeID());
 			    } else {
-			        identifierParts[1] = Long.toString(info.getRequestID().getExecutionID());
-			        request = new MMRequest(identifierParts);
-			        
-			        correctType = (! info.isAtomicQuery());
+			    	identifierParts = new String[2];
 			    }
+			    identifierParts[0] = info.getRequestID().getConnectionID();
+		        identifierParts[1] = Long.toString(info.getRequestID().getExecutionID());
+
+		        request = new MMRequest(identifierParts);
 			    
-			    if (correctType && identifierMatches(identifier, identifierParts)) {
+			    if (identifierMatches(identifier, identifierParts)) {
 			        Object bindingName = uuidToBindingNameMap.get(info.getConnectorBindingUUID());
 			        request.setConnectorBindingName(bindingName!=null?(String)bindingName:null);
 			        request.setCreated(info.getSubmittedTimestamp()); 

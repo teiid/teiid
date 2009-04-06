@@ -152,11 +152,14 @@ public class RequestInfo implements Serializable {
 	
     @Override
 	public boolean equals(Object obj) {
+    	if (obj == this) {
+    		return true;
+    	}
     	if (!(obj instanceof RequestInfo)) {
     		return false;
     	}
     	RequestInfo value = (RequestInfo)obj;
-    	if (connectorBindingUUID == null) {
+    	if (connectorBindingUUID == null || value.getConnectorBindingUUID() == null) {
     		return requestID.equals(value.getRequestID());
     	}
 		return requestID.equals(value.getRequestID()) && connectorBindingUUID.equals(value.getConnectorBindingUUID()) && nodeID == value.nodeID;

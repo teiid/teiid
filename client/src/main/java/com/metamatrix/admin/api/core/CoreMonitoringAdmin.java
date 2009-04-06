@@ -33,7 +33,6 @@ import com.metamatrix.admin.api.objects.ExtensionModule;
 import com.metamatrix.admin.api.objects.QueueWorkerPool;
 import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.api.objects.Session;
-import com.metamatrix.admin.api.objects.SourceRequest;
 import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.api.objects.VDB;
 
@@ -195,7 +194,7 @@ public interface CoreMonitoringAdmin {
      * @since 4.3
      */
 
-    Collection getRequests(String identifier) throws AdminException;
+    Collection<Request> getRequests(String identifier) throws AdminException;
 
     /**
      * Get the Source Request that correspond to the specified identifier pattern
@@ -206,13 +205,11 @@ public interface CoreMonitoringAdmin {
      *      that begin with given number, or all the requests for particular session etc.
      *      <li><code>"number<{@link AdminObject#DELIMITER_CHAR}>number<{@link AdminObject#DELIMITER_CHAR}>number"</code> - for a single source request in the system
      * </ul>
-     * @return Collection of {@link SourceRequest}
+     * @return Collection of {@link Request}
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection getSourceRequests(String identifier) throws AdminException;
-    
-    
+    Collection<Request> getSourceRequests(String identifier) throws AdminException;
     
     /**
      * Get all of the available Configuration Properties for the specified AdminObject, and details about them.

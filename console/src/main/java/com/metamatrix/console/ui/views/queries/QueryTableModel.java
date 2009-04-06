@@ -70,6 +70,16 @@ public class QueryTableModel extends DefaultTableModel {
 		}
 		return col;
 	}
+	
+	public int getSessionIdColumn() {
+		int col = -1;
+		for (int i = 0; i < colOrder.length; i++) {
+			if (colOrder[i] == SESSION_ID_COL) {
+				col = i;
+			}
+		}
+		return col;
+	}
 
 	public void setRows(Vector data) {
         removeRows();

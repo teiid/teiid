@@ -25,27 +25,21 @@ package com.metamatrix.console.models;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 import javax.swing.Action;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.api.exception.ComponentNotFoundException;
-import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.api.exception.server.InvalidRequestIDException;
+import com.metamatrix.admin.api.objects.AdminObject;
+import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.ui.ViewManager;
 import com.metamatrix.console.util.AutoRefresher;
 import com.metamatrix.console.util.ExternalException;
-import com.metamatrix.console.util.InvalidRequestException;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-import com.metamatrix.server.admin.api.QueryAdminAPI;
-import com.metamatrix.server.serverapi.RequestInfo;
 
 public class QueryManager extends TimedManager implements ManagerListener{
 
-    private HashSet queryRequests;
+    private Collection<Request> queryRequests = new HashSet<Request>();
     private MetaMatrixSessionID currentToken = null;
     private Action refreshAction;
     private AutoRefresher ar;
@@ -57,14 +51,9 @@ public class QueryManager extends TimedManager implements ManagerListener{
     public void init() {
         super.init();
         super.setRefreshRate(5);
-        setQueryRequests(new HashSet());
         setIsStale(true);
         ModelManager.getSessionManager(getConnection()).addManagerListener(this);
         super.setIsAutoRefreshEnabled(false);
-    }
-    
-    private QueryAdminAPI getQueryAdminAPI() {
-        return ModelManager.getQueryAPI(getConnection());
     }
     
     /**
@@ -78,44 +67,30 @@ public class QueryManager extends TimedManager implements ManagerListener{
         }
     }
 
-    public void cancelQueryRequests(Collection selected)
-            throws ExternalException, AuthorizationException,
-            InvalidRequestException, ComponentNotFoundException {
+    public void cancelQueryRequests(Collection<Request> selected)
+            throws ExternalException {
         try {
             ViewManager.startBusy();
-            Iterator iterator = selected.iterator();
-            RequestInfo q;
             // determine which request are a global query cancellation
             // versus just an atomic query.
             // If a global request and an atomic request for the same
             // query is select, then the global request will be submitted.
-            List queries = new ArrayList(selected.size());
-            while (iterator.hasNext()){
-                q = (RequestInfo)iterator.next();
-                if (!q.isAtomicQuery()) {
-                    queries.add(q);
+            Set<String> queries = new HashSet<String>();
+            for (Request q : selected) {
+                if (!q.isSource()) {
+                    queries.add(q.getIdentifier());
                 }
             }
                 
-            iterator = selected.iterator();
-            while (iterator.hasNext()){
-                q = (RequestInfo)iterator.next();
+            for (Request q : selected) {
                 try{
-                    if (q.isAtomicQuery()) {
-                        if (!queries.contains(q)) {
-                            getQueryAdminAPI().cancelRequest(q.getRequestID(), q.getNodeID());
+                    if (q.isSource()) {
+                        if (!queries.contains(q.getSessionID() + '.' + q.getRequestID())) {
+                            getConnection().getServerAdmin().cancelSourceRequest(q.getIdentifier());
                         }
                     } else {
-                        getQueryAdminAPI().cancelRequest(q.getRequestID());
+                    	getConnection().getServerAdmin().cancelRequest(q.getIdentifier());
                     }
-                } catch (AuthorizationException e) {
-                    throw e;
-                } catch (ComponentNotFoundException e) {
-                    throw e;
-                } catch (InvalidRequestIDException e) {
-                    throw new InvalidRequestException(e);
-                } catch (InvalidSessionException e) {
-                    throw new InvalidRequestException(e);
                 } catch (Exception e) {
                     throw new ExternalException(e);
                 }
@@ -127,32 +102,10 @@ public class QueryManager extends TimedManager implements ManagerListener{
 
     }
 
-    public void cancelAllQueryRequests(MetaMatrixSessionID token)
-            throws ComponentNotFoundException, InvalidRequestException,
-            AuthorizationException, ExternalException {
-        try{
-            ViewManager.startBusy();
-            try{
-                getQueryAdminAPI().cancelRequests(token);
-            } catch (ComponentNotFoundException e) {
-                throw e;
-            } catch (InvalidSessionException e) {
-                throw new InvalidRequestException(e);
-            } catch (AuthorizationException e) {
-                throw e;
-            } catch (Exception e) {
-                throw new ExternalException(e);
-            }
-            refresh();
-        } finally {
-            ViewManager.endBusy();
-        }
-    }
-
-    public Collection getAllRequests()
-            throws AuthorizationException, ExternalException {
+    public Collection<Request> getAllRequests()
+            throws ExternalException {
         loadRealData();
-        return (Collection) getQueryRequests().clone();
+        return new ArrayList<Request>(getQueryRequests());
     }
 
     public void setAutoRefresher(AutoRefresher autoRefresher){
@@ -160,26 +113,19 @@ public class QueryManager extends TimedManager implements ManagerListener{
     }
 
     private void loadRealData()
-            throws ExternalException, AuthorizationException {
+            throws ExternalException {
         boolean autoRefresh = (ar!=null && ar.isAutoRefreshEnabled());
         if (getIsStale() || autoRefresh || currentToken != null){
             try{
                 currentToken = null;
                 ViewManager.startBusy(); //ADJUSTS STATUS BAR
                 //THIS COULD FAIL SILENTLY
-                Collection col;
                 try {
-                    col = getQueryAdminAPI().getAllRequests();
-                } catch (AuthorizationException e) {
-                    throw e;
+                	this.queryRequests = new ArrayList<Request>(this.getConnection().getServerAdmin().getRequests(AdminObject.WILDCARD));
+                	this.queryRequests.addAll(this.getConnection().getServerAdmin().getSourceRequests(AdminObject.WILDCARD));
                 } catch (Exception e) {
                     throw new ExternalException(e);
                 }
-
-                if (col!= null)
-                    setQueryRequests(new HashSet(col));
-                else
-                    setQueryRequests(new HashSet(0));
                 setIsStale(false);
                 super.startTimer();
             } finally {
@@ -190,12 +136,8 @@ public class QueryManager extends TimedManager implements ManagerListener{
 
     //GETTERS-SETTERS
 
-    private HashSet getQueryRequests(){
+    private Collection<Request> getQueryRequests(){
         return queryRequests;
-    }
-
-    private void setQueryRequests(HashSet set){
-        queryRequests = set;
     }
 
     //OVERRIDING superclass implementation of refresh()

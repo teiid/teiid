@@ -26,13 +26,13 @@ import java.util.Date;
 
 
 /** 
- * when user submits a SQL command to the system for processing, usally that represents
- * a single request to a MetaMatrix system. A single request might have one or more source
+ * When a user submits a SQL command to the system for processing, usually that represents
+ * a single request. A single request might have one or more source
  * requests (the requests that are being processed on the physical data sources) as part
  * of original request. 
  * 
- *  <p>A request is identified by a numbers separted by "." (dots). Usally in they are arranged 
- *  in pattern [session].[request] or [session].[request].[source request] </p>
+ *  <p>A request is identified by a numbers separated by "." (dots). usually in they are arranged 
+ *  in the pattern [session].[request] or [session].[request].[source request] </p>
  * @since 4.3
  */
 public interface Request extends AdminObject {

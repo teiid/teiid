@@ -40,8 +40,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 
-import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.log.LogManager;
+import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ConnectorManager;
@@ -59,11 +58,9 @@ import com.metamatrix.console.ui.views.deploy.util.DeployPkgUtils;
 import com.metamatrix.console.util.AutoRefreshable;
 import com.metamatrix.console.util.AutoRefresher;
 import com.metamatrix.console.util.ExceptionUtility;
-import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.StaticProperties;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.server.serverapi.RequestInfo;
 import com.metamatrix.toolbox.ui.widget.LabelWidget;
 import com.metamatrix.toolbox.ui.widget.Splitter;
 import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
@@ -176,7 +173,7 @@ public final class QueryPanel
 		add(splitter);
 
         this.connectorMgr = ModelManager.getConnectorManager(this.connection);
-		queryPanel = new QueryRequestPanel(this, connectorMgr);
+		queryPanel = new QueryRequestPanel(this);
 		splitter.setTopComponent(queryPanel);
         
         
@@ -299,35 +296,25 @@ public final class QueryPanel
 	 * Main interface to this panel - supply a Request to be displayed. String.valueOf(request.getRequestID().getID())
 	 * @param request Request to be displayed   String.valueOf(request.getSessionToken().getSessionID())
 	 */
-    public void displayQuery(RequestInfo request) {
+    public void displayQuery(Request request) {
         if (request != null) {
             txfRequestId.setText(String.valueOf(request.getRequestID()));
-            String sessionIDStr = request.getSessionId();
+            String sessionIDStr = request.getSessionID();
             txfSessionId.setText(sessionIDStr);
-            Date date = request.getProcessingTimestamp();
+            Date date = request.getProcessingDate();
 			txfSubmitted.setText((date == null) ? StringUtil.Constants.EMPTY_STRING : 
                     FORMATTER.format(date));
-			String transId = request.getTransactionId();
+			String transId = request.getTransactionID();
 			txfTransactionId.setText((transId == null) ? StringUtil.Constants.EMPTY_STRING : transId);
             String userStr = request.getUserName();
 			txfUser.setText(userStr);
-            
-            String bindingUUID = request.getConnectorBindingUUID();
-            String bindingName = StringUtil.Constants.EMPTY_STRING;
-            if ((bindingUUID != null) && (bindingUUID.trim().length() > 0)) {
-                try {
-                    ConnectorBinding cb = connectorMgr.getConnectorBindingByUUID(bindingUUID);
-                    if (cb != null) {
-                        bindingName = cb.getName();
-                    }
-                } catch (Exception ex) {
-                    LogManager.logError(LogContexts.QUERIES, ex, 
-                            "Error retrieving connector binding for UUID " + bindingUUID); //$NON-NLS-1$
-                }
+            if (request.isSource() && request.getConnectorBindingName() != null) {
+            	txfConnectorBinding.setText(request.getConnectorBindingName());
+            } else {
+            	txfConnectorBinding.setText(StringUtil.Constants.EMPTY_STRING);
             }
-            txfConnectorBinding.setText(bindingName);
             
-			String command = request.getCommand();
+			String command = request.getSqlCommand();
 			StringBuffer sql = new StringBuffer();
 			sql.append(command.toString());
 			txaCommand.setText(sql.toString());
@@ -376,7 +363,7 @@ public final class QueryPanel
         final String selectedRequestID = txfRequestId.getText();
 		try {
 			StaticUtilities.startWait(ConsoleMainFrame.getInstance());
-            final Collection allQueries = getQueryManager().getAllRequests();
+            final Collection<Request> allQueries = getQueryManager().getAllRequests();
             
             
             //refresh in the Swing thread

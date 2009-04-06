@@ -115,7 +115,6 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
         objectTypeMap.put(com.metamatrix.admin.api.objects.Resource.class.getName(), new Integer(OBJECT_TYPE_RESOURCE));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.Role.class.getName(), new Integer(OBJECT_TYPE_ROLE));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.Session.class.getName(), new Integer(OBJECT_TYPE_SESSION));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.SourceRequest.class.getName(), new Integer(OBJECT_TYPE_SOURCE_REQUEST));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.SystemObject.class.getName(), new Integer(OBJECT_TYPE_SYSTEM_OBJECT));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.User.class.getName(), new Integer(OBJECT_TYPE_USER));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.VDB.class.getName(), new Integer(OBJECT_TYPE_VDB));        

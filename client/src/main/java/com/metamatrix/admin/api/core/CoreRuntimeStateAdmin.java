@@ -78,7 +78,7 @@ public interface CoreRuntimeStateAdmin {
     /**
      * Terminate the Session
      *
-     * @param identifier  Session Idenitfier {@link com.metamatrix.admin.api.objects.Session}.
+     * @param identifier  Session Identifier {@link com.metamatrix.admin.api.objects.Session}.
      * No wild cards currently supported, must be explicit
      * @throws AdminException  if there's a system error.
      * @since 4.3
@@ -88,7 +88,7 @@ public interface CoreRuntimeStateAdmin {
     /**
      * Cancel Request
      *
-     * @param identifier  The request identifer defined by {@link com.metamatrix.admin.api.objects.Request}
+     * @param identifier  The request identifier defined by {@link com.metamatrix.admin.api.objects.Request}
      * No wild cards currently supported, must be explicit
      * @throws AdminException  if there's a system error.
      * @since 4.3
@@ -98,7 +98,7 @@ public interface CoreRuntimeStateAdmin {
     /**
      * Cancel Source Request
      *
-     * @param identifier  The request identifer defined by {@link com.metamatrix.admin.api.objects.Request}
+     * @param identifier  The request identifier defined by {@link com.metamatrix.admin.api.objects.Request}
      * No wild cards currently supported, must be explicit
      * @throws AdminException  if there's a system error.
      * @since 4.3
@@ -108,8 +108,8 @@ public interface CoreRuntimeStateAdmin {
     /**
      * Change the status of a Deployed VDB
      *
-     * @param name  Name of the Virtial Database
-     * @param version  Version of the Virtial Database
+     * @param name  Name of the Virtual Database
+     * @param version  Version of the Virtual Database
      * @param status  Active, InActive, Delete
      * @throws AdminException  if there's a system error.
      * @since 4.3

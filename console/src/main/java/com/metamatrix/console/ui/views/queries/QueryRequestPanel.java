@@ -43,10 +43,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.console.ConsolePlugin;
 import com.metamatrix.console.connections.ConnectionInfo;
-import com.metamatrix.console.models.ConnectorManager;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.security.UserCapabilities;
 import com.metamatrix.console.ui.layout.BasePanel;
@@ -56,8 +55,6 @@ import com.metamatrix.console.ui.util.ColumnSortInfo;
 import com.metamatrix.console.ui.util.property.PropertyProvider;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.StaticUtilities;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.server.serverapi.RequestInfo;
 import com.metamatrix.toolbox.ui.widget.DialogPanel;
 import com.metamatrix.toolbox.ui.widget.DialogWindow;
 import com.metamatrix.toolbox.ui.widget.LabelWidget;
@@ -77,12 +74,11 @@ public class QueryRequestPanel extends BasePanel {
 	///////////////////////////////////////////////////////////////////////////
 
 	private QueryPanel caller;
-    private ConnectorManager connectorManager;
 	private ConnectionInfo connection = null;
 	private TableWidget queryTable;
 	private QueryTableModel tableModel;
 
-	private HashMap /*<requestID display string to RequestInfo>*/ requestsMap = new HashMap();
+	private HashMap<String, Request> requestsMap = new HashMap<String, Request>();
 
 	private CancelQueryRequestsAction actionCancel = null;
 	private Vector actionsVec;
@@ -91,10 +87,9 @@ public class QueryRequestPanel extends BasePanel {
 	// CONSTRUCTORS
 	///////////////////////////////////////////////////////////////////////////
 
-	public QueryRequestPanel(QueryPanel cllr, ConnectorManager connMgr) {
+	public QueryRequestPanel(QueryPanel cllr) {
 		super();
 		caller = cllr;
-        this.connectorManager = connMgr;
 		connection = caller.getConnection();
 		createComponent();
 
@@ -149,7 +144,7 @@ public class QueryRequestPanel extends BasePanel {
 						String requestIDStr = (String)tableModel.getValueAt(
 								queryTable.convertRowIndexToModel(selectionRow),
 								tableModel.getRequestIdColumn());
-						RequestInfo req = (RequestInfo) requestsMap.get(requestIDStr);
+						Request req = requestsMap.get(requestIDStr);
 						caller.displayQuery(req);
 					} else {
 						// either 0 or more queries selected
@@ -218,7 +213,7 @@ public class QueryRequestPanel extends BasePanel {
 	 * @param newQueryRequests new Request collection that this
 	 * panel should populate its view with.
 	 */
-	public void updateView(Collection /*<Request>*/ newQueryRequests,
+	public void updateView(Collection<Request> newQueryRequests,
             String selectedRequestID) {
         StaticUtilities.startWait(this);
 		updateTheView(newQueryRequests);
@@ -252,25 +247,21 @@ public class QueryRequestPanel extends BasePanel {
 		queryTable.getTableHeader().setName("QueryTable.header"); //$NON-NLS-1$
 	}
 
-	private void updateTheView(Collection /*<RequestInfo>*/ newRequests) {
+	private void updateTheView(Collection<Request> newRequests) {
         ColumnSortInfo[] tableColumnSortInfo = ColumnSortInfo.getTableColumnSortInfo(this.queryTable);
         Vector outerVec = new Vector(newRequests.size());
-        Iterator iterator = newRequests.iterator();
 
-		HashMap tempRequestsMap = new HashMap();
+		HashMap<String, Request> tempRequestsMap = new HashMap<String, Request>();
 
 		// Populate the table data.
-		RequestInfo q;
-        while (iterator.hasNext()) {
-			q = (RequestInfo) iterator.next();
+		for (Request q : newRequests) {
             Object[] rowData = new Object[QueryTableModel.NUM_COLUMNS];
-            String requestStr = getRequestInfoDisplayString(q);
+            String requestStr = q.getIdentifier();
 			rowData[QueryTableModel.REQUEST_ID_COL] = requestStr;
 			tempRequestsMap.put(requestStr, q);
 			rowData[QueryTableModel.USER_COL] = q.getUserName();
-			rowData[QueryTableModel.SESSION_ID_COL] = q.getSessionId();
-            rowData[QueryTableModel.CONNECTOR_BINDING_COL] =
-                    getConnectorBindingForUUID(q.getConnectorBindingUUID());
+			rowData[QueryTableModel.SESSION_ID_COL] = q.getSessionID();
+            rowData[QueryTableModel.CONNECTOR_BINDING_COL] = q.getConnectorBindingName();
             Vector innerVec = StaticUtilities.arrayToVector(rowData);
             outerVec.add(innerVec);
         }
@@ -290,35 +281,6 @@ public class QueryRequestPanel extends BasePanel {
         ColumnSortInfo.setColumnSortOrder(tableColumnSortInfo, this.queryTable);
 	}
     
-       
-    
-    
-
-    private String getRequestInfoDisplayString(RequestInfo q) {
-        RequestID id = q.getRequestID();
-        boolean isAtomicQuery = q.isAtomicQuery();
-        String requestStr;
-        if (isAtomicQuery) {
-            requestStr = id.toString() + '.' + q.getNodeID();
-        } else {
-            requestStr = id.toString();
-        }
-        return requestStr;
-    }
-        
-    private String getConnectorBindingForUUID(String connectorBindingUUID) {
-        ConnectorBinding cb = null;
-        String name = null;
-        try {
-            cb = connectorManager.getConnectorBindingByUUID(connectorBindingUUID);
-        } catch (Exception ex) {
-        }
-        if (cb != null) {
-            name = cb.getFullName();
-        }
-        return name;
-    }
-    
 	/**
 	 * Assemble a Collection of Requests that were previously
 	 *selected, before an update - do this by getting each index that
@@ -326,14 +288,14 @@ public class QueryRequestPanel extends BasePanel {
 	 *to get each Query ID from the table model, and using each ID to
 	 *get an actual Request from the Query Manager
 	 */
-	public Collection /*<RequestInfo>*/ getCurrentSelections() {
+	public Collection<Request> getCurrentSelections() {
 		int[] selectedRows = queryTable.getSelectedRows();
-		Collection queries = new ArrayList(selectedRows.length);
+		Collection<Request> queries = new ArrayList<Request>(selectedRows.length);
 		for (int i = 0; i < selectedRows.length; i++) {
 			String requestIDStr = (String) tableModel.getValueAt(
 					queryTable.convertRowIndexToModel(selectedRows[i]),
 					tableModel.getRequestIdColumn());
-            RequestInfo ri = (RequestInfo)requestsMap.get(requestIDStr);
+            Request ri = requestsMap.get(requestIDStr);
 			queries.add(ri);
 		}
 		return queries;

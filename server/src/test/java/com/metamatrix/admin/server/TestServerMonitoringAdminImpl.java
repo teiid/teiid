@@ -33,6 +33,7 @@ import junit.framework.TestCase;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
+import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorType;
@@ -44,7 +45,6 @@ import com.metamatrix.admin.objects.MMQueueWorkerPool;
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMResource;
 import com.metamatrix.admin.objects.MMSession;
-import com.metamatrix.admin.objects.MMSourceRequest;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -437,10 +437,11 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         Collection results = admin.getSourceRequests(AdminObject.WILDCARD);  
         assertEquals(2, results.size());
         
-        MMSourceRequest request = (MMSourceRequest) results.iterator().next();
+        Request request = (Request) results.iterator().next();
         assertEquals(REQUEST_1_1_1, request.getIdentifier()); 
         assertEquals("1", request.getSessionID()); //$NON-NLS-1$
-        assertEquals(REQUEST_1_1, request.getRequestID()); 
+        assertEquals("1", request.getRequestID()); //$NON-NLS-1$ 
+        assertEquals("1", request.getNodeID()); //$NON-NLS-1$ 
         assertEquals("connectorBinding1", request.getConnectorBindingName()); //$NON-NLS-1$
         assertEquals("user1", request.getUserName()); //$NON-NLS-1$
         
