@@ -62,7 +62,7 @@ public interface CoreMonitoringAdmin {
     SystemObject getSystem() throws AdminException;
 
     /**
-     * Get the Connector Types that correspond to the specified identifer pattern.
+     * Get the Connector Types that correspond to the specified identifier pattern.
      *
      * @param connectorTypeIdentifier the unique identifier for for a {@link ConnectorType}
      * <ul>
@@ -77,7 +77,7 @@ public interface CoreMonitoringAdmin {
     Collection getConnectorTypes(String connectorTypeIdentifier) throws AdminException;
 
     /**
-     * Get the VDBs that correspond to the specifed identifer pattern.
+     * Get the VDBs that correspond to the specified identifier pattern.
      *
      * @param vdbIdentifier the unique identifier for for a {@link VDB} in the system
      * <ul>
@@ -93,7 +93,7 @@ public interface CoreMonitoringAdmin {
     Collection getVDBs(String vdbIdentifier) throws AdminException;
 
     /**
-     * Get the Connector Bindings that correspond to the specifed identifer pattern.
+     * Get the Connector Bindings that correspond to the specified identifier pattern.
      *
      * @param connectorBindingIdentifier the unique identifier pattern of {@link ConnectorBinding}
      * <ul>
@@ -122,7 +122,7 @@ public interface CoreMonitoringAdmin {
     Collection getConnectorBindingsInVDB(String identifier) throws AdminException;
 
     /**
-     * Get the Extension Modules that correspond to the specified identifer pattern
+     * Get the Extension Modules that correspond to the specified identifier pattern
      * @param extensionModuleIdentifier - the unique identifier for {@link ExtensionModule}
      * <ul>
      *      <li> <code>"*"</code> - for all extension modules in the system
@@ -136,7 +136,7 @@ public interface CoreMonitoringAdmin {
     Collection getExtensionModules(String extensionModuleIdentifier) throws AdminException;
 
     /**
-     * Get the Queue Worker Pools that correspond to the specified identifer pattern.
+     * Get the Queue Worker Pools that correspond to the specified identifier pattern.
      *
      * @param identifier - an identfier for the queues {@link QueueWorkerPool}
      * <ul>
@@ -154,7 +154,7 @@ public interface CoreMonitoringAdmin {
 
 
     /**
-     * Get the Caches that correspond to the specified identifer pattern
+     * Get the Caches that correspond to the specified identifier pattern
      * @param identifier - an identifier for the cache in {@link Cache}
      * <ul>
      *      <li> <code>"*"</code> - for all different caches in the system
@@ -168,7 +168,7 @@ public interface CoreMonitoringAdmin {
     Collection getCaches(String identifier) throws AdminException;
 
     /**
-     * Get the Sessions that correspond to the specified identifer pattern
+     * Get the Sessions that correspond to the specified identifier pattern
      * @param identifier - an unique identifier for {@link Session}
      * <ul>
      *      <li> <code>"*"</code> - for all current sessions of the system
@@ -179,15 +179,15 @@ public interface CoreMonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection getSessions(String identifier) throws AdminException;
+    Collection<Session> getSessions(String identifier) throws AdminException;
 
     /**
-     * Get the Requests that correspond to the specified identifer pattern
+     * Get the Requests that correspond to the specified identifier pattern
      * @param identifier - An Identifier for {@link Request}
      * <ul>
      *      <li> <code>"*"</code> - for all current in process requests of the system
      *      <li> <code>"number* or number<{@link AdminObject#DELIMITER_CHAR}>*"</code> - for all the sessions
-     *      that begin with given number, or all the requests for perticular session etc.
+     *      that begin with given number, or all the requests for particular session etc.
      *      <li><code>"number<{@link AdminObject#DELIMITER_CHAR}>number"</code> - for a single request in the system
      * </ul>
      * @return Collection of {@link Request}
@@ -198,12 +198,12 @@ public interface CoreMonitoringAdmin {
     Collection getRequests(String identifier) throws AdminException;
 
     /**
-     * Get the Source Request that correspond to the specified identifer pattern
+     * Get the Source Request that correspond to the specified identifier pattern
      * @param identifier An Identifier for {@link Request}
      * <ul>
      *      <li> <code>"*"</code> - for all current in process requests of the system
      *      <li> <code>"number* or number<{@link AdminObject#DELIMITER_CHAR}>* or number.number.*"</code> - for all the sessions
-     *      that begin with given number, or all the requests for perticular session etc.
+     *      that begin with given number, or all the requests for particular session etc.
      *      <li><code>"number<{@link AdminObject#DELIMITER_CHAR}>number<{@link AdminObject#DELIMITER_CHAR}>number"</code> - for a single source request in the system
      * </ul>
      * @return Collection of {@link SourceRequest}
