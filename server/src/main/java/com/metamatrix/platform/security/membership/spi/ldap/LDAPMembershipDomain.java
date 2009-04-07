@@ -24,6 +24,7 @@ package com.metamatrix.platform.security.membership.spi.ldap;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -318,6 +319,10 @@ public class LDAPMembershipDomain implements
                 }
             }
         }
+        
+        if(credential.getCredentialsAsCharArray().length == 0){
+        	username = "";//$NON-NLS-1$
+        }
 
         return new SuccessfulAuthenticationToken(trustedPayload, username);
     }
@@ -357,6 +362,10 @@ public class LDAPMembershipDomain implements
 
         LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "getGroupNamesForUser", username}); //$NON-NLS-1$ 
 
+        if(username.length() == 0){
+        	return Collections.EMPTY_SET;
+        }
+        
         UserEntry ue = getUserEntry(username, true);
 
         return ue.getGroups();
