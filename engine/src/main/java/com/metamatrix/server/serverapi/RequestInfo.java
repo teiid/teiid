@@ -68,6 +68,10 @@ public class RequestInfo implements Serializable {
     public SessionToken getSessionToken() {
         return this.token;
     }
+    
+    public String getUserName() {
+    	return this.token.getUsername();
+    }
 
     /**
      * Get time that the request was created by the user.
