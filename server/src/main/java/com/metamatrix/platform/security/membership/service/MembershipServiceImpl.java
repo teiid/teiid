@@ -38,6 +38,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Pattern;
+
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
@@ -111,6 +114,8 @@ public class MembershipServiceImpl extends AbstractService implements Membership
     private String adminUsername = DEFAULT_ADMIN_USERNAME;
     private String adminCredentials;
     
+    private Pattern allowedAddresses;
+    
     private boolean isSecurityEnabled = true;
     
     public MembershipServiceImpl() {
@@ -135,6 +140,11 @@ public class MembershipServiceImpl extends AbstractService implements Membership
         adminCredentials = env.getProperty(ADMIN_PASSWORD); 
         if (adminCredentials == null || adminCredentials.length() == 0) {
             throw new ServiceException(PlatformPlugin.Util.getString("MembershipServiceImpl.Root_password_required")); //$NON-NLS-1$
+        }
+        
+        String property = env.getProperty(ADMIN_HOSTS);
+        if (property != null && property.length() > 0) {
+        	this.allowedAddresses = Pattern.compile(property);
         }
         
         isSecurityEnabled = Boolean.valueOf(env.getProperty(SECURITY_ENABLED)).booleanValue();
@@ -266,6 +276,14 @@ public class MembershipServiceImpl extends AbstractService implements Membership
     protected void killService() {
         this.shutdownDomains();
     }
+    
+    void setAllowedAddresses(Pattern allowedAddresses) {
+		this.allowedAddresses = allowedAddresses;
+	}
+    
+    void setAdminCredentials(String adminCredentials) {
+		this.adminCredentials = adminCredentials;
+	}
 
     /**
      * Authenticate a user with the specified username and credential
@@ -306,6 +324,17 @@ public class MembershipServiceImpl extends AbstractService implements Membership
         }
         
         if (isSuperUser(username)) {
+        	if (isSecurityEnabled && allowedAddresses != null) {
+	        	String address = DQPWorkContext.getWorkContext().getClientAddress();
+	        	if (address == null) {
+	        		LogManager.logWarning(LogSecurityConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("MembershipServiceImpl.unknown_host")); //$NON-NLS-1$
+	        		return new FailedAuthenticationToken();
+	        	}
+	        	if (!allowedAddresses.matcher(address).matches() || address.equals(CurrentConfiguration.getInstance().getHostAddress().getHostAddress())) {
+	        		LogManager.logWarning(LogSecurityConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("MembershipServiceImpl.invalid_host", address, allowedAddresses.pattern())); //$NON-NLS-1$
+	        		return new FailedAuthenticationToken();
+	        	}
+        	}
         	// decrypt admin password for comparison
             if ((credential != null && adminCredentials.equals(String.valueOf(credential.getCredentialsAsCharArray())))) {
                 return new SuccessfulAuthenticationToken(trustedPayload, username);

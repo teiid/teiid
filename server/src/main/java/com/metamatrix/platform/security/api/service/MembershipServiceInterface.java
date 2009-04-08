@@ -64,6 +64,7 @@ public interface MembershipServiceInterface extends ServiceInterface {
     public static final String ADMIN_PASSWORD = ConfigurationPropertyNames.MEMBERSHIP_ADMIN_PASSWORD;
     public static final String ADMIN_USERNAME = ConfigurationPropertyNames.MEMBERSHIP_ADMIN_USERNAME;
     public static final String DOMAIN_ACTIVE = "activate"; //$NON-NLS-1$
+    public static final String ADMIN_HOSTS = "metamatrix.security.admin.allowedHosts"; //$NON-NLS-1$
     public static final String SECURITY_ENABLED = ConfigurationPropertyNames.MEMBERSHIP_SECURITY_ENABLED;
     
     public static final String DOMAIN_PROPERTIES = "propertiesFile"; //$NON-NLS-1$

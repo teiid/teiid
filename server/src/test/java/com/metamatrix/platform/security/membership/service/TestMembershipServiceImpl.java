@@ -23,8 +23,11 @@
 package com.metamatrix.platform.security.membership.service;
 
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
+
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
@@ -85,6 +88,26 @@ public class TestMembershipServiceImpl extends TestCase {
         membershipService.getDomains().add(membershipDomainHolder);
         return membershipService;
     }
+    
+    public void testSuperAuthenticate() throws Exception {
+        MembershipServiceImpl membershipService = createMembershipService();
+        membershipService.setAllowedAddresses(Pattern.compile("192[.]168[.]0[.]2")); //$NON-NLS-1$
+        membershipService.setAdminCredentials("pass1"); //$NON-NLS-1$
+        
+        AuthenticationToken at = membershipService.authenticateUser(MembershipServiceImpl.DEFAULT_ADMIN_USERNAME, new Credentials("pass1".toCharArray()), null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        assertFalse(at.isAuthenticated()); 
+        DQPWorkContext.getWorkContext().setClientAddress("192.168.0.1"); //$NON-NLS-1$
+        at = membershipService.authenticateUser(MembershipServiceImpl.DEFAULT_ADMIN_USERNAME, new Credentials("pass1".toCharArray()), null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        assertFalse(at.isAuthenticated()); 
+        DQPWorkContext.getWorkContext().setClientAddress("192.168.0.2"); //$NON-NLS-1$
+        at = membershipService.authenticateUser(MembershipServiceImpl.DEFAULT_ADMIN_USERNAME, new Credentials("pass1".toCharArray()), null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        assertTrue(at.isAuthenticated()); 
+    }
+    
+    
     
     public void testGetPrincipal() throws Exception {
         MembershipServiceImpl membershipService = createMembershipService();
