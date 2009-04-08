@@ -396,8 +396,6 @@ public class SessionPanel
 		    data[i][SessionTableModel.VDB_VERSION_COLUMN_NUM] = vdbVersStr;
 		    String sessionState = ACTIVE_TEXT;  
 		    data[i][SessionTableModel.STATE_COLUMN_NUM] = sessionState;
-		    data[i][SessionTableModel.PRODUCT_COLUMN_NUM]= u.getProductName();
-		
 		}
 		return data;
 	}

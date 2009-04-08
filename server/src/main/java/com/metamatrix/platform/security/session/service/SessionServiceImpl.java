@@ -198,14 +198,11 @@ public class SessionServiceImpl extends AbstractService implements
 
         String authenticatedUserName = authenticatedToken.getUserName();
         
-        String productName = "Platform"; //$NON-NLS-1$
-        
         //
         // Validate VDB and version if logging on to server product...
         //
         String vdbName = properties.getProperty(ProductInfoConstants.VIRTUAL_DB);
         if (vdbName != null) {
-        	productName = "Integration Server"; //$NON-NLS-1$
             String vdbVersion = properties.getProperty(ProductInfoConstants.VDB_VERSION);
             VirtualDatabaseID vdbID = null;
             try {
@@ -240,9 +237,8 @@ public class SessionServiceImpl extends AbstractService implements
         										creationTime,
         										applicationName,
         										productInfo,
-                                                productName,
                                                 properties.getProperty(MMURL.CONNECTION.CLIENT_IP_ADDRESS),
-        										properties.getProperty(MMURL.CONNECTION.CLIENT_HOSTNAME));
+                                                properties.getProperty(MMURL.CONNECTION.CLIENT_HOSTNAME));
         newSession.setTrustedToken(trustedToken);
         this.sessionCache.put(newSession.getSessionID(), newSession);
         return newSession;

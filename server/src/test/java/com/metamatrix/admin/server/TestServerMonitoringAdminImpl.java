@@ -473,10 +473,6 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         assertEquals("vdb1", session.getVDBName()); //$NON-NLS-1$
         assertEquals("1", session.getVDBVersion()); //$NON-NLS-1$
         assertEquals("app1", session.getApplicationName()); //$NON-NLS-1$
-        assertEquals("product1", session.getProductName()); //$NON-NLS-1$
-               
-        
-        
         results = admin.getSessions("1");  //$NON-NLS-1$
         assertEquals(1, results.size());
     }

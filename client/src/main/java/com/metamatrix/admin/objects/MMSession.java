@@ -38,7 +38,6 @@ public class MMSession extends MMAdminObject implements Session {
 	private String sessionID;
 	private String vdbName = ""; //$NON-NLS-1$
 	private String vdbVersion = ""; //$NON-NLS-1$
-	private String productName = ""; //$NON-NLS-1$
     private String ipAddress = ""; //$NON-NLS-1$
     private String hostName = ""; //$NON-NLS-1$
 	private long lastPingTime;
@@ -70,7 +69,6 @@ public class MMSession extends MMAdminObject implements Session {
 		result.append(AdminPlugin.Util.getString("MMSession.ID")).append(sessionID); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMSession.VDB_Name")).append(vdbName); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMSession.VDB_Version")).append(vdbVersion); //$NON-NLS-1$
-		result.append(AdminPlugin.Util.getString("MMSession.Product")).append(productName); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMSession.Last_Ping_Time")).append(getLastPingTimeString()); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMSession.State")).append(getStateAsString()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMSession.IPAddress")).append(ipAddress); //$NON-NLS-1$
@@ -163,26 +161,6 @@ public class MMSession extends MMAdminObject implements Session {
         this.applicationName = name;
     }
     
-    
-
-	/**
-	 * Get the Product Names
-	 * 
-	 * @return String of the Product Names
-	 */
-	public String getProductName() {
-		return productName;
-	}
-    
-    /**
-     * Set the Product Names 
-     * @param name
-     */
-    public void setProductName(String name) {
-        this.productName = name;
-    }
-
-
 	/**
 	 * Get the unique MetaMatrix session
      * within a given MetaMatrix System

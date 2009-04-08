@@ -37,7 +37,6 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
     private long lastPingTime;
     private long timeCreated;
     private String applicationName;
-    private String product;
     private Properties productInfo;
     private String clientIp;
     private String clientHostname;
@@ -47,11 +46,10 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
      * Master constructor, allows a MetaMatrixSessionInfo to be created with
      * any state and any timestamps.
      */
-    public MetaMatrixSessionInfo(MetaMatrixSessionID sessionID, String userName, long timeCreated, String applicationName, Properties productInfo, String product, String clientIp, String clientHostname){
+    public MetaMatrixSessionInfo(MetaMatrixSessionID sessionID, String userName, long timeCreated, String applicationName, Properties productInfo, String clientIp, String clientHostname){
         this.timeCreated = timeCreated;
         this.lastPingTime = timeCreated;
         this.applicationName = applicationName;
-        this.product = product;
         this.sessionToken = new SessionToken(sessionID, userName);
         this.productInfo = productInfo;
         this.clientIp = clientIp;
@@ -91,10 +89,6 @@ public class MetaMatrixSessionInfo implements Serializable, Cloneable {
      */
     public void setLastPingTime(long lastPingTime) {
         this.lastPingTime = lastPingTime;
-    }
-
-    public String getProductName() {
-        return this.product;
     }
 
     public SessionToken getSessionToken(){

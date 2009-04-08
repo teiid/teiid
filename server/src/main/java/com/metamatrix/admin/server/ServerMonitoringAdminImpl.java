@@ -911,7 +911,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        session.setLastUpdated(new Date(info.getTimeCreated())); 
 			        session.setVDBName(vdbName); 
 			        session.setVDBVersion(vdbVersionString); 
-			        session.setProductName(info.getProductName()); 
 			        session.setLastPingTime(info.getLastPingTime());
 			        session.setSessionState(MetaMatrixSessionState.ACTIVE);
 			        session.setIPAddress(info.getClientIp());

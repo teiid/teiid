@@ -126,14 +126,6 @@ public interface Session extends
      */
     public String getApplicationName();
 
-       
-    /**
-     * Get the Product Name
-     * 
-     * @return String of the Product Name
-     */
-    public String getProductName();
-
     /**
      * Get the unique MetaMatrix session
      * within a given MetaMatrix System

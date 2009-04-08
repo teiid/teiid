@@ -38,9 +38,8 @@ public class SessionTableModel extends DefaultTableModel {
 	public static final int LOGGED_IN_COLUMN_NUM = 3;
 	public static final int VDB_NAME_COLUMN_NUM = 4;
 	public static final int VDB_VERSION_COLUMN_NUM = 5;
-	public static final int PRODUCT_COLUMN_NUM = 6;
-	public static final int LAST_PING_TIME = 7;
-	public static final int STATE_COLUMN_NUM = 8;
+	public static final int LAST_PING_TIME = 6;
+	public static final int STATE_COLUMN_NUM = 7;
 
 	//Note-- positions must match USER_NAME_COLUMN_NUM, etc., below.
 	public final static String LOGGED_IN_AT = ConsolePlugin.Util.getString("SessionTableModel.Logged_In_At_1"); //$NON-NLS-1$
@@ -52,7 +51,6 @@ public class SessionTableModel extends DefaultTableModel {
 			LOGGED_IN_AT,
 			ConsolePlugin.Util.getString("SessionTableModel.VDB_Name_5"), //$NON-NLS-1$
 			ConsolePlugin.Util.getString("SessionTableModel.VDB_Ver._6"), //$NON-NLS-1$
-			ConsolePlugin.Util.getString("SessionTableModel.Product_7"), //$NON-NLS-1$
 			ConsolePlugin.Util.getString("SessionTableModel.Last_Ping_Time_8"), //$NON-NLS-1$
 			ConsolePlugin.Util.getString("SessionTableModel.State_9") }; //$NON-NLS-1$
 
