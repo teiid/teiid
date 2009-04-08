@@ -24,6 +24,10 @@ package com.metamatrix.server.query.service;
 
 import java.util.Collection;
 
+import javax.transaction.xa.Xid;
+
+import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
@@ -47,8 +51,6 @@ public interface QueryServiceInterface extends ServiceInterface, CacheAdmin {
     
     public Collection getAllQueries();
 
-    public Collection getQueriesForSession(SessionToken userToken);
-
     //=========================================================================
     // Methods to cancel running queries and cursors associated with them
     //=========================================================================
@@ -59,6 +61,12 @@ public interface QueryServiceInterface extends ServiceInterface, CacheAdmin {
         throws InvalidRequestIDException, MetaMatrixComponentException;
     
     public void cancelQuery(RequestID requestID, int nodeID)
-    throws InvalidRequestIDException, MetaMatrixComponentException;    
+    throws InvalidRequestIDException, MetaMatrixComponentException;   
+    
+    Collection<Transaction> getTransactions();
+    
+    void terminateTransaction(Xid transactionId) throws AdminException;
+    
+    void terminateTransaction(String transactionId, String sessionId) throws AdminException;
 
 }

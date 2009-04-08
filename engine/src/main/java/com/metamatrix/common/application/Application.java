@@ -32,6 +32,7 @@ import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.util.LogConstants;
@@ -59,6 +60,10 @@ public class Application {
                 LogManager.logWarning(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceIsNull", serviceName)); //$NON-NLS-1$
             }else{
             	ApplicationService appService = injector.getInstance(type);
+            	String loggingContext = DQPServiceNames.SERVICE_LOGGING_CONTEXT[i];
+				if (loggingContext != null) {
+					appService = (ApplicationService)LogManager.createLoggingProxy(loggingContext, appService, new Class[] {type}, MessageLevel.DETAIL);
+				}
                 appService.initialize(configSource.getProperties());
             	installService(serviceName, appService);
                 LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceInstalled", serviceName)); //$NON-NLS-1$

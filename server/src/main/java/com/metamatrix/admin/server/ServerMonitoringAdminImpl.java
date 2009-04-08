@@ -49,6 +49,7 @@ import com.metamatrix.admin.api.objects.Model;
 import com.metamatrix.admin.api.objects.Resource;
 import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.api.objects.SystemObject;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.api.server.ServerMonitoringAdmin;
 import com.metamatrix.admin.objects.MMAdminObject;
@@ -1226,5 +1227,10 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         return null;
     }
 
+    @Override
+    public Collection<Transaction> getTransactions()
+    		throws AdminException {
+    	return getQueryServiceProxy().getTransactions();
+    }
     
 }

@@ -26,6 +26,7 @@ import java.io.Serializable;
 
 /**
  * This is the base interface of all subsystem administrative API interfaces.
+ * @deprecated
  */
 public interface SubSystemAdminAPI extends Serializable {
 

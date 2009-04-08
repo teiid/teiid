@@ -24,11 +24,9 @@ package org.teiid.dqp.internal.transaction;
 
 import javax.transaction.xa.XAResource;
 
-import org.teiid.dqp.internal.transaction.TransactionProvider;
-import org.teiid.dqp.internal.transaction.TransactionServerImpl;
-
 import junit.framework.TestCase;
 
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.util.SimpleMock;
@@ -52,7 +50,7 @@ public class TestTransactionServer extends TestCase {
      */
     protected void setUp() throws Exception {
         server = new TransactionServerImpl();
-        server.init(SimpleMock.createSimpleMock(TransactionProvider.class)); 
+        server.setTransactionProvider(SimpleMock.createSimpleMock(TransactionProvider.class)); 
     }
 
     /**
@@ -238,5 +236,19 @@ public class TestTransactionServer extends TestCase {
     
     public void testGetTransactionContext() throws Exception {
         assertSame(server.getOrCreateTransactionContext(THREAD1), server.getOrCreateTransactionContext(THREAD1));
+    }
+    
+    public void testGetTransactions() throws Exception {
+    	server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100);
+        server.begin(THREAD2);
+        
+        assertEquals(2, server.getTransactions().size());
+        
+        server.commit(THREAD2);
+        assertEquals(1, server.getTransactions().size());
+        
+        Transaction t = server.getTransactions().iterator().next();
+        assertEquals(THREAD1, t.getAssociatedSession());
+        assertNotNull(t.getXid());
     }
 }

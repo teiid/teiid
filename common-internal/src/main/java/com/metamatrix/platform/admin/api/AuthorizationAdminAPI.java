@@ -36,7 +36,6 @@ import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.api.AuthorizationPolicyID;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public interface AuthorizationAdminAPI extends SubSystemAdminAPI {
 

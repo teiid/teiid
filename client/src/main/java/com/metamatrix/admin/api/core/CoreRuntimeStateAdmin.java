@@ -22,6 +22,8 @@
 
 package com.metamatrix.admin.api.core;
 
+import javax.transaction.xa.Xid;
+
 import com.metamatrix.admin.api.exception.AdminException;
 
 
@@ -116,5 +118,21 @@ public interface CoreRuntimeStateAdmin {
      */
     public void changeVDBStatus(String name, String version, int status)
         throws AdminException;
+    
+    /**
+     * Mark the given global transaction as rollback only.
+     * @param transactionId
+     * @throws AdminException
+     */
+    void terminateTransaction(Xid transactionId) throws AdminException;
+    
+    /**
+     * Mark the given transaction as rollback only.
+     * @param identifier
+     * 		The exact identifier of the transaction.  Wild card is not supported.
+     * @param the session the transaction is associated with.
+     * @throws AdminException
+     */
+    void terminateTransaction(String transactionId, String sessionId) throws AdminException;
 
 }

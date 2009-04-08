@@ -32,6 +32,7 @@ import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.StringUtil;
 
@@ -82,14 +83,14 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
     public static final int OBJECT_TYPE_ROLE = 16;
     /**Object type code for Session*/
     public static final int OBJECT_TYPE_SESSION = 17;
-    /**Object type code for SourceRequest*/
-    public static final int OBJECT_TYPE_SOURCE_REQUEST = 18;
     /**Object type code for SystemObject*/
     public static final int OBJECT_TYPE_SYSTEM_OBJECT = 19;
     /**Object type code for User*/
     public static final int OBJECT_TYPE_USER = 20;
     /**Object type code for VDB*/
     public static final int OBJECT_TYPE_VDB = 21;
+    /**Object type code for TRANSACTION*/
+    public static final int OBJECT_TYPE_TRANSACTION = 22;
     
     
     
@@ -118,7 +119,7 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
         objectTypeMap.put(com.metamatrix.admin.api.objects.SystemObject.class.getName(), new Integer(OBJECT_TYPE_SYSTEM_OBJECT));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.User.class.getName(), new Integer(OBJECT_TYPE_USER));        
         objectTypeMap.put(com.metamatrix.admin.api.objects.VDB.class.getName(), new Integer(OBJECT_TYPE_VDB));        
-        
+        objectTypeMap.put(Transaction.class.getName(), Integer.valueOf(OBJECT_TYPE_TRANSACTION));
     }
     
     
@@ -164,7 +165,7 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
      * @param identifierParts Parts of the fully-qualified identifier of the MetaMatrix Object 
      * @since 4.3
      */
-    public MMAdminObject(String[] identifierParts) {
+    public MMAdminObject(String ... identifierParts) {
        if (identifierParts == null) {
             throw new IllegalArgumentException(AdminPlugin.Util.getString("AbstractAdminObject.0")); //$NON-NLS-1$
         }

@@ -34,6 +34,7 @@ import com.metamatrix.admin.api.objects.QueueWorkerPool;
 import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.api.objects.SystemObject;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.admin.api.objects.VDB;
 
 
@@ -228,5 +229,13 @@ public interface CoreMonitoringAdmin {
      */
     Collection getPropertyDefinitions(String identifier,
                                       String className) throws AdminException;
+    
+    
+    /**
+     * Get all transaction matching the identifier.
+     * @return
+     * @throws AdminException
+     */
+    Collection<Transaction> getTransactions() throws AdminException;
 
 }

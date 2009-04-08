@@ -22,22 +22,39 @@
 
 package com.metamatrix.console.ui.views.transactions;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.transaction.xa.Xid;
 
 import com.metamatrix.console.connections.ConnectionInfo;
-import com.metamatrix.console.models.*;
+import com.metamatrix.console.models.ManagerListener;
+import com.metamatrix.console.models.ModelChangedEvent;
+import com.metamatrix.console.models.TransactionManager;
 import com.metamatrix.console.notification.RuntimeUpdateNotification;
-import com.metamatrix.console.ui.layout.*;
+import com.metamatrix.console.ui.layout.BasePanel;
+import com.metamatrix.console.ui.layout.ConsoleMenuBar;
+import com.metamatrix.console.ui.layout.MenuEntry;
+import com.metamatrix.console.ui.layout.WorkspacePanel;
 import com.metamatrix.console.ui.util.AbstractPanelAction;
-import com.metamatrix.console.util.*;
-import com.metamatrix.server.admin.api.TransactionAdminAPI;
+import com.metamatrix.console.util.AutoRefreshable;
+import com.metamatrix.console.util.AutoRefresher;
+import com.metamatrix.console.util.DialogUtility;
+import com.metamatrix.console.util.ExceptionUtility;
+import com.metamatrix.console.util.StaticProperties;
+import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.toolbox.ui.widget.TableWidget;
 import com.metamatrix.toolbox.ui.widget.table.DefaultTableColumnModel;
-import com.metamatrix.common.xa.XATransactionException;
 
 public class TransactionsPanel extends BasePanel
                             implements ManagerListener,
@@ -74,10 +91,7 @@ public class TransactionsPanel extends BasePanel
                 new Insets(5, 5, 5, 5), 0, 0));
         if (canTerminateTransactions) {
             table.addMouseListener(new MouseAdapter() {
-                //public void mousePressed(MouseEvent ev) {
-                //    checkMouseClick(ev);
-                //}
-                public void mouseReleased(MouseEvent ev) {
+                public void mousePressed(MouseEvent ev) {
                     checkMouseClick(ev);
                 }
             });
@@ -91,23 +105,39 @@ public class TransactionsPanel extends BasePanel
     }
 
     private void checkMouseClick(MouseEvent ev) {
-        if (ev.isPopupTrigger()) {
-            int[] selectedRows = table.getSelectedRows();
-            if (selectedRows.length == 1) {
-                int row = selectedRows[0];
-                //Was the mouse click over the selected row?
-                int clickRow = table.rowAtPoint(ev.getPoint());
-                if (row == clickRow) {
-                    //Yes.  Put up popup menu with single action of terminate transaction
-                    Long transactionNum = (Long)table.getModel().getValueAt(row,
-                            TransactionTableModel.TRANSACTION_ID_COL);
-                    JPopupMenu popupMenu = new JPopupMenu();
-                    Action terminateAction = new TerminateAction(transactionNum, this);
-                    popupMenu.add(terminateAction);
-                    popupMenu.show(table, ev.getX() + 10, ev.getY());
-                }
-            }
+        if (!SwingUtilities.isRightMouseButton(ev)) {
+        	return;
         }
+        int[] selectedRows = table.getSelectedRows();
+        if (selectedRows.length != 1) {
+        	return;
+        }
+        int row = selectedRows[0];
+        //Was the mouse click over the selected row?
+        int clickRow = table.rowAtPoint(ev.getPoint());
+        if (row != clickRow) {
+        	return;
+        }
+        //Yes.  Put up popup menu with single action of terminate transaction
+        final String transactionNum = (String)table.getModel().getValueAt(row, TransactionTableModel.TXN_ID_INDEX);
+        final String sessionId = (String)table.getModel().getValueAt(row, TransactionTableModel.SESSION_ID_INDEX);
+        final Xid xid = (Xid)table.getModel().getValueAt(row, TransactionTableModel.XID_INDEX);
+        
+        JPopupMenu popupMenu = new JPopupMenu();
+        Action terminateAction = new AbstractAction("Terminate transaction") {
+
+	        public void actionPerformed(ActionEvent ev) {
+	            boolean confirmed = DialogUtility.yesNoDialog(null,
+	                    "Terminate transaction " + transactionNum.toString() + "?",
+	                    "Confirm Termination");
+	            if (confirmed) {
+	                doTermination(transactionNum, sessionId, xid);
+	            }
+	        }
+        };
+
+        popupMenu.add(terminateAction);
+        popupMenu.show(table, ev.getX() + 10, ev.getY());
     }
 
     public void start() {
@@ -121,6 +151,7 @@ public class TransactionsPanel extends BasePanel
     }
 
     public java.util.List /*<Action>*/ resume() {
+    	refresh();
         AbstractPanelAction refreshAction = new AbstractPanelAction(0){
             public void actionImpl(final ActionEvent e){
                 TransactionsPanel.this.refresh();
@@ -181,15 +212,13 @@ public class TransactionsPanel extends BasePanel
         }
     }
 
-    public void doTermination(Long transactionNum) {
+    public void doTermination(String transactionNum, String sessionId, Xid xid) {
         try {
-            TransactionAdminAPI api = ModelManager.getTransactionAPI(connection);
-            api.terminateTransaction(manager.transactionIDForTransactionNum(transactionNum));
-        } catch (XATransactionException ex) {
-            StaticUtilities.displayModalDialogWithOK("Not Terminated",
-                    "Transaction " + transactionNum +
-                    " was not terminated.  The transaction may have already " +
-                    "completed.");
+        	if (xid != null) {
+        		getConnection().getServerAdmin().terminateTransaction(xid);
+        	} else {
+        		getConnection().getServerAdmin().terminateTransaction(transactionNum, sessionId);
+        	}
         } catch (Exception e) {
             ExceptionUtility.showMessage("Terminate Transaction", e);
         }
@@ -242,22 +271,3 @@ public class TransactionsPanel extends BasePanel
 
 }//end TransactionsPanel
 
-class TerminateAction extends AbstractAction {
-    private Long transactionNum;
-    private TransactionsPanel panel;
-
-    public TerminateAction(Long trans, TransactionsPanel pnl) {
-        super("Terminate transaction");
-        transactionNum = trans;
-        panel = pnl;
-    }
-
-    public void actionPerformed(ActionEvent ev) {
-        boolean confirmed = DialogUtility.yesNoDialog(null,
-                "Terminate transaction " + transactionNum.toString() + "?",
-                "Confirm Termination");
-        if (confirmed) {
-            panel.doTermination(transactionNum);
-        }
-    }
-}//end TerminateAction

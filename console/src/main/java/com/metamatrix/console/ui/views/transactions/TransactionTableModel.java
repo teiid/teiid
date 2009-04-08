@@ -22,49 +22,42 @@
 
 package com.metamatrix.console.ui.views.transactions;
 
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
-import com.metamatrix.common.xa.TransactionID;
-import com.metamatrix.console.util.StaticUtilities;
+import com.metamatrix.admin.api.objects.Transaction;
+import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.toolbox.ui.widget.table.DefaultTableModel;
 /**
  * Extension to DefaultSortableTableModel to model the Transactions tab table.
  */
 public class TransactionTableModel extends DefaultTableModel {
+	
+	public static final int TXN_ID_INDEX = 0;
+	public static final int SESSION_ID_INDEX = 1;
+	public static final int XID_INDEX = 3;
     //
     //  Static column information
     //
-    public final static int NUM_COLUMNS = 9;
-    public final static int TRANSACTION_ID_COL = 0;
-    public final static int SESSION_ID_COL = 1;
-    public final static int STATUS_COL = 2;
-    public final static int START_TIME_COL = 3;
-    public final static int END_TIME_COL = 4;
-    public final static int CONNECTOR_ID_COL = 5;
-    public final static int PROCESSOR_ID_COL = 6;
-    public final static int DATABASE_COL = 7;
-    public final static int REQUEST_ID_COL = 8;
-    public final static String TRANSACTION_ID_HDR = "Transaction ID";
-    public final static String SESSION_ID_HDR = "Session ID";
-    public final static String STATUS_HDR = "Status";
-    public final static String START_TIME_HDR = "Start Time";
-    public final static String END_TIME_HDR = "End Time";
-    public final static String CONNECTOR_ID_HDR = "Connector ID";
-    public final static String PROCESSOR_ID_HDR = "Processor ID";
-    public final static String DATABASE_HDR = "Model";
-    public final static String REQUEST_ID_HDR = "Request ID";
-
-    private Map /*<Long (transaction num.) to TransactionID>*/ transMap;
-        //Transaction-number-to-transaction-ID map of the model's current
-        //contents.  This map is accurate only if the model is populated
-        //exclusively through use of the resetFromTransactionsList() method.
-    private String[] colHdrs;
-
+    public final static Class<?>[] COLUMN_CLASS = new Class[]{
+    	String.class,
+    	String.class,
+    	String.class,
+    	Object.class,
+    	String.class,
+    	Date.class
+    	
+    };
+    public final static String[] COLUMN_HEADERS = new String[]{
+    	"Transaction ID",
+    	"Session ID",
+    	"Scope",
+    	"Xid",
+    	"Status",
+    	"Start Time",
+    };
+    
 //
 // Constructors
 //
@@ -72,17 +65,7 @@ public class TransactionTableModel extends DefaultTableModel {
         super();
 
         // Set columns for model
-        colHdrs = new String[NUM_COLUMNS];
-        colHdrs[TRANSACTION_ID_COL] = TRANSACTION_ID_HDR;
-        colHdrs[SESSION_ID_COL] = SESSION_ID_HDR;
-        colHdrs[STATUS_COL] = STATUS_HDR;
-        colHdrs[START_TIME_COL] = START_TIME_HDR;
-        colHdrs[END_TIME_COL] = END_TIME_HDR;
-        colHdrs[CONNECTOR_ID_COL] = CONNECTOR_ID_HDR;
-        colHdrs[PROCESSOR_ID_COL] = PROCESSOR_ID_HDR;
-        colHdrs[DATABASE_COL] = DATABASE_HDR;
-        colHdrs[REQUEST_ID_COL] = REQUEST_ID_HDR;
-        super.setColumnIdentifiers(colHdrs);
+        super.setColumnIdentifiers(COLUMN_HEADERS);
 
         // Set to 0 rows
         super.setNumRows(0);
@@ -92,18 +75,7 @@ public class TransactionTableModel extends DefaultTableModel {
 // Overridden methods
 //
     public Class getColumnClass(int columnIndex) {
-        // Return appropriate column class based on the column index
-        Class cls;
-        if ((columnIndex == SESSION_ID_COL) || (columnIndex == PROCESSOR_ID_COL)
-                || (columnIndex == REQUEST_ID_COL) || (columnIndex ==
-                TRANSACTION_ID_COL)) {
-            cls = Long.class;
-        } else if ((columnIndex == START_TIME_COL) || (columnIndex == END_TIME_COL)) {
-            cls = Date.class;
-        } else {
-            cls = String.class;
-        }
-        return cls;
+    	return COLUMN_CLASS[columnIndex];
     }
 
 //
@@ -113,70 +85,28 @@ public class TransactionTableModel extends DefaultTableModel {
      * Method to repopulate the table model based on a Collection of
      * ServerTransaction objects.
      */
-    public void resetFromTransactionsList(Collection /*<ServerTransaction>*/ tx) {
-        transMap = new HashMap();
-        int numRows = tx.size();
-        String NA = "N/A"; //$NON-NLS-1$ 
+    public void resetFromTransactionsList(Collection<Transaction> txs) {
+        int numRows = txs.size();
         
         // This panel needs to be removed, any transaction information provided
         // should be on the queries panel.
         
         //Store list's contents in a matrix-- one row per transaction.
-        SimpleDateFormat formatter = StaticUtilities.getDefaultDateFormat();
-        Object[][] data = new Object[numRows][NUM_COLUMNS];
-        Iterator it = tx.iterator();
+        Object[][] data = new Object[numRows][COLUMN_HEADERS.length];
+        Iterator<Transaction> it = txs.iterator();
         for (int row = 0; it.hasNext(); row++) {
-
-            //getDisplayString() for TransactionID is guaranteed to return a
-            //numeric string.
-            data[row][TRANSACTION_ID_COL] = 0L;
-            transMap.put(data[row][TRANSACTION_ID_COL], NA);
-            data[row][SESSION_ID_COL] = NA;
-            data[row][STATUS_COL] = NA;
-
-            //Form new Date objects for begin and end time, rather than using
-            //the objects returned by ServerTransaction.  This is so we can
-            //ensure that we have objects whose toString() method displays both
-            //date and time.  toString() for java.sql.Date displays date only.
-            Date beginTime = new Date();
-            if (beginTime == null) {
-                data[row][START_TIME_COL] = null;
-            } else {
-                data[row][START_TIME_COL] = formatter.format(new Date(beginTime.getTime()));
-            }
-            Date endTime = new Date();
-            if (endTime == null) {
-                data[row][END_TIME_COL] = null;
-            } else {
-                data[row][END_TIME_COL] = formatter.format(new Date(endTime.getTime()));
-            }
-            data[row][CONNECTOR_ID_COL] = null;
-            data[row][PROCESSOR_ID_COL] = null;            
-            data[row][DATABASE_COL] = NA;
-//            if (st.getRequestID() == null) {
-//                data[row][REQUEST_ID_COL] = null;
-//            } else {
-                data[row][REQUEST_ID_COL] = new Long(0);
-//            }
+        	Transaction txn = it.next();
+            data[row][0] = txn.getIdentifier();
+            data[row][1] = txn.getAssociatedSession();
+            data[row][2] = txn.getScope();
+            data[row][3] = txn.getXid() != null?new MMXid(txn.getXid()):null;
+            data[row][4] = txn.getStatus();
+            data[row][5] = txn.getCreated();
         }
         //Set model's data to this matrix.
-        this.setNumRows(0);
-        this.setDataVector(data, colHdrs);
+        this.setRowCount(numRows);
+        this.setDataVector(data, COLUMN_HEADERS);
+        this.setEditable(false);
     }
 
-    /**
-     * Method to return a TransactionID contained within the model, given its
-     * transaction number.  This method is accurate only if the model has been
-     * populated exclusively through use of the resetFromTransactionsList()
-     * method.
-     */
-    public TransactionID transactionIDForTransactionNum(Long transactionNum) {
-        //transMap is a transaction-number-to-transaction-ID map for the model's
-        //current contents.  See if it contains the given transaction number.
-        TransactionID id = null;
-        if (transMap != null) {
-            id = (TransactionID)transMap.get(transactionNum);
-        }
-        return id;
-    }
 }

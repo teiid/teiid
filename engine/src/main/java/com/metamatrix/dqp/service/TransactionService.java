@@ -24,9 +24,21 @@
  */
 package com.metamatrix.dqp.service;
 
+import java.util.Collection;
+
+import javax.transaction.InvalidTransactionException;
+import javax.transaction.SystemException;
+import javax.transaction.xa.XAResource;
+import javax.transaction.xa.Xid;
+
+import org.teiid.connector.xa.api.TransactionContext;
+import org.teiid.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
+
+import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.dqp.transaction.TransactionServer;
-import com.metamatrix.dqp.transaction.XAServer;
+import com.metamatrix.common.xa.MMXid;
+import com.metamatrix.common.xa.XATransactionException;
 
 /**
  */
@@ -52,7 +64,65 @@ public interface TransactionService extends ApplicationService {
     public static final String DEFAULT_TXN_STORE_DIR = System.getProperty("metamatrix.xatxnmgr.txnstore_dir", System.getProperty("user.dir")); //$NON-NLS-1$ //$NON-NLS-2$
     public static final String DEFAULT_TXN_STATUS_PORT = "0"; //$NON-NLS-1$
 
-    TransactionServer getTransactionServer();
+    // processor level methods
+    TransactionContext start(TransactionContext context) throws XATransactionException, SystemException;
+
+    TransactionContext commit(TransactionContext context) throws XATransactionException, SystemException;
+
+    TransactionContext rollback(TransactionContext context) throws XATransactionException, SystemException;
+
+    TransactionContext getOrCreateTransactionContext(String threadId);
+
+    // local transaction
+    TransactionContext begin(String threadId) throws XATransactionException, SystemException;
+
+    void commit(String threadId) throws XATransactionException, SystemException;
+
+    void rollback(String threadId) throws XATransactionException, SystemException;
+
+    // connector worker
+    TransactionContext delist(TransactionContext context,
+                              XAResource resource,
+                              int flags) throws XATransactionException;
+
+    TransactionContext enlist(TransactionContext context,
+                              XAResource resource) throws XATransactionException;
     
-    XAServer getXAServer();
+    void cancelTransactions(String threadId, boolean requestOnly) throws InvalidTransactionException, SystemException;
+
+    
+    // recovery
+    void registerRecoverySource(String name, XAConnectionSource resource);
+    
+    void removeRecoverySource(String name);  
+    
+    int prepare(final String threadId,
+            MMXid xid) throws XATransactionException;
+
+	void commit(final String threadId,
+	                   MMXid xid,
+	                   boolean onePhase) throws XATransactionException;
+	
+	void rollback(final String threadId,
+	                     MMXid xid) throws XATransactionException;
+	
+	Xid[] recover(int flag) throws XATransactionException;
+	
+	void forget(final String threadId,
+	            MMXid xid) throws XATransactionException;
+	
+	void start(final String threadId,
+	           MMXid xid,
+	           int flags,
+	           int timeout) throws XATransactionException;
+	
+	void end(final String threadId,
+	         MMXid xid,
+	         int flags) throws XATransactionException;
+        
+    Collection<Transaction> getTransactions();
+    
+    void terminateTransaction(Xid transactionId) throws AdminException;
+    
+    void terminateTransaction(String transactionId, String sessionId) throws AdminException;
 }

@@ -57,6 +57,7 @@ import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.dqp.DQPPlugin;
@@ -422,7 +423,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         
         if (transactionService != null) {
             try {
-                transactionService.getTransactionServer().cancelTransactions(sessionId, false);
+                transactionService.cancelTransactions(sessionId, false);
             } catch (InvalidTransactionException err) {
                 LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + sessionId); //$NON-NLS-1$
             } catch (SystemException err) {
@@ -543,7 +544,14 @@ public class DQPCore extends Application implements ClientSideDQP {
 		return tracker;
 	}
 
-	TransactionService getTransactionService() {
+	public TransactionService getTransactionService() {
+		if (transactionService == null) {
+			throw new MetaMatrixRuntimeException("Transactions are not enabled"); //$NON-NLS-1$
+		}
+		return transactionService;
+	}
+	
+	public TransactionService getTransactionServiceDirect() {
 		return transactionService;
 	}
 
@@ -645,7 +653,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	public void begin() throws XATransactionException {
     	String threadId = DQPWorkContext.getWorkContext().getConnectionID();
         try {
-			this.transactionService.getTransactionServer().begin(threadId);
+			this.getTransactionService().begin(threadId);
 		} catch (SystemException e) {
 			throw new XATransactionException(e);
 		}
@@ -654,7 +662,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	public void commit() throws XATransactionException {
 		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
         try {
-			this.transactionService.getTransactionServer().commit(threadId);
+			this.getTransactionService().commit(threadId);
 		} catch (SystemException e) {
 			throw new XATransactionException(e);
 		}
@@ -662,7 +670,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	
 	public void rollback() throws XATransactionException {
 		try {
-			this.transactionService.getTransactionServer().rollback(
+			this.getTransactionService().rollback(
 					DQPWorkContext.getWorkContext().getConnectionID());
 		} catch (SystemException e) {
 			throw new XATransactionException(e);
@@ -672,31 +680,31 @@ public class DQPCore extends Application implements ClientSideDQP {
 	public void commit(MMXid xid, boolean onePhase)
 			throws XATransactionException {
 		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-		this.transactionService.getXAServer().commit(threadId, xid, onePhase);
+		this.getTransactionService().commit(threadId, xid, onePhase);
 	}
 
 	public void end(MMXid xid, int flags) throws XATransactionException {
 		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-		this.transactionService.getXAServer().end(threadId, xid, flags);
+		this.getTransactionService().end(threadId, xid, flags);
 	}
 
 	public void forget(MMXid xid) throws XATransactionException {
 		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-		this.transactionService.getXAServer().forget(threadId, xid);
+		this.getTransactionService().forget(threadId, xid);
 	}
 	
 	public int prepare(MMXid xid) throws XATransactionException {
-		return this.transactionService.getXAServer().prepare(
+		return this.getTransactionService().prepare(
 				DQPWorkContext.getWorkContext().getConnectionID(),
 				xid);
 	}
 	
 	public Xid[] recover(int flag) throws XATransactionException {
-		return this.transactionService.getXAServer().recover(flag);
+		return this.getTransactionService().recover(flag);
 	}
 
 	public void rollback(MMXid xid) throws XATransactionException {
-		this.transactionService.getXAServer().rollback(
+		this.getTransactionService().rollback(
 				DQPWorkContext.getWorkContext().getConnectionID(),
 				xid);
 	}
@@ -704,7 +712,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	public void start(MMXid xid, int flags, int timeout)
 			throws XATransactionException {
 		String threadId = DQPWorkContext.getWorkContext().getConnectionID();
-		this.transactionService.getXAServer().start(threadId, xid, flags, timeout);
+		this.getTransactionService().start(threadId, xid, flags, timeout);
 	}
 
 	public MetadataResult getMetadata(long requestID)

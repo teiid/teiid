@@ -30,11 +30,11 @@ import javax.transaction.Transaction;
 public interface TransactionContext {
     
 	public enum Scope {
-		TRANSACTION_BLOCK,
-		TRANSACTION_GLOBAL,
-		TRANSACTION_LOCAL,
-		TRANSACTION_NONE,
-		TRANSACTION_REQUEST
+		BLOCK,
+		GLOBAL,
+		LOCAL,
+		NONE,
+		REQUEST
 	}
 	
     public boolean isInTransaction();

@@ -26,13 +26,18 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.transaction.xa.Xid;
+
 import org.teiid.dqp.internal.process.DQPCore;
 
+import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
@@ -49,6 +54,7 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.message.RequestID;
+import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
@@ -160,7 +166,7 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
      * @see com.metamatrix.server.query.service.QueryServiceInterface#cancelQueries(com.metamatrix.platform.security.api.SessionToken, boolean, boolean)
      */
     public void cancelQueries(SessionToken sessionToken, boolean shouldRollback)
-        throws InvalidRequestIDException, MetaMatrixComponentException{
+        throws MetaMatrixComponentException{
         this.dqp.terminateConnection(sessionToken.getSessionID().toString());
     }
 
@@ -248,6 +254,36 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
     		Properties props, ClientServiceRegistry listenerRegistry) {
     	super.init(id, deployedComponentID, props, listenerRegistry);
     	listenerRegistry.registerClientService(ClientSideDQP.class, this.dqp, LogConstants.CTX_QUERY_SERVICE);
+    }
+    
+    @Override
+    public Collection<Transaction> getTransactions() {
+    	TransactionService ts = getTransactionService();
+    	if (ts == null) {
+    		return Collections.emptyList();
+    	}
+    	return ts.getTransactions();
+    }
+    
+    @Override
+    public void terminateTransaction(String transactionId, String sessionId)
+    		throws AdminException {
+    	TransactionService ts = getTransactionService();
+    	if (ts != null) {
+    		ts.terminateTransaction(transactionId, sessionId);
+    	}
+    }
+    
+    @Override
+    public void terminateTransaction(Xid transactionId) throws AdminException {
+    	TransactionService ts = getTransactionService();
+    	if (ts != null) {
+    		ts.terminateTransaction(transactionId);
+    	}
+    }
+    
+    protected TransactionService getTransactionService() {
+    	return this.dqp.getTransactionServiceDirect();
     }
 
 }

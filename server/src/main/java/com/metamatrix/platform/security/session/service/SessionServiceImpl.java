@@ -208,8 +208,7 @@ public class SessionServiceImpl extends AbstractService implements
             try {
                 vdbID = RuntimeMetadataCatalog.getInstance().getActiveVirtualDatabaseID(vdbName, vdbVersion);
             } catch (VirtualDatabaseDoesNotExistException e) {
-                // Propagate message, don't care about stack trace
-                throw new MetaMatrixAuthenticationException(e.getMessage());
+                throw new SessionServiceException(e);
             } catch (VirtualDatabaseException e) {
                 if (vdbVersion == null) {
                     throw new SessionServiceException(e,PlatformPlugin.Util.getString("SessionServiceImpl.Unexpected_error_finding_latest_version_of_Virtual_Database", new Object[] {vdbName})); //$NON-NLS-1$

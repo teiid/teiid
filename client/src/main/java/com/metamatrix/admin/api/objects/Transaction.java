@@ -20,17 +20,44 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.internal.datamgr.impl;
+package com.metamatrix.admin.api.objects;
 
-import org.teiid.dqp.internal.transaction.TransactionProvider;
-import org.teiid.dqp.internal.transaction.TransactionServerImpl;
+import java.util.Date;
 
-import com.metamatrix.core.util.SimpleMock;
+import javax.transaction.xa.Xid;
 
-public class FakeTransactionService extends TransactionServerImpl {
+public interface Transaction extends AdminObject {
 
-	public FakeTransactionService() {
-		this.setTransactionProvider(SimpleMock.createSimpleMock(TransactionProvider.class));
-	}
+	/**
+	 * Get the session associated with the this transaction.
+	 * May be null for an unassociated Global transaction.
+	 * @return
+	 */
+	String getAssociatedSession();
+	
+	/**
+	 * Get the scope for the transaction.  Will be one of GLOBAL, LOCAL, or REQUEST
+	 * @return
+	 */
+	String getScope();
+	
+	/**
+	 * Return the Xid of the Global transaction.  Will be null for non-Global transactions.
+	 * @return
+	 */
+	Xid getXid();
+	
+	/**
+	 * Get the current status.  See {@link javax.transaction.Status} for
+	 * possible values.
+	 * @return
+	 */
+	String getStatus();
+	
+	/**
+	 * Get the date the transaction was created.
+	 * @return
+	 */
+	Date getCreated();
 	
 }

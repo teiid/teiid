@@ -83,7 +83,6 @@ import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.TrackingService;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.spi.TrackerLogConstants;
-import com.metamatrix.dqp.transaction.TransactionServer;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -398,7 +397,7 @@ public class ConnectorManager implements ApplicationService {
             if (this.isXa) {
                 if (this.connector.supportsSingleIdentity()) {
                 	// add this connector as the recovery source
-	                TransactionServer ts = this.getTransactionService().getTransactionServer(); 
+	                TransactionService ts = this.getTransactionService(); 
 	                ts.registerRecoverySource(connectorName, new TransactionProvider.XAConnectionSource() {
 	                	XAConnection conn = null;
 	                	
@@ -501,7 +500,7 @@ public class ConnectorManager implements ApplicationService {
 
             if(this.isXa){
                 if (this.getTransactionService() != null) {
-                    TransactionServer ts = this.getTransactionService().getTransactionServer();
+                    TransactionService ts = this.getTransactionService();
                     ts.removeRecoverySource(connectorName);
                 }
             }

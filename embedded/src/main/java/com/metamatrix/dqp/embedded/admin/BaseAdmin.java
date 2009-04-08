@@ -65,6 +65,7 @@ import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
+import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 import com.metamatrix.platform.util.ProductInfoConstants;
@@ -144,6 +145,10 @@ abstract class BaseAdmin {
     
     DataService getDataService() {
         return (DataService)getManager().findService(DQPServiceNames.DATA_SERVICE);
+    }
+    
+    TransactionService getTransactionService() {
+    	return (TransactionService)getManager().findService(DQPServiceNames.TRANSACTION_SERVICE);
     }
     
     ConfigurationService getConfigurationService() {

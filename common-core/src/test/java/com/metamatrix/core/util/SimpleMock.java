@@ -43,7 +43,7 @@ public class SimpleMock extends MixinProxy {
         }
         
         if (clazz.isPrimitive()) {
-            return null;
+        	return 0;
         }
 
         if (!clazz.isInterface()) {

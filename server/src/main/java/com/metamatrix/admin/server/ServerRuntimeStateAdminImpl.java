@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.transaction.xa.Xid;
+
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.api.exception.AdminComponentException;
@@ -730,7 +732,16 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
         return true;
     }
     
+    @Override
+    public void terminateTransaction(String transactionId, String sessionId)
+    		throws AdminException {
+    	this.getQueryServiceProxy().terminateTransaction(transactionId, sessionId);
+    }
     
+    @Override
+    public void terminateTransaction(Xid transactionId) throws AdminException {
+    	this.getQueryServiceProxy().terminateTransaction(transactionId);
+    }
     
 
 }

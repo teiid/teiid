@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
+import javax.transaction.xa.Xid;
+
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminOptions;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
@@ -35,6 +37,7 @@ import com.metamatrix.admin.api.objects.Group;
 import com.metamatrix.admin.api.objects.LogConfiguration;
 import com.metamatrix.admin.api.objects.ScriptsContainer;
 import com.metamatrix.admin.api.objects.SystemObject;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -969,4 +972,22 @@ public class ServerAdminImpl implements ServerAdmin {
 			throws AdminException {
 		return getSecurityAdmin().getGroupsForDomain(domainName);
 	}
+	
+	@Override
+	public Collection<Transaction> getTransactions()
+			throws AdminException {
+		return getMonitoringAdmin().getTransactions();
+	}
+	
+	@Override
+	public void terminateTransaction(String transactionId, String sessionId)
+			throws AdminException {
+		getRuntimeAdmin().terminateTransaction(transactionId, sessionId);
+	}
+	
+	@Override
+	public void terminateTransaction(Xid transactionId) throws AdminException {
+		getRuntimeAdmin().terminateTransaction(transactionId);
+	}
+	
 }

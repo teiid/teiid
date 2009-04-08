@@ -38,7 +38,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
-import com.metamatrix.dqp.transaction.TransactionServer;
+import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.util.LogConstants;
 
 public class SynchConnectorWorkItem extends ConnectorWorkItem {
@@ -167,8 +167,8 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 		this.lock = null;
 	}
 	
-    private TransactionServer getTransactionServer() {
-        return manager.getTransactionService().getTransactionServer();
+    private TransactionService getTransactionServer() {
+        return manager.getTransactionService();
     }
     
     @Override

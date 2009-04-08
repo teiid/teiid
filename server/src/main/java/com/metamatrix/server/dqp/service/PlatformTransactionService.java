@@ -30,30 +30,21 @@ import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
-import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.transaction.TransactionServer;
-import com.metamatrix.dqp.transaction.XAServer;
 import com.metamatrix.server.Configuration;
 import com.metamatrix.xa.arjuna.ArjunaTransactionProvider;
 
 /**
  */
-public class PlatformTransactionService implements TransactionService{
+public class PlatformTransactionService extends TransactionServerImpl {
 
-    private TransactionServerImpl arjunaTs = new TransactionServerImpl();
-    private TransactionServer ts;
     private Host host;
     
     @Inject
@@ -83,42 +74,11 @@ public class PlatformTransactionService implements TransactionService{
             props.setProperty(TransactionService.VMNAME, CurrentConfiguration.getInstance().getProcessName());
             props.setProperty(TransactionService.TXN_STORE_DIR, host.getDataDirectory()); 
 
-            arjunaTs.init(ArjunaTransactionProvider.getInstance(props));
-            
-            final Class[] interfaces = new Class[] {TransactionServer.class, XAServer.class};
-            
-            ts = (TransactionServer)LogManager.createLoggingProxy(LogCommonConstants.CTX_XA_TXN, arjunaTs, interfaces, MessageLevel.DETAIL);
+            this.setTransactionProvider(ArjunaTransactionProvider.getInstance(props));
+            this.setProcessName(CurrentConfiguration.getInstance().getProcessName());
         } catch (XATransactionException err) {
             throw new ApplicationInitializationException(err);
         }
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#start(com.metamatrix.common.application.ApplicationEnvironment)
-     */
-    public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {
-        
-    }
-
-    /*
-     * @see com.metamatrix.common.application.ApplicationService#stop()
-     */
-    public void stop() throws ApplicationLifecycleException {
-        arjunaTs.shutdown(true);
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.TransactionService#getTransactionServer()
-     */
-    public TransactionServer getTransactionServer() {
-        return ts;
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.TransactionService#getXAServer()
-     */
-    public XAServer getXAServer() {
-        return (XAServer)ts;
     }
 
 }

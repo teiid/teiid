@@ -26,71 +26,28 @@ import java.util.Properties;
 
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 
-import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
-import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.transaction.TransactionServer;
-import com.metamatrix.dqp.transaction.XAServer;
 import com.metamatrix.xa.arjuna.ArjunaTransactionProvider;
 
-public class EmbeddedTransactionService extends EmbeddedBaseDQPService implements TransactionService {
+public class EmbeddedTransactionService extends TransactionServerImpl {
 
     public static final String TRANSACTIONS_ENABLED = "metamatrix.xatxnmgr.enabled"; //$NON-NLS-1$
-    private TransactionServerImpl arjunaTs = new TransactionServerImpl();
-    private TransactionServer ts;
     
-    /**  
-     * @param props
-     * @throws ApplicationInitializationException
-     */
-    public void initializeService(Properties props) throws ApplicationInitializationException {
+    @Override
+    public void initialize(Properties props)
+    		throws ApplicationInitializationException {
         try {
         	props = new Properties(props);
             props.put(TransactionService.HOSTNAME, "dqp"); //$NON-NLS-1$
             props.put(TransactionService.VMNAME, props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY));
             
-            arjunaTs.init(ArjunaTransactionProvider.getInstance(props));
-            
-            final Class[] interfaces = new Class[] {TransactionServer.class, XAServer.class};
-            
-            ts = (TransactionServer)LogManager.createLoggingProxy(LogCommonConstants.CTX_XA_TXN, arjunaTs, interfaces, MessageLevel.DETAIL);
+            this.setTransactionProvider(ArjunaTransactionProvider.getInstance(props));
         } catch (XATransactionException e) {
             throw new ApplicationInitializationException(e);
         } 
-    }
-
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#start(com.metamatrix.common.application.ApplicationEnvironment)
-     */
-    public void startService(ApplicationEnvironment environment) throws ApplicationLifecycleException {
-
-    }
-   
-    /* 
-     * @see com.metamatrix.common.application.ApplicationService#stop()
-     */
-    public void stopService() throws ApplicationLifecycleException {
-        arjunaTs.shutdown(true);
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.TransactionService#getTransactionServer()
-     */
-    public TransactionServer getTransactionServer() {
-        return ts;
-    }
-
-    /** 
-     * @see com.metamatrix.dqp.service.TransactionService#getXAServer()
-     */
-    public XAServer getXAServer() {
-        return (XAServer)ts;
     }
     
 }

@@ -23,7 +23,6 @@
 package com.metamatrix.jdbc;
 
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.SQLException;
@@ -31,10 +30,9 @@ import java.util.Properties;
 
 import com.metamatrix.admin.api.core.Admin;
 import com.metamatrix.admin.api.embedded.EmbeddedAdmin;
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.core.util.MixinProxy;
 import com.metamatrix.dqp.embedded.admin.DQPConfigAdminImpl;
 import com.metamatrix.dqp.embedded.admin.DQPMonitoringAdminImpl;
 import com.metamatrix.dqp.embedded.admin.DQPRuntimeStateAdminImpl;
@@ -80,17 +78,14 @@ public class EmbeddedConnection extends MMConnection {
      */
     public Admin getAdminAPI() throws SQLException {
     
-        InvocationHandler handler = new InvocationHandler() {
-            Object[] implementors = {
-                    new DQPConfigAdminImpl(manager),                    
-                    new DQPMonitoringAdminImpl(manager), 
-                    new DQPRuntimeStateAdminImpl(manager), 
-                    new DQPSecurityAdminImpl(manager)
-            };
+        InvocationHandler handler = new MixinProxy(new Object[] {
+                new DQPConfigAdminImpl(manager),                    
+                new DQPMonitoringAdminImpl(manager), 
+                new DQPRuntimeStateAdminImpl(manager), 
+                new DQPSecurityAdminImpl(manager)
+        }) {
             
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                Exception ex = null;
-                
                 // We we perform any DQP functions check if the DQP is still alive
                 if (!manager.isAlive()) {
                     throw new AdminProcessingException(JDBCPlugin.Util.getString("EmbeddedConnection.DQP_shutDown")); //$NON-NLS-1$
@@ -105,28 +100,7 @@ public class EmbeddedConnection extends MMConnection {
                 try {
                     // Set the class loader to current class classloader so that the this classe's class loader gets used
                     Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
-                    
-                    for (int i = 0; i < implementors.length; i++) {
-                        try {
-                            return method.invoke(implementors[i], args);
-                        } catch (IllegalArgumentException e) {
-                            ex = e; // try all classes
-                        } catch (IllegalAccessException e) {
-                            throw e;
-                        } catch (InvocationTargetException e) {
-                            // Since we know all the admin methods throw the Admin Exceptions
-                            // no need to wrap with undeclared exception.
-                            Throwable target = e.getTargetException();
-                            if (target instanceof AdminException) {
-                                throw target;
-                            }
-                            throw new AdminComponentException(e);
-                        }
-                    }
-                    if (ex != null) {
-                        throw ex;
-                    }                
-                    return null;
+                    return super.invoke(proxy, method, args);
                 }
                 finally {
                     Thread.currentThread().setContextClassLoader(callingClassLoader);

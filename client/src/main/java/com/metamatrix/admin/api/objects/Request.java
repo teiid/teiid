@@ -31,8 +31,8 @@ import java.util.Date;
  * requests (the requests that are being processed on the physical data sources) as part
  * of original request. 
  * 
- *  <p>A request is identified by a numbers separated by "." (dots). usually in they are arranged 
- *  in the pattern [session].[request] or [session].[request].[source request] </p>
+ *  <p>A request is identified by a numbers separated by '|'. usually in they are arranged 
+ *  in the pattern [session]|[request] or [session]|[request]|[source request] </p>
  * @since 4.3
  */
 public interface Request extends AdminObject {

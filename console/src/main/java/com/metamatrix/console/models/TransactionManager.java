@@ -24,23 +24,16 @@ package com.metamatrix.console.models;
 
 import java.util.Collection;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
-
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.xa.TransactionID;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.ui.views.transactions.TransactionTableModel;
-import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.RuntimeExternalException;
-
-import com.metamatrix.server.admin.api.TransactionAdminAPI;
 
 /**
  * Extension of TimedManager to manage the Transactions tab.  It creates and
  * maintains the tab's table model, but has no reference to the tab itself.
  */
 public class TransactionManager extends TimedManager {
-    private TransactionAdminAPI transAPI;
     private TransactionTableModel tableModel;
 
 // Constructors and initialization methods
@@ -48,7 +41,6 @@ public class TransactionManager extends TimedManager {
     public TransactionManager(ConnectionInfo connection) {
         super(connection);
         super.init();
-        transAPI = ModelManager.getTransactionAPI(getConnection());
         //Create the table model, initially empty.
         tableModel = new TransactionTableModel();
     }
@@ -71,28 +63,15 @@ public class TransactionManager extends TimedManager {
     public void refreshTableModel() {
         super.refresh(false);
         //Make API call to get all transactions
-        Collection /*<ServerTransaction>*/ tx = null;
+        Collection<Transaction> tx = null;
         try {
-            tx = transAPI.getAllTransactions();
-        } catch (ComponentNotFoundException ex) {
-            //Exception should not occur.  Throw to caller as a
-            //RuntimeExternalException.
-            LogManager.logError(LogContexts.TRANSACTIONS, ex,
-                    "Error retrieving list of transactions.  Transaction Service may not be running."); //$NON-NLS-1$
-            throw new RuntimeExternalException(ex);
+            tx = getConnection().getServerAdmin().getTransactions();
         } catch (Exception ex) {
-            //Exception should not occur.  Throw to caller as a
-            //RuntimeExternalException.
-            LogManager.logError(LogContexts.TRANSACTIONS, ex,
-                    "Error retrieving list of transactions."); //$NON-NLS-1$
             throw new RuntimeExternalException(ex);
         }
         //Repopulate the table model from the list of transactions returned.
         tableModel.resetFromTransactionsList(tx);
     }
 
-    public TransactionID transactionIDForTransactionNum(Long transactionNum) {
-        return tableModel.transactionIDForTransactionNum(transactionNum);
-    }
 }
 

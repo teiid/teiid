@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.transaction.xa.Xid;
+
 import com.metamatrix.admin.api.embedded.EmbeddedLogger;
 import com.metamatrix.admin.api.embedded.EmbeddedRuntimeStateAdmin;
 import com.metamatrix.admin.api.exception.AdminComponentException;
@@ -44,6 +46,7 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.message.RequestID;
+import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 
 
@@ -326,4 +329,22 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
             throw new AdminProcessingException("Admin_invalid_log_listener"); //$NON-NLS-1$
         }
     }
+    
+    @Override
+    public void terminateTransaction(String transactionId, String sessionId)
+    		throws AdminException {
+    	TransactionService ts = getTransactionService();
+    	if (ts != null) {
+    		ts.terminateTransaction(transactionId, sessionId);
+    	}
+    }
+    
+    @Override
+    public void terminateTransaction(Xid transactionId) throws AdminException {
+    	TransactionService ts = getTransactionService();
+    	if (ts != null) {
+    		ts.terminateTransaction(transactionId);
+    	}
+    }
+    
 }

@@ -112,9 +112,7 @@ import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.server.HostManagement;
 import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.admin.api.RuntimeMetadataAdminAPI;
-import com.metamatrix.server.admin.api.TransactionAdminAPI;
 import com.metamatrix.server.admin.apiimpl.RuntimeMetadataAdminAPIImpl;
-import com.metamatrix.server.admin.apiimpl.TransactionAdminAPIImpl;
 import com.metamatrix.server.util.ServerPropertyNames;
 
 /**
@@ -211,7 +209,6 @@ public abstract class ProcessController implements ProcessManagement {
         this.clientServices.registerClientService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_AUTHORIZATION_ADMIN_API);
         this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
         this.clientServices.registerClientService(RuntimeMetadataAdminAPI.class, RuntimeMetadataAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_RUNTIME_METADATA_ADMIN_API);
-        this.clientServices.registerClientService(TransactionAdminAPI.class, TransactionAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
     }	
     
     

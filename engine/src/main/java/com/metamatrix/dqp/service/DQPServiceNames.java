@@ -22,6 +22,8 @@
 
 package com.metamatrix.dqp.service;
 
+import com.metamatrix.common.util.LogCommonConstants;
+
 
 /**
  * Defines constants used for naming DQP services.
@@ -77,5 +79,16 @@ public interface DQPServiceNames {
         VDBService.class,
         MetadataService.class,
         DataService.class,
+    };
+    
+    public static final String[] SERVICE_LOGGING_CONTEXT = new String[] {
+    	null,
+        null,
+        null,
+        null,
+        LogCommonConstants.CTX_TXN_LOG,                                           
+        null,
+        null,
+        null,
     };
 }

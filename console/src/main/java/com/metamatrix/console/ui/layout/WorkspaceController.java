@@ -45,6 +45,7 @@ import com.metamatrix.console.models.GroupsManager;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.models.ResourceManager;
 import com.metamatrix.console.models.ServerLogManager;
+import com.metamatrix.console.models.TransactionManager;
 import com.metamatrix.console.notification.RuntimeUpdateNotification;
 import com.metamatrix.console.security.UserCapabilities;
 import com.metamatrix.console.ui.NotifyOnExitConsole;
@@ -63,6 +64,7 @@ import com.metamatrix.console.ui.views.runtime.RuntimeMgmtPanel;
 import com.metamatrix.console.ui.views.sessions.SessionPanel;
 import com.metamatrix.console.ui.views.summary.SummaryPanel;
 import com.metamatrix.console.ui.views.syslog.SysLogPanel;
+import com.metamatrix.console.ui.views.transactions.TransactionsPanel;
 import com.metamatrix.console.ui.views.users.AdminRolesMain;
 import com.metamatrix.console.ui.views.vdb.VdbMainPanel;
 import com.metamatrix.console.util.AutoRefreshable;
@@ -364,6 +366,8 @@ public class WorkspaceController implements
             panel = createSystemLogSetupPanel(connection);
         } else if (cls == ResourcesMainPanel.class) {
             panel = createResourcesPanel(connection);
+        } else if (cls == TransactionsPanel.class) {
+        	panel = createTransactionsPanel(connection);
         }
         if (panel instanceof AutoRefreshable) {
             addToAutoRefreshableXref(panel);
@@ -488,6 +492,17 @@ public class WorkspaceController implements
             ExceptionUtility.showMessage("Create Data Roles panel", ex); //$NON-NLS-1$
         }
         return entPanel;
+    }
+    
+    private TransactionsPanel createTransactionsPanel(ConnectionInfo connection) {
+        try {
+            UserCapabilities cap = UserCapabilities.getInstance();
+            boolean canModify = cap.isProductAdmin(connection);
+            return new TransactionsPanel(new TransactionManager(connection), canModify, connection);
+        } catch (Exception ex) {
+            ExceptionUtility.showMessage("Create Transactions panel", ex); //$NON-NLS-1$
+        }
+        return null;
     }
 
     private WorkspacePanel createResourcesPanel(ConnectionInfo connection) {

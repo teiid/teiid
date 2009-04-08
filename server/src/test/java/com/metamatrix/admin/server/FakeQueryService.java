@@ -24,6 +24,7 @@ package com.metamatrix.admin.server;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -31,7 +32,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.transaction.xa.Xid;
+
+import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.Request;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
@@ -290,6 +295,22 @@ public class FakeQueryService implements QueryServiceInterface {
 	@Override
 	public Throwable getInitException() {
 		return null;
+	}
+	
+	@Override
+	public Collection<Transaction> getTransactions() {
+		return Collections.emptyList();
+	}
+	
+	@Override
+	public void terminateTransaction(String transactionId, String sessionId)
+			throws AdminException {
+		
+	}
+	
+	@Override
+	public void terminateTransaction(Xid transactionId) throws AdminException {
+		
 	}
 
 }

@@ -39,12 +39,14 @@ import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.SystemObject;
+import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -355,8 +357,14 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
         }
     }
 
-    
-    
-    
+    @Override
+    public Collection<Transaction> getTransactions()
+    		throws AdminException {
+    	TransactionService ts = getTransactionService();
+    	if (ts == null) {
+    		return Collections.emptyList();
+    	}
+    	return ts.getTransactions();
+    }
     
 }

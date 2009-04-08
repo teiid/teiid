@@ -44,7 +44,6 @@ import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.api.SubSystemAdminAPI;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.server.admin.api.RuntimeMetadataAdminAPI;
-import com.metamatrix.server.admin.api.TransactionAdminAPI;
 
 public class ModelManager {
 
@@ -328,11 +327,6 @@ public class ModelManager {
 
         return (RuntimeMetadataAdminAPI) getSubSystemAdminAPI(RuntimeMetadataAdminAPI.class, conn);
 	}
-
-    public static TransactionAdminAPI getTransactionAPI(ConnectionInfo conn) {
-        
-        return (TransactionAdminAPI) getSubSystemAdminAPI(TransactionAdminAPI.class, conn);
-    }
 
     public static ExtensionSourceAdminAPI getExtensionSourceAPI(ConnectionInfo conn) {
 

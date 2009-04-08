@@ -522,16 +522,14 @@ public class AbstractAdminImpl {
                 return parent.getResources(identifier);
             case MMAdminObject.OBJECT_TYPE_SESSION:
                 return parent.getSessions(identifier);
-            case MMAdminObject.OBJECT_TYPE_SOURCE_REQUEST:
-                return parent.getSourceRequests(identifier);
             case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
                 list = new ArrayList();
                 list.add(parent.getSystem());
                 return list;
             case MMAdminObject.OBJECT_TYPE_VDB:
                 return parent.getVDBs(identifier);
-                
-                
+            case MMAdminObject.OBJECT_TYPE_TRANSACTION:
+                return parent.getTransactions();
             case MMAdminObject.OBJECT_TYPE_ENTITLEMENT:                
             case MMAdminObject.OBJECT_TYPE_MODEL:
             case MMAdminObject.OBJECT_TYPE_PROPERTY_DEFINITION:

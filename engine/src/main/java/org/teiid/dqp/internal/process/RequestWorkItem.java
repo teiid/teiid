@@ -175,7 +175,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         if (this.rsCache != null) {
         	this.cid = ResultSetCacheUtil.createCacheID(requestMsg, rsCache);
         }
-        this.transactionService = dqpCore.getTransactionService();
+        this.transactionService = dqpCore.getTransactionServiceDirect();
         this.dqpCore = dqpCore;
         this.request = request;
         this.resultsReceiver = receiver;
@@ -283,8 +283,8 @@ public class RequestWorkItem extends AbstractWorkItem {
 					this.transactionState = TransactionState.END;
 				}
 			}
-			if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.Scope.TRANSACTION_REQUEST) {
-				this.transactionService.getTransactionServer().commit(transactionContext);
+			if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+				this.transactionService.commit(transactionContext);
 				this.transactionState = TransactionState.DONE;
 			}
 			sendResultsIfNeeded(null);
@@ -343,10 +343,10 @@ public class RequestWorkItem extends AbstractWorkItem {
 			this.transactionState = TransactionState.END;
 		} 
 		
-		if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.Scope.TRANSACTION_REQUEST) {
+		if (this.transactionState == TransactionState.END && transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
 			this.transactionState = TransactionState.DONE;
             try {
-        		this.transactionService.getTransactionServer().rollback(transactionContext);
+        		this.transactionService.rollback(transactionContext);
             } catch (XATransactionException e1) {
                 LogManager.logWarning(LogConstants.CTX_DQP, e1, DQPPlugin.Util.getString("ProcessWorker.failed_rollback")); //$NON-NLS-1$           
             } catch (SystemException err) {
@@ -590,7 +590,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         	try {
 	            if (transactionService != null) {
 	                try {
-	                    transactionService.getTransactionServer().cancelTransactions(requestID.getConnectionID(), true);
+	                    transactionService.cancelTransactions(requestID.getConnectionID(), true);
 	                } catch (InvalidTransactionException err) {
 	                    LogManager.logWarning(LogConstants.CTX_DQP, "rollback failed for requestID=" + requestID.getConnectionID()); //$NON-NLS-1$
 	                } catch (SystemException err) {

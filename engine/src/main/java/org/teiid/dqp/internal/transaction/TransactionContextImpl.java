@@ -46,10 +46,11 @@ class TransactionContextImpl implements
     private MMXid xid;
     private String txnID;
     private Transaction transaction;
-    private Scope transactionType = Scope.TRANSACTION_NONE;
-    private Set suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap());
+    private Scope transactionType = Scope.NONE;
+    private Set<String> suspendedBy = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
     private int transactionTimeout = -1;
-    private Set xaResources = Collections.newSetFromMap(new ConcurrentHashMap());
+    private Set<XAResource> xaResources = Collections.newSetFromMap(new ConcurrentHashMap<XAResource, Boolean>());
+    private long creationTime;
     
     public TransactionContextImpl() {}
     
@@ -64,8 +65,13 @@ class TransactionContextImpl implements
     void setTransaction(Transaction transaction, String id) {
         this.transaction = transaction;
         this.txnID = id;
+        this.creationTime = System.currentTimeMillis();
     }
-
+    
+    long getCreationTime() {
+		return creationTime;
+	}
+    
     /**
      * @return Returns the transaction.
      */
@@ -117,7 +123,7 @@ class TransactionContextImpl implements
         this.xid = xid;
     }
 
-    Set getSuspendedBy() {
+    Set<String> getSuspendedBy() {
         return this.suspendedBy;
     }
 
@@ -136,7 +142,7 @@ class TransactionContextImpl implements
     	this.xaResources.add(resource);
     }
     
-    Set getXAResources() {
+    Set<XAResource> getXAResources() {
     	return xaResources;
     }
 

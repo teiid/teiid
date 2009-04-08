@@ -434,11 +434,11 @@ public class Request implements QueryProcessor.ProcessorFactory {
         TransactionContext tc = null;
         
         if (transactionService != null) {
-            tc = transactionService.getTransactionServer().getOrCreateTransactionContext(workContext.getConnectionID());
+            tc = transactionService.getOrCreateTransactionContext(workContext.getConnectionID());
         }
         
         if (tc != null){ 
-            Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.TRANSACTION_REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
+            Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
         }
         
         if (tc == null || !tc.isInTransaction()) {
@@ -467,7 +467,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
                     throw new MetaMatrixComponentException(DQPPlugin.Util.getString("Request.transaction_not_supported")); //$NON-NLS-1$
                 }
                 try {
-                    tc = transactionService.getTransactionServer().start(tc);
+                    tc = transactionService.start(tc);
                 } catch (XATransactionException err) {
                     throw new MetaMatrixComponentException(err);
                 } catch (SystemException err) {

@@ -54,9 +54,9 @@ public class PanelsTreeModel extends DefaultTreeModel {
     public static final String QUERIES = "Queries"; //$NON-NLS-1$
     public static final Class QUERIES_PANEL_CLASS =
         	com.metamatrix.console.ui.views.queries.QueryPanel.class;
-//    public static final String TRANSACTIONS = "Transactions";
-//    public static final Class TRANSACTIONS_PANEL_CLASS =
-//        	com.metamatrix.console.ui.views.transactions.TransactionsPanel.class;
+    public static final String TRANSACTIONS = "Transactions";
+    public static final Class TRANSACTIONS_PANEL_CLASS =
+        	com.metamatrix.console.ui.views.transactions.TransactionsPanel.class;
     public static final String CONFIGURATION = "Configuration"; //$NON-NLS-1$
     public static final String SYS_PROPS = "System Properties"; //$NON-NLS-1$
     public static final Class SYSTEM_PROPERTIES_PANEL_CLASS =
@@ -221,12 +221,12 @@ public class PanelsTreeModel extends DefaultTreeModel {
         runtimeMMServer.add(queries);
 
         // transactions panel node
-//        PanelsTreeNode transactions = new PanelsTreeNode(TRANSACTIONS,
-//        		TRANSACTIONS_PANEL_CLASS, connection, false);
-//        transactions.setToolTipText(
-//            	"View and manage transactions that are currently being executed " 
-//            	+ "in the MetaMatrix Server");
-//        runtimeMMServer.add(transactions);
+        PanelsTreeNode transactions = new PanelsTreeNode(TRANSACTIONS,
+        		TRANSACTIONS_PANEL_CLASS, connection, false);
+        transactions.setToolTipText(
+            	"View and manage transactions that are currently being executed " 
+            	+ "in the MetaMatrix Server");
+        runtimeMMServer.add(transactions);
 
         // --------------------------------------------------------------------------------
         // setup Configuration header node
