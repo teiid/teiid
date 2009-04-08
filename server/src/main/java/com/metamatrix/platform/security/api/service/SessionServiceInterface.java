@@ -64,7 +64,6 @@ public interface SessionServiceInterface extends ServiceInterface {
                                                Credentials credentials,
                                                Serializable trustedToken,
                                                String applicationName,
-                                               String productName,
                                                Properties properties)
             throws MetaMatrixAuthenticationException, SessionServiceException;
 

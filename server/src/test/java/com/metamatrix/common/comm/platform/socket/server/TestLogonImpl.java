@@ -48,14 +48,13 @@ public class TestLogonImpl extends TestCase {
 		Properties p = new Properties();
 		p.setProperty(MMURL.CONNECTION.USER_NAME, userName);
 		p.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
-		p.setProperty(MMURL.CONNECTION.PRODUCT_NAME, productName);
 
 		MetaMatrixSessionInfo resultInfo = new MetaMatrixSessionInfo(
 				new MetaMatrixSessionID(1), userName, 0, applicationName, new Properties(),
 				"product", null, null); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Mockito.stub(ssi.createSession(userName, null, null, applicationName,
-								productName, p)).toReturn(resultInfo);
+								p)).toReturn(resultInfo);
 
 		LogonImpl impl = new LogonImpl(ssi, "fakeCluster");
 

@@ -39,7 +39,6 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
-import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.HashCodeUtil;
@@ -248,7 +247,6 @@ public class ConnectionInfo {
         properties.setProperty(MMURL.CONNECTION.USER_NAME, user);
         properties.setProperty(MMURL.CONNECTION.PASSWORD, new String(password));
         properties.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
-        properties.setProperty(MMURL.CONNECTION.PRODUCT_NAME, MetaMatrixProductNames.Platform.PRODUCT_NAME);
         properties.setProperty(MMURL.CONNECTION.SERVER_URL, mmurl.getAppServerURL());
         connection = SocketServerConnectionFactory.getInstance().createConnection(properties);
         ModelManager.clearServices(this);

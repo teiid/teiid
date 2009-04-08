@@ -30,7 +30,7 @@ import org.jdom.Element;
 
 import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
-import com.metamatrix.common.util.MetaMatrixProductNames;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.util.DateUtil;
 
 
@@ -131,7 +131,7 @@ public class XMLHelperUtil {
             defaultProperties.putAll(props);
         }
         defaultProperties.setProperty(ConfigurationPropertyNames.CONFIGURATION_VERSION, ConfigurationPropertyNames.MM_CONFIG_4_2_VERSION);        
-        defaultProperties.setProperty(ConfigurationPropertyNames.METAMATRIX_SYSTEM_VERSION, MetaMatrixProductNames.VERSION_NUMBER);
+        defaultProperties.setProperty(ConfigurationPropertyNames.METAMATRIX_SYSTEM_VERSION, ApplicationInfo.getInstance().getMajorReleaseNumber());
         defaultProperties.setProperty(ConfigurationPropertyNames.TIME, DateUtil.getCurrentDateAsString());
        
         

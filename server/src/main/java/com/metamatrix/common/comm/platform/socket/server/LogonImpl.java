@@ -72,7 +72,6 @@ public class LogonImpl implements ILogon {
         String user = connProps.getProperty(MMURL.CONNECTION.USER_NAME);
         // password may be null if using trustedToken to log on
         String password = connProps.getProperty(MMURL.CONNECTION.PASSWORD);
-		String productName = connProps.getProperty(MMURL.CONNECTION.PRODUCT_NAME);
 		Credentials credential = null;
         if (password != null) {
             credential = new Credentials(password.toCharArray());
@@ -87,7 +86,7 @@ public class LogonImpl implements ILogon {
 		try {
 			MetaMatrixSessionInfo sessionInfo = service.createSession(user,
 					credential, (Serializable) payload, applicationName,
-					productName, connProps);
+					connProps);
 			// logon
 			MetaMatrixSessionID sessionID = updateDQPContext(sessionInfo);
 			LogManager.logDetail(LogSecurityConstants.CTX_SESSION, new Object[] {

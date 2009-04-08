@@ -34,7 +34,6 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefn;
-import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.ConfigurationManager;
 import com.metamatrix.console.models.ModelManager;
@@ -131,17 +130,7 @@ public final class ConfigurationTreeCellRenderer
         } else if (userObj instanceof ConfigurationTreeModel.HostWrapper) {
             setIcon(HOST_ICON);
         } else if (userObj instanceof ProductType) {
-            ProductType product = (ProductType)userObj;
-            if (product.getName().equals(
-                MetaMatrixProductNames.Platform.PRODUCT_NAME)) {
-                setIcon(PLATFORM_ICON);
-            } else if (product.getName().equals(
-                MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME)) {
-                setIcon(METAMATRIX_SERVER_ICON);
-            } else if (product.getName().equals(
-                MetaMatrixProductNames.ConnectorProduct.PRODUCT_NAME)) {
-                setIcon(CONNECTOR_ICON);
-            }
+            setIcon(METAMATRIX_SERVER_ICON);
         } else if (userObj instanceof DeployedComponent) {
             setIcon(SERVICE_ICON);
         }

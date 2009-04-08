@@ -32,7 +32,7 @@ public class TestSessionServiceImpl extends TestCase {
 			
 		}
 		
-		MetaMatrixSessionInfo info = ssi.createSession("steve", null, null, "foo", "test", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		MetaMatrixSessionInfo info = ssi.createSession("steve", null, null, "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		id1 = info.getSessionID();
 		ssi.validateSession(id1);
 		

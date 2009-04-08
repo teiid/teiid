@@ -50,7 +50,6 @@ public class MMURL {
 	}
 
 	public static interface CONNECTION {
-		public static final String PRODUCT_NAME = "productName"; //$NON-NLS-1$
 		public static final String CLIENT_IP_ADDRESS = "clientIpAddress"; //$NON-NLS-1$
 		public static final String CLIENT_HOSTNAME = "clientHostName"; //$NON-NLS-1$
 		/**

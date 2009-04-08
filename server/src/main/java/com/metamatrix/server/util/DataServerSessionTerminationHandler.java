@@ -24,10 +24,8 @@ package com.metamatrix.server.util;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.metadata.runtime.RuntimeVDBDeleteUtility;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.security.api.service.SessionTerminationHandler;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.server.ServerPlugin;
@@ -37,15 +35,9 @@ import com.metamatrix.server.query.service.QueryServiceInterface;
  * SessionTerminationHandler implementation that cleans up all resources associated
  * with a Session on the MetaMatrix server.
  */
-public class DataServerSessionTerminationHandler implements SessionTerminationHandler {
-
-    public static final String PRODUCT_NAME = MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME;
+public class DataServerSessionTerminationHandler {
 
     private QueryServiceInterface queryServiceProxy;
-
-    public String getProductName() {
-        return PRODUCT_NAME;
-    }
 
     public void cleanup(SessionToken token) throws Exception {
 

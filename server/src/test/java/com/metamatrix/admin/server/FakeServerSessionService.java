@@ -57,7 +57,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
     
     public MetaMatrixSessionInfo createSession(String userName,
     		Credentials credentials, Serializable trustedToken,
-    		String applicationName, String productName, Properties properties)
+    		String applicationName, Properties properties)
     		throws MetaMatrixAuthenticationException, SessionServiceException {
     	return null;
     }

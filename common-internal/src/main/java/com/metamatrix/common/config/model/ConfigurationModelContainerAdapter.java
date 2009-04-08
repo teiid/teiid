@@ -37,8 +37,8 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.util.ConfigObjectsNotResolvableException;
 import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.MetaMatrixProductNames;
 
 public class ConfigurationModelContainerAdapter {
 
@@ -118,7 +118,7 @@ public class ConfigurationModelContainerAdapter {
 
             Properties props = new Properties();
             props.put(ConfigurationPropertyNames.APPLICATION_CREATED_BY, "Configuration Import_Export Utility"); //$NON-NLS-1$
-            props.put(ConfigurationPropertyNames.APPLICATION_VERSION_CREATED_BY, MetaMatrixProductNames.VERSION_NUMBER); 
+            props.put(ConfigurationPropertyNames.APPLICATION_VERSION_CREATED_BY, ApplicationInfo.getInstance().getMajorReleaseNumber()); 
             props.put(ConfigurationPropertyNames.USER_CREATED_BY, principalName);
 
             io.exportConfiguration(out, model.getAllObjects(), props);

@@ -26,10 +26,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -50,10 +46,8 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.id.dbid.DBIDController;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.MetaMatrixProductNames;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
@@ -67,7 +61,6 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.security.api.service.SessionTerminationHandler;
 import com.metamatrix.platform.security.membership.service.AuthenticationToken;
 import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.service.api.exception.ServiceException;
@@ -77,6 +70,7 @@ import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.util.ProductInfoConstants;
+import com.metamatrix.server.util.DataServerSessionTerminationHandler;
 
 /**
  * This class serves as the primary implementation of the Session Service.
@@ -88,7 +82,6 @@ public class SessionServiceImpl extends AbstractService implements
      * Comma delimited string containing a list of SessionTerminationHandlers to be called when a session
      * is terminated.
      */
-    private static final String SESSION_TERMINATION_HANDLERS = "security.session.terminationHandlers"; //$NON-NLS-1$
     private static final String MAX_ACTIVE_SESSIONS = "metamatrix.session.max.connections"; //$NON-NLS-1$
     private static final String SESSION_TIME_LIMIT = "metamatrix.session.time.limit"; //$NON-NLS-1$
     public static final String SESSION_MONITOR_ACTIVITY_INTERVAL = "metamatrix.session.sessionMonitor.ActivityInterval"; //$NON-NLS-1$
@@ -100,8 +93,7 @@ public class SessionServiceImpl extends AbstractService implements
     private long sessionMaxLimit;
     private long sessionTimeLimit;
     
-    // Product name -> ServiceTerminationHandler
-    private Map<String, SessionTerminationHandler> terminationHandlerMap = new HashMap<String, SessionTerminationHandler>();
+    private DataServerSessionTerminationHandler queryTerminationHandler = new DataServerSessionTerminationHandler();
     
     private Timer sessionMonitor;
     private DBIDController idGenerator = DBIDGenerator.getInstance();
@@ -115,13 +107,6 @@ public class SessionServiceImpl extends AbstractService implements
      */
     protected void initService(Properties env) throws Exception {
         this.membershipService = PlatformProxyHelper.getMembershipServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
-        
-        // Instantiate SessionTerminationHandlers
-        String handlerString = env.getProperty(SESSION_TERMINATION_HANDLERS);
-        if (handlerString != null && handlerString.trim().length() > 0) {
-            List handlers = StringUtil.split(handlerString, ","); //$NON-NLS-1$
-            initTerminationHandlers(handlers);
-        }
 
         CacheFactory cf = ResourceFinder.getCacheFactory();
         this.sessionCache = cf.get(Cache.Type.SESSION, new CacheConfiguration(Policy.LRU, 24*60*60, 5000));
@@ -156,22 +141,6 @@ public class SessionServiceImpl extends AbstractService implements
 		}
 	}
 
-    private void initTerminationHandlers(List handlers) {
-
-        Iterator iter = handlers.iterator();
-        while (iter.hasNext()) {
-            String handler = (String)iter.next();
-            try {
-                SessionTerminationHandler sth = (SessionTerminationHandler)Thread.currentThread().getContextClassLoader().loadClass(handler).newInstance();
-                terminationHandlerMap.put(sth.getProductName(), sth);
-            } catch (ClassNotFoundException e) {
-                LogManager.logWarning(LogSecurityConstants.CTX_SESSION,e,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0002, new Object[] {handler}));
-            } catch (Exception e) {
-                throw new ServiceException(e, ErrorMessageKeys.SEC_SESSION_0003,PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0003, handler));
-            }
-        }
-    }
-
     /**
      * Close the service to new work if applicable. After this method is called the service should no longer accept new work to
      * perform but should continue to process any outstanding work. This method is called by die().
@@ -202,22 +171,19 @@ public class SessionServiceImpl extends AbstractService implements
 		if (info == null) {
 			throw new InvalidSessionException(ErrorMessageKeys.SEC_SESSION_0027, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0027, sessionID));
 		}
-		SessionTerminationHandler handler = terminationHandlerMap.get(info.getProductName());
-        if (handler != null) {
+		if (info.getProductInfo(ProductInfoConstants.VIRTUAL_DB) != null) {
             try {
-                handler.cleanup(info.getSessionToken());
+                queryTerminationHandler.cleanup(info.getSessionToken());
             } catch (Exception e) {
-                LogManager.logWarning(LogSecurityConstants.CTX_SESSION,e,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0028, new Object[] {handler.getProductName()}));
+                LogManager.logWarning(LogSecurityConstants.CTX_SESSION,e,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0028, DataServerSessionTerminationHandler.class.getName()));
             }
-        } else {
-            LogManager.logDetail(LogSecurityConstants.CTX_SESSION,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0024, new Object[] {info.getProductName()}));
-        }
+		}
 	}
 	
 	@Override
 	public MetaMatrixSessionInfo createSession(String userName,
 			Credentials credentials, Serializable trustedToken,
-			String applicationName, String productName, Properties properties)
+			String applicationName, Properties properties)
 			throws MetaMatrixAuthenticationException, SessionServiceException {
 		ArgCheck.isNotNull(applicationName);
         ArgCheck.isNotNull(properties);
@@ -232,12 +198,15 @@ public class SessionServiceImpl extends AbstractService implements
 
         String authenticatedUserName = authenticatedToken.getUserName();
         
+        String productName = "Platform"; //$NON-NLS-1$
+        
         //
         // Validate VDB and version if logging on to server product...
         //
-        if (productName == null || productName.equals(MetaMatrixProductNames.MetaMatrixServer.PRODUCT_NAME)) {
-            String vdbName = (String)properties.get(ProductInfoConstants.VIRTUAL_DB);
-            String vdbVersion = (String)properties.get(ProductInfoConstants.VDB_VERSION);
+        String vdbName = properties.getProperty(ProductInfoConstants.VIRTUAL_DB);
+        if (vdbName != null) {
+        	productName = "Integration Server"; //$NON-NLS-1$
+            String vdbVersion = properties.getProperty(ProductInfoConstants.VDB_VERSION);
             VirtualDatabaseID vdbID = null;
             try {
                 vdbID = RuntimeMetadataCatalog.getInstance().getActiveVirtualDatabaseID(vdbName, vdbVersion);
