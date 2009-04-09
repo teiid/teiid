@@ -28,11 +28,12 @@ import java.io.InputStream;
 import java.net.URL;
 import java.security.GeneralSecurityException;
 import java.security.Key;
+import java.security.KeyStore;
 
 import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.core.util.ArgCheck;
 
@@ -44,7 +45,10 @@ public class SymmetricCryptor extends BasicCryptor {
     
     public static final String DEFAULT_SYM_KEY_ALGORITHM = "AES"; //$NON-NLS-1$
     public static final String DEFAULT_SYM_ALGORITHM = "AES/ECB/PKCS5Padding"; //$NON-NLS-1$
-    public static final int DEFAULT_KEY_BITS = 128; 
+    public static final int DEFAULT_KEY_BITS = 128;
+    public static final String DEFAULT_STORE_PASSWORD = "changeit"; //$NON-NLS-1$
+    public static final String DEFAULT_ALIAS = "cluster_key"; //$NON-NLS-1$
+    
     private static KeyGenerator keyGen;
     
     /**
@@ -59,7 +63,7 @@ public class SymmetricCryptor extends BasicCryptor {
         return new SymmetricCryptor(key);
     }
 
-	private static Key generateKey() throws CryptoException {
+	private static SecretKey generateKey() throws CryptoException {
 		try {
             synchronized(SymmetricCryptor.class) {
                 if (keyGen == null) {
@@ -82,7 +86,18 @@ public class SymmetricCryptor extends BasicCryptor {
      * @throws IOException 
      */
     public static SymmetricCryptor getSymmectricCryptor(URL keyResource) throws CryptoException, IOException {
-		return getSymmectricCryptor(loadKey(keyResource));
+		ArgCheck.isNotNull(keyResource);
+		InputStream stream = keyResource.openStream();
+		try {
+	    	KeyStore store = KeyStore.getInstance("JCEKS"); //$NON-NLS-1$
+	    	store.load(stream, DEFAULT_STORE_PASSWORD.toCharArray());
+	    	Key key = store.getKey(DEFAULT_ALIAS, DEFAULT_STORE_PASSWORD.toCharArray());
+	    	return new SymmetricCryptor(key);
+        } catch (GeneralSecurityException e) {
+            throw new CryptoException(e);
+		} finally {
+			stream.close();
+		}
     }
     
     /**
@@ -98,13 +113,23 @@ public class SymmetricCryptor extends BasicCryptor {
     }
     
     public static void generateAndSaveKey(String file) throws CryptoException, IOException {
-    	Key key = generateKey();
+    	SecretKey key = generateKey();
+    	saveKey(file, key);
+    }
+    
+    private static void saveKey(String file, SecretKey key) throws CryptoException, IOException {
+    	ArgCheck.isNotNull(file);
     	FileOutputStream fos = new FileOutputStream(file);
     	try {
-    		fos.write(key.getEncoded());
+        	KeyStore store = KeyStore.getInstance("JCEKS"); //$NON-NLS-1$
+        	store.load(null,null);
+    		store.setKeyEntry(DEFAULT_ALIAS, key, DEFAULT_STORE_PASSWORD.toCharArray(),null);
+    		store.store(fos, DEFAULT_STORE_PASSWORD.toCharArray());
+    	} catch (GeneralSecurityException e) {
+    		throw new CryptoException(e);
     	} finally {
     		fos.close();
-    	}
+    	}	
     }
     
     SymmetricCryptor(Key key) throws CryptoException {
@@ -115,17 +140,11 @@ public class SymmetricCryptor extends BasicCryptor {
         return this.decryptKey.getEncoded();
     }
     
-	private static byte[] loadKey(URL keyResource) throws IOException {
-		ArgCheck.isNotNull(keyResource);
-		InputStream stream = keyResource.openStream();
-		try {
-			return ByteArrayHelper.toByteArray(keyResource.openStream());
-		} finally {
-			stream.close();
-		}
-	}
-    
 	public static void main(String[] args) throws Exception {
-		SymmetricCryptor.generateAndSaveKey("cluster.key");
+		if (args.length != 1) {
+			System.out.println("The file to create must be supplied as the only argument."); //$NON-NLS-1$
+			System.exit(-1);
+		}
+		SymmetricCryptor.generateAndSaveKey(args[0]);
 	}
 }

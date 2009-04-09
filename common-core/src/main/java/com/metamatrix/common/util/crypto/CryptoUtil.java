@@ -28,6 +28,8 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.common.util.crypto.cipher.BasicCryptor;
 import com.metamatrix.common.util.crypto.cipher.SymmetricCryptor;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
@@ -41,17 +43,17 @@ public class CryptoUtil {
 	/**
 	* This property indicates the encryption provider, if set to none encryption is disabled.
 	*/
-	public static final String JCE_PROVIDER = "metamatrix.encryption.jce.provider"; //$NON-NLS-1$
+	public static final String ENCRYPTION_ENABLED = "teiid.encryption.enabled"; //$NON-NLS-1$
 
 	/** The name of the key. */
-	public static final String KEY_NAME = "cluster.key"; //$NON-NLS-1$
+	public static final String KEY_NAME = "teiid.keystore"; //$NON-NLS-1$
     public static final URL KEY = CryptoUtil.class.getResource("/" + KEY_NAME); //$NON-NLS-1$
-    public static final String OLD_ENCRYPT_PREFIX = "{mmencrypt}"; //$NON-NLS-1$
-    public static final String ENCRYPT_PREFIX = "{mm-encrypt}"; //$NON-NLS-1$
+    public static final String OLD_ENCRYPT_PREFIX = "{mm-encrypt}"; //$NON-NLS-1$
+    public static final String ENCRYPT_PREFIX = "{teiid-encrypt}"; //$NON-NLS-1$
     // Empty provider means encryption should be disabled
     public static final String NONE = "none"; //$NON-NLS-1$
 
-    private static boolean encryptionEnabled = !NONE.equalsIgnoreCase(System.getProperty(JCE_PROVIDER));
+    private static boolean encryptionEnabled = PropertiesUtils.getBooleanProperty(System.getProperties(), ENCRYPTION_ENABLED, true);
 
 	private static Cryptor CRYPTOR;
 
@@ -230,18 +232,20 @@ public class CryptoUtil {
     		return false;
     	}
         try {
-            if (value.startsWith(ENCRYPT_PREFIX)) {
-                try {
-                	Base64.decode(value.substring(ENCRYPT_PREFIX.length()));
+        	if (value.trim().length() == 0) {
+            	return false;
+            }
+        	String strippedValue = BasicCryptor.stripEncryptionPrefix(value);
+        	if (strippedValue.length() != value.length()) {
+        		try {
+                	Base64.decode(strippedValue);
                 } catch (IllegalArgumentException e) {
                     return false;
                 }
                 //if we have the encrypt prefix and the rest of the string is base64 encoded, then
                 //we'll assume that it's properly encrypted
                 return true;
-            } else if (value.trim().length() == 0) {
-            	return false;
-            }
+        	}
             CryptoUtil.getDecryptor().decrypt(value);
             return true;
         } catch (CryptoException err) {

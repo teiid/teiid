@@ -42,6 +42,7 @@ import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
@@ -74,7 +75,10 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
                     "pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;" + //$NON-NLS-1$
                     "shun=false;print_local_addr=true):" + //$NON-NLS-1$
                     "pbcast.STATE_TRANSFER"; //$NON-NLS-1$
-                
+    
+    private static final String ENCRYPT_ALL = ":ENCRYPT(key_store_name=teiid.keystore;store_password=changeit;alias=cluster_key)"; //$NON-NLS-1$
+    private static final String ENCRYPT_ALL_KEY = "metamatrix.encryption.internal.secure.sockets"; //$NON-NLS-1$
+    
     private static final String UDP_MCAST_SUPPORTED_PROPERTY = "udp.multicast_supported"; //$NON-NLS-1$
 	private static final String UDP_MCAST_MESSAGEBUS_PORT_PROPERTY = "udp.mcast_messagebus_port"; //$NON-NLS-1$
 	private static final String UDP_MCAST_ADDR_PROPERTY = "udp.mcast_addr"; //$NON-NLS-1$
@@ -124,7 +128,8 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 		try {
         	String properties = null;
 			Properties configProps = CurrentConfiguration.getInstance().getResourceProperties(ResourceNames.JGROUPS);
-
+			boolean useEncrypt = PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), ENCRYPT_ALL_KEY, false);
+			
 			String udpMulticastSupported =  configProps.getProperty(UDP_MCAST_SUPPORTED_PROPERTY, DEFAULT_UDP_MCAST_SUPPORTED);
 
 			String udpMulticastPort = configProps.getProperty(UDP_MCAST_MESSAGEBUS_PORT_PROPERTY, DEFAULT_UDP_MCAST_PORT);
@@ -171,6 +176,9 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 					"timeout="+pingTimeout+";num_initial_members="+pingInitialMemberCount+"):";  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
 			}
 			properties += otherSettings;
+			if (useEncrypt) {
+				properties += ENCRYPT_ALL;
+			}
 			return properties;
 			
 		} catch (ConfigurationException e) {

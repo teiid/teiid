@@ -47,7 +47,7 @@ public class HostControllerRegistryBinding implements Serializable {
     		return hostController;
     	}
     	if (this.hostControllerStub == null) {
-    		return null;
+    		throw new IllegalStateException("Cannot locate host controller.  It may need to be started or restarted if jgroups properties have changed"); //$NON-NLS-1$
     	}
     	// when exported to the remote, use remote's message bus instance.
     	MessageBus bus = this.messageBus;

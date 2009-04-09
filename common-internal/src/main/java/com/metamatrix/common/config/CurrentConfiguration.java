@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -199,12 +200,12 @@ public final class CurrentConfiguration {
      */
     public Properties getProperties() {
 		try {
-			Properties result = getReader().getConfigurationModel().getConfiguration().getProperties();
-	        Properties copyResult = PropertiesUtils.clone(result,getBootStrapProperties(),false,true);
-	        if ( !(copyResult instanceof UnmodifiableProperties) ) {
-	        	copyResult = new UnmodifiableProperties(copyResult);
-	        }
-	        return copyResult;
+			ConfigurationModelContainer cmc = getReader().getConfigurationModel();
+			ComponentTypeID id = cmc.getConfiguration().getComponentTypeID();
+			Properties result = new Properties(getBootStrapProperties());
+			PropertiesUtils.putAll(result, cmc.getDefaultPropertyValues(id));
+			PropertiesUtils.putAll(result, cmc.getConfiguration().getProperties());
+	        return new UnmodifiableProperties(result);
 		} catch (ConfigurationException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}

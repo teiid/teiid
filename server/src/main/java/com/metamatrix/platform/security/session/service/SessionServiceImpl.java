@@ -84,7 +84,6 @@ public class SessionServiceImpl extends AbstractService implements
      */
     private static final String MAX_ACTIVE_SESSIONS = "metamatrix.session.max.connections"; //$NON-NLS-1$
     private static final String SESSION_TIME_LIMIT = "metamatrix.session.time.limit"; //$NON-NLS-1$
-    public static final String SESSION_MONITOR_ACTIVITY_INTERVAL = "metamatrix.session.sessionMonitor.ActivityInterval"; //$NON-NLS-1$
 
     private static final String SESSION_ID = "SESSION_ID"; //$NON-NLS-1$
     

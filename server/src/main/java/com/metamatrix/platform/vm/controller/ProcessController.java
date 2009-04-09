@@ -259,8 +259,7 @@ public abstract class ProcessController implements ProcessManagement {
 
     	this.vmComponentDefn = deployedVM;
     	
-    	vmProps = new Properties(CurrentConfiguration.getInstance().getSystemBootStrapProperties());
-    	PropertiesUtils.putAll(vmProps, config.getConfiguration().getProperties());
+    	vmProps = new Properties(config.getConfiguration().getProperties());
     	PropertiesUtils.putAll(vmProps, host.getProperties());
     	PropertiesUtils.putAll(vmProps, config.getDefaultPropertyValues(deployedVM.getComponentTypeID()));
     	PropertiesUtils.putAll(vmProps, config.getConfiguration().getAllPropertiesForComponent(deployedVM.getID()));

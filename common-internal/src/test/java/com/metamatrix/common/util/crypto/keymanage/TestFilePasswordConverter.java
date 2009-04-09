@@ -36,8 +36,8 @@ public class TestFilePasswordConverter extends TestCase {
     private final static String INPUT_XML_FILE = UnitTestUtil.getTestDataPath() + "/keymanage/config.xml"; //$NON-NLS-1$
     private final static String INPUT_VDB_FILE = UnitTestUtil.getTestDataPath() + "/keymanage/ODBCvdb.VDB"; //$NON-NLS-1$
     
-    private final static String KEYSTORE_FILE1 = UnitTestUtil.getTestDataPath() + "/keymanage/cluster.key"; //$NON-NLS-1$
-    private final static String KEYSTORE_FILE2 = UnitTestUtil.getTestDataPath() + "/keymanage/other.key"; //$NON-NLS-1$
+    private final static String KEYSTORE_FILE1 = UnitTestUtil.getTestDataPath() + "/keymanage/teiid.keystore"; //$NON-NLS-1$
+    private final static String KEYSTORE_FILE2 = UnitTestUtil.getTestDataPath() + "/keymanage/other.keystore"; //$NON-NLS-1$
     
     private final static String TEMP_PROPERTIES = UnitTestUtil.getTestScratchPath() + "temp.properties"; //$NON-NLS-1$
     private final static String TEMP2_PROPERTIES = UnitTestUtil.getTestScratchPath() + "temp2.properties"; //$NON-NLS-1$
@@ -49,7 +49,7 @@ public class TestFilePasswordConverter extends TestCase {
     public void testConvertProperties() throws Exception {
         //convert from keystore1 to keystore2
         String inputFile = INPUT_PROPERTIES_FILE;
-        String outputFile = TEMP_PROPERTIES; //$NON-NLS-1$
+        String outputFile = TEMP_PROPERTIES; 
         String oldKeystoreFile = KEYSTORE_FILE1;
         String newKeystoreFile = KEYSTORE_FILE2;
         
@@ -69,8 +69,8 @@ public class TestFilePasswordConverter extends TestCase {
         
         
         //convert back from keystore2 to keystore1
-        inputFile = TEMP_PROPERTIES;  //$NON-NLS-1$
-        outputFile = TEMP2_PROPERTIES; //$NON-NLS-1$
+        inputFile = TEMP_PROPERTIES;  
+        outputFile = TEMP2_PROPERTIES; 
         oldKeystoreFile = KEYSTORE_FILE2;
         newKeystoreFile = KEYSTORE_FILE1;
         
@@ -92,7 +92,7 @@ public class TestFilePasswordConverter extends TestCase {
     public void testConvertXML() throws Exception {
         //convert from keystore1 to keystore2
         String inputFile = INPUT_XML_FILE;
-        String outputFile = TEMP_XML; //$NON-NLS-1$
+        String outputFile = TEMP_XML; 
         String oldKeystoreFile = KEYSTORE_FILE1;
         String newKeystoreFile = KEYSTORE_FILE2;
         
@@ -112,8 +112,8 @@ public class TestFilePasswordConverter extends TestCase {
         
         
         //convert back from keystore2 to keystore1
-        inputFile = TEMP_XML;  //$NON-NLS-1$
-        outputFile = TEMP2_XML; //$NON-NLS-1$
+        inputFile = TEMP_XML;  
+        outputFile = TEMP2_XML; 
         oldKeystoreFile = KEYSTORE_FILE2;
         newKeystoreFile = KEYSTORE_FILE1;
         
@@ -135,7 +135,7 @@ public class TestFilePasswordConverter extends TestCase {
     public void testConvertVDB() throws Exception {
         //convert from keystore1 to keystore2
         String inputFile = INPUT_VDB_FILE;
-        String outputFile = TEMP_VDB; //$NON-NLS-1$
+        String outputFile = TEMP_VDB; 
         String oldKeystoreFile = KEYSTORE_FILE1;
         String newKeystoreFile = KEYSTORE_FILE2;
         
@@ -155,8 +155,8 @@ public class TestFilePasswordConverter extends TestCase {
         
         
         //convert back from keystore2 to keystore1
-        inputFile = TEMP_VDB;  //$NON-NLS-1$
-        outputFile = TEMP2_VDB; //$NON-NLS-1$
+        inputFile = TEMP_VDB;  
+        outputFile = TEMP2_VDB; 
         oldKeystoreFile = KEYSTORE_FILE2;
         newKeystoreFile = KEYSTORE_FILE1;
         

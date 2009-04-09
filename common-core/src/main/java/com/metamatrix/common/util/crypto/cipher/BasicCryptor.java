@@ -95,10 +95,7 @@ public class BasicCryptor implements Cryptor {
             throw new CryptoException( ErrorMessageKeys.CM_UTIL_ERR_0074, CorePlugin.Util.getString(ErrorMessageKeys.CM_UTIL_ERR_0074));
         }
         
-        //strip prefix
-        if (ciphertext.startsWith(CryptoUtil.ENCRYPT_PREFIX)) {
-            ciphertext = ciphertext.substring(CryptoUtil.ENCRYPT_PREFIX.length()); 
-        }
+        ciphertext = stripEncryptionPrefix(ciphertext);
        
         // Decode the previously encoded text into bytes...
         byte[] cipherBytes = null;
@@ -112,6 +109,15 @@ public class BasicCryptor implements Cryptor {
         // Perform "standard" Java encoding and return the result
         return new String(cleartext);
     }
+
+	public static String stripEncryptionPrefix(String ciphertext) {
+        if (ciphertext.startsWith(CryptoUtil.ENCRYPT_PREFIX)) {
+            ciphertext = ciphertext.substring(CryptoUtil.ENCRYPT_PREFIX.length()); 
+        } else if (ciphertext.startsWith(CryptoUtil.OLD_ENCRYPT_PREFIX)) {
+        	ciphertext = ciphertext.substring(CryptoUtil.OLD_ENCRYPT_PREFIX.length());
+        }
+		return ciphertext;
+	}
 
     /**
      * Initialize the ciphers used for encryption and decryption.  The ciphers
