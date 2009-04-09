@@ -150,7 +150,7 @@ public class TestQueueWorkerPool {
     	}, 0, 5, TimeUnit.MILLISECONDS);
     	Thread.sleep(99);
     	future.cancel(true);
-    	assertEquals(10, result.size());
+    	assertTrue(result.size() > 8 && result.size() < 12);
     }
     
     @Test public void testFailingWork() throws Exception {
