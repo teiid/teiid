@@ -41,11 +41,12 @@ import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
  */
 public class ExtensionModuleWriter {
     
-    public static void write(ExtensionModule extModule, URL extModuleURL) throws MetaMatrixComponentException {
+    public static void write(ExtensionModule extModule, URL[] contexts) throws MetaMatrixComponentException {
         OutputStream out = null;
         try {
-            String extFile = extModuleURL.toString()+"?action=write"; //$NON-NLS-1$
-            extModuleURL = URLHelper.buildURL(extFile);
+            String extFile = extModule.getFullName()+"?action=write"; //$NON-NLS-1$
+            // NOTE: only write to the very first context.
+            URL extModuleURL = URLHelper.buildURL(contexts[0], extFile);
                         
             URLConnection conn = extModuleURL.openConnection();
             out =  conn.getOutputStream();
@@ -65,27 +66,38 @@ public class ExtensionModuleWriter {
      * @param extModule
      * @since 4.3
      */
-    public static void deleteModule(URL extModuleURL) throws MetaMatrixComponentException{
-        String extensionPath = extModuleURL.toString()+"?action=delete"; //$NON-NLS-1$
+    public static void deleteModule(String extModuleName, URL[] contexts) throws MetaMatrixComponentException{
 
+        URL extModuleURL = null;
+		try {
+			extModuleURL = ExtensionModuleReader.resolveExtensionModule(ExtensionModuleReader.MM_JAR_PROTOCOL+":"+extModuleName, contexts); //$NON-NLS-1$
+			if (extModuleURL == null) {
+				throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("ExtensionModuleReader.ext_module_does_not_exist", extModuleName)); //$NON-NLS-1$
+			}
+		} catch (IOException e) {
+			throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("ExtensionModuleReader.ext_module_does_not_exist", extModuleName)); //$NON-NLS-1$
+		}
+        
+        String extFile = extModuleURL.toString()+"?action=delete"; //$NON-NLS-1$
+        
         InputStream in = null;
         try {
-            extModuleURL = URLHelper.buildURL(extensionPath);        
+            extModuleURL = URLHelper.buildURL(extFile);        
             in = extModuleURL.openStream();
             if (in != null) {
                 // now delete file from the extensions directory..        
                 throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("ExtensionModuleWriter.ext_module_delete_failed", new Object[] {extModuleURL})); //$NON-NLS-1$
             }
-            DQPEmbeddedPlugin.logInfo("ExtensionModuleWriter.ext_module_delete", new Object[] {extModuleURL.getPath(), extModuleURL}); //$NON-NLS-1$
+            DQPEmbeddedPlugin.logInfo("ExtensionModuleWriter.ext_module_delete", new Object[] {extModuleName, extModuleURL}); //$NON-NLS-1$
         }catch(FileNotFoundException e) {
             // this is what we should expect if open the stream.
-            DQPEmbeddedPlugin.logInfo("ExtensionModuleWriter.ext_module_delete", new Object[] {extModuleURL.getPath(), extModuleURL}); //$NON-NLS-1$                                    
+            DQPEmbeddedPlugin.logInfo("ExtensionModuleWriter.ext_module_delete", new Object[] {extModuleName, extModuleURL}); //$NON-NLS-1$                                    
         }catch(IOException e) {
             throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("ExtensionModuleWriter.ext_module_delete_failed", new Object[] {extModuleURL})); //$NON-NLS-1$            
         } finally {
             if (in != null) {
                 try {in.close();}catch(IOException e) {}
             }
-        }        
+        }
     }                                              
 }

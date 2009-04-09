@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
@@ -362,21 +363,24 @@ public final class EmbeddedDriver extends BaseDriver {
             
             // a non-delegating class loader will be created from where all third party dependent jars can be loaded
             ArrayList<URL> runtimeClasspath = new ArrayList<URL>();
+            String libLocation = info.getProperty("dqp.lib", "./lib/"); //$NON-NLS-1$ //$NON-NLS-2$
+            if (!libLocation.endsWith("/")) { //$NON-NLS-1$
+            	libLocation = libLocation + "/"; //$NON-NLS-1$
+            }
 
             // find jars in the "lib" directory; patches is reverse alpaha and not case sensitive so small letters then capitals
             if (!EmbeddedDriver.getDefaultConnectionURL().equals(dqpURL.toString())) {
-	            runtimeClasspath.addAll(libClassPath(dqpURL, "lib/patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
-	            runtimeClasspath.addAll(libClassPath(dqpURL, "lib/", MMURLConnection.DATE)); //$NON-NLS-1$
+	            runtimeClasspath.addAll(libClassPath(dqpURL, libLocation+"patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
+	            runtimeClasspath.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
             }
             
             URL[] dqpClassPath = runtimeClasspath.toArray(new URL[runtimeClasspath.size()]);
-            this.classLoader = new NonDelegatingClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
+            this.classLoader = new URLClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_classpath"); //$NON-NLS-1$
             DriverManager.println(logMsg);
             for (int i = 0; i < dqpClassPath.length; i++) {
                 DriverManager.println(dqpClassPath[i].toString());
             }
-            
             
             // Now using this class loader create the connection factory to the dqp.            
             ClassLoader current = null;            

@@ -22,6 +22,8 @@
 
 package com.metamatrix.dqp.embedded.services;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,8 +41,10 @@ import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingID;
+import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.config.model.BasicConnectorBindingType;
+import com.metamatrix.common.config.model.BasicExtensionModule;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -128,7 +132,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
         Properties p = EmbeddedTestUtil.getProperties(); 
         p.remove(DQPEmbeddedProperties.DQP_EXTENSIONS);
         service.userPreferences = p;        
-        assertTrue(service.getDefaultExtensionPath().toString().endsWith("dqp/extensions/")); //$NON-NLS-1$
+        assertTrue(service.getExtensionPath()[0].toString().endsWith("dqp/extensions/")); //$NON-NLS-1$
     }
     
     public void testGetDirectoryToStoreVDBS() throws Exception {
@@ -320,11 +324,39 @@ public class TestEmbeddedConfigurationService extends TestCase {
         assertNotNull(service.getSystemVdb());
     }
     
-    public void testGetUDFFileName() throws Exception{
+    public void testUDF() throws Exception{
         Properties p = EmbeddedTestUtil.getProperties(); 
-        p.setProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS, "./lib/foo.txt"); //$NON-NLS-1$
+        p.setProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS, "extensionjar:foo.xmi"); //$NON-NLS-1$
+        p.setProperty("dqp.extensions", "./foo/;./bar/"); //$NON-NLS-1$ //$NON-NLS-2$
         service.userPreferences = p;
-        assertTrue(service.getUDFFile().toString().endsWith(UnitTestUtil.getTestScratchPath()+"/dqp/lib/foo.txt")); //$NON-NLS-1$
+        
+        assertNull(service.getUDFFile());
+        
+        File f = new File("target/scratch/dqp/bar"); //$NON-NLS-1$
+        f.mkdirs();
+        File xmiFile = new File("target/scratch/dqp/bar/foo.xmi"); //$NON-NLS-1$
+        FileWriter fw = new FileWriter(xmiFile); 
+        fw.write("testing extension modules"); //$NON-NLS-1$
+        fw.flush();
+        fw.close();
+        
+        
+        assertTrue(service.getUDFFile().toString().endsWith(UnitTestUtil.getTestScratchPath()+"/dqp/bar/foo.xmi")); //$NON-NLS-1$
+        
+        p.setProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS, xmiFile.toURL().toString());
+        assertEquals(xmiFile.toURL().toString(), service.getUDFFile().toString()); 
+        
+        xmiFile.delete();
+        
+        // now look for the default
+        p.remove(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS);
+        assertNull(service.getUDFFile());
+
+        service.saveExtensionModule(new BasicExtensionModule(ConfigurationService.USER_DEFINED_FUNCTION_MODEL, "adding extension module", "xmi", "testing extension modules".getBytes())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$        
+        
+        assertTrue(service.getUDFFile().toString().endsWith("/dqp/foo/"+ConfigurationService.USER_DEFINED_FUNCTION_MODEL)); //$NON-NLS-1$
+        
+        f.delete();
     }
     
     public void testGetVDBs() throws Exception{
@@ -460,5 +492,66 @@ public class TestEmbeddedConfigurationService extends TestCase {
         
         assertEquals(23, service.loadedConnectorTypes.size());
     }
+    
+    public void testUseMultipleExtensionPath()  throws Exception {
+        Properties p = EmbeddedTestUtil.getProperties();
+        p.setProperty("dqp.extensions", "/foo/;../x/bar/"); //$NON-NLS-1$ //$NON-NLS-2$
+        service.userPreferences = p;        
+        assertEquals("mmfile:/foo/", service.getExtensionPath()[0].toExternalForm()); //$NON-NLS-1$
+        assertEquals("mmfile:target/scratch/x/bar/", service.getExtensionPath()[1].toExternalForm()); //$NON-NLS-1$
+    }    
+    
+    public void testGetExtensionModule()  throws Exception {
+        Properties p = EmbeddedTestUtil.getProperties();
+        
+        File f = new File("target/scratch/dqp/bar"); //$NON-NLS-1$
+        f.mkdirs();
+        FileWriter fw = new FileWriter("target/scratch/dqp/bar/extfile.jar"); //$NON-NLS-1$
+        fw.write("testing extension modules"); //$NON-NLS-1$
+        fw.flush();
+        fw.close();
+        
+        p.setProperty("dqp.extensions", "./foo/;./bar/"); //$NON-NLS-1$ //$NON-NLS-2$
+        service.userPreferences = p;
+        
+        // get all the modules in the system.
+        List<ExtensionModule> modules = service.getExtensionModules();
+        assertEquals("extfile.jar", modules.get(0).getID().getFullName()); //$NON-NLS-1$
+        assertEquals("testing extension modules", new String(modules.get(0).getFileContents())); //$NON-NLS-1$
+        
+        // get individual module
+        ExtensionModule m = service.getExtensionModule("extfile.jar"); //$NON-NLS-1$
+        assertEquals("testing extension modules", new String(m.getFileContents())); //$NON-NLS-1$
+        
+        // test adding of the extension module
+        service.saveExtensionModule(new BasicExtensionModule("added-ext.jar", "adding extension module", "jar", "testing extension modules".getBytes())); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        modules = service.getExtensionModules();
+        assertEquals(2, modules.size());
+        
+        m = service.getExtensionModule("added-ext.jar"); //$NON-NLS-1$
+        assertEquals("testing extension modules", new String(m.getFileContents())); //$NON-NLS-1$
+        
+        modules = service.getExtensionModules();
+        assertEquals(2,  modules.size()); 
+                
+        // test common class path; also makes sure that the conect in position (1) has the newly added module
+        service.userPreferences.setProperty("dqp.extension.CommonClasspath", "extensionjar:added-ext.jar;extensionjar:extfile.jar"); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("mmfile:target/scratch/dqp/foo/added-ext.jar", service.getCommonExtensionClasspath().get(0).toString()); //$NON-NLS-1$
+        assertEquals("mmfile:target/scratch/dqp/bar/extfile.jar", service.getCommonExtensionClasspath().get(1).toString()); //$NON-NLS-1$
+        
+        // test delete 
+        service.deleteExtensionModule("added-ext.jar"); //$NON-NLS-1$
+        modules = service.getExtensionModules();
+        assertEquals(1,  modules.size()); 
+        
+        // test for non-existent module
+        try {
+			m = service.getExtensionModule("added-ext.jar"); //$NON-NLS-1$
+			fail("must have failed to find"); //$NON-NLS-1$
+		} catch (MetaMatrixComponentException e) {
+		}
+		
+		f.delete();
+    }      
     
 }
