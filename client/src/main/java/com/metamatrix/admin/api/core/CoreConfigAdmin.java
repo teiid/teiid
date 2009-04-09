@@ -24,6 +24,7 @@ package com.metamatrix.admin.api.core;
 
 import java.util.Properties;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.AdminOptions;
@@ -32,6 +33,7 @@ import com.metamatrix.admin.api.objects.ConnectorType;
 import com.metamatrix.admin.api.objects.ExtensionModule;
 import com.metamatrix.admin.api.objects.LogConfiguration;
 import com.metamatrix.admin.api.objects.VDB;
+import com.metamatrix.admin.api.server.AdminRoles;
 
 
 /**
@@ -41,6 +43,7 @@ import com.metamatrix.admin.api.objects.VDB;
  * this administration is common to both the MetaMatrix server and MM Query.</p>
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
 public interface CoreConfigAdmin {
 
     /**
@@ -259,6 +262,7 @@ public interface CoreConfigAdmin {
      *             if there's a system error.
      * @since 4.3
      */
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_READONLY)
     LogConfiguration getLogConfiguration() throws AdminException;
 
     /**

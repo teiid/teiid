@@ -24,7 +24,6 @@ package com.metamatrix.platform.admin.api;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
@@ -282,23 +281,6 @@ public interface ConfigurationAdminAPI extends SubSystemAdminAPI {
      */
     Set executeTransaction(List actions)
     throws ModificationException, ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
-
-    /**
-     * Add a host to the Configuration 
-     * 
-     * @param hostName String name of Host to add to Configuration
-     * @param properties
-     * @return Host 
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @throws InvalidSessionException if there is not a valid administrative session
-     * @throws AuthorizationException if the administrator does not have privileges to use this method
-     * @throws MetaMatrixComponentException if a general remote system problem occurred
-     * @since 4.3
-     */
-    Host addHost(String hostName, Properties properties) 
-    throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException;
-    
-    
 
     /**
      * Check whether the encrypted properties for the specified ComponentDefns can be decrypted.

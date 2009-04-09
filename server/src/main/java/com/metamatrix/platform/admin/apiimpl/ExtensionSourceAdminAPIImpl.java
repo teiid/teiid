@@ -25,6 +25,7 @@ package com.metamatrix.platform.admin.apiimpl;
 import java.util.Collection;
 import java.util.List;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -38,7 +39,8 @@ import com.metamatrix.common.extensionmodule.exception.InvalidExtensionModuleTyp
 import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
 import com.metamatrix.platform.security.api.SessionToken;
 
-public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implements ExtensionSourceAdminAPI {
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_READONLY)
+public class ExtensionSourceAdminAPIImpl implements ExtensionSourceAdminAPI {
 
     private ExtensionModuleManager extensionSourceManager;
     private static ExtensionSourceAdminAPI extensionSourceAdminAPI;
@@ -46,11 +48,11 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
     /**
      * ctor
      */
-    private ExtensionSourceAdminAPIImpl() throws MetaMatrixComponentException {
+    private ExtensionSourceAdminAPIImpl() {
         
     }
 
-    public synchronized static ExtensionSourceAdminAPI getInstance() throws MetaMatrixComponentException {
+    public synchronized static ExtensionSourceAdminAPI getInstance() {
         if (extensionSourceAdminAPI == null) {
             extensionSourceAdminAPI = new ExtensionSourceAdminAPIImpl();
         }
@@ -92,10 +94,10 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized ExtensionModuleDescriptor addSource(String type, String sourceName, byte[] source, String description, boolean enabled)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public ExtensionModuleDescriptor addSource(String type, String sourceName, byte[] source, String description, boolean enabled)
     throws InvalidSessionException, AuthorizationException, DuplicateExtensionModuleException, InvalidExtensionModuleTypeException, MetaMatrixComponentException{
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ExtensionSourceAdminAPIImpl.addSource(" + type + ", " + sourceName + ", " + source + ", " + description + ", " + enabled + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+        SessionToken token = AdminAPIHelper.validateSession();
         return getExtensionSourceManager().addSource(token.getUsername(), type, sourceName, source, description, enabled);
     }
 
@@ -109,10 +111,10 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized void removeSource(String sourceName)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public void removeSource(String sourceName)
     throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ExtensionSourceAdminAPIImpl.removeSource(" + sourceName + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token = AdminAPIHelper.validateSession();
         getExtensionSourceManager().removeSource(token.getUsername(), sourceName);
     }
 
@@ -126,10 +128,8 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized Collection getSourceTypes()
+    public Collection getSourceTypes()
     throws InvalidSessionException, AuthorizationException, MetaMatrixComponentException{
-//        SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
         return getExtensionSourceManager().getSourceTypes();
     }
 
@@ -143,10 +143,8 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized List getSourceNames()
+    public List getSourceNames()
     throws InvalidSessionException, AuthorizationException, MetaMatrixComponentException{
-//        SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
         return getExtensionSourceManager().getSourceNames();
     }
 
@@ -160,10 +158,8 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized List getSourceDescriptors()
+    public List getSourceDescriptors()
     throws InvalidSessionException, AuthorizationException, MetaMatrixComponentException{
-//        SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
         return getExtensionSourceManager().getSourceDescriptors();
     }
 
@@ -180,10 +176,10 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized ExtensionModuleDescriptor getSourceDescriptor(String sourceName)
+    public ExtensionModuleDescriptor getSourceDescriptor(String sourceName)
     throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException{
 //        SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         return getExtensionSourceManager().getSourceDescriptor(sourceName);
     }
 
@@ -204,10 +200,10 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized List setSearchOrder(List sourceNames)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public List setSearchOrder(List sourceNames)
     throws InvalidSessionException, AuthorizationException, ExtensionModuleOrderingException, MetaMatrixComponentException{
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ExtensionSourceAdminAPIImpl.setSearchOrder(" + sourceNames + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token = AdminAPIHelper.validateSession();
         return getExtensionSourceManager().setSearchOrder(token.getUsername(), sourceNames);
     }
 
@@ -228,29 +224,11 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized List setEnabled(Collection sourceNames, boolean enabled)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public List setEnabled(Collection sourceNames, boolean enabled)
     throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ExtensionSourceAdminAPIImpl.setEnabled(" + sourceNames + ", " + enabled + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken token = AdminAPIHelper.validateSession();
         return getExtensionSourceManager().setEnabled(token.getUsername(), sourceNames, enabled);
-    }
-
-    /**
-     * Retrieves an extension source in byte[] form
-     * @param sourceName name (e.g. filename) of extension source
-     * @return actual contents of source in byte[] array form
-     * @throws InvalidSessionException if there is not a valid administrative session
-     * @throws AuthorizationException if the administrator does not have privileges to use this method
-     * @throws ExtensionSourceNotFoundException if no extension source with
-     * name sourceName can be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     */
-    public synchronized byte[] getSource(String sourceName)
-    throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException{
-//        SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
-        return getExtensionSourceManager().getSource(sourceName);
     }
 
     /**
@@ -266,10 +244,10 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized ExtensionModuleDescriptor setSource(String sourceName, byte[] source)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public ExtensionModuleDescriptor setSource(String sourceName, byte[] source)
     throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ExtensionSourceAdminAPIImpl.setSource(" + sourceName + ", " + source + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken token = AdminAPIHelper.validateSession();
         return getExtensionSourceManager().setSource(token.getUsername(), sourceName, source);
     }
 
@@ -284,10 +262,10 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized ExtensionModuleDescriptor setSourceName(String sourceName, String newName)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public ExtensionModuleDescriptor setSourceName(String sourceName, String newName)
     throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ExtensionSourceAdminAPIImpl.setSourceName(" + sourceName + ", " + newName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken token = AdminAPIHelper.validateSession();
         return getExtensionSourceManager().setSourceName(token.getUsername(), sourceName, newName);
     }
 
@@ -303,10 +281,10 @@ public class ExtensionSourceAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    public synchronized ExtensionModuleDescriptor setSourceDescription(String sourceName, String description)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public ExtensionModuleDescriptor setSourceDescription(String sourceName, String description)
     throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException{
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ExtensionSourceAdminAPIImpl.setSourceDescription(" + sourceName + ", " + description + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken token = AdminAPIHelper.validateSession();
         return getExtensionSourceManager().setSourceDescription(token.getUsername(), sourceName, description);
     }
 

@@ -26,7 +26,9 @@ import java.lang.reflect.Method;
 
 import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
@@ -53,6 +55,9 @@ public class ExceptionUtil {
 				return new MetaMatrixComponentException(exception);	
 			}
 			if (AdminException.class.isAssignableFrom(exceptionClasses[i])) {
+				if (exception instanceof MetaMatrixProcessingException) {
+					return new AdminProcessingException(exception);
+				}
 	        	return new AdminComponentException(exception);
 			}
 			canThrowXATransactionException |= XATransactionException.class.isAssignableFrom(exceptionClasses[i]);

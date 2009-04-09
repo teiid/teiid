@@ -20,24 +20,17 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.admin.apiimpl;
+package com.metamatrix.admin;
 
-import org.teiid.dqp.internal.process.DQPWorkContext;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import com.metamatrix.platform.admin.api.SubSystemAdminAPI;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
-
-/**
- * Base class for subsystem administrative API implementations.
- */
-public abstract class SubSystemAdminAPIImpl implements SubSystemAdminAPI {
-
-	/**
-     * Get The <code>MetaMatrixSessionID</code> for this Connection
-     * @return this Session ID
-     */
-    protected MetaMatrixSessionID getSessionID() {
-    	return DQPWorkContext.getWorkContext().getSessionId();
-    }
+@Documented
+@Retention(value=RetentionPolicy.RUNTIME)
+@Target(value={ElementType.TYPE,ElementType.METHOD})
+public @interface RolesAllowed {
+	String[] value();
 }
-

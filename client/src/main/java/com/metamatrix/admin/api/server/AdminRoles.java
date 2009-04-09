@@ -73,5 +73,7 @@ public class AdminRoles {
         public static final String ADMIN_PRODUCT                = "Admin.ProductAdmin"; //$NON-NLS-1$
         /** Read-only admin role name */
         public static final String ADMIN_READONLY               = "Admin.ReadOnlyAdmin"; //$NON-NLS-1$
+        
+        public static final String ANONYMOUS 					= "Anonymous"; //$NON-NLS-1$ 
     }
 }

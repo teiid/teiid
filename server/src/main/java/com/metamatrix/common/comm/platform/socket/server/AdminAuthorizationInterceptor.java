@@ -25,22 +25,24 @@ package com.metamatrix.common.comm.platform.socket.server;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.server.ServerAdmin;
-import com.metamatrix.admin.util.AdminMethodRoleResolver;
-import com.metamatrix.api.exception.ComponentNotFoundException;
+import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.AuthorizationException;
+import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.platform.admin.apiimpl.IAdminHelper;
 import com.metamatrix.platform.security.api.SessionToken;
+import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 
 /**
  * Call authorization service to make sure the current admin user has the
@@ -48,10 +50,10 @@ import com.metamatrix.platform.security.api.SessionToken;
  */
 public class AdminAuthorizationInterceptor implements InvocationHandler {
 	
-    private final IAdminHelper authorizationService;
-    private final AdminMethodRoleResolver methodNames;
-    private final ServerAdmin serverAdmin;
-    
+    private final Object service;
+    private AuthorizationServiceInterface authAdmin;
+
+
     /**
      * Ctor. 
      * @param securityContextFactory
@@ -60,14 +62,10 @@ public class AdminAuthorizationInterceptor implements InvocationHandler {
      * @since 4.3
      */
     public AdminAuthorizationInterceptor(
-            IAdminHelper authorizationService,
-            AdminMethodRoleResolver methodNames, ServerAdmin serverAdmin) {
-
+    		AuthorizationServiceInterface authorizationService, Object service) {
         ArgCheck.isNotNull(authorizationService);
-        ArgCheck.isNotNull(methodNames);
-        this.authorizationService = authorizationService;
-        this.methodNames = methodNames;
-        this.serverAdmin = serverAdmin;
+        this.authAdmin = authorizationService;
+        this.service = service;
     }
 
     /**
@@ -80,43 +78,56 @@ public class AdminAuthorizationInterceptor implements InvocationHandler {
      */
     public Object invoke(Object proxy, Method method, Object[] args)
 	throws Throwable {
-        // Validate user's admin session is active
         SessionToken adminToken = DQPWorkContext.getWorkContext().getSessionToken();
 
-		// Verify that the admin user is authorized to perform the given operation
-		String requiredRoleName = methodNames.getRoleNameForMethod(method.getName());
-		
-		if (!AdminMethodRoleResolver.ANONYMOUS_ROLE.equals(requiredRoleName)) {
-            
-            Object[] msgParts = null;
-            boolean msgWillBeRecorded = LogManager.isMessageToBeRecorded(PlatformAdminConstants.CTX_AUDIT_ADMIN, MessageLevel.INFO);
-            if (msgWillBeRecorded) {
-                msgParts = buildAuditMessage(adminToken, requiredRoleName, method);
-                LogManager.logInfo(PlatformAdminConstants.CTX_AUDIT_ADMIN,
-                                       CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_Audit_request", msgParts)); //$NON-NLS-1$
-            }
+    	Method serviceMethod = service.getClass().getMethod(method.getName(), method.getParameterTypes());
+    	RolesAllowed allowed = serviceMethod.getAnnotation(RolesAllowed.class);
+        if (allowed == null) {
+        	allowed = method.getAnnotation(RolesAllowed.class);
+        	if (allowed == null) {
+        		allowed = serviceMethod.getDeclaringClass().getAnnotation(RolesAllowed.class);
+        		if (allowed == null) {
+            		allowed = method.getDeclaringClass().getAnnotation(RolesAllowed.class);
+                }
+        	}
+        }
+        if (allowed == null || allowed.value() == null) {
+        	throw new MetaMatrixRuntimeException("Could not determine roles allowed for admin method"); //$NON-NLS-1$
+        }
 
-            try {
-                authorizationService.checkForRequiredRole(adminToken, requiredRoleName);
-                LogManager.logInfo(PlatformAdminConstants.CTX_AUDIT_ADMIN, CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_granted", msgParts)); //$NON-NLS-1$
-            } catch (AuthorizationException err) {
-                if ( msgParts == null ) {
-                    msgParts = buildAuditMessage(adminToken, requiredRoleName, method);
+        boolean authorized = false;
+        boolean msgWillBeRecorded = LogManager.isMessageToBeRecorded(PlatformAdminConstants.CTX_AUDIT_ADMIN, MessageLevel.INFO);
+        Object[] msgParts = null;
+        if (msgWillBeRecorded) {
+        	msgParts = buildAuditMessage(adminToken, Arrays.toString(allowed.value()), method);
+        	LogManager.logInfo(PlatformAdminConstants.CTX_AUDIT_ADMIN,
+                                   CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_Audit_request", msgParts)); //$NON-NLS-1$
+        }
+
+        for (int i = 0; i < allowed.value().length; i++) {
+        	String requiredRoleName = allowed.value()[i];
+			if (AdminRoles.RoleName.ANONYMOUS.equalsIgnoreCase(requiredRoleName)) {
+				authorized = true;
+				break;
+			}
+	            
+            if (authAdmin.isCallerInRole(adminToken, requiredRoleName)) {
+            	authorized = true;
+                if (msgWillBeRecorded) {
+                	LogManager.logInfo(PlatformAdminConstants.CTX_AUDIT_ADMIN, CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_granted", msgParts)); //$NON-NLS-1$
                 }
-                String errMsg = CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_not_authorized", msgParts); //$NON-NLS-1$
-                LogManager.logWarning(PlatformAdminConstants.CTX_AUDIT_ADMIN, errMsg);
-                throw new AdminProcessingException(errMsg);
-            } catch (ComponentNotFoundException err) {
-                if ( msgParts == null ) {
-                    msgParts = buildAuditMessage(adminToken, requiredRoleName, method);
-                }
-                String errMsg = CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_not_authorized", msgParts); //$NON-NLS-1$
-                LogManager.logWarning(PlatformAdminConstants.CTX_AUDIT_ADMIN, errMsg);
-                throw new AdminProcessingException(errMsg);
+            	break;
             }
         }
+        if (!authorized) {
+        	if (msgParts == null) {
+        		msgParts = buildAuditMessage(adminToken, Arrays.toString(allowed.value()), method);
+        	}
+            String errMsg = CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_not_authorized", msgParts); //$NON-NLS-1$
+            throw ExceptionUtil.convertException(method, new AuthorizationException(errMsg));
+        }
         try {
-        	return method.invoke(this.serverAdmin, args);
+        	return method.invoke(service, args);
         } catch (InvocationTargetException e) {
         	throw e.getTargetException();
         }

@@ -186,20 +186,6 @@ public interface ExtensionSourceAdminAPI extends SubSystemAdminAPI {
     throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException;
 
     /**
-     * Retrieves an extension source in byte[] form
-     * @param sourceName name (e.g. filename) of extension source
-     * @return actual contents of source in byte[] array form
-     * @throws InvalidSessionException if there is not a valid administrative session
-     * @throws AuthorizationException if the administrator does not have privileges to use this method
-     * @throws ExtensionSourceNotFoundException if no extension source with
-     * name sourceName can be found
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     */
-    byte[] getSource(String sourceName)
-    throws InvalidSessionException, AuthorizationException, ExtensionModuleNotFoundException, MetaMatrixComponentException;
-
-    /**
      * Updates the indicated extension source
      * @param sourceName name (e.g. filename) of extension source
      * @param source actual contents of source

@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -64,7 +65,6 @@ import com.metamatrix.platform.admin.api.EntitlementMigrationReport;
 import com.metamatrix.platform.admin.api.PermissionDataNode;
 import com.metamatrix.platform.admin.apiimpl.AdminAPIHelper;
 import com.metamatrix.platform.admin.apiimpl.PermissionDataNodeImpl;
-import com.metamatrix.platform.admin.apiimpl.SubSystemAdminAPIImpl;
 import com.metamatrix.platform.security.api.AuthorizationPolicyID;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -74,7 +74,8 @@ import com.metamatrix.server.admin.api.MaterializationLoadScripts;
 import com.metamatrix.server.admin.api.RuntimeMetadataAdminAPI;
 import com.metamatrix.server.admin.api.ServerAdminLogConstants;
 
-public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implements RuntimeMetadataAdminAPI {
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_READONLY)
+public class RuntimeMetadataAdminAPIImpl implements RuntimeMetadataAdminAPI {
 
 
     
@@ -84,11 +85,11 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * ctor
      * Only defined here so that it doesn't get generated.
      */
-    private RuntimeMetadataAdminAPIImpl() throws MetaMatrixComponentException {
+    private RuntimeMetadataAdminAPIImpl() {
         
     }
 
-    public synchronized static RuntimeMetadataAdminAPI getInstance() throws MetaMatrixComponentException {
+    public synchronized static RuntimeMetadataAdminAPI getInstance() {
         if (runtimeMetadataAdminAPI == null) {
             runtimeMetadataAdminAPI = new RuntimeMetadataAdminAPIImpl();
         }
@@ -106,14 +107,12 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized void updateVirtualDatabase(VirtualDatabase vdb)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+    public void updateVirtualDatabase(VirtualDatabase vdb)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        SessionToken callerToken = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.updateVirtualDatabase(" + vdb.getID() + ")"); //$NON-NLS-1$ //$NON-NLS-2$
-
+        SessionToken callerToken = AdminAPIHelper.validateSession();
         RuntimeMetadataCatalog.getInstance().updateVirtualDatabase(vdb, callerToken.getUsername());
     }
 
@@ -128,13 +127,12 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while updating vdb.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized void markVDBForDelete(VirtualDatabaseID vdbID)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+    public void markVDBForDelete(VirtualDatabaseID vdbID)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        SessionToken callerToken = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.markVDBForDelete(" + vdbID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken callerToken = AdminAPIHelper.validateSession();
 
         // Get VDB's current state
         VirtualDatabase theVDB = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
@@ -175,11 +173,11 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized Map migrateConnectorBindingNames(VirtualDatabase sourceVDB, VDBDefn vdb)
+    public Map migrateConnectorBindingNames(VirtualDatabase sourceVDB, VDBDefn vdb)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
 
 
         Map modelNameToRoutingIDs = new HashMap();
@@ -243,14 +241,13 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized void setConnectorBindingNames(VirtualDatabaseID vdbID,
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+    public void setConnectorBindingNames(VirtualDatabaseID vdbID,
                                                       Map modelAndCBNames)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        SessionToken callerToken = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.setConnectorBindingNames(" + vdbID + ", " + modelAndCBNames + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken callerToken = AdminAPIHelper.validateSession();
 
         RuntimeMetadataCatalog.getInstance().setConnectorBindingNames(vdbID, modelAndCBNames, callerToken.getUsername());
     }
@@ -265,10 +262,10 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized Collection getVDBsForConnectorBinding(String routingID)
+    public Collection getVDBsForConnectorBinding(String routingID)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
 
         Collection VDBs = new HashSet();
@@ -307,11 +304,11 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized VirtualDatabase getVirtualDatabase(VirtualDatabaseID vdbID)
+    public VirtualDatabase getVirtualDatabase(VirtualDatabaseID vdbID)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
 
         return RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
@@ -328,11 +325,11 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs during retrieval process.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized VirtualDatabase getLatestVirtualDatabase(String vdbName)
+    public VirtualDatabase getLatestVirtualDatabase(String vdbName)
     throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
 	    // Validate caller's session
-	    AdminAPIHelper.validateSession(getSessionID());
+	    AdminAPIHelper.validateSession();
 	    // Any administrator may call this read-only method - no need to validate role
 	
 	    VirtualDatabaseID vdbId = RuntimeMetadataCatalog.getInstance().getVirtualDatabaseID(vdbName, null);
@@ -351,11 +348,11 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized Collection getVirtualDatabases()
+    public Collection getVirtualDatabases()
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
 
         return RuntimeMetadataCatalog.getInstance().getVirtualDatabases();
@@ -374,11 +371,11 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws AuthorizationException if caller is not authorized to perform this method.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized Collection getVDBModels(VirtualDatabaseID vdbID)
+    public Collection getVDBModels(VirtualDatabaseID vdbID)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
 
         ArrayList models = new ArrayList(RuntimeMetadataCatalog.getInstance().getModels(vdbID));
@@ -432,13 +429,12 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized void setVDBState(VirtualDatabaseID vdbID, short state)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+    public void setVDBState(VirtualDatabaseID vdbID, short state)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        SessionToken callerToken = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.setVDBState(" + vdbID + ", " + state + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken callerToken = AdminAPIHelper.validateSession();
 
         // Get VDB's current state
         VirtualDatabase theVDB = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
@@ -527,13 +523,12 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws AuthorizationException if admninistrator does not have the authority to perform the requested operation.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
-    public synchronized EntitlementMigrationReport migrateEntitlements(VirtualDatabase sourceVDB,
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+    public EntitlementMigrationReport migrateEntitlements(VirtualDatabase sourceVDB,
                                                                           VirtualDatabase targetVDB)
         throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.migrateEntitlements(" + sourceVDB.getID() + ", " + targetVDB.getID() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken token = AdminAPIHelper.validateSession();
 
         return RuntimeMetadataHelper.migrateEntitlements(sourceVDB, targetVDB, token);
     }
@@ -548,13 +543,12 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws AuthorizationException if admninistrator does not have the authority to perform the requested operation.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
-    public synchronized EntitlementMigrationReport migrateEntitlements(VirtualDatabase targetVDB,
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+    public EntitlementMigrationReport migrateEntitlements(VirtualDatabase targetVDB,
                                                                           char[] dataRoleContents, boolean overwriteExisting)
 		throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
 		// Validate caller's session
-		SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-		
-		AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "RuntimeMetadataAdminAPIImpl.migrateEntitlements(" + targetVDB.getID() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ 
+		SessionToken token = AdminAPIHelper.validateSession();
 		
 		return RuntimeMetadataHelper.migrateEntitlements(targetVDB.getVirtualDatabaseID(), dataRoleContents, overwriteExisting, token);
     }
@@ -569,12 +563,12 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws AuthorizationException if admninistrator does not have the authority to perform the requested operation.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
-    public synchronized PermissionDataNode getEntitlementTree(String vDBName,
+    public PermissionDataNode getEntitlementTree(String vDBName,
                                                               String vDBVersion,
                                                               AuthorizationPolicyID policyID)
         throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
 
         LogManager.logDetail(
@@ -598,10 +592,10 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws AuthorizationException if admninistrator does not have the authority to perform the requested operation.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
-    public synchronized PermissionDataNode getDataNodes(String vDBName, String vDBVersion)
+    public PermissionDataNode getDataNodes(String vDBName, String vDBVersion)
         throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
 
         LogManager.logDetail(
@@ -620,10 +614,10 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @param vdbVersion The version for the VDB.
      * @return All element paths in the given VDB version.
      */
-    public synchronized Set getAllDataNodeNames(String vdbName, String vdbVersion)
+    public Set getAllDataNodeNames(String vdbName, String vdbVersion)
         throws InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
 
         return new HashSet(RuntimeMetadataHelper.getAllDataNodeNames(vdbName, vdbVersion, new HashMap()));
     }
@@ -640,13 +634,9 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized byte[] getVDB(VirtualDatabaseID vdbID) 
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+    public byte[] getVDB(VirtualDatabaseID vdbID) 
     	throws AuthorizationException, InvalidSessionException,VirtualDatabaseException,MetaMatrixComponentException {
-
-        // Validate caller's session
-        SessionToken callerToken = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.getVDBDefn(" + vdbID + ")"); //$NON-NLS-1$ //$NON-NLS-2$
 
         VDBArchive vdbArchive = null;
         try {
@@ -672,14 +662,13 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
         	}
         }
     }
-    
-    public synchronized VirtualDatabase importVDB(byte[] vdbStream)
+
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+    public VirtualDatabase importVDB(byte[] vdbStream)
 			throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        SessionToken callerToken = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(callerToken, AdminRoles.RoleName.ADMIN_PRODUCT, "RuntimeMetadataAdminAPIImpl.importVDB(vdbStream)"); //$NON-NLS-1$
+        SessionToken callerToken = AdminAPIHelper.validateSession();
         
         VDBArchive vdbArchive = null;
         try {
@@ -721,11 +710,11 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      * @throws MetaMatrixComponentException if an error occurs in communicating with a component.
      */
-    public synchronized Map getModelVisibilityLevels(VirtualDatabaseID vdbID)
+    public Map getModelVisibilityLevels(VirtualDatabaseID vdbID)
         throws AuthorizationException, InvalidSessionException, VirtualDatabaseException, MetaMatrixComponentException {
 
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
 
         Collection models = RuntimeMetadataCatalog.getInstance().getModels(vdbID);
@@ -747,7 +736,7 @@ public class RuntimeMetadataAdminAPIImpl extends SubSystemAdminAPIImpl implement
      * @return a Collection of all <code>VirtualDatabase</code>s in the system.
      * @throws VirtualDatabaseException if an error occurs while setting the state.
      */
-//    private synchronized static Collection filterVirtualDatabases(Set vdbsToFilter) throws VirtualDatabaseException {
+//    private static Collection filterVirtualDatabases(Set vdbsToFilter) throws VirtualDatabaseException {
 //
 //        Collection vdbs = RuntimeMetadataCatalog.getVirtualDatabases();
 //

@@ -22,6 +22,7 @@
 
 package com.metamatrix.admin.api.server;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.objects.AdminObject;
 
 /**
@@ -47,5 +48,6 @@ public interface ServerAdmin extends ServerMonitoringAdmin, ServerConfigAdmin, S
      * Closes ServerAdmin connection to the server.
      * @since 4.3
      */
+	@RolesAllowed(value=AdminRoles.RoleName.ANONYMOUS)
     void close();    
 }

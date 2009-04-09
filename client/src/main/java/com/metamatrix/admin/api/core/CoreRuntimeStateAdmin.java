@@ -24,7 +24,9 @@ package com.metamatrix.admin.api.core;
 
 import javax.transaction.xa.Xid;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.server.AdminRoles;
 
 
 /**
@@ -36,6 +38,7 @@ import com.metamatrix.admin.api.exception.AdminException;
  *
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
 public interface CoreRuntimeStateAdmin {
 
     /**
@@ -75,6 +78,7 @@ public interface CoreRuntimeStateAdmin {
      * @throws AdminException  if there's a system error.
      * @since 4.3
      */
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
     void clearCache(String cacheIdentifier) throws AdminException;
 
     /**

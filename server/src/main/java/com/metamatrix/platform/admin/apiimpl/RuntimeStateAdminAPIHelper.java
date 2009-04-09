@@ -113,7 +113,7 @@ public class RuntimeStateAdminAPIHelper {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized SystemState getSystemState() throws MetaMatrixComponentException {
+    public SystemState getSystemState() throws MetaMatrixComponentException {
         try {
             SystemStateBuilder ssm = new SystemStateBuilder(this.registry, this.hostManagement);
             return ssm.getSystemState();
@@ -263,7 +263,7 @@ public class RuntimeStateAdminAPIHelper {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized void shutdownServer() throws MetaMatrixComponentException {
+    public void shutdownServer() throws MetaMatrixComponentException {
     	this.hostManagement.killAllServersInCluster();
     }
     
@@ -274,7 +274,7 @@ public class RuntimeStateAdminAPIHelper {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized void bounceServer() throws MetaMatrixComponentException {
+    public void bounceServer() throws MetaMatrixComponentException {
     	this.hostManagement.bounceAllServersInCluster();
     }
     
@@ -287,7 +287,7 @@ public class RuntimeStateAdminAPIHelper {
      * @throws a MultipleException if an error occurs
      */
 
-    public synchronized void synchronizeServer() throws MetaMatrixComponentException,MultipleException {
+    public void synchronizeServer() throws MetaMatrixComponentException,MultipleException {
         List exceptions = new ArrayList();
         StringBuffer errorMsg = new StringBuffer();
 

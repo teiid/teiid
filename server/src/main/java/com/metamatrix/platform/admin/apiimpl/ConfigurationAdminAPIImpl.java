@@ -24,12 +24,11 @@ package com.metamatrix.platform.admin.apiimpl;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
-import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.actions.ActionDefinition;
@@ -45,15 +44,14 @@ import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 
-public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements ConfigurationAdminAPI {
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_READONLY)
+public class ConfigurationAdminAPIImpl implements ConfigurationAdminAPI {
 
     // Auth svc proxy
     private ConfigurationServiceInterface configAdmin;
@@ -62,11 +60,11 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
     /**
      * ctor
      */
-    private ConfigurationAdminAPIImpl(ClusteredRegistryState registry) throws MetaMatrixComponentException {
+    private ConfigurationAdminAPIImpl(ClusteredRegistryState registry) {
         configAdmin = PlatformProxyHelper.getConfigurationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
     }
 
-    public synchronized static ConfigurationAdminAPI getInstance(ClusteredRegistryState registry) throws MetaMatrixComponentException {
+    public synchronized static ConfigurationAdminAPI getInstance(ClusteredRegistryState registry) {
         if (configAdminAPI == null) {
             configAdminAPI = new ConfigurationAdminAPIImpl(registry);
         }
@@ -83,10 +81,10 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * 
      * @return ConfigurationObjectEditor
      */
-    public synchronized ConfigurationObjectEditor createEditor() 
+    public ConfigurationObjectEditor createEditor() 
     	throws ConfigurationException, InvalidSessionException, AuthorizationException, MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.createEditor();
     }
@@ -107,12 +105,12 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws MetaMatrixComponentException
      *             if a general remote system problem occurred
      */
-    public synchronized ConfigurationID getNextStartupConfigurationID() throws ConfigurationException,
+    public ConfigurationID getNextStartupConfigurationID() throws ConfigurationException,
                                                                                                           InvalidSessionException,
                                                                                                           AuthorizationException,
                                                                                                           MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getNextStartupConfigurationID();
     }
@@ -127,12 +125,12 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
-    public synchronized Configuration getCurrentConfiguration() throws ConfigurationException,
+    public Configuration getCurrentConfiguration() throws ConfigurationException,
                                                                                                   InvalidSessionException,
                                                                                                   AuthorizationException,
                                                                                                   MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getCurrentConfiguration();
     }
@@ -147,21 +145,21 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
-    public synchronized Configuration getNextStartupConfiguration() throws ConfigurationException,
+    public Configuration getNextStartupConfiguration() throws ConfigurationException,
                                                                                                       InvalidSessionException,
                                                                                                       AuthorizationException,
                                                                                                       MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getNextStartupConfiguration();
     }
 
-    public synchronized ConfigurationModelContainer getConfigurationModel(String configName) throws ConfigurationException,
+    public ConfigurationModelContainer getConfigurationModel(String configName) throws ConfigurationException,
                                                                                             InvalidSessionException,
                                                                                             AuthorizationException,
                                                                                             MetaMatrixComponentException {
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getConfigurationModel(configName);
     }
@@ -219,13 +217,13 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws MetaMatrixComponentException
      *             if a general remote system problem occurred
      */
-    public synchronized Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException,
+    public Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException,
                                                                                           InvalidSessionException,
                                                                                           AuthorizationException,
                                                                                           MetaMatrixComponentException {
         // Validate caller's session
         // SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getConfigurationAndDependents(configID);
     }
@@ -239,13 +237,13 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @return Collection of ComponentTypeDefns
      * @see getDependentComponentTypeDefinitions(ComponentTypeID)
      */
-    public synchronized Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
+    public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
                                                                                                InvalidSessionException,
                                                                                                AuthorizationException,
                                                                                                MetaMatrixComponentException {
         // Validate caller's session
         // SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getComponentTypeDefinitions(componentTypeID);
     }
@@ -259,12 +257,12 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @return Collection of ComponentTypeDefns
      * @see getDependentComponentTypeDefinitions(ComponentTypeID)
      */
-    public synchronized Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
+    public Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException,
                                                                                                   InvalidSessionException,
                                                                                                   AuthorizationException,
                                                                                                   MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getAllComponentTypeDefinitions(componentTypeID);
     }
@@ -278,12 +276,12 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
-    public synchronized ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException,
+    public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException,
                                                                           InvalidSessionException,
                                                                           AuthorizationException,
                                                                           MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getComponentType(id);
     }
@@ -299,13 +297,13 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      *             if an error occurred within or during communication with the Configuration Service.
      * @see #ComponentType
      */
-    public synchronized Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException,
+    public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException,
                                                                                   InvalidSessionException,
                                                                                   AuthorizationException,
                                                                                   MetaMatrixComponentException {
         // Validate caller's session
         // SessionToken token =
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getAllComponentTypes(includeDeprecated);
     }
@@ -318,24 +316,24 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
-    public synchronized Host getHost(HostID hostID) throws ConfigurationException,
+    public Host getHost(HostID hostID) throws ConfigurationException,
                                                    InvalidSessionException,
                                                    AuthorizationException,
                                                    MetaMatrixComponentException {
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getHost(hostID);
     }
 
-    public synchronized ComponentDefn getComponentDefn(ConfigurationID configurationID,
+    public ComponentDefn getComponentDefn(ConfigurationID configurationID,
                                                        ComponentDefnID componentDefnID) throws ConfigurationException,
                                                                                        InvalidSessionException,
                                                                                        AuthorizationException,
                                                                                        MetaMatrixComponentException {
 
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getComponentDefn(configurationID, componentDefnID);
     }
@@ -352,13 +350,13 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized Collection getResources() throws ConfigurationException,
+    public Collection getResources() throws ConfigurationException,
                                                                                     InvalidSessionException,
                                                                                     AuthorizationException,
                                                                                     MetaMatrixComponentException {
 
         // Validate caller's session
-        AdminAPIHelper.validateSession(getSessionID());
+        AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return configAdmin.getResources();
     }
@@ -376,12 +374,12 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    public synchronized void saveResources(Collection resourceDescriptors) throws ConfigurationException,
+    public void saveResources(Collection resourceDescriptors) throws ConfigurationException,
                                                                           InvalidSessionException,
                                                                           AuthorizationException,
                                                                           MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
+        SessionToken token = AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         configAdmin.saveResources(resourceDescriptors, token.getUsername());
     }
@@ -409,15 +407,14 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Metadata Service.
      */
-    public synchronized Set executeTransaction(ActionDefinition action) throws ModificationException,
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public Set executeTransaction(ActionDefinition action) throws ModificationException,
                                                                        ConfigurationException,
                                                                        InvalidSessionException,
                                                                        AuthorizationException,
                                                                        MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.executeTransaction(" + action + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token = AdminAPIHelper.validateSession();
         return configAdmin.executeTransaction(action, token.getUsername());
     }
 
@@ -437,49 +434,28 @@ public class ConfigurationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Metadata Service.
      */
-    public synchronized Set executeTransaction(List actions) throws ModificationException,
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public Set executeTransaction(List actions) throws ModificationException,
                                                             ConfigurationException,
                                                             InvalidSessionException,
                                                             AuthorizationException,
                                                             MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.executeTransaction(" + actions + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token = AdminAPIHelper.validateSession();
         return configAdmin.executeTransaction(actions, token.getUsername());
     }
 
     /**
-     * @see com.metamatrix.platform.admin.apiimpl.ConfigurationAdminAPI#addHost(java.lang.String, java.util.Properties)
-     * @since 4.3
-     */
-    public synchronized Host addHost(String hostName,
-                                     Properties properties) throws ConfigurationException,
-                                                           InvalidSessionException,
-                                                           AuthorizationException,
-                                                           MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.addHost(" + hostName + ", " + properties + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        return configAdmin.addHost(hostName, token.getUsername(), properties);
-    }
-    
-    
-    
-    
-    /**
      * @see com.metamatrix.platform.admin.api.ConfigurationAdminAPI#checkPropertiesDecryptable(java.util.List)
      * @since 4.3
      */
-    public synchronized List checkPropertiesDecryptable(List defns) throws ConfigurationException,
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public List checkPropertiesDecryptable(List defns) throws ConfigurationException,
                                                            InvalidSessionException,
                                                            AuthorizationException,
                                                            MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "ConfigurationAdminAPIImpl.checkPropertiesDecryptable(" + defns + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token = AdminAPIHelper.validateSession();
         return configAdmin.checkPropertiesDecryptable(defns);
     }
     

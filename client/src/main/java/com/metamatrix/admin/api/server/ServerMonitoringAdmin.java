@@ -24,6 +24,7 @@ package com.metamatrix.admin.api.server;
 
 import java.util.Collection;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.core.CoreMonitoringAdmin;
 import com.metamatrix.admin.api.exception.AdminException;
 
@@ -59,6 +60,7 @@ public interface ServerMonitoringAdmin extends CoreMonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
+    @RolesAllowed(value=AdminRoles.RoleName.ANONYMOUS)
     Collection getProcesses(String processIdentifier) throws AdminException;
 
     /**

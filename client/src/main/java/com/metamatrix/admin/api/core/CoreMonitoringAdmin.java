@@ -24,18 +24,24 @@ package com.metamatrix.admin.api.core;
 
 import java.util.Collection;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.Cache;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.ConnectorType;
+import com.metamatrix.admin.api.objects.DQP;
 import com.metamatrix.admin.api.objects.ExtensionModule;
+import com.metamatrix.admin.api.objects.Host;
+import com.metamatrix.admin.api.objects.ProcessObject;
 import com.metamatrix.admin.api.objects.QueueWorkerPool;
 import com.metamatrix.admin.api.objects.Request;
+import com.metamatrix.admin.api.objects.Resource;
 import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.admin.api.objects.VDB;
+import com.metamatrix.admin.api.server.AdminRoles;
 
 
 
@@ -50,6 +56,7 @@ import com.metamatrix.admin.api.objects.VDB;
  *
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_READONLY)
 public interface CoreMonitoringAdmin {
 
     /**
@@ -90,6 +97,7 @@ public interface CoreMonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
+    @RolesAllowed(value=AdminRoles.RoleName.ANONYMOUS)
     Collection getVDBs(String vdbIdentifier) throws AdminException;
 
     /**
@@ -133,7 +141,7 @@ public interface CoreMonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection getExtensionModules(String extensionModuleIdentifier) throws AdminException;
+    Collection<ExtensionModule> getExtensionModules(String extensionModuleIdentifier) throws AdminException;
 
     /**
      * Get the Queue Worker Pools that correspond to the specified identifier pattern.

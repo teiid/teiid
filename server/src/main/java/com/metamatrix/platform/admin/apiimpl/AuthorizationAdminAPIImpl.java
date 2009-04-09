@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -50,7 +51,8 @@ import com.metamatrix.platform.security.util.RolePermissionFactory;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 
-public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements AuthorizationAdminAPI {
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_READONLY)
+public class AuthorizationAdminAPIImpl implements AuthorizationAdminAPI {
 
     AuthorizationRealm roleRealm = RolePermissionFactory.getRealm();
 
@@ -81,28 +83,23 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * submitted to the <code>AuthorizationService</code> for actual updates to occur.
      * @return AuthorizationObjectEditor
      */
-    public synchronized AuthorizationEditor createEditor()
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public AuthorizationEditor createEditor()
             throws InvalidSessionException, AuthorizationException, MetaMatrixComponentException {
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "AuthorizationAdminAPIImpl.createEditor()"); //$NON-NLS-1$
         return new AuthorizationObjectEditor(true);
     }
 
-    public synchronized Map getRoleDescriptions()
+    public Map getRoleDescriptions()
             throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
+        SessionToken token = AdminAPIHelper.validateSession();
         return authAdmin.getRoleDescriptions(token);
     }
 
-    public synchronized Collection getPrincipalsForRole(String roleName)
+    public Collection getPrincipalsForRole(String roleName)
             throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
+        SessionToken token = AdminAPIHelper.validateSession();
         return authAdmin.getPrincipalsForRole(token, roleName);
     }
 
@@ -115,11 +112,10 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws AuthorizationException if administrator does not have the authority to perform the requested operation.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
-    public synchronized Collection getRoleNamesForPrincipal(MetaMatrixPrincipalName principal)
+    public Collection getRoleNamesForPrincipal(MetaMatrixPrincipalName principal)
             throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
+        SessionToken token = AdminAPIHelper.validateSession();
         return authAdmin.getRoleNamesForPrincipal(token, principal);
     }
 
@@ -131,12 +127,11 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws AuthorizationException if admninistrator does not have the authority to perform the requested operation.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
-    public synchronized void addPrincipalsToRole(Set principals, String roleName)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public void addPrincipalsToRole(Set principals, String roleName)
             throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "AuthorizationAdminAPIImpl.addPrincipalsToRole(" + principals + ", " + roleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken token = AdminAPIHelper.validateSession();
 
         AuthorizationPolicy role = authAdmin.getPolicy(token, new AuthorizationPolicyID(roleName, null, RolePermissionFactory.getRealm()));
 
@@ -154,12 +149,11 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws AuthorizationException if admninistrator does not have the authority to perform the requested operation.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
-    public synchronized void removePrincipalsFromRole(Set principals, String roleName)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public void removePrincipalsFromRole(Set principals, String roleName)
             throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "AuthorizationAdminAPIImpl.removePrincipalsFromRole(" + principals + ", " + roleName + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        SessionToken token = AdminAPIHelper.validateSession();
 
         AuthorizationPolicy role = authAdmin.getPolicy(token, new AuthorizationPolicyID(roleName, null, RolePermissionFactory.getRealm()));
 
@@ -173,11 +167,10 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
     /**
      * Get all policyIDs in the system except those that we want to filter from the console.
      */
-    public synchronized Collection findAllPolicyIDs()
+    public Collection findAllPolicyIDs()
             throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
+        SessionToken token = AdminAPIHelper.validateSession();
 
         Collection allPolicyIDs = authAdmin.findAllPolicyIDs(token);
 
@@ -196,28 +189,26 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
         return filteredPolicyIDs;
     }
 
-    public synchronized Boolean containsPolicy(AuthorizationPolicyID policyID)
+    public Boolean containsPolicy(AuthorizationPolicyID policyID)
             throws AuthorizationException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
+        SessionToken token = AdminAPIHelper.validateSession();
         return new Boolean(authAdmin.containsPolicy(token, policyID));
     }
 
-    public synchronized AuthorizationPolicy getPolicy(AuthorizationPolicyID policyID)
+    public AuthorizationPolicy getPolicy(AuthorizationPolicyID policyID)
             throws AuthorizationException, AuthorizationMgmtException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
+        SessionToken token = AdminAPIHelper.validateSession();
         // Any administrator may call this read-only method - no need to validate role
         return authAdmin.getPolicy(token, policyID);
     }
 
-    public synchronized Set executeTransaction(List actions)
+    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
+    public Set executeTransaction(List actions)
             throws AuthorizationException, AuthorizationMgmtException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Validate caller's role
-        AdminAPIHelper.checkForRequiredRole(token, AdminRoles.RoleName.ADMIN_SYSTEM, "AuthorizationAdminAPIImpl.executeTransaction(" + actions + ")"); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token = AdminAPIHelper.validateSession();
         return authAdmin.executeTransaction(token, actions);
     }
 
@@ -237,11 +228,10 @@ public class AuthorizationAdminAPIImpl extends SubSystemAdminAPIImpl implements 
      * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
      * @throws MetaMatrixComponentException if this service has trouble communicating.
      */
-    public synchronized Collection getPolicyIDsInRealm(AuthorizationRealm realm)
+    public Collection getPolicyIDsInRealm(AuthorizationRealm realm)
             throws AuthorizationException, AuthorizationMgmtException, InvalidSessionException, MetaMatrixComponentException {
         // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession(getSessionID());
-        // Any administrator may call this read-only method - no need to validate role
+        SessionToken token = AdminAPIHelper.validateSession();
         return authAdmin.getPolicyIDsInRealm(token, realm);
     }
 

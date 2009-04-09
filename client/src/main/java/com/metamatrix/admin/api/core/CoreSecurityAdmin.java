@@ -22,6 +22,9 @@
 
 package com.metamatrix.admin.api.core;
 
+import com.metamatrix.admin.RolesAllowed;
+import com.metamatrix.admin.api.server.AdminRoles;
+
 
 /**
  * This interface defines the methods available for security administration
@@ -34,6 +37,7 @@ package com.metamatrix.admin.api.core;
  * for a description of methods to administer MetaMatrix server security.</p>
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
 public interface CoreSecurityAdmin {
 
 }

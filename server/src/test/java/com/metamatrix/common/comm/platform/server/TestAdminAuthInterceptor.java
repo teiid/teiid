@@ -26,85 +26,96 @@ import java.lang.reflect.Proxy;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import junit.framework.TestCase;
-
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.admin.api.server.ServerAdmin;
-import com.metamatrix.admin.util.AdminMethodRoleResolver;
-import com.metamatrix.common.comm.platform.FakeAdminHelper;
+import com.metamatrix.api.exception.security.AuthorizationException;
+import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.comm.platform.socket.server.AdminAuthorizationInterceptor;
 import com.metamatrix.core.util.SimpleMock;
-import com.metamatrix.platform.admin.apiimpl.IAdminHelper;
+import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
+import com.metamatrix.platform.admin.apiimpl.ExtensionSourceAdminAPIImpl;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
+import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 
 
 /** 
  * @since 4.3
  */
-public class TestAdminAuthInterceptor extends TestCase {
+public class TestAdminAuthInterceptor {
 
-    /**
-     * Constructor for TestAdminMethodRoleResolver.
-     * @param name
-     */
-    public TestAdminAuthInterceptor(String name) {
-        super(name);
+    @Before public void setUp() throws Exception {
+    	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "gojo")); //$NON-NLS-1$
     }
     
-    @Override
-    protected void setUp() throws Exception {
-    	DQPWorkContext.getWorkContext().setSessionToken(new SessionToken(new MetaMatrixSessionID(1), "gojo")); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Override
-    protected void tearDown() throws Exception {
+    @After public void tearDown() throws Exception {
     	DQPWorkContext.setWorkContext(new DQPWorkContext());
     }
     
-    public void testAddUserUDF_fail() throws AdminException {
-        Set userRoles = new HashSet();
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles);
-        try {
-        	serverAdmin.addUDF(null, null);
-        } catch (AdminException err) {
-        	
-        }
+    @Test(expected=AdminProcessingException.class) public void testAddUserUDF_fail() throws AdminException {
+        Set<String> userRoles = new HashSet<String>();
+        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
+    	serverAdmin.addUDF(null, null);
     }
+    
+	private <T> T getTestServerAdmin(final Set<String> userRoles, Class<T> iface) {
+		return getTestServerAdmin(userRoles, iface, SimpleMock.createSimpleMock(iface));
+	}
 
-	private ServerAdmin getTestServerAdmin(Set userRoles) throws AdminException {
-		IAdminHelper authHelper = new FakeAdminHelper("gojo", userRoles); //$NON-NLS-1$
-        AdminMethodRoleResolver roleResolver = new AdminMethodRoleResolver();
-        roleResolver.init();
-        AdminAuthorizationInterceptor authInterceptor = new AdminAuthorizationInterceptor(authHelper, roleResolver, SimpleMock.createSimpleMock(ServerAdmin.class));
-        ServerAdmin serverAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ServerAdmin.class}, authInterceptor);
-		return serverAdmin;
+	private <T> T getTestServerAdmin(final Set<String> userRoles, Class<T> iface, T impl) {
+		AuthorizationServiceInterface service = Mockito.mock(AuthorizationServiceInterface.class);
+		try {
+			Mockito.stub(service.isCallerInRole((SessionToken)Mockito.anyObject(), Mockito.argThat(new BaseMatcher<String>() {
+				@Override
+				public boolean matches(Object arg0) {
+					return userRoles.contains(arg0);
+				}
+				
+				@Override
+				public void describeTo(Description arg0) {
+					
+				}
+			}))).toReturn(Boolean.TRUE);
+		} catch (AuthorizationMgmtException e) {
+			throw new RuntimeException(e);
+		}
+        AdminAuthorizationInterceptor authInterceptor = new AdminAuthorizationInterceptor(service, impl);
+        return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, authInterceptor);
 	}
     
-    public void testAddUDF_succeed() throws Exception {
-        Set userRoles = new HashSet();
+    @Test public void testAddUDF_succeed() throws Exception {
+        Set<String> userRoles = new HashSet<String>();
         userRoles.add(AdminRoles.RoleName.ADMIN_SYSTEM);
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles);
+        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
         serverAdmin.addUDF(null, null);
     }
     
-    public void testGetVDBs() throws Exception {
-        Set userRoles = new HashSet();
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles);
+    @Test public void testGetVDBs() throws Exception {
+        Set<String> userRoles = new HashSet<String>();
+        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
         serverAdmin.getVDBs("*"); //$NON-NLS-1$
     }
     
-    public void testReadOnlyFails() throws Exception {
-        Set userRoles = new HashSet();
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles);
-        try {
-        	serverAdmin.getSessions("*"); //$NON-NLS-1$
-        } catch (AdminException e) {
-        	
-        }
+    @Test(expected=AdminProcessingException.class) public void testReadOnlyFails() throws Exception {
+        Set<String> userRoles = new HashSet<String>();
+        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
+    	serverAdmin.getSessions("*"); //$NON-NLS-1$
+    }
+    
+    @Test(expected=AuthorizationException.class) public void testSubsystemReadOnlyFails() throws Exception {
+    	Set<String> userRoles = new HashSet<String>();
+    	ExtensionSourceAdminAPI serverAdmin = getTestServerAdmin(userRoles, ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance());
+    	serverAdmin.getSourceDescriptors();
     }
     
 }

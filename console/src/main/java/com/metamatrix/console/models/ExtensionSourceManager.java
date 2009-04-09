@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.*;
 
+import com.metamatrix.admin.api.objects.ExtensionModule;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.exception.*;
 import com.metamatrix.console.connections.ConnectionInfo;
@@ -117,12 +118,13 @@ public class ExtensionSourceManager extends Manager {
 
     public void exportToFile(String moduleName, File target) throws
             ExtensionModuleNotFoundException, ExternalException {
-        ExtensionSourceAdminAPI api = ModelManager.getExtensionSourceAPI(
-        		getConnection());
         try {
-            byte[] contents = api.getSource(moduleName);
+            Collection<ExtensionModule> modules = getConnection().getServerAdmin().getExtensionModules(moduleName);
+            if (modules.size() != 1) {
+            	throw new ExtensionModuleNotFoundException(moduleName);
+            }
             FileOutputStream stream = new FileOutputStream(target);
-            stream.write(contents);
+            stream.write(modules.iterator().next().getFileContents());
             stream.close();
         } catch (ExtensionModuleNotFoundException ex) {
             throw ex;

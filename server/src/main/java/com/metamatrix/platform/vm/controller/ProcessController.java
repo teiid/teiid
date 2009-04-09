@@ -39,7 +39,6 @@ import java.util.Properties;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.admin.server.ServerAdminImpl;
-import com.metamatrix.admin.util.AdminMethodRoleResolver;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.common.classloader.URLFilteringClassLoader;
@@ -84,7 +83,6 @@ import com.metamatrix.platform.admin.api.AuthorizationAdminAPI;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
 import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
-import com.metamatrix.platform.admin.apiimpl.AdminHelper;
 import com.metamatrix.platform.admin.apiimpl.AuthorizationAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.ConfigurationAdminAPIImpl;
 import com.metamatrix.platform.admin.apiimpl.ExtensionSourceAdminAPIImpl;
@@ -204,13 +202,12 @@ public abstract class ProcessController implements ProcessManagement {
      * @throws MetaMatrixComponentException
      */
     private void registerSubSystemAdminAPIs(HostManagement hostManagement) throws MetaMatrixComponentException {
-        this.clientServices.registerClientService(ConfigurationAdminAPI.class, ConfigurationAdminAPIImpl.getInstance(this.registry), PlatformAdminConstants.CTX_CONFIGURATION_ADMIN_API);
-        this.clientServices.registerClientService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry, hostManagement), PlatformAdminConstants.CTX_RUNTIME_STATE_ADMIN_API);
-        this.clientServices.registerClientService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_AUTHORIZATION_ADMIN_API);
-        this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_ADMIN_API);
-        this.clientServices.registerClientService(RuntimeMetadataAdminAPI.class, RuntimeMetadataAdminAPIImpl.getInstance(), PlatformAdminConstants.CTX_RUNTIME_METADATA_ADMIN_API);
+        this.clientServices.registerClientService(ConfigurationAdminAPI.class, wrapAdminService(ConfigurationAdminAPI.class, ConfigurationAdminAPIImpl.getInstance(this.registry)), PlatformAdminConstants.CTX_CONFIGURATION_ADMIN_API);
+        this.clientServices.registerClientService(RuntimeStateAdminAPI.class, wrapAdminService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry, hostManagement)), PlatformAdminConstants.CTX_RUNTIME_STATE_ADMIN_API);
+        this.clientServices.registerClientService(AuthorizationAdminAPI.class, wrapAdminService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance()), PlatformAdminConstants.CTX_AUTHORIZATION_ADMIN_API);
+        this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, wrapAdminService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance()), PlatformAdminConstants.CTX_ADMIN_API);
+        this.clientServices.registerClientService(RuntimeMetadataAdminAPI.class, wrapAdminService(RuntimeMetadataAdminAPI.class, RuntimeMetadataAdminAPIImpl.getInstance()), PlatformAdminConstants.CTX_RUNTIME_METADATA_ADMIN_API);
     }	
-    
     
     /**
      * Register a ServiceInterceptor for the new Admin API, so that the client can access it via messaging.
@@ -220,11 +217,15 @@ public abstract class ProcessController implements ProcessManagement {
      */
     private void registerAdmin(HostManagement hostManagement) throws AdminException {
     	ServerAdminImpl serverAdminImpl = new ServerAdminImpl(this.registry, hostManagement);
-    	AdminMethodRoleResolver adminMethodRoleResolver = new AdminMethodRoleResolver();
-    	adminMethodRoleResolver.init();
-    	ServerAdmin roleCheckedServerAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ServerAdmin.class}, new AdminAuthorizationInterceptor(new AdminHelper(), adminMethodRoleResolver, serverAdminImpl));
+    	ServerAdmin roleCheckedServerAdmin = wrapAdminService(ServerAdmin.class, serverAdminImpl);
     	this.clientServices.registerClientService(ServerAdmin.class, roleCheckedServerAdmin, PlatformAdminConstants.CTX_ADMIN);
     }
+
+
+	@SuppressWarnings("unchecked")
+	private <T> T wrapAdminService(Class<T> iface, T impl) {
+		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new AdminAuthorizationInterceptor(PlatformProxyHelper.getAuthorizationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), impl));
+	}
     
     /** 
      * Register ILogonAPI's ServiceInterceptor
