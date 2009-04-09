@@ -30,7 +30,6 @@ import java.util.Arrays;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.RolesAllowed;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.AuthorizationException;

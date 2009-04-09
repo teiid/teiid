@@ -22,6 +22,7 @@
 
 package com.metamatrix.admin.api.server;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.core.CoreRuntimeStateAdmin;
 import com.metamatrix.admin.api.exception.AdminException;
 
@@ -33,6 +34,7 @@ import com.metamatrix.admin.api.exception.AdminException;
  * should instead use {@link ServerAdmin}.</p>
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
 public interface ServerRuntimeStateAdmin extends CoreRuntimeStateAdmin {
 
     /**

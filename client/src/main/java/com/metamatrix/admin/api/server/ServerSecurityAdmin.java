@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.core.CoreSecurityAdmin;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.AdminObject;
@@ -43,6 +44,7 @@ import com.metamatrix.admin.api.objects.Role;
  *
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
 public interface ServerSecurityAdmin extends CoreSecurityAdmin {
 
     /**

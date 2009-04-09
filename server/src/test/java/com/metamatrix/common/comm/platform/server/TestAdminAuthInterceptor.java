@@ -72,6 +72,7 @@ public class TestAdminAuthInterceptor {
 		return getTestServerAdmin(userRoles, iface, SimpleMock.createSimpleMock(iface));
 	}
 
+	@SuppressWarnings("unchecked")
 	private <T> T getTestServerAdmin(final Set<String> userRoles, Class<T> iface, T impl) {
 		AuthorizationServiceInterface service = Mockito.mock(AuthorizationServiceInterface.class);
 		try {
@@ -117,5 +118,13 @@ public class TestAdminAuthInterceptor {
     	ExtensionSourceAdminAPI serverAdmin = getTestServerAdmin(userRoles, ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance());
     	serverAdmin.getSourceDescriptors();
     }
+    
+    @Test public void testBounce_succeed() throws Exception {
+        Set<String> userRoles = new HashSet<String>();
+        userRoles.add(AdminRoles.RoleName.ADMIN_PRODUCT);
+        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
+        serverAdmin.bounceSystem(false);
+    }
+
     
 }

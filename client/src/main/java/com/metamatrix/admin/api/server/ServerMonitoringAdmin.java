@@ -36,6 +36,7 @@ import com.metamatrix.admin.api.exception.AdminException;
  * should instead use {@link ServerAdmin}.</p>
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_READONLY)
 public interface ServerMonitoringAdmin extends CoreMonitoringAdmin {
 
     /**

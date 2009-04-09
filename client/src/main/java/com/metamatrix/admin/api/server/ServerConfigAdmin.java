@@ -24,11 +24,12 @@ package com.metamatrix.admin.api.server;
 
 import java.util.Properties;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.core.CoreConfigAdmin;
+import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.ScriptsContainer;
 import com.metamatrix.admin.api.objects.VDB;
-import com.metamatrix.admin.api.exception.AdminException;
 
 
 /**
@@ -39,6 +40,7 @@ import com.metamatrix.admin.api.exception.AdminException;
  *
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
 public interface ServerConfigAdmin extends
                                   CoreConfigAdmin {
 
