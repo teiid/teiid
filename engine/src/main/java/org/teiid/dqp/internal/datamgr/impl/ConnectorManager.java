@@ -57,7 +57,6 @@ import org.teiid.dqp.internal.pooling.connector.PooledConnector;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.transaction.TransactionProvider;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -97,6 +96,8 @@ public class ConnectorManager implements ApplicationService {
 
     public static final int DEFAULT_MAX_PROCESSOR_THREADS = 15;
     public static final int DEFAULT_PROCESSOR_TREAD_TTL = 120000;
+    private static final String DEFAULT_MAX_RESULTSET_CACHE_SIZE = "20"; //$NON-NLS-1$
+    private static final String DEFAULT_MAX_RESULTSET_CACHE_AGE = "3600000"; //$NON-NLS-1$
 
     //state constructed in start
     private ConnectorWrapper connector;
@@ -323,18 +324,14 @@ public class ConnectorManager implements ApplicationService {
 
         // Initialize and start the connector
         initStartConnector(connectorEnv);
-        try {
-            //check result set cache
-            if(PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.USE_RESULTSET_CACHE, false)) {
-	            Properties rsCacheProps = new Properties();
-	        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_SIZE, "0")); //$NON-NLS-1$
-	        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_AGE, "0")); //$NON-NLS-1$
-	        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(ConnectorPropertyNames.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
-	    		this.rsCache = createResultSetCache(rsCacheProps);
-            }
-		} catch (MetaMatrixComponentException e) {
-			throw new ApplicationLifecycleException(e);
-		}
+        //check result set cache
+        if(PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.USE_RESULTSET_CACHE, false)) {
+            Properties rsCacheProps = new Properties();
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_SIZE, DEFAULT_MAX_RESULTSET_CACHE_SIZE)); 
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_AGE, DEFAULT_MAX_RESULTSET_CACHE_AGE)); 
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(ConnectorPropertyNames.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
+    		this.rsCache = createResultSetCache(rsCacheProps);
+        }
 		this.workItemFactory = new ConnectorWorkItemFactory(this, this.rsCache, synchWorkers);
         this.started = true;
     }
@@ -456,8 +453,7 @@ public class ConnectorManager implements ApplicationService {
         return c;
     }
     
-    protected ResultSetCache createResultSetCache(Properties rsCacheProps)
-			throws MetaMatrixComponentException {
+    protected ResultSetCache createResultSetCache(Properties rsCacheProps) {
 		return new ResultSetCache(rsCacheProps, ResourceFinder.getCacheFactory());
 	}
 

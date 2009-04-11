@@ -39,11 +39,11 @@ import com.metamatrix.cache.CacheListener;
  */
 public class JBossCache<K, V> implements Cache<K, V> {
 
-	private org.jboss.cache.Cache cacheStore;
+	private org.jboss.cache.Cache<K, V> cacheStore;
 	private Fqn rootFqn;
 	private JBossCacheListener cacheListener;
 	
-	public JBossCache(org.jboss.cache.Cache cacheStore, Fqn fqn) {
+	public JBossCache(org.jboss.cache.Cache<K, V> cacheStore, Fqn fqn) {
 		this.cacheStore = cacheStore;
 		this.rootFqn = fqn;
 	}
@@ -52,39 +52,39 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 * {@inheritDoc}
 	 */
 	public V get(K key) {
-		return (V)this.cacheStore.get(this.rootFqn, key);
+		return this.cacheStore.get(this.rootFqn, key);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public V put(K key, V value) {
-		return (V)this.cacheStore.put(this.rootFqn, key, value);
+		return this.cacheStore.put(this.rootFqn, key, value);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public V remove(K key) {
-		return (V)this.cacheStore.remove(this.rootFqn, key);
+		return this.cacheStore.remove(this.rootFqn, key);
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Set<K> keySet() {
-		Node node = this.cacheStore.getRoot().getChild(this.rootFqn);
+		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
 		if (node != null) {
 			return node.getKeys();
 		}
-		return Collections.EMPTY_SET;
+		return Collections.emptySet();
 	}
 	
 	/**
 	 * {@inheritDoc}
 	 */
 	public int size() {
-		Node node = this.cacheStore.getRoot().getChild(this.rootFqn);
+		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
 		if (node != null) {
 			return node.dataSize();
 		}
@@ -95,7 +95,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 * {@inheritDoc}
 	 */
 	public void clear() {
-		Node node = this.cacheStore.getRoot().getChild(this.rootFqn);
+		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
 		if (node != null) {
 			node.clearData();
 		}
@@ -103,7 +103,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	
 	@Override
 	public Collection<V> values() {
-		Node node = this.cacheStore.getRoot().getChild(this.rootFqn);
+		Node<K, V> node = this.cacheStore.getRoot().getChild(this.rootFqn);
 		if (node != null) {
 			return node.getData().values();
 		}
@@ -130,21 +130,21 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Cache addChild(String name) {
-		Node node = this.cacheStore.getNode(this.rootFqn);
-		Node childNode = node.addChild(Fqn.fromString(name));
-		return new JBossCache(this.cacheStore, childNode.getFqn());
+	public Cache<K, V> addChild(String name) {
+		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
+		Node<K, V> childNode = node.addChild(Fqn.fromString(name));
+		return new JBossCache<K, V>(this.cacheStore, childNode.getFqn());
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
-	public Cache getChild(String name) {
-		Node node = this.cacheStore.getNode(this.rootFqn);
-		Node child = node.getChild(Fqn.fromString(name));
+	public Cache<K, V> getChild(String name) {
+		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
+		Node<K, V> child = node.getChild(Fqn.fromString(name));
 		if (child != null) {
-			return new JBossCache(this.cacheStore, child.getFqn());
+			return new JBossCache<K, V>(this.cacheStore, child.getFqn());
 		}
 		return null;
 	}
@@ -154,14 +154,14 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 */
 	@Override
 	public List<Cache> getChildren() {
-		Node node = this.cacheStore.getNode(this.rootFqn);
+		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
 		Set<Node<K,V>> nodes = node.getChildren();
 		if (nodes.isEmpty()) {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 		List<Cache> children = new ArrayList<Cache>();
-		for(Node child: nodes) {
-			children.add(new JBossCache(this.cacheStore, child.getFqn()));
+		for(Node<K, V> child: nodes) {
+			children.add(new JBossCache<K, V>(this.cacheStore, child.getFqn()));
 		}
 		return children;
 	}
@@ -171,7 +171,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 */
 	@Override
 	public boolean removeChild(String name) {
-		Node node = this.cacheStore.getNode(this.rootFqn);
+		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
 		return node.removeChild(Fqn.fromString(name));
 	} 	
 }

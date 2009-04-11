@@ -57,7 +57,7 @@ public class Application {
             final String serviceName = DQPServiceNames.ALL_SERVICES[i];
             final Class<? extends ApplicationService> type = DQPServiceNames.ALL_SERVICE_CLASSES[i];
             if(injector.getBinding(Key.get(type)) == null){
-                LogManager.logWarning(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceIsNull", serviceName)); //$NON-NLS-1$
+                LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceIsNull", serviceName)); //$NON-NLS-1$
             }else{
             	ApplicationService appService = injector.getInstance(type);
             	String loggingContext = DQPServiceNames.SERVICE_LOGGING_CONTEXT[i];

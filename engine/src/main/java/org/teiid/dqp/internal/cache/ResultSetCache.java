@@ -27,12 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.Cache.Type;
 import com.metamatrix.cache.CacheConfiguration.Policy;
+import com.metamatrix.common.util.PropertiesUtils;
 
 /**
  * Used to cache ResultSet based on the exact match of sql string.
@@ -49,25 +49,41 @@ public class ResultSetCache {
 
 	private Cache<CacheID, CacheResults> cache; 
 	private String scope;
-	private Map tempBatchResults = new HashMap();
-	private long maxSize; //bytes
+	private Map<CacheID, CacheResults> tempBatchResults = new HashMap<CacheID, CacheResults>();
+	private int maxSize = 50 * 1024 * 1024; //bytes
+	private int maxAge = 60 * 60; // seconds
+	private int maxEntries = 20 * 1024; 
 	
-	public ResultSetCache(Properties props, CacheFactory cacheFactory) throws MetaMatrixComponentException{
-		//ObjectCache does a check every 5 seconds. 
-		//It starts cleaning only if the cache is full.
-		//We set the max size of the ObjectCache a little lower than the one user specified
-		maxSize = Integer.parseInt(props.getProperty(RS_CACHE_MAX_SIZE)) * 1024 * 1024;
-		int maxAgeInSeconds = Integer.parseInt(props.getProperty(RS_CACHE_MAX_AGE));
-		
-		scope = props.getProperty(RS_CACHE_SCOPE);
-		this.cache = cacheFactory.get(Type.RESULTSET, new CacheConfiguration(Policy.MRU, maxAgeInSeconds, 1000));
+	public ResultSetCache(Properties props, CacheFactory cacheFactory) {
+		PropertiesUtils.setBeanProperties(this, props, null);
+		this.cache = cacheFactory.get(Type.RESULTSET, new CacheConfiguration(Policy.MRU, maxAge, maxEntries));
 	}
 	
+	public void setMaxSize(int maxSize) {
+		if (maxSize <= 0 ) {
+			this.maxSize = 0;
+			this.maxEntries = Integer.MAX_VALUE;
+		} else {
+			this.maxSize = maxSize * 1024 * 1024;
+			this.maxEntries = this.maxSize * 1024;
+		}
+	}
 	
+	public void setMaxAge(int maxAge) {
+		if (maxAge <= 0) {
+			this.maxAge = Integer.MAX_VALUE;
+		}
+		this.maxAge = Math.max(1, maxAge / 1000);
+	}
+	
+	public void setScope(String scope) {
+		this.scope = scope;
+	}
+		
 	//interval is 1 based. 
 	public final CacheResults getResults(CacheID cacheID, int[] interval){
 		CacheResults cacheResults = null;
-		cacheResults = (CacheResults)cache.get(cacheID);
+		cacheResults = cache.get(cacheID);
 		if(cacheResults == null){
 			return null;
 		}
@@ -80,7 +96,7 @@ public class ResultSetCache {
 			return cacheResults;
 		}
 		int batchSize = lastRow - firstRow + 1;
-		List[] resultsPart = new List[batchSize];
+		List<?>[] resultsPart = new List[batchSize];
 		System.arraycopy(cacheResults.getResults(), firstRow, resultsPart, 0, batchSize);
 		boolean isFinal = lastRow == finalRow;
 		CacheResults newCacheResults = new CacheResults(resultsPart, cacheResults.getElements(), firstRow + 1, lastRow == finalRow);
@@ -104,7 +120,7 @@ public class ResultSetCache {
      * @return true if the result was cachable 
      */
 	public boolean setResults(CacheID cacheID, CacheResults cacheResults, Object requestID){	
-		List[] results = cacheResults.getResults();
+		List<?>[] results = cacheResults.getResults();
 		if(cacheResults.getSize() == -1){
 			cacheResults.setSize(ResultSetCacheUtil.getResultsSize(results, true));
 		}
@@ -118,7 +134,7 @@ public class ResultSetCache {
 		}
 	
 		synchronized(tempBatchResults){
-			CacheResults savedResults = (CacheResults)tempBatchResults.get(cacheID);
+			CacheResults savedResults = tempBatchResults.get(cacheID);
 			if(savedResults == null){
 				savedResults = new CacheResults(null, cacheResults.getElements(), 1, false); 
 				tempBatchResults.put(cacheID, savedResults);

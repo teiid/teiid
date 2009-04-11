@@ -26,11 +26,7 @@
  */
 package org.teiid.dqp.internal.datamgr.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -45,7 +41,6 @@ import org.teiid.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsRec
 import org.teiid.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.cache.FakeCache;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -157,10 +152,8 @@ public final class TestConnectorManagerImpl {
     @Test public void testCaching() throws Exception {
     	ConnectorManager cm = new ConnectorManager() {
     		@Override
-    		protected ResultSetCache createResultSetCache(
-    				Properties rsCacheProps)
-    				throws MetaMatrixComponentException {
-    			assertEquals(rsCacheProps.get(ResultSetCache.RS_CACHE_MAX_AGE), String.valueOf(0));
+    		protected ResultSetCache createResultSetCache(Properties rsCacheProps) {
+    			assertEquals(String.valueOf(3600000), rsCacheProps.get(ResultSetCache.RS_CACHE_MAX_AGE));
     			return new ResultSetCache(rsCacheProps, new FakeCache.FakeCacheFactory());
     		}
     	};

@@ -36,7 +36,7 @@ public interface Cache<K, V>  {
 						SESSION("Session"), //$NON-NLS-1$ 
 						SESSION_MONITOR("Session-Monitor"), //$NON-NLS-1$ 
 						AUTHORIZATION_POLICY("Authorization-Policy"), //$NON-NLS-1$ 
-						AUTHORIZATION_PRINCIPLE("Auhtorization-Principle"), //$NON-NLS-1$ 
+						AUTHORIZATION_PRINCIPAL("Auhtorization-Principal"), //$NON-NLS-1$ 
 						RESULTSET("ResultSet"), //$NON-NLS-1$
 						VDBMETADATA("VdbMetadata"), //$NON-NLS-1$
 						VDBMODELS("VdbModels"); //$NON-NLS-1$

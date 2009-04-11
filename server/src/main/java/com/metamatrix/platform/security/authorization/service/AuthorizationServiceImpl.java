@@ -163,7 +163,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             // Initialize cache
             CacheFactory cf = ResourceFinder.getCacheFactory();
             CacheConfiguration config = new CacheConfiguration(Policy.LRU, 0, 0);
-            this.authorizationCache = new AuthorizationCache(cf.get(Type.AUTHORIZATION_POLICY, config), cf.get(Type.AUTHORIZATION_PRINCIPLE, config),environment);
+            this.authorizationCache = new AuthorizationCache(cf.get(Type.AUTHORIZATION_POLICY, config), cf.get(Type.AUTHORIZATION_PRINCIPAL, config),environment);
 
             this.serviceClosed = false;
 
