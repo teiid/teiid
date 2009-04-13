@@ -131,7 +131,7 @@ public class RuleRemoveOptionalJoins implements
                 if (isRoot) {
                     List columns = (List)node.getProperty(NodeConstants.Info.PROJECT_COLS);
                     ElementCollectorVisitor.getElements(columns, elements);
-                    collectCorrelatedReferences(node, elements);
+                    elements.addAll(node.getCorrelatedReferenceElements());
                 }
                 
                 break;
@@ -158,7 +158,7 @@ public class RuleRemoveOptionalJoins implements
                 if (elements != null) {
                     Criteria crit = (Criteria)node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
                     ElementCollectorVisitor.getElements(crit, elements);
-                    collectCorrelatedReferences(node, elements);
+                    elements.addAll(node.getCorrelatedReferenceElements());
                 }
                 break;
             }
@@ -198,19 +198,6 @@ public class RuleRemoveOptionalJoins implements
         }
         return false;
     }
-
-	private void collectCorrelatedReferences(PlanNode node,
-			Set<ElementSymbol> elements) {
-		List refs = (List)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-		if (refs != null){
-		    Iterator refIter = refs.iterator();
-		    while (refIter.hasNext()) {
-		        Reference ref = (Reference)refIter.next();
-		        Expression expr = ref.getExpression();
-		        ElementCollectorVisitor.getElements(expr, elements);
-		    }
-		}
-	}
 
     /**
      * remove the optional node if possible

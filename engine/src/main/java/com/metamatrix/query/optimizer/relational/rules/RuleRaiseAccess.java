@@ -354,19 +354,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
             if(!(plan instanceof RelationalPlan)) {
                 return false;
             }
-            // We are expecting the following for an eligible subquery:
-            // 1. Plan should be Access, nothing else
-            // 2. Access should be returning a single column
-            // 3. should not be returning a constant or scalar function, 
-            //    only an element or aggregate  
-            // 4. Access node command should be a Query
-            // 5. Access node should be for the same model as critNode
-            // 6. If subquery has correlated references, model supports correlated
             
-            // Check that root node is a project
             RelationalPlan rplan = (RelationalPlan) plan;
             
-            // Check that the second node is an access node and that it has no children                
+            // Check that the plan is just an access node                
             RelationalNode accessNode = rplan.getRootNode();
             if(accessNode == null || ! (accessNode instanceof AccessNode) || accessNode.getChildren()[0] != null) {
                 return false;

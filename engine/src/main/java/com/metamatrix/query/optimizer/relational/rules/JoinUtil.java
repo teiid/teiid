@@ -87,8 +87,8 @@ public class JoinUtil {
         PlanNode right = joinNode.getLastChild();
         right = FrameUtil.findJoinSourceNode(right);
         
-        Collection outerGroups = left.getGroups();
-        Collection innerGroups = right.getGroups();
+        Collection<GroupSymbol> outerGroups = left.getGroups();
+        Collection<GroupSymbol> innerGroups = right.getGroups();
         if (joinType == JoinType.JOIN_RIGHT_OUTER) {
             outerGroups = innerGroups;
             innerGroups = left.getGroups(); 
@@ -135,7 +135,7 @@ public class JoinUtil {
      *  given all null values for elements in the inner groups
      */
     public static boolean isNullDependent(QueryMetadataInterface metadata,
-                                            final Collection innerGroups,
+                                            final Collection<GroupSymbol> innerGroups,
                                             Criteria crit) {
         Criteria simplifiedCrit = (Criteria)replaceWithNullValues(innerGroups, crit);
         try {
@@ -148,7 +148,7 @@ public class JoinUtil {
     }
     
     public static boolean isNullDependent(QueryMetadataInterface metadata,
-                                          final Collection innerGroups,
+                                          final Collection<GroupSymbol> innerGroups,
                                           Expression expr) {
         Expression simplifiedExpression = (Expression)replaceWithNullValues(innerGroups, expr);
         try {
@@ -160,7 +160,7 @@ public class JoinUtil {
         return !QueryRewriter.isNull(simplifiedExpression);
     }
 
-    private static LanguageObject replaceWithNullValues(final Collection innerGroups,
+    private static LanguageObject replaceWithNullValues(final Collection<GroupSymbol> innerGroups,
                                                         LanguageObject obj) {
         ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
             
@@ -188,7 +188,7 @@ public class JoinUtil {
     }
 
     static JoinType getJoinTypePreventingCriteriaOptimization(PlanNode joinNode, PlanNode critNode) {
-        Set groups = critNode.getGroups();
+        Set<GroupSymbol> groups = critNode.getGroups();
         
         //special case for 0 group criteria
         if (groups.size() == 0) {

@@ -57,6 +57,7 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
+import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -203,6 +204,7 @@ public class RelationalPlanner implements CommandPlanner {
                 node.setProperty(NodeConstants.Info.SUBQUERY_PLANS, plans);
                 node.setProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS, subqueryContainers);
                 node.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, correlatedReferences);
+                node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
             }
         }
     }

@@ -110,7 +110,7 @@ public class FrameUtil {
         
     }
     
-    static boolean canConvertAccessPatterns(PlanNode sourceNode) throws QueryPlannerException {
+    static boolean canConvertAccessPatterns(PlanNode sourceNode) {
         List accessPatterns = (List)sourceNode.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
         if (accessPatterns == null) {
             return true;
@@ -168,8 +168,21 @@ public class FrameUtil {
         throws QueryPlannerException {
 
         // Update groups for current node   
-        Set groups = node.getGroups();  
+        Set<GroupSymbol> groups = node.getGroups();  
+        
+        boolean hasOld = groups.remove(oldGroup);
 
+        int type = node.getType();
+
+        if(newGroup != null) {
+            if (!hasOld) {
+                return;
+            }
+            groups.add(newGroup);
+        } else if (type != NodeConstants.Types.SOURCE && type != NodeConstants.Types.ACCESS) {
+        	groups.clear();
+        }
+        
         // Convert expressions from correlated subquery references;
         // currently only for SELECT or PROJECT nodes
         List refs = (List)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
@@ -180,83 +193,63 @@ public class FrameUtil {
                 Expression expr = ref.getExpression();
                 Expression convertedExpr = convertExpression(expr, symbolMap);
                 ref.setExpression(convertedExpr);
+                if (newGroup == null) {
+                    GroupsUsedByElementsVisitor.getGroups(convertedExpr, groups);
+                }
             }
         }
-        
-        boolean hasOld = groups.remove(oldGroup);
-        
-        if(newGroup != null) {
-            if (!hasOld) {
-                return;
-            }
-            groups.add(newGroup);
-        }   
 
-        // Updated elements
-        List newElementSymbols = null;
-        if (newGroup == null) {
-            newElementSymbols = new ArrayList();
-        }
-
-        int type = node.getType();
         if(type == NodeConstants.Types.SELECT) { 
             Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-            convertCriteria(crit, symbolMap);
+            crit = convertCriteria(crit, symbolMap);
+            node.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
             
             if (newGroup == null) {
-                ElementCollectorVisitor.getElements(crit, newElementSymbols);
+                GroupsUsedByElementsVisitor.getGroups(crit, groups);
             }
                             
         } else if(type == NodeConstants.Types.PROJECT) {                    
-            List elements = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);           
-            List newElements = new ArrayList(elements.size());
+            List<SingleElementSymbol> elements = (List<SingleElementSymbol>) node.getProperty(NodeConstants.Info.PROJECT_COLS);           
             
-            Iterator elementIter = elements.iterator();
-            while(elementIter.hasNext()) { 
-                SingleElementSymbol symbol = (SingleElementSymbol) elementIter.next();
+            for (int i = 0; i < elements.size(); i++) {
+                SingleElementSymbol symbol = elements.get(i);
                 SingleElementSymbol mappedSymbol = convertSingleElementSymbol(symbol, symbolMap, true);
-                newElements.add(mappedSymbol);
+                elements.set(i, mappedSymbol);
                       
                 if (newGroup == null) {
-                    ElementCollectorVisitor.getElements(mappedSymbol, newElementSymbols);
+                    GroupsUsedByElementsVisitor.getGroups(mappedSymbol, groups);
                 }
             }
             
-            node.setProperty(NodeConstants.Info.PROJECT_COLS, newElements);
-            
         } else if(type == NodeConstants.Types.JOIN) { 
             // Convert join criteria property
-            List joinCrits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-            if(joinCrits != null && joinCrits.size() > 0) { 
-                Iterator critIter = joinCrits.iterator();
-                while(critIter.hasNext()) { 
-                    Criteria crit = (Criteria) critIter.next();
-                    convertCriteria(crit, symbolMap);
+            List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
+            if(joinCrits != null) { 
+            	for (int i = 0; i < joinCrits.size(); i++) {
+                    Criteria crit = joinCrits.get(i);
+                    crit = convertCriteria(crit, symbolMap);
                     
                     if (newGroup == null) {
-                        ElementCollectorVisitor.getElements(crit, newElementSymbols);
+                        GroupsUsedByElementsVisitor.getGroups(crit, groups);
                     }
+                    joinCrits.set(i, crit);
                 }   
             }
             
             convertAccessPatterns(symbolMap, node);
         
         } else if(type == NodeConstants.Types.SORT) { 
-            List elements = (List) node.getProperty(NodeConstants.Info.SORT_ORDER);         
-            List newElements = new ArrayList(elements.size());
+            List<SingleElementSymbol> elements = (List<SingleElementSymbol>) node.getProperty(NodeConstants.Info.SORT_ORDER);         
             
-            Iterator elementIter = elements.iterator();
-            while(elementIter.hasNext()) { 
-                SingleElementSymbol symbol = (SingleElementSymbol) elementIter.next();
+            for (int i = 0; i < elements.size(); i++) {
+                SingleElementSymbol symbol = elements.get(i);
                 SingleElementSymbol mappedSymbol = convertSingleElementSymbol(symbol, symbolMap, true);
-                newElements.add( mappedSymbol );
-                
+                elements.set(i, mappedSymbol);
+                      
                 if (newGroup == null) {
-                    ElementCollectorVisitor.getElements(mappedSymbol, newElementSymbols);
+                    GroupsUsedByElementsVisitor.getGroups(mappedSymbol, groups);
                 }
             }
-            
-            node.setProperty(NodeConstants.Info.SORT_ORDER, newElements);   
             
         } else if(type == NodeConstants.Types.GROUP) {  
             // Grouping columns 
@@ -270,17 +263,13 @@ public class FrameUtil {
                     newGroupCols.add( mappedCol );
                     
                     if (newGroup == null) {
-                        ElementCollectorVisitor.getElements(mappedCol, newElementSymbols);
+                        GroupsUsedByElementsVisitor.getGroups(mappedCol, groups);
                     }
                 }                        
                 node.setProperty(NodeConstants.Info.GROUP_COLS, newGroupCols);            
             }               
         } else if (type == NodeConstants.Types.SOURCE || type == NodeConstants.Types.ACCESS) {
             convertAccessPatterns(symbolMap, node);
-        }
-
-        if (newGroup == null) {
-            GroupsUsedByElementsVisitor.getGroups(newElementSymbols, groups);
         }
     }
     
@@ -419,7 +408,7 @@ public class FrameUtil {
      * @param groups
      * @return
      */
-    static PlanNode findOriginatingNode(PlanNode root, Set groups) {
+    static PlanNode findOriginatingNode(PlanNode root, Set<GroupSymbol> groups) {
         return findOriginatingNode(root, groups, false);
     }
     
@@ -438,7 +427,7 @@ public class FrameUtil {
         return findOriginatingNode(root, root.getGroups(), true);
     }
     
-    private static PlanNode findOriginatingNode(PlanNode root, Set groups, boolean joinSource) {
+    private static PlanNode findOriginatingNode(PlanNode root, Set<GroupSymbol> groups, boolean joinSource) {
         boolean containsGroups = false;
         
     	if(root.getType() == NodeConstants.Types.NULL || root.getType() == NodeConstants.Types.SOURCE 

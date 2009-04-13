@@ -49,7 +49,7 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  */
 public class ElementCollectorVisitor extends LanguageVisitor {
 
-    private Collection elements;
+    private Collection<ElementSymbol> elements;
 
     /**
      * Construct a new visitor with the specified collection, which should
@@ -57,7 +57,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param elements Collection to use for elements
      * @throws IllegalArgumentException If elements is null
      */
-	public ElementCollectorVisitor(Collection elements) {
+	public ElementCollectorVisitor(Collection<ElementSymbol> elements) {
         if(elements == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0021));
         }
@@ -69,7 +69,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * after the visitor has been run on the language object tree.
      * @return Collection of {@link com.metamatrix.query.sql.symbol.ElementSymbol}
      */
-    public Collection getElements() {
+    public Collection<ElementSymbol> getElements() {
         return this.elements;
     }
 
@@ -109,7 +109,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect elements in
      */
-    public static final void getElements(LanguageObject obj, Collection elements) {
+    public static final void getElements(LanguageObject obj, Collection<ElementSymbol> elements) {
     	if(obj == null) {
     		return;
     	}
@@ -117,7 +117,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
         PreOrderNavigator.doVisit(obj, visitor);
     }
     
-    public static final void getElements(Collection<LanguageObject> objs, Collection elements) {
+    public static final void getElements(Collection<LanguageObject> objs, Collection<ElementSymbol> elements) {
     	if(objs == null) {
     		return;
     	}
@@ -149,15 +149,15 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * subqueries of the query 
      * @return Collection of {@link com.metamatrix.query.sql.symbol.ElementSymbol}
      */
-    public static final Collection getElements(LanguageObject obj, boolean removeDuplicates, boolean useDeepIteration) {
+    public static final Collection<ElementSymbol> getElements(LanguageObject obj, boolean removeDuplicates, boolean useDeepIteration) {
         if(obj == null) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
-        Collection elements = null;
+        Collection<ElementSymbol> elements = null;
         if(removeDuplicates) {
-            elements = new HashSet();
+            elements = new HashSet<ElementSymbol>();
         } else {
-            elements = new ArrayList();
+            elements = new ArrayList<ElementSymbol>();
         }
         ElementCollectorVisitor visitor = null;
         if (useDeepIteration){

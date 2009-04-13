@@ -25,6 +25,7 @@ package com.metamatrix.query.optimizer.relational.plantree;
 import java.util.*;
 
 import com.metamatrix.query.sql.symbol.*;
+import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 
 public class PlanNode {
 
@@ -275,6 +276,21 @@ public class PlanNode {
     	}
     	assert node.getChildCount() == 0;
 		node.addLastChild(this);
+    }
+    
+    public Set<ElementSymbol> getCorrelatedReferenceElements() {
+        List<Reference> refs = (List<Reference>) this.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+        
+        if(refs == null || refs.isEmpty()) {
+            return Collections.emptySet();    
+        }
+        
+        HashSet<ElementSymbol> result = new HashSet<ElementSymbol>(refs.size());
+        for (Reference ref : refs) {
+            Expression expr = ref.getExpression();
+            ElementCollectorVisitor.getElements(expr, result);
+        }
+        return result;
     }
         
 }
