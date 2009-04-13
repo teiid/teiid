@@ -102,7 +102,7 @@ public interface ConfigurationService extends ApplicationService {
      * files are loaded usually as the extension modules. 
      * @return URL[] - Classpath for the UDF jar files
      */
-    public URL[] getCommonExtensionClasspath();
+    public List<URL> getCommonExtensionClasspath();
     
     /**
      * URL to Log file name  
@@ -262,7 +262,7 @@ public interface ConfigurationService extends ApplicationService {
      * @return String URL - url to extension path; null if extensions are not used 
      * @since 4.3
      */
-    public URL getExtensionPath();
+    public URL[] getExtensionPath();
 
     /**
      * Get the list of extension modules available in the store
@@ -270,7 +270,7 @@ public interface ConfigurationService extends ApplicationService {
      * @throws MetaMatrixComponentException
      * @since 4.3
      */
-    public List getExtensionModules() throws MetaMatrixComponentException;
+    public List<ExtensionModule> getExtensionModules() throws MetaMatrixComponentException;
 
     /**
      * Get the extension module by the given identifier 

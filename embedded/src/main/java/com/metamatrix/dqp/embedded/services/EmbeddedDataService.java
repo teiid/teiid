@@ -452,7 +452,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     }
     
     private void removeConnectorBinding(String connectorBindingName) 
-        throws MetaMatrixComponentException, ApplicationLifecycleException{
+        throws MetaMatrixComponentException {
         // do house cleanup of the objects.
         ConnectorID id = selectConnector(connectorBindingName);
         connectorMgrs.remove(id);   
@@ -565,17 +565,17 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             }
             
             DQPEmbeddedPlugin.logInfo("DataService.useClassloader", new Object[] {classPath}); //$NON-NLS-1$
-            URL context = getConfigurationService().getExtensionPath();
 
-            URL[] userPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, context);
+            List<URL> userPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, getConfigurationService().getExtensionPath());
 
             // since we are using the extensions, get the common extension path 
-            URL[] commonExtensionPath = getConfigurationService().getCommonExtensionClasspath();
-            ArrayList<URL> urlPath = new ArrayList<URL>();
+            List<URL> commonExtensionPath = getConfigurationService().getCommonExtensionClasspath();
             
-            urlPath.addAll(Arrays.asList(userPath));
+            ArrayList<URL> urlPath = new ArrayList<URL>();            
+            urlPath.addAll(userPath);
+            
             if (commonExtensionPath != null) {
-            	urlPath.addAll(Arrays.asList(commonExtensionPath));
+            	urlPath.addAll(commonExtensionPath);
             }
             
             ClassLoader classLoader = new URLFilteringClassLoader(urlPath.toArray(new URL[urlPath.size()]), Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());

@@ -207,43 +207,47 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public URL getUDFFile() {
-        String udfFile = userPreferences.getProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS);
-        if (valid(udfFile)) {
-            return getFullyQualifiedPath(udfFile);
-        }
         try {
-            return getFullyQualifiedPath(getDefaultExtensionPath(), USER_DEFINED_FUNCTION_MODEL);
-        } catch (MetaMatrixComponentException e) {
-            return null;
-        }
+			String udfFile = userPreferences.getProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS);
+			if (valid(udfFile)) {
+				return ExtensionModuleReader.resolveExtensionModule(udfFile, getExtensionPath());
+			}
+			return ExtensionModuleReader.resolveExtensionModule(ExtensionModuleReader.MM_JAR_PROTOCOL+":"+USER_DEFINED_FUNCTION_MODEL, getExtensionPath()); //$NON-NLS-1$
+		} catch (IOException e) {
+			return null;
+		}
     }
 
     /**  
      * @see com.metamatrix.dqp.service.ConfigurationService#getCommonExtensionClasspath()
      */
-    public URL[] getCommonExtensionClasspath() {
+    public List<URL> getCommonExtensionClasspath() {
         String classpath= userPreferences.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH);
         if (valid(classpath)) {            
             try {
-                URL context = getExtensionPath();
-                return ExtensionModuleReader.resolveExtensionClasspath(classpath, context);
+            	return ExtensionModuleReader.resolveExtensionClasspath(classpath, getExtensionPath());
             } catch (IOException e) {
                 DQPEmbeddedPlugin.logError(e, "EmbeddedConfigurationService.udf_classspath_failure", new Object[] {}); //$NON-NLS-1$                
             }
         }
+        /*
         else {
             try {
                 StringBuffer sb = new StringBuffer();
-                List extModules = getExtensionModules();
+                List<ExtensionModule> extModules = getExtensionModules();
                 boolean valid = false;
-                for (Iterator i = extModules.iterator(); i.hasNext();) {
-                    ExtensionModule module = (ExtensionModule)i.next();
+                for (ExtensionModule module:extModules) {
                     sb.append("extensionjar:").append(module.getFullName()).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
                     valid = true;
                 }
                 if (valid) {
-                    URL context = getExtensionPath();
-                    return ExtensionModuleReader.resolveExtensionClasspath(sb.toString(), context);
+                	classpath = sb.toString();
+                	ArrayList<URL> allExtensionModules = new ArrayList<URL>();
+                    URL[] contexts = getExtensionPath();
+                    for (URL context:contexts) {
+                    	allExtensionModules.addAll(ExtensionModuleReader.resolveExtensionClasspath(classpath, context));
+                    }
+                    return allExtensionModules;
                 }
             } catch (MetaMatrixComponentException e) {
                 // ok to return null
@@ -251,6 +255,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 DQPEmbeddedPlugin.logError(e, "EmbeddedConfigurationService.udf_classspath_failure", new Object[] {}); //$NON-NLS-1$
             }
         }
+        */
         return null;
     }
     
@@ -323,7 +328,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         return fileToSave;
     }
     
-    URL getVDBSaveLocation() throws MetaMatrixComponentException {
+    URL getVDBSaveLocation() {
         URL[] urls = getVDBLocations();
         for (int i = 0; i < urls.length; i++) {
             String vdblocation = urls[i].toString().toLowerCase();
@@ -634,7 +639,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      */
     public ConnectorBinding getConnectorBinding(String deployedBindingName) 
     	throws MetaMatrixComponentException {      
-    	return (ConnectorBinding)loadedConnectorBindings.get(deployedBindingName);
+    	return loadedConnectorBindings.get(deployedBindingName);
     }
     
     /**
@@ -803,10 +808,15 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @see com.metamatrix.dqp.service.ConfigurationService#getExtensionPath()
      * @since 4.3
      */
-    public URL getExtensionPath() {
-        String path = userPreferences.getProperty(DQPEmbeddedProperties.DQP_EXTENSIONS);
+    public URL[] getExtensionPath() {
+        String path = userPreferences.getProperty(DQPEmbeddedProperties.DQP_EXTENSIONS, "./extensions/"); //$NON-NLS-1$
         if (valid(path)) {
-            return getFullyQualifiedPath(path);
+        	ArrayList<URL> urlPaths = new ArrayList<URL>();
+        	StringTokenizer st = new StringTokenizer(path, ";"); //$NON-NLS-1$
+        	while(st.hasMoreElements()) {
+        		urlPaths.add(getFullyQualifiedPath(st.nextToken()));
+        	}
+            return urlPaths.toArray(new URL[urlPaths.size()]);
         }
         return null;
     }
@@ -815,19 +825,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @see com.metamatrix.dqp.service.ConfigurationService#useExtensionClasspath()
      */
     public boolean useExtensionClasspath() {
-        return (getExtensionPath() != null);
-    }
-    
-    /**
-     * @return - returns a non null default path if the extension path is not defined
-     * @throws MetaMatrixComponentException
-     */
-    URL getDefaultExtensionPath() throws MetaMatrixComponentException{
-        URL extPath = getExtensionPath();
-        if (extPath != null) {
-            return extPath;
-        }
-        return getFullyQualifiedPath("./extensions/"); //$NON-NLS-1$
+        String path = userPreferences.getProperty(DQPEmbeddedProperties.DQP_EXTENSIONS);
+        return valid(path);
     }
     
     /** 
@@ -835,26 +834,23 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public ExtensionModule getExtensionModule(String extModuleName) throws MetaMatrixComponentException {
-        URL extModulePath = getFullyQualifiedPath(getDefaultExtensionPath(), extModuleName);
-        return ExtensionModuleReader.loadExtensionModule(extModuleName, extModulePath);
+    	return ExtensionModuleReader.loadExtensionModule(extModuleName, getExtensionPath());
     }
     
     /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#getExtensionModules()
      * @since 4.3
      */
-    public List getExtensionModules() throws MetaMatrixComponentException {
-        URL extPath = getDefaultExtensionPath();        
-        return ExtensionModuleReader.loadExtensionModules(extPath);
+    public List<ExtensionModule> getExtensionModules() throws MetaMatrixComponentException {
+    	return ExtensionModuleReader.loadExtensionModules(getExtensionPath());
     }
     
     /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#saveExtensionModule(com.metamatrix.common.config.api.ExtensionModule)
      * @since 4.3
      */
-    public void saveExtensionModule(ExtensionModule extModule) throws MetaMatrixComponentException {        
-        URL extModuleURL = getFullyQualifiedPath(getDefaultExtensionPath(), extModule.getFullName());
-        ExtensionModuleWriter.write(extModule, extModuleURL);                 
+    public void saveExtensionModule(ExtensionModule extModule) throws MetaMatrixComponentException {
+        ExtensionModuleWriter.write(extModule, getExtensionPath());                 
     }
 
     /** 
@@ -862,8 +858,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public void deleteExtensionModule(String extModuleName) throws MetaMatrixComponentException {
-        URL extModuleURL = getFullyQualifiedPath(getDefaultExtensionPath(), extModuleName);
-        ExtensionModuleWriter.deleteModule(extModuleURL);
+    	ExtensionModuleWriter.deleteModule(extModuleName, getExtensionPath());
     }    
     
     /** 
@@ -930,9 +925,9 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     public void loadUDF() throws MetaMatrixComponentException {
         URL udfFile = getUDFFile();
         if(udfFile != null && exists(udfFile)) {
-            URL[] urls = getCommonExtensionClasspath();            
+            List<URL> urls = getCommonExtensionClasspath();            
             try {
-				this.udfSource = new UDFSource(udfFile, urls);
+				this.udfSource = new UDFSource(udfFile, urls.toArray(new URL[urls.size()]));
 				FunctionLibraryManager.registerSource(this.udfSource);
 				DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.udf_load", new Object[] {udfFile, urls}); //$NON-NLS-1$
 			} catch (IOException e) {
