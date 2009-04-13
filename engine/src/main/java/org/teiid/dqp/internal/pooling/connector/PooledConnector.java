@@ -101,6 +101,7 @@ public class PooledConnector extends ConnectorWrapper {
 	@Override
 	public void start(ConnectorEnvironment environment)
 			throws ConnectorException {
+		this.environment = environment;
 		Properties p = environment.getProperties();
 		pool.initialize(p);
 		if (xaPool != null) {
