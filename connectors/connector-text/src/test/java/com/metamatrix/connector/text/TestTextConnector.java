@@ -47,7 +47,7 @@ public class TestTextConnector extends TestCase {
 
         ConnectorEnvironment env = EnvironmentUtility.createEnvironment(props, false);
         TextConnector connector = new TextConnector();
-        // Init license checker with class, non-GUI notifier and don't exitOnFailure
+        // Initialize license checker with class, non-GUI notifier and don't exitOnFailure
         connector.start(env);
         return connector;
     }
