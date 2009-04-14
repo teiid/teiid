@@ -375,7 +375,13 @@ public final class EmbeddedDriver extends BaseDriver {
             }
             
             URL[] dqpClassPath = runtimeClasspath.toArray(new URL[runtimeClasspath.size()]);
-            this.classLoader = new URLClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
+            boolean useNondelegation = Boolean.parseBoolean(info.getProperty("dqp.useNonDelegateClassloader", "false")); //$NON-NLS-1$ //$NON-NLS-2$
+            if (useNondelegation) {
+            	this.classLoader = new NonDelegatingClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
+            }
+            else {
+            	this.classLoader = new URLClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
+            }
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_classpath"); //$NON-NLS-1$
             DriverManager.println(logMsg);
             for (int i = 0; i < dqpClassPath.length; i++) {
