@@ -26,7 +26,7 @@ public class SforceServiceLocator extends org.apache.axis.client.Service impleme
     }
 
     // Use to get a proxy class for Soap
-    private java.lang.String Soap_address = "https://www.salesforce.com/services/Soap/u/14.0";
+    private java.lang.String Soap_address = "https://www.salesforce.com/services/Soap/u/15.0";
 
     public java.lang.String getSoapAddress() {
         return Soap_address;

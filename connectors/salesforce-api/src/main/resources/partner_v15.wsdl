@@ -2,10 +2,10 @@
 
 
 <!--
-Salesforce.com Partner Web Services API Version 14.0
-Generated on 2008-11-12 15:51:21 +0000.
+Salesforce.com Partner Web Services API Version 15.0
+Generated on 2009-04-15 20:55:33 +0000.
 
-Copyright 1999-2008 salesforce.com, inc.
+Copyright 1999-2009 salesforce.com, inc.
 All Rights Reserved
 -->
 
@@ -1404,6 +1404,14 @@ All Rights Reserved
                 </complexType>
             </element>
 
+            <element name="AllowFieldTruncationHeader">
+                <complexType>
+                    <sequence>
+                        <element name="allowFieldTruncation" type="xsd:boolean" />
+                    </sequence>
+                </complexType>
+            </element>
+        
             <!-- ideally this could of just been elem name="..." type="xsd:boolean"
                  but is required to be nested within a complexType for .NET 1.1 compatibility -->
             <element name="MruHeader">
@@ -1715,6 +1723,7 @@ All Rights Reserved
 
         <part element="tns:QueryOptions"                 name="QueryOptions"/>
         <part element="tns:AssignmentRuleHeader"         name="AssignmentRuleHeader"/>
+        <part element="tns:AllowFieldTruncationHeader"   name="AllowFieldTruncationHeader"/>
         <part element="tns:MruHeader"                    name="MruHeader"/>
         <part element="tns:EmailHeader"                  name="EmailHeader"/>
 
@@ -2358,6 +2367,7 @@ All Rights Reserved
                 <soap:header use="literal" message="tns:Header" part="CallOptions"/>
                 <soap:header use="literal" message="tns:Header" part="AssignmentRuleHeader"/>
                 <soap:header use="literal" message="tns:Header" part="MruHeader"/>
+                <soap:header use="literal" message="tns:Header" part="AllowFieldTruncationHeader"/>
                 <soap:header use="literal" message="tns:Header" part="DebuggingHeader"/>
                 <soap:header use="literal" message="tns:Header" part="EmailHeader"/>
                 <soap:body parts="parameters" use="literal"/>
@@ -2386,6 +2396,7 @@ All Rights Reserved
                 <soap:header use="literal" message="tns:Header" part="CallOptions"/>
                 <soap:header use="literal" message="tns:Header" part="AssignmentRuleHeader"/>
                 <soap:header use="literal" message="tns:Header" part="MruHeader"/>
+                <soap:header use="literal" message="tns:Header" part="AllowFieldTruncationHeader"/>
                 <soap:header use="literal" message="tns:Header" part="DebuggingHeader"/>
                 <soap:header use="literal" message="tns:Header" part="EmailHeader"/>
                 <soap:body parts="parameters" use="literal"/>
@@ -2414,6 +2425,7 @@ All Rights Reserved
                 <soap:header use="literal" message="tns:Header" part="CallOptions"/>
                 <soap:header use="literal" message="tns:Header" part="AssignmentRuleHeader"/>
                 <soap:header use="literal" message="tns:Header" part="MruHeader"/>
+                <soap:header use="literal" message="tns:Header" part="AllowFieldTruncationHeader"/>
                 <soap:header use="literal" message="tns:Header" part="DebuggingHeader"/>
                 <soap:header use="literal" message="tns:Header" part="EmailHeader"/>
                 <soap:body parts="parameters" use="literal"/>
@@ -2442,6 +2454,7 @@ All Rights Reserved
                 <soap:header use="literal" message="tns:Header" part="CallOptions"/>
                 <soap:header use="literal" message="tns:Header" part="AssignmentRuleHeader"/>
                 <soap:header use="literal" message="tns:Header" part="MruHeader"/>
+                <soap:header use="literal" message="tns:Header" part="AllowFieldTruncationHeader"/>
                 <soap:header use="literal" message="tns:Header" part="DebuggingHeader"/>
                 <soap:header use="literal" message="tns:Header" part="EmailHeader"/>
                 <soap:body parts="parameters" use="literal"/>
@@ -2470,6 +2483,7 @@ All Rights Reserved
                 <soap:header use="literal" message="tns:Header" part="CallOptions"/>
                 <soap:header use="literal" message="tns:Header" part="UserTerritoryDeleteHeader"/>
                 <soap:header use="literal" message="tns:Header" part="EmailHeader"/>
+                <soap:header use="literal" message="tns:Header" part="AllowFieldTruncationHeader"/>
                 <soap:header use="literal" message="tns:Header" part="DebuggingHeader"/>
                 <soap:body parts="parameters" use="literal"/>
             </input>
@@ -2486,6 +2500,7 @@ All Rights Reserved
             <input>
                 <soap:header use="literal" message="tns:Header" part="SessionHeader"/>
                 <soap:header use="literal" message="tns:Header" part="CallOptions"/>
+                <soap:header use="literal" message="tns:Header" part="AllowFieldTruncationHeader"/>
                 <soap:header use="literal" message="tns:Header" part="DebuggingHeader"/>
                 <soap:body parts="parameters" use="literal"/>
             </input>
@@ -2544,6 +2559,7 @@ All Rights Reserved
             <input>
                 <soap:header use="literal" message="tns:Header" part="SessionHeader"/>
                 <soap:header use="literal" message="tns:Header" part="CallOptions"/>
+                <soap:header use="literal" message="tns:Header" part="AllowFieldTruncationHeader"/>
                 <soap:header use="literal" message="tns:Header" part="DebuggingHeader"/>
                 <soap:body parts="parameters" use="literal"/>
             </input>
@@ -2563,6 +2579,7 @@ All Rights Reserved
             <input>
                 <soap:header use="literal" message="tns:Header" part="SessionHeader"/>
                 <soap:header use="literal" message="tns:Header" part="CallOptions"/>
+                <soap:header use="literal" message="tns:Header" part="AllowFieldTruncationHeader"/>
                 <soap:header use="literal" message="tns:Header" part="DebuggingHeader"/>
                 <soap:body parts="parameters" use="literal"/>
             </input>
@@ -2828,7 +2845,7 @@ All Rights Reserved
     <service name="SforceService">
         <documentation>Sforce SOAP API</documentation>
         <port binding="tns:SoapBinding" name="Soap">
-            <soap:address location="https://www.salesforce.com/services/Soap/u/14.0"/>
+            <soap:address location="https://www.salesforce.com/services/Soap/u/15.0"/>
         </port>
     </service>
 </definitions>
