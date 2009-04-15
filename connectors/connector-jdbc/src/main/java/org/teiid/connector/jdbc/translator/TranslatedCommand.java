@@ -112,13 +112,11 @@ public class TranslatedCommand {
      * @return
      */
     static boolean isBindEligible(ILiteral l) {
-        if (TypeFacility.RUNTIME_TYPES.CLOB.equals(l.getType())
-                        || TypeFacility.RUNTIME_TYPES.BLOB.equals(l.getType()) 
-                        || TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType())) {
-            return true;
-        }
-        return false;
-    }
+		return TypeFacility.RUNTIME_TYPES.XML.equals(l.getType())
+				|| TypeFacility.RUNTIME_TYPES.CLOB.equals(l.getType())
+				|| TypeFacility.RUNTIME_TYPES.BLOB.equals(l.getType())
+				|| TypeFacility.RUNTIME_TYPES.OBJECT.equals(l.getType());
+	}
     
     /**
      * Return List of values to set on a prepared statement, if 
