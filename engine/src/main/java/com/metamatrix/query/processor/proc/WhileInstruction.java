@@ -29,11 +29,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 
 /**
  */
@@ -84,16 +84,12 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
         return this.whileProgram.getChildPlans();
     }
 
-
     /** 
+     * @throws MetaMatrixProcessingException 
      * @see com.metamatrix.query.processor.proc.RepeatedInstruction#testCondition(com.metamatrix.query.processor.proc.ProcedureEnvironment)
      */
-    public boolean testCondition(ProcedureEnvironment procEnv) throws MetaMatrixComponentException {
-        // get the current variable context
-        CommandInstruction.setReferenceValues(procEnv.getCurrentVariableContext(), ReferenceCollectorVisitor.getReferences(condition));
-        boolean evalValue = IfInstruction.evaluateCriteria(condition, procEnv);
-
-        return evalValue;
+    public boolean testCondition(ProcedureEnvironment procEnv) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        return procEnv.evaluateCriteria(condition);
     }
 
     /** 

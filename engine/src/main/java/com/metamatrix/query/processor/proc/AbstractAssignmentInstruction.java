@@ -24,7 +24,6 @@ package com.metamatrix.query.processor.proc;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +31,9 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
-import com.metamatrix.query.processor.xml.ProcessorInstruction;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.VariableContext;
@@ -61,11 +58,10 @@ public abstract class AbstractAssignmentInstruction extends CommandInstruction {
 	 * <p> Updates the current variable context with a value for the Variable
 	 * defined using a DeclareInstruction, the variable value is obtained by either processing
 	 * a expression or a command(stored as a processplan). The Processing of the command is
-	 * expected to result in 1 column, 1 row tuple, if more than a row is retuned an exception
+	 * expected to result in 1 column, 1 row tuple, if more than a row is returned an exception
 	 * is thrown. Also updates the program counter.</p>
      * @throws BlockedException
 	 * @throws MetaMatrixComponentException if error processing command or expression on this instruction
-     * @see ProcessorInstruction#process(ProcessorEnvironment)
      */
     public void process(ProgramEnvironment env) throws BlockedException,
                                                MetaMatrixComponentException, MetaMatrixProcessingException {
@@ -76,14 +72,9 @@ public abstract class AbstractAssignmentInstruction extends CommandInstruction {
         Object value = null;
         if (this.getExpression() != null || this.getProcessorPlan() != null) {
             
-            // get the current set of references and set their values
-            setReferenceValues(varContext);
-    
             if (this.expression != null) {
                 //Evaluated the given expression - may throw BlockedException!
-                value = new Evaluator(Collections.emptyMap(), procEnv
-						.getDataManager(), procEnv.getContext()).evaluate(
-						this.expression, Collections.EMPTY_LIST);
+                value = procEnv.evaluateExpression(this.expression);
             } else if (processPlan != null) {
                 String rsName = "ASSIGNMENT_INSTRUCTION"; //$NON-NLS-1$
                 procEnv.executePlan(processPlan, rsName);
@@ -118,10 +109,6 @@ public abstract class AbstractAssignmentInstruction extends CommandInstruction {
         }
         if (processPlan != null) {
             clone.setProcessPlan((ProcessorPlan)getProcessPlan().clone());
-        }
-        if (this.getReferences() != null) {
-            List copyReferences = cloneReferences();
-            clone.setReferences(copyReferences);
         }
     }
 

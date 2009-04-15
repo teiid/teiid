@@ -27,7 +27,6 @@ import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -44,8 +43,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -79,7 +76,6 @@ import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
@@ -2969,18 +2965,8 @@ public class TestXMLProcessor extends TestCase {
 
             // Process twice, to test reset and clone methods
             for (int i=1; i<=2; i++) {
-                BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-
-                List schema = plan.getOutputElements();
-                ArrayList typeNames = new ArrayList();
-                for(Iterator s = schema.iterator(); s.hasNext();) {
-                    SingleElementSymbol es = (SingleElementSymbol)s.next();            
-                    typeNames.add(DataTypeManager.getDataTypeName(es.getType()));
-                }
-                String[] types = (String[])typeNames.toArray(new String[typeNames.size()]);                                  
-                
-                TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), types, "TestConn", TupleSourceType.FINAL); //$NON-NLS-1$
-                CommandContext context = new CommandContext("pID", "TestConn", tsID, 10, "testUser", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();                
+                CommandContext context = new CommandContext("pID", "TestConn", 10, "testUser", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 context.setProcessDebug(DEBUG);
                 QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
     	
@@ -2996,7 +2982,7 @@ public class TestXMLProcessor extends TestCase {
                 //int count = bufferMgr.getFinalRowCount(tsID);
                 //assertEquals("Incorrect number of records: ", 1, count); //$NON-NLS-1$
                 
-                TupleSource ts = bufferMgr.getTupleSource(tsID);
+                TupleSource ts = bufferMgr.getTupleSource(processor.getResultsID());
                 List row = ts.nextTuple();
                 assertEquals("Incorrect number of columns: ", 1, row.size()); //$NON-NLS-1$
                
@@ -3004,7 +2990,7 @@ public class TestXMLProcessor extends TestCase {
                 XMLType result = (XMLType)row.get(0);
                 String actualDoc = result.getString();
                 
-                bufferMgr.removeTupleSource(tsID);
+                bufferMgr.removeTupleSource(processor.getResultsID());
                 
                 if(DEBUG) {
                     System.out.println("expectedDoc = \n" + expectedDoc); //$NON-NLS-1$
@@ -3026,15 +3012,7 @@ public class TestXMLProcessor extends TestCase {
             XMLPlan plan = (XMLPlan)QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
     
             BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            List schema = plan.getOutputElements();
-            ArrayList typeNames = new ArrayList();
-            for(Iterator s = schema.iterator(); s.hasNext();) {
-                SingleElementSymbol es = (SingleElementSymbol)s.next();            
-                typeNames.add(DataTypeManager.getDataTypeName(es.getType()));
-            }
-            String[] types = (String[])typeNames.toArray(new String[typeNames.size()]);                  
-            TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), types, null, TupleSourceType.FINAL);
-            CommandContext context = new CommandContext("pID", null, tsID, 10, null, null, null, null);                                                                 //$NON-NLS-1$
+            CommandContext context = new CommandContext("pID", null, 10, null, null, null, null);                                                                 //$NON-NLS-1$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
             processor.process();
         } catch (Exception e){
@@ -3077,25 +3055,15 @@ public class TestXMLProcessor extends TestCase {
             System.out.println(analysisRecord.getDebugLog());
         }
         
-//System.out.println("Plan w/ criteria\n" + plan);        
-
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        List schema = plan.getOutputElements();
-        ArrayList typeNames = new ArrayList();
-        for(Iterator s = schema.iterator(); s.hasNext();) {
-            SingleElementSymbol es = (SingleElementSymbol)s.next();            
-            typeNames.add(DataTypeManager.getDataTypeName(es.getType()));
-        }
-        String[] types = (String[])typeNames.toArray(new String[typeNames.size()]);         
-        TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), types, null, TupleSourceType.FINAL);  
-        CommandContext context = new CommandContext("pID", null, tsID, 10, null, null, null, null);                                 //$NON-NLS-1$
+        CommandContext context = new CommandContext("pID", null, 10, null, null, null, null);                                 //$NON-NLS-1$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
         processor.process();
         
-       int count = bufferMgr.getFinalRowCount(tsID);
+       int count = bufferMgr.getFinalRowCount(processor.getResultsID());
        assertEquals("Incorrect number of records: ", expectedDocs.length, count); //$NON-NLS-1$
         
-        TupleSource ts = bufferMgr.getTupleSource(tsID);
+        TupleSource ts = bufferMgr.getTupleSource(processor.getResultsID());
         for (int i=0; i<expectedDocs.length; i++){        
             List row = ts.nextTuple();
             if(row.isEmpty()){
@@ -3108,7 +3076,7 @@ public class TestXMLProcessor extends TestCase {
             //assertEquals("XML doc result # " + i +" mismatch: ", expectedDocs[i], actualDoc); //$NON-NLS-1$ //$NON-NLS-2$
             compareDocuments(expectedDocs[i], actualDoc);
         }
-        bufferMgr.removeTupleSource(tsID);
+        bufferMgr.removeTupleSource(processor.getResultsID());
     }    
 
     // =============================================================================================
@@ -6095,16 +6063,7 @@ public class TestXMLProcessor extends TestCase {
         XMLPlan plan = TestXMLPlanner.preparePlan(command, metadata, new DefaultCapabilitiesFinder(), null);
 
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        List schema = plan.getOutputElements();
-        ArrayList typeNames = new ArrayList();
-        for(Iterator s = schema.iterator(); s.hasNext();) {
-            SingleElementSymbol es = (SingleElementSymbol)s.next();            
-            typeNames.add(DataTypeManager.getDataTypeName(es.getType()));
-        }
-        String[] types = (String[])typeNames.toArray(new String[typeNames.size()]);         
-        
-        TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), types, null, TupleSourceType.FINAL);  
-        CommandContext context = new CommandContext("pID", null, tsID, 10, null, null, null, null);                                 //$NON-NLS-1$
+        CommandContext context = new CommandContext("pID", null, 10, null, null, null, null);                                 //$NON-NLS-1$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
 
         MetaMatrixComponentException failOnDefaultException = null;

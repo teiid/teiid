@@ -22,14 +22,14 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 /**
@@ -43,41 +43,20 @@ import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 public class DependentSelectNode extends SelectNode {
 
     private SubqueryProcessorUtility subqueryProcessor;
+    private SymbolMap correlatedReferences;
 
 	/**
 	 * Constructor for DependentSelectNode.
 	 * @param nodeID
 	 */
-	public DependentSelectNode(int nodeID) {
+	public DependentSelectNode(int nodeID, SymbolMap correlatedReferences) {
 		super(nodeID);
-        this.subqueryProcessor = new SubqueryProcessorUtility();
+		this.correlatedReferences = correlatedReferences;
 	}
 
     /** for unit testing */
     SubqueryProcessorUtility getSubqueryProcessorUtility(){
         return this.subqueryProcessor;
-    }
-
-	/**
-	 * Set the two Lists that map subquery ProcessorPlans to SubqueryContainer criteria
-	 * which hold the Commands represented by the ProcessorPlans.  The objects at
-	 * each index of both lists are essentially "mapped" to each other, one to one.
-	 * At a given index, the ProcessorPlan in the one List will be processed and
-	 * "fill" the SubqueryContainer criteria (of the other List) so the SubqueryContainer criteria
-	 * can be evalutated later.
-	 * @param subqueryProcessorPlans List of ProcessorPlans
-	 * @param subqueryContainerCriteria List of SubqueryContainer criteria
-	 */
-	public void setPlansAndCriteriaMapping(List subqueryProcessorPlans, List subqueryContainerCriteria) {
-        subqueryProcessor.setPlansAndValueProviders(subqueryProcessorPlans, subqueryContainerCriteria);
-	}
-    
-    /**
-     * Set List of References needing to be updated with each outer tuple
-     * @param correlatedReferences List<Reference> correlated reference to outer query
-     */
-    public void setCorrelatedReferences(List correlatedReferences){
-        subqueryProcessor.setCorrelatedReferences(correlatedReferences);
     }
 
 	public void reset() {
@@ -92,7 +71,14 @@ public class DependentSelectNode extends SelectNode {
 		throws MetaMatrixComponentException, MetaMatrixProcessingException {
 
 		super.open();
-        this.subqueryProcessor.open(this.getContext(), this.getBatchSize(), this.getDataManager(), this.getBufferManager());
+        this.subqueryProcessor.open(this);
+	}
+	
+	@Override
+	public void setCriteria(Criteria criteria) {
+		super.setCriteria(criteria);
+		List valueList = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.getCriteria());
+		this.subqueryProcessor = new SubqueryProcessorUtility(valueList, this.correlatedReferences);
 	}
 
 	/**
@@ -121,7 +107,7 @@ public class DependentSelectNode extends SelectNode {
 	protected void prepareToProcessTuple(Map elementMap, List currentTuple)
 	throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         
-        this.subqueryProcessor.process(elementMap, currentTuple, this.getBufferManager(), this.getConnectionID());
+        this.subqueryProcessor.process(this, elementMap, currentTuple);
 	}
 		
 	/**
@@ -130,27 +116,8 @@ public class DependentSelectNode extends SelectNode {
 	 * @see java.lang.Object#clone()
 	 */
 	public Object clone(){
-		DependentSelectNode clonedNode = new DependentSelectNode(super.getID());
+		DependentSelectNode clonedNode = new DependentSelectNode(super.getID(), this.correlatedReferences);
 		super.copy(this, clonedNode);
-        
-        List processorPlans = this.subqueryProcessor.getSubqueryPlans();
-		
-		List clonedValueIteratorProviders = new ArrayList(processorPlans.size());
-        ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(clonedNode.getCriteria(), clonedValueIteratorProviders);
-		List clonedProcessorPlans = new ArrayList(clonedValueIteratorProviders.size());
-		for (int i=0; i<clonedValueIteratorProviders.size(); i++){
-			ProcessorPlan aPlan = (ProcessorPlan)processorPlans.get(i);
-			clonedProcessorPlans.add(aPlan.clone());
-		}
-		clonedNode.setPlansAndCriteriaMapping(clonedProcessorPlans, clonedValueIteratorProviders);
-
-        //Since Reference.clone() returns itself and not a true clone, this shallow clone is sufficient
-        //to clone the Collection of References
-        if (this.subqueryProcessor.getCorrelatedReferences() != null){
-            List clonedReferences = new ArrayList(this.subqueryProcessor.getCorrelatedReferences());
-            clonedNode.setCorrelatedReferences(clonedReferences);
-        }
-
 		return clonedNode;
 	}	
     

@@ -22,14 +22,13 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 /**
@@ -41,25 +40,14 @@ import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 public class DependentProjectNode extends ProjectNode {
 
     private SubqueryProcessorUtility subqueryProcessor;
+    private SymbolMap correlatedReferences;
 
     /**
      * @param nodeID
      */
-    public DependentProjectNode(int nodeID) {
+    public DependentProjectNode(int nodeID, SymbolMap correlatedReferences) {
         super(nodeID);
-        this.subqueryProcessor = new SubqueryProcessorUtility();
-    }
-
-    public void setPlansAndValueProviders(List subqueryProcessorPlans, List valueIteratorProviders) {
-        subqueryProcessor.setPlansAndValueProviders(subqueryProcessorPlans, valueIteratorProviders);
-    }
-
-    /**
-     * Set List of References needing to be updated with each outer tuple
-     * @param correlatedReferences List<Reference> correlated reference to outer query
-     */
-    public void setCorrelatedReferences(List correlatedReferences){
-        subqueryProcessor.setCorrelatedReferences(correlatedReferences);
+        this.correlatedReferences = correlatedReferences;
     }
 
     public void reset() {
@@ -74,7 +62,14 @@ public class DependentProjectNode extends ProjectNode {
         throws MetaMatrixComponentException, MetaMatrixProcessingException {
 
         super.open();
-        this.subqueryProcessor.open(this.getContext(), this.getBatchSize(), this.getDataManager(), this.getBufferManager());
+        this.subqueryProcessor.open(this);
+    }
+    
+    @Override
+    public void setSelectSymbols(List symbols) {
+    	super.setSelectSymbols(symbols);
+		List valueList = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.getSelectSymbols());
+		this.subqueryProcessor = new SubqueryProcessorUtility(valueList, this.correlatedReferences);
     }
 
     /**
@@ -103,7 +98,7 @@ public class DependentProjectNode extends ProjectNode {
     protected void prepareToProcessTuple(Map elementMap, List currentTuple)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         
-        this.subqueryProcessor.process(elementMap, currentTuple, this.getBufferManager(), this.getConnectionID());
+        this.subqueryProcessor.process(this, elementMap, currentTuple);
     }
 
     /**
@@ -112,26 +107,8 @@ public class DependentProjectNode extends ProjectNode {
      * @see java.lang.Object#clone()
      */
     public Object clone(){
-        DependentProjectNode clonedNode = new DependentProjectNode(super.getID());
+        DependentProjectNode clonedNode = new DependentProjectNode(super.getID(), this.correlatedReferences);
         super.copy(this, clonedNode);
-        
-        List processorPlans = this.subqueryProcessor.getSubqueryPlans();
-        
-        List clonedValueIteratorProviders = new ArrayList(processorPlans.size());
-        ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(clonedNode.getSelectSymbols(), clonedValueIteratorProviders);
-        List clonedProcessorPlans = new ArrayList(clonedValueIteratorProviders.size());
-        for (int i=0; i<clonedValueIteratorProviders.size(); i++){
-            ProcessorPlan aPlan = (ProcessorPlan)processorPlans.get(i);
-            clonedProcessorPlans.add(aPlan.clone());
-        }
-        clonedNode.setPlansAndValueProviders(clonedProcessorPlans, clonedValueIteratorProviders);
-
-        //Since Reference.clone() returns itself and not a true clone, this shallow clone is sufficient
-        //to clone the Collection of References
-        if (this.subqueryProcessor.getCorrelatedReferences() != null){
-            List clonedReferences = new ArrayList(this.subqueryProcessor.getCorrelatedReferences());
-            clonedNode.setCorrelatedReferences(clonedReferences);
-        }
         
         return clonedNode;
     }   

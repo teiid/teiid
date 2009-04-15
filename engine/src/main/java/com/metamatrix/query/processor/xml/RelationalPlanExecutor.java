@@ -22,8 +22,6 @@
 
 package com.metamatrix.query.processor.xml;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +31,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.query.execution.QueryExecPlugin;
@@ -44,12 +40,11 @@ import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 import com.metamatrix.query.util.LogConstants;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 
 /** 
@@ -61,7 +56,6 @@ import com.metamatrix.query.util.TypeRetrievalUtil;
 class RelationalPlanExecutor implements PlanExecutor {
     
     QueryProcessor internalProcessor;
-    TupleSourceID internalResultID;
 
     // information about the result set.
     ResultSetInfo resultInfo;
@@ -82,12 +76,8 @@ class RelationalPlanExecutor implements PlanExecutor {
         this.bufferMgr = bufferMgr;
         
         ProcessorPlan plan = (ProcessorPlan)resultInfo.getPlan();
-        List schema = plan.getOutputElements();
         CommandContext subContext = (CommandContext)context.clone();
-        
-        this.internalResultID = bufferMgr.createTupleSource(schema, TypeRetrievalUtil.getTypeNames(schema), subContext.getConnectionID(), TupleSourceType.PROCESSOR);
-        subContext.setTupleSourceID(internalResultID);
-        subContext.setProcessorID(subContext.getProcessorID());
+        subContext.pushVariableContext(new VariableContext());
         this.internalProcessor = new QueryProcessor(plan, subContext, bufferMgr, dataMgr);
     }
     
@@ -123,26 +113,13 @@ class RelationalPlanExecutor implements PlanExecutor {
         if (this.resultInfo.hasReferences() && (referencesValues != null && !referencesValues.isEmpty()) ) {
             for (final Iterator i = this.resultInfo.getReferences().iterator(); i.hasNext();) {
                 Reference ref = (Reference)i.next();
-                Expression expr = ref.getExpression();
-                if(expr instanceof ElementSymbol) {
-                    ElementSymbol element = (ElementSymbol) expr;
-                    if(referencesValues.containsKey(element)) {
-                        setReferenceValue(referencesValues.get(element), element, ref);
-                    }
-                    else {
-                        throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("unmapped_reference", element.getName())); //$NON-NLS-1$
-                    }
+                ElementSymbol expr = ref.getExpression();
+                if(!referencesValues.containsKey(expr)) {
+                    throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("unmapped_reference", expr.getName())); //$NON-NLS-1$
                 }
+                this.internalProcessor.getContext().getVariableContext().setValue(expr, referencesValues.get(expr));
             }
         }
-    }    
-    
-    static void setReferenceValue(Object value, ElementSymbol element, Reference ref) {
-        Map elmntMap = new HashMap();
-        elmntMap.put(element, new Integer(0));
-        List tuple = new ArrayList(1);
-        tuple.add(value);
-        ref.setData(elmntMap, tuple);
     }    
     
     /**
@@ -153,7 +130,7 @@ class RelationalPlanExecutor implements PlanExecutor {
     public List nextRow() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         if (this.tupleSource == null) {
             try {
-                this.tupleSource = this.bufferMgr.getTupleSource(this.internalResultID);
+                this.tupleSource = this.bufferMgr.getTupleSource(this.internalProcessor.getResultsID());
             } catch (TupleSourceNotFoundException e) {
                 throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("tuple_not_found", this.resultInfo.getResultSetName())); //$NON-NLS-1$                
             }
@@ -199,22 +176,12 @@ class RelationalPlanExecutor implements PlanExecutor {
      * Close the executor and release all the resources.
      */
     public void close() throws MetaMatrixComponentException {
-        removeTupleSource(this.resultInfo.getResultSetName(), this.internalResultID);
-    }
-    
-    /**
-     * Remove a tuple source when it is done with it.
-     */
-    void removeTupleSource(String rsName, TupleSourceID tupleSourceID)
-        throws MetaMatrixComponentException {
         try {
-            this.bufferMgr.removeTupleSource(tupleSourceID);
+            this.bufferMgr.removeTupleSource(this.internalProcessor.getResultsID());
         } catch (TupleSourceNotFoundException e) {
-            throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0021, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0021, rsName));
-        } catch (MetaMatrixComponentException e) {
-            throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0022, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0022, rsName));
-        }
-        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"removed tuple source", tupleSourceID, "for result set", rsName}); //$NON-NLS-1$ //$NON-NLS-2$
+            
+        } 
+        LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"removed tuple source", this.internalProcessor.getResultsID(), "for result set", this.internalProcessor.getResultsID()}); //$NON-NLS-1$ //$NON-NLS-2$
     }
   
 }

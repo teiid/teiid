@@ -94,10 +94,10 @@ public class TestPreparedStatement extends TestCase{
     static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement) throws Exception { 
         TestablePreparedPlanCache prepPlan = new TestablePreparedPlanCache();
         //Create plan
-        ProcessorPlan plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, SESSION_ID, callableStatement, false);
+        PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, SESSION_ID, callableStatement, false);
 
         // Run query
-        TestProcessor.helpProcess(plan, dataManager, expected);
+        TestProcessor.helpProcess(plan.processPlan, plan.context, dataManager, expected);
         
         //test cached plan
     	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, SESSION_ID, callableStatement, false);
@@ -106,7 +106,7 @@ public class TestPreparedStatement extends TestCase{
         assertEquals("should reuse the plan", 1, prepPlan.hitCount); //$NON-NLS-1$
                 
         // Run query again
-        TestProcessor.helpProcess(plan, dataManager, expected);
+        TestProcessor.helpProcess(plan.processPlan, plan.context, dataManager, expected);
         
         //get the plan again with a new connection
         assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, 7, callableStatement, false));
@@ -159,19 +159,19 @@ public class TestPreparedStatement extends TestCase{
         List values = new ArrayList();
         values.add(new Integer(0));
 
-        ProcessorPlan plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new PreparedPlanCache(), SESSION_ID, false, false);
+        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new PreparedPlanCache(), SESSION_ID, false, false);
         
-        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);  
+        TestOptimizer.checkNodeTypes(plan.processPlan, TestOptimizer.FULL_PUSHDOWN);  
     }
     
-	private ProcessorPlan helpGetProcessorPlan(String preparedSql, List values, PreparedPlanCache prepPlanCache)
+	private PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, PreparedPlanCache prepPlanCache)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {    	
 		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false);
     }
 	
-	private ProcessorPlan helpGetProcessorPlan(String preparedSql, List values,
+	private PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
 			PreparedPlanCache prepPlanCache, int conn)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
@@ -181,7 +181,7 @@ public class TestPreparedStatement extends TestCase{
 						.example1Cached(), prepPlanCache, conn, false, false);
 	}
 
-	static ProcessorPlan helpGetProcessorPlan(String preparedSql, List values,
+	static PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
 			CapabilitiesFinder capFinder, QueryMetadataInterface metadata, PreparedPlanCache prepPlanCache, int conn, boolean callableStatement, boolean limitResults)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
@@ -212,9 +212,8 @@ public class TestPreparedStatement extends TestCase{
         serverRequest.setMetadata(capFinder, metadata, null);
         serverRequest.processRequest();
         
-        ProcessorPlan plan = serverRequest.processPlan;
-        assertNotNull(plan);
-		return plan;
+        assertNotNull(serverRequest.processPlan);
+		return serverRequest;
 	}
 	
 	public void testValidateCorrectValues() throws Exception {

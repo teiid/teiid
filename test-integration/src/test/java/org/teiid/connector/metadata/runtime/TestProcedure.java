@@ -60,13 +60,13 @@ public class TestProcedure extends TestCase {
     public Procedure getProcedure(String procName, int inputArgs, TranslationUtility transUtil) throws Exception {
         StringBuffer sql = new StringBuffer("EXEC " + procName + "("); //$NON-NLS-1$ //$NON-NLS-2$
         if(inputArgs > 0) {
-            sql.append("?"); //$NON-NLS-1$
+            sql.append("null"); //$NON-NLS-1$
             for(int i=1; i<inputArgs; i++) {
-                sql.append(", ?");                 //$NON-NLS-1$
+                sql.append(", null");                 //$NON-NLS-1$
             }
         }
         sql.append(")"); //$NON-NLS-1$
-        IProcedure proc = (IProcedure) transUtil.parseCommand(sql.toString()); //$NON-NLS-1$
+        IProcedure proc = (IProcedure) transUtil.parseCommand(sql.toString()); 
         return proc.getMetadataObject();
     }
 
@@ -122,7 +122,7 @@ public class TestProcedure extends TestCase {
         Element elemID2 = rsCols.get(1);        
         assertEquals("RSCol2", elemID2.getName());         //$NON-NLS-1$
         assertEquals("ConnectorMetadata.TestProc2.RSParam.RSCol2", elemID2.getFullName());         //$NON-NLS-1$
-        assertEquals(null, elemID2.getNameInSource());         //$NON-NLS-1$
+        assertEquals(null, elemID2.getNameInSource());         
         assertEquals(String.class, elemID2.getJavaType());
         assertEquals(1, elemID2.getPosition());
         Properties props = new Properties();

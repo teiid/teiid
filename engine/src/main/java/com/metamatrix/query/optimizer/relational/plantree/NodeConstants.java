@@ -128,16 +128,7 @@ public final class NodeConstants {
         OUTPUT_COLS,        // List <SingleElementSymbol>
 
         // Plan node constants, common to any or multiple plan node types
-        /** List of ProcessorPlan, directly maps to {@link #SUBQUERY_VALUE_PROVIDERS}*/
-        SUBQUERY_PLANS,
-        /** List of ValueIteratorProvider, directly maps to {@link #SUBQUERY_PLANS}*/
-        SUBQUERY_VALUE_PROVIDERS,
-        /**
-         * List of References in correlated subqueries to an "outer" query.  This
-         * List is a property of an outer node which needs to provide data to the
-         * References for each tuple that the outer node processes.
-         */
-        CORRELATED_REFERENCES,
+        CORRELATED_REFERENCES, // SymbolMap
         
         // Plan Node Cost Estimate Constants
         EST_SET_SIZE,        // Integer represents the estimated set size this node would produce for a sibling node as the indenpendent node in a dependent join scenario

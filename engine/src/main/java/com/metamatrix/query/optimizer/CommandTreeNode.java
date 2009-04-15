@@ -22,8 +22,9 @@
 
 package com.metamatrix.query.optimizer;
 
-import java.util.*;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -64,17 +65,14 @@ public class CommandTreeNode {
 	/** The Planner-specific canonical plan object */
 	private Object canonicalPlan;
 	
-	/** The processor-plan of this node (useful if this is a subnode) */
-	private ProcessorPlan processorPlan;
-	
 	/** Planner-specific node properties, as defined by each CommandPlanner implementation */
-	private Map properties = new HashMap();
+	private Map<Integer, Object> properties = new HashMap<Integer, Object>();
 	
 	/** The parent of this node, null if root. */
 	private CommandTreeNode parent;
 
 	/** Child nodes */
-	private LinkedList children = new LinkedList();	
+	private LinkedList<CommandTreeNode> children = new LinkedList<CommandTreeNode>();	
 
 	// ====================================================
 	// API
@@ -143,7 +141,7 @@ public class CommandTreeNode {
 	 * @return ProcessorPlan at this node, or null if none
 	 */
 	public ProcessorPlan getProcessorPlan() {
-		return processorPlan;
+		return this.command.getProcessorPlan();
 	}
 
 	/**
@@ -152,7 +150,7 @@ public class CommandTreeNode {
 	 * @param processorPlan The processorPlan to set
 	 */
 	public void setProcessorPlan(ProcessorPlan processorPlan) {
-		this.processorPlan = processorPlan;
+		this.command.setProcessorPlan(processorPlan);
 	}	
 
 	// ====================================================
@@ -167,7 +165,7 @@ public class CommandTreeNode {
 		this.parent = parent;
 	}
 
-	public List getChildren() {
+	public List<CommandTreeNode> getChildren() {
 		return this.children;
 	}
 	
@@ -176,11 +174,11 @@ public class CommandTreeNode {
 	}
 		
 	public CommandTreeNode getFirstChild() {
-		return (CommandTreeNode) this.children.getFirst();
+		return this.children.getFirst();
 	}
 	
 	public CommandTreeNode getLastChild() {
-		return (CommandTreeNode) this.children.getLast();
+		return this.children.getLast();
 	}
 		
 	public void addFirstChild(CommandTreeNode child) {
@@ -191,7 +189,7 @@ public class CommandTreeNode {
 		this.children.addLast(child);
 	}
 	
-	public void addChildren(List otherChildren) {
+	public void addChildren(List<CommandTreeNode> otherChildren) {
 		this.children.addAll(otherChildren);
 	}
 	
@@ -219,14 +217,6 @@ public class CommandTreeNode {
 	}
 	
 	/**
-	 * Get the Map of all planner-specific properties
-	 * @return Map property keys to property values
-	 */
-	public Map getAllProperties(){
-		return this.properties;
-	}
-
-	/**
 	 * Set a {@link CommandPlanner}-specific property.  Each planner may have
 	 * conflicting property keys, so an object of this Class should only be
 	 * used for one CommandPlanner at a time.
@@ -237,15 +227,6 @@ public class CommandTreeNode {
 		properties.put(propertyID, value);
 	}
 
-	/**
-	 * Remove one of the planner-specific properties.  No action
-	 * is taken if the indicated property doesn't exist.
-	 * @param propertyID key of the property
-	 */
-	public void removeProperty(Integer propertyID) {
-		properties.remove(propertyID);
-	}	
-	
 	// ====================================================
 	// Overriden Object Methods
 	// ====================================================
@@ -291,9 +272,7 @@ public class CommandTreeNode {
 		getCanonicalPlanString(str);
 		
 		// Recursively add children at one greater tab level
-		Iterator iter = children.iterator();
-		while(iter.hasNext()) {
-			CommandTreeNode child = (CommandTreeNode) iter.next();
+		for (CommandTreeNode child : this.children) {
 			child.getRecursiveString(str, tabLevel+1);
 		}		
 	}

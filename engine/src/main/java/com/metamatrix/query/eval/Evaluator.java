@@ -39,7 +39,6 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.Sequencable;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
@@ -58,6 +57,7 @@ import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
@@ -482,20 +482,25 @@ public class Evaluator {
 	   throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
 	
 	   if(expression instanceof SingleElementSymbol) {
-	       // Case 5155: elements must be non-null
-	       Assertion.isNotNull( elements );
-	
-	       // Try to evaluate by lookup in the elements map (may work for both ElementSymbol and ExpressionSymbol
-	       Integer index = (Integer) elements.get(expression);
-	       if(index != null) {
-	           return tuple.get(index.intValue());
-	       }
+		   if (elements != null) {
+		       // Try to evaluate by lookup in the elements map (may work for both ElementSymbol and ExpressionSymbol
+		       Integer index = (Integer) elements.get(expression);
+		       if(index != null) {
+		           return tuple.get(index.intValue());
+		       }
+		   }
+		   
 	       // Otherwise this should be an ExpressionSymbol and we just need to dive in and evaluate the expression itself
 	       if (expression instanceof ExpressionSymbol && !(expression instanceof AggregateSymbol)) {            
 	           ExpressionSymbol exprSyb = (ExpressionSymbol) expression;
 	           Expression expr = exprSyb.getExpression();
 	           return internalEvaluate(expr, tuple);
 	       } 
+	       
+	       if (expression instanceof ElementSymbol && this.context != null && this.context.getVariableContext() != null 
+	    		   && this.context.getVariableContext().containsVariable((ElementSymbol)expression)) {
+    		   return this.context.getVariableContext().getValue((ElementSymbol)expression);
+	       }
 	       // instead of assuming null, throw an exception.  a problem in planning has occurred
 	       throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
 	   } 
@@ -508,7 +513,8 @@ public class Evaluator {
 	   } else if(expression instanceof SearchedCaseExpression) {
 	       return evaluate((SearchedCaseExpression) expression, tuple);
 	   } else if(expression instanceof Reference) {
-	       return ((Reference) expression).getValue(dataMgr, context);
+		   Reference ref = (Reference)expression;
+		   return internalEvaluate(ref.getExpression(), tuple);
 	   } else if(expression instanceof ScalarSubquery) {
 	       return evaluate((ScalarSubquery) expression, tuple);
 	   } else {

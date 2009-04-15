@@ -95,7 +95,7 @@ public class PreparedBatchUpdatePlan extends BaseProcessorPlan {
      */
     public void open() throws MetaMatrixComponentException, MetaMatrixProcessingException{
     	if (!isPlanOpened) { // Open the plan only once
-        	PreparedStatementRequest.resolveParameterValues(parameterReferences, (List)parameterValuesList.get(planIndex));          	
+        	PreparedStatementRequest.resolveParameterValues(parameterReferences, (List)parameterValuesList.get(planIndex), this.getContext());          	
             updatePlans[planIndex].open();
             isPlanOpened = true;
         }

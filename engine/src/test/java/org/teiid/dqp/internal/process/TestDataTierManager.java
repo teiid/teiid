@@ -29,12 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.DataTierManagerImpl;
-import org.teiid.dqp.internal.process.DataTierTupleSource;
-import org.teiid.dqp.internal.process.RequestWorkItem;
-
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -46,7 +40,6 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
@@ -133,7 +126,6 @@ public class TestDataTierManager extends TestCase {
         
         context = new CommandContext();
         context.setProcessorID(requestID);
-        context.setTupleSourceID(new TupleSourceID("fakeid")); //$NON-NLS-1$
         context.setVdbName("test"); //$NON-NLS-1$
         context.setVdbVersion("1"); //$NON-NLS-1$
         context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
@@ -327,7 +319,7 @@ public class TestDataTierManager extends TestCase {
         public void close() throws MetaMatrixComponentException {}
         public List getAndClearWarnings() {return null;}
         public CommandContext getContext() {return null;}
-        public List getOutputElements() {return null;}
+        public List getOutputElements() {return Collections.EMPTY_LIST;}
         public void initialize(CommandContext context,ProcessorDataManager dataMgr,BufferManager bufferMgr) {}
         public TupleBatch nextBatch() throws BlockedException,MetaMatrixComponentException {
         	ArrayList one = new ArrayList(); one.add("1");

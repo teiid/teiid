@@ -23,7 +23,6 @@
 package com.metamatrix.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -62,10 +61,13 @@ import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.lang.SubqueryFromClause;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
+import com.metamatrix.query.sql.navigator.DeepPostOrderNavigator;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
-import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
+import com.metamatrix.query.sql.util.SymbolMap;
+import com.metamatrix.query.sql.visitor.ExpressionMappingVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 public final class RuleCollapseSource implements OptimizerRule {
@@ -243,12 +245,33 @@ public final class RuleCollapseSource implements OptimizerRule {
             case NodeConstants.Types.SELECT:
             {
                 Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);       
-                Iterator valueIteratorProviders = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).iterator();
-                if (valueIteratorProviders.hasNext()){
-                    SubqueryContainer container = (SubqueryContainer)valueIteratorProviders.next();
-                    RelationalPlan subqueryPlan = (RelationalPlan)((Collection)node.getProperty(NodeConstants.Info.SUBQUERY_PLANS)).iterator().next();
+                List<SubqueryContainer> containers = node.getSubqueryContainers();
+                for (SubqueryContainer container : containers) {
+                    RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
+                    if (subqueryPlan == null) {
+                    	continue;
+                    }
                     AccessNode child = (AccessNode)subqueryPlan.getRootNode();
-                    container.setCommand(child.getCommand());
+                    Command command = child.getCommand();
+                    final SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                    if (map != null) {
+                    	ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
+                    		@Override
+                    		public Expression replaceExpression(
+                    				Expression element) {
+                    			if (element instanceof Reference) {
+                    				Reference ref = (Reference)element;
+                    				Expression replacement = map.getMappedExpression(ref.getExpression());
+                    				if (replacement != null) {
+                    					return replacement;
+                    				}
+                    			}
+                    			return element;
+                    		}
+                    	};
+                    	DeepPostOrderNavigator.doVisit(command, visitor);
+                    }
+                    container.setCommand(command);
                 }
                 if(!node.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
                     query.setCriteria( CompoundCriteria.combineCriteria(query.getCriteria(), crit) );

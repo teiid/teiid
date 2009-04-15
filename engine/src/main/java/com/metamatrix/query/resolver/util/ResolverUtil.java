@@ -230,13 +230,12 @@ public class ResolverUtil {
      * @param targetType the target type, if the expression's type is null.
      * @throws QueryResolverException if unable to set the reference type to the target type.
      */
-    public static void setTypeIfReference(Expression expression, Class targetType, LanguageObject surroundingExpression) throws QueryResolverException {
-        if ((expression instanceof Reference) && expression.getType() == null) {
+    public static void setTypeIfReference(Expression expression, Class<?> targetType, LanguageObject surroundingExpression) throws QueryResolverException {
+        if ((expression instanceof Reference) && ((Reference)expression).isPositional()) {
         	if (targetType == null) {
         		throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0026, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0026, surroundingExpression));
         	}
-            Constant dummy = new Constant(null, targetType);
-            ((Reference)expression).setExpression(dummy);
+            ((Reference)expression).setType(targetType);
         }
     }
     

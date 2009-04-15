@@ -905,8 +905,8 @@ public class TestResolver extends TestCase {
     
     public void testResolveParameters() {
         List bindings = new ArrayList();
-        bindings.add("0"); //$NON-NLS-1$
-        bindings.add("'abc'"); //$NON-NLS-1$
+        bindings.add("pm1.g2.e1"); //$NON-NLS-1$
+        bindings.add("pm1.g2.e2"); //$NON-NLS-1$
         
         Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, ? FROM pm1.g1 WHERE pm1.g1.e1 = ?", bindings); //$NON-NLS-1$
 
@@ -920,14 +920,14 @@ public class TestResolver extends TestCase {
 
     public void testResolveParametersInsert() {
         List bindings = new ArrayList();
-        bindings.add("'abc'"); //$NON-NLS-1$
+        bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         
         helpResolve("INSERT INTO pm1.g1 (e1) VALUES (?)", bindings); //$NON-NLS-1$
     }
     
     public void testResolveParametersExec() {
         List bindings = new ArrayList();
-        bindings.add("'abc'"); //$NON-NLS-1$
+        bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         
         Query resolvedQuery = (Query)helpResolve("SELECT * FROM (exec pm1.sq2(?)) as a", bindings); //$NON-NLS-1$
         //verify the type of the reference is resolved

@@ -24,7 +24,6 @@ package com.metamatrix.query.processor.eval;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +36,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibraryManager;
@@ -45,17 +43,13 @@ import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
-import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.SPParameter;
-import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
@@ -316,7 +310,7 @@ public class TestExpressionEvaluator extends TestCase {
         func.setFunctionDescriptor(desc);
 
         FakeDataManager dataMgr = new FakeDataManager();
-        CommandContext context = new CommandContext(new Long(1), null, null, -1, null, null, null, null);
+        CommandContext context = new CommandContext(new Long(1), null, -1, null, null, null, null);
         context.setUserName("logon");  //$NON-NLS-1$
         assertEquals(context.getUserName(), new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList()) );       
     } 
@@ -337,7 +331,7 @@ public class TestExpressionEvaluator extends TestCase {
         Properties props = new Properties();
         props.setProperty("http_host", "testHostName"); //$NON-NLS-1$ //$NON-NLS-2$
         props.setProperty("http_port", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
-        CommandContext context = new CommandContext(new Long(1), null, null, -1, null, null, null, null, null, props, false, false);
+        CommandContext context = new CommandContext(new Long(1), null, null, null, null, null, null, props, false, false);
         
         func.setArgs(new Expression[] {new Constant("http_host")}); //$NON-NLS-1$
         assertEquals("testHostName", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
@@ -359,7 +353,7 @@ public class TestExpressionEvaluator extends TestCase {
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
-        CommandContext context = new CommandContext(new Long(-1), null, null, 500, "user", null, payload, "vdb", "1", null, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        CommandContext context = new CommandContext(new Long(-1), null, "user", null, payload, "vdb", "1", null, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 
@@ -409,50 +403,6 @@ public class TestExpressionEvaluator extends TestCase {
             // expected
         }
     }    
-    
-    public void testEvaluateExpressionVisitorDefect24026() throws Exception {
-        
-        Function func = new Function("concat", new Expression[] { new Constant("a"), new Constant("b") }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
-        func.setFunctionDescriptor(desc);
-        func.setType(DataTypeManager.DefaultDataClasses.STRING);
-        Reference ref = new Reference(0, func);
-
-        CompareCriteria criteria = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, ref); //$NON-NLS-1$
-        
-        EvaluateExpressionVisitor.replaceExpressions(criteria, true, null, null);
-        
-        assertEquals("e1 = 'ab'", criteria.toString()); //$NON-NLS-1$
-    }
-    
-    public void testEvaluateExpressionVisitorWithExpression() throws Exception {
-        
-        Function func = new Function("concat", new Expression[] { new ElementSymbol("e2"), new Constant("b") }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        FunctionDescriptor desc = FunctionLibraryManager.getFunctionLibrary().findFunction("concat", new Class[] { String.class, String.class } ); //$NON-NLS-1$
-        func.setFunctionDescriptor(desc);
-        func.setType(DataTypeManager.DefaultDataClasses.STRING);
-        Reference ref = new Reference(0, func);
-        HashMap symbolMap = new HashMap(1);
-        symbolMap.put(new ElementSymbol("e2"), new Integer(0)); //$NON-NLS-1$
-        ref.setData(symbolMap, Arrays.asList(new Object[] {"a"})); //$NON-NLS-1$
-        
-        CompareCriteria criteria = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, ref); //$NON-NLS-1$
-        
-        EvaluateExpressionVisitor.replaceExpressions(criteria, true, null, null);
-        
-        assertEquals("e1 = 'ab'", criteria.toString()); //$NON-NLS-1$
-    }
-    
-    public void testExecParam() throws Exception {
-    	SPParameter param = new SPParameter(1, new Reference(1, new Constant(1)));
-    	StoredProcedure sp = new StoredProcedure();
-    	sp.setParameter(param);
-    	
-    	EvaluateExpressionVisitor.replaceExpressions(sp, true, null, null);
-    	
-    	//ensure that the reference is replaced with its value
-    	assertEquals(new Constant(1), ((SPParameter)sp.getParameters().get(0)).getExpression());
-    }
     
     //tests that the visitor is safe to use against a null expression in the aggregate symbol
     public void testCountStar() throws Exception {

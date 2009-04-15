@@ -24,7 +24,6 @@ package com.metamatrix.query.processor;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,9 +37,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerPropertyNames;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.storage.memory.MemoryStorageManager;
 import com.metamatrix.common.types.DataTypeManager;
@@ -50,7 +47,6 @@ import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
@@ -481,19 +477,10 @@ public class TestVirtualDepJoin extends TestCase {
  
         // Run query 
         BufferManager bufferMgr = createCustomBufferMgr(2);
-        List schema = plan.getOutputElements();
-        ArrayList typeNames = new ArrayList();
-        for(Iterator s = schema.iterator(); s.hasNext();) {
-            SingleElementSymbol es = (SingleElementSymbol)s.next();            
-            typeNames.add(DataTypeManager.getDataTypeName(es.getType()));
-        }
-        String[] types = (String[])typeNames.toArray(new String[typeNames.size()]);          
-        TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), types, "test", TupleSourceType.FINAL);   //$NON-NLS-1$
-        context.setTupleSourceID(tsID);
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
         processor.process();
 
-        TestProcessor.examineResults((List[])expected.toArray(new List[expected.size()]), bufferMgr, tsID);
+        TestProcessor.examineResults((List[])expected.toArray(new List[expected.size()]), bufferMgr, processor.getResultsID());
     }
 
     private BufferManager createCustomBufferMgr(int batchSize) throws MetaMatrixComponentException {

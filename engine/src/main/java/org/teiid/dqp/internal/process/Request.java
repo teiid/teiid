@@ -51,8 +51,6 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.xa.XATransactionException;
@@ -101,7 +99,6 @@ import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ContextProperties;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 import com.metamatrix.query.validator.AbstractValidationVisitor;
 import com.metamatrix.query.validator.ValidationVisitor;
 import com.metamatrix.query.validator.Validator;
@@ -273,15 +270,13 @@ public class Request implements QueryProcessor.ProcessorFactory {
             new CommandContext(
                 reqID,
                 groupName,
-                null,
-                requestMsg.getFetchSize(), 
-                workContext.getUserName(), 
-                workContext.getTrustedPayload(),
-                requestMsg.getExecutionPayload(),
-                workContext.getVdbName(), 
+                workContext.getUserName(),
+                workContext.getTrustedPayload(), 
+                requestMsg.getExecutionPayload(), 
+                workContext.getVdbName(),
                 workContext.getVdbVersion(),
-                props,
-                useProcDebug(command), 
+                props, 
+                useProcDebug(command),
                 collectNodeStatistics(command));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
@@ -477,12 +472,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         } 
         
         this.transactionContext = tc;
-        List outputElements = processPlan.getOutputElements();
-        this.context.setTupleSourceID(this.bufferManager.createTupleSource(
-                outputElements,
-                TypeRetrievalUtil.getTypeNames(outputElements),
-                this.workContext.getConnectionID(),
-                TupleSourceType.FINAL));
         this.processor = new QueryProcessor(processPlan, context, bufferManager, new TempTableDataManager(processorDataManager, tempTableStore));
     }
 
@@ -658,9 +647,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         
         QueryRewriter.rewrite(newCommand, null, metadata, copy);
         ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, capabilitiesFinder, analysisRecord, copy);
-
-        TupleSourceID resultsId = bufferManager.createTupleSource(newCommand.getProjectedSymbols(), TypeRetrievalUtil.getTypeNames(newCommand.getProjectedSymbols()), copy.getConnectionID(), TupleSourceType.PROCESSOR);
-        copy.setTupleSourceID(resultsId);
         return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
 	}
 

@@ -22,13 +22,9 @@
 
 package com.metamatrix.query.processor.dynamic;
 
-import java.util.List;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -42,7 +38,6 @@ import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 
 public class SimpleQueryProcessorFactory implements QueryProcessor.ProcessorFactory {
@@ -73,13 +68,7 @@ public class SimpleQueryProcessorFactory implements QueryProcessor.ProcessorFact
 				idGenerator, finder, AnalysisRecord.createNonRecordingRecord(),
 				commandContext);
 
-		List elements = plan.getOutputElements();
 		CommandContext copy = (CommandContext) commandContext.clone();
-		TupleSourceID resultsId = bufferMgr.createTupleSource(elements,
-				TypeRetrievalUtil.getTypeNames(elements), commandContext
-						.getConnectionID(), TupleSourceType.PROCESSOR);
-		copy.setTupleSourceID(resultsId);
-
 		return new QueryProcessor(plan, copy, bufferMgr, dataMgr);
 	}
 }

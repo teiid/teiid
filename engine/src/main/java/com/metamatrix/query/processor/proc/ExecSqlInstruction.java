@@ -34,9 +34,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
-import com.metamatrix.query.processor.xml.ProcessorInstruction;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.LogConstants;
 
 /**
@@ -57,24 +55,20 @@ public class ExecSqlInstruction extends CommandInstruction {
      * Constructor for ExecSqlInstruction.
      * @param command Object (such as a ProcessorPlan) that is executed when this instruction
      * is processed.
-	 * @param references List of lists of reference objects,  these references
-	 * would be updated to the values they evaluate to.
      */
-	public ExecSqlInstruction(ProcessorPlan commandPlan, List references, GroupSymbol intoGroup) {
+	public ExecSqlInstruction(ProcessorPlan commandPlan, GroupSymbol intoGroup) {
         this.commandPlan = commandPlan;
         this.intoGroup = intoGroup;
-        setReferences(references);
 	}
 
 	/**
      * <p>Processing this instruction executes the ProcessorPlan for the command on the
      * CommandStatement of the update procedure language. Executing this plan does not effect
      * the values of any of the variables defined as part of the update procedure and hence
-     * the results of the ProcessPlan execution need not be stored for furthur processing. The
+     * the results of the ProcessPlan execution need not be stored for further processing. The
      * results are removed from the buffer manager immediately after execution. The program
      * counter is incremented after execution of the plan.</p>
-     * @throws BlockedException if this processing the plan thows a currentVarContext
-     * @see ProcessorInstruction#process(ProcessorEnvironment)
+     * @throws BlockedException if this processing the plan throws a currentVarContext
      */
     public void process(ProgramEnvironment env)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
@@ -82,10 +76,6 @@ public class ExecSqlInstruction extends CommandInstruction {
         LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[]{"Processing ExecSqlInstruction as part of processing the update procedure"}); //$NON-NLS-1$
 
         ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
-        VariableContext varContext = procEnv.getCurrentVariableContext();
-
-        // get the current set of references and set their values
-        setReferenceValues(varContext);
 
         if(intoGroup != null && intoGroup.isTempGroupSymbol()){
             procEnv.executePlan(commandPlan, intoGroup.getName());
@@ -107,14 +97,12 @@ public class ExecSqlInstruction extends CommandInstruction {
      * Returns a deep clone
      */
     public Object clone(){
-		List copyReferences = cloneReferences();
-        
         GroupSymbol clonedIntoGroup = null;
         if(this.intoGroup != null){
             clonedIntoGroup = (GroupSymbol)intoGroup.clone();
         }
         
-        ExecSqlInstruction clone = new ExecSqlInstruction((ProcessorPlan)commandPlan.clone(), copyReferences, clonedIntoGroup);
+        ExecSqlInstruction clone = new ExecSqlInstruction((ProcessorPlan)commandPlan.clone(), clonedIntoGroup);
         return clone;
     }
 

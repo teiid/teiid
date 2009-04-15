@@ -25,19 +25,8 @@ package com.metamatrix.query.sql.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.util.ErrorMessageKeys;
 
-/**
- * <p>This class holds a map of variables to their values, these variables and
- * their values are held in the context of a {@link Block} in the procedure language,
- * differrent {@link Statement}s populate the map by declaring variables and
- * assigning values. This class holds reference to a parent <code>VariableContext</code>
- * that holds variable info for parent {@link Block}. The variable declared at
- * the parent level is available to its immediate child context and any children,
- * down the heirarchy.</p>
- */
 public class VariableContext {
 
     // map between variables and their values
@@ -45,22 +34,18 @@ public class VariableContext {
 
     // reference to the parent variable context
     private VariableContext parentContext;
+    private boolean delegateSets;
 
     /**
      * Constructor for VariableContext.
      */
     public VariableContext() {
-        this.variableMap = new HashMap();
+    	this(false);
     }
-
-    /**
-     * Constructor for VariableContext.
-     */
-    public VariableContext(Map variableMap) {
-        if(variableMap == null) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0019));
-        }
-        this.variableMap = variableMap;
+    
+    public VariableContext(boolean delegateSets) {
+    	this.delegateSets = delegateSets;
+    	this.variableMap = new HashMap();
     }
 
     /**
@@ -70,7 +55,11 @@ public class VariableContext {
      * @param value The value to be set for the given variable.
      */
     public void setValue(ElementSymbol variable, Object value) {
-        variableMap.put(variable, value);
+    	if (delegateSets && parentContext != null && parentContext.containsVariable(variable)) {
+    		parentContext.setValue(variable, value);
+    	} else {
+    		variableMap.put(variable, value);
+    	}
     }
 
     /**
@@ -149,4 +138,15 @@ public class VariableContext {
         }
         return false;
     }
+    
+    public Object remove(ElementSymbol symbol) {
+    	if (!this.variableMap.containsKey(symbol)) {
+    		if (this.parentContext != null) {
+    			return this.parentContext.remove(symbol);
+    		}
+    		return null;
+    	}
+    	return this.variableMap.remove(symbol);
+    }
+    
 }

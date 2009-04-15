@@ -1106,7 +1106,7 @@ public class TestOptimizer extends TestCase {
     
     public void testPushMatchCritWithReference() {
         List bindings = new ArrayList();
-        bindings.add("'%'"); //$NON-NLS-1$
+        bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         helpPlan("select e1 FROM pm1.g1 WHERE e1 LIKE ?", example1(), bindings, null,  //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g1 WHERE e1 LIKE ?" }, true ); //$NON-NLS-1$
     }

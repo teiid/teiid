@@ -22,38 +22,27 @@
 
 package com.metamatrix.query.sql.symbol;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.ExpressionEvaluationException;
-import com.metamatrix.query.eval.Evaluator;
-import com.metamatrix.query.eval.LookupEvaluator;
+import com.metamatrix.core.util.Assertion;
+import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
-import com.metamatrix.query.util.CommandContext;
 
 /**
- * This class represents a reference within a SQL statement to some other 
- * source of data.  This reference may resolve to many different values
+ * This class represents a reference (positional from the user query, or
+ * to an element from another scope).  This reference may resolve to many different values
  * during evaluation.  For any particular bound value, it is treated as a constant.
  */
 public class Reference implements Expression {
 
-    private int refIndex;
-    private Expression expression;
-    //set true for correlated references only when determining if the subquery can be pushed down
-    private boolean correlated;
     private boolean positional;
 
-    transient private Map elements;       // Elements needed for evaluation, may be null
-    transient private List tuple;         // Current data values for elements
+    private int refIndex;
+    private Class<?> type;
+    
+    private ElementSymbol expression;
 
     /**
-     * Constructor for Reference.
+     * Constructor for a positional Reference.
      */
     public Reference(int refIndex) {
         this.refIndex = refIndex;
@@ -61,60 +50,42 @@ public class Reference implements Expression {
     }
     
     /**
-     * Constructor for Reference.
+     * Constructor for an element Reference.
      */
-    public Reference(int refIndex, Expression expression) {
-        this.refIndex = refIndex;
+    public Reference(ElementSymbol expression) {
         this.expression = expression;
         this.positional = false;
-    }    
+    }  
+    
+    private Reference(Reference ref) {
+    	this.refIndex = ref.refIndex;
+    	this.positional = ref.positional;
+    	this.type = ref.type;
+    	if (ref.expression != null) {
+    		this.expression = (ElementSymbol)ref.expression.clone();
+    	}
+    }
 
     public boolean isResolved() {
-        return (expression != null);
+        return (expression != null || this.type != null);
     }
 
     public int getIndex() {
         return this.refIndex;
     }
 
-    public void setExpression(Expression expression) { 
-        this.expression = expression;
-    }
-
-    public Expression getExpression() { 
+    public ElementSymbol getExpression() {
+    	if (this.isPositional() && this.expression == null) {
+    		return new ElementSymbol("$param.pos" + this.refIndex); //$NON-NLS-1$
+    	}
         return this.expression;    
     }
 
-    public Class getType() {
-        if(expression == null) { 
-            return null;
-        }
-        return expression.getType();
-    }
-    
-    /**
-     * Set value provider for this reference
-     * @param provider Provider of values for this reference
-     */
-    public void setData(Map elements, List tuple) {
-        this.elements = elements;
-        this.tuple = tuple;    
-    }
-
-    public Map getDataElements() {
-        return this.elements;
-    }
-    
-    public List getTuple() {
-        return this.tuple;
-    }
-
-    public Object getValue(LookupEvaluator dataMgr, CommandContext context) throws ExpressionEvaluationException, MetaMatrixComponentException {
-    	if ( elements == null ) {
-            elements = Collections.EMPTY_MAP;
-        }
-    		 
-        return new Evaluator(elements, dataMgr, context).evaluate(expression, tuple);
+    public Class<?> getType() {
+    	if (this.isPositional()) {
+    		return type;
+    	}
+    	return expression.getType();
     }
     
     public void acceptVisitor(LanguageVisitor visitor) {
@@ -125,7 +96,7 @@ public class Reference implements Expression {
      * @see java.lang.Object#clone()
      */
     public Object clone() {
-        return this;
+        return new Reference(this);
     }
 
     /**
@@ -155,12 +126,20 @@ public class Reference implements Expression {
         return this.expression.equals(other.expression);
     }
     
+    public void setType(Class<?> type) {
+    	Assertion.assertTrue(this.positional);
+		this.type = type;
+	}
+    
     /**
      * Define hash code to be that of the underlying object to make it stable.
      * @return Hash code, based on value
      */
     public int hashCode() { 
-        return getIndex();
+    	if (this.isPositional()) {
+    		return getIndex();
+    	}
+    	return this.expression.hashCode();
     }
     
     /**
@@ -172,32 +151,27 @@ public class Reference implements Expression {
     }
 
     public boolean isCorrelated() {
-        return this.correlated;
-    }
-
-    public void setCorrelated(boolean correlated) {
-        this.correlated = correlated;
+    	if (this.isPositional()) {
+    		return false;
+    	}
+    	//metadata hack
+    	if (!(this.expression.getMetadataID() instanceof TempMetadataID)) {
+    		return true;
+    	}
+    	TempMetadataID tid = (TempMetadataID)this.expression.getMetadataID();
+    	return !tid.isScalarGroup();
     }
     
-    public void setValue(Object value) {
-        HashMap symbolMap = new HashMap(1);
-        symbolMap.put(this.getExpression(), new Integer(0));
-
-        if (value instanceof Constant) {
-            value = ((Constant)value).getValue();
-        }
-
-        this.setData(symbolMap, Arrays.asList(new Object[] {
-            value
-        }));
-    }
-
     public boolean isPositional() {
         return this.positional;
     }
+    
+    /**
+     * Should never be called - used for an xml hack
+     * @param expression
+     */
+    public void setExpression(ElementSymbol expression) {
+		this.expression = expression;
+	}
 
-    public void setPositional(boolean positional) {
-        this.positional = positional;
-    }
 }
-

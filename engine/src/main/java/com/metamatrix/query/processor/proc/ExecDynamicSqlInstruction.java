@@ -32,7 +32,6 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryProcessingException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.buffer.BlockedException;
@@ -40,7 +39,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
@@ -52,7 +50,6 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.processor.program.ProgramInstruction;
-import com.metamatrix.query.processor.xml.ProcessorInstruction;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
 import com.metamatrix.query.resolver.util.ResolverUtil;
@@ -127,15 +124,13 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 
 	public ExecDynamicSqlInstruction(
 			CreateUpdateProcedureCommand parentProcCommand,
-			DynamicCommand command, List references,
-			QueryMetadataInterface metadata, IDGenerator idGenerator,
-			CapabilitiesFinder capFinder) {
+			DynamicCommand command, QueryMetadataInterface metadata,
+			IDGenerator idGenerator, CapabilitiesFinder capFinder) {
 		this.parentProcCommand = parentProcCommand;
 		this.dynamicCommand = command;
 		this.metadata = metadata;
 		this.capFinder = capFinder;
 		this.idGenerator = idGenerator;
-		setReferences(references);
 	}
 
 	/**
@@ -144,14 +139,13 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 	 * the CommandStatement of the update procedure language. Executing this
 	 * plan does not effect the values of any of the variables defined as part
 	 * of the update procedure and hence the results of the ProcessPlan
-	 * execution need not be stored for furthur processing. The results are
+	 * execution need not be stored for further processing. The results are
 	 * removed from the buffer manager immediately after execution. The program
 	 * counter is incremented after execution of the plan.
 	 * </p>
 	 * 
 	 * @throws BlockedException
-	 *             if this processing the plan thows a currentVarContext
-	 * @see ProcessorInstruction#process(ProcessorEnvironment)
+	 *             if this processing the plan throws a currentVarContext
 	 */
 	public void process(ProgramEnvironment env) throws BlockedException,
 			MetaMatrixComponentException, MetaMatrixProcessingException {
@@ -165,13 +159,8 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
         
 		VariableContext localContext = procEnv.getCurrentVariableContext();
 
-		// get the current set of references and set their values
-		setReferenceValues(localContext);
-        
 		try {
-			Object value = new Evaluator(Collections.emptyMap(), procEnv.getDataManager(),
-					procEnv.getContext()).evaluate(dynamicCommand
-					.getSql(), Collections.emptyList());
+			Object value = procEnv.evaluateExpression(dynamicCommand.getSql());
 
 			if (value == null) {
 				throw new QueryProcessingException(QueryExecPlugin.Util
@@ -229,10 +218,8 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-			List references = ReferenceCollectorVisitor.getReferences(command);
-
 			ExecSqlInstruction inst = new ExecSqlInstruction(commandPlan,
-					references, dynamicCommand.getIntoGroup());
+					dynamicCommand.getIntoGroup());
 
             dynamicProgram = new Program();
             dynamicProgram.addInstruction(inst);
@@ -256,17 +243,15 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 	 * @param procEnv
 	 * @param localContext
 	 * @throws MetaMatrixComponentException
-	 * @throws ExpressionEvaluationException
 	 * @throws MetaMatrixComponentException
+	 * @throws MetaMatrixProcessingException 
 	 */
 	private void updateContextWithUsingValues(ProcedureEnvironment procEnv,
-			VariableContext localContext) throws ExpressionEvaluationException,
-			MetaMatrixComponentException {
+			VariableContext localContext) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		if (dynamicCommand.getUsing() != null
 				&& !dynamicCommand.getUsing().isEmpty()) {
 			for (SetClause setClause : dynamicCommand.getUsing().getClauses()) {
-				Object assignment = new Evaluator(Collections.emptyMap(), procEnv.getDataManager(),
-						procEnv.getContext()).evaluate(setClause.getValue(), Collections.emptyList());
+				Object assignment = procEnv.evaluateExpression(setClause.getValue());
 
 				LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER,
 						new Object[] { this, " The using variable ", //$NON-NLS-1$
@@ -496,10 +481,8 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 	 * Returns a deep clone
 	 */
 	public Object clone() {
-		List copyReferences = cloneReferences();
-
 		ExecDynamicSqlInstruction clone = new ExecDynamicSqlInstruction(
-				parentProcCommand, dynamicCommand, copyReferences, metadata, idGenerator, capFinder);
+				parentProcCommand, dynamicCommand, metadata, idGenerator, capFinder);
 		return clone;
 	}
 

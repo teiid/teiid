@@ -23,7 +23,6 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -32,20 +31,20 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.IndexedTupleSource;
-import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.query.execution.QueryExecPlugin;
-import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.sql.util.ValueIteratorProvider;
+import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 /**
  * <p>This utility handles the work of processing a subquery; certain types
@@ -68,69 +67,48 @@ import com.metamatrix.query.util.TypeRetrievalUtil;
  * and provides the ValueIteratorProvider instance with a ValueIterator
  * instance, which iterates over the subquery results.</p>
  */
-class SubqueryProcessorUtility {
-
+public class SubqueryProcessorUtility {
+	
 	/**
      * List of ProcessorPlans for each subquery.  Contents match
      * 1-for-1 with the contents of {@link #valueIteratorProviders} List
      * see {@link #setPlansAndValueProviders}
      */
-	private List processorPlans;
+	private List<ProcessorPlan> processorPlans = new ArrayList<ProcessorPlan>();
+	private List<QueryProcessor> processors = new ArrayList<QueryProcessor>();
 
 	/**
      * List of ValueIteratorProvider for each subquery.  Contents match
      * 1-for-1 with the contents of {@link #processorPlans} List
      * see {@link #setPlansAndValueProviders}
      */
-	private List valueIteratorProviders;
+	private List<ValueIteratorProvider> valueIteratorProviders;
 
-    /**
-     * List<Reference> to set data on
-     */
-    private List correlatedReferences;
+    private SymbolMap correlatedReferences;
 
 	// "Placeholder" state, for resuming processing after
 	// a BlockedException - not cloned
 	private int currentIndex = 0;
-	private ProcessorPlan currentPlan;
-	private TupleSourceID currentID;
+	private QueryProcessor currentProcessor;
 
     // List <TupleSourceID> - same index-matchup as other two Lists
 	// Need to clean up on close()
-	private List tupleSources = new ArrayList();
+	private List<TupleSourceID> tupleSources = new ArrayList<TupleSourceID>();
+	
+	private VariableContext currentContext;
 
-	/**
-	 * Constructor
-	 */
-	SubqueryProcessorUtility() {
+	public SubqueryProcessorUtility(List<ValueIteratorProvider> valList, SymbolMap references) {
+		for (ValueIteratorProvider val : valList) {
+			SubqueryContainer sc = (SubqueryContainer)val;
+			this.processorPlans.add((ProcessorPlan)sc.getCommand().getProcessorPlan().clone());
+		}
+		this.valueIteratorProviders = valList;
+		if (references != null && !references.asMap().isEmpty()) {
+			this.correlatedReferences = references;
+		}
 	}
 
-	/**
-	 * Set the two Lists that map subquery ProcessorPlans to ValueIteratorProviders
-	 * which hold the Commands represented by the ProcessorPlans.  The objects at
-	 * each index of both lists are essentially "mapped" to each other, one to one.
-	 * At a given index, the ProcessorPlan in the one List will be processed and
-	 * "fill" the ValueIteratorProvider (of the other List) so the ValueIteratorProvider
-	 * can be evalutated later.
-	 * @param subqueryProcessorPlans List of ProcessorPlans
-	 * @param valueIteratorProviders List of ValueIteratorProviders
-	 */
-	void setPlansAndValueProviders(List subqueryProcessorPlans, List valueIteratorProviders) {
-		this.processorPlans = subqueryProcessorPlans;
-		this.valueIteratorProviders = valueIteratorProviders;
-	}
-
-    /**
-     * Set List of References needing to be updated with each outer tuple
-     * @param correlatedReferences List<Reference> correlated reference to outer query
-     */
-    void setCorrelatedReferences(List correlatedReferences){
-    	if (correlatedReferences != null && correlatedReferences.size() > 0) {
-    		this.correlatedReferences = correlatedReferences;
-    	}
-    }
-
-	List getSubqueryPlans(){
+	List<ProcessorPlan> getSubqueryPlans(){
 		return this.processorPlans;
 	}
 
@@ -138,36 +116,27 @@ class SubqueryProcessorUtility {
 		return this.valueIteratorProviders;
 	}
 
-    List getCorrelatedReferences(){
-        return this.correlatedReferences;
-    }
-    
 	void reset() {
 		this.currentIndex = 0;
-		currentPlan = null;
-		currentID = null;
-
+		currentProcessor = null;
         // Reset internal plans
         for(int i=0; i<processorPlans.size(); i++) {
-            ProcessorPlan plan = (ProcessorPlan) processorPlans.get(i);
+            ProcessorPlan plan = processorPlans.get(i);
             plan.reset();
         }
 	}
 
 	/**
 	 * initializes each subquery ProcessorPlan
+	 * @throws MetaMatrixComponentException 
 	 */
-	void open(CommandContext processorContext,
-                    int batchSize,
-                    ProcessorDataManager dataManager,
-                    BufferManager bufferManager) {
+	void open(RelationalNode parent) throws MetaMatrixComponentException {
 		// Open subquery processor plans
-		Iterator plans = this.processorPlans.iterator();
-		while (plans.hasNext()) {
-			ProcessorPlan plan = (ProcessorPlan) plans.next();
-            CommandContext subContext = (CommandContext) processorContext.clone();
-            subContext.setOutputBatchSize(batchSize);
-			plan.initialize(subContext, dataManager, bufferManager);
+		for (ProcessorPlan plan : this.processorPlans) {
+            CommandContext subContext = (CommandContext) parent.getContext().clone();
+            QueryProcessor processor = new QueryProcessor(plan, subContext, parent.getBufferManager(), parent.getDataManager());
+            this.processors.add(processor);
+            this.tupleSources.add(processor.getResultsID());
 		}
 	}
 
@@ -177,9 +146,15 @@ class SubqueryProcessorUtility {
 	void close(BufferManager bufferManager)
 		throws MetaMatrixComponentException {
 
-        Iterator i = this.tupleSources.iterator();
-		while (i.hasNext()){
-			TupleSourceID tsID = (TupleSourceID)i.next();
+		for (QueryProcessor processor : this.processors) {
+			try {
+				processor.closeProcessing();
+			} catch (TupleSourceNotFoundException e) {
+			}
+		}	
+		this.processors.clear();
+		
+		for (TupleSourceID tsID : this.tupleSources) {
 			try {
                 bufferManager.removeTupleSource(tsID);
 			} catch (TupleSourceNotFoundException e) {
@@ -187,7 +162,6 @@ class SubqueryProcessorUtility {
 			}
 		}
 
-        //Clear this list, just in case this obj is ever closed and then re-opened
         this.tupleSources.clear();
 	}
 
@@ -213,64 +187,50 @@ class SubqueryProcessorUtility {
      * @throws MetaMatrixComponentException for unexpected exception
      * @throws MetaMatrixProcessingException for exception due to user input or modeling
 	 */
-	void process(Map elementMap, List currentTuple, BufferManager bufferManager, String groupName)
+	void process(RelationalNode parent, Map elementMap, List currentTuple)
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
         // This IF block is only intended to be run when the outer query tuple has changed,
         // so it should not be run when this instance is resuming processing after a BlockedException
-        if (this.currentPlan == null && this.correlatedReferences != null){ 
+        if (this.currentContext == null && this.currentProcessor == null && this.correlatedReferences != null){ 
             // Close old tuple sources
-            this.close(bufferManager);
-            Iterator refs = this.correlatedReferences.iterator();
-            while (refs.hasNext()) {
-                Reference ref = (Reference)refs.next();
-                ref.setData(elementMap, currentTuple);
-            }
+            this.close(parent.getBufferManager());
+            this.open(parent);
+            this.currentContext = new VariableContext();
+            for (Map.Entry<ElementSymbol, Expression> entry : this.correlatedReferences.asMap().entrySet()) {
+				this.currentContext.setValue(entry.getKey(), new Evaluator(elementMap, parent.getDataManager(), parent.getContext()).evaluate(entry.getValue(), currentTuple));
+			}
         }
-
-		while (this.currentPlan != null || this.currentIndex < this.processorPlans.size()){
+        
+		while (this.currentProcessor != null || this.currentIndex < this.processorPlans.size()){
 			//Initialize current ProcessorPlan tuple source, if necessary
-			if (this.currentPlan == null){
-				this.currentPlan = (ProcessorPlan)this.processorPlans.get(this.currentIndex);
-
-				// Run query processor on command
-				List schema = this.currentPlan.getOutputElements();
-				this.currentID = bufferManager.createTupleSource(schema, TypeRetrievalUtil.getTypeNames(schema), groupName, TupleSourceType.PROCESSOR);
-				this.tupleSources.add(this.currentID);
-
-                // Open plan
-                this.currentPlan.open();
+			if (this.currentProcessor == null){
+				this.currentProcessor = this.processors.get(currentIndex);
+				if (this.currentContext != null) {
+					this.currentProcessor.getContext().pushVariableContext(this.currentContext);
+				}
 			}
 
 			// Process the results
 			IndexedTupleSource subqueryResults = null;
-			while(true) {
-
-				TupleBatch batch = this.currentPlan.nextBatch(); // Might throw BlockedException.
-				flushBatch(bufferManager, batch, this.currentID);
-
-				// Check if this was the last batch
-				if(batch.getTerminationFlag() == true) {
-                    this.currentPlan.close();
-                    this.currentPlan.reset();
-					try {
-                        bufferManager.setStatus(this.currentID, TupleSourceStatus.FULL);
-                        subqueryResults = bufferManager.getTupleSource(this.currentID);
-					} catch (TupleSourceNotFoundException e) {
-                        throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0029, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0029, this.currentID));
-					}
-
-					break;
-				}
+			try {
+				this.currentProcessor.process(Integer.MAX_VALUE);
+				subqueryResults = parent.getBufferManager().getTupleSource(this.currentProcessor.getResultsID());
+				this.currentProcessor.getProcessorPlan().reset();
+			} catch (MetaMatrixProcessingException e) {
+				throw e;
+			} catch (MetaMatrixComponentException e) {
+				throw e;
+			} catch (MetaMatrixCoreException e) {
+				throw new MetaMatrixComponentException(e);
 			}
 
 			// Set the results on the ValueIteratorProviders
-            ValueIteratorProvider vip = (ValueIteratorProvider)this.valueIteratorProviders.get(this.currentIndex);
+            ValueIteratorProvider vip = this.valueIteratorProviders.get(this.currentIndex);
             ValueIterator iterator = new TupleSourceValueIterator(subqueryResults, 0);
 			vip.setValueIterator(iterator);
 
-            this.currentID = null;
-            this.currentPlan = null;
+            this.currentProcessor = null;
 			this.currentIndex++;
 		}
         
@@ -279,26 +239,8 @@ class SubqueryProcessorUtility {
             // If we've made it this far, then the next time 
             // this method is called, it should be for a new outer tuple 
             currentIndex = 0;
-        }        
+        }   
+        this.currentContext = null;
 	}
-
-
-	// ========================================================================
-	// PRIVATE UTILITY
-	// ========================================================================
-
-    /**
-     * Flush the batch by giving it to the buffer manager.
-     */
-    private static void flushBatch(BufferManager bufferManager, TupleBatch batch, TupleSourceID tsID)
-    throws MetaMatrixComponentException{
-        if(batch != null && batch.getRowCount() > 0) {
-            try {
-                bufferManager.addTupleBatch(tsID, batch);
-            } catch (TupleSourceNotFoundException e) {
-                throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0029, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0029, tsID));
-            }
-        }
-    }
-
+	
 }

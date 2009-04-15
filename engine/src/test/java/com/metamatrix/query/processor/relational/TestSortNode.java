@@ -63,7 +63,7 @@ public class TestSortNode extends TestCase {
         impl.getConfig().setTotalAvailableMemory(bytesInMemory);
         impl.getConfig().setGroupUsePercentage(100);
         impl.getConfig().setManagementInterval(0);
-        CommandContext context = new CommandContext ("pid", "test", null, BATCH_SIZE, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext ("pid", "test", BATCH_SIZE, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeRelationalNode dataNode = new FakeRelationalNode(2, data);
         dataNode.setElements(elements);

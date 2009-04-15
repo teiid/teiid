@@ -35,9 +35,11 @@ import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.ValueIterator;
+import com.metamatrix.query.sql.util.VariableContext;
 
 public class DependentProcedureCriteriaProcessor extends DependentCriteriaProcessor {
 
@@ -66,18 +68,18 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
      * @throws TupleSourceNotFoundException
      * @see com.metamatrix.query.processor.relational.PlanExecutionNode#prepareNextCommand()
      */
-    protected boolean prepareNextCommand() throws BlockedException,
+    protected boolean prepareNextCommand(VariableContext context) throws BlockedException,
                                           MetaMatrixComponentException, MetaMatrixProcessingException {
 
         if (this.critInProgress == null) {
             critInProgress = prepareCriteria();
         }
-
+        
         for (int j = 0; j < inputReferences.size(); j++) {
 
             Reference ref = (Reference)inputReferences.get(j);
 
-            ref.setData(null, null);
+            context.remove(ref.getExpression());
         }
 
         boolean validRow = true;
@@ -116,16 +118,17 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
                 break;
             }
 
-            if (parameter.getTuple() != null) {
-                Object existingValue = parameter.getTuple().get(0);
-
-                if ((value != null && !value.equals(existingValue)) || (value == null && existingValue != null)) {
-                    validRow = false;
-                    break;
-                }
+            ElementSymbol parameterSymbol = parameter.getExpression();
+            if (context.containsVariable(parameterSymbol)) {
+	            Object existingValue = context.getValue(parameterSymbol);
+	
+	            if ((value != null && !value.equals(existingValue)) || (value == null && existingValue != null)) {
+	                validRow = false;
+	                break;
+	            }
             }
 
-            parameter.setValue(value);
+            context.setValue(parameterSymbol, value);
         }
 
         critInProgress = null;
@@ -140,11 +143,9 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
 
             Reference ref = (Reference)inputReferences.get(j);
 
-            if (defaultValue != null && ref.getTuple() == null) {
-                ref.setValue(defaultValue);
+            if (defaultValue != null && !context.containsVariable(ref.getExpression())) {
+                context.setValue(ref.getExpression(), defaultValue);
             }
-            
-            Assertion.isNotNull(ref.getTuple());
         }
 
         return true;

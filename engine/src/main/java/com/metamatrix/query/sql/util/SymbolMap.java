@@ -44,6 +44,21 @@ public class SymbolMap {
     private LinkedHashMap<ElementSymbol, Expression> map = new LinkedHashMap<ElementSymbol, Expression>();
     private Map<ElementSymbol, Expression> unmodifiableMap = Collections.unmodifiableMap(map);
 
+    public SymbolMap() {
+	}
+    
+    public SymbolMap(SymbolMap other) {
+    	//todo clone;
+    	this.map.putAll(other.map);
+    }
+    
+    public SymbolMap merge(SymbolMap other) {
+    	if (other != null) {
+    		this.map.putAll(other.map);
+    	}
+    	return this;
+    }
+    
     /**
      * @return true if the map did not already contained the given symbol
      */
@@ -70,6 +85,10 @@ public class SymbolMap {
 
     public Expression getMappedExpression(ElementSymbol symbol) {
         return map.get(symbol);
+    }
+    
+    public Map<ElementSymbol, Expression> asUpdatableMap() {
+    	return this.map;
     }
 
     public Map<ElementSymbol, Expression> asMap() {

@@ -56,6 +56,8 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.StoredProcedure;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
@@ -99,7 +101,8 @@ public class TestConnectorWorkItem extends TestCase {
 
 		// this has two result set columns and 1 out parameter
 		int total_columns = 3;
-		Command command = helpGetCommand("{call pm2.spTest8(?)}", EXAMPLE_BQT); //$NON-NLS-1$      
+		StoredProcedure command = (StoredProcedure)helpGetCommand("{call pm2.spTest8(?)}", EXAMPLE_BQT); //$NON-NLS-1$      
+		command.getInputParameters().get(0).setExpression(new Constant(1));
 		IProcedure proc = (IProcedure) new LanguageBridgeFactory(EXAMPLE_BQT)
 				.translate(command);
 
@@ -118,7 +121,7 @@ public class TestConnectorWorkItem extends TestCase {
 			fail("Expected exception from resultset mismatch"); //$NON-NLS-1$
 		} catch (ConnectorException err) {
 			assertEquals(
-					"Could not process stored procedure results for EXEC spTest8(, ?).  Expected 2 result set columns, but was 1.  Please update your models to allow for stored procedure results batching.", err.getMessage()); //$NON-NLS-1$
+					"Could not process stored procedure results for EXEC spTest8(, 1).  Expected 2 result set columns, but was 1.  Please update your models to allow for stored procedure results batching.", err.getMessage()); //$NON-NLS-1$
 		}
 	}
 

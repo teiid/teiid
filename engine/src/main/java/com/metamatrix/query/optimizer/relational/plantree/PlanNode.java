@@ -22,10 +22,27 @@
 
 package com.metamatrix.query.optimizer.relational.plantree;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import com.metamatrix.query.sql.symbol.*;
+import com.metamatrix.query.sql.LanguageObject;
+import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
+import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 public class PlanNode {
 
@@ -279,18 +296,30 @@ public class PlanNode {
     }
     
     public Set<ElementSymbol> getCorrelatedReferenceElements() {
-        List<Reference> refs = (List<Reference>) this.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+        SymbolMap refs = (SymbolMap) this.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
         
-        if(refs == null || refs.isEmpty()) {
+        if(refs == null) {
             return Collections.emptySet();    
         }
         
-        HashSet<ElementSymbol> result = new HashSet<ElementSymbol>(refs.size());
-        for (Reference ref : refs) {
-            Expression expr = ref.getExpression();
+        List<Expression> values = refs.getValues();
+        HashSet<ElementSymbol> result = new HashSet<ElementSymbol>(values.size());
+        for (Expression expr : values) {
             ElementCollectorVisitor.getElements(expr, result);
         }
         return result;
     }
+    
+	public List<SubqueryContainer> getSubqueryContainers() {
+		Collection<? extends LanguageObject> toSearch = Collections.emptyList();
+		if (this.getType() == NodeConstants.Types.SELECT){
+		    Criteria criteria = (Criteria)this.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+		    toSearch = Arrays.asList(criteria);
+		} 
+		if (this.getType() == NodeConstants.Types.PROJECT) {
+		    toSearch = (Collection)this.getProperty(NodeConstants.Info.PROJECT_COLS);
+		}
+		return (List<SubqueryContainer>)ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
+	}
         
 }

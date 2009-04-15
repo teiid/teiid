@@ -67,7 +67,7 @@ public class TestSelectNode extends TestCase {
     
     public void helpTestSelect(List elements, Criteria criteria, List childElements, ProcessorDataManager dataMgr, List[] expected, RelationalNode child) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         child.setElements(childElements);
         child.initialize(context, mgr, dataMgr);    

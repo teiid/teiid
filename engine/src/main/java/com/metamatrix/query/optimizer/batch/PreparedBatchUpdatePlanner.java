@@ -132,7 +132,7 @@ public class PreparedBatchUpdatePlanner implements CommandPlanner {
 		            		while(valuesIter.hasNext()){
 		            			List values = (List)valuesIter.next();
 		            			batchUpdate = (PreparedBatchUpdate)commandIter.next();
-		            			PreparedStatementRequest.resolveParameterValues(parameters, values);
+		            			PreparedStatementRequest.resolveParameterValues(parameters, values, context);
 		            			EvaluateExpressionVisitor.replaceExpressions(batchUpdate, true, null, context);
 		            		}
 						}         			

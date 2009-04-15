@@ -48,7 +48,6 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
@@ -83,6 +82,7 @@ import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
@@ -233,9 +233,7 @@ public class TestProcessor extends TestCase {
 
         try {   
             BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), null, null, TupleSourceType.FINAL);  
-
-            CommandContext context = new CommandContext("0", "test", tsID, 5, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+            CommandContext context = new CommandContext("0", "test", 5, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
             processor.process();
             fail("Expected error during processing, but got none."); //$NON-NLS-1$
@@ -251,16 +249,16 @@ public class TestProcessor extends TestCase {
         BufferManagerImpl bufferMgr = (BufferManagerImpl)BufferManagerFactory.getStandaloneBufferManager();
         bufferMgr.getConfig().setProcessorBatchSize(context.getProcessorBatchSize());
         bufferMgr.getConfig().setConnectorBatchSize(context.getProcessorBatchSize());
-        TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), null, "test", TupleSourceType.FINAL);   //$NON-NLS-1$
-        context.setTupleSourceID(tsID);
         context.getNextRand(0);
+        TupleSourceID id = null;
         try {
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
+            id = processor.getResultsID();
     		processor.process();
             assertEquals(0, bufferMgr.getPinnedCount());
-            examineResults(expectedResults, bufferMgr, tsID);
+            examineResults(expectedResults, bufferMgr, processor.getResultsID());
         } finally {
-            bufferMgr.removeTupleSource(tsID);
+            bufferMgr.removeTupleSource(id);
         }
     }
 
@@ -314,7 +312,7 @@ public class TestProcessor extends TestCase {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", null, 5, "user", null, null, "myvdb", "1", props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		CommandContext context = new CommandContext("0", "test", "user", null, null, "myvdb", "1", props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         context.setProcessorBatchSize(2000);
         context.setConnectorBatchSize(2000);
 		return context;
@@ -1383,27 +1381,6 @@ public class TestProcessor extends TestCase {
         // Plan query
         ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
 
-        // Run query
-        helpProcess(plan, dataManager, expected);
-    }
-    
-    public void testParameterized1() { 
-        // Create query 
-        String sql = "SELECT e1, e2, e3, e4 FROM pm1.g1 WHERE e2 = ?"; //$NON-NLS-1$
-        
-        // Create expected results
-        List[] expected = new List[] { 
-            Arrays.asList(new Object[] { null,  new Integer(1),     Boolean.FALSE,  new Double(1.0) }),
-            Arrays.asList(new Object[] { "c",   new Integer(1),     Boolean.TRUE,   null }) //$NON-NLS-1$
-        };    
-    
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached(), new String[] { "1" }); //$NON-NLS-1$
-        
         // Run query
         helpProcess(plan, dataManager, expected);
     }
@@ -5501,11 +5478,12 @@ public class TestProcessor extends TestCase {
         
         // Collect reference, set value
         Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
-        Constant constant = new Constant("a    ", String.class); //$NON-NLS-1$
-        ref.setExpression(constant);
-        
+        VariableContext vc = new VariableContext();
+        vc.setValue(ref.getExpression()	, "a    "); //$NON-NLS-1$
+        CommandContext context = createCommandContext();
+        context.setVariableContext(vc);
         // Run query
-        helpProcess(plan, dataManager, expected);        
+        helpProcess(plan, context, dataManager, expected);        
         
     }    
 
@@ -5542,11 +5520,13 @@ public class TestProcessor extends TestCase {
         
         // Collect reference, set value
         Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
-        Constant constant = new Constant("a", String.class); //$NON-NLS-1$
-        ref.setExpression(constant);
+        VariableContext vc = new VariableContext();
+        vc.setValue(ref.getExpression()	, "a"); //$NON-NLS-1$
+        CommandContext context = createCommandContext();
+        context.setVariableContext(vc);
         
         // Run query
-        helpProcess(plan, dataManager, expected);        
+        helpProcess(plan, context, dataManager, expected);        
         
     }      
 
@@ -7889,8 +7869,10 @@ public class TestProcessor extends TestCase {
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder);
         
         Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
-        Constant constant = new Constant("a"); //$NON-NLS-1$
-        ref.setExpression(constant);
+        VariableContext vc = new VariableContext();
+        vc.setValue(ref.getExpression(), "a"); //$NON-NLS-1$
+        CommandContext context = createCommandContext();
+        context.setVariableContext(vc);
         
         List[] expected = new List[] {
             Arrays.asList("a", "b"), //$NON-NLS-1$ //$NON-NLS-2$
@@ -7900,7 +7882,7 @@ public class TestProcessor extends TestCase {
         HardcodedDataManager manager = new HardcodedDataManager();
         manager.addData("SELECT 'a', pm1.g1.e1 FROM pm1.g1", expected); //$NON-NLS-1$ 
         
-        helpProcess(plan, manager, expected);
+        helpProcess(plan, context, manager, expected);
     }
     
     public void testCase6486() { 

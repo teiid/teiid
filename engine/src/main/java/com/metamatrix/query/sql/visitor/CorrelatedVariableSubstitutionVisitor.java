@@ -54,7 +54,7 @@ public class CorrelatedVariableSubstitutionVisitor extends ExpressionMappingVisi
             ElementSymbol variable = (ElementSymbol)expression;
 
             if (variable.isExternalReference()) {
-                return new Reference(0, variable);
+                return new Reference(variable);
             }
         } 
 

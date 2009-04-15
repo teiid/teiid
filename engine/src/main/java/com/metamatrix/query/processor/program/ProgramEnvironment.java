@@ -25,7 +25,6 @@ package com.metamatrix.query.processor.program;
 import java.util.Stack;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.processor.ProcessorPlan;
 
 /**
@@ -77,16 +76,6 @@ public abstract class ProgramEnvironment {
         peek().incrementProgramCounter();
     }
     
-    /**
-     * <p>Execute a ProcessorPlan and return the tupelSourceID for the results.
-     * The TupleSourceID could be used by differrent {@link ProgramInstruction}s that
-     * use this environment to access results. The 
-     * @param command The command to execute which is a ProcessPlan
-     * @param rsName The name of the result set, which can be used later to obtain the tuple source.
-     */
-	public abstract void executePlan(Object command, String rsName)
-        throws MetaMatrixComponentException, MetaMatrixProcessingException;
-        
     /**
      * Remove the a data source from the environment.
      * @param rsName The name of the result set.

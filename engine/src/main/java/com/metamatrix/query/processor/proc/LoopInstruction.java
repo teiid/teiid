@@ -49,8 +49,8 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     //cursor columns
     private List elements;
     
-    public LoopInstruction(Program loopProgram, String rsName, ProcessorPlan plan, Collection atomicCommandReferences) {
-        super(rsName, plan, atomicCommandReferences);
+    public LoopInstruction(Program loopProgram, String rsName, ProcessorPlan plan) {
+        super(rsName, plan);
         this.loopProgram = loopProgram;
     }
 
@@ -83,8 +83,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
      */
     public Object clone(){
         ProcessorPlan clonedPlan = (ProcessorPlan) this.plan.clone();
-        List copyRefs = cloneReferences();
-        return new LoopInstruction((Program)this.loopProgram.clone(), this.rsName, clonedPlan, copyRefs);
+        return new LoopInstruction((Program)this.loopProgram.clone(), this.rsName, clonedPlan);
     }
     
     public String toString() {
@@ -113,10 +112,6 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
      * @see com.metamatrix.query.processor.proc.RepeatedInstruction#testCondition(com.metamatrix.query.processor.proc.ProcedureEnvironment)
      */
     public boolean testCondition(ProcedureEnvironment procEnv) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        
-        VariableContext varContext = procEnv.getCurrentVariableContext();
-        setReferenceValues(varContext);            
-        
         if(!procEnv.resultSetExists(rsName)) {
             procEnv.executePlan(plan, rsName);            
         }

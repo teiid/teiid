@@ -94,7 +94,7 @@ public class SqlEval implements XQuerySQLEvaluator {
         
         // check to see if we have XML results
         if (src.getSchema().size() > 0) {
-            xml = ((SingleElementSymbol)src.getSchema().get(0)).getType().equals(DataTypeManager.DefaultDataClasses.XML);
+            xml = src.getSchema().get(0).getType().equals(DataTypeManager.DefaultDataClasses.XML);
         }            
         
         if (xml) {

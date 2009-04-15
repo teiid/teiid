@@ -69,7 +69,7 @@ public abstract class BaseQueryTest extends TestCase {
         AnalysisRecord analysisRecord = new AnalysisRecord(false, debug, debug);
         ProcessorPlan plan = null;
         try {
-            plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, createCommandContext(null, command));
+            plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, createCommandContext());
         } finally {
             if(debug) {
                 System.out.println(analysisRecord.getDebugLog());
@@ -81,11 +81,10 @@ public abstract class BaseQueryTest extends TestCase {
     
     protected void doProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), null, "test", BufferManager.TupleSourceType.FINAL);   //$NON-NLS-1$
-
-        CommandContext context = createCommandContext(tsID, null);
+        CommandContext context = createCommandContext();
         context.setProcessDebug(debug);
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
+        TupleSourceID tsID = processor.getResultsID();
         processor.process();
 
         // Create QueryResults from TupleSource
@@ -121,10 +120,9 @@ public abstract class BaseQueryTest extends TestCase {
 
     protected void doProcessNoResultsCheck(ProcessorPlan plan, ProcessorDataManager dataManager, int expectedRowCount, boolean debug) throws Exception {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        TupleSourceID tsID = bufferMgr.createTupleSource(plan.getOutputElements(), null, "test", BufferManager.TupleSourceType.FINAL);   //$NON-NLS-1$
-
-        CommandContext context = createCommandContext(tsID, null);
+        CommandContext context = createCommandContext();
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
+        TupleSourceID tsID = processor.getResultsID();
         processor.process();
 
         // Create QueryResults from TupleSource
@@ -151,10 +149,10 @@ public abstract class BaseQueryTest extends TestCase {
         bufferMgr.removeTupleSource(tsID);
     }
     
-    protected CommandContext createCommandContext(TupleSourceID tsID, Command command) {
+    protected CommandContext createCommandContext() {
         Properties props = new Properties();
         //props.setProperty(ContextProperties.SOAP_HOST, "my.host.com"); //$NON-NLS-1$
-        CommandContext context = new CommandContext("0", "test", tsID, 5, "user", null, null, "myvdb", "1", props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        CommandContext context = new CommandContext("0", "test", "user", null, null, "myvdb", "1", props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         
         return context;
     }       

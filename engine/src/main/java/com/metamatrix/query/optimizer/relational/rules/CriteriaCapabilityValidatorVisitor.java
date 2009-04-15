@@ -228,7 +228,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(Function obj) {
         try {
             //if the function can be evaluated then return as it will get replaced during the final rewrite 
-            if (EvaluateExpressionVisitor.willBecomeConstant(obj)) { 
+            if (EvaluateExpressionVisitor.willBecomeConstant(obj, true)) { 
                 return; 
             }
             if(obj.getFunctionDescriptor().getPushdown() == FunctionMethod.CANNOT_PUSHDOWN || ! CapabilitiesUtil.supportsScalarFunction(modelID, obj, metadata, capFinder)) {

@@ -24,23 +24,18 @@ package com.metamatrix.query.processor.proc;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.CriteriaEvaluationException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.query.eval.Evaluator;
-import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
-import com.metamatrix.query.util.ErrorMessageKeys;
 import com.metamatrix.query.util.LogConstants;
 
 /**
@@ -85,43 +80,21 @@ public class IfInstruction extends ProgramInstruction {
 		this(condition, ifProgram, null);
     }
 
-	/**
-	 * <p> Evaluate the criteria that determines which block will be executed. This method uses the
-	 * CriteriaEvaluator used in the processor framework, variables and their values from the
-	 * variable context are used to construct a map of variable -> Index and a list of the values,
-	 * this is the format expected by the CriteriaEvaluator.</p>
-	 * @param condition The <code>Criteria</code> to evaluate.
-	 * @return boolean indicating what the criteria evaluated to
-	 * @throws MetaMatrixComponentException if there is an error trying to evaluate the criteria.
-	 */
-    static boolean evaluateCriteria(Criteria condition, ProcedureEnvironment env) throws BlockedException, MetaMatrixComponentException {
-    	try {
-	    	return new Evaluator(Collections.emptyMap(), env.getDataManager(), env.getContext()).evaluate(condition, Collections.EMPTY_LIST);
-    	} catch(CriteriaEvaluationException e) {
-            throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0020));
-    	}
-    }
-
     /**
      * This instruction will evaluate it's criteria, if it evaluates
      * to true, it will push the corresponding sub Program on to the top of the
      * program stack, and break from the loop.  Regardless if whether any criteria
      * evaluate to true, this instruction will increment the program counter of the
      * current program.
+     * @throws MetaMatrixProcessingException 
      * @see ProgramInstruction#process(ProgramEnvironment)
      */
     public void process(ProgramEnvironment env)
-        throws BlockedException, MetaMatrixComponentException {
+        throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
         ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
 
-        // create a new variable context and set the current
-        // context to be the parent context
-        procEnv.getCurrentVariableContext();
-
-		// get the current variable context
-        CommandInstruction.setReferenceValues(procEnv.getCurrentVariableContext(), ReferenceCollectorVisitor.getReferences(condition));
-    	boolean evalValue = evaluateCriteria(condition, procEnv);
+    	boolean evalValue = procEnv.evaluateCriteria(condition);
 
         if(evalValue) {
 	        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[]{"IFInstruction: "+ //$NON-NLS-1$

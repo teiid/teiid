@@ -65,7 +65,7 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         Update update = (Update) command;
 
         // Resolve elements and functions
-        Set groups = new HashSet();
+        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(update.getGroup());
         ResolverVisitor.resolveLanguageObject(update, groups, update.getExternalGroupContexts(), metadata);
     }

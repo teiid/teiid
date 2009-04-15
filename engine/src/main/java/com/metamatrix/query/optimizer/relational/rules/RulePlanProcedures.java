@@ -73,17 +73,17 @@ public class RulePlanProcedures implements OptimizerRule {
                                                    QueryMetadataException,
                                                    MetaMatrixComponentException {
         
-        List nodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS);
-        
-        for (Iterator i = nodes.iterator(); i.hasNext();) {
-            PlanNode node = (PlanNode)i.next();
-            
+        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS)) {
             if (!FrameUtil.isProcedure(node.getFirstChild())) {
                 continue;
             }
             
             StoredProcedure proc = (StoredProcedure)node.getProperty(NodeConstants.Info.NESTED_COMMAND);
             
+            if (!proc.isProcedureRelational()) {
+                continue;
+            }
+
             HashSet inputSymbols = new HashSet();
             List inputReferences = new LinkedList();
             
@@ -92,11 +92,7 @@ public class RulePlanProcedures implements OptimizerRule {
             List conjuncts = new LinkedList();
             HashSet coveredParams = new HashSet();
             //List preExecNodes = new LinkedList();
-            
-            if (!proc.isProcedureRelational()) {
-                continue;
-            }
-            
+                        
             for (Iterator params = proc.getInputParameters().iterator(); params.hasNext();) {
                 SPParameter param = (SPParameter)params.next();
                 ElementSymbol symbol = param.getParameterSymbol();
@@ -111,7 +107,7 @@ public class RulePlanProcedures implements OptimizerRule {
             
             for (Iterator params = inputReferences.iterator(); params.hasNext();) {
                 Reference ref = (Reference)params.next(); 
-                ElementSymbol symbol = (ElementSymbol)ref.getExpression();
+                ElementSymbol symbol = ref.getExpression();
                 
                 Expression defaultValue = null;
                 
@@ -128,13 +124,13 @@ public class RulePlanProcedures implements OptimizerRule {
                 }
             }
             
-            if (conjuncts.isEmpty()) {
+            /*if (conjuncts.isEmpty()) {
                 for (int j = 0; j < inputReferences.size(); j++) {
                     Reference ref = (Reference)inputReferences.get(j);
                     ref.setValue(defaults.get(j));
                 }
                 continue;
-            }
+            }*/
             
             PlanNode accessNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.ACCESS);
             

@@ -51,7 +51,7 @@ public class TestUnionAllNode extends TestCase {
     
     public void helpTestUnion(RelationalNode[] children, RelationalNode union, List[] expected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = NodeTestUtil.getTestBufferManager(1, 2);
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         for(int i=0; i<children.length; i++) {
             union.addChild(children[i]);

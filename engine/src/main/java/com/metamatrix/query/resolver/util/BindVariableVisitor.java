@@ -148,19 +148,18 @@ public class BindVariableVisitor extends LanguageVisitor {
         // Parse and resolve ref
         Expression expr = QueryParser.getQueryParser().parseExpression(binding);
 
-        if(expr instanceof ElementSymbol) {
-            ElementSymbol element = (ElementSymbol) expr;
-
-            GroupSymbol groupSymbol = new GroupSymbol(metadata.getGroupName(element.getName()));
-            ResolverVisitorUtil.resolveGroup(groupSymbol, metadata);
-
-            ResolverVisitor.resolveLanguageObject(element, Arrays.asList(groupSymbol), metadata);
-
-        } else if(expr instanceof Function) {
+        if(!(expr instanceof ElementSymbol)) {
             throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0025, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0025, expr));
         }
+        
+        ElementSymbol element = (ElementSymbol) expr;
 
-        reference.setExpression(expr);
+        GroupSymbol groupSymbol = new GroupSymbol(metadata.getGroupName(element.getName()));
+        ResolverVisitorUtil.resolveGroup(groupSymbol, metadata);
+
+        ResolverVisitor.resolveLanguageObject(element, Arrays.asList(groupSymbol), metadata);
+
+        reference.setExpression(element);
     }
 
 	/**

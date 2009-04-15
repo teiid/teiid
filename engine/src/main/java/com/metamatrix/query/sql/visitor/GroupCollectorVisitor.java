@@ -49,13 +49,13 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  */
 public class GroupCollectorVisitor extends LanguageVisitor {
 
-    private Collection groups;
+    private Collection<GroupSymbol> groups;
 
     private boolean isIntoClauseGroup;
        
     // In some cases, set a flag to ignore groups created by a subquery from clause
     private boolean ignoreInlineViewGroups = false;
-    private Collection inlineViewGroups;    // groups defined by a SubqueryFromClause
+    private Collection<GroupSymbol> inlineViewGroups;    // groups defined by a SubqueryFromClause
 
     /**
      * Construct a new visitor with the specified collection, which should
@@ -63,7 +63,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * @param groups Collection to use for groups
      * @throws IllegalArgumentException If groups is null
      */
-	public GroupCollectorVisitor(Collection groups) {
+	public GroupCollectorVisitor(Collection<GroupSymbol> groups) {
         if(groups == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0023));
         }
@@ -75,11 +75,11 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * after the visitor has been run on the language object tree.
      * @return Collection of {@link com.metamatrix.query.sql.symbol.GroupSymbol}
      */
-    public Collection getGroups() {
+    public Collection<GroupSymbol> getGroups() {
         return this.groups;
     }
     
-    public Collection getInlineViewGroups() {
+    public Collection<GroupSymbol> getInlineViewGroups() {
         return this.inlineViewGroups;
     }
     
@@ -121,7 +121,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
     public void visit(SubqueryFromClause obj) {
         if(this.ignoreInlineViewGroups) {
             if(this.inlineViewGroups == null) { 
-                this.inlineViewGroups = new ArrayList();
+                this.inlineViewGroups = new ArrayList<GroupSymbol>();
             }
             this.inlineViewGroups.add(obj.getGroupSymbol());
         }
@@ -132,7 +132,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect groups in
      */
-    public static void getGroups(LanguageObject obj, Collection groups) {
+    public static void getGroups(LanguageObject obj, Collection<GroupSymbol> groups) {
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
         PreOrderNavigator.doVisit(obj, visitor);
     }
@@ -145,12 +145,12 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * @param removeDuplicates True to remove duplicates
      * @return Collection of {@link com.metamatrix.query.sql.symbol.GroupSymbol}
      */
-    public static Collection getGroups(LanguageObject obj, boolean removeDuplicates) {
-        Collection groups = null;
+    public static Collection<GroupSymbol> getGroups(LanguageObject obj, boolean removeDuplicates) {
+        Collection<GroupSymbol> groups = null;
         if(removeDuplicates) {
-            groups = new HashSet();
+            groups = new HashSet<GroupSymbol>();
         } else {
-            groups = new ArrayList();
+            groups = new ArrayList<GroupSymbol>();
         }
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
         PreOrderNavigator.doVisit(obj, visitor);
@@ -162,7 +162,7 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect groups in
      */
-    public static void getGroupsIgnoreInlineViews(LanguageObject obj, Collection groups) {
+    public static void getGroupsIgnoreInlineViews(LanguageObject obj, Collection<GroupSymbol> groups) {
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
         visitor.setIgnoreInlineViewGroups(true);
         DeepPreOrderNavigator.doVisit(obj, visitor);  
@@ -180,12 +180,12 @@ public class GroupCollectorVisitor extends LanguageVisitor {
      * @param removeDuplicates True to remove duplicates
      * @return Collection of {@link com.metamatrix.query.sql.symbol.GroupSymbol}
      */
-    public static Collection getGroupsIgnoreInlineViews(LanguageObject obj, boolean removeDuplicates) {
-        Collection groups = null;
+    public static Collection<GroupSymbol> getGroupsIgnoreInlineViews(LanguageObject obj, boolean removeDuplicates) {
+        Collection<GroupSymbol> groups = null;
         if(removeDuplicates) { 
-            groups = new HashSet();
+            groups = new HashSet<GroupSymbol>();
         } else {
-            groups = new ArrayList();
+            groups = new ArrayList<GroupSymbol>();
         }    
         GroupCollectorVisitor visitor = new GroupCollectorVisitor(groups);
         visitor.setIgnoreInlineViewGroups(true);

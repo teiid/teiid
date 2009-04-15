@@ -22,13 +22,17 @@
 
 package com.metamatrix.query.sql.visitor;
 
-import java.util.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
-import com.metamatrix.query.sql.lang.*;
+import com.metamatrix.query.sql.lang.ExistsCriteria;
+import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
+import com.metamatrix.query.sql.lang.SubquerySetCriteria;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 
@@ -45,7 +49,7 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
  */
 public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
 
-    private Collection valueIteratorProviders;
+    private List valueIteratorProviders;
     
     /**
      * Construct a new visitor with the default collection type, which is a 
@@ -60,7 +64,7 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
      * ValueIteratorProvider instances
 	 * @param valueIteratorProviders Collection to accumulate found 
 	 */
-	public ValueIteratorProviderCollectorVisitor(Collection valueIteratorProviders) { 
+	ValueIteratorProviderCollectorVisitor(List valueIteratorProviders) { 
 		this.valueIteratorProviders = valueIteratorProviders;
 	}   
     
@@ -70,7 +74,7 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
      * @return Collection of {@link com.metamatrix.sql.util.ValueIteratorProvider}
      * (by default, this is a java.util.ArrayList)
      */
-    public Collection getValueIteratorProviders() { 
+    public List getValueIteratorProviders() { 
         return this.valueIteratorProviders;
     }
     
@@ -115,28 +119,25 @@ public class ValueIteratorProviderCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @return java.util.ArrayList of found ValueIteratorProvider
      */
-    public static final Collection getValueIteratorProviders(LanguageObject obj) {
+    public static final List getValueIteratorProviders(LanguageObject obj) {
         ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor();
         PreOrderNavigator.doVisit(obj, visitor);
         return visitor.getValueIteratorProviders();
     }
 
-	/**
-     * Helper to quickly get the ValueIteratorProvider instances from obj
-     * @param obj Language object
-	 * @param valueIteratorProviders Collection to collect ValueIteratorProviders in
-	 */
-	public static final void getValueIteratorProviders(LanguageObject obj, Collection valueIteratorProviders) {
+	public static final void getValueIteratorProviders(LanguageObject obj, List valueIteratorProviders) {
 		ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(valueIteratorProviders);
         PreOrderNavigator.doVisit(obj, visitor);
 	}
           	
-    public static final void getValueIteratorProviders(Collection languageObjects, Collection valueIteratorProviders) {
-        ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(valueIteratorProviders);
+    public static final List getValueIteratorProviders(Collection<? extends LanguageObject> languageObjects) {
+    	List result = new LinkedList();
+        ValueIteratorProviderCollectorVisitor visitor = new ValueIteratorProviderCollectorVisitor(result);
         Iterator i = languageObjects.iterator();
         while (i.hasNext()) {
             LanguageObject obj = (LanguageObject)i.next();
             PreOrderNavigator.doVisit(obj, visitor);
         }
+        return result;
     }            
 }

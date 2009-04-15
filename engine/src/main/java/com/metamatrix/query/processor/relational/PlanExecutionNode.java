@@ -31,6 +31,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.CommandContext;
 
 public class PlanExecutionNode extends RelationalNode {
@@ -65,8 +66,7 @@ public class PlanExecutionNode extends RelationalNode {
 
         // Initialize plan for execution
         CommandContext subContext = (CommandContext) getContext().clone();
-        subContext.setOutputBatchSize(getBatchSize()); 
-        
+        subContext.pushVariableContext(new VariableContext());
         plan.initialize(subContext, getDataManager(), this.getBufferManager());        
         
         if (prepareNextCommand()) {

@@ -38,10 +38,8 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -63,7 +61,6 @@ import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 import com.metamatrix.query.util.LogConstants;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 /**
  */
 public class ProcedurePlan extends BaseProcessorPlan {
@@ -141,30 +138,22 @@ public class ProcedurePlan extends BaseProcessorPlan {
      * @param command Command to execute from node
      * @return The <code>TupleSourceID</code> for the results
      */
-    TupleSourceID registerRequest(Object command)
+    TupleSourceID registerRequest(ProcessorPlan subPlan, VariableContext currentVariableContext)
         throws MetaMatrixComponentException {
         
-        Assertion.assertTrue((command instanceof ProcessorPlan), QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0050, command.getClass()));
-
         if(this.internalProcessor != null){
             return this.internalResultID;
         }
         
-        // this is typically a query or an insert being executed from within the
-        // procedure and is mostly a relational plan
-        ProcessorPlan subPlan = (ProcessorPlan) command;
-
         //this may not be the first time the plan is being run
         subPlan.reset();
 
         // Run query processor on command
-        List schema = subPlan.getOutputElements();
         CommandContext subContext = (CommandContext) getContext().clone();
+        subContext.setVariableContext(currentVariableContext);
         subContext.setTempTableStore(env.getTempTableStore());
-        this.internalResultID = this.bufferMgr.createTupleSource(schema, TypeRetrievalUtil.getTypeNames(schema), subContext.getConnectionID(), TupleSourceType.PROCESSOR);
-        subContext.setTupleSourceID(internalResultID);
         internalProcessor = new QueryProcessor(subPlan, subContext, this.bufferMgr, this.dataMgr);
-
+        this.internalResultID = this.internalProcessor.getResultsID();
         return this.internalResultID;
     }
 

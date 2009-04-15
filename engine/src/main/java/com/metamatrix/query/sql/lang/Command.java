@@ -27,6 +27,7 @@ import java.util.*;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -123,6 +124,8 @@ public abstract class Command implements LanguageObject {
 	
 	/** The option clause */
 	private Option option;
+	
+	private ProcessorPlan plan;
     
 	/**
 	 * Return type of command to make it easier to build switch statements by command type.
@@ -218,6 +221,7 @@ public abstract class Command implements LanguageObject {
         }
         
         copy.setIsResolved(this.isResolved());
+        copy.plan = this.plan;
     }
     
     /**
@@ -349,6 +353,14 @@ public abstract class Command implements LanguageObject {
 
     public void setVariableValues(Map parameters) {
         this.variableValues = parameters;
+    }
+    
+    public ProcessorPlan getProcessorPlan() {
+    	return this.plan;
+    }
+    
+    public void setProcessorPlan(ProcessorPlan plan) {
+    	this.plan = plan;
     }
     
     /**

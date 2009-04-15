@@ -836,11 +836,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                     if(((Constant)value).isNull() && ! getMetadata().elementSupports(elementID.getMetadataID(), SupportConstants.Element.NULL)) {
                         handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0060, SQLStringVisitor.getSQLString(elementID)), elementID);
                     }// end of if
-                } else if(value instanceof Reference) {
-                	if(value.getType() == null){
-                		((Reference)value).setExpression(new Constant(null, elementID.getType()));
-                	}
-		    	} else if (!EvaluateExpressionVisitor.willBecomeConstant(value)) {
+                } else if (!EvaluateExpressionVisitor.willBecomeConstant(value)) {
                     // If this is an update on a virtual group, verify that no elements are in the right side
                     GroupSymbol group = update.getGroup();
                     if(getMetadata().isVirtualGroup(group.getMetadataID())) {

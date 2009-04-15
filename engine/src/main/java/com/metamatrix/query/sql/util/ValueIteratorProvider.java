@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.sql.util;
 
+import com.metamatrix.query.sql.LanguageObject;
+
 /**
  * <p>Language Object Implementors of this interface will provide a 
  * {@link ValueIterator} over one or potentially more values
@@ -31,7 +33,7 @@ package com.metamatrix.query.sql.util;
  * have their value iterators given to them by some external
  * entity, so there is a setter method in this interface.</p>  
  */
-public interface ValueIteratorProvider {
+public interface ValueIteratorProvider extends LanguageObject {
 
     /**
      * Get the {@link ValueIterator} from this ValueIterator provider

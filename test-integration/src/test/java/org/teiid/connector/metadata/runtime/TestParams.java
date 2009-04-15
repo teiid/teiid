@@ -61,13 +61,13 @@ public class TestParams extends TestCase {
     public IProcedure getProcedure(String procName, int inputArgs, TranslationUtility transUtil) throws Exception {
         StringBuffer sql = new StringBuffer("EXEC " + procName + "("); //$NON-NLS-1$ //$NON-NLS-2$
         if(inputArgs > 0) {
-            sql.append("?"); //$NON-NLS-1$
+            sql.append("null"); //$NON-NLS-1$
             for(int i=1; i<inputArgs; i++) {
-                sql.append(", ?");                 //$NON-NLS-1$
+                sql.append(", null");                 //$NON-NLS-1$
             }
         }
         sql.append(")"); //$NON-NLS-1$
-        IProcedure proc = (IProcedure) transUtil.parseCommand(sql.toString()); //$NON-NLS-1$
+        IProcedure proc = (IProcedure) transUtil.parseCommand(sql.toString());
         return proc;
     }
 
@@ -114,62 +114,62 @@ public class TestParams extends TestCase {
         assertEquals(4, params.size());
         
         checkParameter((IParameter)params.get(0),
-                       "in1",
-                       "sptest.proc1.in1",
+                       "in1", //$NON-NLS-1$
+                       "sptest.proc1.in1", //$NON-NLS-1$
                        1,
                        Direction.IN,
                        null,
-                       "sample default",
+                       "sample default", //$NON-NLS-1$
                        TypeModel.NOT_NULLABLE,
                        String.class,
                        20,
                        10,
                        5,
                        CONNECTOR_METADATA_UTILITY, 
-                       "http://www.w3.org/2001/XMLSchema#string", 
-                       "http://www.w3.org/2001/XMLSchema#anySimpleType", 
-                       "http://www.w3.org/2001/XMLSchema#string");
+                       "http://www.w3.org/2001/XMLSchema#string",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#anySimpleType",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#string"); //$NON-NLS-1$
 
         checkParameter((IParameter)params.get(1),
-                       "in2",
-                       "sptest.proc1.in2",
+                       "in2", //$NON-NLS-1$
+                       "sptest.proc1.in2", //$NON-NLS-1$
                        2,
                        Direction.IN,
                        null,
-                       "15",
+                       "15", //$NON-NLS-1$
                        TypeModel.NULLABLE,
                        Integer.class,
                        0,
                        10,
                        0,
                        CONNECTOR_METADATA_UTILITY, 
-                       "http://www.w3.org/2001/XMLSchema#int", 
-                       "http://www.w3.org/2001/XMLSchema#long", 
-                       "http://www.w3.org/2001/XMLSchema#decimal");
+                       "http://www.w3.org/2001/XMLSchema#int",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#long",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#decimal"); //$NON-NLS-1$
 
         checkParameter((IParameter)params.get(2),
-                       "in3",
-                       "sptest.proc1.in3",
+                       "in3", //$NON-NLS-1$
+                       "sptest.proc1.in3", //$NON-NLS-1$
                        3,
                        Direction.IN,
                        null,
-                       "2003-04-23 09:30:00",
+                       "2003-04-23 09:30:00", //$NON-NLS-1$
                        TypeModel.NULLABLE_UNKNOWN,
                        Timestamp.class,
                        22,
                        10,
                        0,
                        CONNECTOR_METADATA_UTILITY, 
-                       "http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp", 
-                       "http://www.w3.org/2001/XMLSchema#dateTime", 
-                       "http://www.w3.org/2001/XMLSchema#dateTime");
+                       "http://www.metamatrix.com/metamodels/SimpleDatatypes-instance#timestamp",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#dateTime",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#dateTime"); //$NON-NLS-1$
 
         checkParameter((IParameter)params.get(3),
-                       "inOptional",
-                       "sptest.proc1.inOptional",
+                       "inOptional", //$NON-NLS-1$
+                       "sptest.proc1.inOptional", //$NON-NLS-1$
                        4,
                        Direction.IN,
-                       "optionalName",
+                       "optionalName", //$NON-NLS-1$
                        null,
                        TypeModel.NULLABLE,
                        String.class,
@@ -177,9 +177,9 @@ public class TestParams extends TestCase {
                        0,
                        0,
                        CONNECTOR_METADATA_UTILITY, 
-                       "http://www.w3.org/2001/XMLSchema#string", 
-                       "http://www.w3.org/2001/XMLSchema#anySimpleType", 
-                       "http://www.w3.org/2001/XMLSchema#string");
+                       "http://www.w3.org/2001/XMLSchema#string",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#anySimpleType",  //$NON-NLS-1$
+                       "http://www.w3.org/2001/XMLSchema#string"); //$NON-NLS-1$
 
     
     }   

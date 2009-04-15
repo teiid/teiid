@@ -33,12 +33,14 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
+import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.util.CommandContext;
+import com.metamatrix.query.util.TypeRetrievalUtil;
 
 /**
  * TODO: combine overlapping responsibilities with RequestWorkItem
@@ -53,6 +55,7 @@ public class QueryProcessor {
 		void batchProduced(TupleBatch batch) throws MetaMatrixCoreException;
 	}
 
+	private TupleSourceID resultsID;
     private CommandContext context;
 	private ProcessorDataManager dataMgr;
     private BufferManager bufferMgr;
@@ -72,8 +75,9 @@ public class QueryProcessor {
      * @param context The context that this plan is being processed in
      * @param bufferMgr The buffer manager that provides access to tuple sources
      * @param dataMgr The data manager that provides access to get data
+     * @throws MetaMatrixComponentException 
      */
-    public QueryProcessor(ProcessorPlan plan, CommandContext context, BufferManager bufferMgr, ProcessorDataManager dataMgr) {
+    public QueryProcessor(ProcessorPlan plan, CommandContext context, BufferManager bufferMgr, ProcessorDataManager dataMgr) throws MetaMatrixComponentException {
         this.context = context;
 		this.dataMgr = dataMgr;
         this.bufferMgr = bufferMgr;
@@ -81,15 +85,20 @@ public class QueryProcessor {
 
 		// Add data manager to all nodes in tree
 		this.processPlan.initialize(context, this.dataMgr, bufferMgr);
+        this.resultsID = bufferMgr.createTupleSource(processPlan.getOutputElements(), TypeRetrievalUtil.getTypeNames(processPlan.getOutputElements()), context.getConnectionID(), TupleSourceType.PROCESSOR);
+    }
+    
+    public CommandContext getContext() {
+		return context;
 	}
-
+    
 	public Object getProcessID() {
 		return this.context.getProcessorID();
 	}
-
-    public TupleSourceID getResultsID() {
-        return this.context.getTupleSourceID();
-    }
+	
+	public TupleSourceID getResultsID() {
+		return resultsID;
+	}
 
     public ProcessorPlan getProcessorPlan() {
         return this.processPlan;
@@ -181,7 +190,7 @@ public class QueryProcessor {
      */
     private void flushBatch(TupleBatch batch) throws MetaMatrixCoreException {
 		if(batch.getRowCount() > 0) {
-			this.bufferMgr.addTupleBatch(this.context.getTupleSourceID(), batch);
+			this.bufferMgr.addTupleBatch(this.resultsID, batch);
 			this.highestRow = batch.getEndRow();
 		}
 		if (this.batchHandler != null && (batch.getRowCount() > 0 || batch.getTerminationFlag())) {
@@ -207,7 +216,7 @@ public class QueryProcessor {
         	processPlan.close();
         } finally {
             // Mark tuple source FULL
-            this.bufferMgr.setStatus(this.context.getTupleSourceID(), TupleSourceStatus.FULL);
+            this.bufferMgr.setStatus(this.resultsID, TupleSourceStatus.FULL);
         }
     }
 

@@ -44,7 +44,6 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.MetaMatrixCoreException;
@@ -116,12 +115,12 @@ public class TestProcedureProcessor extends TestCase {
         // Process twice, testing reset and clone method of Processor plan
         for (int i=1; i<=2; i++) {
 	        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            TupleSourceID tsID = bufferMgr.createTupleSource(procPlan.getOutputElements(), null, null, TupleSourceType.FINAL);  
-            CommandContext context = new CommandContext("pID", null, tsID, 10, null, null, null, null); //$NON-NLS-1$
+            CommandContext context = new CommandContext("pID", null, 10, null, null, null, null); //$NON-NLS-1$
             context.getNextRand(0);
             context.setOptimisticTransaction(optimistic);
             context.setProcessDebug(DEBUG);
             QueryProcessor processor = new QueryProcessor(procPlan, context, bufferMgr, dataMgr);
+            TupleSourceID tsID = processor.getResultsID();  
 	        processor.process();
 	
 	        // Create QueryResults from TupleSource
@@ -2578,7 +2577,7 @@ public class TestProcedureProcessor extends TestCase {
         FakeDataManager dataMgr = exampleDataManager(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
 
-        List[] expected = new List[] {Arrays.asList(new Object[] {new Integer(3)})}; //$NON-NLS-1$
+        List[] expected = new List[] {Arrays.asList(new Object[] {new Integer(3)})};
         helpTestProcess(plan, expected, dataMgr);
     }
         

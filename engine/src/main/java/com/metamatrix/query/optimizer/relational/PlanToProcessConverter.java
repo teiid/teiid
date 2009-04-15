@@ -188,21 +188,14 @@ public class PlanToProcessConverter {
                 } else {
                     List symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
                     
-                    List subqueryPlans = (List)node.getProperty(NodeConstants.Info.SUBQUERY_PLANS);
-                    if (subqueryPlans == null){
-                        // This is a normal select node
-        				ProjectNode pnode = new ProjectNode(getID());
-        				processNode = pnode;
+                    // This project node has one or more subqueries
+                    List subqueries = node.getSubqueryContainers();
+                    if (subqueries.isEmpty()){
+                		ProjectNode pnode = new ProjectNode(getID());
+                		processNode = pnode;
                     } else {
-                        // This project node has one or more subqueries
-                        List subqueries = (List)node.getProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS);
-                        DependentProjectNode pnode = new DependentProjectNode(getID());
-                        pnode.setPlansAndValueProviders(subqueryPlans, subqueries);
-
-                        List correlatedReferences = (List)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-                        if (correlatedReferences != null){
-                            pnode.setCorrelatedReferences(correlatedReferences);
-                        }
+                        SymbolMap correlatedReferences = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+                        DependentProjectNode pnode = new DependentProjectNode(getID(), correlatedReferences);
 
                         processNode = pnode;
                     }
@@ -328,9 +321,9 @@ public class PlanToProcessConverter {
 
 			case NodeConstants.Types.SELECT:
 
-				List subPlans = (List) node.getProperty(NodeConstants.Info.SUBQUERY_PLANS);
 				Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-                if (subPlans == null){
+				List subCrits = node.getSubqueryContainers();
+                if (subCrits.isEmpty()){
 					// This is a normal select node
 					SelectNode selnode = new SelectNode(getID());
 					selnode.setCriteria(crit);
@@ -338,14 +331,10 @@ public class PlanToProcessConverter {
 					processNode = selnode;
 				} else {
                     // This select node has one or more subqueries
-					List subCrits = (List)node.getProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS);
+                    SymbolMap correlatedReferences = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
 
-                    DependentSelectNode selnode = new DependentSelectNode(getID());
+                    DependentSelectNode selnode = new DependentSelectNode(getID(), correlatedReferences);
 					selnode.setCriteria(crit);
-					selnode.setPlansAndCriteriaMapping(subPlans, subCrits);
-
-                    List correlatedReferences = (List)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-                    selnode.setCorrelatedReferences(correlatedReferences);
 
 					processNode = selnode;
 				}

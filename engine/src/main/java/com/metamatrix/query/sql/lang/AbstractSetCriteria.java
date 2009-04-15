@@ -23,7 +23,6 @@
 package com.metamatrix.query.sql.lang;
 
 import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.sql.util.ValueIteratorProvider;
 
 /**
@@ -78,32 +77,6 @@ implements ValueIteratorProvider{
     public void setNegated(boolean negationFlag) {
         negated = negationFlag;
     }
-
-	/**
-	 * <p>Returns a ValueIterator over the Collection of values that the
-	 * Criteria tests the Expression for inclusion in.  This
-	 * method allows implementors leeway in how the Collection 
-	 * of values of this Criteria are stored.</p> 
-	 * <p>Subclasses must take care that a ValueIterator returned from
-	 * this method is always {@link ValueIterator#reset reset} to the
-	 * beginning of the iteration.</p>
-	 * <p>Also note that no guarantee is made as to whether or not the
-	 * same ValueIterator instance is returned by multiple calls to
-	 * this method, or if a new ValueIterator instance is returned.
-	 * Clients must be aware that the same instance might be returned
-	 * multiple times, and modifying the state of one will affect anything
-	 * else using that reference.</p>
-	 * @return ValueIterator over the Collection of values that the 
-	 * left Expression is tested for inclusion in 
-	 */
-	public abstract ValueIterator getValueIterator();
-
-    /**
-     * Sets the ValueIterator instance on this object.  Subclasses may
-     * choose to implement with a no-op method. 
-     * @see com.metamatrix.query.sql.util.ValueIteratorProvider#setValueIterator(com.metamatrix.query.sql.util.ValueIterator)
-     */
-    public abstract void setValueIterator(ValueIterator valueIterator);
 
     /**
      * Deep copy of object

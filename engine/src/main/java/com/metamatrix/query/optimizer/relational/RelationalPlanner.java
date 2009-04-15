@@ -24,12 +24,9 @@ package com.metamatrix.query.optimizer.relational;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -50,15 +47,14 @@ import com.metamatrix.query.optimizer.relational.rules.RuleConstants;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
-import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 import com.metamatrix.query.util.LogConstants;
@@ -109,7 +105,7 @@ public class RelationalPlanner implements CommandPlanner {
 
         // Distribute childPlans into relational plan
         PlanNode plan = (PlanNode)node.getCanonicalPlan();
-        Map planMap = connectChildPlans(plan, node);
+        connectChildPlans(plan);
 
         // Check whether command has virtual groups
         Command command = node.getCommand();
@@ -125,9 +121,9 @@ public class RelationalPlanner implements CommandPlanner {
         }
 
         // Connect ProcessorPlan to SubqueryContainer (if any) of SELECT or PROJECT nodes
-        if (!planMap.isEmpty()){
-            connectSubqueryContainers(planMap, plan);
-        }
+    	if (node.getChildCount() > 0) {
+    		connectSubqueryContainers(plan);
+    	}
         
         // Set top column information on top node
         List projectCols = command.getProjectedSymbols();
@@ -168,44 +164,30 @@ public class RelationalPlanner implements CommandPlanner {
      * map of child plans, and create a new Map of ProcessorPlan to the
      * SubqueryContainer object, and place that new Map as a property on the
      * plan node.  The Map will be used later during processing.</p>
-     *
-     * @param planMap Map <child Command - child ProcessorPlan>
      * @param plan PlanNode
      */
-    private static void connectSubqueryContainers(Map planMap, PlanNode plan) {
+    private static void connectSubqueryContainers(PlanNode plan) {
         Set<GroupSymbol> groupSymbols = new HashSet<GroupSymbol>();
         for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
             groupSymbols.addAll(source.getGroups());
         }
 
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT)) {
-            List subqueryContainers = new ArrayList();
-
-            if (node.getType() == NodeConstants.Types.SELECT){
-                Criteria criteria = (Criteria)node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-                ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(criteria, subqueryContainers);
-            } else {
-                Collection projectCols = (Collection)node.getProperty(NodeConstants.Info.PROJECT_COLS);
-                ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(projectCols, subqueryContainers);
+            List<SubqueryContainer> subqueryContainers = node.getSubqueryContainers();
+            if (subqueryContainers.isEmpty()){
+            	continue;
             }
-            ArrayList<ElementSymbol> correlatedReferences = new ArrayList<ElementSymbol>(); 
-            if (subqueryContainers.size() > 0){
-                ArrayList plans = new ArrayList(subqueryContainers.size());
-
-                Iterator i = subqueryContainers.iterator();
-                while (i.hasNext()) {
-                    SubqueryContainer container = (SubqueryContainer) i.next();
-
-                    Command subCommand = container.getCommand();
-                    Object processorPlan = planMap.get(subCommand);
-                    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, groupSymbols, correlatedReferences);
-                    plans.add(processorPlan);
-                }
-                node.setProperty(NodeConstants.Info.SUBQUERY_PLANS, plans);
-                node.setProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS, subqueryContainers);
-                node.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, correlatedReferences);
-                node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
+            ArrayList<Reference> correlatedReferences = new ArrayList<Reference>(); 
+            for (SubqueryContainer container : subqueryContainers) {
+                Command subCommand = container.getCommand();
+                CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, groupSymbols, correlatedReferences);
             }
+            SymbolMap map = new SymbolMap();
+            for (Reference reference : correlatedReferences) {
+				map.addMapping(reference.getExpression(), reference.getExpression());
+			}
+            node.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, map);
+            node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
         }
     }
 
@@ -216,31 +198,14 @@ public class RelationalPlanner implements CommandPlanner {
      * @param metadata
      * @return Map <Command - child ProcessorPlan>
      */
-    private static Map connectChildPlans(PlanNode plan, CommandTreeNode commandNode) {
-        // Quick check whether this is needed
-        List commandChildren = commandNode.getChildren();
-        if(commandChildren.size() == 0) {
-            return Collections.EMPTY_MAP;
-        }
-
-        // Pull out subcommands and their plans
-        Map planMap = new IdentityHashMap();
-        Iterator childIter = commandChildren.iterator();
-        for(int i=0; childIter.hasNext(); i++) {
-            CommandTreeNode child = (CommandTreeNode) childIter.next();
-            planMap.put(child.getCommand(), child.getProcessorPlan());
-        }
-
+    private static void connectChildPlans(PlanNode plan) {
         // Find all nodes that need subcommands attached
         for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
-            Object nodeCommand = source.getProperty(NodeConstants.Info.NESTED_COMMAND);
-            ProcessorPlan subPlan = (ProcessorPlan) planMap.get(nodeCommand);
-            if(subPlan != null) {
-                source.setProperty(NodeConstants.Info.PROCESSOR_PLAN, subPlan);
+            Command nodeCommand = (Command)source.getProperty(NodeConstants.Info.NESTED_COMMAND);
+            if(nodeCommand != null && nodeCommand.getProcessorPlan() != null) {
+                source.setProperty(NodeConstants.Info.PROCESSOR_PLAN, nodeCommand.getProcessorPlan());
             }
         }
-        
-        return planMap;
     }
 
     /**

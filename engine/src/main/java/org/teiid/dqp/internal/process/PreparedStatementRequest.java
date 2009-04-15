@@ -46,6 +46,8 @@ import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.util.VariableContext;
+import com.metamatrix.query.util.CommandContext;
 
 /**
  * Specific request for handling prepared statement calls.
@@ -132,7 +134,7 @@ public class PreparedStatementRequest extends Request {
         	   }
         	}
         } else {
-        	PreparedStatementRequest.resolveParameterValues(params, values);
+        	PreparedStatementRequest.resolveParameterValues(params, values, this.context);
         }
     }
     
@@ -193,22 +195,19 @@ public class PreparedStatementRequest extends Request {
 	 * @param values
 	 * @throws QueryResolverException
 	 */
-	public static void resolveParameterValues(List params,
-	                                    List values) throws QueryResolverException, MetaMatrixComponentException {
+	public static void resolveParameterValues(List<Reference> params,
+	                                    List values, CommandContext context) throws QueryResolverException, MetaMatrixComponentException {
+		VariableContext result = new VariableContext();
 	    //the size of the values must be the same as that of the parameters
 	    if (params.size() != values.size()) {
 	        String msg = QueryPlugin.Util.getString("QueryUtil.wrong_number_of_values", new Object[] {new Integer(values.size()), new Integer(params.size())}); //$NON-NLS-1$
 	        throw new QueryResolverException(msg);
 	    }
 	
-	    if (params.isEmpty()) {
-	        return;
-	    }
-	
 	    //the type must be the same, or the type of the value can be implicitly converted
 	    //to that of the reference
 	    for (int i = 0; i < params.size(); i++) {
-	        Reference param = (Reference) params.get(i);
+	        Reference param = params.get(i);
 	        Object value = values.get(i);
 	        
 	        //TODO: why is the list check in here
@@ -225,12 +224,11 @@ public class PreparedStatementRequest extends Request {
                     throw new QueryResolverException(msg);
 				}
 	        }
-	        
-	        // Create with expected type if null
-	        Constant constant = new Constant(value, param.getType());
-	        
+	        	        
 	        //bind variable
-	        param.setExpression(constant);
+	        result.setValue(param.getExpression(), value);
 	    }
+	    
+	    context.setVariableContext(result);
 	}
 } 

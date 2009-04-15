@@ -122,17 +122,16 @@ public class TestDependentSelectNode extends TestCase {
 	 */
 	public void testClone(){
 		int id = 1;
-		DependentSelectNode node = new DependentSelectNode(id);
 		Command subCommand = helpMakeCommand();
+		subCommand.setProcessorPlan(new DoNothingProcessorPlan());
 		Criteria subCrit = new SubquerySetCriteria(new Constant("3"), subCommand); //$NON-NLS-1$
 		Command subCommand2 = helpMakeCommand2();
+		subCommand2.setProcessorPlan(new DoNothingProcessorPlan());
 		Criteria subCrit2 = new SubquerySetCriteria(new ElementSymbol("f"), subCommand2); //$NON-NLS-1$
-		//Set up DependentSelectNode data
-		List plans = helpMakeFakeProcessorPlans(2);
 		List crits = new ArrayList(2);
 		crits.add(subCrit);
 		crits.add(subCrit2);
-		node.setPlansAndCriteriaMapping(plans, crits);
+		DependentSelectNode node = new DependentSelectNode(id, null);
 		//Set up criteria
 		CompoundCriteria crit = new CompoundCriteria();
 		crit.addCriteria(subCrit);
@@ -145,7 +144,7 @@ public class TestDependentSelectNode extends TestCase {
 		//Test clone
 		DependentSelectNode cloned = (DependentSelectNode)node.clone();
 		
-		List originalProcessorPlans = node.getSubqueryProcessorUtility().getSubqueryPlans();
+		List<ProcessorPlan> originalProcessorPlans = node.getSubqueryProcessorUtility().getSubqueryPlans();
 		List clonedProcessorPlans = cloned.getSubqueryProcessorUtility().getSubqueryPlans();
 		List clonedCrits = cloned.getSubqueryProcessorUtility().getValueIteratorProviders();
 		List checkClonedCrits = new ArrayList(clonedCrits.size());
@@ -156,10 +155,10 @@ public class TestDependentSelectNode extends TestCase {
 		assertEquals(clonedCrits.size(), clonedProcessorPlans.size());
 		for (int i=0; i<originalProcessorPlans.size(); i++){
 			//Check ProcessorPlans
-			Object originalPlan = originalProcessorPlans.get(i);
+			ProcessorPlan originalPlan = originalProcessorPlans.get(i);
 			DoNothingProcessorPlan clonedPlan = (DoNothingProcessorPlan)clonedProcessorPlans.get(i);
 			assertNotNull(clonedPlan.original);
-			assertSame(originalPlan, clonedPlan.original);
+			assertSame(((DoNothingProcessorPlan)originalPlan).original, clonedPlan.original);
 			
 			//Check SubquerySetCriteria
 			assertNotNull(clonedCrits.get(i));
@@ -173,20 +172,21 @@ public class TestDependentSelectNode extends TestCase {
      */
     public void testClone2(){
         int id = 1;
-        DependentSelectNode node = new DependentSelectNode(id);
-
         Command subCommand = helpMakeCommand();
+        subCommand.setProcessorPlan(new DoNothingProcessorPlan());
         Criteria subCrit = new SubqueryCompareCriteria(new ElementSymbol("f"), subCommand, SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ANY); //$NON-NLS-1$
 
         Command subCommand2 = helpMakeCommand2();
+        subCommand2.setProcessorPlan(new DoNothingProcessorPlan());
         Criteria subCrit2 = new ExistsCriteria(subCommand2);
 
         //Set up DependentSelectNode data
-        List plans = helpMakeFakeProcessorPlans(2);
         List crits = new ArrayList(2);
         crits.add(subCrit);
         crits.add(subCrit2);
-        node.setPlansAndCriteriaMapping(plans, crits);
+
+        DependentSelectNode node = new DependentSelectNode(id, null);
+
         //Set up criteria
         CompoundCriteria crit = new CompoundCriteria();
         crit.addCriteria(subCrit);
@@ -213,7 +213,7 @@ public class TestDependentSelectNode extends TestCase {
             Object originalPlan = originalProcessorPlans.get(i);
             DoNothingProcessorPlan clonedPlan = (DoNothingProcessorPlan)clonedProcessorPlans.get(i);
             assertNotNull(clonedPlan.original);
-            assertSame(originalPlan, clonedPlan.original);
+            assertSame(((DoNothingProcessorPlan)originalPlan).original, clonedPlan.original);
             
             //Check SubquerySetCriteria
             assertNotNull(clonedCrits.get(i));

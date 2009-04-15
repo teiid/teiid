@@ -60,7 +60,7 @@ public class JoinUtil {
     }
     
     /**
-     * Will attempt to optimize the join type based upon the criteria provied.
+     * Will attempt to optimize the join type based upon the criteria provided.
      * 
      * Returns the new join type if one is found, otherwise null
      * 
@@ -72,7 +72,7 @@ public class JoinUtil {
      * @return
      */
     static final JoinType optimizeJoinType(PlanNode critNode, PlanNode joinNode, QueryMetadataInterface metadata) {
-        if (critNode.getGroups().isEmpty() || !joinNode.getGroups().containsAll(critNode.getGroups()) || critNode.hasCollectionProperty(NodeConstants.Info.CORRELATED_REFERENCES)) {
+        if (critNode.getGroups().isEmpty() || !joinNode.getGroups().containsAll(critNode.getGroups()) || FrameUtil.hasSubquery(critNode)) {
             return null;
         }
 

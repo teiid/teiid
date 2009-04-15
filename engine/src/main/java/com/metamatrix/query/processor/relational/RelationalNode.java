@@ -81,6 +81,10 @@ public abstract class RelationalNode implements Cloneable, Describable{
 	public RelationalNode(int nodeID) {
 		this.nodeID = nodeID;
 	}
+	
+	public void setContext(CommandContext context) {
+		this.context = context;
+	}
 
     public void initialize(CommandContext context, BufferManager bufferManager, ProcessorDataManager dataMgr) {
         this.context = context;

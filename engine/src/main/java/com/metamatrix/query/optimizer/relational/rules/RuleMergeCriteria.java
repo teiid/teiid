@@ -39,6 +39,7 @@ import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 
@@ -99,20 +100,16 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
         // Remove all of chain except root, collect crit from each
         CompoundCriteria critParts = new CompoundCriteria();
-        List subqueryPlans = null;
-        List subqueryValueProviders = null;
-        List correlatedReferences = null;        
+        SymbolMap correlatedReferences = new SymbolMap();        
         PlanNode current = chainRoot;
         boolean isDependentSet = false;
         while(current.getType() == NodeConstants.Types.SELECT) {
             critParts.addCriteria((Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA)); 
             
-            subqueryPlans = addProperties(subqueryPlans, (List)current.getProperty(NodeConstants.Info.SUBQUERY_PLANS));           
-            subqueryValueProviders = addProperties(subqueryValueProviders, (List)current.getProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS));           
-            correlatedReferences = addProperties(correlatedReferences, (List)current.getProperty(NodeConstants.Info.CORRELATED_REFERENCES));           
-
             isDependentSet |= current.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET);
             
+            correlatedReferences.merge((SymbolMap)current.getProperty(NodeConstants.Info.CORRELATED_REFERENCES));
+                        
             // Recurse
             PlanNode last = current;
             current = current.getLastChild();
@@ -132,19 +129,15 @@ public final class RuleMergeCriteria implements OptimizerRule {
         
         // Replace criteria at root with new combined criteria
         chainRoot.setProperty(NodeConstants.Info.SELECT_CRITERIA, combinedCrit);
-        if (subqueryPlans != null){
-            chainRoot.setProperty(NodeConstants.Info.SUBQUERY_PLANS, subqueryPlans); 
-        }
-        if (subqueryValueProviders != null){
-            chainRoot.setProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS, subqueryValueProviders); 
-        }
-        if (correlatedReferences != null){
+        if (!correlatedReferences.asMap().isEmpty()){
             chainRoot.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, correlatedReferences); 
         }
         
         // Reset group for node based on combined criteria
         chainRoot.getGroups().clear();
+        
         chainRoot.addGroups(GroupsUsedByElementsVisitor.getGroups(combinedCrit));
+        chainRoot.addGroups(GroupsUsedByElementsVisitor.getGroups(chainRoot.getCorrelatedReferenceElements()));
     }
 
     /**

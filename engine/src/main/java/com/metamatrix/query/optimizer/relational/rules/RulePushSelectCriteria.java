@@ -22,11 +22,9 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,23 +45,16 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
-import com.metamatrix.query.processor.relational.AccessNode;
-import com.metamatrix.query.processor.relational.RelationalNode;
-import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.resolver.util.AccessPattern;
-import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.SymbolMap;
-import com.metamatrix.query.sql.util.ValueIteratorProvider;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -102,22 +93,22 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	            if (isPhantom || isCopied || isPushed || deadNodes.contains(critNode)) {
 	            	continue;
 	            }
-	            pushTowardOriginatingNode(critNode, metadata, capFinder);
+	            
+	            PlanNode sourceNode = findOriginatingNode(metadata, capFinder, critNode);
+	            
+	            if(sourceNode == null) {
+                    deadNodes.add(critNode);
+	                continue;
+	            }
+	            pushTowardOriginatingNode(sourceNode, critNode, metadata, capFinder);
 	            
                 boolean moved = false;
                 
-                if(critNode.getGroups().isEmpty()) {
+                if((critNode.getGroups().isEmpty() && !FrameUtil.hasSubquery(critNode)) || !atBoundary(critNode, sourceNode)) {
                     deadNodes.add(critNode);
                     continue;
                 }
-                    
-                PlanNode sourceNode = FrameUtil.findOriginatingNode(critNode, critNode.getGroups());
                
-                if (sourceNode == null || !atBoundary(critNode, sourceNode)) {
-                    deadNodes.add(critNode);
-                    continue;
-                }
-                
                 switch (sourceNode.getType()) {
                     case NodeConstants.Types.SOURCE:
                     {
@@ -140,6 +131,24 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		}
 
 		return plan;
+	}
+
+	private PlanNode findOriginatingNode(QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, PlanNode critNode)
+			throws MetaMatrixComponentException, QueryMetadataException {
+		if (critNode.getGroups().isEmpty() && FrameUtil.hasSubquery(critNode)) {
+			Object modelId = RuleRaiseAccess.isEligibleSubquery(critNode, null, metadata, capFinder);
+			if (modelId != null) {
+				for (PlanNode node : NodeEditor.findAllNodes(critNode, NodeConstants.Types.SOURCE)) {
+		            GroupSymbol group = node.getGroups().iterator().next();
+		            Object srcModelID = metadata.getModelID(group.getMetadataID());
+		            if(CapabilitiesUtil.isSameConnector(srcModelID, modelId, metadata, capFinder)) {
+		                return node;
+		            }
+		        }
+			}
+		} 
+		return FrameUtil.findOriginatingNode(critNode, critNode.getGroups());
 	}
     
     /**
@@ -205,34 +214,8 @@ public final class RulePushSelectCriteria implements OptimizerRule {
      * @throws QueryMetadataException
      * @throws MetaMatrixComponentException
      */
-    void pushTowardOriginatingNode(PlanNode critNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+    void pushTowardOriginatingNode(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
 		throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
-
-        PlanNode sourceNode = null;
-        
-        Set<GroupSymbol> groups = critNode.getGroups();
-                    
-        //check for an uncorrelated subquery
-        if(groups.isEmpty() && FrameUtil.hasSubquery(critNode)) {
-            Object modelID = getUniqueModel(critNode, metadata);            
-            if(modelID != null) {
-                // Find source node for this model - if multiple, pick first
-                for (PlanNode node : NodeEditor.findAllNodes(critNode, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE)) {
-                    GroupSymbol group = node.getGroups().iterator().next();
-                    Object srcModelID = metadata.getModelID(group.getMetadataID());
-                    if(srcModelID != null && srcModelID.equals(modelID)) {
-                        sourceNode = node;
-                        break;
-                    }
-                }
-            }
-        } else {
-            sourceNode = FrameUtil.findOriginatingNode(critNode, groups);
-        }
-        
-        if(sourceNode == null) {
-            return;
-        }
 
         //to keep a stable criteria ordering, move the sourceNode to the top of the criteria chain
         while (sourceNode.getParent().getType() == NodeConstants.Types.SELECT) {
@@ -247,53 +230,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         NodeEditor.removeChildNode(critNode.getParent(), critNode);
         destination.addAsParent(critNode);
 	}
-
-    private Object getUniqueModel(PlanNode critNode, QueryMetadataInterface metadata) 
-    throws QueryMetadataException, MetaMatrixComponentException {
-        
-        Object modelID = null;
-        List plans = (List) critNode.getProperty(NodeConstants.Info.SUBQUERY_PLANS);
-        if(plans == null) {
-            return null;
-        }
-        
-        Iterator planIter = plans.iterator();
-        while(planIter.hasNext()) {
-            Object plan = planIter.next();
-            if(plan instanceof RelationalPlan) {
-                RelationalPlan subPlan = (RelationalPlan) plan;   
-                
-                LinkedList nodes = new LinkedList();
-                nodes.add(subPlan.getRootNode());
-                
-                while(nodes.size() > 0) {
-                    RelationalNode node = (RelationalNode) nodes.removeFirst();
-                    if(node instanceof AccessNode) {
-                        Command command = ((AccessNode)node).getCommand();
-                        Collection groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, true);
-                        if(groups.size() > 0) {
-                            GroupSymbol group = (GroupSymbol) groups.iterator().next();
-                            if(modelID == null) {
-                                modelID = metadata.getModelID(group.getMetadataID());
-                            } else if(! modelID.equals(metadata.getModelID(group.getMetadataID()))){
-                                // Mismatch - bail out
-                                return null;
-                            }
-                        }
-                    } else {
-                        RelationalNode[] children = node.getChildren();                        
-                        for(int i=0; i<children.length; i++) {
-                            if(children[i] != null) {
-                                nodes.add(children[i]);                                
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return modelID;
-    }
 
     /**
 	 * Examine the path from crit node to source node to determine how far down a node
@@ -509,18 +445,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		Criteria copyCrit = (Criteria) crit.clone();
 		copyNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, copyCrit);
 		copyNode.addGroups(critNode.getGroups());
-        // Copy subquery properties
-        List<RelationalPlan> subqueryPlans = (List<RelationalPlan>)critNode.getProperty(NodeConstants.Info.SUBQUERY_PLANS);     
-        if(subqueryPlans != null) {
-            copyNode.setProperty(NodeConstants.Info.SUBQUERY_PLANS, new ArrayList<RelationalPlan>(subqueryPlans));
-        }
-        List<ValueIteratorProvider> subqueryValueProviders = (List<ValueIteratorProvider>)critNode.getProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS);      
-        if(subqueryValueProviders != null) {
-            copyNode.setProperty(NodeConstants.Info.SUBQUERY_VALUE_PROVIDERS, new ArrayList<ValueIteratorProvider>(subqueryValueProviders));
-        }
-        List<Reference> correlatedReferences = (List<Reference>)critNode.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);       
+        SymbolMap correlatedReferences = (SymbolMap)critNode.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);       
         if(correlatedReferences  != null) {
-            copyNode.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, new ArrayList<Reference>(correlatedReferences));
+            copyNode.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, new SymbolMap(correlatedReferences));
         }
         if(critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
             copyNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);

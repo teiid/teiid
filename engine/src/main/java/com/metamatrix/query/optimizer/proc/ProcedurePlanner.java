@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.optimizer.proc;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +66,6 @@ import com.metamatrix.query.sql.proc.Statement;
 import com.metamatrix.query.sql.proc.WhileStatement;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -112,9 +110,7 @@ public final class ProcedurePlanner implements CommandPlanner {
         
 		// set state of the planner with child nodes
 		// to be used while planning
-		List childNodes = node.getChildren();
-		// index giving the next child node to be accessed in the list
-        ChildIndexHolder childIndex = new ChildIndexHolder();
+		List<CommandTreeNode> childNodes = node.getChildren();
 
         boolean debug = analysisRecord.recordDebug();
         if(debug) {
@@ -128,7 +124,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 
         Block block = ((CreateUpdateProcedureCommand) procCommand).getBlock();
 
-		Program programBlock = planBlock(((CreateUpdateProcedureCommand)procCommand), block, metadata, childNodes, debug, childIndex, idGenerator, capFinder, analysisRecord);
+		Program programBlock = planBlock(((CreateUpdateProcedureCommand)procCommand), block, metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
 
         if(debug) {
             analysisRecord.println("\n####################################################"); //$NON-NLS-1$
@@ -168,14 +164,13 @@ public final class ProcedurePlanner implements CommandPlanner {
 	 * @param metadata Metadata used during planning
 	 * @param childNodes list of CommandTreeNode objects that contain the ProcessorPlans of the child nodes of this procedure
 	 * @param debug Boolean detemining if procedure plan needs to be printed for debug purposes
-	 * @param childIndex index giving the next child node to be accessed in the list
 	 * @param analysisRecord TODO
 	 * @return A Program resulting in the block planning
 	 * @throws QueryPlannerException if invalid statement is encountered in the block
 	 * @throws QueryMetadataException if there is an error accessing metadata
 	 * @throws MetaMatrixComponentException if unexpected error occurs
 	 */
-    private Program planBlock(CreateUpdateProcedureCommand parentProcCommand, Block block, QueryMetadataInterface metadata, List childNodes, boolean debug, ChildIndexHolder childIndex, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord)
+    private Program planBlock(CreateUpdateProcedureCommand parentProcCommand, Block block, QueryMetadataInterface metadata, List<CommandTreeNode> childNodes, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord)
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
         Iterator stmtIter = block.getStatements().iterator();
@@ -188,7 +183,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 		// plan each statement in the block
         while(stmtIter.hasNext()) {
 			Statement statement = (Statement) stmtIter.next();
-			Object instruction = planStatement(parentProcCommand, statement, metadata, childNodes, debug, childIndex, idGenerator, capFinder, analysisRecord);
+			Object instruction = planStatement(parentProcCommand, statement, metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
 			//childIndex = ((Integer) array[0]).intValue();
             if(instruction instanceof ProgramInstruction){
                 programBlock.addInstruction((ProgramInstruction)instruction);
@@ -213,7 +208,6 @@ public final class ProcedurePlanner implements CommandPlanner {
 	 * @param metadata Metadata used during planning
 	 * @param childNodes list of CommandTreeNode objects that contain the ProcessorPlans of the child nodes of this procedure
 	 * @param debug Boolean detemining if procedure plan needs to be printed for debug purposes
-	 * @param childIndex index giving the next child node to be accessed in the list
 	 * @param analysisRecord TODO
 	 * @return An array containing index of the next child to be accessesd and the ProgramInstruction resulting
 	 * in the statement planning
@@ -221,7 +215,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 	 * @throws QueryMetadataException if there is an error accessing metadata
 	 * @throws MetaMatrixComponentException if unexpected error occurs
 	 */
-    private Object planStatement(CreateUpdateProcedureCommand parentProcCommand, Statement statement, QueryMetadataInterface metadata, List childNodes, boolean debug, ChildIndexHolder childIndex, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord)
+    private Object planStatement(CreateUpdateProcedureCommand parentProcCommand, Statement statement, QueryMetadataInterface metadata, List<CommandTreeNode> childNodes, boolean debug, IDGenerator idGenerator, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord)
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
 		int stmtType = statement.getType();
@@ -248,16 +242,11 @@ public final class ProcedurePlanner implements CommandPlanner {
                 
                 ProcessorPlan assignPlan = null;
 				if(assignStmt.hasCommand()) {
-					List references = ReferenceCollectorVisitor.getReferences(assignStmt.getCommand());
-					assignPlan = ((CommandTreeNode)childNodes.get(childIndex.getChildIndex())).getProcessorPlan();
-					childIndex.incrementChildIndex();                    
+					assignPlan = assignStmt.getCommand().getProcessorPlan();                   
                     assignInstr.setProcessPlan(assignPlan);
-                    assignInstr.setReferences(references);
 				} else if (assignStmt.hasExpression()) {
 					Expression asigExpr = assignStmt.getExpression();
                     assignInstr.setExpression(asigExpr);
-					Collection references = ReferenceCollectorVisitor.getReferences(asigExpr);
-                    assignInstr.setReferences(references);
 				}
                 if(debug) {
                 	analysisRecord.println("\t"+instruction.toString()+"\n" + statement); //$NON-NLS-1$ //$NON-NLS-2$
@@ -278,14 +267,12 @@ public final class ProcedurePlanner implements CommandPlanner {
                         intoGroup = into.getGroup();
                     }
                 }
-				List references = ReferenceCollectorVisitor.getReferences(command);   
-				ProcessorPlan commandPlan = ((CommandTreeNode)childNodes.get(childIndex.getChildIndex())).getProcessorPlan();                
-                childIndex.incrementChildIndex();
+				ProcessorPlan commandPlan = cmdStmt.getCommand().getProcessorPlan();                
                 
 				if (command.getType() == Command.TYPE_DYNAMIC){
-					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), references, metadata, idGenerator, capFinder );
+					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder );
 				}else{
-					instruction = new ExecSqlInstruction(commandPlan, references, intoGroup);
+					instruction = new ExecSqlInstruction(commandPlan, intoGroup);
 				}
                 
 				if(debug) {
@@ -297,10 +284,10 @@ public final class ProcedurePlanner implements CommandPlanner {
 			case Statement.TYPE_IF:
             {
 				IfStatement ifStmt = (IfStatement)statement;
-				Program ifProgram = planBlock(parentProcCommand, ifStmt.getIfBlock(), metadata, childNodes, debug, childIndex, idGenerator, capFinder, analysisRecord);
+				Program ifProgram = planBlock(parentProcCommand, ifStmt.getIfBlock(), metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
 				Program elseProgram = null;
 				if(ifStmt.hasElseBlock()) {
-					elseProgram = planBlock(parentProcCommand, ifStmt.getElseBlock(), metadata, childNodes, debug, childIndex, idGenerator, capFinder, analysisRecord);
+					elseProgram = planBlock(parentProcCommand, ifStmt.getElseBlock(), metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
 				}
 				instruction = new IfInstruction(ifStmt.getCondition(), ifProgram, elseProgram);
 				if(debug) {
@@ -331,20 +318,16 @@ public final class ProcedurePlanner implements CommandPlanner {
                 	analysisRecord.println("\tLOOP STATEMENT:\n" + statement); //$NON-NLS-1$
                 }
                 String rsName = loopStmt.getCursorName();
-                ProcessorPlan commandPlan = ((CommandTreeNode)childNodes.get(childIndex.getChildIndex())).getProcessorPlan();
-                childIndex.incrementChildIndex();
+                ProcessorPlan commandPlan = loopStmt.getCommand().getProcessorPlan();
 
-                Command command = loopStmt.getCommand();
-                List references = ReferenceCollectorVisitor.getReferences(command);
-
-                Program loopProgram = planBlock(parentProcCommand, loopStmt.getBlock(), metadata, childNodes, debug, childIndex, idGenerator, capFinder, analysisRecord);
-                instruction = new LoopInstruction(loopProgram, rsName, commandPlan, references);
+                Program loopProgram = planBlock(parentProcCommand, loopStmt.getBlock(), metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
+                instruction = new LoopInstruction(loopProgram, rsName, commandPlan);
                 break;
             }
             case Statement.TYPE_WHILE:
             {
                 WhileStatement whileStmt = (WhileStatement)statement;
-                Program whileProgram = planBlock(parentProcCommand, whileStmt.getBlock(), metadata, childNodes, debug, childIndex, idGenerator, capFinder, analysisRecord);
+                Program whileProgram = planBlock(parentProcCommand, whileStmt.getBlock(), metadata, childNodes, debug, idGenerator, capFinder, analysisRecord);
                 if(debug) {
                 	analysisRecord.println("\tWHILE STATEMENT:\n" + statement); //$NON-NLS-1$
                 }
@@ -357,15 +340,4 @@ public final class ProcedurePlanner implements CommandPlanner {
 		return instruction;
     }
         
-    static class ChildIndexHolder{
-        private int childIndex;
-
-        int getChildIndex() {
-            return childIndex;
-        }
-
-        void incrementChildIndex() {
-            childIndex++;
-        }        
-    }
 } // END CLASS

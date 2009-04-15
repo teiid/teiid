@@ -690,5 +690,31 @@ public class TestSubqueryPushdown {
             0       // UnionAll
         }); 
     }       
+    
+	@Test public void testPushMultipleCorrelatedSubquery1() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_OR, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_ALL, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+
+        ProcessorPlan plan = helpPlan("SELECT intkey FROM bqt1.smalla AS n WHERE intkey = (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey ) or intkey = (SELECT MIN(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey )", FakeMetadataFactory.exampleBQTCached(),  //$NON-NLS-1$
+            null, capFinder,
+            new String[] { "SELECT g_0.intkey FROM bqt1.smalla AS g_0 WHERE (g_0.intkey = (SELECT MAX(g_1.intkey) FROM bqt1.smallb AS g_1 WHERE g_1.stringkey = g_0.stringkey)) OR (g_0.intkey = (SELECT MIN(g_2.IntKey) FROM bqt1.smallb AS g_2 WHERE g_2.StringKey = g_0.stringkey))" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
+    }
 
 }

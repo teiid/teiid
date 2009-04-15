@@ -35,7 +35,6 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
-import com.metamatrix.query.sql.util.VariableContext;
 
 /**
  */
@@ -43,10 +42,9 @@ public class CreateCursorResultSetInstruction extends CommandInstruction {
     protected String rsName;
     protected ProcessorPlan plan;
     
-    public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan, Collection atomicCommandReferences){
+    public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan){
         this.rsName = rsName;
         this.plan = plan;
-        setReferences(atomicCommandReferences);
     }
     
     /**
@@ -66,10 +64,6 @@ public class CreateCursorResultSetInstruction extends CommandInstruction {
         if(procEnv.resultSetExists(rsName)) {
             procEnv.removeResults(rsName);
         }
-        //LogManager.logTrace(LogConstants.CTX_XML_PLAN, new Object[]{"SQL: Result set DOESN'T exist:",rsName});
-        
-        VariableContext varContext = procEnv.getCurrentVariableContext();
-        setReferenceValues(varContext);            
         
         procEnv.executePlan(plan, rsName);
     }
@@ -79,8 +73,7 @@ public class CreateCursorResultSetInstruction extends CommandInstruction {
      */
     public Object clone(){
         ProcessorPlan clonedPlan = (ProcessorPlan) this.plan.clone();
-        List copyRefs = cloneReferences();
-        return new CreateCursorResultSetInstruction(this.rsName, clonedPlan, copyRefs);
+        return new CreateCursorResultSetInstruction(this.rsName, clonedPlan);
     }
     
     public String toString(){

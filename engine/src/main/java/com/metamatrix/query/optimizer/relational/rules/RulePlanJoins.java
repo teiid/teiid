@@ -292,6 +292,8 @@ public class RulePlanJoins implements OptimizerRule {
                     PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, entry.getKey(), false);
                     for (Iterator joinCriteriaIter = joinCriteriaNodes.iterator(); joinCriteriaIter.hasNext();) {
                         PlanNode critNode = (PlanNode)joinCriteriaIter.next();
+                        critNode.removeFromParent();
+                        critNode.removeAllChildren();
                         critNode.setProperty(NodeConstants.Info.IS_COPIED, Boolean.FALSE);
                         critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.FALSE);
                         newAccess.getFirstChild().addAsParent(critNode);

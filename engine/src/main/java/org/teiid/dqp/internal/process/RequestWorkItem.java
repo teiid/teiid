@@ -388,7 +388,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 			    sendResultsIfNeeded(batch);
 			}
 		});
-		resultsID = request.context.getTupleSourceID();
+		resultsID = processor.getResultsID();
 		analysisRecord = request.analysisRecord;
 		schemas = request.schemas;
 		transactionContext = request.transactionContext;

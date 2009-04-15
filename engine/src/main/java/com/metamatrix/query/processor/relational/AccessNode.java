@@ -154,8 +154,8 @@ public class AccessNode extends RelationalNode {
         }
         
         if(isUpdate && !returnedRows) {
-			List tuple = new ArrayList(1);
-			tuple.add(new Integer(0));
+			List<Integer> tuple = new ArrayList<Integer>(1);
+			tuple.add(Integer.valueOf(0));
             // Add tuple to current batch
             addBatchRow(tuple);
         }

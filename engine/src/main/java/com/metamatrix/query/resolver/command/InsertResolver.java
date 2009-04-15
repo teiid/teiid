@@ -55,7 +55,6 @@ import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
@@ -165,6 +164,10 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             // Walk through both elements and expressions, which should match up
 			Expression expression = (Expression) valueIter.next();
 			ElementSymbol element = (ElementSymbol) varIter.next();
+			
+			if (!usingQuery) {
+				ResolverUtil.setTypeIfReference(expression, element.getType(), insert);
+			}
 
             if(element.getType() != null && expression.getType() != null) {
                 String elementTypeName = DataTypeManager.getDataTypeName(element.getType());
@@ -176,11 +179,6 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
                     //TODO: a special case here is a projected literal
                     throw new QueryResolverException(QueryPlugin.Util.getString("InsertResolver.cant_convert_query_type", new Object[] {expression, expression.getType().getName(), element, element.getType().getName()})); //$NON-NLS-1$
                 }
-            } else if(element.getType() != null && expression.getType() == null && expression instanceof Reference){
-                Reference ref = (Reference)expression;
-                //set the type of reference to be the same as variable
-                ref.setExpression(new Constant(null, element.getType()));
-                newValues.add(ref);
             } else if (element.getType() == null && expression.getType() != null && !usingQuery)  {
                 element.setType(expression.getType());
                 newValues.add(expression);

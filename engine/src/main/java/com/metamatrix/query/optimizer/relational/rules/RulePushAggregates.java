@@ -63,7 +63,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -421,17 +420,15 @@ public class RulePushAggregates implements
             
             // Convert expressions from correlated subquery references;
             // currently only for SELECT or PROJECT nodes
-            List refs = (List)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+        	SymbolMap refs = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
             if (refs != null){
-                Iterator refIter = refs.iterator();
-                while (refIter.hasNext()) {
-                    Reference ref = (Reference)refIter.next();
-                    Expression expr = ref.getExpression();
+                for (Map.Entry<ElementSymbol, Expression> ref : refs.asUpdatableMap().entrySet()) {
+                    Expression expr = ref.getValue();
                     Expression mappedExpr = exprMap.get(expr);
                     if (mappedExpr != null) {
-                        ref.setExpression(mappedExpr);
+                        ref.setValue(mappedExpr);
                     } else {
-                        ExpressionMappingVisitor.mapExpressions(ref.getExpression(), exprMap);
+                        ExpressionMappingVisitor.mapExpressions(ref.getValue(), exprMap);
                     }
                 }
             }

@@ -151,17 +151,12 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
      * @return
      */
     public Expression replaceExpression(Expression expr) {
-        if(expr instanceof Reference) {
-            Reference ref = (Reference) expr;
-            if(!EvaluatableVisitor.isEvaluatable(expr, false, true, false)) {
-                return ref.getExpression();        
-            }                   
-        } else if(!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty()) {
+        if(!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty()) {
             return expr;
         }
                
         //if the expression is a constant or is not evaluatable, just return
-        if (expr instanceof Constant || !EvaluatableVisitor.isEvaluatable(expr, false, true, false)) {
+        if (expr instanceof Constant || (!(expr instanceof Reference) && !EvaluatableVisitor.isEvaluatable(expr, false, true, false, false))) {
             return expr;
         }
 
@@ -169,6 +164,9 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
         try {
             value = new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(expr, Collections.emptyList());
         } catch (MetaMatrixException err) {
+        	if (expr instanceof Reference) {
+        		return expr;
+        	}
             throw new MetaMatrixRuntimeException(err);
         }
 		return new Constant(value, expr.getType());			 
@@ -179,14 +177,18 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
      *  evaluatable during planning
      */
     public static final boolean willBecomeConstant(LanguageObject obj) {
-        return EvaluatableVisitor.isEvaluatable(obj, false, false, true);
+        return willBecomeConstant(obj, false);
+    }
+    
+    public static final boolean willBecomeConstant(LanguageObject obj, boolean pushdown) {
+        return EvaluatableVisitor.isEvaluatable(obj, false, false, true, pushdown);
     }
     
     /**
      *  Should be called to check if the object can fully evaluated
      */
     public static final boolean isFullyEvaluatable(LanguageObject obj, boolean duringPlanning) {
-        return EvaluatableVisitor.isEvaluatable(obj, duringPlanning, true, true);
+        return EvaluatableVisitor.isEvaluatable(obj, duringPlanning, true, true, false);
     }
         
     public static final void replaceExpressions(LanguageObject obj, boolean deep, LookupEvaluator dataMgr, CommandContext context)

@@ -23,6 +23,7 @@
 package com.metamatrix.query.processor.proc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,8 +34,10 @@ import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
+import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.NullTupleSource;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -43,7 +46,9 @@ import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.ProcedureReservedWords;
+import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.util.CommandContext;
@@ -83,7 +88,7 @@ public class ProcedureEnvironment extends ProgramEnvironment {
      */
     public ProcedureEnvironment() {
         super();
-        this.currentVarContext = new VariableContext();
+        this.currentVarContext = new VariableContext(true);
         this.currentVarContext.setValue(ROWS_UPDATED, new Integer(NO_ROWS_UPDATED));
     }
 
@@ -117,7 +122,7 @@ public class ProcedureEnvironment extends ProgramEnvironment {
 		return this.currentVarContext;
     }
 
-    public void executePlan(Object command, String rsName)
+    public void executePlan(ProcessorPlan command, String rsName)
         throws MetaMatrixComponentException, MetaMatrixProcessingException {
         boolean isExecSQLInstruction = rsName.equals(ExecSqlInstruction.RS_NAME);
         // Defect 14544: Close all non-final ExecSqlInstruction tuple sources before creating a new source.
@@ -126,7 +131,7 @@ public class ProcedureEnvironment extends ProgramEnvironment {
             removeResults(ExecSqlInstruction.RS_NAME);
         }
         
-        TupleSourceID tsID = this.plan.registerRequest(command);
+        TupleSourceID tsID = this.plan.registerRequest(command, this.currentVarContext);
         TupleSource source = this.plan.getResults(tsID);
         tupleSourceIDMap.put(rsName.toUpperCase(), tsID);
         tupleSourceMap.put(rsName.toUpperCase(), source);
@@ -143,6 +148,9 @@ public class ProcedureEnvironment extends ProgramEnvironment {
      */
     public void pop() throws MetaMatrixComponentException {
         super.pop();
+        if (this.currentVarContext.getParentContext() != null) {
+        	this.currentVarContext = this.currentVarContext.getParentContext();
+        }
         Set current = getTempContext();
 
         Set tempTables = getLocalTempTables();
@@ -161,6 +169,10 @@ public class ProcedureEnvironment extends ProgramEnvironment {
      */
     public void push(Program program) {
         super.push(program);
+        VariableContext context = new VariableContext(true);
+        context.setParentContext(this.currentVarContext);
+        this.currentVarContext = context;
+        
         Set current = getTempContext();
         
         Set tempTables = getLocalTempTables();
@@ -272,9 +284,10 @@ public class ProcedureEnvironment extends ProgramEnvironment {
     }
 
     public CommandContext getContext() {
-        return this.plan.getContext();
+    	CommandContext context = this.plan.getContext();
+    	context.setVariableContext(currentVarContext);
+    	return context;
     }
-
 
     /**
      * @return
@@ -338,4 +351,13 @@ public class ProcedureEnvironment extends ProgramEnvironment {
     public void setTempTableStore(TempTableStore tempTableStore) {
         this.tempTableStore = tempTableStore;
     }
+    
+    boolean evaluateCriteria(Criteria condition) throws BlockedException, MetaMatrixProcessingException, MetaMatrixComponentException {
+    	return new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(condition, Collections.emptyList());
+    }
+    
+    Object evaluateExpression(Expression expression) throws BlockedException, MetaMatrixProcessingException, MetaMatrixComponentException {
+    	return new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(expression, Collections.emptyList());
+    }
+    
 }

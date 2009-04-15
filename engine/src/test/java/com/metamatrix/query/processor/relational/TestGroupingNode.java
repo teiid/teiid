@@ -158,7 +158,7 @@ public class TestGroupingNode extends TestCase {
 		List groupingElements = new ArrayList();
 		groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
 		node.setGroupingElements(groupingElements);	  
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
         
         List[] expected = new List[] {
@@ -192,7 +192,7 @@ public class TestGroupingNode extends TestCase {
         List groupingElements = new ArrayList();
         groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);         
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
         
         List[] expected = new List[] {
@@ -228,7 +228,7 @@ public class TestGroupingNode extends TestCase {
         List groupingElements = new ArrayList();
         groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);         
-        CommandContext context = new CommandContext("pid", "test", null, 100,  null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null,  null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
         
         List[] expected = new List[] {
@@ -260,7 +260,7 @@ public class TestGroupingNode extends TestCase {
         
         // Set grouping elements to null 
         node.setGroupingElements(null);         
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
         
         List[] data = new List[] {
@@ -301,7 +301,7 @@ public class TestGroupingNode extends TestCase {
         List groupingElements = new ArrayList();
         groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);         
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
         
         List[] data = new List[] {
@@ -350,7 +350,7 @@ public class TestGroupingNode extends TestCase {
         List groupingElements = new ArrayList();
         groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
         node.setGroupingElements(groupingElements);   
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);    //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);    //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeDataManager dataMgr = new FakeDataManager();
         dataMgr.setThrowBlocked(true);
@@ -399,7 +399,7 @@ public class TestGroupingNode extends TestCase {
             groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
             node.setGroupingElements(groupingElements);
         }
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
         
         List[] data = new List[] {

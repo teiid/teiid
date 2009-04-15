@@ -25,7 +25,6 @@ package com.metamatrix.query.processor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -35,12 +34,8 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -57,17 +52,9 @@ public class TestQueryProcessor extends TestCase {
     
     public void helpTestProcessor(FakeProcessorPlan plan, long timeslice, List[] expectedResults) throws MetaMatrixCoreException {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        List schema = plan.getSchema();
-        ArrayList typeNames = new ArrayList();
-        for(Iterator s = schema.iterator(); s.hasNext();) {
-            SingleElementSymbol es = (SingleElementSymbol)s.next();            
-            typeNames.add(DataTypeManager.getDataTypeName(es.getType()));
-        }
-        String[] types = (String[])typeNames.toArray(new String[typeNames.size()]);              
-        TupleSourceID tsID = bufferMgr.createTupleSource(plan.getSchema(), types, "group", TupleSourceType.FINAL); //$NON-NLS-1$
         FakeDataManager dataManager = new FakeDataManager();
 
-        CommandContext context = new CommandContext("pid", "group", tsID, 100, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "group", 100, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
                  
         while(true) {
@@ -81,10 +68,10 @@ public class TestQueryProcessor extends TestCase {
         }
         
         // Compare # of rows in actual and expected
-        assertEquals("Did not get expected # of rows", expectedResults.length, bufferMgr.getFinalRowCount(tsID)); //$NON-NLS-1$
+        assertEquals("Did not get expected # of rows", expectedResults.length, bufferMgr.getFinalRowCount(processor.getResultsID())); //$NON-NLS-1$
         
         // Compare actual with expected results
-        TupleSource actual = bufferMgr.getTupleSource(tsID);
+        TupleSource actual = bufferMgr.getTupleSource(processor.getResultsID());
         if(expectedResults.length > 0) {
             for(int i=0; i<expectedResults.length; i++) {
                 List actRecord = actual.nextTuple();
@@ -182,17 +169,9 @@ public class TestQueryProcessor extends TestCase {
         final FakeProcessorPlan plan = new FakeProcessorPlan(elements, batches);
         
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        List schema = plan.getOutputElements();
-        ArrayList typeNames = new ArrayList();
-        for(Iterator s = schema.iterator(); s.hasNext();) {
-            SingleElementSymbol es = (SingleElementSymbol)s.next();            
-            typeNames.add(DataTypeManager.getDataTypeName(es.getType()));
-        }
-        String[] types = (String[])typeNames.toArray(new String[typeNames.size()]);              
-        TupleSourceID tsID = bufferMgr.createTupleSource(plan.getSchema(), types, "group", TupleSourceType.FINAL); //$NON-NLS-1$
         FakeDataManager dataManager = new FakeDataManager();
 
-        CommandContext context = new CommandContext("pid", "group", tsID, 100, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "group", 100, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
         final QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
         
         processor.setBatchHandler(new QueryProcessor.BatchHandler() {

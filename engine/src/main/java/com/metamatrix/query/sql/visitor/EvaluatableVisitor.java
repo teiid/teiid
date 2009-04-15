@@ -25,8 +25,6 @@
  */
 package com.metamatrix.query.sql.visitor;
 
-import java.util.Iterator;
-
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.metadata.TempMetadataID;
@@ -63,9 +61,12 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
 public class EvaluatableVisitor extends LanguageVisitor {
 
     protected boolean evaluationPossible = true;
+    
+    //TODO: there aren't really 16 states here, this should be minimized
     private boolean duringPlanning = false;
     private boolean fullyEvaluatable = false;
     private boolean deterministic = false;
+    private boolean pushdown = false;
     
     public EvaluatableVisitor(boolean duringPlanning, boolean fullyEvaluatable) {
         this.duringPlanning = duringPlanning;
@@ -117,19 +118,10 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }
     
     public void visit(Reference obj) {
-        if (duringPlanning) {
+        if (duringPlanning || fullyEvaluatable) {
             evaluationNotPossible();
-        } else if (fullyEvaluatable) {
-            if (obj.getExpression() != null) {
-                for (Iterator i = ReferenceCollectorVisitor.getReferences(obj.getExpression()).iterator(); i.hasNext();) {
-                    PreOrderNavigator.doVisit((Reference)i.next(), this);  //follow reference
-                }
-                if (!ElementCollectorVisitor.getElements(obj.getExpression(), false).isEmpty() && obj.getTuple() == null) {
-                    evaluationNotPossible();
-                }
-            }
-        } else if (obj.isCorrelated()) {
-            evaluationNotPossible();
+        } else if (pushdown && obj.isCorrelated()) {
+        	evaluationNotPossible();
         }
     }
     
@@ -161,9 +153,10 @@ public class EvaluatableVisitor extends LanguageVisitor {
         return evaluationPossible;
     }
     
-    static final boolean isEvaluatable(LanguageObject obj, boolean duringPlanning, boolean fullyEvaluatable, boolean deterministic) {
+    static final boolean isEvaluatable(LanguageObject obj, boolean duringPlanning, boolean fullyEvaluatable, boolean deterministic, boolean pushdown) {
         EvaluatableVisitor visitor = new EvaluatableVisitor(duringPlanning, fullyEvaluatable);
         visitor.deterministic = deterministic;
+        visitor.pushdown = pushdown;
         PreOrderNavigator.doVisit(obj, visitor);
         return visitor.isEvaluationPossible();
     }

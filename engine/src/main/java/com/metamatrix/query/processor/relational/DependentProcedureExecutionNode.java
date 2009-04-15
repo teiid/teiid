@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +31,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.util.CommandContext;
 
 public class DependentProcedureExecutionNode extends PlanExecutionNode {
 
@@ -67,8 +67,8 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
      */
     public Object clone() {
         DependentProcedureExecutionNode copy = new DependentProcedureExecutionNode(getID(), (Criteria)inputCriteria.clone(),
-                                                                                   new ArrayList(inputReferences),
-                                                                                   new ArrayList(inputDefaults));
+                                                                                   inputReferences,
+                                                                                   inputDefaults);
         copy(this, copy);
         return copy;
     }
@@ -100,7 +100,7 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
             this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, (Criteria)inputCriteria.clone(), inputReferences, inputDefaults, new Evaluator(null, null, getContext()));
         }
         
-        return criteriaProcessor.prepareNextCommand();
+        return criteriaProcessor.prepareNextCommand(this.getProcessorPlan().getContext().getVariableContext());
     }
 
     /**
@@ -116,5 +116,25 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
     public Criteria getInputCriteria() {
         return this.inputCriteria;
     }
+    
+    @Override
+    public void open() throws MetaMatrixComponentException,
+    		MetaMatrixProcessingException {
+    	super.open();
+    	shareVariableContext(this, this.getProcessorPlan().getContext());
+    }
+
+	public static void shareVariableContext(RelationalNode node, CommandContext context) {
+		// we need to look up through our parents and share this context
+    	RelationalNode parent = node.getParent();
+    	int projectCount = 0;
+    	while (parent != null && projectCount < 2) {
+    		parent.setContext(context);
+    		if (parent instanceof ProjectNode) {
+    			projectCount++;
+    		}
+    		parent = parent.getParent();
+    	}
+	}
 
 }

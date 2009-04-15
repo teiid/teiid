@@ -431,12 +431,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 
         // Gather elements from correlated subquery references;
         // currently only for SELECT or PROJECT nodes
-        List refs = (List)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+        SymbolMap refs = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
         if (refs != null){
-            Iterator refIter = refs.iterator();
-            while (refIter.hasNext()) {
-                Reference ref = (Reference)refIter.next();
-                Expression expr = ref.getExpression();
+        	for (Expression expr : refs.asMap().values()) {
                 AggregateSymbolCollectorVisitor.getAggregates(expr, requiredSymbols, requiredSymbols);
             }
         }

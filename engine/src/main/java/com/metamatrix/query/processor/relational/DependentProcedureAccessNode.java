@@ -31,6 +31,8 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.util.VariableContext;
+import com.metamatrix.query.util.CommandContext;
 
 public class DependentProcedureAccessNode extends AccessNode {
 
@@ -87,6 +89,16 @@ public class DependentProcedureAccessNode extends AccessNode {
             criteriaProcessor.close();
         }
     }
+    
+    @Override
+    public void open() throws MetaMatrixComponentException,
+    		MetaMatrixProcessingException {
+    	CommandContext context  = (CommandContext)getContext().clone();
+    	context.pushVariableContext(new VariableContext());
+    	this.setContext(context);
+    	DependentProcedureExecutionNode.shareVariableContext(this, context);
+    	super.open();
+    }
 
     /** 
      * @see com.metamatrix.query.processor.relational.AccessNode#prepareNextCommand(com.metamatrix.query.sql.lang.Command)
@@ -97,7 +109,11 @@ public class DependentProcedureAccessNode extends AccessNode {
             this.criteriaProcessor = new DependentProcedureCriteriaProcessor(this, (Criteria)inputCriteria.clone(), inputReferences, inputDefaults, new Evaluator(null, null, getContext()));
         }
         
-        return criteriaProcessor.prepareNextCommand();
+        if (criteriaProcessor.prepareNextCommand(this.getContext().getVariableContext())) {
+        	return super.prepareNextCommand(atomicCommand);
+        }
+        
+        return false;
     }
     
     @Override

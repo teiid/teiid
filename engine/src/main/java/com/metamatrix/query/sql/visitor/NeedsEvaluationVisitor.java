@@ -57,7 +57,7 @@ public class NeedsEvaluationVisitor extends LanguageVisitor {
      */
     @Override
     public void visit(Function obj) {
-        if (EvaluatableVisitor.isEvaluatable(obj, false, true, false)) {
+        if (EvaluatableVisitor.isEvaluatable(obj, false, true, false, false)) {
             setNeedsEvaluation();
         }
     }

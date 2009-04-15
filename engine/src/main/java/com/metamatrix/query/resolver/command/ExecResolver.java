@@ -289,14 +289,8 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
                     ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
                     Class paramType = param.getClassType();
 
-                	//if it is reference, set type for it
-                	if(expr instanceof Reference){
-                        Reference ref = (Reference)expr;
-                        if (ref.getExpression() == null){
-                            ref.setExpression(new Constant(null, paramType));
-                        }
-                        continue;
-                	} 
+                    ResolverUtil.setTypeIfReference(expr, paramType, storedProcedureCommand);
+                    
                     // Compare type of parameter expression against parameter type
                     // and add implicit conversion if necessary
                     Class exprType = expr.getType();

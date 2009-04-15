@@ -227,7 +227,7 @@ public class TestJoinNode extends TestCase {
     public void helpTestJoinDirect(List[] expectedResults, boolean swapExpected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         helpCreateJoin();                
         BufferManager mgr = NodeTestUtil.getTestBufferManager(1, getProcessorBatchSize());
-        CommandContext context = new CommandContext("pid", "test", null, 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         join.addChild(leftNode);
         join.addChild(rightNode);

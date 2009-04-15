@@ -477,7 +477,7 @@ public class QueryRewriter {
      */
     private static void rewriteSubqueryContainer(SubqueryContainer container, Command procCommand,
                                                  CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-        if (container.getCommand() != null && metadata != null) {
+        if (container.getCommand() != null && container.getCommand().getProcessorPlan() == null && metadata != null) {
             container.setCommand(rewriteCommand(container.getCommand(), procCommand, metadata, context));
         }
     }

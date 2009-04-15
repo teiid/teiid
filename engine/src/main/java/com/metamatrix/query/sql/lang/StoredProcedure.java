@@ -35,9 +35,7 @@ import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -221,9 +219,9 @@ public class StoredProcedure extends ProcedureContainer {
         }
         copy.callableName = callableName;
 
-        List params = getParameters();
+        List<SPParameter> params = getParameters();
         for(int i=0; i<params.size(); i++) {
-            copy.setParameter((SPParameter)params.get(i));
+            copy.setParameter((SPParameter)params.get(i).clone());
         }
         copy.resultSetParameterKey = resultSetParameterKey;
         this.copyMetadataState(copy);

@@ -50,13 +50,13 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
@@ -318,8 +318,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         
         Criteria crit = (Criteria) parentNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         
-        boolean hasSubquery = FrameUtil.hasSubquery(parentNode);
-        if(hasSubquery && !isEligibleSubquery(parentNode, metadata, capFinder)){
+        if(isEligibleSubquery(parentNode, modelID, metadata, capFinder) == null){
         	return false;
         }
         
@@ -343,16 +342,12 @@ public final class RuleRaiseAccess implements OptimizerRule {
     /**
      * Check whether the subquery in the node is eligible to be pushed.
      */
-    static boolean isEligibleSubquery(PlanNode critNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws MetaMatrixComponentException {
-        List plans = (List) critNode.getProperty(NodeConstants.Info.SUBQUERY_PLANS);
-        if(plans == null) {
-            return false;
-        }
-        Iterator planIter = plans.iterator();
-        while(planIter.hasNext()) {
-            ProcessorPlan plan = (ProcessorPlan) planIter.next();
+    static Object isEligibleSubquery(PlanNode critNode, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws MetaMatrixComponentException {
+        List<SubqueryContainer> plans = critNode.getSubqueryContainers();
+        for (SubqueryContainer subqueryContainer : plans) {
+        	ProcessorPlan plan = subqueryContainer.getCommand().getProcessorPlan();
             if(!(plan instanceof RelationalPlan)) {
-                return false;
+                return null;
             }
             
             RelationalPlan rplan = (RelationalPlan) plan;
@@ -360,72 +355,53 @@ public final class RuleRaiseAccess implements OptimizerRule {
             // Check that the plan is just an access node                
             RelationalNode accessNode = rplan.getRootNode();
             if(accessNode == null || ! (accessNode instanceof AccessNode) || accessNode.getChildren()[0] != null) {
-                return false;
+                return null;
             }
             
             // Check that command in access node is a query
             Command command = ((AccessNode)accessNode).getCommand();
             if(command == null || !(command instanceof Query) || ((Query)command).getIsXML()) {
-                return false;
+                return null;
             }
             
             // Check that query in access node is for the same model as current node
-            Object critNodeModelID = null;
-            try {
-                PlanNode source = FrameUtil.findJoinSourceNode(critNode);
-                if (source.getType() != NodeConstants.Types.ACCESS) {
-                	return false;
-                }
-                critNodeModelID = RuleRaiseAccess.getModelIDFromAccess(source, metadata);
-                
-                if (critNodeModelID == null) {
-                    return false;
-                }
-                
+            try {                
                 Collection subQueryGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false);
                 if(subQueryGroups.size() == 0) {
                     // No FROM?
-                    return false;
+                    return null;
                 }
                 GroupSymbol subQueryGroup = (GroupSymbol)subQueryGroups.iterator().next();
-                
+
                 Object modelID = metadata.getModelID(subQueryGroup.getMetadataID());
-                if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder)) {
-                    return false;
+                if (critNodeModelID == null) {
+                	critNodeModelID = modelID;
+                } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder)) {
+                    return null;
                 }
             } catch(QueryMetadataException e) {
                 throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
             }                
             
             // Check whether source supports correlated subqueries and if not, whether criteria has them
-            Collection refs = (Collection) critNode.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+            SymbolMap refs = (SymbolMap) critNode.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
             try {
-                if(refs != null && !refs.isEmpty()) {
+                if(refs != null && !refs.asMap().isEmpty()) {
                     if(! CapabilitiesUtil.supportsCorrelatedSubquery(critNodeModelID, metadata, capFinder)) {
-                        return false;
-                    }
-                    
-                    for (Iterator i = refs.iterator(); i.hasNext();) {
-                        ((Reference)i.next()).setCorrelated(true);
+                        return null;
                     }
                     
                     if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, critNodeModelID, metadata, capFinder)) {
-                        return false;
+                        return null;
                     }
                 }
             } catch(QueryMetadataException e) {
                 throw new MetaMatrixComponentException(e, e.getMessage());                  
-            } finally {
-                if (refs != null) {
-                    for (Iterator i = refs.iterator(); i.hasNext();) {
-                        ((Reference)i.next()).setCorrelated(false);
-                    }
-                }
             }
         }
 
         // Found no reason why this node is not eligible
-        return true;
+        return critNodeModelID;
     }
         
     /**

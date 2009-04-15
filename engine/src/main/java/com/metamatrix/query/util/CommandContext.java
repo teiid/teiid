@@ -30,13 +30,13 @@ import java.util.Stack;
 import java.util.TimeZone;
 
 import com.metamatrix.api.exception.query.QueryProcessingException;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.optimizer.relational.PlanToProcessConverter;
 import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.sql.util.VariableContext;
 
 /** 
  * Defines the context that a command is processing in.  For example, this defines
@@ -52,12 +52,6 @@ public class CommandContext implements Cloneable {
     /** Identify a group of related commands, which typically get cleaned up together */
     private String connectionID;
 
-    /** Identify where the results of processing this command should be placed */
-    private TupleSourceID tupleSourceID;
-    
-    /** Identify how the final result set should be batched.  */
-    private int outputBatchSize = 2000;
-    
     private int processorBatchSize = 2000;
     
     private int connectorBatchSize = 2000;
@@ -100,17 +94,17 @@ public class CommandContext implements Cloneable {
     
     private QueryProcessor.ProcessorFactory queryProcessorFactory;
     
+    private VariableContext variableContext;
+    
     /**
      * Construct a new context.
      * @param collectNodeStatistics TODO
      */
-    public CommandContext(Object processorID, String connectionID, TupleSourceID tupleSourceID, 
-        int outputBatchSize, String userName, Serializable trustedPayload, Serializable commandPayload, String vdbName, String vdbVersion, 
-        Properties envProperties, boolean processDebug, boolean collectNodeStatistics) {
+    public CommandContext(Object processorID, String connectionID, String userName, 
+        Serializable trustedPayload, Serializable commandPayload, String vdbName, String vdbVersion, Properties envProperties, boolean processDebug, 
+        boolean collectNodeStatistics) {
         setProcessorID(processorID);
         setConnectionID(connectionID);
-        setTupleSourceID(tupleSourceID);
-        setOutputBatchSize(outputBatchSize);
         setUserName(userName);
         setTrustedPayload(trustedPayload);
         setCommandPayload(commandPayload);
@@ -124,24 +118,20 @@ public class CommandContext implements Cloneable {
     /**
      * Construct a new context.
      */
-    public CommandContext(Object processorID, String connectionID, TupleSourceID tupleSourceID, 
-        int outputBatchSize, String userName, Serializable trustedPayLoad, String vdbName, String vdbVersion) {
+    public CommandContext(Object processorID, String connectionID, int outputBatchSize, 
+        String userName, Serializable trustedPayLoad, String vdbName, String vdbVersion) {
 
-        this(processorID, connectionID, tupleSourceID, outputBatchSize, userName, 
-            trustedPayLoad, null, vdbName, vdbVersion, null, false, false);            
+        this(processorID, connectionID, userName, trustedPayLoad, null, 
+            vdbName, vdbVersion, null, false, false);            
              
     }
 
     protected CommandContext(CommandContext context) {
         setConnectionID(context.connectionID);
-        setOutputBatchSize(context.outputBatchSize);
                 
         // Reuse existing processor ID - may be overridden
         setProcessorID(context.processorID);
             
-        // Can't reuse tuple source for different context
-        setTupleSourceID(null);    
-        
         setUserName(context.userName);
         setTrustedPayload(context.trustedPayload);
         setCommandPayload(context.commandPayload);
@@ -160,6 +150,7 @@ public class CommandContext implements Cloneable {
         this.preparedBatchUpdateValues = context.preparedBatchUpdateValues;
         this.planToProcessConverter = context.planToProcessConverter;
         this.queryProcessorFactory = context.queryProcessorFactory;
+        this.variableContext = context.variableContext;
     }
         
     public CommandContext() {        
@@ -168,22 +159,8 @@ public class CommandContext implements Cloneable {
     /**
      * @return
      */
-    public int getOutputBatchSize() {
-        return outputBatchSize;
-    }
-
-    /**
-     * @return
-     */
     public Object getProcessorID() {
         return processorID;
-    }
-
-    /**
-     * @return
-     */
-    public TupleSourceID getTupleSourceID() {
-        return tupleSourceID;
     }
 
     public boolean getProcessDebug() {
@@ -192,12 +169,6 @@ public class CommandContext implements Cloneable {
     
     public void setProcessDebug(boolean processDebug) {
         this.processDebug = processDebug;
-    }
-    /**
-     * @param i
-     */
-    public void setOutputBatchSize(int i) {
-        outputBatchSize = i;
     }
 
     /**
@@ -208,13 +179,6 @@ public class CommandContext implements Cloneable {
         processorID = object;
     }
 
-    /**
-     * @param sourceID
-     */
-    public void setTupleSourceID(TupleSourceID sourceID) {
-        tupleSourceID = sourceID;
-    }
-    
     public boolean equals(Object obj) {
         if(this == obj) {
             return true;
@@ -472,5 +436,18 @@ public class CommandContext implements Cloneable {
 
 	public void setQueryProcessorFactory(QueryProcessor.ProcessorFactory queryProcessorFactory) {
 		this.queryProcessorFactory = queryProcessorFactory;
+	}
+	
+	public VariableContext getVariableContext() {
+		return variableContext;
+	}
+	
+	public void setVariableContext(VariableContext variableContext) {
+		this.variableContext = variableContext;
+	}
+	
+	public void pushVariableContext(VariableContext toPush) {
+		toPush.setParentContext(this.variableContext);
+		this.variableContext = toPush;
 	}
 }

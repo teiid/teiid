@@ -36,6 +36,7 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -288,7 +289,11 @@ public class ProjectNode extends RelationalNode {
     protected void copy(ProjectNode source, ProjectNode target){
         super.copy(source, target);
         if(selectSymbols != null){
-            target.selectSymbols = new ArrayList(source.selectSymbols);
+        	List clonedSymbols = new ArrayList(source.selectSymbols.size());
+        	for (LanguageObject obj : (List<LanguageObject>)this.selectSymbols) {
+        		clonedSymbols.add(obj.clone());
+        	}
+            target.setSelectSymbols(clonedSymbols);
         }
     }
 
