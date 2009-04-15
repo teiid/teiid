@@ -40,6 +40,7 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -60,7 +61,6 @@ import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
-import com.metamatrix.query.util.LogConstants;
 /**
  */
 public class ProcedurePlan extends BaseProcessorPlan {
@@ -126,7 +126,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         	env.getProgramStack().push(originalProgram);
         }
         env.reset();
-		LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "ProcedurePlan reset"); //$NON-NLS-1$
+		LogManager.logTrace(LogConstants.CTX_DQP, "ProcedurePlan reset"); //$NON-NLS-1$
     }
 
     public ProcessorDataManager getDataManager() {
@@ -169,7 +169,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
 		} catch (MetaMatrixComponentException e) {
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0022, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0022, (String) null));
 		}
-        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[]{"removed tuple source", tupleSourceID, "for result set"}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(LogConstants.CTX_DQP, new Object[]{"removed tuple source", tupleSourceID, "for result set"}); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -251,23 +251,23 @@ public class ProcedurePlan extends BaseProcessorPlan {
             Program program = env.peek();
             inst = program.getCurrentInstruction();
 	        if (inst == null){
-	        	LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Finished program", program); //$NON-NLS-1$
+	        	LogManager.logTrace(LogConstants.CTX_DQP, "Finished program", program); //$NON-NLS-1$
                 this.env.pop();
                 continue;
             }
             if (inst instanceof RepeatedInstruction) {
-    	        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Executing repeated instruction", inst); //$NON-NLS-1$
+    	        LogManager.logTrace(LogConstants.CTX_DQP, "Executing repeated instruction", inst); //$NON-NLS-1$
                 RepeatedInstruction loop = (RepeatedInstruction)inst;
                 if (loop.testCondition(env)) {
-                    LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
+                    LogManager.logTrace(LogConstants.CTX_DQP, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
                     inst.process(env);
                     env.push(loop.getNestedProgram());
                     continue;
                 }
-                LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Exiting repeated instruction", inst); //$NON-NLS-1$
+                LogManager.logTrace(LogConstants.CTX_DQP, "Exiting repeated instruction", inst); //$NON-NLS-1$
                 loop.postInstruction(env);
             } else {
-            	LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, "Executing instruction", inst); //$NON-NLS-1$
+            	LogManager.logTrace(LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
                 inst.process(this.env);
             }
             program.incrementProgramCounter();

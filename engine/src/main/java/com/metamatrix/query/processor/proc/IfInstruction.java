@@ -32,11 +32,11 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.processor.program.Program;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * <p>This instruction an holds an if block and an else block and a criteria that determines
@@ -97,13 +97,13 @@ public class IfInstruction extends ProgramInstruction {
     	boolean evalValue = procEnv.evaluateCriteria(condition);
 
         if(evalValue) {
-	        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
+	        LogManager.logTrace(LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
 		        	" The criteria on the if block evaluated to true, processing the if block"}); //$NON-NLS-1$
 
             //push the "if" Program onto the stack
             procEnv.push(ifProgram);
         } else if(elseProgram != null) {
-	        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
+	        LogManager.logTrace(LogConstants.CTX_DQP, new Object[]{"IFInstruction: "+ //$NON-NLS-1$
 		        	" The criteria on the if block evaluated to false, processing the else block"}); //$NON-NLS-1$            
             //push the "else" Program onto the stack
             procEnv.push(elseProgram);

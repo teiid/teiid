@@ -32,10 +32,10 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * <p> Executes a SQL statement, and remove its results from the buffer manager. Executing this
@@ -73,7 +73,7 @@ public class ExecSqlInstruction extends CommandInstruction {
     public void process(ProgramEnvironment env)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
-        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER, new Object[]{"Processing ExecSqlInstruction as part of processing the update procedure"}); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_DQP, new Object[]{"Processing ExecSqlInstruction as part of processing the update procedure"}); //$NON-NLS-1$
 
         ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
 

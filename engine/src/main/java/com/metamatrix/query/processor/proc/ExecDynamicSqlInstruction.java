@@ -38,6 +38,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.id.IDGenerator;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -75,9 +76,7 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
-import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * <p>
@@ -152,7 +151,7 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 
 		LogManager
 				.logTrace(
-						LogConstants.CTX_QUERY_PLANNER,
+						LogConstants.CTX_DQP,
 						"Processing ExecDynamicSqlInstruction as part of processing the update procedure"); //$NON-NLS-1$
 
 		ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
@@ -167,7 +166,7 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 						.getString("ExecDynamicSqlInstruction.0")); //$NON-NLS-1$
 			}
 
-			LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER,
+			LogManager.logTrace(LogConstants.CTX_DQP,
 					new Object[] { "Executing dynamic sql ", value }); //$NON-NLS-1$
 
 			Command command = QueryParser.getQueryParser().parseCommand(value.toString());
@@ -253,7 +252,7 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 			for (SetClause setClause : dynamicCommand.getUsing().getClauses()) {
 				Object assignment = procEnv.evaluateExpression(setClause.getValue());
 
-				LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER,
+				LogManager.logTrace(LogConstants.CTX_DQP,
 						new Object[] { this, " The using variable ", //$NON-NLS-1$
 						setClause.getSymbol(), " has value :", assignment }); //$NON-NLS-1$
 				localContext.setValue(setClause.getSymbol(),

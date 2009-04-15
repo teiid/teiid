@@ -27,8 +27,8 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.sql.util.VariableContext;
-import com.metamatrix.query.util.LogConstants;
 
 /**
  * <p> This instruction updates the current variable context with a value for the Variable
@@ -60,7 +60,7 @@ public class AssignmentInstruction extends AbstractAssignmentInstruction {
     protected void processValue(Object value, VariableContext varContext) throws MetaMatrixComponentException,
                                              MetaMatrixProcessingException {
         varContext.setValue(getVariable(), value);
-        LogManager.logTrace(LogConstants.CTX_QUERY_PLANNER,
+        LogManager.logTrace(LogConstants.CTX_DQP,
                             new Object[] {this.toString() + " The variable " //$NON-NLS-1$
                                           + getVariable() + " in the variablecontext is updated with the value :", value}); //$NON-NLS-1$
     }
