@@ -132,7 +132,7 @@ public class TestQueueWorkerPool {
     }
     
     /**
-     * Here each execution exceeds the period, so only half the number of executions are expected.
+     * Here each execution exceeds the period
      */
     @Test public void testScheduleRepeated() throws Exception {
     	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
@@ -142,15 +142,15 @@ public class TestQueueWorkerPool {
     		public void run() {
     			result.add("hello"); //$NON-NLS-1$
     			try {
-					Thread.sleep(7);
+					Thread.sleep(75);
 				} catch (InterruptedException e) {
 					throw new RuntimeException(e);
 				}
     		}
-    	}, 0, 5, TimeUnit.MILLISECONDS);
-    	Thread.sleep(99);
+    	}, 0, 10, TimeUnit.MILLISECONDS);
+    	Thread.sleep(100);
     	future.cancel(true);
-    	assertTrue(result.size() > 8 && result.size() < 12);
+    	assertEquals(2, result.size());
     }
     
     @Test public void testFailingWork() throws Exception {
