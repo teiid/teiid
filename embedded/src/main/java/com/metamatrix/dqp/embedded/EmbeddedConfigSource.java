@@ -29,7 +29,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.dqp.internal.cache.DQPContextCache;
+
 import com.google.inject.Binder;
+import com.google.inject.Inject;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -58,6 +61,9 @@ public class EmbeddedConfigSource implements DQPConfigSource {
     
 	private Properties props;
     private boolean useTxn;
+    
+    @Inject
+    DQPContextCache contextCache;
     
     /**  
     * Based the configuration file load the DQP services
@@ -90,9 +96,7 @@ public class EmbeddedConfigSource implements DQPConfigSource {
             in.close();
 
             // Merge any user properties with the mm.properties
-            if (connectionProperties != null) {
-                props.putAll(connectionProperties);
-            }
+            props.putAll(connectionProperties);
             
             // this will resolve any nested properties in the properties
             // file; this created for testing purpose
@@ -136,7 +140,9 @@ public class EmbeddedConfigSource implements DQPConfigSource {
     
 	@Override
 	public void updateBindings(Binder binder) {
-		
+		if (contextCache != null) {
+			binder.bind(DQPContextCache.class).toInstance(contextCache);
+		}
 	}
 
 	@Override

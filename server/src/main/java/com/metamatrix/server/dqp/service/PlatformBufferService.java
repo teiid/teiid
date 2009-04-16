@@ -24,6 +24,8 @@ package com.metamatrix.server.dqp.service;
 
 import java.util.Properties;
 
+import org.teiid.dqp.internal.cache.DQPContextCache;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -49,11 +51,13 @@ public class PlatformBufferService implements BufferService {
     
     private String processName;
     private Host host;
+    private DQPContextCache contextCache;
     
     @Inject
-    public PlatformBufferService(@Named(Configuration.HOST) Host host, @Named(Configuration.PROCESSNAME) String processName) {
+    public PlatformBufferService(@Named(Configuration.HOST) Host host, @Named(Configuration.PROCESSNAME) String processName, DQPContextCache cache) {
     	this.host = host;
     	this.processName = processName;
+    	this.contextCache = cache;
 	}
 
     /* 
@@ -95,5 +99,11 @@ public class PlatformBufferService implements BufferService {
     public void stop() throws ApplicationLifecycleException {
     	bufferMgr.stop();
     }
+
+	@Override
+	public DQPContextCache getContextCache() {
+		return this.contextCache;
+	}
+
 
 }

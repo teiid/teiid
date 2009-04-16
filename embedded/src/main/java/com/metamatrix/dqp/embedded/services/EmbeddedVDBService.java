@@ -31,6 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.api.CacheScope;
+import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
+import com.google.inject.Inject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -42,7 +47,12 @@ import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VDBStatus;
+import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+import com.metamatrix.dqp.service.BufferService;
+import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
@@ -52,9 +62,12 @@ import com.metamatrix.vdb.runtime.BasicVDBDefn;
  * A VDBService implementation for Embedded DQP.
  * @since 4.3
  */
-public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBService {   
+public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBService, VDBLifeCycleListener {   
     static final String[] VDB_STATUS = {"INCOMPLETE", "INACTIVE", "ACTIVE", "DELETED"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-
+    
+    @Inject
+    private DQPContextCache contextCache;
+    
     /**
      * Find the VDB in the list of VDBs available 
      * @param name
@@ -300,6 +313,7 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
     public void startService(ApplicationEnvironment environment) throws ApplicationLifecycleException {        
         // deploying VDB at this stage created issues with data service prematurely
         // asking for unfinished VDB and starting it
+    	getConfigurationService().register(this);
     }
 
     /** 
@@ -307,5 +321,14 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
      * @since 4.3
      */
     public void stopService() throws ApplicationLifecycleException {
-    }    
+    }
+
+	@Override
+	public void loaded(String vdbName, String vdbVersion) {
+	}
+
+	@Override
+	public void unloaded(String vdbName, String vdbVersion) {
+		this.contextCache.removeVDBScopedCache(vdbName, vdbVersion);
+	}    
 }

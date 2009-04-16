@@ -86,4 +86,26 @@ public interface ConnectorEnvironment extends Executor {
             long initialDelay,
             long period,
             TimeUnit unit);
+
+
+	/**
+	 * Get the item from cache based on the scope provided; The required information like session-id, or vdb-name etc 
+	 * are gleaned from runtime context. If such information is not available then error will be raised.
+	 * @param scope - scope of the cache; {@link CacheScope.REQUEST}, scope is not supported, as request information is not
+     * visible. use ExecutionContext. 
+	 * on {@link ExecutionContext}
+	 * @param key
+	 * @return
+	 */
+	Object getFromCache(CacheScope scope, Object key);
+
+	/**
+	 * Store the item in the cache based on the scope provided.The required information like session-id, or vdb-name etc 
+	 * are gleaned from runtime context. If such information is not available then error will be raised.
+	 * @param scope  - scope of the cache; {@link CacheScope.REQUEST}, scope is not supported. 
+	 * on {@link ExecutionContext}
+	 * @param key
+	 * @param value
+	 */
+	void storeInCache(CacheScope scope, Object key, Object value);
 }

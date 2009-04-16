@@ -22,7 +22,10 @@
 
 package com.metamatrix.dqp.service;
 
+import org.teiid.dqp.internal.cache.DQPContextCache;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.cache.FakeCache.FakeCacheFactory;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 
@@ -52,4 +55,8 @@ public class FakeBufferService extends FakeAbstractService implements BufferServ
         return bufferMgr;
     }
 
+	@Override
+	public DQPContextCache getContextCache() {
+		return new DQPContextCache("test", "test", new FakeCacheFactory()); //$NON-NLS-1$ //$NON-NLS-2$
+	}
 }

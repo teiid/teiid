@@ -36,31 +36,18 @@ import com.metamatrix.cache.FakeCache;
 import com.metamatrix.platform.security.authorization.cache.AuthorizationCache;
 
 public class TestAuthorizationCache extends TestCase {
-
-	Cache cacheStore;
-	
-	@Override
-	protected void setUp() throws Exception {
-		CacheFactory factory = new DefaultCacheFactory();
-		cacheStore = factory.createCache();
-	}
-
-	@Override
-	protected void tearDown() throws Exception {
-		cacheStore.stop();
-	}
 	
     public void testFindPolicyIdsWithNoResult() throws Exception {
-        AuthorizationCache cache = new AuthorizationCache(new FakeCache(), new FakeCache(), null); 
+        AuthorizationCache cache = new AuthorizationCache(new FakeCache("1"), new FakeCache("2"), null); //$NON-NLS-1$ //$NON-NLS-2$ 
         Collection result = cache.findPolicyIDs(new MetaMatrixPrincipalName("a", MetaMatrixPrincipal.TYPE_USER), null); //$NON-NLS-1$
         assertTrue(result.isEmpty());
     }
     
     public void testFindPolicyIds() throws Exception {
-        AuthorizationCache cache = new AuthorizationCache(new FakeCache(), new FakeCache(),null);
+    	AuthorizationCache cache = new AuthorizationCache(new FakeCache("1"), new FakeCache("2"), null); //$NON-NLS-1$ //$NON-NLS-2$
         List policyIDs = new LinkedList();
         policyIDs.add(new Integer(1));
-        SessionToken token =  new SessionToken(new MetaMatrixSessionID(1), "dummy"); //$NON-NLS-1$ //$NON-NLS-2$
+        SessionToken token =  new SessionToken(new MetaMatrixSessionID(1), "dummy"); //$NON-NLS-1$s
         cache.cachePolicyIDsForPrincipal(new MetaMatrixPrincipalName("a", MetaMatrixPrincipal.TYPE_USER), token, policyIDs); //$NON-NLS-1$
         Collection result = cache.findPolicyIDs(new MetaMatrixPrincipalName("a", MetaMatrixPrincipal.TYPE_USER), new SessionToken(new MetaMatrixSessionID(2), "dummy")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         //different session, result should be empty

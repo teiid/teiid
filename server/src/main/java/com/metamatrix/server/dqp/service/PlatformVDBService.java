@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.dqp.internal.cache.DQPContextCache;
+
+import com.google.inject.Inject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -64,7 +67,12 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
 
     private Map vdbIDs = Collections.synchronizedMap(new HashMap());
     private EventObjectListener listener = null;
+    private DQPContextCache contextCache;
 
+    @Inject
+    public PlatformVDBService(DQPContextCache cache) {
+    	this.contextCache = cache;
+    }
     /* 
      * @see com.metamatrix.dqp.service.VDBService#isActiveVDB(java.lang.String, java.lang.String)
      */
@@ -142,7 +150,7 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
      */
     public int getFileVisibility(final String vdbName, final String vdbVersion, final String pathInVDB) throws MetaMatrixComponentException {
         // get the name of model
-    	String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), ".");
+    	String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
 
 
         //return configuration.getModelVisibility(vdbName, vdbVersion, modelName);
@@ -234,8 +242,10 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
             VirtualDatabaseID vdbID = event.getVirtualDatabaseID();
             // update the cache for this vdb
             removeVirtualDatabaseID(vdbID);
+
+            // remove any cached items
+            this.contextCache.removeVDBScopedCache(vdbID.getName(), vdbID.getVersion());
         }
-        
     }    
     
     /**

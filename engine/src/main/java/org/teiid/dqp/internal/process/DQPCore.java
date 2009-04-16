@@ -37,7 +37,9 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
 import javax.transaction.xa.Xid;
 
+import org.teiid.connector.api.CacheScope;
 import org.teiid.dqp.internal.cache.CacheID;
+import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.cache.ResultSetCacheUtil;
 
@@ -146,6 +148,7 @@ public class DQPCore extends Application implements ClientSideDQP {
     
 	private Map<RequestID, RequestWorkItem> requests = Collections.synchronizedMap(new HashMap<RequestID, RequestWorkItem>());			
 	private Map<String, List<RequestID>> requestsByClients = Collections.synchronizedMap(new HashMap<String, List<RequestID>>());
+	private DQPContextCache contextCache;
 	
 	public DQPCore() { 
 		
@@ -164,6 +167,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	@Override
     public void stop() throws ApplicationLifecycleException {
     	processWorkerPool.shutdown();
+    	contextCache.shutdown();
     	super.stop();
     }
     
@@ -296,6 +300,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         		clientRequests.remove(workItem.requestID);
         	}
 		}
+    	contextCache.removeRequestScopedCache(workItem.requestID.toString());
     }
            
     boolean areResultsInCache(final RequestMessage requestMsg) {
@@ -434,6 +439,7 @@ public class DQPCore extends Application implements ClientSideDQP {
                 throw new MetaMatrixComponentException(err);
             }
         }
+        contextCache.removeSessionScopedCache(sessionId);
     }
 
     public boolean cancelRequest(RequestID requestID)
@@ -609,6 +615,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         //get buffer manager
         BufferService bufferService = (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE);
         bufferManager = bufferService.getBufferManager();
+        contextCache = bufferService.getContextCache();
 
         //Get tracking service
         tracker = (TrackingService) env.findService(DQPServiceNames.TRACKING_SERVICE);

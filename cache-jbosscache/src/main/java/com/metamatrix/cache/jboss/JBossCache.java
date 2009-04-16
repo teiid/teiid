@@ -173,5 +173,10 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	public boolean removeChild(String name) {
 		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
 		return node.removeChild(Fqn.fromString(name));
+	}
+
+	@Override
+	public String getName() {
+		return this.rootFqn.toString();
 	} 	
 }

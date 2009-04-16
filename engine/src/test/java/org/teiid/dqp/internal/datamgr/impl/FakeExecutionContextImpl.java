@@ -24,29 +24,37 @@ package org.teiid.dqp.internal.datamgr.impl;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
+import org.teiid.connector.api.ExecutionContext;
 
 /**
  */
 public class FakeExecutionContextImpl extends ExecutionContextImpl {
 
-    private final static AtomicInteger COUNT = new AtomicInteger(0);
+	private final static AtomicInteger COUNT = new AtomicInteger(0);
 
-    public FakeExecutionContextImpl() {
-    	this(COUNT.getAndIncrement());
-    }
-    
-    public FakeExecutionContextImpl(int unique) {
-        super("VDB"+unique,  //$NON-NLS-1$
-            "Version"+unique,  //$NON-NLS-1$
-            "User"+unique,  //$NON-NLS-1$ 
-            "Payload"+unique,  //$NON-NLS-1$
-            "ExecutionPayload"+unique,  //$NON-NLS-1$            
-            "ConnectionID"+unique,   //$NON-NLS-1$
-            "ConnectorID"+unique,   //$NON-NLS-1$
-            "RequestID"+unique,   //$NON-NLS-1$
-            "PartID"+unique, //$NON-NLS-1$
-            "ExecCount"+unique); 
-    }
-    
+	public FakeExecutionContextImpl() {
+		this(COUNT.getAndIncrement());
+	}
+
+	public FakeExecutionContextImpl(int unique) {
+		super("VDB" + unique, //$NON-NLS-1$
+				"Version" + unique, //$NON-NLS-1$
+				"User" + unique, //$NON-NLS-1$ 
+				"Payload" + unique, //$NON-NLS-1$
+				"ExecutionPayload" + unique, //$NON-NLS-1$            
+				"ConnectionID" + unique, //$NON-NLS-1$
+				"ConnectorID" + unique, //$NON-NLS-1$
+				"RequestID" + unique, //$NON-NLS-1$
+				"PartID" + unique, //$NON-NLS-1$
+				"ExecCount" + unique); //$NON-NLS-1$
+	}
+
+	public FakeExecutionContextImpl(ExecutionContext c) {
+		super(c.getVirtualDatabaseName(), c.getVirtualDatabaseVersion(), c
+				.getUser(), c.getTrustedPayload(), c.getExecutionPayload(), c
+				.getConnectionIdentifier(), c.getConnectorIdentifier(), c
+				.getRequestIdentifier(), c.getPartIdentifier(), c
+				.getExecutionCountIdentifier());
+	}
+
 }

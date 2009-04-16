@@ -120,6 +120,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
                 Integer.toString(requestID.getExecutionId())
                 );
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
+        this.securityContext.setContextCache(manager.getContextCache());
     }
 
     protected void createConnection(Connector connector, QueryMetadataInterface queryMetadata) throws ConnectorException, MetaMatrixComponentException {

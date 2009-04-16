@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.dqp.internal.cache.DQPContextCache;
+
 import com.google.inject.Binder;
 import com.google.inject.name.Names;
 import com.metamatrix.common.application.ApplicationService;
@@ -42,6 +44,7 @@ import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.server.Configuration;
+import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.dqp.service.PlatformAuthorizationService;
 import com.metamatrix.server.dqp.service.PlatformBufferService;
 import com.metamatrix.server.dqp.service.PlatformDataService;
@@ -127,6 +130,7 @@ public class PlatformConfigSource implements DQPConfigSource {
 		}
 		binder.bindConstant().annotatedWith(Names.named(Configuration.PROCESSNAME)).to(processName);
 		binder.bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
+		binder.bind(DQPContextCache	.class).toInstance(ResourceFinder.getContextCache());
 	}
     
 }

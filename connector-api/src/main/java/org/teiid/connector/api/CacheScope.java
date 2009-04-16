@@ -19,32 +19,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.connector.api;
 
-package com.metamatrix.server;
+import java.io.Serializable;
 
-
-import org.teiid.dqp.internal.cache.DQPContextCache;
-
-import com.google.inject.Injector;
-import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.common.messaging.NoOpMessageBus;
-import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
-
-public class ResourceFinder extends com.metamatrix.dqp.ResourceFinder {
-	
-	public static MessageBus getMessageBus() {
-		if (injector == null) {
-			return new NoOpMessageBus();
-		}
-		return injector.getInstance(MessageBus.class);
-	}	
-	
-	public static void setInjectorAndCompleteInitialization(Injector injector) {
-		ResourceFinder.setInjector(injector);
-		XMLConfigurationMgr.getInstance().setMessageBus(getMessageBus());
-	}
-
-	public static DQPContextCache getContextCache() {
-		return injector.getInstance(DQPContextCache.class);
-	}
+/**
+ * Cache Scope
+ * 
+ * REQUEST - Items placed in this scope are retained until the end of the top level request. The items to be placed
+ * does not need to implement {@link Serializable}, however recommended. These items are not replicated across the cluster.
+ * SERVICE - Items from this scope are available to the identified connector
+ * 
+ * All the items placed in the below scopes must be {@link Serializable}, as they are replicated across cluster.
+ *  
+ * SESSION - Items placed in the scope retained until the particular User's session of top level request is alive. 
+ * VDB - Items placed with this scope retained until the life of the VDB; 
+ * 
+ * GLOBAL - Items placed in this will available to all until the Query Service is recycled. 
+ */
+public enum CacheScope {
+	REQUEST, 
+	SERVICE,
+	SESSION, 
+	VDB, 
+	GLOBAL;
 }

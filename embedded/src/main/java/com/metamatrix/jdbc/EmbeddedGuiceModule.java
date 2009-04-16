@@ -25,9 +25,11 @@ package com.metamatrix.jdbc;
 import java.util.Properties;
 
 import org.jboss.cache.Cache;
+import org.teiid.dqp.internal.cache.DQPContextCache;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.name.Names;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.jboss.JBossCacheFactory;
 import com.metamatrix.common.application.DQPConfigSource;
@@ -49,11 +51,14 @@ public class EmbeddedGuiceModule extends AbstractModule {
 				
 		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
 		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
+		bindConstant().annotatedWith(Names.named("HostName")).to("embedded"); //$NON-NLS-1$ //$NON-NLS-2$
+		bindConstant().annotatedWith(Names.named("ProcessName")).to("embedded"); //$NON-NLS-1$ //$NON-NLS-2$
+		bind(DQPContextCache.class).in(Scopes.SINGLETON);
 		bind(DQPConfigSource.class).toInstance(new EmbeddedConfigSource(this.props));
 		
 		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
 		bind(LogListener.class).toProvider(LogListernerProvider.class).in(Scopes.SINGLETON);  
-
+		
 		
 		// this needs to be removed.
 		binder().requestStaticInjection(LogManager.class);

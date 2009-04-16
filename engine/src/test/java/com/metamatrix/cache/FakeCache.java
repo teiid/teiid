@@ -34,7 +34,7 @@ public class FakeCache<K, V> implements Cache<K, V> {
     public static class FakeCacheFactory implements CacheFactory{
 
 		public Cache get(Type type, CacheConfiguration config) {
-			return new FakeCache();
+			return new FakeCache("root"); //$NON-NLS-1$
 		}
 		
 		public void destroy() {
@@ -43,7 +43,10 @@ public class FakeCache<K, V> implements Cache<K, V> {
     
 	Map<K, V> map = new HashMap();
 	Map<String, Cache> children = new HashMap();
-	
+	String name;
+	public FakeCache(String name) {
+		this.name = name;
+	}
 	public void addListener(CacheListener listener) {
 	}
 
@@ -81,7 +84,11 @@ public class FakeCache<K, V> implements Cache<K, V> {
 
 	@Override
 	public Cache addChild(String name) {
-		Cache c = new FakeCache();
+		if (children.get(name) != null) {
+			return children.get(name);
+		}
+		
+		Cache c = new FakeCache(name);
 		children.put(name, c);
 		return c;
 	}
@@ -100,5 +107,10 @@ public class FakeCache<K, V> implements Cache<K, V> {
 	public boolean removeChild(String name) {
 		Object obj = children.remove(name);
 		return obj != null;
+	}
+
+	@Override
+	public String getName() {
+		return name;
 	}
 }

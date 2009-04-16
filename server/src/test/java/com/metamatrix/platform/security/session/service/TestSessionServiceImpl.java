@@ -19,7 +19,7 @@ public class TestSessionServiceImpl extends TestCase {
 	public void testValidateSession() throws Exception {
 		SessionServiceImpl ssi = new SessionServiceImpl();
 		ssi.setIdGenerator(new InMemoryIDController());
-		ssi.setSessionCache(new FakeCache<MetaMatrixSessionID, MetaMatrixSessionInfo>());
+		ssi.setSessionCache(new FakeCache<MetaMatrixSessionID, MetaMatrixSessionInfo>("1")); //$NON-NLS-1$
 		MembershipServiceInterface msi = Mockito.mock(MembershipServiceInterface.class);
 		Mockito.stub(msi.authenticateUser("steve", null, null, "foo")).toReturn(new SuccessfulAuthenticationToken(null, "steve@somedomain")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		ssi.setMembershipService(msi);
@@ -32,7 +32,7 @@ public class TestSessionServiceImpl extends TestCase {
 			
 		}
 		
-		MetaMatrixSessionInfo info = ssi.createSession("steve", null, null, "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		MetaMatrixSessionInfo info = ssi.createSession("steve", null, null, "foo", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
 		id1 = info.getSessionID();
 		ssi.validateSession(id1);
 		

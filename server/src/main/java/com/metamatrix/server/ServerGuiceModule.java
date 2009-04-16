@@ -24,6 +24,7 @@ package com.metamatrix.server;
 
 import org.jboss.cache.Cache;
 import org.jgroups.mux.Multiplexer;
+import org.teiid.dqp.internal.cache.DQPContextCache;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -86,6 +87,7 @@ class ServerGuiceModule extends AbstractModule {
 		bind(ProcessManagement.class).to(SocketVMController.class).in(Scopes.SINGLETON);
 		bind(ServerEvents.class).to(ProcessMonitor.class).in(Scopes.SINGLETON);
 		bind(HostManagement.class).toProvider(HostManagementProvider.class).in(Scopes.SINGLETON);
+		bind(DQPContextCache.class).in(Scopes.SINGLETON);
 		
 		// this needs to be removed.
 		binder().requestStaticInjection(PlatformProxyHelper.class);

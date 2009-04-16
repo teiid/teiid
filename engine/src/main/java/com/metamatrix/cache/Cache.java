@@ -39,7 +39,8 @@ public interface Cache<K, V>  {
 						AUTHORIZATION_PRINCIPAL("Auhtorization-Principal"), //$NON-NLS-1$ 
 						RESULTSET("ResultSet"), //$NON-NLS-1$
 						VDBMETADATA("VdbMetadata"), //$NON-NLS-1$
-						VDBMODELS("VdbModels"); //$NON-NLS-1$
+						VDBMODELS("VdbModels"), //$NON-NLS-1$
+						SCOPED_CACHE("Scoped-Cache"); //$NON-NLS-1$
 		
 		private String location;
 		
@@ -140,7 +141,7 @@ public interface Cache<K, V>  {
 	/**
 	 * Destroys the child from the current node; no-op if node not found
 	 * @param name
-	 * @return true if removed; false otehrwise
+	 * @return true if removed; false otherwise
 	 */
 	boolean removeChild(String name);
 	
@@ -150,4 +151,10 @@ public interface Cache<K, V>  {
 	 * @return
 	 */
 	List<Cache> getChildren();
+	
+	/**
+	 * Name of the cache node
+	 * @return
+	 */
+	String getName();
 }

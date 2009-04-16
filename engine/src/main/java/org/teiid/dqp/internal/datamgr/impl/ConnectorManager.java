@@ -51,6 +51,7 @@ import org.teiid.connector.api.ConnectorAnnotations.SynchronousWorkers;
 import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
+import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import org.teiid.dqp.internal.pooling.connector.PooledConnector;
@@ -77,6 +78,7 @@ import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
+import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.TrackingService;
@@ -116,6 +118,7 @@ public class ConnectorManager implements ApplicationService {
     private MetadataService metadataService;
     private TrackingService tracker;
     private TransactionService transactionService;
+    private DQPContextCache contextCache;
     
     private volatile Boolean started;
 
@@ -149,7 +152,7 @@ public class ConnectorManager implements ApplicationService {
             currentThread.setContextClassLoader(classloader);
             boolean global = true;
             if (caps == null) {
-            	ExecutionContext context = new ExecutionContextImpl(
+            	ExecutionContextImpl context = new ExecutionContextImpl(
                         message.getVdbName(),
                         message.getVdbVersion(),
                         message.getUserName(),
@@ -159,6 +162,8 @@ public class ConnectorManager implements ApplicationService {
                         connectorID.getID(), 
                         requestID.toString(), 
                         "capabilities-request", "0"); //$NON-NLS-1$ //$NON-NLS-2$ 
+            	
+            	context.setContextCache(this.contextCache);
 
             	conn = connector.getConnection(context);
             	caps = conn.getCapabilities();
@@ -322,6 +327,11 @@ public class ConnectorManager implements ApplicationService {
         this.exceptionOnMaxRows = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false);
     	this.synchWorkers = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.SYNCH_WORKERS, true);
 
+    	BufferService bufferService = (BufferService)env.findService(DQPServiceNames.BUFFER_SERVICE);
+    	if (bufferService != null) {
+    		this.contextCache = bufferService.getContextCache();
+    	}
+    		
         // Initialize and start the connector
         initStartConnector(connectorEnv);
         //check result set cache
@@ -615,6 +625,10 @@ public class ConnectorManager implements ApplicationService {
      */
     public ConnectorID getConnectorID() {
         return connectorID;
+    }
+    
+    DQPContextCache getContextCache() {
+    	return this.contextCache;
     }
     
     /**

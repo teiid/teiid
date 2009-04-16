@@ -27,11 +27,16 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.connector.api.CacheScope;
 import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.cache.Cache;
 import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.core.util.HashCodeUtil;
+import com.metamatrix.dqp.service.BufferService;
 
 /**
  */
@@ -63,6 +68,8 @@ public class ExecutionContextImpl implements ExecutionContext {
     private boolean isTransactional;
     
     private ConnectorIdentity connectorIdentity;
+    
+    private DQPContextCache contextCache;
     
     private int batchSize = BufferConfig.DEFAULT_CONNECTOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
@@ -204,4 +211,25 @@ public class ExecutionContextImpl implements ExecutionContext {
 		warnings.clear();
 		return result;
 	}
+	
+	public void setContextCache(DQPContextCache cache) {
+		this.contextCache = cache;
+	}
+	
+	@Override
+	public Object get(Object key) {
+		if (this.contextCache != null) {
+			Cache cache = contextCache.getRequestScopedCache(getRequestIdentifier());
+			return cache.get(key);
+		}
+		return null;
+	}
+	
+	@Override
+	public void put(Object key, Object value) {
+		if (this.contextCache != null) {
+			Cache cache = contextCache.getRequestScopedCache(getRequestIdentifier());
+			cache.put(key, value);
+		}
+	}	
 }

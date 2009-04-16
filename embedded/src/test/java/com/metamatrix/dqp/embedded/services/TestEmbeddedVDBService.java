@@ -169,14 +169,14 @@ public class TestEmbeddedVDBService extends TestCase{
     
     
     public void testVDBResource() throws Exception {
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
+        Properties p = EmbeddedTestUtil.getProperties();         
         configService.userPreferences = p;
         configService.initializeService(p);                
         assertNotNull(vdbService.getVDBResource("Admin", "1")); //$NON-NLS-1$ //$NON-NLS-2$              
     }
     
     public void testAvailableVDBs() throws Exception {
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
+        Properties p = EmbeddedTestUtil.getProperties();         
         configService.userPreferences = p;
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 

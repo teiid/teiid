@@ -30,15 +30,22 @@ import java.util.Properties;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.teiid.connector.api.CacheScope;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.datamgr.language.LanguageFactoryImpl;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.cache.Cache;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.queue.WorkerPool;
+import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.service.BufferService;
+import com.metamatrix.dqp.service.DQPServiceNames;
 
 /**
  * Default Connector Environment. 
@@ -155,5 +162,63 @@ public class ConnectorEnvironmentImpl implements ConnectorEnvironment {
 			return this.workerPool.scheduleAtFixedRate(new ContextClassLoaderPreservingRunnable(command), initialDelay, period, unit);
 		}
 		return null;
+	}
+	
+	@Override
+	public Object getFromCache(CacheScope scope, Object key) {
+		DQPWorkContext context = DQPWorkContext.getWorkContext();
+		checkScopeValidity(scope, context);
+
+		Cache cache = getScopedCache(scope, context);
+		if (cache != null) {
+			return cache.get(key);
+		}
+		return null;
+	}
+	
+	@Override
+	public void storeInCache(CacheScope scope, Object key, Object value) {
+		DQPWorkContext context = DQPWorkContext.getWorkContext();
+		checkScopeValidity(scope, context);
+		Cache cache = getScopedCache(scope, context);
+		if (cache != null) {
+			cache.put(key, value);
+		}
+	}
+	
+	private Cache getScopedCache(CacheScope scope, DQPWorkContext context) {
+		BufferService service = (BufferService) findResource(DQPServiceNames.BUFFER_SERVICE);
+		if (service != null) {
+			DQPContextCache contextCache = service.getContextCache();
+			switch (scope) {
+			case SERVICE:
+				return contextCache.getServiceScopedCache(properties.getProperty(ConnectorPropertyNames.CONNECTOR_ID));
+			case SESSION:
+				return contextCache.getSessionScopedCache(context.getSessionToken().getSessionIDValue());
+			case VDB:
+				return contextCache.getVDBScopedCache(context.getVdbName(), context.getVdbVersion());
+			case GLOBAL:
+				return contextCache.getGlobalScopedCache();
+			}
+		}
+		return null;
+	}
+	
+	
+	private void checkScopeValidity(CacheScope scope, DQPWorkContext context) {
+		if (scope == CacheScope.REQUEST) {
+			throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.request_scope_error")); //$NON-NLS-1$
+		}
+		
+		if (scope == CacheScope.SESSION) {
+			if (context == null || context.getSessionToken() == null) {
+				throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.session_scope_error")); //$NON-NLS-1$
+			}
+		}
+		else if (scope == CacheScope.VDB) {
+			if (context == null || context.getVdbName() == null || context.getVdbVersion() == null) {
+				throw new IllegalStateException(DQPPlugin.Util.getString("ConnectorEnvironmentImpl.vdb_scope_error")); //$NON-NLS-1$
+			}
+		}
 	}
 }

@@ -51,23 +51,10 @@ public class TestAuthorizationServiceImpl extends TestCase {
 	private static final String TEST_GROUP = "g1+p1"; //$NON-NLS-1$
 	private static final String INVALID_GROUP = "foo"; //$NON-NLS-1$
 
-	Cache cacheStore;
-	
-	@Override
-	protected void setUp() throws Exception {
-		CacheFactory factory = new DefaultCacheFactory();
-		cacheStore = factory.createCache();
-	}
-
-	@Override
-	protected void tearDown() throws Exception {
-		cacheStore.stop();
-	}
-	
 	public class FakeAuthorizationService extends AuthorizationServiceImpl {
 		
 		public FakeAuthorizationService() throws Exception {
-			this.authorizationCache = new AuthorizationCache(new FakeCache(), new FakeCache(), null);
+			this.authorizationCache = new AuthorizationCache(new FakeCache("1"), new FakeCache("2"), null); //$NON-NLS-1$ //$NON-NLS-2$
 			this.membershipServiceProxy = Mockito.mock(MembershipServiceInterface.class);
 			Mockito.stub(this.membershipServiceProxy.getPrincipal(new MetaMatrixPrincipalName(TEST_GROUP, MetaMatrixPrincipal.TYPE_GROUP))).toReturn(new BasicMetaMatrixPrincipal(TEST_GROUP, MetaMatrixPrincipal.TYPE_GROUP));
 			Mockito.stub(this.membershipServiceProxy.getPrincipal(new MetaMatrixPrincipalName(INVALID_GROUP, MetaMatrixPrincipal.TYPE_GROUP))).toThrow(new InvalidPrincipalException());
