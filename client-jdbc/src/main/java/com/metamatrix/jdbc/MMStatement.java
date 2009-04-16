@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
@@ -443,11 +442,7 @@ public class MMStatement extends WrapperImpl implements Statement {
     }
 
 	protected RequestMessage createRequestMessage(String[] commands,
-			boolean isBatchedCommand, Boolean requiresResultSet)
-			throws MMSQLException {
-		if (isBatchedCommand || requiresResultSet == Boolean.FALSE) {
-            throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Operation_Not_Supported", Arrays.asList(commands))); //$NON-NLS-1$
-        }
+			boolean isBatchedCommand, Boolean requiresResultSet) {
         RequestMessage reqMessage = new RequestMessage();
     	reqMessage.setCommands(commands);
     	reqMessage.setBatchedUpdate(isBatchedCommand);

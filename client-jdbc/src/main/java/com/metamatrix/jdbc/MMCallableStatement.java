@@ -84,8 +84,7 @@ public class MMCallableStatement extends MMPreparedStatement implements Callable
     
     @Override
     protected RequestMessage createRequestMessage(String[] commands,
-    		boolean isBatchedCommand, Boolean requiresResultSet)
-    		throws MMSQLException {
+    		boolean isBatchedCommand, Boolean requiresResultSet) {
     	RequestMessage message = super.createRequestMessage(commands, isBatchedCommand, requiresResultSet);
     	message.setCallableStatement(true);
     	message.setPreparedStatement(false);

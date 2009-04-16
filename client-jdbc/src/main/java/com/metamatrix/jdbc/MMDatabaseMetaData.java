@@ -125,46 +125,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         public final static String JDBC_SYSTEM_MODEL_NAME = "System.JDBC"; //$NON-NLS-1$
     }
 
-    // decodeString mappings
     private static final String TYPE_MAPPING;
-//      new StringBuffer(     MMJDBCSQLTypeInfo.STRING)      .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.STRING)) //$NON-NLS-1$
-//        .append(",").append(MMJDBCSQLTypeInfo.INTEGER)     .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.INTEGER)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BOOLEAN)     .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.BOOLEAN)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.DATE)        .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.DATE)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.TIME)        .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.TIME)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.TIMESTAMP)   .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.TIMESTAMP)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.DOUBLE)      .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.DOUBLE)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.FLOAT)       .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.FLOAT)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BIGDECIMAL)  .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.BIGDECIMAL)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BYTE)        .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.BYTE)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.SHORT)       .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.SHORT)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.LONG)        .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.LONG)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.CLOB)        .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.CLOB)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BLOB)        .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.BLOB)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BIGINTEGER)  .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.BIGINTEGER)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.CHAR)        .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.CHAR)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.OBJECT)      .append(",").append(MMJDBCSQLTypeInfo.getSQLType(MMJDBCSQLTypeInfo.OBJECT)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .toString();
     
     private static final String PRECISION_MAPPING;
-//      new StringBuffer(     MMJDBCSQLTypeInfo.STRING)      .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.STRING)) //$NON-NLS-1$
-//        .append(",").append(MMJDBCSQLTypeInfo.INTEGER)     .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.INTEGER)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BOOLEAN)     .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.BOOLEAN)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.DATE)        .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.DATE)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.TIME)        .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.TIME)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.TIMESTAMP)   .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.TIMESTAMP)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.DOUBLE)      .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.DOUBLE)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.FLOAT)       .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.FLOAT)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BIGDECIMAL)  .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.BIGDECIMAL)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BYTE)        .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.BYTE)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.SHORT)       .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.SHORT)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.LONG)        .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.LONG)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.CLOB)        .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.CLOB)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BLOB)        .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.BLOB)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.BIGINTEGER)  .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.BIGINTEGER)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.CHAR)        .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.CHAR)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .append(",").append(MMJDBCSQLTypeInfo.OBJECT)      .append(",").append(ResultsMetadataDefaults.getDefaultPrecision(MMJDBCSQLTypeInfo.OBJECT)) //$NON-NLS-1$ //$NON-NLS-2$
-//        .toString();
+
     static {
         String[] internalTypes = MMJDBCSQLTypeInfo.getMMTypeNames();
         StringBuffer typeMapping = new StringBuffer();

@@ -22,16 +22,41 @@
 
 package com.metamatrix.jdbc;
 
+import static org.junit.Assert.*;
+
 import java.sql.ResultSet;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.client.ResultsFuture;
+import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.message.ResultsMessage;
 
 public class TestMMStatement {
 
 	@Test(expected=MMSQLException.class) public void testUpdateException() throws Exception {
 		MMStatement statement = new MMStatement(Mockito.mock(MMConnection.class), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		statement.executeQuery("delete from table"); //$NON-NLS-1$
+	}
+	
+	@Test public void testBatchExecution() throws Exception {
+		MMConnection conn = Mockito.mock(MMConnection.class);
+		ClientSideDQP dqp = Mockito.mock(ClientSideDQP.class);
+		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
+		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
+		ResultsMessage rm = new ResultsMessage();
+		rm.setResults(new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
+		rm.setUpdateResult(true);
+		results.getResultsReceiver().receiveResults(rm);
+		Mockito.stub(conn.getDQP()).toReturn(dqp);
+		MMStatement statement = new MMStatement(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		statement.addBatch("delete from table"); //$NON-NLS-1$
+		statement.addBatch("delete from table1"); //$NON-NLS-1$
+		assertTrue(Arrays.equals(new int[] {1, 2}, statement.executeBatch()));
 	}
 	
 }

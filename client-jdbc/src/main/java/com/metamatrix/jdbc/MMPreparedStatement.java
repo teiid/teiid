@@ -201,8 +201,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
     
     @Override
     protected RequestMessage createRequestMessage(String[] commands,
-    		boolean isBatchedCommand, Boolean requiresResultSet)
-    		throws MMSQLException {
+    		boolean isBatchedCommand, Boolean requiresResultSet) {
     	RequestMessage message = super.createRequestMessage(commands, false, requiresResultSet);
     	message.setPreparedStatement(true);
     	message.setParameterValues(isBatchedCommand?getParameterValuesList(): getParameterValues());
