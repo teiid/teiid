@@ -72,7 +72,8 @@ public class RelationalPlanner implements CommandPlanner {
     /**
 	 * Key for a {@link PlanHints PlanHints} object 
 	 */
-	public static final Integer HINTS = new Integer(0);
+	public static final Integer HINTS = Integer.valueOf(0);
+	public static final Integer VARIABLE_CONTEXTS = Integer.valueOf(1);
 
 	/**
      * @see com.metamatrix.query.optimizer.CommandPlanner#generateCanonical(com.metamatrix.query.optimizer.CommandTreeNode, boolean)

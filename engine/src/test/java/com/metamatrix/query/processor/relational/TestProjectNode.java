@@ -63,7 +63,7 @@ public class TestProjectNode extends TestCase {
     
     public ProjectNode helpSetupProject(List elements, List[] data, List childElements, ProcessorDataManager dataMgr) throws MetaMatrixComponentException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pid", "test", 100, null, null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         FakeRelationalNode dataNode = new FakeRelationalNode(2, data);
         dataNode.setElements(childElements);

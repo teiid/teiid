@@ -37,7 +37,7 @@ import com.metamatrix.query.sql.visitor.SQLStringVisitor;
  * "DELETE FROM <group> [WHERE <criteria>]".
  * Implements Command interface.
  */
-public class Delete extends PreparedBatchUpdate {
+public class Delete extends ProcedureContainer {
 
     /** Identifies the group to delete data from. */
     private GroupSymbol group;
@@ -186,7 +186,6 @@ public class Delete extends PreparedBatchUpdate {
 
         Delete copy = new Delete(copyGroup, copyCrit);
         copyMetadataState(copy);
-        copy.setParameterReferences(this.getParameterReferences());
 		return copy;
 	}
 

@@ -54,7 +54,7 @@ public class TestQueryProcessor extends TestCase {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager();
 
-        CommandContext context = new CommandContext("pid", "group", 100, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "group", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
                  
         while(true) {
@@ -171,7 +171,7 @@ public class TestQueryProcessor extends TestCase {
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         FakeDataManager dataManager = new FakeDataManager();
 
-        CommandContext context = new CommandContext("pid", "group", 100, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+        CommandContext context = new CommandContext("pid", "group", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
         final QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
         
         processor.setBatchHandler(new QueryProcessor.BatchHandler() {

@@ -39,6 +39,7 @@ import com.metamatrix.query.optimizer.CommandTreeNode;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.batch.BatchedUpdatePlan;
 import com.metamatrix.query.processor.relational.BatchedUpdateNode;
@@ -51,6 +52,8 @@ import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.util.VariableContext;
+import com.metamatrix.query.sql.visitor.NeedsEvaluationVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 
@@ -105,7 +108,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
         BatchedUpdateCommand batchedUpdateCommand = (BatchedUpdateCommand)node.getCommand();
         List updateCommands = batchedUpdateCommand.getUpdateCommands();
         int numCommands = updateCommands.size();
-        
+        List<VariableContext> allContexts = (List<VariableContext>)node.getProperty(RelationalPlanner.VARIABLE_CONTEXTS);
         for (int commandIndex = 0; commandIndex < numCommands; commandIndex++) {
             // Potentially the first command of a batch
             Command updateCommand = (Command)updateCommands.get(commandIndex);
@@ -119,9 +122,17 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                 // Only attempt batching if the source supports batching
                 if (caps.supportsCapability(Capability.BATCHED_UPDATES)) {
                     // Start a new batch
-                    List batch = new ArrayList();
+                    List<Command> batch = new ArrayList<Command>();
+                    List<VariableContext> contexts = new ArrayList<VariableContext>();
+                    List<Boolean> shouldEvaluate = new ArrayList<Boolean>();
                     // This is the first command in a potential batch, so add it to the batch
                     batch.add(updateCommand);
+                    if (allContexts != null) {
+                    	contexts.add(allContexts.get(commandIndex));
+                    	shouldEvaluate.add(Boolean.TRUE);
+                    } else {
+                    	shouldEvaluate.add(NeedsEvaluationVisitor.needsEvaluation(updateCommand));
+                    }
                     // Find out if there are other commands called on the same physical model
                     // immediately and contiguously after this one
                     batchLoop: for (int batchIndex = commandIndex+1; batchIndex < numCommands; batchIndex++) {
@@ -129,6 +140,12 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                         // If this command updates the same model, and is eligible for batching, add it to the batch
                         if (canBeAddedToBatch(batchingCandidate, batchModelID, metadata)) {
                             batch.add(batchingCandidate);
+                            if (allContexts != null) {
+                            	contexts.add(allContexts.get(batchIndex));
+                            	shouldEvaluate.add(Boolean.TRUE);
+                            } else {
+                            	shouldEvaluate.add(NeedsEvaluationVisitor.needsEvaluation(batchingCandidate));
+                            }
                         } else { // Otherwise, stop batching at this point. The next command may well be the start of a new batch
                             break batchLoop;
                         }
@@ -138,7 +155,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                         ProjectNode projectNode = new ProjectNode(((IntegerID)idGenerator.create()).getValue());
                         // Create a BatchedUpdateNode that creates a batched request for the connector
                         BatchedUpdateNode batchNode = new BatchedUpdateNode(((IntegerID)idGenerator.create()).getValue(),
-                                                                            batch,
+                                                                            batch, contexts, shouldEvaluate,
                                                                             modelName);
                         List symbols = batchedUpdateCommand.getProjectedSymbols();
                         projectNode.setSelectSymbols(symbols);
@@ -168,7 +185,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
      * @return the group being updated
      * @since 4.2
      */
-    private static GroupSymbol getUpdatedGroup(Command command) {
+    public static GroupSymbol getUpdatedGroup(Command command) {
         int type = command.getType();
         if (type == Command.TYPE_INSERT) {
             return ((Insert)command).getGroup();
@@ -176,9 +193,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
             return ((Update)command).getGroup();
         } else if (type == Command.TYPE_DELETE) {
             return ((Delete)command).getGroup();
-        } else if (type == Command.TYPE_QUERY) { // SELECT INTO
-            // Assumes that the group is not a temp group, because the
-            // resolver would have thrown an exception if it was
+        } else if (type == Command.TYPE_QUERY) { 
             return ((Query)command).getInto().getGroup();
         }
         throw new MetaMatrixRuntimeException(QueryExecPlugin.Util.getString("BatchedUpdatePlanner.unrecognized_command", command)); //$NON-NLS-1$
@@ -193,7 +208,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
      * @throws MetaMatrixComponentException
      * @since 4.2
      */
-    private static boolean isEligibleForBatching(Command command, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
+    public static boolean isEligibleForBatching(Command command, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
         // If it's a SELECT INTO, it shouldn't be part of a connector batch.
         if (command.getType() == Command.TYPE_QUERY) {
             return false;

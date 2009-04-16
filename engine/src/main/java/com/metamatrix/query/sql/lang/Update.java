@@ -41,7 +41,7 @@ import com.metamatrix.query.sql.visitor.SQLStringVisitor;
  * Represents a SQL Update statement of the form:
  * "UPDATE <group> SET <element> = <expression>, ... [WHERE <criteria>]".
  */
-public class Update extends PreparedBatchUpdate {
+public class Update extends ProcedureContainer {
 
     /** Identifies the group to be udpdated. */
     private GroupSymbol group;
@@ -234,7 +234,6 @@ public class Update extends PreparedBatchUpdate {
 		}
 
         this.copyMetadataState(copy);
-        copy.setParameterReferences(this.getParameterReferences());
 		return copy;
 	}
 	

@@ -233,7 +233,7 @@ public class TestProcessor extends TestCase {
 
         try {   
             BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            CommandContext context = new CommandContext("0", "test", 5, null, null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
+            CommandContext context = new CommandContext("0", "test", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
             processor.process();
             fail("Expected error during processing, but got none."); //$NON-NLS-1$
@@ -312,7 +312,7 @@ public class TestProcessor extends TestCase {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, null, "myvdb", "1", props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", "1", props, DEBUG, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         context.setProcessorBatchSize(2000);
         context.setConnectorBatchSize(2000);
 		return context;

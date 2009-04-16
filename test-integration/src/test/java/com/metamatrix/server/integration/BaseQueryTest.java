@@ -152,7 +152,7 @@ public abstract class BaseQueryTest extends TestCase {
     protected CommandContext createCommandContext() {
         Properties props = new Properties();
         //props.setProperty(ContextProperties.SOAP_HOST, "my.host.com"); //$NON-NLS-1$
-        CommandContext context = new CommandContext("0", "test", "user", null, null, "myvdb", "1", props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", "1", props, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         
         return context;
     }       

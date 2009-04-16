@@ -36,6 +36,8 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.util.VariableContext;
+import com.metamatrix.query.util.CommandContext;
 
 
 /** 
@@ -44,22 +46,23 @@ import com.metamatrix.query.sql.lang.Command;
  */
 public class BatchedUpdateNode extends RelationalNode {
     
-    private static final List ZERO_COUNT_TUPLE = Arrays.asList(new Object[] {new Integer(0)});
+    private static final List<Integer> ZERO_COUNT_TUPLE = Arrays.asList(Integer.valueOf(0));
 
     /** The commands in this batch. */
-    private List updateCommands;
+    private List<Command> updateCommands;
+    private List<VariableContext> contexts;
+    private List<Boolean> shouldEvaluate;
+    
     /** The model name within the scope of which these commands are being executed. */
     private String modelName;
     /** The tuple source containing the update counts after the batch has been executed. */
     private TupleSource tupleSource;
     
     /** Set containing the indexes of commands that weren't executed. */
-    private Set unexecutedCommands;
+    private Set<Integer> unexecutedCommands;
     /** Flag indicating that at least one command was sent to the DataManager. */
     private boolean commandsWereExecuted = true;
     
-    private BatchedCommandsEvaluator commandsEvaluator;
-
     /**
      *  
      * @param nodeID
@@ -67,8 +70,10 @@ public class BatchedUpdateNode extends RelationalNode {
      * @param modelName The name of the model. All the commands in this batch must update groups only within this model.
      * @since 4.2
      */
-    public BatchedUpdateNode(int nodeID, List commands, String modelName) {
+    public BatchedUpdateNode(int nodeID, List<Command> commands, List<VariableContext> contexts, List<Boolean> shouldEvaluate, String modelName) {
         super(nodeID);
+        this.shouldEvaluate = shouldEvaluate;
+        this.contexts = contexts;
         this.updateCommands = commands;
         this.modelName = modelName;
     }
@@ -79,18 +84,27 @@ public class BatchedUpdateNode extends RelationalNode {
      */
     public void open() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         super.open();
-        unexecutedCommands = new HashSet(updateCommands.size(), 1.0f);
-        List commandsToExecute = new ArrayList(updateCommands.size());
-        if(commandsEvaluator != null){
-        	commandsEvaluator.evaluateExpressions(updateCommands, this.getContext());
-        }
+        unexecutedCommands = new HashSet<Integer>();
+        List<Command> commandsToExecute = new ArrayList<Command>(updateCommands.size());
         // Find the commands to be executed
         for (int i = 0; i < updateCommands.size(); i++) {
-            Command updateCommand = (Command)updateCommands.get(i);
-            if (RelationalNodeUtil.shouldExecute(updateCommand, true)) {
+            Command updateCommand = (Command)updateCommands.get(i).clone();
+            CommandContext context = this.getContext();
+            if (this.contexts != null) {
+            	context = (CommandContext)context.clone();
+            	context.setVariableContext(this.contexts.get(i));
+            }
+            boolean needProcessing = false;
+            if(shouldEvaluate != null && shouldEvaluate.get(i)) {
+                updateCommand = (Command) updateCommand.clone();
+                needProcessing = AccessNode.prepareCommand(updateCommand, this, context);
+            } else {
+                needProcessing = RelationalNodeUtil.shouldExecute(updateCommand, true);
+            }
+            if (needProcessing) {
                 commandsToExecute.add(updateCommand);
             } else {
-                unexecutedCommands.add(new Integer(i));
+                unexecutedCommands.add(Integer.valueOf(i));
             }
         }
         if (commandsToExecute.isEmpty()) {
@@ -114,7 +128,7 @@ public class BatchedUpdateNode extends RelationalNode {
             List tuple;
             for ( int i = 0; i < numExpectedCounts; i++) {
                 // If the command at this index was not executed
-                if (unexecutedCommands.contains(new Integer(i))) {
+                if (unexecutedCommands.contains(Integer.valueOf(i))) {
                     addBatchRow(ZERO_COUNT_TUPLE);
                 } else { // Otherwise, get the next count in the batch
                     tuple = tupleSource.nextTuple();
@@ -172,14 +186,9 @@ public class BatchedUpdateNode extends RelationalNode {
         for (int i = 0; i < updateCommands.size(); i++) {
             clonedCommands.add(((Command)updateCommands.get(i)).clone());
         }
-        BatchedUpdateNode clonedNode = new BatchedUpdateNode(getID(), clonedCommands, modelName);
-        clonedNode.commandsEvaluator = this.commandsEvaluator;
+        BatchedUpdateNode clonedNode = new BatchedUpdateNode(getID(), clonedCommands, contexts, shouldEvaluate, modelName);
         super.copy(this, clonedNode);
         return clonedNode;
     }
 
-	public void setCommandsEvaluator(BatchedCommandsEvaluator commandsEvaluator) {
-		this.commandsEvaluator = commandsEvaluator;
-	}
-    
 }

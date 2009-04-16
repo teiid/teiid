@@ -2966,7 +2966,7 @@ public class TestXMLProcessor extends TestCase {
             // Process twice, to test reset and clone methods
             for (int i=1; i<=2; i++) {
                 BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();                
-                CommandContext context = new CommandContext("pID", "TestConn", 10, "testUser", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                CommandContext context = new CommandContext("pID", "TestConn", "testUser", null, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 context.setProcessDebug(DEBUG);
                 QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
     	
@@ -3012,7 +3012,7 @@ public class TestXMLProcessor extends TestCase {
             XMLPlan plan = (XMLPlan)QueryOptimizer.optimizePlan(command, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
     
             BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            CommandContext context = new CommandContext("pID", null, 10, null, null, null, null);                                                                 //$NON-NLS-1$
+            CommandContext context = new CommandContext("pID", null, null, null, null);                                                                 //$NON-NLS-1$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
             processor.process();
         } catch (Exception e){
@@ -3056,7 +3056,7 @@ public class TestXMLProcessor extends TestCase {
         }
         
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pID", null, 10, null, null, null, null);                                 //$NON-NLS-1$
+        CommandContext context = new CommandContext("pID", null, null, null, null);                                 //$NON-NLS-1$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
         processor.process();
         
@@ -6063,7 +6063,7 @@ public class TestXMLProcessor extends TestCase {
         XMLPlan plan = TestXMLPlanner.preparePlan(command, metadata, new DefaultCapabilitiesFinder(), null);
 
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-        CommandContext context = new CommandContext("pID", null, 10, null, null, null, null);                                 //$NON-NLS-1$
+        CommandContext context = new CommandContext("pID", null, null, null, null);                                 //$NON-NLS-1$
         QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataMgr);
 
         MetaMatrixComponentException failOnDefaultException = null;

@@ -22,7 +22,9 @@
 
 package com.metamatrix.query.optimizer;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -30,17 +32,19 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerIDFactory;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.metadata.*;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.metadata.TempMetadataAdapter;
+import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.optimizer.batch.BatchedUpdatePlanner;
-import com.metamatrix.query.optimizer.batch.PreparedBatchUpdatePlanner;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.proc.ProcedurePlanner;
-import com.metamatrix.query.optimizer.relational.*;
+import com.metamatrix.query.optimizer.relational.MergeTreeNodeProcessor;
+import com.metamatrix.query.optimizer.relational.PlanHints;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.optimizer.xml.XMLPlanner;
 import com.metamatrix.query.optimizer.xquery.XQueryPlanner;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.PreparedBatchUpdate;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
@@ -62,7 +66,6 @@ public class QueryOptimizer {
     private static final CommandPlanner XQUERY_PLANNER = new XQueryPlanner();
     private static final CommandPlanner BATCHED_UPDATE_PLANNER = new BatchedUpdatePlanner();
 	private static final CommandTreeProcessor MERGE_TREE_NODE_PROCESSOR = new MergeTreeNodeProcessor();
-	private static final CommandPlanner PREPARED_BATCH_UPDATE_PLANNER = new PreparedBatchUpdatePlanner();
 
 	// Can't construct	
 	private QueryOptimizer() {}
@@ -247,8 +250,6 @@ public class QueryOptimizer {
             result = XQUERY_PLANNER.optimize(node, idGenerator, metadata, capFinder, analysisRecord, context);
         } else if (node.getCommandType() == CommandTreeNode.TYPE_BATCHED_UPDATE_COMMAND){
             result = BATCHED_UPDATE_PLANNER.optimize(node, idGenerator, metadata, capFinder, analysisRecord, context);
-        }else if (node.getCommandType() == CommandTreeNode.TYPE_PREPARED_BATCH_UPDATE_COMMAND){
-        	result = PREPARED_BATCH_UPDATE_PLANNER.optimize(node, idGenerator, metadata, capFinder, analysisRecord, context);
         }
 		return result;
 	}
@@ -263,16 +264,6 @@ public class QueryOptimizer {
         Map tempMetadata = command.getTemporaryMetadata();
         if(tempMetadata != null && !tempMetadata.isEmpty()) {
             optMetadata = new TempMetadataAdapter(metadata, new TempMetadataStore(tempMetadata));
-        }
-        
-        //attach a new node for prepared statement batch update
-        if(node.getParent() == null &&command instanceof PreparedBatchUpdate && ((PreparedBatchUpdate)command).isBatchedUpdate()){
-        	node.setCommandType(CommandTreeNode.TYPE_PREPARED_BATCH_UPDATE_COMMAND);
-        	CommandTreeNode child = new CommandTreeNode();
-        	node.addLastChild(child);
-        	child.setParent(node);
-        	recursiveGenerateCanonical(child, command, metadata, analysisRecord, context);
-        	return;        	
         }
         
         // Easy to detect batched update planner, procedural planner, or XQueryPlanner

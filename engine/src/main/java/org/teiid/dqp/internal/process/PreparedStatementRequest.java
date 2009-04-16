@@ -23,24 +23,31 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
+import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.optimizer.CommandTreeNode;
+import com.metamatrix.query.optimizer.batch.BatchedUpdatePlanner;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
+import com.metamatrix.query.optimizer.relational.RelationalPlanner;
 import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.processor.relational.AccessNode;
+import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.resolver.util.ResolverUtil;
+import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.PreparedBatchUpdate;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -61,27 +68,23 @@ public class PreparedStatementRequest extends Request {
     }
     
     @Override
-    protected void checkReferences(List references)
+    protected void checkReferences(List<Reference> references)
     		throws QueryValidatorException {
-    	//do nothing - references are allowed
+        prepPlan.setReferences(references);
     }
     
     /** 
      * @see org.teiid.dqp.internal.process.Request#resolveCommand(com.metamatrix.query.sql.lang.Command)
      */
-    protected void resolveCommand(Command command, List references) throws QueryResolverException,
+    @Override
+    protected void resolveCommand(Command command) throws QueryResolverException,
                                                   MetaMatrixComponentException {
+    	handleCallableStatement(command);
     	
-    	handleCallableStatement(command, references);
-    	
-    	super.resolveCommand(command, references);
+    	super.resolveCommand(command);
 
-    	if(requestMsg.isPreparedBatchUpdate()){
-        	((PreparedBatchUpdate)command).setParameterReferences(references);
-        }
     	//save the command in it's present form so that it can be validated later
         prepPlan.setCommand((Command) command.clone());
-        prepPlan.setReferences(references);
     }
 
     /**
@@ -89,7 +92,7 @@ public class PreparedStatementRequest extends Request {
      * @param command
      * @param references
      */
-	private void handleCallableStatement(Command command, List references) {
+	private void handleCallableStatement(Command command) {
 		if (!this.requestMsg.isCallableStatement() || !(command instanceof StoredProcedure)) {
     		return;
     	}
@@ -112,31 +115,13 @@ public class PreparedStatementRequest extends Request {
 			}
 			if (param.getExpression() instanceof Reference && index > inParameterCount) {
 				//assume it's an output parameter
-				references.remove(param.getExpression());
+				this.prepPlan.getReferences().remove(param.getExpression());
 				continue;
 			}
 			param.setIndex(index++);
 			proc.setParameter(param);					
 		}
 	}
-
-    protected void resolveParameterValues() throws QueryResolverException, MetaMatrixComponentException {
-        List params = prepPlan.getReferences();
-        List values = requestMsg.getParameterValues();
-        if(requestMsg.isPreparedBatchUpdate()){
-        	if(values.size() > 1){
-        		((PreparedBatchUpdate)userCommand).setUpdatingModelCount(2);
-        	}
-        	for(int i=0; i<values.size(); i++){
-        	   if (params.size() != ((List)values.get(i)).size()) {
-        		   String msg = DQPPlugin.Util.getString("DQPCore.wrong_number_of_values", new Object[] {new Integer(values.size()), new Integer(params.size())}); //$NON-NLS-1$
-        		   throw new QueryResolverException(msg);
-        	   }
-        	}
-        } else {
-        	PreparedStatementRequest.resolveParameterValues(params, values, this.context);
-        }
-    }
     
     @Override
     protected void validateQueryValues(Command command)
@@ -152,13 +137,13 @@ public class PreparedStatementRequest extends Request {
      * @throws QueryPlannerException 
      * @see org.teiid.dqp.internal.process.Request#generatePlan()
      */
-    protected void generatePlan() throws QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+    protected Command generatePlan() throws QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
     	
     	String sqlQuery = requestMsg.getCommands()[0];
-        prepPlan = prepPlanCache.getPreparedPlan(this.workContext.getConnectionID(), sqlQuery, requestMsg.isPreparedBatchUpdate());
+        prepPlan = prepPlanCache.getPreparedPlan(this.workContext.getConnectionID(), sqlQuery);
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
-            prepPlan = prepPlanCache.createPreparedPlan(this.workContext.getConnectionID(), sqlQuery, requestMsg.isPreparedBatchUpdate());
+            prepPlan = prepPlanCache.createPreparedPlan(this.workContext.getConnectionID(), sqlQuery);
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
         }
 
@@ -166,7 +151,7 @@ public class PreparedStatementRequest extends Request {
         Command command = prepPlan.getCommand();
         
         if (cachedPlan == null) {
-        	super.generatePlan();
+        	prepPlan.setRewritenCommand(super.generatePlan());
         	
         	if (!this.addedLimit) { //TODO: this is a little problematic 
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
@@ -183,12 +168,88 @@ public class PreparedStatementRequest extends Request {
             this.userCommand = command;
             createCommandContext(command);
         }
-        
-        // validate parameters values - right number and right type
-        resolveParameterValues();
+                
+        if (requestMsg.isPreparedBatchUpdate()) {
+	        handlePreparedBatchUpdate();
+        } else {
+	        List<Reference> params = prepPlan.getReferences();
+	        List<?> values = requestMsg.getParameterValues();
+	
+			resolveAndValidateParameters(command, params, values);
+        }
+        return prepPlan.getRewritenCommand();
+    }
+
+    /**
+     * There are two cases
+     *   if 
+     *     The source supports preparedBatchUpdate -> just let the command and values pass to the source
+     *   else 
+     *     create a batchedupdatecommand that represents the batch operation 
+     * @param command
+     * @throws QueryMetadataException
+     * @throws MetaMatrixComponentException
+     * @throws QueryResolverException
+     * @throws QueryPlannerException 
+     * @throws QueryValidatorException 
+     */
+	private void handlePreparedBatchUpdate() throws QueryMetadataException,
+			MetaMatrixComponentException, QueryResolverException, QueryPlannerException, QueryValidatorException {
+		ProcessorPlan plan = this.processPlan;
+		List<List<?>> paramValues = requestMsg.getParameterValues();
+		if (paramValues.isEmpty()) {
+			throw new QueryValidatorException("No batch values sent for prepared batch update"); //$NON-NLS-1$
+		}
+		boolean supportPreparedBatchUpdate = false;
+		if (plan instanceof RelationalPlan) {
+			RelationalPlan rPlan = (RelationalPlan)plan;
+			if (rPlan.getRootNode() instanceof AccessNode) {
+				AccessNode aNode = (AccessNode)rPlan.getRootNode();
+			    String modelName = aNode.getModelName();
+		        SourceCapabilities caps = capabilitiesFinder.findCapabilities(modelName);
+		        supportPreparedBatchUpdate = caps.supportsCapability(SourceCapabilities.Capability.PREPARED_BATCH_UPDATE);
+			}
+		}
+		CommandTreeNode ctn = new CommandTreeNode();
+		List<Command> commands = new LinkedList<Command>();
+		List<VariableContext> contexts = new LinkedList<VariableContext>();
+		for (List<?> values : paramValues) {
+			resolveAndValidateParameters(this.userCommand, this.prepPlan.getReferences(), values);
+			contexts.add(this.context.getVariableContext());
+			if(supportPreparedBatchUpdate){
+				continue; // -- TODO make this work
+			}
+			Command c = (Command)this.prepPlan.getRewritenCommand().clone();
+			commands.add(c);
+			CommandTreeNode child = new CommandTreeNode();
+			child.setCommand(c);
+			child.setProcessorPlan((ProcessorPlan)this.processPlan.clone());
+			ctn.addLastChild(child);
+		}
+		
+		if (paramValues.size() > 1) {
+			this.context.setVariableContext(null);
+		} 
+		
+		if (supportPreparedBatchUpdate || paramValues.size() == 1) {
+			return; // just use the existing plan
+		}
+		
+		BatchedUpdateCommand buc = new BatchedUpdateCommand(commands);
+		ctn.setCommand(buc);
+		ctn.setProperty(RelationalPlanner.VARIABLE_CONTEXTS, contexts);
+		BatchedUpdatePlanner planner = new BatchedUpdatePlanner();
+		this.processPlan = planner.optimize(ctn, idGenerator, metadata, capabilitiesFinder, analysisRecord, context);
+	}
+
+	private void resolveAndValidateParameters(Command command, List<Reference> params,
+			List<?> values) throws QueryResolverException,
+			MetaMatrixComponentException, QueryValidatorException {
+		// validate parameters values - right number and right type
+    	PreparedStatementRequest.resolveParameterValues(params, values, this.context);
         // call back to Request.validateQueryValues to ensure that bound references are valid
         super.validateQueryValues(command);
-    }
+	}
 
 	/** 
 	 * @param params

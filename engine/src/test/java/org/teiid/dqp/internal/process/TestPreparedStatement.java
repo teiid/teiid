@@ -69,9 +69,8 @@ public class TestPreparedStatement extends TestCase{
 		
 		@Override
 		public synchronized PreparedPlan getPreparedPlan(
-				String clientConn, String sql,
-				boolean isPreparedBatchUpdate) {
-			PreparedPlan plan = super.getPreparedPlan(clientConn, sql, isPreparedBatchUpdate);
+				String clientConn, String sql) {
+			PreparedPlan plan = super.getPreparedPlan(clientConn, sql);
 			if (plan != null && plan.getPlan() != null) {
 				hitCount++;
 			}

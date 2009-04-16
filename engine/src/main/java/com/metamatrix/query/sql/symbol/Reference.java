@@ -76,7 +76,7 @@ public class Reference implements Expression {
 
     public ElementSymbol getExpression() {
     	if (this.isPositional() && this.expression == null) {
-    		return new ElementSymbol("$param.pos" + this.refIndex); //$NON-NLS-1$
+    		return new ElementSymbol("$param/pos" + this.refIndex); //$NON-NLS-1$
     	}
         return this.expression;    
     }

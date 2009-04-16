@@ -30,6 +30,7 @@ import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.symbol.Reference;
 
 /**
  * This class is used to cahce plan and related objects for prepared statement
@@ -37,7 +38,7 @@ import com.metamatrix.query.sql.lang.Command;
 public class PreparedPlanCache {
 	public static final int DEFAULT_MAX_SIZE_TOTAL = 100;
 
-	private LRUCache cache;
+	private LRUCache<CacheID, PreparedPlan> cache;
 	
 	PreparedPlanCache(){
 		this(DEFAULT_MAX_SIZE_TOTAL);
@@ -47,33 +48,33 @@ public class PreparedPlanCache {
 		if(maxSize < 0){
 			maxSize = DEFAULT_MAX_SIZE_TOTAL;
 		}
-		cache = new LRUCache(maxSize);
+		cache = new LRUCache<CacheID, PreparedPlan>(maxSize);
 	}	
 	
 	/**
 	 * Return the PreparedPlan for the given session and SQl query
-	 * @param session ClientConnection
 	 * @param sql SQL query string
+	 * @param session ClientConnection
 	 * @return PreparedPlan for the given clientConn and SQl query. Null if not exist.
 	 */
-	public synchronized PreparedPlan getPreparedPlan(String sessionId, String sql, boolean isPreparedBatchUpdate){
+	public synchronized PreparedPlan getPreparedPlan(String sessionId, String sql){
 		ArgCheck.isNotNull(sessionId);
 		ArgCheck.isNotNull(sql);
 		
-		CacheID cID = new CacheID(sessionId, sql, isPreparedBatchUpdate);
+		CacheID cID = new CacheID(sessionId, sql);
 		
-		return (PreparedPlan)cache.get(cID);
+		return cache.get(cID);
 	}
 	
 	/**
 	 * Create PreparedPlan for the given clientConn and SQl query
 	 */
-	public synchronized PreparedPlan createPreparedPlan(String sessionId, String sql, boolean isPreparedBatchUpdate){
+	public synchronized PreparedPlan createPreparedPlan(String sessionId, String sql){
 		ArgCheck.isNotNull(sessionId);
 		ArgCheck.isNotNull(sql);
 		
-		CacheID cID = new CacheID(sessionId, sql, isPreparedBatchUpdate);
-		PreparedPlan preparedPlan = (PreparedPlan)cache.get(cID);
+		CacheID cID = new CacheID(sessionId, sql);
+		PreparedPlan preparedPlan = cache.get(cID);
 		if(preparedPlan == null){
 			preparedPlan = new PreparedPlan();
 			cache.put(cID, preparedPlan);
@@ -104,10 +105,9 @@ public class PreparedPlanCache {
 		int hashCode;
 		private boolean isPreparedBatchUpdate;
 		
-		CacheID(String sessionId, String sql, boolean isPreparedBatchUpdate){
+		CacheID(String sessionId, String sql){
 			this.sessionId = sessionId;
 			this.sql = sql;
-			this.isPreparedBatchUpdate = isPreparedBatchUpdate;
 			hashCode = HashCodeUtil.hashCode(HashCodeUtil.hashCode(0, sessionId), sql);
 		}
 		
@@ -132,7 +132,8 @@ public class PreparedPlanCache {
 	static class PreparedPlan{
 		private ProcessorPlan plan;
 		private Command command;
-		private List refs;
+		private Command rewritenCommand;
+		private List<Reference> refs;
 		private AnalysisRecord analysisRecord;
 		
 		/**
@@ -159,7 +160,7 @@ public class PreparedPlanCache {
 		/**
 		 * Return the list of Reference.
 		 */
-		public List getReferences(){
+		public List<Reference> getReferences(){
 			return refs;
 		}
 		
@@ -187,8 +188,16 @@ public class PreparedPlanCache {
 		/**
 		 * Set the list of Reference.
 		 */
-		public void setReferences(List refsValue){
+		public void setReferences(List<Reference> refsValue){
 			refs = refsValue;
+		}
+		
+		public void setRewritenCommand(Command rewritenCommand) {
+			this.rewritenCommand = rewritenCommand;
+		}
+		
+		public Command getRewritenCommand() {
+			return rewritenCommand;
 		}
 					
 	}

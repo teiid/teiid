@@ -207,7 +207,7 @@ public class MetaDataProcessor {
     private MetadataResult obtainMetadataForPreparedSql(String sql, String sessionId, boolean isDoubleQuotedVariablesAllowed) throws QueryParserException, QueryResolverException, MetaMatrixComponentException {
         Command command = null;
         
-        PreparedPlanCache.PreparedPlan plan = planCache.getPreparedPlan(sessionId, sql, false);
+        PreparedPlanCache.PreparedPlan plan = planCache.getPreparedPlan(sessionId, sql);
         if(plan != null) {
             command = plan.getCommand();
         } else {

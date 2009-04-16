@@ -310,7 +310,7 @@ public class TestExpressionEvaluator extends TestCase {
         func.setFunctionDescriptor(desc);
 
         FakeDataManager dataMgr = new FakeDataManager();
-        CommandContext context = new CommandContext(new Long(1), null, -1, null, null, null, null);
+        CommandContext context = new CommandContext(new Long(1), null, null, null, null);
         context.setUserName("logon");  //$NON-NLS-1$
         assertEquals(context.getUserName(), new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList()) );       
     } 
@@ -331,7 +331,7 @@ public class TestExpressionEvaluator extends TestCase {
         Properties props = new Properties();
         props.setProperty("http_host", "testHostName"); //$NON-NLS-1$ //$NON-NLS-2$
         props.setProperty("http_port", "8000"); //$NON-NLS-1$ //$NON-NLS-2$
-        CommandContext context = new CommandContext(new Long(1), null, null, null, null, null, null, props, false, false);
+        CommandContext context = new CommandContext(new Long(1), null, null, null, null, null, props, false, false);
         
         func.setArgs(new Expression[] {new Constant("http_host")}); //$NON-NLS-1$
         assertEquals("testHostName", new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(func, Collections.emptyList())); //$NON-NLS-1$
@@ -353,7 +353,7 @@ public class TestExpressionEvaluator extends TestCase {
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
-        CommandContext context = new CommandContext(new Long(-1), null, "user", null, payload, "vdb", "1", null, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", "1", null, false, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 

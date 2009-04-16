@@ -42,7 +42,7 @@ import com.metamatrix.query.sql.symbol.SingleElementSymbol;
  * Represents a SQL Insert statement of the form:
  * "INSERT INTO <group> (<variables>) VALUES <values>".
  */
-public class Insert extends PreparedBatchUpdate {
+public class Insert extends ProcedureContainer {
 
     /** Identifies the group to be udpdated. */
     private GroupSymbol group;
@@ -261,7 +261,6 @@ public class Insert extends PreparedBatchUpdate {
         
 	    Insert copy = new Insert(copyGroup, copyVars, copyVals);
         this.copyMetadataState(copy);
-        copy.setParameterReferences(this.getParameterReferences());
 		return copy;
 	}
 	

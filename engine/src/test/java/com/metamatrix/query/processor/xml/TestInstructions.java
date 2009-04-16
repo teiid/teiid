@@ -348,7 +348,7 @@ public class TestInstructions extends TestCase {
         
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         XMLPlan temp = new XMLPlan(env);
-        CommandContext context = new CommandContext("pid", null, 100, null, null, null, null); //$NON-NLS-1$
+        CommandContext context = new CommandContext("pid", null, null, null, null); //$NON-NLS-1$
         temp.initialize(context,null,bufferMgr);
 
         List schema = new ArrayList();
@@ -404,7 +404,7 @@ public class TestInstructions extends TestCase {
                 
         BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
         XMLPlan temp = new XMLPlan(env);
-        CommandContext context = new CommandContext("pid", null, 100, null, null, null, null); //$NON-NLS-1$
+        CommandContext context = new CommandContext("pid", null, null, null, null); //$NON-NLS-1$
         temp.initialize(context,null,bufferMgr);
         env.addData(resultSetName, command.getProjectedSymbols(), new List[] { 
                     Arrays.asList( new Object[] { "001", "Lamp", new Integer(5) } ),         //$NON-NLS-1$ //$NON-NLS-2$

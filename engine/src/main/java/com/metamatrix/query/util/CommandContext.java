@@ -23,7 +23,6 @@
 package com.metamatrix.query.util;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 import java.util.Stack;
@@ -58,8 +57,6 @@ public class CommandContext implements Cloneable {
 
     private String userName;
     
-    private Serializable trustedPayload;
-    
     private Serializable commandPayload;
     
     private String vdbName;
@@ -84,8 +81,6 @@ public class CommandContext implements Cloneable {
     
     private SecurityFunctionEvaluator securityFunctionEvaluator;
     
-    private List preparedBatchUpdateValues;
-    
     private Object tempTableStore;
     
     private TimeZone timezone = TimeZone.getDefault();
@@ -101,12 +96,10 @@ public class CommandContext implements Cloneable {
      * @param collectNodeStatistics TODO
      */
     public CommandContext(Object processorID, String connectionID, String userName, 
-        Serializable trustedPayload, Serializable commandPayload, String vdbName, String vdbVersion, Properties envProperties, boolean processDebug, 
-        boolean collectNodeStatistics) {
+        Serializable commandPayload, String vdbName, String vdbVersion, Properties envProperties, boolean processDebug, boolean collectNodeStatistics) {
         setProcessorID(processorID);
         setConnectionID(connectionID);
         setUserName(userName);
-        setTrustedPayload(trustedPayload);
         setCommandPayload(commandPayload);
         setVdbName(vdbName);
         setVdbVersion(vdbVersion);  
@@ -118,11 +111,11 @@ public class CommandContext implements Cloneable {
     /**
      * Construct a new context.
      */
-    public CommandContext(Object processorID, String connectionID, int outputBatchSize, 
-        String userName, Serializable trustedPayLoad, String vdbName, String vdbVersion) {
+    public CommandContext(Object processorID, String connectionID, String userName, 
+        String vdbName, String vdbVersion) {
 
-        this(processorID, connectionID, userName, trustedPayLoad, null, 
-            vdbName, vdbVersion, null, false, false);            
+        this(processorID, connectionID, userName, null, vdbName, 
+            vdbVersion, null, false, false);            
              
     }
 
@@ -133,7 +126,6 @@ public class CommandContext implements Cloneable {
         setProcessorID(context.processorID);
             
         setUserName(context.userName);
-        setTrustedPayload(context.trustedPayload);
         setCommandPayload(context.commandPayload);
         setVdbName(context.vdbName);
         setVdbVersion(context.vdbVersion);   
@@ -147,7 +139,6 @@ public class CommandContext implements Cloneable {
         }
         setOptimisticTransaction(context.isOptimisticTransaction());
         this.setSecurityFunctionEvaluator(context.getSecurityFunctionEvaluator());
-        this.preparedBatchUpdateValues = context.preparedBatchUpdateValues;
         this.planToProcessConverter = context.planToProcessConverter;
         this.queryProcessorFactory = context.queryProcessorFactory;
         this.variableContext = context.variableContext;
@@ -179,21 +170,6 @@ public class CommandContext implements Cloneable {
         processorID = object;
     }
 
-    public boolean equals(Object obj) {
-        if(this == obj) {
-            return true;
-        }
-        
-        if(obj instanceof CommandContext)  {
-            return this.processorID.equals(((CommandContext)obj).getProcessorID());
-        }
-        return false;
-    }
-    
-    public int hashCode() {
-        return this.processorID.hashCode();
-    }
-    
     public Object clone() {
     	return new CommandContext(this);
     }
@@ -207,13 +183,6 @@ public class CommandContext implements Cloneable {
      */
     public String getConnectionID() {
         return connectionID;
-    }
-
-    /**
-     * @return Serializable
-     */
-    public Serializable getTrustedPayload() {
-        return trustedPayload;
     }
 
     /**
@@ -243,14 +212,6 @@ public class CommandContext implements Cloneable {
      */
     public void setConnectionID(String connectionID) {
         this.connectionID = connectionID;
-    }
-
-    /**
-     * Sets the trustedPayLoad.
-     * @param trustedPayLoad The trustedPayLoad to set
-     */
-    public void setTrustedPayload(Serializable trustedPayLoad) {
-        this.trustedPayload = trustedPayLoad;
     }
 
     /**
@@ -402,14 +363,6 @@ public class CommandContext implements Cloneable {
         this.securityFunctionEvaluator = securityFunctionEvaluator;
     }
 
-	public List getPreparedBatchUpdateValues() {
-		return preparedBatchUpdateValues;
-	}
-
-	public void setPreparedBatchUpdateValues(List preparedBatchUpdateValues) {
-		this.preparedBatchUpdateValues = preparedBatchUpdateValues;
-	}
-    
 	public Object getTempTableStore() {
 		return tempTableStore;
 	}

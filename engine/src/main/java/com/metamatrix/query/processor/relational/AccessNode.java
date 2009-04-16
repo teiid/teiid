@@ -28,6 +28,8 @@ import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.query.CriteriaEvaluationException;
+import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
@@ -36,6 +38,7 @@ import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
+import com.metamatrix.query.util.CommandContext;
 
 public class AccessNode extends RelationalNode {
 
@@ -105,18 +108,24 @@ public class AccessNode extends RelationalNode {
 	}
 
     protected boolean prepareNextCommand(Command atomicCommand) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-    	// evaluate all references and any functions on constant values
-        EvaluateExpressionVisitor.replaceExpressions(atomicCommand, true, getDataManager(), getContext());                            
+    	return prepareCommand(atomicCommand, this, this.getContext());
+    }
+
+	static boolean prepareCommand(Command atomicCommand, RelationalNode node, CommandContext context)
+			throws ExpressionEvaluationException, MetaMatrixComponentException,
+			MetaMatrixProcessingException, CriteriaEvaluationException {
+		// evaluate all references and any functions on constant values
+        EvaluateExpressionVisitor.replaceExpressions(atomicCommand, true, node.getDataManager(), context);                            
         
         try {
             // Defect 16059 - Rewrite the command once the references have been replaced with values.
-            QueryRewriter.rewrite(atomicCommand, null, null, getContext());
+            QueryRewriter.rewrite(atomicCommand, null, null, context);
         } catch (QueryValidatorException e) {
             throw new MetaMatrixProcessingException(e, QueryExecPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
         }
         
         return RelationalNodeUtil.shouldExecute(atomicCommand, true);
-    }
+	}
     
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {

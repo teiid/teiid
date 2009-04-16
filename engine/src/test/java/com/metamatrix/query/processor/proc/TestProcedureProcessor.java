@@ -115,7 +115,7 @@ public class TestProcedureProcessor extends TestCase {
         // Process twice, testing reset and clone method of Processor plan
         for (int i=1; i<=2; i++) {
 	        BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
-            CommandContext context = new CommandContext("pID", null, 10, null, null, null, null); //$NON-NLS-1$
+            CommandContext context = new CommandContext("pID", null, null, null, null); //$NON-NLS-1$
             context.getNextRand(0);
             context.setOptimisticTransaction(optimistic);
             context.setProcessDebug(DEBUG);

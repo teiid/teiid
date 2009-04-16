@@ -95,6 +95,7 @@ import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.symbol.Constant;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
 import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.util.CommandContext;
@@ -121,15 +122,15 @@ public class Request implements QueryProcessor.ProcessorFactory {
     private ProcessorDataManager processorDataManager;
     private TransactionService transactionService;
     private TempTableStore tempTableStore;
-    private IDGenerator idGenerator = new IDGenerator();
+    protected IDGenerator idGenerator = new IDGenerator();
     private boolean procDebugAllowed = false;
     private Map connectorCapabilitiesCache;
     DQPWorkContext workContext;
     RequestID requestId;
 
     // acquired state
-    private CapabilitiesFinder capabilitiesFinder;
-    private QueryMetadataInterface metadata;
+    protected CapabilitiesFinder capabilitiesFinder;
+    protected QueryMetadataInterface metadata;
     private Set multiSourceModels;
 
     // internal results
@@ -271,12 +272,11 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 reqID,
                 groupName,
                 workContext.getUserName(),
-                workContext.getTrustedPayload(), 
                 requestMsg.getExecutionPayload(), 
-                workContext.getVdbName(),
+                workContext.getVdbName(), 
                 workContext.getVdbVersion(),
-                props, 
-                useProcDebug(command),
+                props,
+                useProcDebug(command), 
                 collectNodeStatistics(command));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
@@ -290,79 +290,21 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
 
         context.setSecurityFunctionEvaluator((SecurityFunctionEvaluator)this.env.findService(DQPServiceNames.AUTHORIZATION_SERVICE));
-        if(requestMsg.isPreparedBatchUpdate()){
-        	context.setPreparedBatchUpdateValues(requestMsg.getParameterValues());
-        }
         context.setTempTableStore(tempTableStore);
         context.setQueryProcessorFactory(this);
     }
 
-    /**
-     * Side effects:
-     * 		creates the analysis record
-     * 		creates the command context
-     * 		sets the pre-rewrite command on the request
-     * 		adds a limit clause if the row limit is specified
-     * 
-     * @return the post rewrite query
-     * @throws QueryParserException
-     * @throws QueryResolverException
-     * @throws QueryValidatorException
-     * @throws MetaMatrixComponentException
-     */
-    protected Command prepareCommand() throws QueryParserException,
-                                   QueryResolverException,
-                                   QueryValidatorException,
-                                   MetaMatrixComponentException {
-        
-        Command command = getCommand();
-
-        List references = ReferenceCollectorVisitor.getReferences(command);
-        
-        //there should be no reference (?) for query/update executed as statement
-        checkReferences(references);
-        
-        createAnalysisRecord(command);
-                
-        resolveCommand(command, references);
-        
-        createCommandContext(command);
-        
-        validateQuery(command, true);
-        
-        validateQueryValues(command);
-        
-        Command preRewrite = command;
-        
-        command = QueryRewriter.rewrite(command, null, metadata, context);
-        
-        /*
-         * Adds a row limit to a query if Statement.setMaxRows has been called and the command
-         * doesn't already have a limit clause.
-         */
-        if (requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
-            QueryCommand query = (QueryCommand)command;
-            if (query.getLimit() == null) {
-                query.setLimit(new Limit(null, new Constant(new Integer(requestMsg.getRowLimit()), DataTypeManager.DefaultDataClasses.INTEGER)));
-                this.addedLimit = true;
-            }
-        }
-        
-        this.userCommand = preRewrite;
-        return command;
-    }
-    
-    protected void checkReferences(List references) throws QueryValidatorException {
+    protected void checkReferences(List<Reference> references) throws QueryValidatorException {
     	referenceCheck(references);
     }
     
-    static void referenceCheck(List references) throws QueryValidatorException {
+    static void referenceCheck(List<Reference> references) throws QueryValidatorException {
     	if (references != null && !references.isEmpty()) {
     		throw new QueryValidatorException(DQPPlugin.Util.getString("Request.Invalid_character_in_query")); //$NON-NLS-1$
     	}
     }
 
-    protected void resolveCommand(Command command, List references) throws QueryResolverException, MetaMatrixComponentException {
+    protected void resolveCommand(Command command) throws QueryResolverException, MetaMatrixComponentException {
         if (this.tempTableStore != null) {
         	QueryResolver.setChildMetadata(command, tempTableStore.getMetadataStore().getData(), null);
         }
@@ -391,17 +333,15 @@ public class Request implements QueryProcessor.ProcessorFactory {
         validateWithVisitor(visitor, metadata, command, false);
     }
 
-    private Command getCommand() throws QueryParserException {
+    private Command parseCommand() throws QueryParserException {
         String[] commands = requestMsg.getCommands();
         ParseInfo parseInfo = new ParseInfo();
-        if (requestMsg.isDoubleQuotedVariableAllowed()) {
-        	parseInfo.allowDoubleQuotedVariable = true;
-        }
+    	parseInfo.allowDoubleQuotedVariable = requestMsg.isDoubleQuotedVariableAllowed();
         if (!requestMsg.isBatchedUpdate()) {
         	String commandStr = commands[0];
             return QueryParser.getQueryParser().parseCommand(commandStr, parseInfo);
         } 
-        List parsedCommands = new ArrayList(commands.length);
+        List<Command> parsedCommands = new ArrayList<Command>(commands.length);
         for (int i = 0; i < commands.length; i++) {
         	String updateCommand = commands[i];
             parsedCommands.add(QueryParser.getQueryParser().parseCommand(updateCommand, parseInfo));
@@ -497,7 +437,11 @@ public class Request implements QueryProcessor.ProcessorFactory {
     }
 
     /**
-     * side effects:
+     * state side effects:
+     *      creates the analysis record
+     * 		creates the command context
+     * 		sets the pre-rewrite command on the request
+     * 		adds a limit clause if the row limit is specified
      * 		sets the processor plan
      * 
      * @throws MetaMatrixComponentException
@@ -506,8 +450,39 @@ public class Request implements QueryProcessor.ProcessorFactory {
      * @throws QueryResolverException
      * @throws QueryValidatorException
      */
-    protected void generatePlan() throws MetaMatrixComponentException, QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException {
-    	Command command = prepareCommand();
+    protected Command generatePlan() throws MetaMatrixComponentException, QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException {
+        Command command = parseCommand();
+
+        List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
+        
+        //there should be no reference (?) for query/update executed as statement
+        checkReferences(references);
+        
+        createAnalysisRecord(command);
+                
+        resolveCommand(command);
+        
+        createCommandContext(command);
+        
+        validateQuery(command, true);
+        
+        validateQueryValues(command);
+        
+        this.userCommand = command;
+        
+        command = QueryRewriter.rewrite(command, null, metadata, context);
+        
+        /*
+         * Adds a row limit to a query if Statement.setMaxRows has been called and the command
+         * doesn't already have a limit clause.
+         */
+        if (requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
+            QueryCommand query = (QueryCommand)command;
+            if (query.getLimit() == null) {
+                query.setLimit(new Limit(null, new Constant(new Integer(requestMsg.getRowLimit()), DataTypeManager.DefaultDataClasses.INTEGER)));
+                this.addedLimit = true;
+            }
+        }
         
         try {
         	// If using multi-source models, insert a proxy to simplify the supported capabilities.  This is 
@@ -538,6 +513,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             String msg = DQPPlugin.Util.getString("DQPCore.Unknown_query_metadata_exception_while_registering_query__{0}.", params); //$NON-NLS-1$
             throw new QueryPlannerException(e, msg);
         }
+        return command;
     }
 
     private void setSchemasForXMLPlan(Command command, QueryMetadataInterface metadata)
@@ -628,7 +604,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
 		Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
         QueryResolver.resolveCommand(newCommand, metadata);            
         
-        List references = ReferenceCollectorVisitor.getReferences(newCommand);
+        List<Reference> references = ReferenceCollectorVisitor.getReferences(newCommand);
         
         referenceCheck(references);
         
