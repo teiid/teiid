@@ -24,25 +24,26 @@ package com.metamatrix.platform.admin.api.runtime;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
+import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.HostControllerRegistryBinding;
-import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.registry.ProcessRegistryBinding;
+import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
@@ -178,7 +179,7 @@ public class SystemStateBuilder {
             						vmBinding.getProcessName(),
             						String.valueOf(vmBinding.getPort()),
             						null,    // deployed component id
-            						new ArrayList(),
+            						Collections.EMPTY_LIST,
             						false, // not deployed
             						true); // registered
         }
@@ -186,8 +187,8 @@ public class SystemStateBuilder {
         // ServiceBindings for vm
         List bindings = this.registry.getServiceBindings(vmBinding.getHostName(), vmBinding.getProcessName()); 
 
-        // Map of pscIDs -> List of services
-        Map pscMap = new HashMap();
+         Set<ServiceComponentDefnID> serviceKeys = new HashSet<ServiceComponentDefnID>(bindings.size());
+        Set<ServiceData> serviceDatas = new HashSet<ServiceData>(bindings.size());
 
         // get all running services from registry.
         // for each create ServiceData object and add to the appropriate list
@@ -195,22 +196,11 @@ public class SystemStateBuilder {
         while (iter.hasNext()) {
             ServiceRegistryBinding svcBinding = (ServiceRegistryBinding) iter.next();
 
-            // get the pscID for service
-            ProductServiceConfigID id = svcBinding.getPscID();
-            if (id == null) {
-                id = new ProductServiceConfigID("Default PSC"); //$NON-NLS-1$
-            }
-            // get list for psc, if does not exist then create one.
-            List list = (List) pscMap.get(id);
-            if (list == null) {
-                list = new ArrayList();
-                pscMap.put(id, list);
-            }
-
             // create a ServiceData object and add to list
             // Note: createServiceData removes svc from global deployedServicesList.
-            list.add(createServiceData(svcBinding));
-        }
+            serviceKeys.add(svcBinding.getDeployedComponent().getServiceComponentDefnID());
+            serviceDatas.add(createServiceData(svcBinding));
+         }
 
         // now get all deployed services for this vm that are not running.
         List cmpList = new ArrayList(deployedComponents);
@@ -223,45 +213,31 @@ public class SystemStateBuilder {
                 DeployedComponent dCmp = (DeployedComponent) o;
                 // check to see if this component belongs to this vm
                 if (vmBinding.getDeployedComponent().getID().equals(dCmp.getVMComponentDefnID()) &&
-                    dCmp.getServiceComponentDefnID() != null) {
+                    dCmp.getServiceComponentDefnID() != null &&
+                    ! serviceKeys.contains(dCmp.getServiceComponentDefnID() ) ){
     
-                    ProductServiceConfigID id = dCmp.getProductServiceConfigID();
-                    if (id == null) {
-                        id = new ProductServiceConfigID("Default PSC"); //$NON-NLS-1$
-                    }
-                    List list = (List) pscMap.get(id);
-                    if (list == null) {
-                        list = new ArrayList();
-                        pscMap.put(id, list);
-                    }
                     String essentialStr = dCmp.getProperty(ServicePropertyNames.SERVICE_ESSENTIAL);
                     boolean essential = false;
                     if (essentialStr != null && essentialStr.trim().length() != 0) {
                         essential = Boolean.valueOf(essentialStr).booleanValue();
                     }
+                    
+                    serviceKeys.add(dCmp.getServiceComponentDefnID());
+                    serviceDatas.add(new ServiceData(null, dCmp.getComponentTypeID().getFullName(),
+                            null, dCmp.getServiceComponentDefnID(),
+                            dCmp.getName(), null,
+                            ServiceState.STATE_NOT_REGISTERED, new Date(), essential, true, false, null));
+
     
-                    list.add(new ServiceData(null, dCmp.getComponentTypeID().getFullName(),
-                                             null, dCmp.getServiceComponentDefnID(),
-                                             dCmp, null,
-                                             ServiceState.STATE_NOT_REGISTERED, new Date(), essential, true, false, null)); // deployed, not registered.
+//                    svcMap.put(dCmp.getServiceComponentDefnID(), new ServiceData(null, dCmp.getComponentTypeID().getFullName(),
+//                                             null, dCmp.getServiceComponentDefnID(),
+//                                             dCmp.getName(), null,
+//                                             ServiceState.STATE_NOT_REGISTERED, new Date(), essential, true, false, null)); // deployed, not registered.
     
                     deployedComponents.remove(dCmp);
                 }
             }
         }
-
-        // ok we now have a map of pscID's -> list of ServiceData objects
-        // create a list of psc's
-        List pscList = new ArrayList();
-        Iterator pscIter = pscMap.keySet().iterator();
-        String processName = vmBinding.getProcessName();
-
-        while (pscIter.hasNext()) {
-            ProductServiceConfigID pId = (ProductServiceConfigID) pscIter.next();
-            List sList = (List) pscMap.get(pId);
-            pscList.add(createPSCData(pId, sList, processName));
-        }
-
         // determine if process/vm is deployed
         VMComponentDefn dc = vmBinding.getDeployedComponent();
         boolean deployed = deployedComponents.contains(dc);
@@ -270,11 +246,12 @@ public class SystemStateBuilder {
             deployedComponents.remove(dc);
         }
 
+        
         return new ProcessData(	vmBinding.getHostName(),
         						vmBinding.getProcessName(), 
         						vmBinding.getPort(),
         						(VMComponentDefnID) vmBinding.getDeployedComponent().getID(),
-        						pscList,  
+        						serviceDatas,  
         						deployed, true);
     }
 
@@ -293,43 +270,43 @@ public class SystemStateBuilder {
         }
 
         // Map of PscID -> List of ServiceData objects
-        Map pscMap = new HashMap();
+        Collection svcList =  new ArrayList();
 
         Iterator iter = deployedServices.iterator();
         while (iter.hasNext()) {
             DeployedComponent dCmp = (DeployedComponent) iter.next();
-            ProductServiceConfigID id = dCmp.getProductServiceConfigID();
-            if (id == null) {
-                id = new ProductServiceConfigID("Default PSC"); //$NON-NLS-1$
-            }
-            List list = (List) pscMap.get(id);
-            if (list == null) {
-                list = new ArrayList();
-                pscMap.put(id, list);
-            }
+//            ProductServiceConfigID id = dCmp.getProductServiceConfigID();
+//            if (id == null) {
+//                id = new ProductServiceConfigID("Default PSC"); //$NON-NLS-1$
+//            }
+//            List list = (List) pscMap.get(id);
+//            if (list == null) {
+//                list = new ArrayList();
+//                pscMap.put(id, list);
+//            }
             String essentialStr = dCmp.getProperty(ServicePropertyNames.SERVICE_ESSENTIAL);
             boolean essential = false;
             if (essentialStr != null && essentialStr.trim().length() != 0) {
                 essential = Boolean.valueOf(essentialStr).booleanValue();
             }
-            list.add(new ServiceData(null, dCmp.getComponentTypeID().getName(),
+            svcList.add(new ServiceData(null, dCmp.getComponentTypeID().getName(),
                                      null, dCmp.getServiceComponentDefnID(),
-                                     dCmp, null,
+                                     dCmp.getName(), null,
                                      ServiceState.STATE_NOT_REGISTERED, new Date(), essential, true, false, null)); // deployed, not registered
         }
 
 
         // ok we now have a map of pscID's -> list of ServiceData objects
         // create a list of psc's
-        List pscList = new ArrayList();
-        Iterator pscIter = pscMap.keySet().iterator();
-        String processName = deployedVM.getName();
-
-        while (pscIter.hasNext()) {
-            ProductServiceConfigID pId = (ProductServiceConfigID) pscIter.next();
-            List sList = (List) pscMap.get(pId);
-            pscList.add(createPSCData(pId, sList, processName));
-        }
+//        List pscList = new ArrayList();
+//        Iterator pscIter = pscMap.keySet().iterator();
+//        String processName = deployedVM.getName();
+//
+//        while (pscIter.hasNext()) {
+//            ProductServiceConfigID pId = (ProductServiceConfigID) pscIter.next();
+//            List sList = (List) pscMap.get(pId);
+//            pscList.add(createPSCData(pId, sList, processName));
+//        }
 
         deployedComponents.remove(deployedVM);
 
@@ -338,16 +315,16 @@ public class SystemStateBuilder {
         return new ProcessData(	hostName,
         						deployedVM.getName(), deployedVM.getPort(),
                                (VMComponentDefnID)deployedVM.getID(),
-                               pscList,  
+                               svcList,  
                                true, false); // deployed, not registered
     }
 
     /**
      * Create PSCData object.
      */
-    private PSCData createPSCData(ProductServiceConfigID pscID, List services, String processName) {
-        return new PSCData(pscID, services, processName);
-    }
+//    private PSCData createPSCData(ProductServiceConfigID pscID, List services, String processName) {
+//        return new PSCData(pscID, services, processName);
+//    }
 
     /**
      * Create ServiceData object from the serviceBinding
@@ -370,7 +347,7 @@ public class SystemStateBuilder {
             deployedComponents.remove(deployedComponent);
         }
 
-        return new ServiceData(id,serviceName,instanceName,defnID,deployedComponent,queues,state,stateDate,essential, deployed, true, serviceBinding.getInitException()); // registered
+        return new ServiceData(id,serviceName,instanceName,defnID,deployedComponent.getName(),queues,state,stateDate,essential, deployed, true, serviceBinding.getInitException()); // registered
     }
 
 }

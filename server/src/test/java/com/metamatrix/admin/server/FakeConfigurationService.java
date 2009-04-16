@@ -49,25 +49,24 @@ import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.HostType;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.SharedResourceID;
 import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.InvalidArgumentException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
+import com.metamatrix.common.config.model.BasicComponentObject;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.BasicConnectorBindingType;
 import com.metamatrix.common.config.model.BasicHost;
 import com.metamatrix.common.config.model.BasicSharedResource;
 import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
-import com.metamatrix.common.config.model.ConfigurationObjectEditorHelper;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
@@ -87,8 +86,15 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
         File configFile = new File(CONFIG_FILE_PATH);
         config = (ConfigurationModelContainerImpl)importConfigurationModel(configFile, Configuration.NEXT_STARTUP_ID);
     }
+    
+    
 
-    /**
+
+
+
+
+
+	/**
      * Import a configuration file to work with.
      *  
      * @param fileToImport
@@ -113,15 +119,15 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
         return configModel;
     }
     
-    private ProductServiceConfig getPSCByName(Configuration config,
-            String pscName) throws InvalidArgumentException {
-		ProductServiceConfig result = null;
-		if (config != null) {
-			ProductServiceConfigID pscID = new ProductServiceConfigID(((ConfigurationID)config.getID()), pscName);
-			result = config.getPSC(pscID);
-		}
-		return result;
-	}
+//    private ProductServiceConfig getPSCByName(Configuration config,
+//            String pscName) throws InvalidArgumentException {
+//		ProductServiceConfig result = null;
+//		if (config != null) {
+//			ProductServiceConfigID pscID = new ProductServiceConfigID(((ConfigurationID)config.getID()), pscName);
+//			result = config.getPSC(pscID);
+//		}
+//		return result;
+//	}
 
     public Host addHost(String hostName,
                         String principalName,
@@ -391,15 +397,18 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
         List results = new ArrayList();
         
         SharedResourceID resourceID1 = new SharedResourceID("resource1"); //$NON-NLS-1$
-        SharedResource resource1 = new BasicSharedResource(resourceID1, SharedResource.JDBC_COMPONENT_TYPE_ID);
-        ConfigurationObjectEditorHelper.addProperty(resource1, "prop1", "value1"); //$NON-NLS-1$ //$NON-NLS-2$
-        ConfigurationObjectEditorHelper.addProperty(resource1, Resource.RESOURCE_POOL, "pool"); //$NON-NLS-1$ 
+        SharedResource resource1 = new BasicSharedResource(resourceID1, SharedResource.MISC_COMPONENT_TYPE_ID);
+        
+        BasicComponentObject target = (BasicComponentObject) resource1;
+
+        target.addProperty("prop1", "value1");
+        target.addProperty(Resource.RESOURCE_POOL, "pool");
         
         results.add(resource1);
         
         
         SharedResourceID resourceID2 = new SharedResourceID("resource2"); //$NON-NLS-1$
-        SharedResource resource2 = new BasicSharedResource(resourceID2, SharedResource.JDBC_COMPONENT_TYPE_ID);
+        SharedResource resource2 = new BasicSharedResource(resourceID2, SharedResource.MISC_COMPONENT_TYPE_ID);
         results.add(resource2);
 
         
@@ -544,7 +553,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public ConnectorBinding createConnectorBinding(String connectorBindingName,
                                                    String connectorType,
-                                                   String pscName,
+                                                   String vmName,
                                                    String principalName,
                                                    Properties properties) throws ConfigurationException {
         return null;
@@ -576,11 +585,12 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 			//deploy to the specified PSC
 			Configuration config = getNextStartupConfiguration();
 			if (pscName != null && !pscName.equals("")) { //$NON-NLS-1$
-			ProductServiceConfig psc = this.getPSCByName(config, pscName);
+//			ProductServiceConfig psc = this.getPSCByName(config, pscName);
 			ServiceComponentDefnID bindingID = (ServiceComponentDefnID) newBinding.getID();
-			editor.addServiceComponentDefn(psc, bindingID);
+//			editor.addServiceComponentDefn(psc, bindingID);
 			
-			editor.deployServiceDefn(config, newBinding, (ProductServiceConfigID)psc.getID());
+			VMComponentDefn vm = (VMComponentDefn) config.getVMComponentDefns().iterator().next();
+			editor.deployServiceDefn(config, newBinding, (VMComponentDefnID) vm.getID());
 			}            
 		
 		} catch (Exception theException) {
@@ -640,16 +650,16 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
                                             ModificationException{
     }
 
-    /** 
-     * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#deployPSC(com.metamatrix.common.config.api.Host, com.metamatrix.common.config.api.VMComponentDefn, java.lang.String, java.lang.String)
-     */
-    public Collection deployPSC(Host theHost,
-                                VMComponentDefn theProcess,
-                                String pscName,
-                                String principalName) throws ConfigurationException,
-                                                     ModificationException{
-        return null;
-    }
+    
+    
+
+    @Override
+	public DeployedComponent deployService(VMComponentDefnID theProcessID,
+			String serviceName, String principalName)
+			throws ConfigurationException, ModificationException {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#checkPropertiesDecryptable(java.util.List)

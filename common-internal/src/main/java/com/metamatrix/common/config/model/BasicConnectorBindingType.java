@@ -31,13 +31,12 @@ import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.core.util.MetaMatrixProductVersion;
 
 public class BasicConnectorBindingType extends BasicComponentType implements ConnectorBindingType {
     
     public static final long serialVersionUID = 1592753260156781311L;
     
-    private static final String XA_CONNECTOR = "XA Connector";//$NON-NLS-1$
+ //   private static final String XA_CONNECTOR = "XA Connector";//$NON-NLS-1$
 
     public BasicConnectorBindingType(ComponentTypeID id, ComponentTypeID parentID, ComponentTypeID superID, boolean deployable, boolean deprecated, boolean monitored) {
         super(id, parentID, superID, deployable, deprecated, monitored);
@@ -54,24 +53,17 @@ public class BasicConnectorBindingType extends BasicComponentType implements Con
         super(copy);
     }
     
-    public boolean isOfConnectorProductType() {
-        if (getParentComponentTypeID().getFullName().equalsIgnoreCase(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME)) {
-            return true;
-        }
-        return false;
-    }    
+//    public boolean isOfConnectorProductType() {
+//        if (getParentComponentTypeID().getFullName().equalsIgnoreCase(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME)) {
+//            return true;
+//        }
+//        return false;
+//    }    
 
     public boolean isOfTypeConnector() {
         return true;
     }
-    
-    public boolean isOfTypeXAConnector() {
-        if (this.getFullName().endsWith(XA_CONNECTOR)) {
-            return true;
-        }
-
-        return false;
-    }    
+     
 
 
     public synchronized Object clone() {

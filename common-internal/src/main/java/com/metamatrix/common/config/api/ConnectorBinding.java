@@ -35,4 +35,13 @@ public interface ConnectorBinding extends ServiceComponentDefn {
     String getConnectorClass();
     
     String getDeployedName();
+    
+    /**
+     * Returns true if this component type supports XA transactions. 
+     * If this is <code>true</code>, then @link #isOfTypeConnector()
+     * will also be true.  However, @link #isOfTypeConnector() can be true
+     * and this can be <code>false</code>.
+     * @return boolean true if a connector type
+     */
+    boolean isXASupported(); 
 }

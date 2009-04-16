@@ -33,8 +33,14 @@ import com.metamatrix.core.util.HashCodeUtil;
  */
 public class ProcessData extends ComponentData {
 
-    /** Map of ServiceID to ServiceRegistryBindings */
-    private Collection pscs;
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4648970293578256936L;
+
+	/** Collection of serviceData objects */
+    private Collection<ServiceData> services;
 
     /** defines vm in configuration */
     private ComponentDefnID defnID;
@@ -51,20 +57,24 @@ public class ProcessData extends ComponentData {
      * @param vmController VMController implementation
      * @param hostName Name of host VM is running on
      */
-    public ProcessData(String hostName, String processName, String port, ComponentDefnID defnID,  Collection pscs,  boolean deployed, boolean registered) {
+    public ProcessData(String hostName, String processName, String port, ComponentDefnID defnID,  Collection<ServiceData> services,  boolean deployed, boolean registered) {
         super(processName, deployed, registered);
         this.hostName = hostName;
         this.defnID = defnID;
-        this.pscs = pscs;
+        this.services = services;
         this.port = port;
+        
         computeHashCode();
     }
 
     /**
-     * Return a collection of PSCData objects.
+     * Return a list of all ServiceData objects
+     *
+     * @return List of ServiceData objects
      */
-    public Collection getPSCs() {
-        return pscs;
+    public Collection<ServiceData> getServices() {
+
+        return services;
     }
 
 

@@ -30,6 +30,7 @@ import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
+import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingID;
 import com.metamatrix.common.config.api.DeployedComponent;
@@ -37,11 +38,7 @@ import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.HostType;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigComponentType;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ProductType;
-import com.metamatrix.common.config.api.ProductTypeID;
+
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
@@ -60,6 +57,20 @@ import com.metamatrix.core.util.Assertion;
  * @since 4.2
  */
 public class BasicUtil {
+	
+	   private static BasicConfigurationObjectEditor editor = new BasicConfigurationObjectEditor();
+
+	    
+	    /**
+	     * Returns a COnfigurationObjectEditor that does not create actions.  This editor,
+	     * because it doesn't maintain any state, is sharable for reuse. 
+	     * @return
+	     * @since 4.3
+	     */
+	    public static ConfigurationObjectEditor getEditor() {
+	        return editor;
+	    }    
+
 
     /**
      *  static method that is used to create the specified instance type of BasicComponentDefn.
@@ -73,19 +84,13 @@ public class BasicUtil {
     public static final BasicComponentDefn createComponentDefn(int defnTypeCode, ConfigurationID configID, ComponentTypeID typeID, String defnName)  {
 
         BasicComponentDefn defn = null;
-//        if (defnTypeCode == ComponentDefn.VM_COMPONENT_CODE) {
-//            VMComponentDefnID vmID = new VMComponentDefnID(configID, defnName);
-//            defn = new BasicVMComponentDefn(configID, vmID, typeID);
 //            
-//            
-//        } else 
-            
-        if (defnTypeCode == ComponentDefn.RESOURCE_DESCRIPTOR_COMPONENT_CODE) {
-            ResourceDescriptorID descriptorID = new ResourceDescriptorID(configID,defnName);
-            defn = new BasicResourceDescriptor(configID, descriptorID, typeID);
-           
+//        if (defnTypeCode == ComponentDefn.RESOURCE_DESCRIPTOR_COMPONENT_CODE) {
+//            ResourceDescriptorID descriptorID = new ResourceDescriptorID(configID,defnName);
+//            defn = new BasicResourceDescriptor(configID, descriptorID, typeID);
+//           
                              
-        } else if (defnTypeCode == ComponentDefn.CONNECTOR_COMPONENT_CODE) { 
+        if (defnTypeCode == ComponentDefn.CONNECTOR_COMPONENT_CODE) { 
             ConnectorBindingID conID = new ConnectorBindingID(configID, defnName);
             defn = new BasicConnectorBinding(configID, conID, typeID);                    
 
@@ -114,35 +119,12 @@ public class BasicUtil {
         if (defnTypeCode == ComponentDefn.VM_COMPONENT_CODE) {
             VMComponentDefnID vmID = new VMComponentDefnID(configID, hostID, defnName);
             defn = new BasicVMComponentDefn(configID, hostID, vmID, typeID);
-        }
-        return defn;
-    }
-    
-    
-    /**
-     *  static method that is used to create the specified instance type of BasicComponentDefn.
-     *  @param defnTypeCode identifies the type of class this component defn should represent
-     *      @see ComponentDefn for type codes
-     *  @param configID is the ConfigurationID identifying what configuration this defn belongs
-     *  @param typeID is the ComponentTypeID identifying this new created BasicComponentType
-     *  @param defnName is the name of the component defn
-     *  @return BasicComponentDefn
-     */
-    public static final BasicComponentDefn createComponentDefn(int defnTypeCode, ConfigurationID configID, ProductTypeID typeID, String defnName)  {
-
-        BasicComponentDefn defn = null;
-            
-        if (defnTypeCode == ComponentDefn.PSC_COMPONENT_CODE) { 
-            ProductServiceConfigID pscID = new ProductServiceConfigID(configID, defnName);
-            defn = new BasicProductServiceConfig(configID, pscID, typeID);            
-                             
         } else {
-           Assertion.assertTrue(true, "DefnTypeCode:" + defnTypeCode + " is not defined in BasicUtil.createComponentDefn"); //$NON-NLS-1$ //$NON-NLS-2$
-        }
-        
+            Assertion.assertTrue(true, "DefnTypeCode:" + defnTypeCode + " is not defined in BasicUtil.createComponentODefn for VM"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
         return defn;
     }
-    
     
     
     /**
@@ -161,17 +143,14 @@ public class BasicUtil {
         if (defnTypeCode == ComponentDefn.SHARED_RESOURCE_COMPONENT_CODE) {
              SharedResourceID id = new SharedResourceID(objName);
              defn = new BasicSharedResource(id, typeID);
-//        } else if (defnTypeCode == ComponentDefn.PRODUCT_COMPONENT_CODE) {
-//             ProductTypeID id = new ProductTypeID(objName);
-//             defn = new BasicProductType(id, typeID);     
-//
         } else {
                 Assertion.assertTrue(true, "DefnTypeCode:" + defnTypeCode + " is not defined in BasicUtil.createComponentObject"); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         return defn;
     }
-   
+    
+ 
 
     /**
      *  static method that is used to create the specified instance type of BasicComponentType.
@@ -198,10 +177,6 @@ public class BasicUtil {
         } else if (name.equalsIgnoreCase(Configuration.COMPONENT_TYPE_NAME)) {
             type = new BasicComponentType(typeID, parentID, superID, deployable, false, monitored);
             classTypeCode =  ComponentType.CONFIGURATION_COMPONENT_TYPE_CODE;
-        
-        } else if (name.equalsIgnoreCase(ProductServiceConfigComponentType.COMPONENT_TYPE_NAME)) {
-            type = new BasicProductServiceConfigType(typeID, parentID, superID, deployable, false, monitored);
-            classTypeCode =  ComponentType.PSC_COMPONENT_TYPE_CODE;
            
         } else if (name.equalsIgnoreCase("DeployedComponent")) { //$NON-NLS-1$
  //           type = new BasicDeployedComponentType(typeID, parentID, superID, deployable, false, monitored);
@@ -209,23 +184,12 @@ public class BasicUtil {
 
             classTypeCode =  ComponentType.DEPLOYED_COMPONENT_TYPE_CODE;
             
-            
-            
-        } else //if (name.equalsIgnoreCase(ProductType.COMPONENT_TYPE_NAME) ||
-                        if (       classTypeCode == ComponentType.PRODUCT_COMPONENT_TYPE_CODE ) {
-            ProductTypeID prodtypeID = new ProductTypeID(name);
-            classTypeCode =  ComponentType.PRODUCT_COMPONENT_TYPE_CODE;
-            
-            type = new BasicProductType(prodtypeID, parentID, superID, deployable, false, monitored);
-            
         } else if (classTypeCode == ComponentType.CONNECTOR_COMPONENT_TYPE_CODE) {
             type = new BasicConnectorBindingType(typeID, parentID, superID, deployable, false, monitored);
         } else if (classTypeCode == ComponentType.AUTHPROVIDER_COMPONENT_TYPE_CODE) {
             type = new BasicAuthenticationProviderType(typeID, parentID, superID, deployable, false, monitored);
         } else if (classTypeCode == ComponentType.SERVICE_COMPONENT_TYPE_CODE) {
             type = new BasicServiceComponentType(typeID, parentID, superID, deployable, false, monitored);
-        } else if (classTypeCode == ComponentType.PSC_COMPONENT_TYPE_CODE) {
-            type = new BasicProductServiceConfigType(typeID, parentID, superID, deployable, false, monitored);
         
 //        } else if (classTypeCode == ComponentDefn.VM_COMPONENT_TYPE_CODE) {
 //            type = new BasicVMComponentDefnType(typeID, parentID, superID, deployable, false, monitored);            
@@ -244,24 +208,29 @@ public class BasicUtil {
 
             
         } else {
-            Assertion.assertTrue(true, "ClassTypeCode:" + classTypeCode + " is not defined in BasicUtil.createComponentType"); //$NON-NLS-1$ //$NON-NLS-2$
+        	throw new RuntimeException("ComponentType Exception "  + classTypeCode);
+            //Assertion.assertTrue(true, "ClassTypeCode:" + classTypeCode + " is not defined in BasicUtil.createComponentType"); //$NON-NLS-1$ //$NON-NLS-2$
         }
+        
+        if (type == null) {
+        	throw new RuntimeException("Null Type");
+        }
+        
 
         type.setComponentTypeCode(classTypeCode);
 
         return type;
     }
     
-    public static BasicDeployedComponent createDeployedComponent(String name, ConfigurationID configID, HostID hostID, VMComponentDefnID vmID, ServiceComponentDefnID svcID, ProductServiceConfigID pscID, ComponentTypeID typeID) {
+    public static BasicDeployedComponent createDeployedComponent(String name, ConfigurationID configID, HostID hostID, VMComponentDefnID vmID, ServiceComponentDefnID svcID, ComponentTypeID typeID) {
 
-        DeployedComponentID id = new DeployedComponentID(name, configID,  hostID, vmID, pscID, svcID);
+        DeployedComponentID id = new DeployedComponentID(name, configID,  hostID, vmID, svcID);
         
         BasicDeployedComponent deployComponent = new BasicDeployedComponent(id,
                                                                             configID,
                                                                             hostID,
                                                                             vmID,
-                                                                            svcID,
-                                                                            pscID,
+                                                                            svcID,                                                                     
                                                                             typeID);
         return deployComponent;
     }
@@ -284,8 +253,6 @@ public class BasicUtil {
  public static int getComponentType(BaseObject defn) {
   if (defn instanceof Host) {
       return ComponentType.HOST_COMPONENT_TYPE_CODE;
-  } else if (defn instanceof ProductServiceConfig) {
-      return ComponentType.PSC_COMPONENT_TYPE_CODE;
   }else if(defn instanceof VMComponentDefn) {
       return ComponentType.VM_COMPONENT_TYPE_CODE;
   }else if(defn instanceof ConnectorBinding) {
@@ -311,9 +278,7 @@ public class BasicUtil {
   static int getComponentType(BaseID defnID) {
      if (defnID instanceof HostID) {
          return ComponentType.HOST_COMPONENT_TYPE_CODE;
-     } else if (defnID instanceof ProductServiceConfigID) {
-         return ComponentType.PSC_COMPONENT_TYPE_CODE;
-     }else if(defnID instanceof VMComponentDefnID) {
+      }else if(defnID instanceof VMComponentDefnID) {
          return ComponentType.VM_COMPONENT_TYPE_CODE;
      }else if(defnID instanceof ResourceDescriptorID) {
          return ComponentType.RESOURCE_COMPONENT_TYPE_CODE;   
@@ -346,14 +311,12 @@ public class BasicUtil {
 public static int getComponentDefnType(BaseObject defn) {
     if (defn instanceof Host) {
         return ComponentDefn.HOST_COMPONENT_CODE;
-    } else if (defn instanceof ProductServiceConfig) {
-        return ComponentDefn.PSC_COMPONENT_CODE;
     }else if(defn instanceof VMComponentDefn) {
         return ComponentDefn.VM_COMPONENT_CODE;
     }else if(defn instanceof ConnectorBinding) {
         return ComponentDefn.CONNECTOR_COMPONENT_CODE;            
-    }else if(defn instanceof ResourceDescriptor) {
-        return ComponentDefn.RESOURCE_DESCRIPTOR_COMPONENT_CODE;
+//    }else if(defn instanceof ResourceDescriptor) {
+//        return ComponentDefn.RESOURCE_DESCRIPTOR_COMPONENT_CODE;
     }else if(defn instanceof ServiceComponentDefn) {
         return ComponentDefn.SERVICE_COMPONENT_CODE;   
     }else if(defn instanceof AuthenticationProvider) {
@@ -364,8 +327,7 @@ public static int getComponentDefnType(BaseObject defn) {
         return ComponentDefn.DEPLOYED_COMPONENT_CODE;
     } else if (defn instanceof SharedResource) {
         return ComponentDefn.SHARED_RESOURCE_COMPONENT_CODE;      
-    } else if (defn instanceof ProductType) {
-        return ComponentDefn.PRODUCT_COMPONENT_CODE;      
+
         
     } else {
         Assertion.assertTrue(false, "Process Error: component defn object of type " + defn.getClass().getName() + " not accounted for."); //$NON-NLS-1$ //$NON-NLS-2$
@@ -374,38 +336,80 @@ public static int getComponentDefnType(BaseObject defn) {
     return -1;
 }  
 
-public static int getComponentDefnType(BaseID id) {
-    if (id instanceof HostID) {
-        return ComponentDefn.HOST_COMPONENT_CODE;
-    } else if (id instanceof ProductServiceConfigID) {
-        return ComponentDefn.PSC_COMPONENT_CODE;
-    }else if(id instanceof VMComponentDefnID) {
-        return ComponentDefn.VM_COMPONENT_CODE;
-    }else if(id instanceof ConnectorBindingID) {
-        return ComponentDefn.CONNECTOR_COMPONENT_CODE;            
-    }else if(id instanceof ResourceDescriptorID) {
-        return ComponentDefn.RESOURCE_DESCRIPTOR_COMPONENT_CODE;
-    }else if(id instanceof ServiceComponentDefnID) {
-        return ComponentDefn.SERVICE_COMPONENT_CODE;  
-    }else if(id instanceof AuthenticationProviderID) {
-        return ComponentDefn.AUTHPROVIDER_COMPONENT_CODE;   
-    }else if (id instanceof ConfigurationID) {
-        return ComponentDefn.CONFIGURATION_COMPONENT_CODE;
-    } else if (id instanceof DeployedComponentID) {
-        return ComponentDefn.DEPLOYED_COMPONENT_CODE;
-    } else if (id instanceof SharedResourceID) {
-        return ComponentDefn.SHARED_RESOURCE_COMPONENT_CODE;      
-    } else if (id instanceof ProductTypeID) {
-        return ComponentDefn.PRODUCT_COMPONENT_CODE;      
-        
-    } else {
-        Assertion.assertTrue(false, "Process Error: component defn object of type " + id.getClass().getName() + " not accounted for."); //$NON-NLS-1$ //$NON-NLS-2$
-    }
 
-    return -1;
-}  
-  
-    
+public static boolean isValdComponentTypeCode(int code) {
+	switch (code) {
+	case ComponentType.AUTHPROVIDER_COMPONENT_TYPE_CODE:
+	case ComponentType.CONFIGURATION_COMPONENT_TYPE_CODE:
+	case ComponentType.CONNECTOR_COMPONENT_TYPE_CODE:
+	case ComponentType.DEPLOYED_COMPONENT_TYPE_CODE:
+	case ComponentType.HOST_COMPONENT_TYPE_CODE:
+	case ComponentType.PRODUCT_COMPONENT_TYPE_CODE:
+	case ComponentType.RESOURCE_COMPONENT_TYPE_CODE:
+	case ComponentType.SERVICE_COMPONENT_TYPE_CODE:
+	case ComponentType.VM_COMPONENT_TYPE_CODE:
+		return true;
+
+	//	break;
+	}
+	return false;
+}
+
+
+// ----------------------------------------------------------------------------------
+//                  M O D I F I C A T I O N    M E T H O D S
+// ----------------------------------------------------------------------------------
+
+public static ComponentType setLastChangedHistory(ComponentType type, String lastChangedBy, String lastChangedDate) {
+	Assertion.isNotNull(type);
+
+    BasicComponentType target = (BasicComponentType) type;
+
+     	target.setLastChangedBy(lastChangedBy);
+     	target.setLastChangedDate(lastChangedDate);
+
+ 	return target;
+
+}
+public static ComponentType setCreationChangedHistory(ComponentType type, String createdBy, String creationDate) {
+	Assertion.isNotNull(type);
+
+    BasicComponentType target = (BasicComponentType) type;
+
+     	target.setCreatedBy(createdBy);
+     	target.setCreatedDate(creationDate);
+
+ 	return target;
+}
+
+
+public static ComponentObject setLastChangedHistory(ComponentObject defn, String lastChangedBy, String lastChangedDate) {
+	Assertion.isNotNull(defn);
+
+    BasicComponentObject target = (BasicComponentObject) defn;
+
+    	target.setLastChangedBy(lastChangedBy);
+
+     	target.setLastChangedDate(lastChangedDate);
+
+ 	return target;
+
+}
+//public static boolean set = false;
+public static ComponentObject setCreationChangedHistory(ComponentObject defn, String createdBy, String creationDate) {
+	Assertion.isNotNull(defn);
+
+    BasicComponentObject target = (BasicComponentObject) defn;
+
+     	target.setCreatedBy(createdBy);
+     	target.setCreatedDate(creationDate);
+
+
+	return target;
+
+}
+
+
     
 
 }

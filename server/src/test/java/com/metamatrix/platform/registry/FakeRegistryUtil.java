@@ -40,7 +40,6 @@ import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefnType;
@@ -88,7 +87,7 @@ public class FakeRegistryUtil {
 		ServiceID sid1 = new ServiceID(5, vmBinding2.getHostName(),vmBinding2.getProcessName());
 		registry.addServiceBinding(vmBinding2.getHostName(), vmBinding2.getProcessName(), new ServiceRegistryBinding(sid1, new FakeQueryService(sid1), QueryService.SERVICE_NAME,
                                                                     "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                                                                    "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
+                                                                    "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4),  //$NON-NLS-1$ //$NON-NLS-2$ 
                                                                     ServiceState.STATE_CLOSED,
                                                                     new Date(),  
                                                                     false, new NoOpMessageBus()));
@@ -96,7 +95,7 @@ public class FakeRegistryUtil {
 		ServiceID sid2 = new ServiceID(6, vmBinding3.getHostName(),vmBinding3.getProcessName());	
 		registry.addServiceBinding(vmBinding3.getHostName(), vmBinding3.getProcessName(), new ServiceRegistryBinding(sid2, new FakeQueryService(sid2), QueryService.SERVICE_NAME,
                 "dqp3", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                "dqp3", "3.3.3.3", (DeployedComponent)new FakeConfiguration().deployedComponents.get(5), null, //$NON-NLS-1$ //$NON-NLS-2$ 
+                "dqp3", "3.3.3.3", (DeployedComponent)new FakeConfiguration().deployedComponents.get(5),  //$NON-NLS-1$ //$NON-NLS-2$ 
                 ServiceState.STATE_CLOSED,
                 new Date(),  
                 false, new NoOpMessageBus())); 
@@ -126,11 +125,10 @@ public class FakeRegistryUtil {
         DeployedComponentID deployedComponentID1 = new DeployedComponentID(name, Configuration.NEXT_STARTUP_ID, vm.getDeployedComponent().getHostID(), (VMComponentDefnID)vm.getDeployedComponent().getID());
 		ConnectorBindingID connectorBindingID1 = new ConnectorBindingID(Configuration.NEXT_STARTUP_ID, name); 
 		
-		ProductServiceConfigID pscID = new ProductServiceConfigID(Configuration.NEXT_STARTUP_ID, psc);  
-		BasicDeployedComponent deployedComponent = new BasicDeployedComponent(deployedComponentID1, Configuration.NEXT_STARTUP_ID, vm.getDeployedComponent().getHostID(), (VMComponentDefnID)vm.getDeployedComponent().getID(), connectorBindingID1, pscID,ConnectorBindingType.CONNECTOR_TYPE_ID);
+		BasicDeployedComponent deployedComponent = new BasicDeployedComponent(deployedComponentID1, Configuration.NEXT_STARTUP_ID, vm.getDeployedComponent().getHostID(), (VMComponentDefnID)vm.getDeployedComponent().getID(), connectorBindingID1, ConnectorBindingType.CONNECTOR_TYPE_ID);
 		deployedComponent.setDescription(name); 
 		
-	    return new ServiceRegistryBinding(sid, new FakeCacheAdmin(sid), type,"instance-"+id, null, name, vm.getHostName(), deployedComponent, null, ServiceState.STATE_OPEN, new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$
+	    return new ServiceRegistryBinding(sid, new FakeCacheAdmin(sid), type,"instance-"+id, null, name, vm.getHostName(), deployedComponent,  ServiceState.STATE_OPEN, new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$
 	}
 	
 	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {

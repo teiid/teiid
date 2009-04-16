@@ -47,7 +47,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.MetaMatrixExceptionUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.runtime.HostData;
-import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
@@ -367,11 +366,7 @@ public class RuntimeStateAdminAPIHelper {
                     // loop thru and insure all deployed services are running
                     // kill all non-deployed running services.
                 } else {
-                    Collection pscList = pData.getPSCs();
-                    Iterator pscIter = pscList.iterator();
-                    while (pscIter.hasNext()) {
-                        PSCData pscData = (PSCData)pscIter.next();
-                        Collection services = pscData.getServices();
+                        Collection services = pData.getServices();
                         Iterator sIter = services.iterator();
                         // looping thru services
                         while (sIter.hasNext()) {
@@ -405,7 +400,7 @@ public class RuntimeStateAdminAPIHelper {
 	                        	exceptions.add(new MetaMatrixComponentException(e, e.getMessage()));
 	                        }
                         }
-                    }
+                    
                 }
             }
         }

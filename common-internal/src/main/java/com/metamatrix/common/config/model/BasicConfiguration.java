@@ -48,9 +48,7 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ProductTypeID;
+
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
@@ -87,7 +85,6 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
     /**
      * Key = ComponentID  Value=Component
      */
-    private Map pscs = new HashMap();
     private Map svcComponents = new HashMap();
     private Map connectors = new HashMap();    
     private Map authProviders = new HashMap();    
@@ -142,12 +139,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
     */
    public Map getComponentDefns() {
    		int s = 1;
-   		
-    
-    	if (pscs != null) {
-    		s += pscs.size();
-    	}
-    	
+   		    	
     	if (svcComponents != null) {
     		s += svcComponents.size();
     	}
@@ -174,7 +166,6 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 
         Map comps = new HashMap(s);
 
-		comps.putAll(pscs);
 		comps.putAll(pools);
 		comps.putAll(svcComponents);
 		comps.putAll(vms);
@@ -194,12 +185,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
                     	return true;
                     } 
                     return false;
-                case ComponentType.PSC_COMPONENT_TYPE_CODE:
-                    if (getPSC(componentID) != null) {
-                    	return true;
-                    }
-                    return false;
-
+ 
                 case ComponentType.SERVICE_COMPONENT_TYPE_CODE: 
                 	if (getServiceComponentDefn(componentID) != null) {
                 		return true;
@@ -245,9 +231,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
             switch(BasicUtil.getComponentType(componentID)){
                 case ComponentType.VM_COMPONENT_TYPE_CODE:
                     return getVMDefn(componentID);
-                case ComponentType.PSC_COMPONENT_TYPE_CODE:
-                    return getPSC(componentID);
-                case ComponentType.SERVICE_COMPONENT_TYPE_CODE:
+                 case ComponentType.SERVICE_COMPONENT_TYPE_CODE:
                 	return getServiceComponentDefn(componentID);                   
                 case ComponentType.RESOURCE_COMPONENT_TYPE_CODE:
                     return getConnectionPool(componentID);
@@ -305,14 +289,6 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
             }
             return null;     		
     	
-    }
-    
-    public ProductServiceConfig getPSC(ComponentDefnID componentID) {
-    	
-        if (pscs.containsKey(componentID)) {
-            return ((ProductServiceConfig) pscs.get(componentID));
-        }
-        return null;    		   	
     }
     
     public ResourceDescriptor getConnectionPool(ComponentDefnID componentID) {
@@ -432,13 +408,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 			return ids;
 		}
 		
-		allDefnsIDs = pscs.values().iterator();
-		ids = getIDs(allDefnsIDs, componentTypeID);
-		
-		if (ids.size() > 0) {
-			return ids;
-		}
-		
+	
 		allDefnsIDs = pools.values().iterator();
 		ids = getIDs(allDefnsIDs, componentTypeID);
 		
@@ -478,27 +448,6 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
         
         return ids;
     	
-    }
-
-    /**
-     * Returns Collection of ProductServiceConfigID objects for the
-     * specified Product type
-     * @param productTypeID of product type
-     * @return Collection of ProductServiceConfigID objects of this type,
-     * contained in this Configuration
-     * @deprecated As of GG, please use {@link #getComponentDefnIDs(ComponentTypeID)}
-     */
-    public Collection getProductServiceConfigIDs(ProductTypeID productTypeID){
-        ArrayList ids = new ArrayList();
-        Iterator allDefns = pscs.values().iterator();
-        ProductServiceConfig aDefn = null;
-        while (allDefns.hasNext()){
-            aDefn = (ProductServiceConfig)allDefns.next();
-            if (aDefn.getComponentTypeID().equals(productTypeID)){
-                ids.add(aDefn.getID());
-            }
-        }
-        return ids;
     }
 
     public Properties getDependentPropsForComponent(BaseID componentObjectID) {
@@ -607,54 +556,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 
         return comps;
     }
-
-	public boolean isPSCDeployed(ProductServiceConfigID pscID) {
-	
-		ProductServiceConfig psc = getPSC(pscID);
-		if (psc == null) {
-			return false;
-		}
-		
-  		for (Iterator it=psc.getServiceComponentDefnIDs().iterator(); it.hasNext();) {
-  			ServiceComponentDefnID svcID = (ServiceComponentDefnID) it.next();
-  			
-  			// check to make sure the service is deployed to the sepecific PSC
-  			Collection dcs = getDeployedComponents(svcID);
-  			for (Iterator itdcs = dcs.iterator(); itdcs.hasNext(); ) {
-	  			DeployedComponent dc = (DeployedComponent) itdcs.next();
-	  			
-	  			if (dc.getProductServiceConfigID().equals(pscID)) {
-  					return true;
-	  			}
-  			}
-  			
-  		}
-  		
-  		return false;
-			
-	
-	}
-	public Collection getDeployedComponents(ComponentDefnID componentDefnID, ProductServiceConfigID pscID) {
-		
-        Collection comps = new ArrayList(deployedComponents.size());
-
-        // verify the component is a componentDefn in this configuration
-        if (doesExist(componentDefnID)) {
-
-            DeployedComponent dc;
-            for (Iterator it=getDeployedComponents().iterator(); it.hasNext(); ){
-                dc = (DeployedComponent) it.next();
-                if (dc.getDeployedComponentDefnID().equals(componentDefnID) &&
-                	dc.getProductServiceConfigID().equals(pscID) ) {
-                    comps.add(dc);
-                }
-            }
-        }
-
-        return comps;
-		
-	}
-    
+   
 
     public VMComponentDefn getVMForHost(VMComponentDefnID vmID, HostID hostID) {
  
@@ -835,8 +737,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
      * be returned for the <i>deployed</i> vm that they are deployed to,
      * <i>not</i> the vm component definition which may itself be deployed
      * many times.
-     * @deprecated As of v2.0, replaced by {@link #getDeployedServicesForVM(DeployedComponent)}
-     */
+      */
     public Collection getDeployedServicesForVM(VMComponentDefnID vmComponentID)  {
         if (vmComponentID == null) {
         	return Collections.EMPTY_LIST;
@@ -856,17 +757,15 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 
         Collection comps = new ArrayList(dcs.size());
         DeployedComponent dc;
-//        ComponentDefn comp;
         for (Iterator it = dcs.iterator(); it.hasNext(); ) {
             dc = (DeployedComponent) it.next();
-            // if component is a ServiceComponent and the VM id matches
-            if (dc.isDeployedConnector() || dc.isDeployedService()) {
-//            comp = dc.getDeployedComponentDefn(this);
+            // if deployed component is a ServiceComponent and the VM id matches
+            if (dc.getServiceComponentDefnID() != null) {
                 if (dc.getVMComponentDefnID().equals(vmComponentID) &&
                     dc.getHostID().equals(hostID)) {
                     comps.add(dc);
                 }
-            }
+           }
         }
         return comps;
     }
@@ -883,32 +782,32 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
      * services
      * @throws InvalidArgumentException if either parameter is null
      */
-    public Collection getDeployedServices(VMComponentDefn vm, ProductServiceConfig psc) {
-        if (vm == null || psc == null) {
-        	return Collections.EMPTY_LIST;
-        }
-        VMComponentDefnID vmComponentID = (VMComponentDefnID) vm.getID();
-        HostID hostID = vm.getHostID();
-        ProductServiceConfigID pscID = (ProductServiceConfigID)psc.getID();
-        
-		Collection dcs = getDeployedComponents();
-
-        Collection comps = new ArrayList(dcs.size());
-        DeployedComponent dc;
-//        ComponentDefn comp;
-        for (Iterator it = dcs.iterator(); it.hasNext(); ) {
-            dc = (DeployedComponent) it.next();
-            // if component is a ServiceComponent and the VM id matches
-//            comp = dc.getDeployedComponentDefn(this);
-//            if (comp instanceof ServiceComponentDefn &&
-            if (dc.getVMComponentDefnID().equals(vmComponentID) &&
-                dc.getHostID().equals(hostID) && dc.getProductServiceConfigID() != null &&
-                dc.getProductServiceConfigID().equals(pscID)) {
-                    comps.add(dc);
-            }
-        }
-        return comps;
-    }
+//    public Collection getDeployedServices(VMComponentDefn vm, ProductServiceConfig psc) {
+//        if (vm == null || psc == null) {
+//        	return Collections.EMPTY_LIST;
+//        }
+//        VMComponentDefnID vmComponentID = (VMComponentDefnID) vm.getID();
+//        HostID hostID = vm.getHostID();
+//        ProductServiceConfigID pscID = (ProductServiceConfigID)psc.getID();
+//        
+//		Collection dcs = getDeployedComponents();
+//
+//        Collection comps = new ArrayList(dcs.size());
+//        DeployedComponent dc;
+////        ComponentDefn comp;
+//        for (Iterator it = dcs.iterator(); it.hasNext(); ) {
+//            dc = (DeployedComponent) it.next();
+//            // if component is a ServiceComponent and the VM id matches
+////            comp = dc.getDeployedComponentDefn(this);
+////            if (comp instanceof ServiceComponentDefn &&
+//            if (dc.getVMComponentDefnID().equals(vmComponentID) &&
+//                dc.getHostID().equals(hostID) && dc.getProductServiceConfigID() != null &&
+//                dc.getProductServiceConfigID().equals(pscID)) {
+//                    comps.add(dc);
+//            }
+//        }
+//        return comps;
+//    }
 
 
     /**
@@ -924,34 +823,34 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
      * @return Collection of ProductServiceConfig objects
      * @throws InvalidArgumentException if the parameter is null
      */
-    public Collection getPSCsForVM(VMComponentDefn vm){
-        Iterator deployedServices = this.getDeployedServicesForVM(vm).iterator();
-        HashSet result = new HashSet();
-        DeployedComponent dc = null;
-        while (deployedServices.hasNext()){
-            dc = (DeployedComponent)deployedServices.next();
-            result.add(this.getPSC((dc.getProductServiceConfigID())));
-        }
-        return result;
-    }
+//    public Collection getPSCsForVM(VMComponentDefn vm){
+//        Iterator deployedServices = this.getDeployedServicesForVM(vm).iterator();
+//        HashSet result = new HashSet();
+//        DeployedComponent dc = null;
+//        while (deployedServices.hasNext()){
+//            dc = (DeployedComponent)deployedServices.next();
+//            result.add(this.getPSC((dc.getProductServiceConfigID())));
+//        }
+//        return result;
+//    }
 
-    public Collection getPSCsForServiceDefn(ServiceComponentDefnID serviceDefnID)  {
-    	Collection result = new ArrayList(pscs.size());
-        if (serviceDefnID == null) {
-        	return Collections.EMPTY_LIST;
-        }
-        Object obj;
-        ProductServiceConfig psc = null;
-        for (Iterator iter = pscs.values().iterator(); iter.hasNext(); ){
-            obj = iter.next();
-                psc = (ProductServiceConfig)obj;
-                if (psc.getServiceComponentDefnIDs().contains(serviceDefnID)){
-                    result.add(psc);
-                }
-        }
-        return result;
-    	
-    }
+//    public Collection getPSCsForServiceDefn(ServiceComponentDefnID serviceDefnID)  {
+//    	Collection result = new ArrayList(pscs.size());
+//        if (serviceDefnID == null) {
+//        	return Collections.EMPTY_LIST;
+//        }
+//        Object obj;
+//        ProductServiceConfig psc = null;
+//        for (Iterator iter = pscs.values().iterator(); iter.hasNext(); ){
+//            obj = iter.next();
+//                psc = (ProductServiceConfig)obj;
+//                if (psc.getServiceComponentDefnIDs().contains(serviceDefnID)){
+//                    result.add(psc);
+//                }
+//        }
+//        return result;
+//    	
+//    }
     
 
     public Collection getComponentObjectDependencies(BaseID componentObjectID)  {
@@ -977,18 +876,18 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
         * of the BasicServiceComponentDefn cannot check to see if it is
         * dependent upon its PSC.
         */
-        if (componentObjectID instanceof ProductServiceConfigID) {
-            ProductServiceConfigID pscID = (ProductServiceConfigID)componentObjectID;
-            ProductServiceConfig psc = (ProductServiceConfig)this.pscs.get(pscID);
-            Collection serviceComponentDefns = psc.getServiceComponentDefnIDs();
-            Iterator iterator = serviceComponentDefns.iterator();
-            while (iterator.hasNext()) {
-            	ComponentDefnID id = (ComponentDefnID) iterator.next();
-            	deps.add(getComponentDefn(id));
-            	
-//                deps.add(this.getComponentDefns().get(iterator.next()));
-            }
-        }else {
+//        if (componentObjectID instanceof ProductServiceConfigID) {
+//            ProductServiceConfigID pscID = (ProductServiceConfigID)componentObjectID;
+//            ProductServiceConfig psc = (ProductServiceConfig)this.pscs.get(pscID);
+//            Collection serviceComponentDefns = psc.getServiceComponentDefnIDs();
+//            Iterator iterator = serviceComponentDefns.iterator();
+//            while (iterator.hasNext()) {
+//            	ComponentDefnID id = (ComponentDefnID) iterator.next();
+//            	deps.add(getComponentDefn(id));
+//            	
+////                deps.add(this.getComponentDefns().get(iterator.next()));
+//            }
+//        }else {
         
             Map cd = this.getComponentDefns();
             for (Iterator it=cd.values().iterator(); it.hasNext(); ) {
@@ -997,7 +896,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
                     deps.add(co);
                 }
             }
-        }
+ //       }
         
 
 
@@ -1030,34 +929,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
          
     }   
     
-  
-    /**
-     * Returns a <code>Collection</code> of type <code>ProductServiceConfig</code> that represent
-     * all the ProductServiceConfig defined.
-     * @return Collection of type <code>ProductServiceConfig</code>
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @see #ProductServiceConfig
-     */
-    public Collection getPSCs() {
-        if (pscs == null) {
-        	return Collections.EMPTY_LIST;
-        }
-           
-        Collection rd = new ArrayList(pscs.size());
-                                          
-        Iterator compDefns = pscs.values().iterator();
-        ComponentDefn aDefn = null;
-
-        while (compDefns.hasNext()){
-            aDefn = (ComponentDefn)compDefns.next();
- 			rd.add(aDefn);            
-        }
-                   
-        return rd;
-         
-    }   
-  
- 
+   
      /**
      * Returns a <code>Collection</code> of type <code>ServiceComponentDefn</code> that represent
      * all the ServiceComponentDefn defined.
@@ -1251,9 +1123,6 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
                 case ComponentType.CONNECTOR_COMPONENT_TYPE_CODE:
                     addConnectorBinding(component);
                     return;                    
-                case ComponentType.PSC_COMPONENT_TYPE_CODE:
-                    pscs.put(component.getID(), component);
-                    return;
                 case ComponentType.RESOURCE_COMPONENT_TYPE_CODE:
                     pools.put(component.getID(), component);
                     return;
@@ -1320,18 +1189,13 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
                     removeDeployedVM( vm);
  //                   vms.remove(defnID);
                     break;
-                case ComponentType.PSC_COMPONENT_TYPE_CODE:
-					removeDeployedServicesFromPSC((ProductServiceConfigID) componentID);                
-                    pscs.remove(defnID);
-                    break;
+
                 case ComponentType.CONNECTOR_COMPONENT_TYPE_CODE:
-                	removeServiceFromPSCs((ConnectorBindingID)defnID);
-                    removeConnectorBinding(defnID);
+                     removeConnectorBinding(defnID);
                     break;
                     
                 case ComponentType.SERVICE_COMPONENT_TYPE_CODE:                
-                	removeServiceFromPSCs((ServiceComponentDefnID)defnID);                
-                    svcComponents.remove(defnID);
+                     svcComponents.remove(defnID);
                     break;
                 case ComponentType.RESOURCE_COMPONENT_TYPE_CODE:
                     pools.remove(defnID);
@@ -1367,50 +1231,50 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 
     }
     
-    private void removeServiceFromPSCs(ServiceComponentDefnID defnID) {
-        if (defnID==null) {
-            return;
-        }
-    	Collection pscs = null;
-         	pscs = getPSCsForServiceDefn(defnID);
-			
-			
-	   for (Iterator it=pscs.iterator(); it.hasNext(); ) {
-     		ProductServiceConfig psc =(ProductServiceConfig) it.next();
-     		if (psc.containsService(defnID)) {
-     			BasicProductServiceConfig basicPSC = (BasicProductServiceConfig) psc;
-    			basicPSC.removeServiceComponentDefnID(defnID);
-     		}
-     	}
-    	
-    	
-    }
+//    private void removeServiceFromPSCs(ServiceComponentDefnID defnID) {
+//        if (defnID==null) {
+//            return;
+//        }
+//    	Collection pscs = null;
+//         	pscs = getPSCsForServiceDefn(defnID);
+//			
+//			
+//	   for (Iterator it=pscs.iterator(); it.hasNext(); ) {
+//     		ProductServiceConfig psc =(ProductServiceConfig) it.next();
+//     		if (psc.containsService(defnID)) {
+//     			BasicProductServiceConfig basicPSC = (BasicProductServiceConfig) psc;
+//    			basicPSC.removeServiceComponentDefnID(defnID);
+//     		}
+//     	}
+//    	
+//    	
+//    }
     
-    private void removeDeployedServicesFromPSC(ProductServiceConfigID pscID) {
-    	
-    	ProductServiceConfig psc = getPSC(pscID);
-    	if (psc == null) {
-    		return;
-    	}
-        Iterator serviceDefnIDs = psc.getServiceComponentDefnIDs().iterator();
-        
-        ServiceComponentDefnID serviceID = null;
-        //delete each service definition of this PSC, one by one
-        while (serviceDefnIDs.hasNext()){
-            serviceID = (ServiceComponentDefnID)serviceDefnIDs.next();
-            
-            Collection dcs = getDeployedComponents(serviceID, (ProductServiceConfigID) psc.getID());
-            
-            if (dcs != null) {
-	            Iterator dcIter = dcs.iterator();
-	            while (dcIter.hasNext()) {
-	            	DeployedComponent comp = (DeployedComponent)dcIter.next();
-	            	removeComponentObject((ComponentObjectID)comp.getID());	
-	            }
-            }
-        }
-     	
-    }
+//    private void removeDeployedServicesFromVM(ProductServiceConfigID pscID) {
+//    	
+//    	ProductServiceConfig psc = getPSC(pscID);
+//    	if (psc == null) {
+//    		return;
+//    	}
+//        Iterator serviceDefnIDs = psc.getServiceComponentDefnIDs().iterator();
+//        
+//        ServiceComponentDefnID serviceID = null;
+//        //delete each service definition of this PSC, one by one
+//        while (serviceDefnIDs.hasNext()){
+//            serviceID = (ServiceComponentDefnID)serviceDefnIDs.next();
+//            
+//            Collection dcs = getDeployedComponents(serviceID, (ProductServiceConfigID) psc.getID());
+//            
+//            if (dcs != null) {
+//	            Iterator dcIter = dcs.iterator();
+//	            while (dcIter.hasNext()) {
+//	            	DeployedComponent comp = (DeployedComponent)dcIter.next();
+//	            	removeComponentObject((ComponentObjectID)comp.getID());	
+//	            }
+//            }
+//        }
+//     	
+//    }
     
     /**
      * used whend removing the complete host
@@ -1462,24 +1326,8 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 		
         
         removeDeployedServicesForVM(vm);
-        
-//		Collection dcs = getDeployedComponents();
-//		
-//        DeployedComponent dc;
-//
-//	      for (Iterator it = dcs.iterator(); it.hasNext(); ) {
-//        	dc = (DeployedComponent) it.next();
-//        	
-//        	// only get the deployed VM and let the remove method
-//        	// handle the actual removing logic
-//        	if (!dc.isDeployedService()) {
-//	        	if (dc.getVMComponentDefnID().equals(vmID)) {
-//    	    		removeDeployedServicesForVM(vm);
-//        		}
-//        	}
-//        }
-		
-            vms.remove(vm.getID());
+        	
+        vms.remove(vm.getID());
           
 
 		
@@ -1503,16 +1351,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 			}
 		}
 			
-			// now remove the deployed VM
-			
-//        deployedComponents.remove(vmDeployedComp.getID());
-			
-		 // remove the VM defn
-		 // *** the assumption is that there is a one-for-one match between
-		 // the deployed VM and VM Defn.  If one gets deleted, so should the other
-		 
 
-	
     }
       
 
@@ -1539,8 +1378,7 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 
     public void setComponentDefns(Map components) {
     	
-    	this.pscs = new HashMap();
-    	this.svcComponents = new HashMap();
+     	this.svcComponents = new HashMap();
     	this.vms = new HashMap();
    		this.pools = new HashMap();
    		this.connectors = new HashMap();

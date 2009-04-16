@@ -696,4 +696,36 @@
         </ComponentType>
                         
     </ComponentTypes>
+    <SharedResources>
+        <Resource Name="JGroups" ComponentType="Miscellaneous Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <Properties>
+                <Property Name="udp.multicast_supported">true</Property>
+                <Property Name="udp.mcast_messagebus_port">(multicast.port)</Property>
+                <Property Name="udp.mcast_jndi_port">5556</Property>
+                <Property Name="udp.mcast_addr">(multicast.address)</Property>
+                <Property Name="ping.gossip_host">(gossip_host)</Property>
+                <Property Name="ping.gossip_port">5555</Property>
+                <Property Name="metamatrix.cluster.name">(cluster.name)</Property>
+                <Property Name="jgroups.other.channel.settings">MERGE2(min_interval=5000;max_interval=10000):FD_SOCK:VERIFY_SUSPECT(timeout=1500):pbcast.NAKACK(gc_lag=50;retransmit_timeout=300,600,1200,2400,4800):UNICAST(timeout=5000):pbcast.STABLE(desired_avg_gossip=20000):FRAG(frag_size=4096;down_thread=false;up_thread=false):pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=false;print_local_addr=true):pbcast.STATE_TRANSFER
+                </Property>
+            </Properties>
+        </Resource>
+        <Resource Name="SSL" ComponentType="Miscellaneous Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <Properties>
+                <Property Name="com.metamatrix.ssl.keystoretype">JKS</Property>
+                <Property Name="com.metamatrix.ssl.protocol">SSLv3</Property>
+                <Property Name="com.metamatrix.ssl.keymanagementalgorithm">SunX509</Property>
+            </Properties>
+        </Resource>
+        <Resource Name="XATransactionManager" ComponentType="Miscellaneous Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <Properties>
+                <Property Name="metamatrix.xatxnmgr.log_base_dir">txnlog</Property>
+                <Property Name="metamatrix.xatxnmgr.max_timeout">120000</Property>
+                <Property Name="metamatrix.xatxnmgr.max_log_filesize_in_mb">10</Property>
+                <Property Name="metamatrix.xatxnmgr.max_rolled_log_files">100</Property>
+                <Property Name="metamatrix.xatxnmgr.separate_log">true</Property>
+                <Property Name="metamatrix.xatxnmgr.txnstatus_port">0</Property>
+            </Properties>
+        </Resource>
+    </SharedResources>
 </ConfigurationDocument>

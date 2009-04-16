@@ -25,18 +25,30 @@ package com.metamatrix.common.config.xml;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.ConfigurationModelContainer;
+import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorArchive;
+import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
+import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.ExtensionModule;
+import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.BasicConnectorArchive;
+import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.config.model.BasicExtensionModule;
+import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
+import com.metamatrix.common.config.util.ConfigurationImportExportUtility;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -328,5 +340,113 @@ public class TestXMLConfigurationImportExportUtility extends TestCase {
         }catch(Exception e) {
          // pass   
         }
+    }
+    
+    public void testloadConnectorBindingAndType() throws Exception {
+    	    ConfigurationObjectEditor editor = new BasicConfigurationObjectEditor();
+    	    ConfigurationImportExportUtility utility=  new XMLConfigurationImportExportUtility();
+    	        
+    	    String filename = UnitTestUtil.getTestDataPath() + File.separator+ "properties.cdk";
+    	    
+    	       InputStream in = new FileInputStream(filename);   	        
+
+    	       Object[] bandt = utility.importConnectorBindingAndType(in, editor, new String[]{});
+    	       
+    	       if (bandt == null || bandt.length != 2) {
+    	    	   fail("didnt import both, binding and type");
+    	       }
+    	       if ( bandt[1] instanceof ConnectorBinding) {
+    	    	  
+    	       } else {
+    	    	   fail("Not connector binding instance");
+    	       }
+    	       if ( bandt[0] instanceof ConnectorBindingType) {
+    	    	   
+    	       } else {
+    	    	   fail("No connector type instance");
+    	       }
+    }
+    
+    public void testloadConnectorBinding() throws Exception {
+	    ConfigurationObjectEditor editor = new BasicConfigurationObjectEditor();
+	    ConfigurationImportExportUtility utility=  new XMLConfigurationImportExportUtility();
+	        
+	    String filename = UnitTestUtil.getTestDataPath() + File.separator+ "properties.cdk";
+	    
+	       InputStream in = new FileInputStream(filename);   	        
+
+	       ConnectorBinding cb = utility.importConnectorBinding(in, editor, null);
+	       
+	       if (cb == null) {
+	    	   fail("didnt import binding");
+	       }
+    }   
+    
+    public void testImportExportConfig() throws Exception {
+  
+            String fileToImport = UnitTestUtil.getTestDataPath()+"/config-original.xml"; //$NON-NLS-1$
+            
+            ConfigurationModelContainerAdapter cma = new ConfigurationModelContainerAdapter();
+            
+            ConfigurationModelContainer configModel = cma.readConfigurationModel(fileToImport, Configuration.NEXT_STARTUP_ID);
+ 
+            if (configModel.getHosts().size() != 1) {
+            	fail("Didnt find 1 hosts");
+            }
+            
+            if (configModel.getConfiguration().getVMComponentDefns().size() != 1) {
+            	fail("Didnt find 1 vm");
+            }
+            
+            VMComponentDefn vm = (VMComponentDefn) configModel.getConfiguration().getVMComponentDefns().iterator().next();
+            
+            Collection depsvcs = configModel.getConfiguration().getDeployedServicesForVM(vm);
+            
+            if (depsvcs == null || depsvcs.size() != 6) {
+            	fail("Didnt find 6 deployed services for VM " + vm.getName());
+            }
+            
+            boolean isenabled = false;
+            for (Iterator<DeployedComponent> it=depsvcs.iterator(); it.hasNext();) {
+            	DeployedComponent dc = it.next();
+            	if (!dc.isEnabled()) {
+            		if (dc.getName().equalsIgnoreCase("QueryService")) {
+            			isenabled = true;
+            			BasicDeployedComponent bdc = (BasicDeployedComponent) dc;
+            			bdc.setIsEnabled(true);
+            		} 
+            		
+            	}
+            }
+            if (! isenabled) {
+            	fail("Did not find the QueryService deployed service that wase enabled");
+            }
+            
+            String fileToExport = UnitTestUtil.getTestScratchPath() + ("/exported_config.xml");
+            
+            cma.writeConfigurationModel(fileToExport, configModel, "TestCase");
+            
+            
+            // try reloading what was written to confirm
+            configModel = cma.readConfigurationModel(fileToExport, Configuration.NEXT_STARTUP_ID);
+
+            depsvcs = configModel.getConfiguration().getDeployedServicesForVM(vm);
+            
+            if (depsvcs == null || depsvcs.size() != 6) {
+            	fail("Didnt find 6 deployed services for VM " + vm.getName());
+            }
+
+            isenabled = false;
+            for (Iterator<DeployedComponent> it=depsvcs.iterator(); it.hasNext();) {
+            	DeployedComponent dc = it.next();
+           		if ( dc.getName().equalsIgnoreCase("QueryService")) {
+           			if (!dc.isEnabled()) {
+           				fail("Update to change enabled status to true did not work");
+           			}
+        		} 
+
+            }
+           
+    	
     }
 }

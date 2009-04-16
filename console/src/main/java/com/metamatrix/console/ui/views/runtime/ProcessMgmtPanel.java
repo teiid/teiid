@@ -63,8 +63,8 @@ public final class ProcessMgmtPanel
     private static final int PROC_COL = 0;
     private static final int ID_COL = 1;
     private static final int REGISTERED_COL = 2;
-    private static final int NUM_REG_PSC_COL = 3;
-    private static final int NUM_NOT_REG_PSC_COL = 4;
+    private static final int NUM_REG_SVC_COL = 3;
+    private static final int NUM_NOT_REG_SVC_COL = 4;
 
     ///////////////////////////////////////////////////////////////////////////
     // INITIALIZER
@@ -75,8 +75,8 @@ public final class ProcessMgmtPanel
         HDRS[PROC_COL] = RuntimeMgmtUtils.getString("pm.proc.hdr"); //$NON-NLS-1$
         HDRS[ID_COL] = RuntimeMgmtUtils.getString("pm.id.hdr"); //$NON-NLS-1$
         HDRS[REGISTERED_COL] = RuntimeMgmtUtils.getString("pm.registered.hdr"); //$NON-NLS-1$
-        HDRS[NUM_REG_PSC_COL] = RuntimeMgmtUtils.getString("pm.numregisteredpscs.hdr"); //$NON-NLS-1$
-        HDRS[NUM_NOT_REG_PSC_COL] = RuntimeMgmtUtils.getString("pm.numnotregisteredpscs.hdr"); //$NON-NLS-1$
+        HDRS[NUM_REG_SVC_COL] = RuntimeMgmtUtils.getString("pm.numregisteredservices.hdr"); //$NON-NLS-1$
+        HDRS[NUM_NOT_REG_SVC_COL] = RuntimeMgmtUtils.getString("pm.numnotregisteredservices.hdr"); //$NON-NLS-1$
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -165,9 +165,9 @@ public final class ProcessMgmtPanel
                 row.setElementAt(process, PROC_COL);
                 row.setElementAt(process.getName(), ID_COL);
                 row.setElementAt(new Boolean(process.isRegistered()), REGISTERED_COL);
-                Integer[] counts = manager.getPscCounts(process);
-                row.setElementAt(counts[0], NUM_REG_PSC_COL);
-                row.setElementAt(counts[1], NUM_NOT_REG_PSC_COL);
+                Integer[] counts = manager.getServiceCounts(process);
+                row.setElementAt(counts[0], NUM_REG_SVC_COL);
+                row.setElementAt(counts[1], NUM_NOT_REG_SVC_COL);
                 tblModel.addRow(row);
  
             }

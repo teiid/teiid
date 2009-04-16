@@ -491,10 +491,10 @@ public class ImportBindingWizardRenamePanel
         try {
         	config = getNextStartupConfig();
             
-            Collection colPsc = connectorManager.getAllConnectorsPSCsByConfig(
-            		config);
+//            Collection colPsc = connectorManager.getAllConnectorsPSCsByConfig(
+//            		config);
 
-            if (colPsc != null) {
+ //           if (colPsc != null) {
                 Iterator itBinding = bindings.iterator();
                 while (itBinding.hasNext()) {
                     String binding =
@@ -509,7 +509,7 @@ public class ImportBindingWizardRenamePanel
                		} 
 					mapDoesBindingExist.put(binding, name);
 				}
-            }
+ //           }
         } catch (Exception theException) {
             ExceptionUtility.showMessage("  ", //$NON-NLS-1$
                 //getString("msg.configmgrproblem",

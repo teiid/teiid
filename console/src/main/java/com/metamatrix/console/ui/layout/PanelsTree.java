@@ -261,12 +261,7 @@ public class PanelsTree
     		} else if (hdrText.equals(PanelsTreeModel.AUTHORIZATION)) {
     			icons.add(AUTH_ICON);
     		}
-    		if (secondNode.getChildCount() > 0) {
-    			String secondNodeName = secondNode.getName();
-    			if (secondNodeName.equals(PanelsTreeModel.MM_SERVER)) {
-    				icons.add(MM_SERVER_ICON);
-    			} 
-    		}
+
     		Icon[] iconsArray = new Icon[icons.size()];
     		Iterator it = icons.iterator();
     		for (int j = 0; it.hasNext(); j++) {
@@ -355,9 +350,7 @@ public class PanelsTree
             String hdrTxt = model.getHeaderNodeText(node);
 
             if (hdrTxt != null) {
-                if (node.getName().equals(PanelsTreeModel.MM_SERVER)) {
-                    setIcon(MM_SERVER_ICON);
-                } else if (hdrTxt.equals(PanelsTreeModel.RUNTIME)) {
+                if (hdrTxt.equals(PanelsTreeModel.RUNTIME)) {
                     setIcon((node.getName().equals(PanelsTreeModel.RUNTIME))
                         ? RUNTIME_HDR_ICON
                         : RUNTIME_ICON);

@@ -31,7 +31,6 @@ import javax.swing.JTree;
 
 import com.metamatrix.console.ui.views.runtime.util.RuntimeMgmtUtils;
 import com.metamatrix.platform.admin.api.runtime.HostData;
-import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.service.api.ServiceState;
@@ -47,7 +46,7 @@ public final class RuntimeStateCellRenderer extends DefaultTreeCellRenderer {
     private static final Icon HOST_ICON;
     private static final Icon PROCESS_ICON;
     private static final Icon SERVICE_ICON;
-    private static final Icon PSC_ICON;
+ //   private static final Icon PSC_ICON;
 
     ///////////////////////////////////////////////////////////////////////////
     // FIELDS
@@ -66,7 +65,7 @@ public final class RuntimeStateCellRenderer extends DefaultTreeCellRenderer {
         HOST_ICON = RuntimeMgmtUtils.getIcon("icon.host");
         PROCESS_ICON = RuntimeMgmtUtils.getIcon("icon.process");
         SERVICE_ICON = RuntimeMgmtUtils.getIcon("icon.service");
-        PSC_ICON = RuntimeMgmtUtils.getIcon("icon.psc");
+ //       PSC_ICON = RuntimeMgmtUtils.getIcon("icon.psc");
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -120,15 +119,16 @@ public final class RuntimeStateCellRenderer extends DefaultTreeCellRenderer {
             stateTxt = RuntimeMgmtUtils.getServiceStateText(state);
         }
         else {
-            if (userObj instanceof PSCData) {
-                icon = PSC_ICON;
-            }
-            else if (userObj instanceof ProcessData) {
+//            if (userObj instanceof PSCData) {
+//                icon = PSC_ICON;
+//            }
+//            else 
+            if (userObj instanceof ProcessData) {
                 icon = PROCESS_ICON;
             }
             else if (userObj instanceof HostData) {
                 icon = HOST_ICON;
-            }
+            } 
         }
 
         // set background color

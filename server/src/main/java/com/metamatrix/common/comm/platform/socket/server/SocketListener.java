@@ -25,7 +25,6 @@ package com.metamatrix.common.comm.platform.socket.server;
 import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLEngine;
 
@@ -44,8 +43,8 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
@@ -112,7 +111,7 @@ public class SocketListener implements ChannelListenerFactory {
     }
     
     static String getVersionInfo() {
-        return MetaMatrixProductVersion.VERSION_NUMBER;
+        return ApplicationInfo.getInstance().getMajorReleaseNumber();
     }
     
     public void stop() {

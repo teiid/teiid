@@ -24,10 +24,7 @@
 package com.metamatrix.console.ui.views.deploy.event;
 
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.console.ui.views.deploy.model.ConfigurationTreeModel.HostWrapper;
-import com.metamatrix.console.ui.views.deploy.model.ConfigurationTreeModel.PscWrapper;
-
 import com.metamatrix.toolbox.ui.widget.tree.DefaultTreeNode;
 
 /**
@@ -94,10 +91,11 @@ public final class ConfigurationTreeModelEvent
             Object[] ancestors = new Object[theAncestorNodes.length];
             for (int i=0; i<theAncestorNodes.length; i++) {
                 Object ancestor = theAncestorNodes[i].getContent();
-                if (ancestor instanceof PscWrapper) {
-                    ancestor = ((PscWrapper)ancestor).getPsc();
-                }
-                else if (ancestor instanceof HostWrapper) {
+//                if (ancestor instanceof PscWrapper) {
+//                    ancestor = ((PscWrapper)ancestor).getPsc();
+//                }
+//                else 
+                if (ancestor instanceof HostWrapper) {
                     ancestor = ((HostWrapper)ancestor).getHost();
                 }
                 ancestors[i] = ancestor;
@@ -270,15 +268,16 @@ public final class ConfigurationTreeModelEvent
         ancestors = theAncestors;
         Object source = getSource();
 
-        if (source instanceof PscWrapper) {
-            if (ancestors[0] instanceof ProductType) {
-                type |= PSC_DEFN;
-            }
-            else {
-                type |= DEPLOYED_PSC;
-            }
-        }
-        else if (source instanceof HostWrapper) {
+//        if (source instanceof PscWrapper) {
+//            if (ancestors[0] instanceof ProductType) {
+//                type |= PSC_DEFN;
+//            }
+//            else {
+//                type |= DEPLOYED_PSC;
+//            }
+//        }
+//        else 
+        if (source instanceof HostWrapper) {
             type |= HOST;
         }
         else {

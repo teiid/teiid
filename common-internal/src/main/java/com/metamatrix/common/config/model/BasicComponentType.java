@@ -217,18 +217,6 @@ public class BasicComponentType extends BasicObject implements ComponentType, Se
         return false;
     }
     
-    /**
-     * Returns true if this component type is a member of the connectors product type based on
-     * @link com.metamatrix.core.util.MetaMatrixProductVersion#CONNECTOR_PRODUCT_TYPE_NAME
-     * @return boolean true if a member of the connectors product type
-     */
-    public boolean isOfConnectorProductType() {
-        return false;
-    }
-
-    public boolean isOfTypeXAConnector() {
-        return false;
-    }
 
     /**
      * Returns the principal who created this type

@@ -85,17 +85,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
 	 */
 	void createConfiguration(ConfigurationID configID, Collection configObjects);
 	
-	
-	/**
-	 * This method is used only for importing a component type
-	 */
-//	void createComponentType(ComponentType compType);
-	
-	/**
-	 * This method is used only for importing a service definition
-	 */
-//    void createServiceComponentDefn(ServiceComponentDefn serviceDefn);
-
     /**
      * Create a new Configuration instance with the specified name ID.
      * @param configurationName for the new configuration (may not be null).
@@ -118,17 +107,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
     Configuration createConfiguration(String configurationName, Date creationDate, Date lastChangedDate);
 
     /**
-     * <p>Copy-create method - creates a deep-copy of the original configuration,
-     * with the new name.  The new name cannot be the same as the original
-     * configuration's name.</p>
-     *
-     * <p>All service component definitions, all deployed components, and all
-     * property values will also be copied.  The copies will all retain their original
-     * short names; their full names will reflect the new configuration name.</p>
-     */
-    Configuration createConfiguration(Configuration original, String newName);
-
-    /**
      *  Create a new ComponentType instance with the specified name.
      *  @param classTypeCode identifies the type of class this component type should represent
      *      @see ComponentType for type codes
@@ -148,29 +126,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      *  @return ComponentType
      */
     ComponentType createComponentType(ComponentType componentType, String name);
-    
-    
-    /**
-     * Create a new ProductType instance with the specified name.  Use
-     * {@link createProductType(String, Collection, boolean, boolean)} to
-     * also assign legal service types to this product type.
-     * @param name is the name of the ProductType
-     * @param deployable is a boolean indicating if the type can be deployed in a configuration
-     * @param monitored is a boolean insdicating if the type is to be monitored
-     * @return ComponentType
-     */
-    ProductType createProductType(String name, boolean deployable, boolean monitored);
-
-    /**
-     * Create a new ProductType instance with the specified name.
-     * @param name is the name of the ProductType
-     * @param serviceComponentTypeIDs Collection of ComponentType objects which
-     * indicate the service types that belong to this product type
-     * @param deployable is a boolean indicating if the type can be deployed in a configuration
-     * @param monitored is a boolean insdicating if the type is to be monitored
-     * @return ComponentType
-     */
-    ProductType createProductType(String name, Collection serviceComponentTypes, boolean deployable, boolean monitored);
 
     /**
      * Create a new ComponentTypeDefn and update the ComponentType with the new defintion.
@@ -184,11 +139,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      */
     ComponentTypeDefn createComponentTypeDefn(ComponentType type, PropertyDefinition propertyDefinition, boolean isEffectiveImmediately) ;
 
-    /**
-     * @deprecated as of v 2.0 beta 1, use {@link #createComponentTypeDefn(ComponentType, PropertyDefinition, boolean)}
-     */
-    ComponentTypeDefn createComponentTypeDefn(ComponentType type, PropertyDefinition propertyDefinition);
-
+ 
     /**
      * Create a new ComponentTypeDefn instance with the specified name.  To create
      * a basic PropertyDefinition, do the following:
@@ -207,11 +158,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * @see createComponentTypeDefn(ComponentType, PropertyDefinition)
      */
     ComponentTypeDefn createComponentTypeDefn(ComponentTypeID typeID, PropertyDefinition propertyDefinition, boolean isEffectiveImmediately) ;
-
-    /**
-     * @deprecated as of v 2.0 beta 1, use {@link #createComponentTypeDefn(ComponentTypeID, PropertyDefinition, boolean)}
-     */
-    ComponentTypeDefn createComponentTypeDefn(ComponentTypeID typeID, PropertyDefinition propertyDefinition) ;
 
     /**
      *  Create a new PropDefnAllowedValue that will be added to the modifiable (cloned)
@@ -296,23 +242,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
     ServiceComponentDefn createServiceComponentDefn(Configuration configuration, ComponentTypeID typeID, String componentName, String routingUUID);
 
     /**
-     * Creates a new ServiceComponentDefn for a given Configuration and
-     * ProductServiceConfig; also automatically "deploys" the service anywhere
-     * that this PSC is already deployed, by creating the necessary
-     * DeployedComponents (this will only work if the PSC parameter belongs
-     * to the Configuration parameter).
-     * @param configuration the Configuration containing the PSC; this will
-     * have the new ServiceComponentDefn added to it, plus any DeployedComponents
-     * created for the ServiceComponentDefn
-     * @param typeID type of the new ServiceComponentDefn
-     * @param componentName name for the new ServiceComponentDefn
-     * @param pscID ID of the ProductServiceConfig which this ServiceComponentDefn
-     * will belong to
-     * @return new ServiceComponentDefn
-     */
-    ServiceComponentDefn createServiceComponentDefn(Configuration configuration, ComponentTypeID typeID, String componentName, ProductServiceConfigID pscID);
-
-    /**
      * Create a new ResourceDescriptor Component Definition instance with a specified configuration
      * @param configurationID that the new created component definition will be a part of
      * @param typeID is the type of component definition to create
@@ -334,16 +263,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
     ResourceDescriptor createResourceDescriptor(Configuration configuration, ComponentTypeID typeID, String descriptorName);
 
     /**
-     * Create a new ResourceDescriptor Component Definition instance 
-     * @param typeID is the type of component definition to create
-     * @param componentName is the name of the component
-     * @return the ResourceDescriptor instance with the specified ID.
-     * @throws IllegalArgumentException if either of the ID or data source ID is null
-     */
- //   ResourceDescriptor createResourceDescriptor(ComponentTypeID typeID, String componentName);
-
-
-    /**
      * Create a new SharedResource  instance 
      * @param typeID is the type of component definition to create
      * @param resourceName is the name of the shared resource
@@ -352,41 +271,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      */
     SharedResource createSharedResource(ComponentTypeID typeID, String resourceName) ;
 
-
-    /**
-     * Create a new DeployedComponent instance representing a deployed VM.
-     * The Configuration parameter <i>will</i> be updated with the new
-     * deployed component.
-     * @param instanceName is the name assigned to this instance
-     * @param configuration the configuration the vm is deployed within.
-     * @param hostId the host the vm is deployed on.
-     * @param vmComponentDefn is the VM component definition to be deployed.
-     * @return the DeployedComponent instance with the specified ID.
-     * @throws IllegalArgumentException if either of the IDs are null
-     */
-//    DeployedComponent createDeployedVMComponent(String instanceName, Configuration configuration, HostID hostId, VMComponentDefn vmComponentDefn);
-
-    /**
-     * Create a new DeployedComponent instance representing a deployed VM.
-     * This method has the advantage of allowing the creation of
-     * a deployed component entirely with ID objects, without needing any
-     * of the full objects themselves.  However, it is the responsibility of
-     * the client that the ComponentTypeID parameter and the VMComponentDefnID
-     * parameter both indicate the vm type.  Also, the local
-     * Configuration object represented by the ConfigurationID will <i>not</i>
-     * be updated with this new DeployedComponent object.
-     * @param instanceName is the name assigned to this instance
-     * @param configurationID the configuration the vm is deployed within.
-     * @param hostId the host the vm is deployed on.
-     * @param vmComponentDefnID is the ID of the VM component definition to be deployed.
-     * @param componentTypeID is the <i>type</i> of the service to be deployed
-     * @return the DeployedComponent instance with the specified ID.
-     * @throws IllegalArgumentException if either of the IDs are null
-     *
-     * @see createDeployedVMComponent(String, Configuration, HostID, VMComponentDefn)
-     */
- //   DeployedComponent createDeployedVMComponent(String instanceName, ConfigurationID configurationID, HostID hostId, VMComponentDefnID vmComponentDefnID, ComponentTypeID vmComponentTypeID);
-
+ 
     /**
      * Create a new DeployedComponent instance respresenting a deployed Service.
      * This method has the advantage of allowing the creation of
@@ -401,110 +286,30 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * @param hostId the host the vm is deployed in.
      * @param vmId the VM that the service is deployed in.
      * @param serviceComponentDefnID is the service component definition to be deployed
-     * @param pscID the ID of the ProductServiceConfig of the
-     * ServiceComponentDefn which is to be deployed.
      * @param serviceComponentTypeID is type of the service to be deployed
      * @return the DeployedComponent instance with the specified ID.
      * @throws IllegalArgumentException if either of the IDs  null
      *
      * @see createDeployedServiceComponent(String, Configuration, HostID, VMComponentDefn)
      */
-    DeployedComponent createDeployedServiceComponent(String instanceName, ConfigurationID configurationID, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefnID serviceComponentDefnID, ProductServiceConfigID pscID, ComponentTypeID serviceComponentTypeID);
+    DeployedComponent createDeployedServiceComponent(String instanceName, ConfigurationID configurationID, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefnID serviceComponentDefnID, ComponentTypeID serviceComponentTypeID);
 
     /**
-     * Create a new DeployedComponent instance respresenting a deployed Service.
-     * The Configuration parameter <i>will</i> be updated with the new
-     * deployed component.
-     * @param instanceName is the name assigned to this instance
-     * @param configuration the vm is deployed within.
-     * @param hostId the host the vm is deployed in.
-     * @param vmId the VM that the service is deployed in.
-     * @param serviceComponentDefnID is the service component definition to be deployed
-     * @param componentTypeID is the <i>type</i> of the service to be deployed
-     * @return the DeployedComponent instance with the specified ID.
-     * @throws IllegalArgumentException if either of the IDs  null
-     */
-    DeployedComponent createDeployedServiceComponent(String instanceName, Configuration configuration, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefn serviceComponentDefn, ProductServiceConfigID pscID);
-
-    /**
-     * Copy-creation method, creates a new PSC from the given PSC, with the
-     * new given name, and inserts it into the given Configuration.  The
-     * configuration parameter must match the configuration which the
-     * original PSC belongs to.  This will also deep-copy the
-     * ServiceComponentDefns that are grouped by the originalPSC
-     * parameter.
-     * @param configuration which the originalPSC is from, and
-     * which the new PSC will be put in; this will be modified
-     * @param originalPSC the PSC to copy from
-     * @param newName new String name for the new PSC
-     * @return newly-created ProductServiceConfig object
-     */
-    ProductServiceConfig createProductServiceConfig(Configuration configuration, ProductServiceConfig originalPSC, String newName);
-
-    /**
-     * Copy-creation method, creates a new PSC from the given PSC, with the
-     * new given name, and inserts it into the target Configuration.  Any
-     * ServiceComponentDefns grouped by the originalPSC will be deep-copied
-     * to the targetConfiguration.
-     * The originConfiguration parameter must be the Configuration which the
-     * orignalPSC originates from (because it must contain the
-     * ServiceComponentDefns which are grouped by the originalPSC).
-     * @param targetConfiguration to put the new PSC in; this will be modified
-     * @param originConfiguration which the originalPSC exists in - this is
-     * needed to retrieve any original ServiceComponentDefns from
-     * @param originalPSC the PSC to copy from
-     * @param newName new String name for the new PSC
-     * @return newly-created ProductServiceConfig object
-     */
- // ProductServiceConfig createProductServiceConfig(Configuration targetConfiguration, Configuration originConfiguration, ProductServiceConfig originalPSC, String newName);
-
-    /**
-     * Allows the creation of an empty ProductServiceConfig entirely from
-     * ID objects.  Use {@link #addServiceComponentDefn} or
-     * {@link #removeServiceComponentDefn} in conjuncture with this method.
-     */
-    ProductServiceConfig createProductServiceConfig(ConfigurationID configurationID, ProductTypeID productTypeID, String componentName);
-
-    /**
-     * Allows the creation of an empty ProductServiceConfig entirely from
-     * ID objects.  Use {@link #addServiceComponentDefn} or
-     * {@link #removeServiceComponentDefn} in conjuncture with this method.
-     */
-    ProductServiceConfig createProductServiceConfig(Configuration configuration, ProductTypeID productTypeID, String componentName);
-
-    /**
-     * Deploys the ServiceComponentDefns indicated by the ProductServiceConfig,
-     * contained by the Configuration, onto the specified Host and VM.
-     * @param configuration the Configuration which contains the
-     * ServiceComponentDefns, the ProductServiceConfig, and the VMComponentDefn
-     * @param psc the ProductServiceConfig which groups the ServiceComponentDefns
-     * to be deployed
-     * @param hostId ID of the host on which the services will be deployed
-     * @param vmId ID of the VMComponentDefn on which the services will be
-     * deployed
-     * @return Collection of DeployedComponent objects, each representing
-     * one of the deployed ServiceComponentDefns
-     */
-    Collection deployProductServiceConfig(Configuration configuration, ProductServiceConfig psc, HostID hostId, VMComponentDefnID vmId);
-
-    /**
-     * Deploys a ServiceComponentDefn anywhere that it's PSC is already
-     * deployed.  This method is harmless to call if the
-     * ServiceComponentDefn is already deployed anywhere.  It is
-     * also harmless to call if the PSC has not been deployed at
-     * all (meaning no other services of the PSC have been deployed.) The
-     * ServiceComponentDefn must belong to the PSC, but this method
-     * does not check for that.  A Collection of any newly-created
+     * Deploys a ServiceComponentDefn to the specified VM.
+     * This method is harmless to call if the
+     * ServiceComponentDefn is already deployed.  It is
+     * also harmless to call if the VM has not been started at
+     * all.   A Collection of any newly-created
      * DeployedComponent objects is returned.
      * @param configuration must be the Configuration containing both
-     * the ServiceComponentDefn and PSC ID parameters (but this is not
+     * the ServiceComponentDefn and VM ID parameters (but this is not
      * checked for in this method)
      * @param serviceComponentDefn to be deployed
-     * @param pscID PSC ID that may already be deployed somewhere in the
+     * @param vmID VMComponentDefn ID that may already be deployed somewhere in the
      * Configuration parameter
-     * @return Collection of newly-created DeployedComponent objects
+     * @return DeployedComponent of newly-created DeployedComponent object
      */
-    Collection deployServiceDefn(Configuration configuration, ServiceComponentDefn serviceComponentDefn, ProductServiceConfigID pscID);
+    DeployedComponent deployServiceDefn(Configuration configuration, ServiceComponentDefn serviceComponentDefn, VMComponentDefnID vmID);
     
     // ----------------------------------------------------------------------------------
     //                  M O D I F I C A T I O N    M E T H O D S
@@ -523,7 +328,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
     void setRoutingUUID(ServiceComponentDefn serviceComponentDefn, String newRoutingUUID);
 
     /**
-     * <p>Sets whether the indicated ServiceComponentDefn is enabled for deployment
+     * <p>Sets whether the indicated ServiceComponentDefn is enabled for starting
      * (when the PSC which contains it is
      * {@link #deployProductServiceConfig deployed}) or not.  This method
      * can also either automatically create the necessary
@@ -571,17 +376,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * will have it's <code>enabled</code> field updated.
      * @param enabled whether this service definition should be enabled for
      * deployment or not.
-     * @param deleteDeployedComps With this parameter the client can control
-     * whether any deployed service components of the ServiceComponentDefn
-     * parameter are deleted automatically.  If <code>false</code> is passed
-     * in, and one or more deployed services <i>do</i> exist for the
-     * ServiceComponentDefn parameter, a ConfigurationException will be thrown.
-     * If <code>true</code> is passed in, any deployed service components
-     * in the indicated configuration will be automatically deleted.
-     * @return the Collection of affected
-     * {@link DeployedComponent DeployedComponents}; either the newly-created
-     * DeployedComponents, or the newly-deleted DeployedComponents.  If
-     * none were affected, a non-null empty Collection will be returned.
      * @throws ConfigurationException if <code>false</code> was passed in for
      * the deleteDeployedComps parameter, and any
      * {@link DeployedComponent DeployedComponents} exist for the
@@ -590,16 +384,15 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * @see #deployProductServiceConfig deployProductServiceConfig
      */
 
-
-    Collection setEnabled(Configuration configuration, ServiceComponentDefn serviceComponentDefn, ProductServiceConfig psc, boolean enabled, boolean deleteDeployedComps)
-    throws ConfigurationException;
+//
+//    DeployedComponent setEnabled(Configuration configuration, ServiceComponentDefn serviceComponentDefn, VMComponentDefn vm, boolean enabled)
+//    throws ConfigurationException;
 
 
     /**
-     * It simply modifies the ProductServiceConfig by setting the specified service
-     * enabled value and creates the necessary change object.  
+     * It updates the DeployedComponent by setting its enabled flag.
      */
-    ProductServiceConfig setEnabled(ServiceComponentDefnID serviceComponentDefnID, ProductServiceConfig psc, boolean enabled);
+    DeployedComponent setEnabled(DeployedComponent deployComponent, boolean enabled);
 
 
     /**
@@ -611,8 +404,8 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * @return updated ProductServiceConfig
      * @throws ConfigurationException
      */
-    ProductServiceConfig updateProductServiceConfig(Configuration config, ProductServiceConfig psc, Collection newServiceIDList)
-         throws ConfigurationException;
+//    ProductServiceConfig updateProductServiceConfig(Configuration config, ProductServiceConfig psc, Collection newServiceIDList)
+ //        throws ConfigurationException;
 
 
     /**
@@ -627,7 +420,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * ProductServiceConfiguration (and removed from any PSC it previously
      * belonged to).
      */
-    ProductServiceConfig addServiceComponentDefn(Configuration configuration, ProductServiceConfig psc, ServiceComponentDefnID serviceComponentDefnID);
+//    ProductServiceConfig addServiceComponentDefn(Configuration configuration, ProductServiceConfig psc, ServiceComponentDefnID serviceComponentDefnID);
 
     /**
      * Adds an existing ServiceComponentDefn to indicated PSC.
@@ -638,7 +431,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * ProductServiceConfiguration (and removed from any PSC it previously
      * belonged to).
      */
-    ProductServiceConfig addServiceComponentDefn(ProductServiceConfig psc, ServiceComponentDefnID serviceComponentDefnID);
+ //   ProductServiceConfig addServiceComponentDefn(ProductServiceConfig psc, ServiceComponentDefnID serviceComponentDefnID);
 
     /**
      * Deletes the ServiceComponentDefn from the indicated PSC, and from the
@@ -657,7 +450,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * @param serviceComponentType ComponentType to be added to the
      * ProductType
      */
-    ProductType addServiceComponentType(ProductType productType, ComponentType serviceComponentType);
+ //   ProductType addServiceComponentType(ProductType productType, ComponentType serviceComponentType);
 
     /**
      * Removes the service type represented by the indicated ComponentType from
@@ -666,7 +459,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * @param serviceComponentType ComponentType to be taken from the
      * ProductType
      */
-    ProductType removeServiceComponentType(ProductType productType, ComponentType serviceComponentType);
+ //   ProductType removeServiceComponentType(ProductType productType, ComponentType serviceComponentType);
 
     /**
      * Returns a modifiable properties object for the specified ComponentObject.
@@ -683,7 +476,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * @param name The new name.
      * @return The PSC with its name changed.
      */
-    ProductServiceConfig renamePSC(ProductServiceConfig psc, String name) throws ConfigurationException;
+//    ProductServiceConfig renamePSC(ProductServiceConfig psc, String name) throws ConfigurationException;
 
     /**
      * Change the name of a previously defined VM.
@@ -964,7 +757,7 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
      * will belong to
      * @return new ConnectorBinding
      */
-    ConnectorBinding createConnectorComponent(Configuration configuration, ComponentTypeID typeID, String componentName, ProductServiceConfigID pscID) ;
+ //   ConnectorBinding createConnectorComponent(Configuration configuration, ComponentTypeID typeID, String componentName, ProductServiceConfigID pscID) ;
 
     void addAuthenticationProvider(Configuration configuration, AuthenticationProvider provider);
 

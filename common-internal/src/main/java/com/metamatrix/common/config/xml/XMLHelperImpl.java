@@ -45,18 +45,12 @@ import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
-import com.metamatrix.common.config.api.ConfigurationInfo;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingID;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ProductType;
-import com.metamatrix.common.config.api.ProductTypeID;
-import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.SharedResource;
@@ -65,6 +59,8 @@ import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.model.BasicComponentObject;
 import com.metamatrix.common.config.model.BasicComponentType;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
+import com.metamatrix.common.config.model.BasicUtil;
+import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
 import com.metamatrix.common.log.LogConfiguration;
@@ -79,8 +75,6 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.EquivalenceUtil;
-import com.metamatrix.core.util.MetaMatrixProductVersion;
-//import com.metamatrix.common.util.LogCommonConstants;
 /**
 * This helper class is used to create JDOM XML Elements from configuration objects
 * and to create Configuration objects from JDOM XML Elements.
@@ -92,21 +86,21 @@ import com.metamatrix.core.util.MetaMatrixProductVersion;
 *           logging is available.
 *
 */
-public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropertyNames  {
+public class XMLHelperImpl implements  ConfigurationPropertyNames  {
 
-    /** 
+
+	/** 
      * @see com.metamatrix.common.config.xml.XMLHelper#createDeployedComponent(org.jdom.Element, com.metamatrix.common.config.api.ConfigurationID, com.metamatrix.common.config.api.HostID, com.metamatrix.common.config.api.VMComponentDefnID, com.metamatrix.common.config.api.ProductServiceConfigID, java.util.Map, com.metamatrix.common.config.api.ConfigurationObjectEditor)
      * @since 4.1
      */
-    public DeployedComponent createDeployedComponent(Element element,
-                                                     ConfigurationID configID,
-                                                     HostID hostID,
-                                                     VMComponentDefnID vmID,
-                                                     ProductServiceConfigID pscID,
-                                                     Map componentTypeMap,
-                                                     ConfigurationObjectEditor editor) throws InvalidConfigurationElementException {
-        return null;
-    }
+//    public DeployedComponent createDeployedComponent(Element element,
+//                                                     ConfigurationID configID,
+//                                                     HostID hostID,
+//                                                     VMComponentDefnID vmID,
+//                                                     Map componentTypeMap,
+//                                                     ConfigurationObjectEditor editor) throws InvalidConfigurationElementException {
+//        return null;
+//    }
      /**
     * This method is used to create a Configuration JDOM Element from a
     * Configuration object.
@@ -117,54 +111,12 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     public Element createConfigurationElement(Configuration configuration) {
         // first we set up the organizational structure of a configuration
         Assertion.isNotNull(configuration);
-//        Element productServiceConfigsElement = new Element(XMLConfig_42__ElementNames.Configuration.ProductServiceConfigs.ELEMENT);
-//        Element serviceDefnsElement = createServiceComponentDefnsElement();
-//        Element deployedComponentsElement = new Element(XMLConfig_42__ElementNames.Configuration.DeployedComponents.ELEMENT);
-//        Element vmComponentDefnsElement = new Element(XMLConfig_42__ElementNames.Configuration.VMComponentDefns.ELEMENT);
-//        Element resourcePoolsElement = new Element(XMLConfig_42__ElementNames.Configuration.ResourcePools.ELEMENT);
 
-
-        Element configElement = createComponentObjectElement(XMLConfig_42_ElementNames.Configuration.ELEMENT, configuration);
-
-//        Element logConfigurationElement = createLogConfigurationElement(configuration.getLogConfiguration());
-
-//        configElement.addContent(productServiceConfigsElement);
-//        configElement.addContent(serviceDefnsElement);
-//        configElement.addContent(deployedComponentsElement);
-//        configElement.addContent(vmComponentDefnsElement);
-//        configElement.addContent(logConfigurationElement);
-//        configElement.addContent(resourcePoolsElement);
-
+        Element configElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.ELEMENT, configuration, true);
         return configElement;
     }
 
-    /**
-    * This method is used to create a LogConfiguration JDOM Element from a
-    * LogConfiguration object.
-    *
-    * @param info the Object to be converted to a JDOM XML Element
-    * @return a JDOM XML Element
-    */
-    public Element createLogConfigurationElement(LogConfiguration logConfiguration) {
-        throw new UnsupportedOperationException("Method createLogConfigurationElement is unsupported in 4.2"); //$NON-NLS-1$
-
-//        Assertion.isNotNull(logConfiguration);
-//
-//        Element logConfigurationElement = new Element(XMLConfig_42__ElementNames.Configuration.LogConfiguration.ELEMENT);
-//        Element propertiesElement = null;
-//        try {
-//            propertiesElement = createPropertiesElement(BasicLogConfiguration.getLogConfigurationProperties(logConfiguration));
-//        	logConfigurationElement.addContent(propertiesElement);
-//
-//        }catch(LogConfigurationException e) {
-//        	String msg = CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0031);
-//        	System.out.println(msg);
-//        }
-//
-//
-//        return logConfigurationElement;
-    }
-
+ 
 
     /**
     * This method is used to create a ConfigurationInfo JDOM Element from a
@@ -173,8 +125,8 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @param info the Object to be converted to a JDOM XML Element
     * @return a JDOM XML Element
     */
-    public Element createConfigurationInfoElement(ConfigurationInfo info) {
-        throw new UnsupportedOperationException("Method createConfigurationInfoElement is unsupported in 4.2"); //$NON-NLS-1$
+//    public Element createConfigurationInfoElement(ConfigurationInfo info) {
+//        throw new UnsupportedOperationException("Method createConfigurationInfoElement is unsupported in 4.2"); //$NON-NLS-1$
 
 //        Assertion.isNotNull(info);
 //
@@ -190,7 +142,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 //            configurationInfoElement.setAttribute(XMLConfig_42__ElementNames.Configuration.ConfigurationInfo.Attributes.CREATION_DATE, date.toString());
 //        }
 //        return configurationInfoElement;
-    }
+ //   }
 
     /**
     * This method is used to create a DeployedComponent JDOM Element from a
@@ -199,42 +151,10 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @param deployedComponent the Object to be converted to a JDOM XML Element
     * @return a JDOM XML Element
     */
-    public Element createDeployedComponentElement(DeployedComponent deployedComponent) {
+    public Element createDeployedServiceElement(DeployedComponent deployedComponent) {
         Assertion.isNotNull(deployedComponent);
-
-//        String vmComponentName = null;
-//        String productConfigName = null;
         
-        Element deployedComponentElement = createComponentObjectElement(XMLConfig_42_ElementNames.Configuration.DeployedService.ELEMENT, deployedComponent);
-        
-       
-//        VMComponentDefnID vmComponentID = deployedComponent.getVMComponentDefnID();
-//        ProductServiceConfigID productConfigID = deployedComponent.getProductServiceConfigID();
-
-
-//        // we treat these IDs specially because they are optional for Deployed
-//        // Components that are VM's
-//        if (vmComponentID!=null) {
-//            vmComponentName = vmComponentID.getName();
-//            deployedComponentElement.setAttribute(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.VM_COMPONENT_DEFN_ID, vmComponentName);
-//        }
-//
-//        if (productConfigID!=null) {
-//            productConfigName = productConfigID.getName();
-//            deployedComponentElement.setAttribute(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.PRODUCT_SERVICE_CONFIG_ID, productConfigName);
-//        }
-
-//        BaseID id = deployedComponent.getServiceComponentDefnID();
-//        if (id!=null) {
-//            deployedComponentElement.setAttribute(XMLConfig_42_ElementNames.Configuration.DeployedService.Attributes.SERVICE_COMPONENT_DEFN_ID, id.getName());
-//        }
-        
-       
-
-//        id = deployedComponent.getHostID();
-//        if (id!=null) {
-//            deployedComponentElement.setAttribute(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.HOST_ID, id.getName());
-//        }
+        Element deployedComponentElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.DeployedService.ELEMENT, deployedComponent, true);
 
         return deployedComponentElement;
     }
@@ -246,21 +166,20 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @param defn the Object to be converted to a JDOM XML Element
     * @return a JDOM XML Element
     */
-    public Element createVMComponentDefnElement(VMComponentDefn defn) {
+    public Element createProcessElement(VMComponentDefn defn) {
         Assertion.isNotNull(defn);
 
-        Element vmComponentDefnElement = createComponentObjectElement(XMLConfig_42_ElementNames.Configuration.Process.ELEMENT, defn);
+        Element vmComponentDefnElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.Process.ELEMENT, defn, true);
         return vmComponentDefnElement;
     }
-    
-    public Element createDeployedServiceComponentDefnElement(ServiceComponentDefn defn) {
-        Assertion.isNotNull(defn);
-
-        Element serviceComponentDefnElement = createComponentObjectElement(XMLConfig_42_ElementNames.Configuration.DeployedService.ELEMENT, defn);
-        serviceComponentDefnElement.setAttribute(XMLConfig_42_ElementNames.Configuration.DeployedService.Attributes.QUEUED_SERVICE, Boolean.valueOf(defn.isQueuedService()).toString());
-        serviceComponentDefnElement.setAttribute(XMLConfig_42_ElementNames.Configuration.DeployedService.Attributes.ROUTING_UUID, defn.getRoutingUUID());
-        return serviceComponentDefnElement;
-    }    
+//    
+//    public Element createDeployedServiceComponentDefnElement(ServiceComponentDefn defn) {
+//        Assertion.isNotNull(defn);
+//
+//        Element serviceComponentDefnElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.DeployedService.ELEMENT, defn);
+//        serviceComponentDefnElement.setAttribute(XMLConfig_ElementNames.Configuration.DeployedService.Attributes.ROUTING_UUID, defn.getRoutingUUID());
+//        return serviceComponentDefnElement;
+//    }    
 
     /**
     * This method is used to create a ServiceComponentDefn JDOM Element from a
@@ -272,9 +191,8 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     public Element createServiceComponentDefnElement(ServiceComponentDefn defn) {
         Assertion.isNotNull(defn);
 
-        Element serviceComponentDefnElement = createComponentObjectElement(XMLConfig_42_ElementNames.ServiceComponentDefns.ServiceComponentDefn.ELEMENT, defn);
-        serviceComponentDefnElement.setAttribute(XMLConfig_42_ElementNames.ServiceComponentDefns.ServiceComponentDefn.Attributes.QUEUED_SERVICE, Boolean.valueOf(defn.isQueuedService()).toString());
-        serviceComponentDefnElement.setAttribute(XMLConfig_42_ElementNames.ServiceComponentDefns.ServiceComponentDefn.Attributes.ROUTING_UUID, defn.getRoutingUUID());
+        Element serviceComponentDefnElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.Services.Service.ELEMENT, defn, true);
+        serviceComponentDefnElement.setAttribute(XMLConfig_ElementNames.Configuration.Services.Service.Attributes.ROUTING_UUID, defn.getRoutingUUID());
         return serviceComponentDefnElement;
     }
 
@@ -289,7 +207,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
      public Element createAuthenticationProviderElement(AuthenticationProvider defn) {
          Assertion.isNotNull(defn);
 
-         Element serviceComponentDefnElement = createComponentObjectElement(XMLConfig_42_ElementNames.AuthenticationProviders.Provider.ELEMENT, defn);
+         Element serviceComponentDefnElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.AuthenticationProviders.Provider.ELEMENT, defn, true);
           return serviceComponentDefnElement;
      }    
     /**
@@ -302,22 +220,22 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 //    public Element createServiceComponentDefnElement(ResourceDescriptor defn) {
 //        Assertion.isNotNull(defn);
 //
-//        Element serviceComponentDefnElement = createComponentObjectElement(XMLConfig_42_ElementNames.ServiceComponentDefns.ServiceComponentDefn.ELEMENT, defn);
+//        Element serviceComponentDefnElement = createComponentObjectElement(XMLConfig_ElementNames.ServiceComponentDefns.ServiceComponentDefn.ELEMENT, defn);
 //        return serviceComponentDefnElement;
 //    }
     
-    public Element createDeployedProductServiceConfigElement(ProductServiceConfig config) {
-        Assertion.isNotNull(config);
-
-        Element productServiceConfigElement = createComponentObjectElement(XMLConfig_42_ElementNames.Configuration.ProductServiceConfig.ELEMENT, config);
-
-        return productServiceConfigElement;
-    }
-    
-    public Element createProductServiceConfigsElement()  {
-        return new Element(XMLConfig_42_ElementNames.ProductServiceConfigs.ELEMENT);
-        
-    }
+//    public Element createDeployedProductServiceConfigElement(ProductServiceConfig config) {
+//        Assertion.isNotNull(config);
+//
+//        Element productServiceConfigElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.ProductServiceConfig.ELEMENT, config);
+//
+//        return productServiceConfigElement;
+//    }
+//    
+//    public Element createProductServiceConfigsElement()  {
+//        return new Element(XMLConfig_ElementNames.ProductServiceConfigs.ELEMENT);
+//        
+//    }
     
   
 
@@ -329,24 +247,24 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @param config the Object to be converted to a JDOM XML Element
     * @return a JDOM XML Element
     */
-    public Element createProductServiceConfigElement(ProductServiceConfig config) {
-        Assertion.isNotNull(config);
-
-        Element productServiceConfigElement = createComponentObjectElement(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.ELEMENT, config);
-
-        Iterator iterator = config.getServiceComponentDefnIDs().iterator();
-        while (iterator.hasNext()) {
-            ServiceComponentDefnID id = (ServiceComponentDefnID)iterator.next();
-            boolean isEnabled = config.isServiceEnabled(id);
-
-            Element idElement = createIDElement(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.ELEMENT, id.getName());
-
-			idElement.setAttribute(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.Attributes.IS_ENABLED, (Boolean.valueOf(isEnabled)).toString());
-
-            productServiceConfigElement.addContent(idElement);
-        }
-        return productServiceConfigElement;
-    }
+//    public Element createProductServiceConfigElement(ProductServiceConfig config) {
+//        Assertion.isNotNull(config);
+//
+//        Element productServiceConfigElement = createComponentObjectElement(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.ELEMENT, config);
+//
+//        Iterator iterator = config.getServiceComponentDefnIDs().iterator();
+//        while (iterator.hasNext()) {
+//            ServiceComponentDefnID id = (ServiceComponentDefnID)iterator.next();
+//            boolean isEnabled = config.isServiceEnabled(id);
+//
+//            Element idElement = createIDElement(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.ELEMENT, id.getName());
+//
+//			idElement.setAttribute(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.Attributes.IS_ENABLED, (Boolean.valueOf(isEnabled)).toString());
+//
+//            productServiceConfigElement.addContent(idElement);
+//        }
+//        return productServiceConfigElement;
+//    }
 
     /**
     * This method is used to create a ComponentType JDOM Element from a
@@ -358,7 +276,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     public Element createComponentTypeElement(ComponentType type) {
         Assertion.isNotNull(type);
 
-        Element componentTypeElement = new Element(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ELEMENT);
+        Element componentTypeElement = new Element(XMLConfig_ElementNames.ComponentTypes.ComponentType.ELEMENT);
         Iterator iterator = type.getComponentTypeDefinitions().iterator();
         while (iterator.hasNext()) {
             ComponentTypeDefn defn = (ComponentTypeDefn)iterator.next();
@@ -367,22 +285,22 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 //            componentTypeDefnElement.addContent(propertyDefinitionElement);
             componentTypeElement.addContent(propertyDefinitionElement);
         }
-        componentTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.NAME, type.getName());
+        componentTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.NAME, type.getName());
 
         if (type.getDescription() != null) {
-            componentTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.DESCRIPTION, type.getDescription()); 
+            componentTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.DESCRIPTION, type.getDescription()); 
         }
         
-        componentTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE, new Integer(type.getComponentTypeCode()).toString());
-        componentTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE, (Boolean.valueOf(type.isDeployable())).toString());
-        componentTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.DEPRECATED, (Boolean.valueOf(type.isDeprecated())).toString());
-        componentTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE, (Boolean.valueOf(type.isMonitored())).toString());
+        componentTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE, new Integer(type.getComponentTypeCode()).toString());
+        componentTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE, (Boolean.valueOf(type.isDeployable())).toString());
+        componentTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.DEPRECATED, (Boolean.valueOf(type.isDeprecated())).toString());
+        componentTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE, (Boolean.valueOf(type.isMonitored())).toString());
         // we only add these if they are not null
         BaseID superID = type.getSuperComponentTypeID();
         String superIDString;
         if (superID != null) {
             superIDString = superID.getName();
-            componentTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE, superIDString);
+            componentTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE, superIDString);
 
         }
 
@@ -390,7 +308,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         String parentIDString;
         if (parentID!=null)     {
             parentIDString = parentID.getName();
-            componentTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.PARENT_COMPONENT_TYPE, parentIDString);
+            componentTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.PARENT_COMPONENT_TYPE, parentIDString);
 
         }
 
@@ -412,78 +330,78 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         Assertion.isNotNull(defn);
 
 
-        Element element = new Element(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT);
+        Element element = new Element(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT);
 
         String name = defn.getName();
-        element.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.NAME, name);
+        element.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.NAME, name);
 
         String displayName = defn.getDisplayName();
-        element.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DISPLAY_NAME,displayName);
+        element.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DISPLAY_NAME,displayName);
 
         
         setAttributeString(element,
-                           XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.SHORT_DESCRIPTION,
+                           XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.SHORT_DESCRIPTION,
                            defn.getShortDescription(), PropertyDefinitionImpl.DEFAULT_SHORT_DESCRIPTION);    
 
         Object value = defn.getDefaultValue();
         if (value!=null) {
             setAttributeString(element,
-                               XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DEFAULT_VALUE,
+                               XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DEFAULT_VALUE,
                                value.toString(), PropertyDefinitionImpl.DEFAULT_DEFAULT_VALUE);
         }
         
         Multiplicity mult = defn.getMultiplicity();
         if (mult!=null) {
             setAttributeString(element,
-                               XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.MULTIPLICITY, 
+                               XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.MULTIPLICITY, 
                                mult.toString(), PropertyDefinitionImpl.DEFAULT_MULTIPLICITY);
         }
 
         PropertyType type = defn.getPropertyType();
         if (type != null) {
             setAttributeString(element,
-                               XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.PROPERTY_TYPE, 
+                               XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.PROPERTY_TYPE, 
                                type.getDisplayName(), PropertyDefinitionImpl.DEFAULT_TYPE.getDisplayName());
         }
 
 
         setAttributeString(element,
-                           XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.VALUE_DELIMITER, 
+                           XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.VALUE_DELIMITER, 
                            defn.getValueDelimiter(), PropertyDefinitionImpl.DEFAULT_DELIMITER);
 
         setAttributeBoolean(element, 
-                            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_CONSTRAINED_TO_ALLOWED_VALUES,
+                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_CONSTRAINED_TO_ALLOWED_VALUES,
                             defn.isConstrainedToAllowedValues(), PropertyDefinitionImpl.DEFAULT_IS_CONSTRAINED);
 
         setAttributeBoolean(element, 
-                            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_EXPERT,
+                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_EXPERT,
                             defn.isExpert(), PropertyDefinitionImpl.DEFAULT_IS_EXPERT);
 
         setAttributeBoolean(element, 
-                            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN,
+                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN,
                             defn.isHidden(), PropertyDefinitionImpl.DEFAULT_IS_HIDDEN);
 
         setAttributeBoolean(element, 
-                            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MASKED,
+                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MASKED,
                             defn.isMasked(), PropertyDefinitionImpl.DEFAULT_IS_MASKED);
         
         setAttributeBoolean(element, 
-                            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MODIFIABLE,
+                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MODIFIABLE,
                             defn.isModifiable(), PropertyDefinitionImpl.DEFAULT_IS_MODIFIABLE);
         
         setAttributeBoolean(element, 
-                            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED,
+                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED,
                             defn.isPreferred(), PropertyDefinitionImpl.DEFAULT_IS_PREFERRED);
             
         setAttributeString(element,
-                            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.REQUIRES_RESTART,
+                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.REQUIRES_RESTART,
                             defn.getRequiresRestart().toString(), PropertyDefinitionImpl.DEFAULT_REQUIRES_RESTART.toString());
         
         
         List allowedValues = defn.getAllowedValues();
         Iterator iterator = allowedValues.iterator();
         while (iterator.hasNext()) {
-            Element allowedValueElement = new Element(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.AllowedValue.ELEMENT);
+            Element allowedValueElement = new Element(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.AllowedValue.ELEMENT);
             allowedValueElement.addContent((iterator.next()).toString());
             element.addContent(allowedValueElement);
         }
@@ -533,8 +451,8 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     public Element createComponentTypeDefnElement(ComponentTypeDefn defn) {
         Assertion.isNotNull(defn);
 
-        Element componentTypeDefnElement = new Element(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
-        componentTypeDefnElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.Attributes.DEPRECATED, (Boolean.valueOf(defn.isDeprecated())).toString());
+        Element componentTypeDefnElement = new Element(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
+        componentTypeDefnElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.Attributes.DEPRECATED, (Boolean.valueOf(defn.isDeprecated())).toString());
         return componentTypeDefnElement;
     }
 
@@ -545,40 +463,40 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @param type the Object to be converted to a JDOM XML Element
     * @return a JDOM XML Element
     */
-    public Element createProductTypeElement(ProductType type) {
-        Assertion.isNotNull(type);
-
-        Element productTypeElement = new Element(XMLConfig_42_ElementNames.ProductTypes.ProductType.ELEMENT);
-
-        Iterator iterator = type.getComponentTypeIDs().iterator();
-        while (iterator.hasNext()) {
-            ComponentTypeID id = (ComponentTypeID)iterator.next();
-            Element componentTypeIDElement = createIDElement(XMLConfig_42_ElementNames.ComponentTypeID.ELEMENT, id.getName());
-            productTypeElement.addContent(componentTypeIDElement);
-        }
-        
-
-        productTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.NAME, type.getName());
-        productTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE, new Integer(type.getComponentTypeCode()).toString());
-        productTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE, (Boolean.valueOf(type.isDeployable())).toString());
-        productTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.DEPRECATED, (Boolean.valueOf(type.isDeprecated())).toString());
-        productTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE, (Boolean.valueOf(type.isMonitored())).toString());
-
-        // we only add these if they are not null
-        BaseID superID = type.getSuperComponentTypeID();
-        String superIDString;
-        if (superID != null) {
-            superIDString = superID.getName();
-            productTypeElement.setAttribute(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE, superIDString);
-
-        }
-
-        addChangeHistoryElement(type, productTypeElement);
-
-
-        return productTypeElement;
-
-    }
+//    public Element createProductTypeElement(ProductType type) {
+//        Assertion.isNotNull(type);
+//
+//        Element productTypeElement = new Element(XMLConfig_ElementNames.ProductTypes.ProductType.ELEMENT);
+//
+//        Iterator iterator = type.getComponentTypeIDs().iterator();
+//        while (iterator.hasNext()) {
+//            ComponentTypeID id = (ComponentTypeID)iterator.next();
+//            Element componentTypeIDElement = createIDElement(XMLConfig_ElementNames.ComponentTypeID.ELEMENT, id.getName());
+//            productTypeElement.addContent(componentTypeIDElement);
+//        }
+//        
+//
+//        productTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.NAME, type.getName());
+//        productTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE, new Integer(type.getComponentTypeCode()).toString());
+//        productTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE, (Boolean.valueOf(type.isDeployable())).toString());
+//        productTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.DEPRECATED, (Boolean.valueOf(type.isDeprecated())).toString());
+//        productTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE, (Boolean.valueOf(type.isMonitored())).toString());
+//
+//        // we only add these if they are not null
+//        BaseID superID = type.getSuperComponentTypeID();
+//        String superIDString;
+//        if (superID != null) {
+//            superIDString = superID.getName();
+//            productTypeElement.setAttribute(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE, superIDString);
+//
+//        }
+//
+//        addChangeHistoryElement(type, productTypeElement);
+//
+//
+//        return productTypeElement;
+//
+//    }
 
     /**
     * This method is used to create a Host JDOM Element from a
@@ -587,49 +505,49 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @param host the Object to be converted to a JDOM XML Element
     * @return a JDOM XML Element
     */
-    public Element createDeployedHostElement(Host host) {
+    public Element createHostElement(Host host) {
         Assertion.isNotNull(host);
 
-        Element hostElement = createComponentObjectElement(XMLConfig_42_ElementNames.Configuration.Host.ELEMENT, host);
+        Element hostElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.Host.ELEMENT, host, true);
         return hostElement;
     }
     
-    public Element createDeployedVMElementx(DeployedComponent vm) {
-        Assertion.isNotNull(vm);
-
-        Element hostElement = createComponentObjectElement(XMLConfig_42_ElementNames.Configuration.Host.ELEMENT, vm);
-        return hostElement;
-    }    
+//    public Element createDeployedVMElementx(DeployedComponent vm) {
+//        Assertion.isNotNull(vm);
+//
+//        Element hostElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.Host.ELEMENT, vm, true);
+//        return hostElement;
+//    }    
     
-    public final boolean is42ConfigurationCompatible(Element root) throws InvalidConfigurationElementException{
-        Element headerElement = root.getChild(XMLConfig_42_ElementNames.Header.ELEMENT);
-        if (headerElement == null) {
-            throw new InvalidConfigurationElementException("The header element is not found in the configuration under element.", root.getName()); //$NON-NLS-1$ 
-        }
-        
-        Properties props = getHeaderProperties(headerElement);
-        
-        
-        String sVersion = props.getProperty(XMLConfig_42_ElementNames.Header.ConfigurationVersion.ELEMENT);
-        
-        if (sVersion == null) {
-            return false;
-        }
-        try {
-            double sv = Double.parseDouble(sVersion);
-            if (sv == ConfigurationPropertyNames.MM_LATEST_CONFIG_VERSION) {
-                return true;
-            }
-        } catch (Throwable t) {
-            return false;
-        }
-        return true;
-    }
+//    public final boolean is42ConfigurationCompatible(Element root) throws InvalidConfigurationElementException{
+//        Element headerElement = root.getChild(XMLConfig_ElementNames.Header.ELEMENT);
+//        if (headerElement == null) {
+//            throw new InvalidConfigurationElementException("The header element is not found in the configuration under element.", root.getName()); //$NON-NLS-1$ 
+//        }
+//        
+//        Properties props = getHeaderProperties(headerElement);
+//        
+//        
+//        String sVersion = props.getProperty(XMLConfig_ElementNames.Header.ConfigurationVersion.ELEMENT);
+//        
+//        if (sVersion == null) {
+//            return false;
+//        }
+//        try {
+//            double sv = Double.parseDouble(sVersion);
+//            if (sv == ConfigurationPropertyNames.CONFIG_CURR_VERSION_DBL) {
+//                return true;
+//            }
+//        } catch (Throwable t) {
+//            return false;
+//        }
+//        return true;
+//    }
     
     public Properties getHeaderProperties(Element element) throws InvalidConfigurationElementException{
         Properties props=new Properties();
         
-        if (!element.getName().equals(XMLConfig_42_ElementNames.Header.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Header.ELEMENT)) {
             throw new InvalidConfigurationElementException("This is not the header element: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
@@ -650,12 +568,12 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * Properties object.  The properties object can contain any of the
     * following properties that will be included in the header:<p>
     * <pre>
-    * XMLConfig_42_ElementNames.Header.ApplicationCreatedDate.ELEMENT
-    * XMLConfig_42_ElementNames.Header.ApplicationVersionCreatedBy.ELEMENT
-    * XMLConfig_42_ElementNames.Header.UserName.ELEMENT
-    * XMLConfig_42_ElementNames.Header.DocumentTypeVersion.ELEMENT
-    * XMLConfig_42_ElementNames.Header.MetaMatrixServerVersion.ELEMENT
-    * XMLConfig_42_ElementNames.Header.Time.ELEMENT
+    * XMLConfig_ElementNames.Header.ApplicationCreatedDate.ELEMENT
+    * XMLConfig_ElementNames.Header.ApplicationVersionCreatedBy.ELEMENT
+    * XMLConfig_ElementNames.Header.UserName.ELEMENT
+    * XMLConfig_ElementNames.Header.DocumentTypeVersion.ELEMENT
+    * XMLConfig_ElementNames.Header.MetaMatrixServerVersion.ELEMENT
+    * XMLConfig_ElementNames.Header.Time.ELEMENT
     * <pre>
     * <p>Any of these properties that are not included in the properties object
     * will not be included in the header Element that is returned.
@@ -666,47 +584,47 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     public Element createHeaderElement(Properties props) {
         Assertion.isNotNull(props);
 
-        Element headerElement = new Element(XMLConfig_42_ElementNames.Header.ELEMENT);
-        String applicationCreatedByContent = props.getProperty(XMLConfig_42_ElementNames.Header.ApplicationCreatedBy.ELEMENT);
-        String applicationVersionCreatedByContent = props.getProperty(XMLConfig_42_ElementNames.Header.ApplicationVersionCreatedBy.ELEMENT);
-        String userNameContent = props.getProperty(XMLConfig_42_ElementNames.Header.UserCreatedBy.ELEMENT);
-        String configVersionContent = props.getProperty(XMLConfig_42_ElementNames.Header.ConfigurationVersion.ELEMENT);
-        String serverVersionContent = props.getProperty(XMLConfig_42_ElementNames.Header.MetaMatrixSystemVersion.ELEMENT);
-        String timeContent = props.getProperty(XMLConfig_42_ElementNames.Header.Time.ELEMENT);
+        Element headerElement = new Element(XMLConfig_ElementNames.Header.ELEMENT);
+        String applicationCreatedByContent = props.getProperty(XMLConfig_ElementNames.Header.ApplicationCreatedBy.ELEMENT);
+        String applicationVersionCreatedByContent = props.getProperty(XMLConfig_ElementNames.Header.ApplicationVersionCreatedBy.ELEMENT);
+        String userNameContent = props.getProperty(XMLConfig_ElementNames.Header.UserCreatedBy.ELEMENT);
+        String configVersionContent = props.getProperty(XMLConfig_ElementNames.Header.ConfigurationVersion.ELEMENT);
+        String serverVersionContent = props.getProperty(XMLConfig_ElementNames.Header.MetaMatrixSystemVersion.ELEMENT);
+        String timeContent = props.getProperty(XMLConfig_ElementNames.Header.Time.ELEMENT);
 
 
         if (configVersionContent !=null) {
-            Element configurationVersion = new Element(XMLConfig_42_ElementNames.Header.ConfigurationVersion.ELEMENT);
+            Element configurationVersion = new Element(XMLConfig_ElementNames.Header.ConfigurationVersion.ELEMENT);
             configurationVersion.addContent(configVersionContent);
             headerElement.addContent(configurationVersion);
         }        
         
         if (applicationCreatedByContent !=null) {
-            Element applicationCreatedBy = new Element(XMLConfig_42_ElementNames.Header.ApplicationCreatedBy.ELEMENT);
+            Element applicationCreatedBy = new Element(XMLConfig_ElementNames.Header.ApplicationCreatedBy.ELEMENT);
             applicationCreatedBy.addContent(applicationCreatedByContent);
             headerElement.addContent(applicationCreatedBy);
         }
 
         if (applicationVersionCreatedByContent != null) {
-            Element applicationVersionCreatedBy = new Element(XMLConfig_42_ElementNames.Header.ApplicationVersionCreatedBy.ELEMENT);
+            Element applicationVersionCreatedBy = new Element(XMLConfig_ElementNames.Header.ApplicationVersionCreatedBy.ELEMENT);
             applicationVersionCreatedBy.addContent(applicationVersionCreatedByContent);
             headerElement.addContent(applicationVersionCreatedBy);
         }
 
         if (userNameContent != null) {
-            Element userName = new Element(XMLConfig_42_ElementNames.Header.UserCreatedBy.ELEMENT);
+            Element userName = new Element(XMLConfig_ElementNames.Header.UserCreatedBy.ELEMENT);
             userName.addContent(userNameContent);
             headerElement.addContent(userName);
         }
 
         if (serverVersionContent != null) {
-            Element serverVersion = new Element(XMLConfig_42_ElementNames.Header.MetaMatrixSystemVersion.ELEMENT);
+            Element serverVersion = new Element(XMLConfig_ElementNames.Header.MetaMatrixSystemVersion.ELEMENT);
             serverVersion.addContent(serverVersionContent);
             headerElement.addContent(serverVersion);
         }
 
         if (timeContent != null) {
-            Element time = new Element(XMLConfig_42_ElementNames.Header.Time.ELEMENT);
+            Element time = new Element(XMLConfig_ElementNames.Header.Time.ELEMENT);
             time.addContent(timeContent);
             headerElement.addContent(time);
         }
@@ -724,16 +642,16 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         Properties props = getChangeHistoryFromElement(element);
 
         if (props != null && props.size() > 0) {
-            lastChangedBy = props.getProperty(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
-            lastChangedDate = props.getProperty(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
-            createdBy = props.getProperty(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
-            createdDate = props.getProperty(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
+            lastChangedBy = props.getProperty(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
+            lastChangedDate = props.getProperty(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
+            createdBy = props.getProperty(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
+            createdDate = props.getProperty(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
         } else {
             
-            lastChangedBy = element.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
-            lastChangedDate = element.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
-            createdBy = element.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
-            createdDate = element.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
+            lastChangedBy = element.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
+            lastChangedDate = element.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
+            createdBy = element.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
+            createdDate = element.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
         }  
         
         lastChangedBy = (lastChangedBy!=null?lastChangedBy:""); //$NON-NLS-1$
@@ -758,16 +676,16 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         Properties props = getChangeHistoryFromElement(element);
 
         if (props != null && props.size() > 0) {
-            lastChangedBy = props.getProperty(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
-            lastChangedDate = props.getProperty(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
-            createdBy = props.getProperty(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
-            createdDate = props.getProperty(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
+            lastChangedBy = props.getProperty(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
+            lastChangedDate = props.getProperty(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
+            createdBy = props.getProperty(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
+            createdDate = props.getProperty(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
         } else {
             
-            lastChangedBy = element.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
-            lastChangedDate = element.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
-            createdBy = element.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
-            createdDate = element.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
+            lastChangedBy = element.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY);
+            lastChangedDate = element.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE);
+            createdBy = element.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY);
+            createdDate = element.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE);
         }  
         
         lastChangedBy = (lastChangedBy!=null?lastChangedBy:""); //$NON-NLS-1$
@@ -785,7 +703,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
      private Properties getChangeHistoryFromElement(Element parentElement) {
          
-    	Element propertiesElement = parentElement.getChild(XMLConfig_42_ElementNames.ChangeHistory.ELEMENT);
+    	Element propertiesElement = parentElement.getChild(XMLConfig_ElementNames.ChangeHistory.ELEMENT);
 
     	if (propertiesElement == null ) {
         	return new Properties();
@@ -793,14 +711,14 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
 		Properties props = new Properties();
 
-        List properties = propertiesElement.getChildren(XMLConfig_42_ElementNames.ChangeHistory.Property.ELEMENT);
+        List properties = propertiesElement.getChildren(XMLConfig_ElementNames.ChangeHistory.Property.ELEMENT);
 		if (properties == null) {
 			return new Properties();
 		}
         Iterator iterator = properties.iterator();
         while (iterator.hasNext()) {
             Element propertyElement = (Element)iterator.next();
-            String propertyName = propertyElement.getAttributeValue(XMLConfig_42_ElementNames.ChangeHistory.Property.Attributes.NAME);
+            String propertyName = propertyElement.getAttributeValue(XMLConfig_ElementNames.ChangeHistory.Property.Attributes.NAME);
             String propertyValue = propertyElement.getText();
 
             props.setProperty(propertyName, (propertyValue!=null?propertyValue:"")); //$NON-NLS-1$
@@ -814,7 +732,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 //    private Element addChangeHistoryElementx(ComponentType obj) {
 //
 //// call to create the structure for the properties
-//       Element changeHistoryElement = new Element(XMLConfig_42_ElementNames.ChangeHistory.ELEMENT);
+//       Element changeHistoryElement = new Element(XMLConfig_ElementNames.ChangeHistory.ELEMENT);
 //
 //        String lastChangedBy=null;
 //        String lastChangedDate=null;
@@ -832,24 +750,24 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 //
 //		} else {
 //
-//        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
+//        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
 //    	}
 //
 //		if (lastChangedDate == null) {
 //    	} else {
 //
-//			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
+//			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
 //		}
 //
 //    	if (createdBy == null || createdBy.trim().length() == 0) {
 //    	} else {
 //
-//        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
+//        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
 //    	}
 //
 //    	if (createdDate == null) {
 //        } else {
-//			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE,createdDate);
+//			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE,createdDate);
 //    	}
 //
 //    	return changeHistoryElement;
@@ -874,24 +792,24 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         if (lastChangedBy == null || lastChangedBy.trim().length() == 0) {
 
         } else {
-            element.setAttribute(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
+            element.setAttribute(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
         }
 
         if (lastChangedDate == null) {
 
         } else {
-            element.setAttribute(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
+            element.setAttribute(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
 
         }
 
         if (createdBy == null || createdBy.trim().length() == 0) {
         } else {
-            element.setAttribute(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
+            element.setAttribute(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
         }
 
         if (createdDate == null) {
         } else {
-            element.setAttribute(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE, createdDate);
+            element.setAttribute(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE, createdDate);
         }
         
     }
@@ -915,25 +833,25 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
          if (lastChangedBy == null || lastChangedBy.trim().length() == 0) {
              
          } else {
-             element.setAttribute(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
+             element.setAttribute(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
          }
 
          if (lastChangedDate == null) {
              lastChangedDate = DateUtil.getCurrentDateAsString();
          } 
-             element.setAttribute(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
+             element.setAttribute(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
 
 
 
          if (createdBy == null || createdBy.trim().length() == 0) {
          } else {
-             element.setAttribute(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
+             element.setAttribute(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
          }
 
          if (createdDate == null) {
              createdDate = DateUtil.getCurrentDateAsString();
          } 
-             element.setAttribute(XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE, createdDate);
+             element.setAttribute(XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE, createdDate);
 
      }
    
@@ -941,7 +859,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
 //    private Element addChangeHistoryElementx(ComponentObject obj) {
 //
-//        Element changeHistoryElement = new Element(XMLConfig_42_ElementNames.ChangeHistory.ELEMENT);
+//        Element changeHistoryElement = new Element(XMLConfig_ElementNames.ChangeHistory.ELEMENT);
 //
 //        String lastChangedBy=null;
 //        String lastChangedDate=null;
@@ -959,26 +877,26 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 //
 //		} else {
 //
-//        changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
+//        changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_BY, lastChangedBy);
 //		}
 //
 //		if (lastChangedDate == null) {
 //
 //    	} else {
 //
-//			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
+//			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_ElementNames.ChangeHistory.Property.NAMES.LAST_CHANGED_DATE, lastChangedDate);
 //
 //		}
 //
 //    	if (createdBy == null || createdBy.trim().length() == 0) {
 //    	} else {
 //
-//        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
+//        	changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATED_BY, createdBy);
 //    	}
 //
 //    	if (createdDate == null) {
 //        } else {
-//			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_42_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE, createdDate);
+//			changeHistoryElement = addPropertyElement(changeHistoryElement, XMLConfig_ElementNames.ChangeHistory.Property.NAMES.CREATION_DATE, createdDate);
 //    	}
 //
 //    	return changeHistoryElement;
@@ -996,7 +914,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         Assertion.isNotNull(props);
 
         Properties sortprops = PropertiesUtils.sort(props);
-        Element propertiesElement = new Element(XMLConfig_42_ElementNames.Properties.ELEMENT);
+        Element propertiesElement = new Element(XMLConfig_ElementNames.Properties.ELEMENT);
         Enumeration enumeration = sortprops.propertyNames();
         while (enumeration.hasMoreElements()) {
             String propName = (String)enumeration.nextElement();
@@ -1008,8 +926,8 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
 
     private Element addPropertyElement(Element propertiesElement, String propName, String propValue) {
-            Element property = new Element(XMLConfig_42_ElementNames.Properties.Property.ELEMENT);
-            property.setAttribute(XMLConfig_42_ElementNames.Properties.Property.Attributes.NAME, propName);
+            Element property = new Element(XMLConfig_ElementNames.Properties.Property.ELEMENT);
+            property.setAttribute(XMLConfig_ElementNames.Properties.Property.Attributes.NAME, propName);
             property.addContent(propValue);
             propertiesElement.addContent(property);
             return propertiesElement;
@@ -1022,14 +940,14 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * This method is used to create a Configuration ID JDOM Element from a
     * Configuration ID object.
     *
-    * @param type the ID type to be created. @see XMLConfig_42_ElementNames.Configuration.XXXID.ELEMENT for valid values
+    * @param type the ID type to be created. @see XMLConfig_ElementNames.Configuration.XXXID.ELEMENT for valid values
     * @param name the calue of the name attribute of the ID element to create.
     * @return a JDOM XML Element
     */
     public Element createIDElement(String type, String name) {
 
         Element idElement = new Element(type);
-        idElement.setAttribute(XMLConfig_42_ElementNames.ID.Attributes.NAME, name);
+        idElement.setAttribute(XMLConfig_ElementNames.ID.Attributes.NAME, name);
         return idElement;
     }
 
@@ -1051,9 +969,9 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     *
     * @return a JDOM XML Element
     */
-    public Element createHostsElement() {
-        throw new UnsupportedOperationException("Method createHostsElement is unsupported in 4.2"); //$NON-NLS-1$
-    }
+//    public Element createHostsElement() {
+//        throw new UnsupportedOperationException("Method createHostsElement is unsupported in 4.2"); //$NON-NLS-1$
+//    }
     
     /**
      * This method is used to create a Host JDOM Element from a
@@ -1062,12 +980,12 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
      * @param host the Object to be converted to a JDOM XML Element
      * @return a JDOM XML Element
      */
-     public Element createHostElement(Host host) {
-         Assertion.isNotNull(host);
-
-         Element hostElement = createComponentObjectElement(XMLElementNames.Hosts.Host.ELEMENT, host);
-         return hostElement;
-     }    
+//     public Element createHostElement(Host host) {
+//         Assertion.isNotNull(host);
+//
+//         Element hostElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.Host.ELEMENT, host);
+//         return hostElement;
+//     }    
 
     /**
     * This method is used to create a ServiceComponentDefns JDOM Element.
@@ -1077,9 +995,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return a JDOM XML Element
     */
     public Element createServiceComponentDefnsElement() {
-        return new Element(XMLConfig_42_ElementNames.ServiceComponentDefns.ELEMENT);
-        
-//        throw new UnsupportedOperationException("Method createServiceComponentDefnsElement is unsupported in 4.2"); //$NON-NLS-1$
+        return new Element(XMLConfig_ElementNames.Configuration.Services.ELEMENT);
     }
 
     /**
@@ -1090,15 +1006,15 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return a JDOM XML Element
     */
     public Element createComponentTypesElement() {
-        return new Element(XMLConfig_42_ElementNames.ComponentTypes.ELEMENT);
+        return new Element(XMLConfig_ElementNames.ComponentTypes.ELEMENT);
     }
 
-    public Element createProductTypesElement() {
-        return new Element(XMLConfig_42_ElementNames.ProductTypes.ELEMENT);
-    }
+//    public Element createProductTypesElement() {
+//        return new Element(XMLConfig_ElementNames.ProductTypes.ELEMENT);
+//    }
 
     public Element createConnectorBindingsElement() {
-        return new Element(XMLConfig_42_ElementNames.ConnectorComponents.ELEMENT);
+        return new Element(XMLConfig_ElementNames.Configuration.ConnectorComponents.ELEMENT);
     }
 
 
@@ -1110,7 +1026,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return a JDOM XML Element
     */
     public Element createRootConfigurationDocumentElement() {
-        return new Element(XMLConfig_42_ElementNames.ELEMENT);
+        return new Element(XMLConfig_ElementNames.ELEMENT);
     }
 
 
@@ -1119,21 +1035,25 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * ComponentObject object.
     *
     * @param type The subclass type of the configuration object to be created.
-    * @see XMLConfig_42_ElementNames.Configuration.XXXX.ELEMENT
+    * @see XMLConfig_ElementNames.Configuration.XXXX.ELEMENT
     * @param componentObject the object to create the Element for.
     * @return a JDOM XML Element
     */
-    private Element createComponentObjectElement(String type, ComponentObject componentObject) {
+    private Element createComponentObjectElement(String type, ComponentObject componentObject, boolean addType) {
         Element componentObjectElement = new Element(type);
-        componentObjectElement.setAttribute(XMLConfig_42_ElementNames.ComponentObject.Attributes.NAME, componentObject.getName());
+        componentObjectElement.setAttribute(XMLConfig_ElementNames.ComponentObject.Attributes.NAME, componentObject.getName());
         BaseID id = componentObject.getComponentTypeID();
-        if (id !=null) {
-            componentObjectElement.setAttribute(XMLConfig_42_ElementNames.ComponentObject.Attributes.COMPONENT_TYPE, id.getName());
+        if (id !=null && addType) {
+            componentObjectElement.setAttribute(XMLConfig_ElementNames.ComponentObject.Attributes.COMPONENT_TYPE, id.getName());
         }
 
 			// this will add the changed history information
         if (componentObject instanceof DeployedComponent) {
-            // don't write the properties for the deployed component
+            Properties props = componentObject.getProperties();
+            if (props != null && ! props.isEmpty()) {
+                Element properties = createPropertiesElement( props);
+                componentObjectElement.addContent(properties);           	
+            }
         } else {
             Element properties = createPropertiesElement( componentObject.getProperties());
             componentObjectElement.addContent(properties);
@@ -1168,22 +1088,22 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the Host configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
     public Host createHost(Element element, ConfigurationID configID, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
         Assertion.isNotNull(element);
         Assertion.isNotNull(editor);
 
-        if (!element.getName().equals(XMLConfig_42_ElementNames.Configuration.Host.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Host.ELEMENT)) {
             throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0032, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0032, element.getName()), element);
         }
         if (name == null) {
-            name = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.Host.Attributes.NAME);
+            name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Host.Attributes.NAME);
         }
 
         Host host = editor.createHost(configID, name);
 
-//        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
+//        Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
 
         host = (Host) setDateHistory(host, element, editor);
 
@@ -1205,20 +1125,20 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @param defn the Object to be converted to a JDOM XML Element
     * @return a JDOM XML Element
     */
-    public Element createResourcePoolElement(ResourceDescriptor resource) {
-        Assertion.isNotNull(resource);
-
-        Element resourceElement = createComponentObjectElement(XMLConfig_42_ElementNames.ResourcePools.ResourcePool.ELEMENT, resource);
-        return resourceElement;
-    }
+//    public Element createResourcePoolElement(ResourceDescriptor resource) {
+//        Assertion.isNotNull(resource);
+//
+//        Element resourceElement = createComponentObjectElement(XMLConfig_ElementNames.ResourcePools.ResourcePool.ELEMENT, resource);
+//        return resourceElement;
+//    }
     
 
-    public Element createResourcePoolsElement() {
-       return new Element(XMLConfig_42_ElementNames.ResourcePools.ELEMENT);
-    }
+//    public Element createResourcePoolsElement() {
+//       return new Element(XMLConfig_ElementNames.ResourcePools.ELEMENT);
+//    }
     
     public Element createAuthenticationProviderElement() {
-        return new Element(XMLConfig_42_ElementNames.AuthenticationProviders.ELEMENT);
+        return new Element(XMLConfig_ElementNames.Configuration.AuthenticationProviders.ELEMENT);
      }    
     
 
@@ -1236,42 +1156,42 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the SharedResource configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
-    public ResourceDescriptor createResourcePool(Element element, ConfigurationID configID, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
-        Assertion.isNotNull(element);
-        Assertion.isNotNull(editor);
-
-        if (!element.getName().equals(XMLConfig_42_ElementNames.ResourcePools.ResourcePool.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0033, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0033, element.getName()), element);
-        }
-
-        String name = element.getAttributeValue(XMLConfig_42_ElementNames.ResourcePools.ResourcePool.Attributes.NAME);
-
-        checkElementValue(name, null, ErrorMessageKeys.CONFIG_ERR_0053);
-
-        String type = element.getAttributeValue(XMLConfig_42_ElementNames.ResourcePools.ResourcePool.Attributes.COMPONENT_TYPE);
-
-        checkElementValue(type, name, ErrorMessageKeys.CONFIG_ERR_0054);
-
-		ComponentTypeID id = new ComponentTypeID(type);
-
-        // create the descriptor used to get the resource
-        ResourceDescriptor descriptor = editor.createResourceDescriptor(configID, id, name);
-
-        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
-
-        descriptor = (ResourceDescriptor) setDateHistory(descriptor, element, editor);
-
-        if (propertiesElement != null) {
-            // now we add the system properties to the configuration object
-            descriptor = (ResourceDescriptor)addProperties(propertiesElement, descriptor, editor);
-
-        }
-
-
-        return descriptor;
-    }
+//    public ResourceDescriptor createResourcePool(Element element, ConfigurationID configID, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
+//        Assertion.isNotNull(element);
+//        Assertion.isNotNull(editor);
+//
+//        if (!element.getName().equals(XMLConfig_ElementNames.ResourcePools.ResourcePool.ELEMENT)) {
+//            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0033, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0033, element.getName()), element);
+//        }
+//
+//        String name = element.getAttributeValue(XMLConfig_ElementNames.ResourcePools.ResourcePool.Attributes.NAME);
+//
+//        checkElementValue(name, null, ErrorMessageKeys.CONFIG_ERR_0053);
+//
+//        String type = element.getAttributeValue(XMLConfig_ElementNames.ResourcePools.ResourcePool.Attributes.COMPONENT_TYPE);
+//
+//        checkElementValue(type, name, ErrorMessageKeys.CONFIG_ERR_0054);
+//
+//		ComponentTypeID id = new ComponentTypeID(type);
+//
+//        // create the descriptor used to get the resource
+//        ResourceDescriptor descriptor = editor.createResourceDescriptor(configID, id, name);
+//
+//        Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
+//
+//        descriptor = (ResourceDescriptor) setDateHistory(descriptor, element, editor);
+//
+//        if (propertiesElement != null) {
+//            // now we add the system properties to the configuration object
+//            descriptor = (ResourceDescriptor)addProperties(propertiesElement, descriptor, editor);
+//
+//        }
+//
+//
+//        return descriptor;
+//    }
     
     /**
      * This method will create a Resource configuration object from an XML element
@@ -1286,21 +1206,21 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
      * @return the SharedResource configuration object
      * @throws InvalidConfigurationElementException if the element passed in
      * or its XML structure do not conform to the XML structure specfied in
-     * the XMLConfig_42_ElementNames class.
+     * the XMLConfig_ElementNames class.
      */
      public AuthenticationProvider createAuthenticationProvider(Element element, ConfigurationID configID, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
          Assertion.isNotNull(element);
          Assertion.isNotNull(editor);
 
-         if (!element.getName().equals(XMLConfig_42_ElementNames.AuthenticationProviders.Provider.ELEMENT)) {
+         if (!element.getName().equals(XMLConfig_ElementNames.Configuration.AuthenticationProviders.Provider.ELEMENT)) {
              throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0033, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0033, element.getName()), element);
          }
 
-         String name = element.getAttributeValue(XMLConfig_42_ElementNames.AuthenticationProviders.Provider.Attributes.NAME);
+         String name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.AuthenticationProviders.Provider.Attributes.NAME);
 
          checkElementValue(name, null, ErrorMessageKeys.CONFIG_ERR_0053);
 
-         String type = element.getAttributeValue(XMLConfig_42_ElementNames.AuthenticationProviders.Provider.Attributes.COMPONENT_TYPE);
+         String type = element.getAttributeValue(XMLConfig_ElementNames.Configuration.AuthenticationProviders.Provider.Attributes.COMPONENT_TYPE);
 
          checkElementValue(type, name, ErrorMessageKeys.CONFIG_ERR_0054);
 
@@ -1309,7 +1229,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
          // create the descriptor used to get the resource
          AuthenticationProvider authProvider = editor.createAuthenticationProviderComponent(configID, id, name);
 
-         Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
+         Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
 
          authProvider = (AuthenticationProvider) setDateHistory(authProvider, element, editor);
 
@@ -1335,7 +1255,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     public Element createSharedResourceElement(SharedResource resource) {
         Assertion.isNotNull(resource);
 
-        Element resourceElement = createComponentObjectElement(XMLConfig_42_ElementNames.Resources.Resource.ELEMENT, resource);
+        Element resourceElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.Resources.Resource.ELEMENT, resource, true);
         return resourceElement;
     }
 
@@ -1353,21 +1273,21 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the SharedResource configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
     public SharedResource createSharedResource(Element element, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
         Assertion.isNotNull(element);
         Assertion.isNotNull(editor);
 
-        if (!element.getName().equals(XMLConfig_42_ElementNames.Resources.Resource.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Resources.Resource.ELEMENT)) {
             throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0034, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0034, element.getName()), element);
         }
 
-        String name = element.getAttributeValue(XMLConfig_42_ElementNames.Resources.Resource.Attributes.NAME);
+        String name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Resources.Resource.Attributes.NAME);
 
         checkElementValue(name, null, ErrorMessageKeys.CONFIG_ERR_0055);
 
-        String type = element.getAttributeValue(XMLConfig_42_ElementNames.Resources.Resource.Attributes.COMPONENT_TYPE);
+        String type = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Resources.Resource.Attributes.COMPONENT_TYPE);
 
         checkElementValue(type, name, ErrorMessageKeys.CONFIG_ERR_0056);
 
@@ -1379,7 +1299,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
                                             name);
 
 
-        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
+        Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
 
         descriptor = (SharedResource) setDateHistory(descriptor, element, editor);
 
@@ -1392,7 +1312,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     }
 
     public Element createSharedResourcesElement() {
-       return new Element(XMLConfig_42_ElementNames.Resources.ELEMENT);
+       return new Element(XMLConfig_ElementNames.Configuration.Resources.ELEMENT);
     }
 
     /**
@@ -1408,37 +1328,43 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the ComponentType configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
     public ComponentType createComponentType(Element element, ConfigurationObjectEditor editor, String name, boolean maintainParentID) throws InvalidConfigurationElementException{
         Assertion.isNotNull(element);
         Assertion.isNotNull(editor);
 
-        if (!element.getName().equals(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.ComponentTypes.ComponentType.ELEMENT)) {
             throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0035, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0035, element.getName()), element);
         }
 
         // retreive the attributes of this ComponentType from the JDOM element
-        String parentType = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.PARENT_COMPONENT_TYPE);
-        String superType = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE);
-        String componentTypeCode = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE);
-        String deployable = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE);
-        String monitorable = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE);
-        String description = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.DESCRIPTION);
+        String parentType = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.PARENT_COMPONENT_TYPE);
+        String superType = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE);
+        String componentTypeCode = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.COMPONENT_TYPE_CODE);
+        String deployable = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.DEPLOYABLE);
+        String monitorable = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.MONITORABLE);
+        String description = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.DESCRIPTION);
 
-        // we will use the passed in name unless it is null...
-        if (name == null) {
-            name = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.NAME);
-        }
+
 
         // convert them into their proper data types
         int typeCode = Integer.parseInt(componentTypeCode);
+        
+        if (! BasicUtil.isValdComponentTypeCode(typeCode)) {
+        	throw new RuntimeException("File error2, invalid component type code " + componentTypeCode + " for " + name + " super " + superType);
+        }
+        
+        // we will use the passed in name unless it is null...
+        if (name == null) {
+            name = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.NAME);
+        }
 
         ComponentTypeID parentTypeID = null;
         ComponentTypeID superTypeID = null;
 
         if (parentType != null && parentType.length() > 0) {
-           parentTypeID = new ProductTypeID(parentType);
+           parentTypeID = new ComponentTypeID(parentType);
         }
 
         if (superType !=null && superType.length() > 0) {
@@ -1461,10 +1387,10 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
         // get the ComponentTypeDefn sub-Elements of this ComponentType
         // and create them also.
-        List componentTypeDefnElements = element.getChildren(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
+        List componentTypeDefnElements = element.getChildren(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
 
         if (componentTypeDefnElements == null || componentTypeDefnElements.size() == 0) {
-            componentTypeDefnElements = element.getChildren(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT);
+            componentTypeDefnElements = element.getChildren(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT);
             return addPropertyDefns(componentTypeDefnElements, t, editor);
         } 
 
@@ -1492,54 +1418,54 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the ProductType configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
-    public ProductType createProductType(Element element, ConfigurationObjectEditor editor, Map componentTypeMap, String name)throws  InvalidConfigurationElementException{
-        Assertion.isNotNull(element);
-        Assertion.isNotNull(editor);
-
-        if (!element.getName().equals(XMLConfig_42_ElementNames.ProductTypes.ProductType.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0036, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0036, element.getName()), element);
-        }
-
-        // retreive the attributes of this ComponentType from the JDOM element
-        String deployable = element.getAttributeValue(XMLConfig_42_ElementNames.ProductTypes.ProductType.Attributes.DEPLOYABLE);
-//        String monitorable = element.getAttributeValue(XMLConfig_42_ElementNames.ProductTypes.ProductType.Attributes.MONITORABLE);
-
-        // we will use the passed in name unless it is null...
-        if (name == null) {
-            name = element.getAttributeValue(XMLConfig_42_ElementNames.ProductTypes.ProductType.Attributes.NAME);
-        }
-
-        boolean isDeployable = (Boolean.valueOf(deployable)).booleanValue();
- //       boolean isMonitorable = (Boolean.valueOf(monitorable)).booleanValue();
-
-        List componentTypeIDs = element.getChildren(XMLConfig_42_ElementNames.ComponentTypeID.ELEMENT);
-        List componentTypes = new ArrayList();
-        Iterator iter = componentTypeIDs.iterator();
-        while (iter.hasNext()) {
-            Element componentTypeIDElement = (Element)iter.next();
-            String componentTypeIDName = componentTypeIDElement.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypeID.Attributes.NAME);
-            ComponentTypeID componentTypeID = new ComponentTypeID(componentTypeIDName);
-            ComponentType componentType = (ComponentType)componentTypeMap.get(componentTypeID);
-            if (componentType == null) {
-            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0037, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0037, new Object[] {componentTypeID, name}), element);
-            }
-            componentTypes.add(componentType);
-        }
-
-        // create the ComponentTypeObject
-        ProductType type = editor.createProductType(name, componentTypes, isDeployable, false);
-
-        return type;
-//        // get the ComponentTypeDefn sub-Elements of this ComponentType
-//        // and create them also.
-//        Collection componentTypeDefnElements = element.getChildren(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
+//    public ProductType createProductType(Element element, ConfigurationObjectEditor editor, Map componentTypeMap, String name)throws  InvalidConfigurationElementException{
+//        Assertion.isNotNull(element);
+//        Assertion.isNotNull(editor);
 //
-//        type = (ProductType) setDateHistory(type, element, editor);
+//        if (!element.getName().equals(XMLConfig_ElementNames.ProductTypes.ProductType.ELEMENT)) {
+//            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0036, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0036, element.getName()), element);
+//        }
 //
-//        return (ProductType)addComponentTypeDefns(componentTypeDefnElements, type, editor);
-    }
+//        // retreive the attributes of this ComponentType from the JDOM element
+//        String deployable = element.getAttributeValue(XMLConfig_ElementNames.ProductTypes.ProductType.Attributes.DEPLOYABLE);
+////        String monitorable = element.getAttributeValue(XMLConfig_ElementNames.ProductTypes.ProductType.Attributes.MONITORABLE);
+//
+//        // we will use the passed in name unless it is null...
+//        if (name == null) {
+//            name = element.getAttributeValue(XMLConfig_ElementNames.ProductTypes.ProductType.Attributes.NAME);
+//        }
+//
+//        boolean isDeployable = (Boolean.valueOf(deployable)).booleanValue();
+// //       boolean isMonitorable = (Boolean.valueOf(monitorable)).booleanValue();
+//
+//        List componentTypeIDs = element.getChildren(XMLConfig_ElementNames.ComponentTypeID.ELEMENT);
+//        List componentTypes = new ArrayList();
+//        Iterator iter = componentTypeIDs.iterator();
+//        while (iter.hasNext()) {
+//            Element componentTypeIDElement = (Element)iter.next();
+//            String componentTypeIDName = componentTypeIDElement.getAttributeValue(XMLConfig_ElementNames.ComponentTypeID.Attributes.NAME);
+//            ComponentTypeID componentTypeID = new ComponentTypeID(componentTypeIDName);
+//            ComponentType componentType = (ComponentType)componentTypeMap.get(componentTypeID);
+//            if (componentType == null) {
+//            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0037, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0037, new Object[] {componentTypeID, name}), element);
+//            }
+//            componentTypes.add(componentType);
+//        }
+//
+//        // create the ComponentTypeObject
+//        ProductType type = editor.createProductType(name, componentTypes, isDeployable, false);
+//
+//        return type;
+////        // get the ComponentTypeDefn sub-Elements of this ComponentType
+////        // and create them also.
+////        Collection componentTypeDefnElements = element.getChildren(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.ELEMENT);
+////
+////        type = (ProductType) setDateHistory(type, element, editor);
+////
+////        return (ProductType)addComponentTypeDefns(componentTypeDefnElements, type, editor);
+//    }
 
     /**
     * This method will create a Configuration configuration object from an XML element
@@ -1554,33 +1480,26 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the Configuration configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
     public Configuration createConfiguration(Element element, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
 
         Assertion.isNotNull(element);
         Assertion.isNotNull(editor);
 
-        if (!element.getName().equals(XMLConfig_42_ElementNames.Configuration.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.ELEMENT)) {
             	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0038, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0038, element.getName()), element);
         }
 
         if (name==null) {
-            name = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.Attributes.NAME);
+            name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Attributes.NAME);
         }
 
         Configuration config = editor.createConfiguration(name);
 
-//        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
-
         config = (Configuration) setDateHistory(config, element, editor);
 
-//        if (propertiesElement != null) {
-            // now we add the system properties to the configuration object
-            config = (Configuration)addProperties(element, config, editor);
-
-//            return config;
-//        }
+        config = (Configuration)addProperties(element, config, editor);
 
         return config;
     }
@@ -1598,24 +1517,24 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the LogConfiguration configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
 //    public LogConfiguration createLogConfiguration(Element element) throws InvalidConfigurationElementException{
 //        Assertion.isNotNull(element);
 //
-//        if (!element.getName().equals(XMLConfig_42_ElementNames.Configuration.LogConfiguration.ELEMENT)) {
+//        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.LogConfiguration.ELEMENT)) {
 //            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0039, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0039, element.getName()), element);
 //        }
 //
-//        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
+//        Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
 //        Properties properties = new Properties();
 //
 //
-//        List props = propertiesElement.getChildren(XMLConfig_42_ElementNames.Properties.Property.ELEMENT);
+//        List props = propertiesElement.getChildren(XMLConfig_ElementNames.Properties.Property.ELEMENT);
 //        Iterator iterator = props.iterator();
 //        while (iterator.hasNext()) {
 //            Element propertyElement = (Element)iterator.next();
-//            String propertyName = propertyElement.getAttributeValue(XMLConfig_42_ElementNames.Properties.Property.Attributes.NAME);
+//            String propertyName = propertyElement.getAttributeValue(XMLConfig_ElementNames.Properties.Property.Attributes.NAME);
 //            String propertyValue = propertyElement.getText();
 //            properties.setProperty(propertyName, propertyValue);
 //        }
@@ -1637,17 +1556,10 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         
         Assertion.isNotNull(connector);
     
-        Element connectorElement = createComponentObjectElement(XMLConfig_42_ElementNames.ConnectorComponents.ConnectorComponent.ELEMENT, connector);
+        Element connectorElement = createComponentObjectElement(XMLConfig_ElementNames.Configuration.ConnectorComponents.ConnectorComponent.ELEMENT, connector, true);
 
-        connectorElement.setAttribute(XMLConfig_42_ElementNames.ConnectorComponents.ConnectorComponent.Attributes.QUEUED_SERVICE, Boolean.valueOf(connector.isQueuedService()).toString());
-        // vah - 09-24-2003
-        // when exporting a configuration, export the routing uuid to
-        // otherwise do not export it so that upon import 
-        // the routingUUID to be regenerated.
-        // This is done to help ensure there are no duplicate UUIDs
-//        if (isExportConfig) {
-            connectorElement.setAttribute(XMLConfig_42_ElementNames.ConnectorComponents.ConnectorComponent.Attributes.ROUTING_UUID, connector.getRoutingUUID());
-//        }
+         connectorElement.setAttribute(XMLConfig_ElementNames.Configuration.ConnectorComponents.ConnectorComponent.Attributes.ROUTING_UUID, connector.getRoutingUUID());
+
 
         return connectorElement;
     
@@ -1659,21 +1571,21 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         Assertion.isNotNull(element);
         Assertion.isNotNull(editor);
 
-        if (!element.getName().equals(XMLConfig_42_ElementNames.ConnectorComponents.ConnectorComponent.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.ConnectorComponents.ConnectorComponent.ELEMENT)) {
             throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0041, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0041,element.getName()), element);
         }
 
         if (name==null) {
-            name = element.getAttributeValue(XMLConfig_42_ElementNames.ConnectorComponents.ConnectorComponent.Attributes.NAME);
+            name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.ConnectorComponents.ConnectorComponent.Attributes.NAME);
         }
 
-        String componentType = element.getAttributeValue(XMLConfig_42_ElementNames.ConnectorComponents.ConnectorComponent.Attributes.COMPONENT_TYPE);
+        String componentType = element.getAttributeValue(XMLConfig_ElementNames.Configuration.ConnectorComponents.ConnectorComponent.Attributes.COMPONENT_TYPE);
 
         checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0057);
 
         ComponentTypeID id = new ComponentTypeID(componentType);
 
-//        element.getAttributeValue(XMLConfig_42_ElementNames.ConnectorComponents.ConnectorComponent.Attributes.QUEUED_SERVICE);
+//        element.getAttributeValue(XMLConfig_ElementNames.ConnectorComponents.ConnectorComponent.Attributes.QUEUED_SERVICE);
 
         String routingUUID = null;
         // vah - 09-24-2003
@@ -1681,7 +1593,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         // otherwise do not use it (which will cause the routingUUID to be regenerated)
         // This is done to help ensure there are no duplicate UUIDs
         if (isImportConfig) {  
-            routingUUID = element.getAttributeValue(XMLConfig_42_ElementNames.ConnectorComponents.ConnectorComponent.Attributes.ROUTING_UUID);
+            routingUUID = element.getAttributeValue(XMLConfig_ElementNames.Configuration.ConnectorComponents.ConnectorComponent.Attributes.ROUTING_UUID);
         }
 
         ConnectorBinding defn = null;
@@ -1690,7 +1602,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         defn = (ConnectorBinding) setDateHistory(defn, element, editor);
 
         // add the properties to this ComponentObject...
-        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
+        Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
         if (propertiesElement != null) {
             // now we add the system properties to the configuration object
             return (ConnectorBinding)addProperties(propertiesElement, defn, editor);
@@ -1716,7 +1628,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the ServiceComponentDefn configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
     public ComponentDefn createServiceComponentDefn(Element element, Configuration config, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
 		ConfigurationID configID = null;
@@ -1733,23 +1645,23 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         Assertion.isNotNull(editor);
         Assertion.isNotNull(configID);
 
-        if (!element.getName().equals(XMLConfig_42_ElementNames.ServiceComponentDefns.ServiceComponentDefn.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Services.Service.ELEMENT)) {
             throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0042, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0042,element.getName()), element);
         }
 
         if (name==null) {
-            name = element.getAttributeValue(XMLConfig_42_ElementNames.ServiceComponentDefns.ServiceComponentDefn.Attributes.NAME);
+            name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Services.Service.Attributes.NAME);
         }
 
-        String componentType = element.getAttributeValue(XMLConfig_42_ElementNames.ServiceComponentDefns.ServiceComponentDefn.Attributes.COMPONENT_TYPE);
+        String componentType = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Services.Service.Attributes.COMPONENT_TYPE);
 
         checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0058);
 
         ComponentTypeID id = new ComponentTypeID(componentType);
 
-//        element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.ServiceComponentDefns.ServiceComponentDefn.Attributes.QUEUED_SERVICE);
+//        element.getAttributeValue(XMLConfig_ElementNames.Configuration.ServiceComponentDefns.ServiceComponentDefn.Attributes.QUEUED_SERVICE);
 
-        String routingUUID = element.getAttributeValue(XMLConfig_42_ElementNames.ServiceComponentDefns.ServiceComponentDefn.Attributes.ROUTING_UUID);
+        String routingUUID = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Services.Service.Attributes.ROUTING_UUID);
 
         ComponentDefn defn = null;
         boolean isResourcePool = isResourcePool(componentType);
@@ -1783,18 +1695,19 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
                     defn = editor.createServiceComponentDefn(configID, id, name, routingUUID);
                 }
 
-            } else {
-
-                defn = editor.createResourceDescriptor(configID, id, name);
-
-            }
+            } 
+//            else {
+//
+//                defn = editor.createResourceDescriptor(configID, id, name);
+//
+//            }
 
         }
 
         defn = (ComponentDefn) setDateHistory(defn, element, editor);
 
         // add the properties to this ComponentObject...
-        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
+        Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
         if (propertiesElement != null) {
             // now we add the system properties to the configuration object
             return (ComponentDefn)addProperties(propertiesElement, defn, editor);
@@ -1807,10 +1720,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     private boolean isResourcePool(String componentTypeName) {
         boolean result = false;
 
-        if (componentTypeName.equals(SharedResource.JDBC_COMPONENT_TYPE_NAME) ||
-            componentTypeName.equals(SharedResource.JMS_COMPONENT_TYPE_NAME) ||
-            componentTypeName.equals(SharedResource.MISC_COMPONENT_TYPE_NAME) ||
-            componentTypeName.equals(SharedResource.SEARCHBASE_COMPONENT_TYPE_NAME) ) {
+         if (componentTypeName.equals(SharedResource.MISC_COMPONENT_TYPE_NAME) ) {
                 return true;
             }
 
@@ -1832,92 +1742,92 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the ProductServiceConfig configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
-    public ProductServiceConfig createProductServiceConfig(Element element, ConfigurationID configID, ConfigurationObjectEditor editor,  String name)throws InvalidConfigurationElementException {
-        Assertion.isNotNull(element);
-        Assertion.isNotNull(editor);
-        Assertion.isNotNull(configID);
-
-        if (!element.getName().equals(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0043, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0043,element.getName()), element);
-        }
-
-        if (name==null) {
-            name = element.getAttributeValue(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.Attributes.NAME);
-        }
-
-        String componentType = element.getAttributeValue(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.Attributes.COMPONENT_TYPE);
-        checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0059);
-
-         
- //       ConfigurationID configID = (ConfigurationID)config.getID();
-        ProductTypeID id = new ProductTypeID(componentType);
-
-
- //       ConfigurationID configID = (ConfigurationID)config.getID();
-
-        // this new editor is used only as a way to create a product service config
-        // the passed in editor is then used to add the PSC to the configuration
-        // as passed in.
-        // we dont want to add the actions again to the passed in editor.
-        ProductServiceConfig productServiceConfig = editor.createProductServiceConfig(configID, id, name);
-
-	 	Collection serviceComponentDefnIDs = element.getChildren(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.ELEMENT);
-
-        if (id.getFullName().equals(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME)) {
-	        Iterator iterator = serviceComponentDefnIDs.iterator();
-	        while (iterator.hasNext()) {
-	            Element serviceComponentDefnIDElement = (Element)iterator.next();
-	            String serviceComponentDefnName = serviceComponentDefnIDElement.getAttributeValue(XMLConfig_42_ElementNames.ID.Attributes.NAME);
-
-	            String enabled = serviceComponentDefnIDElement.getAttributeValue(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.Attributes.IS_ENABLED);
-
-	            if (enabled == null) {
-	            	enabled = Boolean.TRUE.toString();
-	            }
-
-	            ConnectorBindingID serviceComponentDefnID = new ConnectorBindingID(configID, serviceComponentDefnName);
-	            productServiceConfig = editor.addServiceComponentDefn(productServiceConfig, serviceComponentDefnID);
-	            editor.setEnabled(serviceComponentDefnID, productServiceConfig, Boolean.valueOf(enabled).booleanValue());
-
-	        }
-
-
-        } else {
-
-	        Iterator iterator = serviceComponentDefnIDs.iterator();
-	        while (iterator.hasNext()) {
-	            Element serviceComponentDefnIDElement = (Element)iterator.next();
-	            String serviceComponentDefnName = serviceComponentDefnIDElement.getAttributeValue(XMLConfig_42_ElementNames.ID.Attributes.NAME);
-
-	            String enabled = serviceComponentDefnIDElement.getAttributeValue(XMLConfig_42_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.Attributes.IS_ENABLED);
-
-	            if (enabled == null) {
-	            	enabled = Boolean.TRUE.toString();
-	            }
-
-	            ServiceComponentDefnID serviceComponentDefnID = new ServiceComponentDefnID(configID, serviceComponentDefnName);
-	            productServiceConfig = editor.addServiceComponentDefn(productServiceConfig, serviceComponentDefnID);
-
-	            editor.setEnabled(serviceComponentDefnID, productServiceConfig, Boolean.valueOf(enabled).booleanValue());
-
-	        }
-
-        }
-
-        productServiceConfig = (ProductServiceConfig) setDateHistory(productServiceConfig, element, editor);
-
-        // add the properties to this ComponentObject...
-        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
-        if (propertiesElement != null) {
-            // now we add the system properties to the configuration object
-            productServiceConfig = (ProductServiceConfig)addProperties(propertiesElement, productServiceConfig, editor);
-            return productServiceConfig;
-        }
-
-        return productServiceConfig;
-    }
+//    public ProductServiceConfig createProductServiceConfig(Element element, ConfigurationID configID, ConfigurationObjectEditor editor,  String name)throws InvalidConfigurationElementException {
+//        Assertion.isNotNull(element);
+//        Assertion.isNotNull(editor);
+//        Assertion.isNotNull(configID);
+//
+//        if (!element.getName().equals(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.ELEMENT)) {
+//            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0043, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0043,element.getName()), element);
+//        }
+//
+//        if (name==null) {
+//            name = element.getAttributeValue(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.Attributes.NAME);
+//        }
+//
+//        String componentType = element.getAttributeValue(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.Attributes.COMPONENT_TYPE);
+//        checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0059);
+//
+//         
+// //       ConfigurationID configID = (ConfigurationID)config.getID();
+//        ProductTypeID id = new ProductTypeID(componentType);
+//
+//
+// //       ConfigurationID configID = (ConfigurationID)config.getID();
+//
+//        // this new editor is used only as a way to create a product service config
+//        // the passed in editor is then used to add the PSC to the configuration
+//        // as passed in.
+//        // we dont want to add the actions again to the passed in editor.
+//        ProductServiceConfig productServiceConfig = editor.createProductServiceConfig(configID, id, name);
+//
+//	 	Collection serviceComponentDefnIDs = element.getChildren(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.ELEMENT);
+//
+//        if (id.getFullName().equals(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME)) {
+//	        Iterator iterator = serviceComponentDefnIDs.iterator();
+//	        while (iterator.hasNext()) {
+//	            Element serviceComponentDefnIDElement = (Element)iterator.next();
+//	            String serviceComponentDefnName = serviceComponentDefnIDElement.getAttributeValue(XMLConfig_ElementNames.ID.Attributes.NAME);
+//
+//	            String enabled = serviceComponentDefnIDElement.getAttributeValue(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.Attributes.IS_ENABLED);
+//
+//	            if (enabled == null) {
+//	            	enabled = Boolean.TRUE.toString();
+//	            }
+//
+//	            ConnectorBindingID serviceComponentDefnID = new ConnectorBindingID(configID, serviceComponentDefnName);
+//	            productServiceConfig = editor.addServiceComponentDefn(productServiceConfig, serviceComponentDefnID);
+//	            editor.setEnabled(serviceComponentDefnID, productServiceConfig, Boolean.valueOf(enabled).booleanValue());
+//
+//	        }
+//
+//
+//        } else {
+//
+//	        Iterator iterator = serviceComponentDefnIDs.iterator();
+//	        while (iterator.hasNext()) {
+//	            Element serviceComponentDefnIDElement = (Element)iterator.next();
+//	            String serviceComponentDefnName = serviceComponentDefnIDElement.getAttributeValue(XMLConfig_ElementNames.ID.Attributes.NAME);
+//
+//	            String enabled = serviceComponentDefnIDElement.getAttributeValue(XMLConfig_ElementNames.ProductServiceConfigs.ProductServiceConfig.Service.Attributes.IS_ENABLED);
+//
+//	            if (enabled == null) {
+//	            	enabled = Boolean.TRUE.toString();
+//	            }
+//
+//	            ServiceComponentDefnID serviceComponentDefnID = new ServiceComponentDefnID(configID, serviceComponentDefnName);
+//	            productServiceConfig = editor.addServiceComponentDefn(productServiceConfig, serviceComponentDefnID);
+//
+//	            editor.setEnabled(serviceComponentDefnID, productServiceConfig, Boolean.valueOf(enabled).booleanValue());
+//
+//	        }
+//
+//        }
+//
+//        productServiceConfig = (ProductServiceConfig) setDateHistory(productServiceConfig, element, editor);
+//
+//        // add the properties to this ComponentObject...
+//        Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
+//        if (propertiesElement != null) {
+//            // now we add the system properties to the configuration object
+//            productServiceConfig = (ProductServiceConfig)addProperties(propertiesElement, productServiceConfig, editor);
+//            return productServiceConfig;
+//        }
+//
+//        return productServiceConfig;
+//    }
 
 
 
@@ -1925,7 +1835,6 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
                                                      ConfigurationID configID, 
                                                      HostID hostID,
                                                      VMComponentDefnID vmID,
-                                                     ProductServiceConfigID pscID,
                                                      Map componentTypeMap,
                                                      ConfigurationObjectEditor editor) 
                                                      throws InvalidConfigurationElementException{
@@ -1937,15 +1846,15 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         
         DeployedComponent component;
        
-        if (!element.getName().equals(XMLConfig_42_ElementNames.Configuration.DeployedService.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.DeployedService.ELEMENT)) {
             throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
         }
                              
-        String name = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedService.Attributes.NAME);
+        String name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedService.Attributes.NAME);
         checkElementValue(name, "NAME", ErrorMessageKeys.CONFIG_ERR_0048); //$NON-NLS-1$
 
-        String componentTypeIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedService.Attributes.COMPONENT_TYPE);
-//        String serviceComponentDefnIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.SERVICE_COMPONENT_DEFN_ID);
+        String componentTypeIDString = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedService.Attributes.COMPONENT_TYPE);
+//        String serviceComponentDefnIDString = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedComponent.Attributes.SERVICE_COMPONENT_DEFN_ID);
 
         checkElementValue(componentTypeIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
 //        checkElementValue(serviceComponentDefnIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
@@ -1966,7 +1875,8 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         }  
         
         ServiceComponentDefnID svcid = null;
-        if (type.getComponentTypeCode() == ComponentType.CONNECTOR_COMPONENT_TYPE_CODE) {
+        if (type.isOfTypeConnector()) {
+ //       		type.getComponentTypeCode() == ComponentType.CONNECTOR_COMPONENT_TYPE_CODE) {
 
             svcid = new ConnectorBindingID(configID, name);
 
@@ -1977,8 +1887,8 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
         }
         
-        component = editor.createDeployedServiceComponent(name, configID, hostID,vmID, svcid, pscID, (ComponentTypeID) type.getID());
-        
+        component = editor.createDeployedServiceComponent(name, configID, hostID,vmID, svcid, (ComponentTypeID) type.getID());
+        component =  (DeployedComponent)addProperties(element, component, editor);
         
         component = (DeployedComponent) setDateHistory(component, element, editor);
         
@@ -1987,55 +1897,55 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
       }
 
     
-    public DeployedComponent createDeployedVMComponentDefnx(Element element,
-                                                            ConfigurationID configID, 
-                                                            HostID hostID,
-     //                                                       VMComponentDefnID vmID,
-     //                                                       ProductServiceConfigID pscID,
-                                                            ComponentTypeID typeID,
-                                                            ConfigurationObjectEditor editor) 
-                                                            throws InvalidConfigurationElementException{
-               Assertion.isNotNull(element);
-               Assertion.isNotNull(editor);
-               Assertion.isNotNull(configID);
-               Assertion.isNotNull(hostID);
-    //           Assertion.isNotNull(vmID);
-               
-               DeployedComponent component=null;
-              
-               if (!element.getName().equals(XMLConfig_42_ElementNames.Configuration.Process.ELEMENT)) {
-                   throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
-               }
-                                    
-               String name = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.Process.Attributes.NAME);
-//               checkElementValue(name, "NAME", ErrorMessageKeys.CONFIG_ERR_0048);
-
-               String componentTypeIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.Process.Attributes.COMPONENT_TYPE);
-
-               checkElementValue(componentTypeIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
-             
-               
-//               ComponentType type = null;
-//               Iterator it = componentTypeMap.keySet().iterator();
-//               while (it.hasNext() ) {
-//                   ComponentTypeID id = (ComponentTypeID) it.next();
-//                   if (id.getFullName().equals(componentTypeIDString)) {
-//                       type = (ComponentType) componentTypeMap.get(id);
-//                       break;
-//                   }
+//    public DeployedComponent createDeployedVMComponentDefnx(Element element,
+//                                                            ConfigurationID configID, 
+//                                                            HostID hostID,
+//     //                                                       VMComponentDefnID vmID,
+//     //                                                       ProductServiceConfigID pscID,
+//                                                            ComponentTypeID typeID,
+//                                                            ConfigurationObjectEditor editor) 
+//                                                            throws InvalidConfigurationElementException{
+//               Assertion.isNotNull(element);
+//               Assertion.isNotNull(editor);
+//               Assertion.isNotNull(configID);
+//               Assertion.isNotNull(hostID);
+//    //           Assertion.isNotNull(vmID);
+//               
+//               DeployedComponent component=null;
+//              
+//               if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Process.ELEMENT)) {
+//                   throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
 //               }
-
-//               if (type == null) {
-//                   throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, name} ), element);
-//               }  
-               
- //              VMComponentDefnID vmID = new VMComponentDefnID(configID, hostID, name);
-/////               component = editor.createDeployedVMComponent(name, configID, hostID, vmID, typeID);
- //              createDeployedServiceComponent(name, configID, hostID,vmID, svcid, pscID, (ComponentTypeID) type.getID());
-               
-               
-             return component;  
-             }
+//                                    
+//               String name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Process.Attributes.NAME);
+////               checkElementValue(name, "NAME", ErrorMessageKeys.CONFIG_ERR_0048);
+//
+//               String componentTypeIDString = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Process.Attributes.COMPONENT_TYPE);
+//
+//               checkElementValue(componentTypeIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
+//             
+//               
+////               ComponentType type = null;
+////               Iterator it = componentTypeMap.keySet().iterator();
+////               while (it.hasNext() ) {
+////                   ComponentTypeID id = (ComponentTypeID) it.next();
+////                   if (id.getFullName().equals(componentTypeIDString)) {
+////                       type = (ComponentType) componentTypeMap.get(id);
+////                       break;
+////                   }
+////               }
+//
+////               if (type == null) {
+////                   throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, name} ), element);
+////               }  
+//               
+// //              VMComponentDefnID vmID = new VMComponentDefnID(configID, hostID, name);
+///////               component = editor.createDeployedVMComponent(name, configID, hostID, vmID, typeID);
+// //              createDeployedServiceComponent(name, configID, hostID,vmID, svcid, pscID, (ComponentTypeID) type.getID());
+//               
+//               
+//             return component;  
+//             }
 
     
 
@@ -2062,111 +1972,111 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the DeployedComponent configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
-    public DeployedComponent createDeployedComponent(Element element,
-             Configuration config, ConfigurationObjectEditor editor,
-             Map serviceComponentDefnMap, Map vmComponentDefnMap, Map componentTypeMap, String name)
-             throws InvalidConfigurationElementException{
-        throw new UnsupportedOperationException("Method createDeployedComponent is unsupported in 4.2"); //$NON-NLS-1$
-
-//        
-//        Assertion.isNotNull(element);
-//        Assertion.isNotNull(editor);
-//        Assertion.isNotNull(config);
+//    public DeployedComponent createDeployedComponent(Element element,
+//             Configuration config, ConfigurationObjectEditor editor,
+//             Map serviceComponentDefnMap, Map vmComponentDefnMap, Map componentTypeMap, String name)
+//             throws InvalidConfigurationElementException{
+//        throw new UnsupportedOperationException("Method createDeployedComponent is unsupported in 4.2"); //$NON-NLS-1$
 //
-//        DeployedComponent component;
-//
-//        if (!element.getName().equals(XMLConfig_42_ElementNames.Configuration.DeployedComponent.ELEMENT)) {
-//            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
-//        }
-//
-//        if (name == null) {
-//            name = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.NAME);
-//        }
-//
-//        String productServiceConfigIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.PRODUCT_SERVICE_CONFIG_ID);
-//        String vmComponentDefnIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.VM_COMPONENT_DEFN_ID);
-//        String serviceComponentDefnIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.SERVICE_COMPONENT_DEFN_ID);
-//        String HostIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.HOST_ID);
-//
-//        checkElementValue(vmComponentDefnIDString, name, ErrorMessageKeys.CONFIG_ERR_0045);
-//        checkElementValue(HostIDString, name, ErrorMessageKeys.CONFIG_ERR_0046);
-//
-//        ConfigurationID configID = (ConfigurationID)config.getID();
-//
-//         HostID hostID = new HostID(HostIDString);
-//         VMComponentDefnID vmComponentDefnID = new VMComponentDefnID(configID, vmComponentDefnIDString);
-//
-//         // this will check to see if this is actually a DeployedVMServiceComponent
-//        // these special deployed components dont have values for these ID's
-//        String componentTypeIDString = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.DeployedComponent.Attributes.COMPONENT_TYPE);
-//
-//        if (serviceComponentDefnIDString == null && productServiceConfigIDString == null) {
-//            VMComponentDefn defn = (VMComponentDefn)vmComponentDefnMap.get(vmComponentDefnID);
-//            if (defn==null) {
-//           		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0047, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0047, new Object[] {name, vmComponentDefnID} ), element);
-//
-//            }
-//            component = editor.createDeployedVMComponent(name, config, hostID, defn);
-//
-//        // else this element represents a normal ServiceComponentDefn object
-//        }else {
-//        	checkElementValue(productServiceConfigIDString, name, ErrorMessageKeys.CONFIG_ERR_0048);
-//        	checkElementValue(serviceComponentDefnIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
-//
-//        	ComponentType type = null;
-//        	Iterator it = componentTypeMap.keySet().iterator();
-//        	while (it.hasNext() ) {
-//        		ComponentTypeID id = (ComponentTypeID) it.next();
-//        		if (id.getFullName().equals(componentTypeIDString)) {
-//        			type = (ComponentType) componentTypeMap.get(id);
-//        			break;
-//        		}
-//        	}
-//
-//        	if (type == null) {
-//            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, serviceComponentDefnIDString} ), element);
-//        	}
-//        	ProductServiceConfigID productServiceConfigID = null;
-//        	if (type instanceof ConnectorBindingType) {
-//
-//	            productServiceConfigID = new ProductServiceConfigID(configID, productServiceConfigIDString);
-//
-//	            ConnectorBindingID bindingID = new ConnectorBindingID(configID, serviceComponentDefnIDString);
-//		        ConnectorBinding bdefn = (ConnectorBinding)serviceComponentDefnMap.get(bindingID);
-//
-//	            if (bdefn==null) {
-//            		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0051, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0051, new Object[] {name, serviceComponentDefnIDString} ), element);
-//	            }
-//	            component = editor.createDeployedServiceComponent(name, config, hostID, vmComponentDefnID, bdefn, productServiceConfigID);
-//
-//        	} else {
-//
-//	            productServiceConfigID = new ProductServiceConfigID(configID, productServiceConfigIDString);
-//
-//	            ServiceComponentDefnID serviceComponentDefnID = new ServiceComponentDefnID(configID, serviceComponentDefnIDString);
-//	            ServiceComponentDefn defn = (ServiceComponentDefn)serviceComponentDefnMap.get(serviceComponentDefnID);
-//
-//	            if (defn==null) {
-//            		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0052, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0052, new Object[] {name, serviceComponentDefnIDString} ), element);
-//	            }
-//	            component = editor.createDeployedServiceComponent(name, config, hostID, vmComponentDefnID, defn, productServiceConfigID);
-//
-//        	}
-//
-//        }
-//
-//        component = (DeployedComponent) setDateHistory(component, element, editor);
-//
-//        Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
-//        if (propertiesElement != null) {
-//            // now we add the system properties to the configuration object
-//           return (DeployedComponent)addProperties(propertiesElement, component, editor);
-//        }
-//
-//        return component;
-    }
+////        
+////        Assertion.isNotNull(element);
+////        Assertion.isNotNull(editor);
+////        Assertion.isNotNull(config);
+////
+////        DeployedComponent component;
+////
+////        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.DeployedComponent.ELEMENT)) {
+////            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
+////        }
+////
+////        if (name == null) {
+////            name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedComponent.Attributes.NAME);
+////        }
+////
+////        String productServiceConfigIDString = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedComponent.Attributes.PRODUCT_SERVICE_CONFIG_ID);
+////        String vmComponentDefnIDString = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedComponent.Attributes.VM_COMPONENT_DEFN_ID);
+////        String serviceComponentDefnIDString = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedComponent.Attributes.SERVICE_COMPONENT_DEFN_ID);
+////        String HostIDString = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedComponent.Attributes.HOST_ID);
+////
+////        checkElementValue(vmComponentDefnIDString, name, ErrorMessageKeys.CONFIG_ERR_0045);
+////        checkElementValue(HostIDString, name, ErrorMessageKeys.CONFIG_ERR_0046);
+////
+////        ConfigurationID configID = (ConfigurationID)config.getID();
+////
+////         HostID hostID = new HostID(HostIDString);
+////         VMComponentDefnID vmComponentDefnID = new VMComponentDefnID(configID, vmComponentDefnIDString);
+////
+////         // this will check to see if this is actually a DeployedVMServiceComponent
+////        // these special deployed components dont have values for these ID's
+////        String componentTypeIDString = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedComponent.Attributes.COMPONENT_TYPE);
+////
+////        if (serviceComponentDefnIDString == null && productServiceConfigIDString == null) {
+////            VMComponentDefn defn = (VMComponentDefn)vmComponentDefnMap.get(vmComponentDefnID);
+////            if (defn==null) {
+////           		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0047, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0047, new Object[] {name, vmComponentDefnID} ), element);
+////
+////            }
+////            component = editor.createDeployedVMComponent(name, config, hostID, defn);
+////
+////        // else this element represents a normal ServiceComponentDefn object
+////        }else {
+////        	checkElementValue(productServiceConfigIDString, name, ErrorMessageKeys.CONFIG_ERR_0048);
+////        	checkElementValue(serviceComponentDefnIDString, name, ErrorMessageKeys.CONFIG_ERR_0049);
+////
+////        	ComponentType type = null;
+////        	Iterator it = componentTypeMap.keySet().iterator();
+////        	while (it.hasNext() ) {
+////        		ComponentTypeID id = (ComponentTypeID) it.next();
+////        		if (id.getFullName().equals(componentTypeIDString)) {
+////        			type = (ComponentType) componentTypeMap.get(id);
+////        			break;
+////        		}
+////        	}
+////
+////        	if (type == null) {
+////            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, serviceComponentDefnIDString} ), element);
+////        	}
+////        	ProductServiceConfigID productServiceConfigID = null;
+////        	if (type instanceof ConnectorBindingType) {
+////
+////	            productServiceConfigID = new ProductServiceConfigID(configID, productServiceConfigIDString);
+////
+////	            ConnectorBindingID bindingID = new ConnectorBindingID(configID, serviceComponentDefnIDString);
+////		        ConnectorBinding bdefn = (ConnectorBinding)serviceComponentDefnMap.get(bindingID);
+////
+////	            if (bdefn==null) {
+////            		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0051, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0051, new Object[] {name, serviceComponentDefnIDString} ), element);
+////	            }
+////	            component = editor.createDeployedServiceComponent(name, config, hostID, vmComponentDefnID, bdefn, productServiceConfigID);
+////
+////        	} else {
+////
+////	            productServiceConfigID = new ProductServiceConfigID(configID, productServiceConfigIDString);
+////
+////	            ServiceComponentDefnID serviceComponentDefnID = new ServiceComponentDefnID(configID, serviceComponentDefnIDString);
+////	            ServiceComponentDefn defn = (ServiceComponentDefn)serviceComponentDefnMap.get(serviceComponentDefnID);
+////
+////	            if (defn==null) {
+////            		throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0052, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0052, new Object[] {name, serviceComponentDefnIDString} ), element);
+////	            }
+////	            component = editor.createDeployedServiceComponent(name, config, hostID, vmComponentDefnID, defn, productServiceConfigID);
+////
+////        	}
+////
+////        }
+////
+////        component = (DeployedComponent) setDateHistory(component, element, editor);
+////
+////        Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
+////        if (propertiesElement != null) {
+////            // now we add the system properties to the configuration object
+////           return (DeployedComponent)addProperties(propertiesElement, component, editor);
+////        }
+////
+////        return component;
+//    }
 
     /**
     * This method will create a VMComponentDefn configuration object from an XML element
@@ -2181,22 +2091,22 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the VMComponentDefn configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
-    public VMComponentDefn createVMComponentDefn(Element element, ConfigurationID configID, HostID hostID, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
+    public BasicVMComponentDefn createProcess(Element element, ConfigurationID configID, HostID hostID, ConfigurationObjectEditor editor, String name) throws InvalidConfigurationElementException{
         Assertion.isNotNull(element);
         Assertion.isNotNull(editor);
         Assertion.isNotNull(configID);
 
-        if (!element.getName().equals(XMLConfig_42_ElementNames.Configuration.Process.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Process.ELEMENT)) {
             throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         if (name==null) {
-            name = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.Process.Attributes.NAME);
+            name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Process.Attributes.NAME);
         }
 
-        String componentType = element.getAttributeValue(XMLConfig_42_ElementNames.Configuration.Process.Attributes.COMPONENT_TYPE);
+        String componentType = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Process.Attributes.COMPONENT_TYPE);
 
         checkElementValue(componentType, name, ErrorMessageKeys.CONFIG_ERR_0060);
 
@@ -2207,13 +2117,13 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     	defn = (VMComponentDefn) setDateHistory(defn, element, editor);
 
         // add the properties to this ComponentObject...
- //       Element propertiesElement = element.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
+ //       Element propertiesElement = element.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
  //       if (propertiesElement != null) {
             // now we add the system properties to the configuration object
            defn =  (VMComponentDefn)addProperties(element, defn, editor);
  //       }
 
-        return defn;
+        return (BasicVMComponentDefn) defn;
     }
 
     /**
@@ -2223,35 +2133,35 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @param element the XML element that represents a PropertyDefinition object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
     public PropertyDefinition createPropertyDefinition(Element element) throws InvalidConfigurationElementException{
 
-        if (!element.getName().equals(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT)) {
             throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         
-        String nameString = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.NAME);
+        String nameString = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.NAME);
         
-        String displayNameString = element.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DISPLAY_NAME);
+        String displayNameString = element.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DISPLAY_NAME);
         
 
         String shortDescriptionString = getAttributeString(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.SHORT_DESCRIPTION,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.SHORT_DESCRIPTION,
             PropertyDefinitionImpl.DEFAULT_SHORT_DESCRIPTION);
 
         String defaultValueString = getAttributeString(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DEFAULT_VALUE,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DEFAULT_VALUE,
             PropertyDefinitionImpl.DEFAULT_DEFAULT_VALUE);
         
         String valueDelimiterString = getAttributeString(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.VALUE_DELIMITER,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.VALUE_DELIMITER,
             PropertyDefinitionImpl.DEFAULT_DELIMITER);
         
         
         String multiplicityString = getAttributeString(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.MULTIPLICITY,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.MULTIPLICITY,
             PropertyDefinitionImpl.DEFAULT_MULTIPLICITY);
         Multiplicity mult = null;
         try {
@@ -2262,38 +2172,38 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
         
         String propertyTypeString = getAttributeString(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.PROPERTY_TYPE,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.PROPERTY_TYPE,
             PropertyDefinitionImpl.DEFAULT_TYPE.getDisplayName());
         PropertyType type = PropertyType.getInstance(propertyTypeString);
 
 
         
         boolean isConstrainedToAllowedValues = getAttributeBoolean(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_CONSTRAINED_TO_ALLOWED_VALUES,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_CONSTRAINED_TO_ALLOWED_VALUES,
             PropertyDefinitionImpl.DEFAULT_IS_CONSTRAINED);
 
         boolean isExpert = getAttributeBoolean(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_EXPERT,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_EXPERT,
             PropertyDefinitionImpl.DEFAULT_IS_EXPERT);
         
         boolean isHidden = getAttributeBoolean(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN,
             PropertyDefinitionImpl.DEFAULT_IS_HIDDEN);
 
         boolean isMasked = getAttributeBoolean(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MASKED,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MASKED,
             PropertyDefinitionImpl.DEFAULT_IS_MASKED);
 
         boolean isModifiable = getAttributeBoolean(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MODIFIABLE,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MODIFIABLE,
             PropertyDefinitionImpl.DEFAULT_IS_MODIFIABLE);
 
         boolean isPreferred = getAttributeBoolean(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED,
             PropertyDefinitionImpl.DEFAULT_IS_PREFERRED);
                                                   
         String requiresRestart = getAttributeString(element,
-            XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.REQUIRES_RESTART,
+            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.REQUIRES_RESTART,
             PropertyDefinitionImpl.DEFAULT_REQUIRES_RESTART.toString());
 
         RestartType restartType = null;
@@ -2307,7 +2217,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         
         // we must retrieve all of the allowed values from the PropertyDefinition
         // element
-        Collection allowedValuesElements = element.getChildren(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.AllowedValue.ELEMENT);
+        Collection allowedValuesElements = element.getChildren(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.AllowedValue.ELEMENT);
         ArrayList allowedValues = new ArrayList(allowedValuesElements.size());
 
         Iterator iterator = allowedValuesElements.iterator();
@@ -2380,13 +2290,15 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * @return the ComponentObject configuration object
     * @throws InvalidConfigurationElementException if the element passed in
     * or its XML structure do not conform to the XML structure specfied in
-    * the XMLConfig_42_ElementNames class.
+    * the XMLConfig_ElementNames class.
     */
     public ComponentObject addProperties(Element propertiesElement, ComponentObject object, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
 
-        if (!propertiesElement.getName().equals(XMLConfig_42_ElementNames.Properties.ELEMENT)) {
-            propertiesElement = propertiesElement.getChild(XMLConfig_42_ElementNames.Properties.ELEMENT);
-        }
+        if (!propertiesElement.getName().equals(XMLConfig_ElementNames.Properties.ELEMENT)) {
+            propertiesElement = propertiesElement.getChild(XMLConfig_ElementNames.Properties.ELEMENT);
+        } 
+        
+        
 
         Properties props = null;
         if (propertiesElement == null) {           
@@ -2404,11 +2316,11 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     private Properties getProperties(Element propertiesElement) {
 		Properties props = new Properties();
 
-        List properties = propertiesElement.getChildren(XMLConfig_42_ElementNames.Properties.Property.ELEMENT);
+        List properties = propertiesElement.getChildren(XMLConfig_ElementNames.Properties.Property.ELEMENT);
         Iterator iterator = properties.iterator();
         while (iterator.hasNext()) {
             Element propertyElement = (Element)iterator.next();
-            String propertyName = propertyElement.getAttributeValue(XMLConfig_42_ElementNames.Properties.Property.Attributes.NAME);
+            String propertyName = propertyElement.getAttributeValue(XMLConfig_ElementNames.Properties.Property.Attributes.NAME);
             String propertyValue = propertyElement.getText();
 
             props.setProperty(propertyName, propertyValue);
@@ -2433,7 +2345,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
     * set on it.
     * @throws InvalidConfigurationElementException if the ComponentTypeDefn
     * JDOM elements do not adhere to the proper XML structure as defined by the
-    * XMLConfig_42_ElementNames class.
+    * XMLConfig_ElementNames class.
     */
     private ComponentType addComponentTypeDefns(Collection componentTypeDefnElements, ComponentType type, ConfigurationObjectEditor editor) throws InvalidConfigurationElementException{
         ArrayList componentTypeDefns = new ArrayList(componentTypeDefnElements.size());
@@ -2441,7 +2353,7 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
         Iterator iterator = componentTypeDefnElements.iterator();
         while (iterator.hasNext()) {
             Element componentTypeDefnElement = (Element)iterator.next();
-            Element propertyDefinitionElement = componentTypeDefnElement.getChild(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT);
+            Element propertyDefinitionElement = componentTypeDefnElement.getChild(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT);
             PropertyDefinition propDefn = createPropertyDefinition(propertyDefinitionElement);
             componentTypeDefns.add(editor.createComponentTypeDefn(type, propDefn, false));
         }
@@ -2502,11 +2414,11 @@ public class XMLConfig_42_HelperImpl implements XMLHelper,  ConfigurationPropert
 
 
         private String getElementSuperID(Element componentTypeElement) {
-            return componentTypeElement.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE);
+            return componentTypeElement.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.SUPER_COMPONENT_TYPE);
         }
 
         private String getElementID(Element componentTypeElement) {
-            return componentTypeElement.getAttributeValue(XMLConfig_42_ElementNames.ComponentTypes.ComponentType.Attributes.NAME);
+            return componentTypeElement.getAttributeValue(XMLConfig_ElementNames.ComponentTypes.ComponentType.Attributes.NAME);
         }
     }
 

@@ -33,7 +33,6 @@ import com.metamatrix.common.config.api.ServiceComponentDefnID;
 
 public class BasicServiceComponentDefn extends BasicComponentDefn implements ServiceComponentDefn, Serializable {
 
-    private boolean isQueuedService;
     private String routingUUID;
 
     public BasicServiceComponentDefn(ConfigurationID configurationID, ServiceComponentDefnID componentID, ComponentTypeID typeID) {
@@ -43,16 +42,7 @@ public class BasicServiceComponentDefn extends BasicComponentDefn implements Ser
 
     protected BasicServiceComponentDefn(BasicServiceComponentDefn component) {
         super(component);
-        setIsQueuedService(component.isQueuedService());
         this.setRoutingUUID(component.getRoutingUUID());
-    }
-
-    public boolean isQueuedService() {
-        return isQueuedService;
-    }
-
-    public void setIsQueuedService(boolean isQueued) {
-        isQueuedService = isQueued;
     }
 
     /**

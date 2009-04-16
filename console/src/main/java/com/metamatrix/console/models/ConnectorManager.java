@@ -22,17 +22,36 @@
 
 package com.metamatrix.console.models;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Properties;
 
 import com.metamatrix.common.actions.ModificationActionQueue;
-import com.metamatrix.common.config.api.*;
-import com.metamatrix.common.object.*;
+import com.metamatrix.common.config.api.ComponentDefnID;
+import com.metamatrix.common.config.api.ComponentType;
+import com.metamatrix.common.config.api.ComponentTypeDefn;
+import com.metamatrix.common.config.api.ComponentTypeID;
+import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.ConfigurationObjectEditor;
+import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.ConnectorBindingID;
+import com.metamatrix.common.config.api.DeployedComponent;
+import com.metamatrix.common.config.api.ServiceComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnID;
+import com.metamatrix.common.object.PropertiedObject;
+import com.metamatrix.common.object.PropertiedObjectEditor;
+import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.ui.views.connector.ConnectorBasicInfo;
 import com.metamatrix.console.ui.views.connector.ConnectorDetailInfo;
-import com.metamatrix.console.ui.views.connectorbinding.*;
+import com.metamatrix.console.ui.views.connectorbinding.BindingBasics;
+import com.metamatrix.console.ui.views.connectorbinding.BindingDataInterface;
+import com.metamatrix.console.ui.views.connectorbinding.ConnectorAndBinding;
 import com.metamatrix.console.util.ExceptionUtility;
-import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.platform.admin.api.ConfigurationAdminAPI;
 
 public class ConnectorManager extends Manager 
@@ -660,48 +679,47 @@ public class ConnectorManager extends Manager
         return propertiedObjectEditor;
     }
 
-    public void setEnableForBindingInPSC(ServiceComponentDefn scdBinding,
-    		ProductServiceConfig psc,
-    		boolean bEnabled, ConfigurationObjectEditor coe)
-            throws Exception {
-        // Ask Scott what this boolean does, and what value we should use:
-        boolean bDeleteDeployedComponents = true;
+//    public void setEnableForBindingInPSC(ServiceComponentDefn scdBinding,
+//    		ProductServiceConfig psc,
+//    		boolean bEnabled, ConfigurationObjectEditor coe)
+//            throws Exception {
+//        // Ask Scott what this boolean does, and what value we should use:
+//        boolean bDeleteDeployedComponents = true;
+//
+//        coe.setEnabled(getNextStartupConfig(), scdBinding, psc, bEnabled, bDeleteDeployedComponents);
+//    }
 
-        coe.setEnabled(getNextStartupConfig(), scdBinding, psc, bEnabled, bDeleteDeployedComponents);
-    }
-
-    public void setEnableForBindingInPSCByConfig(
-                                          Configuration cfg,
-                                          ServiceComponentDefn scdBinding,
-                                          ProductServiceConfig psc, 
-                                          boolean bEnabled,
-                                          ConfigurationObjectEditor coe)
-            throws Exception {
-        boolean bDeleteDeployedComponents = true;
-        coe.setEnabled(cfg,
-                        scdBinding,
-                        psc, 
-                        bEnabled, bDeleteDeployedComponents);
-    }
+//    public void setEnableForBindingInPSCByConfig(
+//                                          Configuration cfg,
+//                                          ServiceComponentDefn scdBinding,
+//                                          ProductServiceConfig psc, 
+//                                          boolean bEnabled,
+//                                          ConfigurationObjectEditor coe)
+//            throws Exception {
+//        boolean bDeleteDeployedComponents = true;
+//        coe.setEnabled(cfg,
+//                        scdBinding,
+//                        psc, 
+//                        bEnabled, bDeleteDeployedComponents);
+//    }
 
 	/**
-	 * Method to commit actions to create a conector binding.  The 
+	 * Method to create a connector binding and have it deployed to all exising VM's.  The 
 	 * ConfigurationObjectEditor argument is expected to to have the connector,
 	 * the connector binding name, and the properties.
 	 * 
 	 * @param binding  ServiceComponentDefn for the binding
 	 * @param coe  editor expected to have the connector, the binding name, and the binding properties
-	 * @param pscs  array of PSCs for which the binding is to be enabled
 	 */
-	public void createConnectorBinding(ServiceComponentDefn binding,
-			ConfigurationObjectEditor coe, ProductServiceConfig[] pscs) 
-			throws Exception {
-		ServiceComponentDefnID bindingID = (ServiceComponentDefnID)binding.getID();
+	public void createConnectorBinding(ConnectorBinding binding, ConfigurationObjectEditor coe) throws Exception {
+		ConnectorBindingID bindingID = (ConnectorBindingID)binding.getID();
 		Configuration nextStartupConfig = getNextStartupConfig();
-		for (int i = 0; i < pscs.length; i++) {
-			coe.addServiceComponentDefn(pscs[i], bindingID);
-			coe.deployServiceDefn(nextStartupConfig, binding,
-					(ProductServiceConfigID)pscs[i].getID());
+		
+		Collection<VMComponentDefn> vms = nextStartupConfig.getVMComponentDefns();
+		for (Iterator<VMComponentDefn> it=vms.iterator(); it.hasNext();) {
+			VMComponentDefn vm = it.next();
+
+			coe.deployServiceDefn(nextStartupConfig, binding, (VMComponentDefnID) vm.getID());
                     
 		}
 		getConfigurationAdminAPI().executeTransaction(
@@ -724,19 +742,30 @@ public class ConnectorManager extends Manager
      * @param pscs  array of PSCs for which the binding is to be enabled
      */
     public void createConnectorBinding(Collection bindings,
-            ConfigurationObjectEditor coe, ProductServiceConfig[] pscs) 
+            ConfigurationObjectEditor coe, VMComponentDefn[] vms) 
             throws Exception {
         Configuration nextStartupConfig = getNextStartupConfig();
+        
+        if (vms == null || vms.length == 0) {
+        	Collection<VMComponentDefn> vmsc = nextStartupConfig.getVMComponentDefns();
+        	vms = new VMComponentDefn[vmsc.size()];
+        	int x = 0;
+        	for (Iterator<VMComponentDefn> it=vmsc.iterator(); it.hasNext(); x++) {
+        		vms[x] = (VMComponentDefn) it.next();
+        	}
+        	
+        }
         
         for (Iterator it=bindings.iterator(); it.hasNext();) {
             ConnectorBinding cb = (ConnectorBinding) it.next();
             ConnectorBindingID cbID = (ConnectorBindingID) cb.getID();
             
-            for (int i = 0; i < pscs.length; i++) {
-                coe.addServiceComponentDefn(pscs[i], cbID);
-                coe.deployServiceDefn(nextStartupConfig, cb,
-                        (ProductServiceConfigID)pscs[i].getID());
-                        
+            if (vms != null && vms.length > 0) {
+	            for (int i = 0; i < vms.length; i++) {
+	                coe.deployServiceDefn(nextStartupConfig, cb,
+	                        (VMComponentDefnID) vms[i].getID());
+	                        
+	            }
             }
         }
         getConfigurationAdminAPI().executeTransaction(
@@ -771,15 +800,15 @@ public class ConnectorManager extends Manager
         //deploy to the same PSCS as the original connector binding        
         ConnectorBindingID oldBindingID = (ConnectorBindingID) oldBinding.getID();
         Configuration nextStartupConfig = getNextStartupConfig();        
-        Collection pscs = nextStartupConfig.getPSCsForServiceDefn(oldBindingID);        
+        Collection olddeploys = nextStartupConfig.getDeployedComponents( (ComponentDefnID) oldBinding.getID());
         
-        for (Iterator iter = pscs.iterator(); iter.hasNext(); ) {
-            ProductServiceConfig psc = (ProductServiceConfig) iter.next();
-            coe.addServiceComponentDefn(psc, newBindingID);
-            coe.deployServiceDefn(nextStartupConfig, newBinding, (ProductServiceConfigID) psc.getID());
-                    
+        // remove the old deployment and add the new binding to the vm
+        for (Iterator iter = olddeploys.iterator(); iter.hasNext(); ) {
+            DeployedComponent dep = (DeployedComponent) iter.next();
+            coe.delete(dep, nextStartupConfig);
+            coe.deployServiceDefn(nextStartupConfig, newBinding, dep.getVMComponentDefnID());                
         }
-        
+               
         //execute the transaction and return the results
         getConfigurationAdminAPI().executeTransaction(coe.getDestination().popActions());
         ModelManager.getConfigurationManager(getConnection()).setRefreshNeeded();
@@ -789,72 +818,4 @@ public class ConnectorManager extends Manager
         
     }    
 	
-    public ServiceComponentDefn getBindingCopyFromPsc(ProductServiceConfig psc,
-            ServiceComponentDefn scdBinding, ConnectionInfo connection) 
-            throws Exception {
-        ServiceComponentDefn scdBindingCopy = getBindingFromPSC(
-                getNextStartupConfig(), scdBinding.getRoutingUUID(),  psc);
-        return scdBindingCopy;
-    }
-
-    public ServiceComponentDefn getBindingCopyFromPscByConfig(
-                                                Configuration cfg,
-                                                ProductServiceConfig psc,
-                                                ServiceComponentDefn scdBinding)
-            throws Exception {
-        ServiceComponentDefn scdBindingCopy = getBindingFromPSC(cfg,
-                                 scdBinding.getRoutingUUID(),
-                                 psc);
-        return scdBindingCopy;
-    }
-
-	/**
-     * @return Collection of all ProductServiceConfig objects for the
-     * "Connectors" product type
-     */
-    public Collection getAllConnectorsPSCs() throws Exception {
-    	return getAllConnectorsPSCsByConfig( getNextStartupConfig() );
-	}
-
-    /**
-     * @return Collection of all ProductServiceConfig objects for the
-     * "Connectors" product type
-     */
-    public Collection getAllConnectorsPSCsByConfig(Configuration cfg)
-            throws Exception {
-        ProductTypeID connectorProductTypeID =
-                new ProductTypeID(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME);
-        Iterator itAllConnectorPSCs =
-                cfg.getComponentDefnIDs(connectorProductTypeID).iterator();
-        ProductServiceConfigID pscID        = null;
-        ProductServiceConfig psc            = null;
-        Collection colResult                = new HashSet();
-
-        while (itAllConnectorPSCs.hasNext()) {
-            pscID = (ProductServiceConfigID)itAllConnectorPSCs.next();
-            psc = (ProductServiceConfig)cfg.getComponentDefn(pscID);
-            colResult.add(psc);
-        }
-        return colResult;
-    }
-
-    /**
-     * @return the copy of the "global" binding that was placed in the indicated
-     * PSC
-     */
-    private ServiceComponentDefn getBindingFromPSC(Configuration config,
-            String routingUUID, ProductServiceConfig psc) {
-        Iterator iter = psc.getServiceComponentDefnIDs().iterator();
-        ServiceComponentDefnID bindingID = null;
-        ServiceComponentDefn binding = null;
-        while (iter.hasNext()) {
-            bindingID = (ServiceComponentDefnID)iter.next();
-            binding = (ServiceComponentDefn)config.getComponentDefn(bindingID);
-            if (binding.getRoutingUUID().equals(routingUUID)) {
-                return binding;
-            }
-        }
-        //should never get here!!!
-        return null;
-    }
 }//end ConnectorManager

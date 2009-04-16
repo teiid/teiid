@@ -45,60 +45,10 @@ public class XMLHelperUtil {
     */
     static final String DEFAULT_USER_CREATED_BY = "Unknown"; //$NON-NLS-1$
     
-    
-    static final String APPLICATION_CREATED_BY = "ApplicationCreatedBy"; //$NON-NLS-1$
-    static final String APPLICATION_VERSION_CREATED_BY = "ApplicationVersion"; //$NON-NLS-1$
-    static final String USER_CREATED_BY = "UserCreatedBy"; //$NON-NLS-1$
-    static final String CONFIGURATION_VERSION = "ConfigurationVersion"; //$NON-NLS-1$
-    static final String METAMATRIX_SYSTEM_VERSION = "MetaMatrixSystemVersion"; //$NON-NLS-1$
-    static final String TIME = "Time"; //$NON-NLS-1$
-
-    // at 4.2 is where the configuration format changes, so anything prior
-    // to this version will use the old (3.0) import/export utility
-    static final String MM_CONFIG_4_2_VERSION = "4.2"; //$NON-NLS-1$
-    static final String MM_CONFIG_3_0_VERSION = "3.0"; //$NON-NLS-1$
-    
-    static final double MM_LATEST_CONFIG_VERSION = 4.2;
-    
-
-    public static final boolean is42ConfigurationCompatible(Element root) throws InvalidConfigurationElementException{
-        Element headerElement = root.getChild(XMLElementNames.Header.ELEMENT);
-        if (headerElement == null) {
-        // If no header element found, assume it's pre vers 4.2
-            return false;
-        }
-        
-        Properties props = getHeaderProperties(headerElement);
-        
-        return is42ConfigurationCompatible(props);
-        
-    }
-    
-    public static final boolean is42ConfigurationCompatible(Properties props) throws InvalidConfigurationElementException{
-        
-        String sVersion = props.getProperty(XMLElementNames.Header.ConfigurationVersion.ELEMENT);
-        
-        if (sVersion == null) {
-            return false;
-        }
-        try {
-            double sv = Double.parseDouble(sVersion);
-            if (sv >= MM_LATEST_CONFIG_VERSION) {
-                return true;
-            } 
-                return false;
-
-        } catch (Throwable t) {
-            return false;
-        }
-
-        
-    }
-    
     public static final Properties getHeaderProperties(Element element) throws InvalidConfigurationElementException{
         Properties props=new Properties();
         
-        if (!element.getName().equals(XMLElementNames.Header.ELEMENT)) {
+        if (!element.getName().equals(XMLConfig_ElementNames.Header.ELEMENT)) {
             throw new InvalidConfigurationElementException("This is not the header element: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
@@ -113,7 +63,7 @@ public class XMLHelperUtil {
 
     
     public static final Element addHeaderElement(Element root, Properties properties) {
-        XMLHelper xmlHelper = new XMLConfig_42_HelperImpl();
+    	XMLHelperImpl xmlHelper = new XMLHelperImpl();
 
         root.addContent(xmlHelper.createHeaderElement(createHeaderProperties(properties)));
 
@@ -130,8 +80,8 @@ public class XMLHelperUtil {
         if (props!=null) {
             defaultProperties.putAll(props);
         }
-        defaultProperties.setProperty(ConfigurationPropertyNames.CONFIGURATION_VERSION, ConfigurationPropertyNames.MM_CONFIG_4_2_VERSION);        
-        defaultProperties.setProperty(ConfigurationPropertyNames.METAMATRIX_SYSTEM_VERSION, ApplicationInfo.getInstance().getMajorReleaseNumber());
+        defaultProperties.setProperty(ConfigurationPropertyNames.CONFIGURATION_VERSION, ConfigurationPropertyNames.CONFIG_CURR_VERSION);        
+        defaultProperties.setProperty(ConfigurationPropertyNames.SYSTEM_VERSION, ApplicationInfo.getInstance().getMajorReleaseNumber());
         defaultProperties.setProperty(ConfigurationPropertyNames.TIME, DateUtil.getCurrentDateAsString());
        
         

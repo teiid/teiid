@@ -33,7 +33,6 @@ import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.platform.admin.api.runtime.PscID;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.vm.controller.ProcessStatistics;
@@ -239,11 +238,11 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    void startPSC(PscID pscID) throws AuthorizationException,
-                              InvalidSessionException,
-                              MetaMatrixComponentException,
-                              MultipleException;
-
+//    void startPSC(PscID pscID) throws AuthorizationException,
+//                              InvalidSessionException,
+//                              MetaMatrixComponentException,
+//                              MultipleException;
+//
     /**
      * Stop up all services in psc, waiting for work to complete.
      * 
@@ -256,10 +255,10 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    void stopPSC(PscID pscID) throws AuthorizationException,
-                             InvalidSessionException,
-                             MetaMatrixComponentException,
-                             MultipleException;
+//    void stopPSC(PscID pscID) throws AuthorizationException,
+//                             InvalidSessionException,
+//                             MetaMatrixComponentException,
+//                             MultipleException;
 
     /**
      * Stop up all services in psc now.
@@ -273,10 +272,10 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
-    void stopPSCNow(PscID pscID) throws AuthorizationException,
-                                InvalidSessionException,
-                                MetaMatrixComponentException,
-                                MultipleException;
+//    void stopPSCNow(PscID pscID) throws AuthorizationException,
+//                                InvalidSessionException,
+//                                MetaMatrixComponentException,
+//                                MultipleException;
 
     /**
      * Synchronize running services with runtime configuration.
@@ -404,11 +403,11 @@ public interface RuntimeStateAdminAPI extends SubSystemAdminAPI {
      * @throws MetaMatrixComponentException
      * @since 4.2.1
      */
-    PscID getPscIDByName(String hostName,
-                         String processName,
-                         String pscName) throws InvalidSessionException,
-                                        AuthorizationException,
-                                        MetaMatrixComponentException;
+//    PscID getPscIDByName(String hostName,
+//                         String processName,
+//                         String pscName) throws InvalidSessionException,
+//                                        AuthorizationException,
+//                                        MetaMatrixComponentException;
 
     /**
      * Return the ServiceID by Name

@@ -94,7 +94,7 @@ public class TestProxies extends TestCase {
         	ServiceID sid1 = new ServiceID(i, vmBinding2.getHostName(), vmBinding2.getProcessName());
         	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, fakeServices[i], QueryService.SERVICE_NAME,
                                                                         "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                                                                        "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
+                                                                        "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4),  //$NON-NLS-1$ //$NON-NLS-2$ 
                                                                         ServiceState.STATE_CLOSED,
                                                                         new Date(),  
                                                                         false, new NoOpMessageBus());         	
@@ -148,7 +148,7 @@ public class TestProxies extends TestCase {
         	ServiceID sid1 = new ServiceID(i, vmBinding2.getHostName(), vmBinding2.getProcessName());
         	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, fakeServices[i], QueryService.SERVICE_NAME,
                                                                         "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                                                                        "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4), null, //$NON-NLS-1$ //$NON-NLS-2$ 
+                                                                        "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4),  //$NON-NLS-1$ //$NON-NLS-2$ 
                                                                         ServiceState.STATE_CLOSED,
                                                                         new Date(),  
                                                                         false, new NoOpMessageBus());        	

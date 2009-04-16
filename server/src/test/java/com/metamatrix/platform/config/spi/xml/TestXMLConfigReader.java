@@ -25,7 +25,6 @@ package com.metamatrix.platform.config.spi.xml;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentType;
@@ -33,6 +32,7 @@ import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
+import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.platform.config.BaseTest;
 import com.metamatrix.platform.config.util.CurrentConfigHelper;
@@ -68,30 +68,16 @@ public class TestXMLConfigReader extends BaseTest {
         for (Iterator it = compTypes.iterator(); it.hasNext();) {
             ComponentType type = (ComponentType)it.next();
             if (type.getComponentTypeCode() == ComponentType.RESOURCE_COMPONENT_TYPE_CODE) {
-                if (type.getID().equals(SharedResource.JDBC_COMPONENT_TYPE_ID)) {
+                if (type.getID().equals(SharedResource.MISC_COMPONENT_TYPE_ID)) {
                     keepTypes.add(type);
-                } else if (type.getID().equals(SharedResource.SEARCHBASE_COMPONENT_TYPE_ID)) {
-                    keepTypes.add(type);
-                }
+                } 
             }
 
-            if (type.getComponentTypeCode() == ComponentType.CONNECTOR_COMPONENT_TYPE_CODE) {
-                if (type.isOfTypeXAConnector()) {
-                    if (!type.isOfTypeConnector()) {
-                        fail("XA Connector Type " + type.getFullName() + " must also be a connector type");//$NON-NLS-1$ //$NON-NLS-2$
-                    }
-                    ++xacnt;
-                }
-            }
 
         }
 
         if (keepTypes.size() == 0) {
             fail("No Poolable ComponentTypes"); //$NON-NLS-1$
-        }
-
-        if (xacnt != 6) {
-            fail("The number XA Connector Types should have been 5, but found " + xacnt);//$NON-NLS-1$
         }
 
         printMsg("Validate Resources Exists"); //$NON-NLS-1$
@@ -105,16 +91,18 @@ public class TestXMLConfigReader extends BaseTest {
 
         HelperTestConfiguration.validateConfigContents(ns);
 
-        printMsg("Validate ComponentDefns"); //$NON-NLS-1$
-        Map defns = reader.getComponentDefinitions(Configuration.NEXT_STARTUP_ID);
-
-        HelperTestConfiguration.validateComponentDefns(defns.values());
-
-        printMsg("Validate Deployed Components"); //$NON-NLS-1$
-
-        Collection dc = reader.getDeployedComponents(Configuration.NEXT_STARTUP_ID);
-
-        HelperTestConfiguration.validateDeployedComponents(dc);
+        int cnt = 0;
+        Collection bindingsCollection = ns.getConnectorBindings();
+        for (Iterator<ConnectorBinding> it=bindingsCollection.iterator(); it.hasNext();) {
+        	ConnectorBinding cb = it.next();
+        	if (cb.isXASupported() ) {
+        		cnt++;
+        	}
+        }
+        if (cnt < 1) {
+        	fail("No XA Supported Connector Types");
+        }
+        
 
         printMsg("Validate Hosts"); //$NON-NLS-1$
 

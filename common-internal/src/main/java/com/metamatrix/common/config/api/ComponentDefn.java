@@ -35,7 +35,6 @@ public interface ComponentDefn extends
     public static final int PRODUCT_COMPONENT_CODE = ComponentType.PRODUCT_COMPONENT_TYPE_CODE;
     public static final int VM_COMPONENT_CODE = ComponentType.VM_COMPONENT_TYPE_CODE;
     public static final int RESOURCE_DESCRIPTOR_COMPONENT_CODE = 9;   
-    public static final int PSC_COMPONENT_CODE = ComponentType.PSC_COMPONENT_TYPE_CODE;
     public static final int HOST_COMPONENT_CODE = ComponentType.HOST_COMPONENT_TYPE_CODE;
     public static final int SHARED_RESOURCE_COMPONENT_CODE = 10;   
     public static final int DEPLOYED_COMPONENT_CODE = ComponentType.DEPLOYED_COMPONENT_TYPE_CODE;   

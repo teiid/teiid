@@ -79,7 +79,7 @@ public class ConfigurationModel {
         // System Configurations
         public static final AttributeDefinition CURRENT_CONFIGURATION   = new AttributeDefinition(6,"Current Configuation"); //$NON-NLS-1$
         public static final AttributeDefinition NEXT_STARTUP_CONFIGURATION   = new AttributeDefinition(16,"Next Startup Configuation"); //$NON-NLS-1$
-        public static final AttributeDefinition STARTUP_CONFIGURATION   = new AttributeDefinition(17,"Startup Configuation"); //$NON-NLS-1$
+ //       public static final AttributeDefinition STARTUP_CONFIGURATION   = new AttributeDefinition(17,"Startup Configuation"); //$NON-NLS-1$
     
 
         public static final AttributeDefinition UPDATE_PSC   = new AttributeDefinition(20,"Update PSC"); //$NON-NLS-1$

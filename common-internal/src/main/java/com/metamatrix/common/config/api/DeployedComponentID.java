@@ -31,7 +31,6 @@ public class DeployedComponentID extends ComponentObjectID {
     private final HostID hostID;
     private final VMComponentDefnID vmID;
     private final ServiceComponentDefnID serviceID;
-    private final ProductServiceConfigID pscID;
 
     /**
      * Instantiate a VM Deployed Component ID 
@@ -42,20 +41,18 @@ public class DeployedComponentID extends ComponentObjectID {
         this.hostID = hostId;
         this.vmID = vmId;
         this.serviceID = null;
-        this.pscID = null;
     }
 
     /**
      * Instantiate a Service or Connector Binding deployed service, that incorporates the
      * PSC name into it
      */
-    public DeployedComponentID(String name, ConfigurationID configId, HostID hostId, VMComponentDefnID vmId, ProductServiceConfigID pscID, ServiceComponentDefnID serviceId) {
-        super(DeployedComponentID.createDeployedName(name, configId, hostId, vmId, pscID, serviceId));
+    public DeployedComponentID(String name, ConfigurationID configId, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefnID serviceId) {
+        super(DeployedComponentID.createDeployedName(name, configId, hostId, vmId,  serviceId));
         this.configID = configId;
         this.hostID = hostId;
         this.vmID = vmId;
         this.serviceID = serviceId;
-        this.pscID = pscID;
     }
 
     /**
@@ -83,9 +80,8 @@ public class DeployedComponentID extends ComponentObjectID {
     /**
      * Responsible for creating the structuring Service id for this deployed component
      */
-    private static final String createDeployedName(String name, ConfigurationID configID, HostID hostID, VMComponentDefnID vmComponentID, ProductServiceConfigID pscID, ServiceComponentDefnID serviceComponentID) {
+    private static final String createDeployedName(String name, ConfigurationID configID, HostID hostID, VMComponentDefnID vmComponentID, ServiceComponentDefnID serviceComponentID) {
 		Assertion.isNotNull(configID);
-		Assertion.isNotNull(pscID);
 		Assertion.isNotNull(hostID);
 		Assertion.isNotNull(vmComponentID);
 		Assertion.isNotNull(serviceComponentID);
@@ -96,8 +92,6 @@ public class DeployedComponentID extends ComponentObjectID {
         sb.append(hostID.getName());
         sb.append(IDVerifier.DELIMITER_CHARACTER);
         sb.append(vmComponentID.getName());
-        sb.append(IDVerifier.DELIMITER_CHARACTER);
-        sb.append(pscID.getName());
         
         sb.append(IDVerifier.DELIMITER_CHARACTER);
         sb.append(serviceComponentID.getName());
@@ -122,9 +116,6 @@ public class DeployedComponentID extends ComponentObjectID {
     }
     public ServiceComponentDefnID getServiceID() {
         return serviceID;
-    }
-    public ProductServiceConfigID getPscID() {
-        return pscID;
     }
 }
 

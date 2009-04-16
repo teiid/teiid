@@ -26,17 +26,17 @@
 <ConfigurationDocument>
 	<Header>
     <ApplicationCreatedBy>ConfigurationAdministration</ApplicationCreatedBy>
-    <ApplicationVersionCreatedBy>4.2</ApplicationVersionCreatedBy>
+    <ApplicationVersionCreatedBy>6.0</ApplicationVersionCreatedBy>
     <UserCreatedBy>Configuration</UserCreatedBy>
-    <ConfigurationVersion>4.2</ConfigurationVersion>
-    <MetaMatrixSystemVersion>4.2</MetaMatrixSystemVersion>
+    <ConfigurationVersion>6.0</ConfigurationVersion>
+    <SystemVersion>6.0</SystemVersion>
     <Time>2004-06-30T12:23:53.919-06:00</Time>
   </Header>
 	
 	<Configuration CreatedBy="ConfigurationStartup" LastChangedBy="ConfigurationStartup" ComponentType="Configuration" Name="Next Startup"><Properties/></Configuration>
 	
 	<Services>
-	<Service Name="QueryService" ComponentType="QueryService" QueuedService="false" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+	<Service Name="QueryService" ComponentType="QueryService"  LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
       <Properties>
         <Property Name="metamatrix.service.essentialservice">false</Property>
         <Property Name="ProcessPoolMaxThreads">64</Property>
@@ -54,31 +54,7 @@
 		<Property Name="MaxPlanCacheSize">100</Property>       
       </Properties>
     </Service>
-	</Services>
-	
-	<ProductTypes>
-	<ProductType Name="Connectors" ComponentTypeCode="3" Deployable="false" Deprecated="false" Monitorable="false" SuperComponentType="Product" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
-		<ComponentTypeID Name="Oracle ANSI JDBC Connector"/>
-		<ComponentTypeID Name="Oracle 8 JDBC Connector"/>
-		<ComponentTypeID Name="DB2 JDBC Connector"/>
-		<ComponentTypeID Name="Sybase ANSI JDBC Connector"/>
-		<ComponentTypeID Name="Sybase 11 JDBC Connector"/>
-		<ComponentTypeID Name="SQL Server JDBC Connector"/>
-		<ComponentTypeID Name="JDBC Connector"/>
-		<ComponentTypeID Name="MS Access Connector"/>
-		<ComponentTypeID Name="JDBC ODBC Connector"/>
-		<ComponentTypeID Name="Text File Connector"/>
-		<ComponentTypeID Name="MySQL JDBC Connector"/>
-		<ComponentTypeID Name="PostgreSQL JDBC Connector"/>
-		<ComponentTypeID Name="Apache Derby Embedded Connector"/>
-		<ComponentTypeID Name="Apache Derby Network Connector"/>
-		<ComponentTypeID Name="Secure Data Source Connector"/>
-		<ComponentTypeID Name="SOAP Connector"/>
-		<ComponentTypeID Name="XML File Connector"/>
-		<ComponentTypeID Name="XML HTTP Connector"/>
-	</ProductType>
-	</ProductTypes>
-	
+	</Services>	
 	<ComponentTypes>
 	<ComponentType Name="Service" ComponentTypeCode="1" Deployable="false" Deprecated="false" Monitorable="false" ParentComponentType="VM" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
 			<ComponentTypeDefn Deprecated="false">

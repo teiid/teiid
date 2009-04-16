@@ -53,10 +53,9 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.object.PropertiedObject;
@@ -112,25 +111,25 @@ public final class DeployedProcessPanel
     private static final String NO_PSC =
         DeployPkgUtils.getString("drp.nodeployedpsc"); //$NON-NLS-1$
 
-    private static /*final*/ String[] PSC_HDRS;
-    private static final int PROD_COL = 0;
-    private static final int PSC_COL = 1;
+//    private static /*final*/ String[] SVC_HDRS;
+//    private static final int SVC_COL = 0;
+//    private static final int ENABLED_COL = 1;
 
     ///////////////////////////////////////////////////////////////////////////
     // INITIALIZER
     ///////////////////////////////////////////////////////////////////////////
 
-    static {
-        PSC_HDRS = new String[2];
-        PSC_HDRS[PROD_COL] = DeployPkgUtils.getString("drp.product.hdr"); //$NON-NLS-1$
-        PSC_HDRS[PSC_COL] = DeployPkgUtils.getString("drp.psc.hdr"); //$NON-NLS-1$
-    }
+//    static {
+//        SVC_HDRS = new String[2];
+//        SVC_HDRS[SVC_COL] = DeployPkgUtils.getString("drp.service.hdr"); //$NON-NLS-1$
+//        SVC_HDRS[ENABLED_COL] = DeployPkgUtils.getString("drp.enabled.hdr"); //$NON-NLS-1$
+//    }
 
     ///////////////////////////////////////////////////////////////////////////
     // CONTROLS
     ///////////////////////////////////////////////////////////////////////////
 
-    private TableWidget tblPscs;
+    private TableWidget tblSvcs;
     private TextFieldWidget txfHost;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -143,14 +142,11 @@ public final class DeployedProcessPanel
     private VMComponentDefn process;
     private ProcessPOP pnlProps;
     private JPanel pnlPropsOuter;
-//    private JSplitPane splitPane;    
     
     private DefaultTableModel tblModel;
     private HashMap prodRowMap = new HashMap();
     private HashMap propValueMap = new HashMap();   
     private HashMap propDefsMap = new HashMap();    
-    private int numPscsDifferent = 0;
-    private PscCellComponent pscCellComp;
     private boolean processEvents = true;
     private ConfigurationPropertiedObjectEditor propEditor;
     private PropertiedObject propObj;
@@ -186,7 +182,8 @@ public final class DeployedProcessPanel
 
     
     private void checkResetState() {
-            if (isPropertiesValid() &&  (propsDifferent ||  (numPscsDifferent > 0))) {
+            if (isPropertiesValid() &&  (propsDifferent) ) {
+            		//||  (numPscsDifferent > 0))) {
                 if (!actionApply.isEnabled()) {
                     actionApply.setEnabled(true);
                     actionReset.setEnabled(true);
@@ -238,16 +235,7 @@ public final class DeployedProcessPanel
 
 
         TitledBorder tBorder;
-
-//        JPanel pnlOps = new JPanel();
-//        gbc = new GridBagConstraints();
-//        gbc.gridx = 0;
-//        gbc.gridy = 4;
-//        gbc.gridwidth = GridBagConstraints.REMAINDER;
-//        gbc.insets = new Insets(3, 3, 3, 3);
-//        pnl.add(pnlOps, gbc);
-        
-        
+       
         pnlPropsOuter = new JPanel(new GridLayout(1, 1));
         setPnlPropsOuterBorder(null);
         
@@ -287,7 +275,7 @@ public final class DeployedProcessPanel
         }
 
         JPanel pnlPscs = new JPanel(new GridLayout(1, 1));
-        tBorder = new TitledBorder(getString("drp.pnlPscs.title")); //$NON-NLS-1$
+        tBorder = new TitledBorder(getString("drp.pnlSvcs.title")); //$NON-NLS-1$
         pnlPscs.setBorder(
             new CompoundBorder(tBorder,
                                DeployPkgUtils.EMPTY_BORDER));
@@ -300,21 +288,23 @@ public final class DeployedProcessPanel
         gbc.weighty = 1.0;
         pnl.add(pnlPscs, gbc);
 
-        tblPscs = new TableWidget();
+        tblSvcs = new TableWidget();
         tblModel =
             DeployPkgUtils.setup(
-                tblPscs,
-                PSC_HDRS,
-                DeployPkgUtils.getInt("drp.pscstblrows", 10), //$NON-NLS-1$
-                new int[] {PSC_COL});
-        TableColumn pscCol = tblPscs.getColumnModel().getColumn(PSC_COL);
-        pscCellComp = new PscCellComponent();
-        pscCol.setCellEditor(pscCellComp);
-        pscCol.setCellRenderer(pscCellComp);
-        tblPscs.setSortable(false);
-        tblPscs.setComparator(new DeployTableSorter());
+                    tblSvcs,
+                    DeployPkgUtils.SERV_DEF_HDRS,
+                    DeployPkgUtils.getInt("csp.psctblrows", 10), //$NON-NLS-1$
+                    null); //  new int[] {SVC_COL, ENABLED_COL});
+            tblSvcs.setComparator(new DeployTableSorter());
+               
+ //       TableColumn vmCol = tblSvcs.getColumnModel().getColumn(SVC_COL);
+//        pscCellComp = new PscCellComponent();
+//        vmCol.setCellEditor(pscCellComp);
+//        pscCol.setCellRenderer(pscCellComp);
+        tblSvcs.setSortable(false);
+        tblSvcs.setComparator(new DeployTableSorter());
 
-        JScrollPane spnPscs = new JScrollPane(tblPscs);
+        JScrollPane spnPscs = new JScrollPane(tblSvcs);
         pnlPscs.add(spnPscs);
         
           
@@ -378,23 +368,11 @@ public final class DeployedProcessPanel
         if (pnlConfirm.isConfirmed()) {
         	deleting = true;
             getConfigurationManager().deleteProcess(process, getConfigId());
-            numPscsDifferent = 0;
-            propsDifferent = false;
+             propsDifferent = false;
             checkResetState();
             deleting = false;
         }
 
-    }
-
-    private int findProductRow(ProductType theProduct) {
-        int row = -1;
-        for (int rows=tblModel.getRowCount(), i=0; i<rows; i++) {
-            if (tblModel.getValueAt(i, PROD_COL).equals(theProduct)) {
-                row = i;
-                break;
-            }
-        }
-        return row;
     }
 
 
@@ -408,18 +386,23 @@ public final class DeployedProcessPanel
     
     private void initTable() {
         try {
-            Map prodPscs = getConfigurationManager().getAllProductPscs(
-            		getConfigId());
-            pscCellComp.setPscValues(prodPscs);
+        	Configuration config = getConfigurationManager().getConfig(getConfigId());
+//            Collection services = config.getDeployedServicesForVM(process);
+           
+//            pscCellComp.setPscValues(prodPscs);
             if (tblModel.getRowCount() == 0) {
-                Iterator prodItr = prodPscs.keySet().iterator();
-                while (prodItr.hasNext()) {
-                    Vector row = new Vector(PSC_HDRS.length);
-                    row.setSize(PSC_HDRS.length);
-                    row.setElementAt(prodItr.next(), PROD_COL);
-                    row.setElementAt(NO_PSC, PSC_COL);
-                    tblModel.addRow(row);
-                }
+            	
+                DeployPkgUtils.loadServiceDefintions(config, tblModel,
+                        getConnectionInfo());
+
+//                Iterator svcItr = services.iterator();
+//                while (svcItr.hasNext()) {
+//                    Vector row = new Vector(SVC_HDRS.length);
+//                    row.setSize(SVC_HDRS.length);
+//                    row.setElementAt(svcItr.next(), SVC_COL);
+//                    row.setElementAt(NO_PSC, ENABLED_COL);
+//                    tblModel.addRow(row);
+//                }
             }
         }
         catch (Exception theException) {
@@ -428,17 +411,12 @@ public final class DeployedProcessPanel
                           new Object[] {getClass(), "initTable"}), //$NON-NLS-1$
                 ""+theException.getMessage(), //$NON-NLS-1$
                 theException);
-            LogManager.logError(LogContexts.PSCDEPLOY,
+            LogManager.logError(LogContexts.CONFIG,
                                 theException,
                                 getClass() + ":initTable"); //$NON-NLS-1$
         }
 
-        // set each psc to none
-        for (int rows=tblModel.getRowCount(), i=0;
-             i<rows;
-             tblModel.setValueAt(NO_PSC, i++, PSC_COL)) {
-            
-        }
+
     }
 
 
@@ -504,33 +482,19 @@ public final class DeployedProcessPanel
     public void itemStateChanged(ItemEvent theEvent) {
         if (processEvents) {
             JComboBox pscEditor = (JComboBox)theEvent.getSource();
-            int row = tblPscs.getSelectedRow();
+            int row = tblSvcs.getSelectedRow();
             if ((theEvent.getStateChange() == ItemEvent.SELECTED) &&
                 (row != -1) &&
                 (pscEditor.getSelectedIndex() != -1)) {
 
-                Object psc = pscEditor.getSelectedItem();
-                tblModel.setValueAt(psc, row, PSC_COL);
-                Object saveValue = prodRowMap.get(tblModel.getValueAt(row, PROD_COL));
+                Object vm = pscEditor.getSelectedItem();
+                tblModel.setValueAt(vm, row, DeployPkgUtils.SERV_COL);
+                Object saveValue = prodRowMap.get(tblModel.getValueAt(row, DeployPkgUtils.ENABLED_COL));
                 boolean diff = false;
-                if (saveValue == null) {
-                    if (!psc.equals(NO_PSC)) {
-                        diff = true;
-                    }
+                if (!vm.equals(saveValue)) {
+                    diff = true;
                 }
-                else {
-                    if (!psc.equals(saveValue)) {
-                        diff = true;
-                    }
-                }
-                if (diff) {
-                    numPscsDifferent++;
-                }
-                else {
-                    if (numPscsDifferent > 0) {
-                        numPscsDifferent--;
-                    }
-                }
+
                 checkResetState();
             }
         }
@@ -547,44 +511,6 @@ public final class DeployedProcessPanel
         }
         checkResetState();
         
-
-        // update pscs if necessary
-        if (numPscsDifferent > 0) {
-            for (int rows = tblModel.getRowCount(), i=0; i<rows; i++) {
-                ProductType prod = (ProductType)tblModel.getValueAt(i, PROD_COL);
-                Object savedPsc = prodRowMap.get(prod);
-                Object currentPsc = tblModel.getValueAt(i, PSC_COL);
-                Object[] ancestors = getAncestors();
-                Host host = (Host)ancestors[0];
-                if ((savedPsc == null) && (!currentPsc.equals(NO_PSC))) {
-                    // no previous psc deployed for product and now there is
-                    getConfigurationManager().deployPsc(
-                        (ProductServiceConfig)currentPsc,
-                        process,
-                        host,
-                        getConfigId());
-                    prodRowMap.put(prod, currentPsc);
-                }
-                else if ((savedPsc != null) &&
-                         (!savedPsc.equals(currentPsc)) &&
-                         (!currentPsc.equals(NO_PSC))) {
-                    // deployed psc has changed, delete then add
-                    getConfigurationManager().changeDeployedPsc(
-                    		(ProductServiceConfig)savedPsc,
-                    		(ProductServiceConfig)currentPsc, process, host,
-                    		getConfigId());
-                    prodRowMap.put(prod, currentPsc);
-                }
-                else if ((savedPsc != null) && (currentPsc.equals(NO_PSC))) {
-                    // deployed psc deleted and no replacement
-                    getConfigurationManager().deleteDeployedPsc(
-                    		(ProductServiceConfig)savedPsc, process, host,
-                    		getConfigId());
-                    prodRowMap.put(prod, null);
-                }
-            }
-        }
-        numPscsDifferent = 0;
         checkResetState();
     }
 
@@ -595,24 +521,6 @@ public final class DeployedProcessPanel
             resetPropertiedObject();
         }
         
-
-        //reset PSC table here
-        for (int rows=tblModel.getRowCount(), i=0; i<rows; i++) {
-            Object prod = tblModel.getValueAt(i, PROD_COL);
-            Object psc = prodRowMap.get(prod);
-            if (psc == null) {
-                if (!tblModel.getValueAt(i, PSC_COL).equals(NO_PSC)) {
-                    tblModel.setValueAt(NO_PSC, i, PSC_COL);
-                }
-            }
-            else {
-                if (!tblModel.getValueAt(i, PSC_COL).equals(psc)) {
-                    tblModel.setValueAt(psc, i, PSC_COL);
-                }
-            }
-        }
-
-        numPscsDifferent = 0;
         propsDifferent = false;
         checkResetState();
     }
@@ -635,7 +543,7 @@ public final class DeployedProcessPanel
     public void setConfigId(ConfigurationID theConfigId) {
         super.setConfigId(theConfigId);
         //This needs checking out.  Changed by dropping oper. config.  BWP 11/08/02:
-        setMMLEnabled(true);
+   //     setMMLEnabled(true);
     }
 
     public void setDomainObject(
@@ -694,17 +602,19 @@ public final class DeployedProcessPanel
             initTable();
             // populate PSC column
             prodRowMap.clear();
-            Collection pscs = getConfigurationManager().getDeployedPscs(process);
-            if (pscs != null) {
-                Iterator pscItr = pscs.iterator();
-                while (pscItr.hasNext()) {
-                    ProductServiceConfig psc = (ProductServiceConfig)pscItr.next();
-                     ProductType product = getConfigurationManager().getProduct(psc);
-                    //tblModel.setValueAt(psc, findProductRow(product), PSC_COL);
-                    prodRowMap.put(product, psc);
-                }
-            }
-            tblPscs.sizeColumnsToFitData();
+//            Collection pscs = getConfigurationManager().getDeployedPscs(process);
+//            if (pscs != null) {
+//                Iterator pscItr = pscs.iterator();
+//                while (pscItr.hasNext()) {
+//                    ProductServiceConfig psc = (ProductServiceConfig)pscItr.next();
+//                    
+//                     ProductType product = BasicProductType.PRODUCT_TYPE;
+//                //    	 getConfigurationManager().getProduct(psc);
+//                    //tblModel.setValueAt(psc, findProductRow(product), PSC_COL);
+//                    prodRowMap.put(product, psc);
+//                }
+//            }
+            tblSvcs.sizeColumnsToFitData();
         }
         catch (Exception theException) {
             ExceptionUtility.showMessage(
@@ -737,21 +647,21 @@ public final class DeployedProcessPanel
             
             
             actionDelete.setEnabled(theEnableFlag);
-            tblPscs.setColumnEditable(PSC_COL, theEnableFlag);
+            tblSvcs.setColumnEditable(DeployPkgUtils.ENABLED_COL, theEnableFlag);
             if (!theEnableFlag) {
-                tblPscs.editingStopped(new ChangeEvent(this));
+                tblSvcs.editingStopped(new ChangeEvent(this));
             }
         }
     }
 
-    public void setMMLEnabled(boolean theEnableFlag) {
-            pnlProps.setReadOnlyForced(!theEnableFlag);
-            pnlProps.refreshDisplay();
-        
-            if (!theEnableFlag) {
-                tblPscs.editingStopped(new ChangeEvent(this));
-            }
-    }
+//    public void setMMLEnabled(boolean theEnableFlag) {
+//            pnlProps.setReadOnlyForced(!theEnableFlag);
+//            pnlProps.refreshDisplay();
+//        
+//            if (!theEnableFlag) {
+//                tblPscs.editingStopped(new ChangeEvent(this));
+//            }
+//    }
 
     ///////////////////////////////////////////////////////////////////////////
     // INNER CLASSES
@@ -814,78 +724,6 @@ public final class DeployedProcessPanel
         }
     }
 
-    private class PscCellComponent
-        extends DefaultCellEditor
-        implements TableCellRenderer {
-
-        HashMap map = new HashMap();
-        JComboBox cbxRenderer;
-
-        public PscCellComponent() {
-            super(new JComboBox() {
-                public void updateUI() {
-                    setUI(javax.swing.plaf.basic.BasicComboBoxUI.createUI(this));
-                }
-            });
-            JComboBox cbx = (JComboBox)getComponent();
-            cbx.addItemListener(DeployedProcessPanel.this);
-            // setup renderer component
-            cbxRenderer = new JComboBox() {
-                public void updateUI() {
-                    setUI(javax.swing.plaf.basic.BasicComboBoxUI.createUI(this));
-                }
-            };
-        }
-
-        public Component getTableCellEditorComponent(
-            JTable theTable,
-            Object theValue,
-            boolean theSelectedFlag,
-            int theRow,
-            int theColumn) {
-
-            JComboBox cbx = (JComboBox)getComponent();
-            Object prod = tblModel.getValueAt(theRow, PROD_COL);
-            DefaultComboBoxModel model = (DefaultComboBoxModel)map.get(prod);
-            processEvents = false;
-            cbx.setModel(model);
-            cbx.setSelectedItem(tblModel.getValueAt(theRow, PSC_COL));
-            processEvents = true;
-            return cbx;
-        }
-
-        public Component getTableCellRendererComponent(
-            JTable theTable,
-            Object theValue,
-            boolean theSelectedFlag,
-            boolean hasFocus,
-            int theRow,
-            int theColumn) {
-
-            cbxRenderer.setModel(
-                new DefaultComboBoxModel(new Object[] {theValue}));
-            Color clr = (theSelectedFlag)
-                        ? theTable.getSelectionBackground()
-                        : theTable.getBackground();
-            cbxRenderer.setBackground(clr);
-            return cbxRenderer;
-        }
-
-        public void setPscValues(Map theProductPscs) {
-            map.clear();
-            if (theProductPscs != null) {
-                Iterator prodItr = theProductPscs.keySet().iterator();
-                while (prodItr.hasNext()) {
-                    ProductType product = (ProductType)prodItr.next();
-                    List pscs = (List)theProductPscs.get(product);
-                    pscs.add(0, NO_PSC);
-                    DefaultComboBoxModel model =
-                        new DefaultComboBoxModel(pscs.toArray());
-                    map.put(product, model);
-                }
-            }
-        }
-    }
     
     class ProcessPOP extends PropertiedObjectPanel {
         public ProcessPOP(PropertiedObjectEditor poe) {

@@ -68,7 +68,8 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         return factory;
     }
 
-    /**
+
+	/**
      * Create an instance of this editor, and specify whether actions are to be created
      * during modifications.  If actions are created, then each action is sent directly
      * to the destination at the time the action is created.
@@ -566,113 +567,109 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
      * property values will also be copied.  The copies will all retain their original
      * short names; their full names will reflect the new configuration name.</p>
      */
-    public Configuration createConfiguration(Configuration original, String newName){
-        if (original == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0079));
-        }
-        if (newName == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0081));
-        }
-        if (original.getName().equals(newName) ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0084, newName));
-        }
-
- 		BasicConfiguration config = ( BasicConfiguration) createConfiguration(newName);
-
-        //copy the configuration properties
-        this.modifyProperties(config, original.getProperties(), ADD);
-
-        if (original.getHosts() != null) {
-            for (Iterator hIt=original.getHosts().iterator(); hIt.hasNext(); ) {
-                Host h = (Host) hIt.next();
-                this.createHost(config, h, h.getName());
-             }
-        }
-
-		Iterator svcDefns = original.getServiceComponentDefns().iterator();
-		while (svcDefns.hasNext()) {
-			ServiceComponentDefn sDefn = (ServiceComponentDefn) svcDefns.next();
-            this.createServiceComponentDefn(config, sDefn, sDefn.getName());
-		}
-
-		Iterator vmsDefns = original.getVMComponentDefns().iterator();
-		while (vmsDefns.hasNext()) {
-			VMComponentDefn vDefn = (VMComponentDefn) vmsDefns.next();
-            this.createVMComponentDefn(config, vDefn, vDefn.getName());
- 		}
-
-		Iterator bindings = original.getConnectorBindings().iterator();
-		while (bindings.hasNext()) {
-			ConnectorBinding cc = (ConnectorBinding) bindings.next();
-
-            this.createConnectorComponent(config, cc, cc.getName());
-
- 		}
-		
-		Iterator authProviders = original.getAuthenticationProviders().iterator();
-		while (authProviders.hasNext()) {
-			AuthenticationProvider provider = (AuthenticationProvider) authProviders.next();
-
-            this.createAuthenticationProviderComponent(config, provider, provider.getName());
-
- 		}
-
-		Iterator pscs = original.getPSCs().iterator();
-		while (pscs.hasNext()) {
-			ProductServiceConfig psc = (ProductServiceConfig) pscs.next();
-             this.createProductServiceConfig(config, psc, psc.getName());
- 		}
-
-
-        //copy all internal deployed components
-        ConfigurationID configID = (ConfigurationID)config.getID();
-        VMComponentDefnID vmID = null;
-        ProductServiceConfigID pscID = null;
-        DeployedComponent originalDeployed = null;
-        ServiceComponentDefn service = null;
-//        VMComponentDefn vm = null;
-        for (Iterator iter=original.getDeployedComponents().iterator(); iter.hasNext(); ){
-            originalDeployed = (DeployedComponent)iter.next();
-			if (originalDeployed.isDeployedConnector()) {
-                ConnectorBindingID serviceID = new ConnectorBindingID(configID, originalDeployed.getServiceComponentDefnID().getName());
-                pscID     = new ProductServiceConfigID(configID, originalDeployed.getProductServiceConfigID().getName());
-                vmID      = new VMComponentDefnID(configID, originalDeployed.getHostID(),  originalDeployed.getVMComponentDefnID().getName());
-                service = config.getConnectorBinding(serviceID);
-
-                
-                if (service==null) {
-                	throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0086,
-                                new Object[] { serviceID, originalDeployed.getName()}));
-                }
-                this.createDeployedServiceComponent(originalDeployed.getName(), config, originalDeployed.getHostID(), vmID, service, pscID);
-
-
-			} else if (originalDeployed.isDeployedService()){
-
-                ServiceComponentDefnID serviceID = new ServiceComponentDefnID(configID, originalDeployed.getServiceComponentDefnID().getName());
-                pscID     = new ProductServiceConfigID(configID, originalDeployed.getProductServiceConfigID().getName());
-                vmID      = new VMComponentDefnID(configID, originalDeployed.getHostID(), originalDeployed.getVMComponentDefnID().getName());
-                service = config.getServiceComponentDefn(serviceID);
-
-                if (service==null) {
-                    throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0085,
-                                new Object[] { serviceID, originalDeployed.getName()}));
-                 }
-                this.createDeployedServiceComponent(originalDeployed.getName(), config, originalDeployed.getHostID(), vmID, service, pscID);
-            } 
-//            else {
+//    public Configuration createConfiguration(Configuration original, String newName){
+//        if (original == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0079));
+//        }
+//        if (newName == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0081));
+//        }
+//        if (original.getName().equals(newName) ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0084, newName));
+//        }
+//
+// 		BasicConfiguration config = ( BasicConfiguration) createConfiguration(newName);
+// 		
+//
+//
+//        //copy the configuration properties
+//        this.modifyProperties(config, original.getProperties(), ADD);
+//
+//        if (original.getHosts() != null) {
+//            for (Iterator hIt=original.getHosts().iterator(); hIt.hasNext(); ) {
+//                Host h = (Host) hIt.next();
+//                this.createHost(config, h, h.getName());
+//             }
+//        }
+//
+//		Iterator svcDefns = original.getServiceComponentDefns().iterator();
+//		while (svcDefns.hasNext()) {
+//			ServiceComponentDefn sDefn = (ServiceComponentDefn) svcDefns.next();
+//            this.createServiceComponentDefn(config, sDefn, sDefn.getName());
+//		}
+//
+//		Iterator vmsDefns = original.getVMComponentDefns().iterator();
+//		while (vmsDefns.hasNext()) {
+//			VMComponentDefn vDefn = (VMComponentDefn) vmsDefns.next();
+//            this.createVMComponentDefn(config, vDefn, vDefn.getName());
+// 		}
+//
+//		Iterator bindings = original.getConnectorBindings().iterator();
+//		while (bindings.hasNext()) {
+//			ConnectorBinding cc = (ConnectorBinding) bindings.next();
+//
+//            this.createConnectorComponent(config, cc, cc.getName());
+//
+// 		}
+//		
+//		Iterator authProviders = original.getAuthenticationProviders().iterator();
+//		while (authProviders.hasNext()) {
+//			AuthenticationProvider provider = (AuthenticationProvider) authProviders.next();
+//
+//            this.createAuthenticationProviderComponent(config, provider, provider.getName());
+//
+// 		}
+//
+//
+//        //copy all internal deployed components
+//        ConfigurationID configID = (ConfigurationID)config.getID();
+//        VMComponentDefnID vmID = null;
+//        ProductServiceConfigID pscID = null;
+//        DeployedComponent originalDeployed = null;
+//        ServiceComponentDefn service = null;
+////        VMComponentDefn vm = null;
+//        for (Iterator iter=original.getDeployedComponents().iterator(); iter.hasNext(); ){
+//            originalDeployed = (DeployedComponent)iter.next();
+//			if (originalDeployed.isDeployedConnector()) {
+//                ConnectorBindingID serviceID = new ConnectorBindingID(configID, originalDeployed.getServiceComponentDefnID().getName());
+//                pscID     = new ProductServiceConfigID(configID, originalDeployed.getProductServiceConfigID().getName());
+//                vmID      = new VMComponentDefnID(configID, originalDeployed.getHostID(),  originalDeployed.getVMComponentDefnID().getName());
+//                service = config.getConnectorBinding(serviceID);
+//
 //                
-//                this.createVMComponentDefn(config, originalDeployed.getHostID(), originalDeployed.getComponentTypeID(), originalDeployed.getName());
-//                
+//                if (service==null) {
+//                	throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0086,
+//                                new Object[] { serviceID, originalDeployed.getName()}));
+//                }
+//                this.createDeployedServiceComponent(originalDeployed.getName(), config, originalDeployed.getHostID(), vmID, service, pscID);
+//
+//
+//			} else if (originalDeployed.isDeployedService()){
+//
+//                ServiceComponentDefnID serviceID = new ServiceComponentDefnID(configID, originalDeployed.getServiceComponentDefnID().getName());
+//                pscID     = new ProductServiceConfigID(configID, originalDeployed.getProductServiceConfigID().getName());
 //                vmID      = new VMComponentDefnID(configID, originalDeployed.getHostID(), originalDeployed.getVMComponentDefnID().getName());
-//                vm = config.getVMComponentDefn(vmID);
-//                this.createDeployedVMComponent(originalDeployed.getName(), config, originalDeployed.getHostID(), vm);
-//            }
-        }
-
-        Configuration newConfig = (Configuration) config.clone();
-        return newConfig;
-    }
+//                service = config.getServiceComponentDefn(serviceID);
+//
+//                if (service==null) {
+//                    throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0085,
+//                                new Object[] { serviceID, originalDeployed.getName()}));
+//                 }
+//                this.createDeployedServiceComponent(originalDeployed.getName(), config, originalDeployed.getHostID(), vmID, service, pscID);
+//            } 
+////            else {
+////                
+////                this.createVMComponentDefn(config, originalDeployed.getHostID(), originalDeployed.getComponentTypeID(), originalDeployed.getName());
+////                
+////                vmID      = new VMComponentDefnID(configID, originalDeployed.getHostID(), originalDeployed.getVMComponentDefnID().getName());
+////                vm = config.getVMComponentDefn(vmID);
+////                this.createDeployedVMComponent(originalDeployed.getName(), config, originalDeployed.getHostID(), vm);
+////            }
+//        }
+//
+//        Configuration newConfig = (Configuration) config.clone();
+//        return newConfig;
+//    }
 
     public ComponentType createComponentType(int classTypeCode, String name, ComponentTypeID parentID, ComponentTypeID superID, boolean deployable, boolean monitored) {
         if (name == null ) {
@@ -721,25 +718,25 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
      * @param monitored is a boolean insdicating if the type is to be monitored
      * @return ComponentType
      */
-    public ProductType createProductType(String name, Collection serviceComponentTypes, boolean deployable, boolean monitored) {
-//        BasicProductTypeType productType = (BasicProductTypeType)this.createComponentType(ComponentObject.PRODUCT_COMPONENT_TYPE_CODE, name, null, ProductTypeType.PRODUCT_SUPER_TYPE_ID, deployable, monitored);
-
-        BasicProductType productType = (BasicProductType) createProductType(name, deployable, monitored); 
-            //(BasicProductType) BasicUtil.createComponentObject(ComponentObject.PRODUCT_COMPONENT_TYPE_CODE, ProductType.PRODUCT_TYPE_ID, name);
- 
-        //this code sets up the legal service types for the product type
-//        ComponentTypeID productTypeID = productType.getComponentTypeID();
-        ComponentType serviceComponentType = null;
-        Iterator iter = serviceComponentTypes.iterator();
-        while (iter.hasNext()){
-
-            serviceComponentType = (ComponentType)iter.next();
-//            this.setParentComponentTypeID(serviceComponentType, productTypeID);
-            //add the service ComponentTypeID to the BasicProductType
-            productType.addServiceTypeID((ComponentTypeID)serviceComponentType.getID());
-        }
-        return productType;
-    }
+//    public ProductType createProductType(String name, Collection serviceComponentTypes, boolean deployable, boolean monitored) {
+////        BasicProductTypeType productType = (BasicProductTypeType)this.createComponentType(ComponentObject.PRODUCT_COMPONENT_TYPE_CODE, name, null, ProductTypeType.PRODUCT_SUPER_TYPE_ID, deployable, monitored);
+//
+//        BasicProductType productType = (BasicProductType) createProductType(name, deployable, monitored); 
+//            //(BasicProductType) BasicUtil.createComponentObject(ComponentObject.PRODUCT_COMPONENT_TYPE_CODE, ProductType.PRODUCT_TYPE_ID, name);
+// 
+//        //this code sets up the legal service types for the product type
+////        ComponentTypeID productTypeID = productType.getComponentTypeID();
+//        ComponentType serviceComponentType = null;
+//        Iterator iter = serviceComponentTypes.iterator();
+//        while (iter.hasNext()){
+//
+//            serviceComponentType = (ComponentType)iter.next();
+////            this.setParentComponentTypeID(serviceComponentType, productTypeID);
+//            //add the service ComponentTypeID to the BasicProductType
+//            productType.addServiceTypeID((ComponentTypeID)serviceComponentType.getID());
+//        }
+//        return productType;
+//    }
 
     /**
      * Create a new ProductType instance with the specified name.  Use
@@ -750,14 +747,14 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
      * @param monitored is a boolean insdicating if the type is to be monitored
      * @return ComponentType
      */
-    public ProductType createProductType(String name, boolean deployable, boolean monitored) {
-//        ProductType productType = (ProductType)this.createComponentType(ComponentType.PRODUCT_COMPONENT_TYPE_CODE, name, null, ProductTypeType.PRODUCT_SUPER_TYPE_ID, deployable, monitored);
-
-        BasicProductType productType = (BasicProductType) BasicUtil.createComponentType(ComponentType.PRODUCT_COMPONENT_TYPE_CODE, name, null, ProductType.PRODUCT_SUPER_TYPE_ID, deployable, monitored);
-//        createComponentObject(ComponentDefn.PRODUCT_COMPONENT_CODE, ProductType.PRODUCT_TYPE_ID, name);
-
-        return productType;
-    }
+//    public ProductType createProductType(String name, boolean deployable, boolean monitored) {
+////        ProductType productType = (ProductType)this.createComponentType(ComponentType.PRODUCT_COMPONENT_TYPE_CODE, name, null, ProductTypeType.PRODUCT_SUPER_TYPE_ID, deployable, monitored);
+//
+//        BasicProductType productType = (BasicProductType) BasicUtil.createComponentType(ComponentType.PRODUCT_COMPONENT_TYPE_CODE, name, null, ProductType.PRODUCT_SUPER_TYPE_ID, deployable, monitored);
+////        createComponentObject(ComponentDefn.PRODUCT_COMPONENT_CODE, ProductType.PRODUCT_TYPE_ID, name);
+//
+//        return productType;
+//    }
 
 /**
  * This method is not provided in the interface, it is only used by the
@@ -873,7 +870,7 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         return bv;
     }
 
-    public DeployedComponent createDeployedServiceComponent(String name, Configuration configuration, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefn serviceComponentDefn, ProductServiceConfigID pscID) {
+    public DeployedComponent createDeployedServiceComponent(String name, Configuration configuration, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefn serviceComponentDefn) {
         if ( name == null ) {
             throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0087, DeployedComponent.class.getName()));
          }
@@ -889,9 +886,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         if (serviceComponentDefn == null ) {
             throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ServiceComponentDefn.class.getName()));
         }
-        if (pscID == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfigID.class.getName()));
-        }
 
         ConfigurationID configID = (ConfigurationID) configuration.getID();
 
@@ -903,8 +897,7 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
                                                                 configID,
                                                                 hostId,
                                                                 vmId,
-                                                                (ServiceComponentDefnID) serviceComponentDefn.getID(),
-                                                                pscID,
+                                                                (ServiceComponentDefnID) serviceComponentDefn.getID(),                                            
                                                                 serviceComponentDefn.getComponentTypeID());
 
 
@@ -922,7 +915,7 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
     /*
      * @see createDeployedServiceComponent(String, Configuration, HostID, VMComponentDefn)
      */
-    public DeployedComponent createDeployedServiceComponent(String name, ConfigurationID configurationID, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefnID serviceComponentDefnID, ProductServiceConfigID pscID, ComponentTypeID serviceComponentTypeID) {
+    public DeployedComponent createDeployedServiceComponent(String name, ConfigurationID configurationID, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefnID serviceComponentDefnID, ComponentTypeID serviceComponentTypeID) {
         if ( name == null ) {
             throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0087, DeployedComponent.class.getName()));
         }
@@ -941,9 +934,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         if (serviceComponentTypeID == null ) {
             throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ComponentTypeID.class.getName()));
         }
-        if (pscID == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfigID.class.getName()));
-        }
 
 
  //       DeployedComponentID id = new DeployedComponentID(name, configurationID,  hostId, vmId, pscID, serviceComponentDefnID);
@@ -955,7 +945,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
                                                                                    hostId,
                                                                                    vmId,
                                                                                    serviceComponentDefnID,
-                                                                                   pscID,
                                                                                    serviceComponentTypeID);
         
 //        BasicDeployedComponent deployComponent = new BasicDeployedComponent(id,
@@ -1120,37 +1109,37 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
      * will belong to
      * @return new ServiceComponentDefn
      */
-    public ServiceComponentDefn createServiceComponentDefn(Configuration configuration, ComponentTypeID typeID, String componentName, ProductServiceConfigID pscID) {
-        if ( configuration == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
-        }
-        if ( pscID == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfigID.class.getName()));
-        }
-        ProductServiceConfig psc = (ProductServiceConfig)configuration.getComponentDefn(pscID);
-
-        Assertion.isNotNull(psc, "PSC " + pscID + " does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
-        ConfigurationID configurationID = (ConfigurationID)configuration.getID();
-
-		BasicServiceComponentDefn newServiceDefn = (BasicServiceComponentDefn) BasicUtil.createComponentDefn(ComponentDefn.SERVICE_COMPONENT_CODE, configurationID, typeID, componentName); 
-        
-//        BasicComponentDefn.getInstance(ComponentDefn.SERVICE_COMPONENT_DEFN_CODE,
-//							configurationID,
-//							typeID,
-//							componentName);
-		// add the service to the psc so that this relationship is found in the deployServiceDefn method
-		addServiceComponentDefn(psc, (ServiceComponentDefnID) newServiceDefn.getID());
-
-            ServiceComponentDefn newDefn = (ServiceComponentDefn) newServiceDefn.clone();
-            
-            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-            bc.addComponentDefn(newDefn);
-   
-            //automatically deploy the service anywhere that the PSC is already deployed
-        this.deployServiceDefn(bc,newDefn,pscID);            
-        
-        return newDefn;
-    }
+//    public ServiceComponentDefn createServiceComponentDefn(Configuration configuration, ComponentTypeID typeID, String componentName, ProductServiceConfigID pscID) {
+//        if ( configuration == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
+//        }
+//        if ( pscID == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfigID.class.getName()));
+//        }
+//        ProductServiceConfig psc = (ProductServiceConfig)configuration.getComponentDefn(pscID);
+//
+//        Assertion.isNotNull(psc, "PSC " + pscID + " does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
+//        ConfigurationID configurationID = (ConfigurationID)configuration.getID();
+//
+//		BasicServiceComponentDefn newServiceDefn = (BasicServiceComponentDefn) BasicUtil.createComponentDefn(ComponentDefn.SERVICE_COMPONENT_CODE, configurationID, typeID, componentName); 
+//        
+////        BasicComponentDefn.getInstance(ComponentDefn.SERVICE_COMPONENT_DEFN_CODE,
+////							configurationID,
+////							typeID,
+////							componentName);
+//		// add the service to the psc so that this relationship is found in the deployServiceDefn method
+//		addServiceComponentDefn(psc, (ServiceComponentDefnID) newServiceDefn.getID());
+//
+//            ServiceComponentDefn newDefn = (ServiceComponentDefn) newServiceDefn.clone();
+//            
+//            BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+//            bc.addComponentDefn(newDefn);
+//   
+//            //automatically deploy the service anywhere that the PSC is already deployed
+//        this.deployServiceDefn(bc,newDefn,pscID);            
+//        
+//        return newDefn;
+//    }
 
     public ServiceComponentDefn createServiceComponentDefn(Configuration configuration, ComponentTypeID typeID, String componentName) {
         if ( configuration == null ) {
@@ -1241,8 +1230,7 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 //							originalServiceComponentDefn.getComponentTypeID(),
 //							newName);
 
-        serviceDefn.setIsQueuedService(originalServiceComponentDefn.isQueuedService());
-        if (serviceDefn.getComponentTypeID().getName().equals(RuntimeMetadataServiceComponentType.RUNTIME_METADATA_SERVICE_TYPE_NAME)) {
+         if (serviceDefn.getComponentTypeID().getName().equals(RuntimeMetadataServiceComponentType.RUNTIME_METADATA_SERVICE_TYPE_NAME)) {
         	/**
         	* This is done because the RuntimeMetadataService is a Service
         	* that must be treated as a Connector for only the RuntimeMetadata
@@ -1465,75 +1453,75 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
      * @param newName new String name for the new PSC
      * @return newly-created ProductServiceConfig object
      */
-    public ProductServiceConfig createProductServiceConfig(Configuration configuration, ProductServiceConfig originalPSC, String newName){
-        if ( configuration == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
-        }
-
-        if (originalPSC == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
-        }
-
-        if (newName == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0087, ProductServiceConfig.class.getName()));
-        }
-
-    	ProductServiceConfig psc = createProductServiceConfig(configuration, (ProductTypeID) originalPSC.getComponentTypeID(),newName);
-
-        this.modifyProperties(psc, originalPSC.getProperties(), ADD);
-
-        Iterator iter = originalPSC.getServiceComponentDefnIDs().iterator();
-        ServiceComponentDefnID originalServiceDefnID = null;
-        while (iter.hasNext()){
-            originalServiceDefnID = (ServiceComponentDefnID)iter.next();
-            this.addServiceComponentDefn(psc, originalServiceDefnID);
-
-        }
-
-        ProductServiceConfig newPSC = (ProductServiceConfig) psc.clone();
-        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-        bc.addComponentDefn(newPSC);
-        return newPSC;
-    }
+//    public ProductServiceConfig createProductServiceConfig(Configuration configuration, ProductServiceConfig originalPSC, String newName){
+//        if ( configuration == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
+//        }
+//
+//        if (originalPSC == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
+//        }
+//
+//        if (newName == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0087, ProductServiceConfig.class.getName()));
+//        }
+//
+//    	ProductServiceConfig psc = createProductServiceConfig(configuration, (ProductTypeID) originalPSC.getComponentTypeID(),newName);
+//
+//        this.modifyProperties(psc, originalPSC.getProperties(), ADD);
+//
+//        Iterator iter = originalPSC.getServiceComponentDefnIDs().iterator();
+//        ServiceComponentDefnID originalServiceDefnID = null;
+//        while (iter.hasNext()){
+//            originalServiceDefnID = (ServiceComponentDefnID)iter.next();
+//            this.addServiceComponentDefn(psc, originalServiceDefnID);
+//
+//        }
+//
+//        ProductServiceConfig newPSC = (ProductServiceConfig) psc.clone();
+//        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+//        bc.addComponentDefn(newPSC);
+//        return newPSC;
+//    }
 
     /**
      * Allows the creation of an empty ProductServiceConfig entirely from
      * ID objects.
      */
-    public ProductServiceConfig createProductServiceConfig(ConfigurationID configurationID, ProductTypeID productTypeID, String componentName){
-        if ( configurationID == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ConfigurationID.class.getName()));
-        }
+//    public ProductServiceConfig createProductServiceConfig(ConfigurationID configurationID, ProductTypeID productTypeID, String componentName){
+//        if ( configurationID == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ConfigurationID.class.getName()));
+//        }
+//
+//        if (productTypeID == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ComponentTypeID.class.getName()));
+//        }
+//
+//        if (componentName == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0087, ProductServiceConfig.class.getName()));
+//        }
+//        
+//
+//
+//   		BasicProductServiceConfig psc = (BasicProductServiceConfig) BasicUtil.createComponentDefn(ComponentDefn.PSC_COMPONENT_CODE, configurationID, productTypeID, componentName); 
+////        BasicComponentDefn.getInstance(ComponentDefn.PRODUCT_SERVICE_DEFN_CODE,
+////							configurationID,
+////							productTypeID,
+////							componentName);
+//
+//        createCreationAction(psc.getID(), psc);
+//
+//        ProductServiceConfig newPSC = (ProductServiceConfig) psc.clone();
+//        return newPSC;
+//    }
 
-        if (productTypeID == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ComponentTypeID.class.getName()));
-        }
 
-        if (componentName == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0087, ProductServiceConfig.class.getName()));
-        }
-        
-
-
-   		BasicProductServiceConfig psc = (BasicProductServiceConfig) BasicUtil.createComponentDefn(ComponentDefn.PSC_COMPONENT_CODE, configurationID, productTypeID, componentName); 
-//        BasicComponentDefn.getInstance(ComponentDefn.PRODUCT_SERVICE_DEFN_CODE,
-//							configurationID,
-//							productTypeID,
-//							componentName);
-
-        createCreationAction(psc.getID(), psc);
-
-        ProductServiceConfig newPSC = (ProductServiceConfig) psc.clone();
-        return newPSC;
-    }
-
-
-    public ProductServiceConfig createProductServiceConfig(Configuration config, ProductTypeID productTypeID,  String name) {
-        ProductServiceConfig psc = createProductServiceConfig((ConfigurationID)config.getID(), productTypeID, name);
-        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(config,BasicConfiguration.class);
-        bc.addComponentDefn(psc);
-        return psc;
-    }
+//    public ProductServiceConfig createProductServiceConfig(Configuration config, ProductTypeID productTypeID,  String name) {
+//        ProductServiceConfig psc = createProductServiceConfig((ConfigurationID)config.getID(), productTypeID, name);
+//        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(config,BasicConfiguration.class);
+//        bc.addComponentDefn(psc);
+//        return psc;
+//    }
 
     /**
      * Deploys the ServiceComponentDefns indicated by the ProductServiceConfig,
@@ -1548,68 +1536,68 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
      * @return Collection of DeployedComponent objects, each representing
      * one of the deployed ServiceComponentDefns
      */
-    public Collection deployProductServiceConfig(Configuration configuration, ProductServiceConfig psc, HostID hostId, VMComponentDefnID vmId){
-        if ( configuration == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
-        }
-        if ( hostId == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, HostID.class.getName()));
-        }
-        if ( vmId == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, VMComponentDefnID.class.getName()));
-        }
-        if (psc == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
-        }
-//        ConfigurationID configID = (ConfigurationID) configuration.getID();
-        ProductServiceConfigID pscID = ( ProductServiceConfigID) psc.getID();
-
-        Collection serviceComponentDefnIDs = psc.getServiceComponentDefnIDs();
-        HashSet result = new HashSet(serviceComponentDefnIDs.size());
-        Iterator iter = serviceComponentDefnIDs.iterator();
-        ServiceComponentDefn serviceDefn = null;
-        ServiceComponentDefnID serviceDefnID = null;
-        while (iter.hasNext()){
-
-            serviceDefnID = (ServiceComponentDefnID)iter.next();
-            serviceDefn = (ServiceComponentDefn)configuration.getComponentDefn(serviceDefnID);
-
-            //only deploy the service defn if it is enabled
-            if (psc.isServiceEnabled(serviceDefnID)) {
-                DeployedComponentID id = new DeployedComponentID(serviceDefnID.getName(), (ConfigurationID) configuration.getID(), hostId, vmId, pscID, serviceDefnID);
-
-                if (configuration.getDeployedComponent(id) != null) {
-                    continue;
-                }
-                    
-                DeployedComponent dc = this.createDeployedServiceComponent(serviceDefnID.getName(), configuration, hostId, vmId, serviceDefn, pscID);
-                result.add(dc);
-//                DeployedComponentID id = new DeployedComponentID(serviceDefnID.getName(), configID, hostId, vmId, pscID, serviceDefnID);
-//                BasicDeployedComponent deployComponent = new BasicDeployedComponent(id,
-//                                                                        configID,
-//                                                                        hostId,
-//                                                                        vmId,
-//                                                                        serviceDefnID,
-//                                                                        pscID,
-//                                                                        serviceDefn.getComponentTypeID());
-
-//                createCreationAction(id, deployComponent );
-
-//                try {
-//                    DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
+//    public Collection deployProductServiceConfig(Configuration configuration, ProductServiceConfig psc, HostID hostId, VMComponentDefnID vmId){
+//        if ( configuration == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
+//        }
+//        if ( hostId == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, HostID.class.getName()));
+//        }
+//        if ( vmId == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, VMComponentDefnID.class.getName()));
+//        }
+//        if (psc == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
+//        }
+////        ConfigurationID configID = (ConfigurationID) configuration.getID();
+//        ProductServiceConfigID pscID = ( ProductServiceConfigID) psc.getID();
 //
-//                    BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-//                    bc.addDeployedComponent(newDefn);
+//        Collection serviceComponentDefnIDs = psc.getServiceComponentDefnIDs();
+//        HashSet result = new HashSet(serviceComponentDefnIDs.size());
+//        Iterator iter = serviceComponentDefnIDs.iterator();
+//        ServiceComponentDefn serviceDefn = null;
+//        ServiceComponentDefnID serviceDefnID = null;
+//        while (iter.hasNext()){
 //
-//                    result.add( newDefn);
-//                } catch (CloneNotSupportedException e) {
-//                    throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-//                                new Object[] {DeployedComponent.class.getName(),  e.getMessage()}));
+//            serviceDefnID = (ServiceComponentDefnID)iter.next();
+//            serviceDefn = (ServiceComponentDefn)configuration.getComponentDefn(serviceDefnID);
+//
+//            //only deploy the service defn if it is enabled
+//            if (psc.isServiceEnabled(serviceDefnID)) {
+//                DeployedComponentID id = new DeployedComponentID(serviceDefnID.getName(), (ConfigurationID) configuration.getID(), hostId, vmId, pscID, serviceDefnID);
+//
+//                if (configuration.getDeployedComponent(id) != null) {
+//                    continue;
 //                }
-           }
-        }
-        return result;
-    }
+//                    
+//                DeployedComponent dc = this.createDeployedServiceComponent(serviceDefnID.getName(), configuration, hostId, vmId, serviceDefn, pscID);
+//                result.add(dc);
+////                DeployedComponentID id = new DeployedComponentID(serviceDefnID.getName(), configID, hostId, vmId, pscID, serviceDefnID);
+////                BasicDeployedComponent deployComponent = new BasicDeployedComponent(id,
+////                                                                        configID,
+////                                                                        hostId,
+////                                                                        vmId,
+////                                                                        serviceDefnID,
+////                                                                        pscID,
+////                                                                        serviceDefn.getComponentTypeID());
+//
+////                createCreationAction(id, deployComponent );
+//
+////                try {
+////                    DeployedComponent newDefn = (DeployedComponent) deployComponent.clone();
+////
+////                    BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
+////                    bc.addDeployedComponent(newDefn);
+////
+////                    result.add( newDefn);
+////                } catch (CloneNotSupportedException e) {
+////                    throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
+////                                new Object[] {DeployedComponent.class.getName(),  e.getMessage()}));
+////                }
+//           }
+//        }
+//        return result;
+//    }
     
     /**
      * This method will update a PSC by adding the new service list of ID's and removing
@@ -1620,68 +1608,68 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
      * @return updated ProductServiceConfig
      * @throws ConfigurationException
      */
-    public ProductServiceConfig updateProductServiceConfig(Configuration config, ProductServiceConfig psc, Collection newServiceIDList)     throws ConfigurationException {
-        if ( config == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));            
-        }
-        if (psc == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));            
-        } 
-        
-        if (newServiceIDList == null) {
-            return psc;       
-        }
-        
-        // keep the old-current services for later processing
-        HashSet set = new HashSet();
-        set.addAll(psc.getServiceComponentDefnIDs());
-        
-        ProductServiceConfig c = (ProductServiceConfig) psc.clone();
-        
-        BasicProductServiceConfig basicPSC = (BasicProductServiceConfig) verifyTargetClass(c,BasicProductServiceConfig.class);
-        basicPSC.resetServices();
-        // 1st - deploy the service to the PSC
-        ProductServiceConfigID pscID = (ProductServiceConfigID) psc.getID();
-        
-        
-        // all the services have been removed from this psc
-        // def# 12847 not removing the last service from a psc
-        if (newServiceIDList.isEmpty()) {
-            basicPSC.resetServices();
-        } else {
-       
-            for (Iterator it = newServiceIDList.iterator(); it.hasNext(); ) {
-                // if the service isnt associated with the psc, then add it 
-                // and also deploy it
-                ServiceComponentDefnID sid = (ServiceComponentDefnID)it.next();
-                ServiceComponentDefn sd = (ServiceComponentDefn) config.getComponentDefn(sid);
-    
-                if (psc.containsService(sid)) {
-                    // remove it from the set so that whats left are those
-                    // that have to be removed from the psc
-                    set.remove(sid);
-    
-                } else {
-                        deployServiceDefn(config, sd, pscID);
-                }  
-                
-                basicPSC.addServiceComponentDefnID(sid);
-                
-            }
-        }
-        
-        // 2nd - remove any services no longer selected
-        for (Iterator it = set.iterator(); it.hasNext(); ) {
-            ServiceComponentDefnID sid = (ServiceComponentDefnID) it.next();
-            ServiceComponentDefn sdefn = (ServiceComponentDefn) config.getComponentDefn(sid);
-            // set the service enabled flag to false so that it will be undeployed
-            this.setEnabled(config, sdefn, psc, false, true);
-        }
-        createExchangeAction(pscID,ConfigurationModel.Attribute.UPDATE_PSC, newServiceIDList, Boolean.TRUE);               
-                                  
-        return basicPSC; 
-
-    } 
+//    public ProductServiceConfig updateProductServiceConfig(Configuration config, ProductServiceConfig psc, Collection newServiceIDList)     throws ConfigurationException {
+//        if ( config == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));            
+//        }
+//        if (psc == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));            
+//        } 
+//        
+//        if (newServiceIDList == null) {
+//            return psc;       
+//        }
+//        
+//        // keep the old-current services for later processing
+//        HashSet set = new HashSet();
+//        set.addAll(psc.getServiceComponentDefnIDs());
+//        
+//        ProductServiceConfig c = (ProductServiceConfig) psc.clone();
+//        
+//        BasicProductServiceConfig basicPSC = (BasicProductServiceConfig) verifyTargetClass(c,BasicProductServiceConfig.class);
+//        basicPSC.resetServices();
+//        // 1st - deploy the service to the PSC
+//        ProductServiceConfigID pscID = (ProductServiceConfigID) psc.getID();
+//        
+//        
+//        // all the services have been removed from this psc
+//        // def# 12847 not removing the last service from a psc
+//        if (newServiceIDList.isEmpty()) {
+//            basicPSC.resetServices();
+//        } else {
+//       
+//            for (Iterator it = newServiceIDList.iterator(); it.hasNext(); ) {
+//                // if the service isnt associated with the psc, then add it 
+//                // and also deploy it
+//                ServiceComponentDefnID sid = (ServiceComponentDefnID)it.next();
+//                ServiceComponentDefn sd = (ServiceComponentDefn) config.getComponentDefn(sid);
+//    
+//                if (psc.containsService(sid)) {
+//                    // remove it from the set so that whats left are those
+//                    // that have to be removed from the psc
+//                    set.remove(sid);
+//    
+//                } else {
+//                        deployServiceDefn(config, sd, pscID);
+//                }  
+//                
+//                basicPSC.addServiceComponentDefnID(sid);
+//                
+//            }
+//        }
+//        
+//        // 2nd - remove any services no longer selected
+//        for (Iterator it = set.iterator(); it.hasNext(); ) {
+//            ServiceComponentDefnID sid = (ServiceComponentDefnID) it.next();
+//            ServiceComponentDefn sdefn = (ServiceComponentDefn) config.getComponentDefn(sid);
+//            // set the service enabled flag to false so that it will be undeployed
+//            this.setEnabled(config, sdefn, psc, false, true);
+//        }
+//        createExchangeAction(pscID,ConfigurationModel.Attribute.UPDATE_PSC, newServiceIDList, Boolean.TRUE);               
+//                                  
+//        return basicPSC; 
+//
+//    } 
     
     /**
      * This will update / replace the existing component type with the specified
@@ -1730,209 +1718,52 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
     }
 
 
- public ProductServiceConfig setEnabled(ServiceComponentDefnID serviceComponentDefnID, ProductServiceConfig psc, boolean enabled) {
-        if ( serviceComponentDefnID == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ServiceComponentDefnID.class.getName()));
-        }
-        if ( psc == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
+ public DeployedComponent setEnabled(DeployedComponent deployedcomponent, boolean enabled) {
+        if ( deployedcomponent == null ) {
+            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, DeployedComponent.class.getName()));
         }
 
-        if (!psc.containsService(serviceComponentDefnID)) {
-        	return psc;
-//        	throw new ConfigurationException("Service " + svcID + " is not currently part of PSC " + psc.getName() + ", therefore the service cannot be enabled for this PSC");
-        }
-
-        boolean oldEnabled = psc.isServiceEnabled(serviceComponentDefnID);
+        boolean oldEnabled = deployedcomponent.isEnabled();
         //if a change is not being made to the enabled value, this whole method
         //will be essentially bypassed
         if (enabled != oldEnabled){
 
-            BasicProductServiceConfig basicPSC = (BasicProductServiceConfig) verifyTargetClass(psc,BasicProductServiceConfig.class);
-			basicPSC.setServiceEnabled(serviceComponentDefnID, enabled);
+        	BasicDeployedComponent basicDC = (BasicDeployedComponent) verifyTargetClass(deployedcomponent,BasicDeployedComponent.class);
+			basicDC.setIsEnabled(enabled);
 
-            createExchangeAction(basicPSC.getID(),ConfigurationModel.Attribute.IS_ENABLED, serviceComponentDefnID, Boolean.valueOf(enabled));
+            createExchangeAction(basicDC.getID(),ConfigurationModel.Attribute.IS_ENABLED, deployedcomponent.getDeployedComponentDefnID(), Boolean.valueOf(enabled));
 
-
-            return basicPSC;
+            return basicDC;
 
         } //end if enabled!= oldEnabled
         
-        return psc;
+        return deployedcomponent;
 
     }
-
-  public  Collection setEnabled(Configuration configuration, ServiceComponentDefn serviceComponentDefn, ProductServiceConfig psc, boolean enabled, boolean deleteDeployedComps)
-    throws ConfigurationException {
-        if ( configuration == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
-        }
-        if ( serviceComponentDefn == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ServiceComponentDefn.class.getName()));
-        }
-        if ( psc == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
-        }
-
-        Collection result = null;
-
-        ServiceComponentDefnID svcID = (ServiceComponentDefnID) serviceComponentDefn.getID();
-
-        if (!psc.containsService(svcID)) {
-            throw new ConfigurationException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0091,
-                    new Object[] { svcID, psc.getName()} ));
-        }
-
-        boolean oldEnabled = psc.isServiceEnabled(svcID);
-
-
-
-        //if a change is not being made to the enabled value, this whole method
-        //will be essentially bypassed
-        if (enabled != oldEnabled){
-            psc = this.setEnabled(svcID, psc, enabled);
-
-            BasicConfiguration targetConfig = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-
-            Collection deps = targetConfig.getDeployedComponents(svcID, (ProductServiceConfigID) psc.getID());
-
-            // if disabling and there are deployed components, then undeploy the components
-            if (!enabled && deleteDeployedComps) {
-                
-                if (!deps.isEmpty()) {
-                    DeployedComponent deployedService;
-                    DeployedComponentID deployedServiceID;
-                    result = new ArrayList(deps.size());
-                    for (Iterator it=deps.iterator(); it.hasNext(); ) {
-                        deployedService = (DeployedComponent) it.next();
-                        deployedServiceID = (DeployedComponentID) deployedService.getID();
-                        
-                        this.createDestroyAction(deployedServiceID, deployedService);
-                        targetConfig.removeComponentObject(deployedServiceID );
-
-                        DeployedComponent ds = targetConfig.getDeployedComponent(deployedServiceID);
-                        if (ds != null) {
-                            throw new ConfigurationException("Deployed Component " + deployedServiceID + " was not removed"); //$NON-NLS-1$ //$NON-NLS-2$
-                        }
-                        DeployedComponent newService = (DeployedComponent) deployedService.clone();
-                        result.add(newService);
-                    }
-                }
-             } else if (enabled){
-                //we must automagically create DeployedComponents for the newly-
-                //enabled service defn, wherever its PSC has already been deployed
-                ProductServiceConfigID pscID = (ProductServiceConfigID) psc.getID();
-                result = this.deployServiceDefn(targetConfig,serviceComponentDefn,pscID);
-
-            }
-
-            //this will overwrite the service if it already is in the Configuration
-            targetConfig.addComponentDefn(psc);
-
-        } //end if enabled!= oldEnabled
-        if (result == null){
-            result = Collections.EMPTY_LIST;
-
-        }
-        return result;
-
-
-    }
-
-
-//    public Configuration addHostComponent(Configuration t, Host host) {
 //
-//        BasicConfiguration target = (BasicConfiguration) verifyTargetClass(t,BasicConfiguration.class);
+//  public  DeployedComponent setEnabled(Configuration configuration, ServiceComponentDefn serviceComponentDefn, VMComponentDefn vm, boolean enabled)
+//    throws ConfigurationException {
+//        if ( configuration == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
+//        }
+//        if ( serviceComponentDefn == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ServiceComponentDefn.class.getName()));
+//        }
+//        if ( vm == null ) {
+//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, VMComponentDefn.class.getName()));
+//        }
 //
-//        target.addHost(host);
+//         ServiceComponentDefnID svcID = (ServiceComponentDefnID) serviceComponentDefn.getID();
 //
-//        createCreationAction(host.getID(), host);
+//        DeployedComponent dc = configuration.getDeployedServiceForVM(svcID, vm);
+//        return this.setEnabled(dc, enabled);
 //
-//        return target;
+//
+//
 //    }
 
 
-    /**
-     * Adds an existing ServiceComponentDefn to indicated PSC; the
-     * ServiceComponentDefn is assumed to already belong to the indicated
-     * Configuration.  The ServiceComponentDefn will be removed from
-     * any PSC it previously belonged to.
-     * @param configuration the Configuration containing the
-     * ServiceComponentDefn
-     * @param psc ProductServiceConfig to have service comp defn added to
-     * @param serviceComponentDefnID will be added to the indicated
-     * ProductServiceConfiguration (and removed from any PSC it previously
-     * belonged to).
-     */
-    public ProductServiceConfig addServiceComponentDefn(Configuration configuration, ProductServiceConfig psc, ServiceComponentDefnID serviceComponentDefnID){
-        return this.addServiceComponentDefn(psc, serviceComponentDefnID);
-    }
 
-    /**
-     * Adds an existing ServiceComponentDefn to indicated PSC.
-     * The ServiceComponentDefn will be removed from
-     * any PSC it previously belonged to.
-
-     * @param psc ProductServiceConfig to have service comp defn added to
-     * @param serviceComponentDefnID will be added to the indicated
-     * ProductServiceConfiguration (and removed from any PSC it previously
-     * belonged to).
-     */
-    public ProductServiceConfig addServiceComponentDefn(ProductServiceConfig psc, ServiceComponentDefnID serviceComponentDefnID){
-        if ( psc == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
-        }
-        if ( serviceComponentDefnID == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ServiceComponentDefnID.class.getName()));
-        }
-
-        BasicProductServiceConfig basicPSC = (BasicProductServiceConfig) verifyTargetClass(psc,BasicProductServiceConfig.class);
-        basicPSC.addServiceComponentDefnID(serviceComponentDefnID);
-
-        //todo get old PSC of this service defn
-        //ProductServiceConfigID oldValue = serviceComponentDefn.getParentComponentTypeID();
-        createExchangeAction(serviceComponentDefnID,ConfigurationModel.Attribute.PSC_NAME, null, basicPSC.getID());
-
-
-        ProductServiceConfig newDefn = (ProductServiceConfig) basicPSC.clone();
-        return newDefn;
-    }
-
-    /**
-     * Adds the service type represented by the indicated ComponentType to
-     * the list of legal service types of the indicated ProductType.
-     * @param productType ProductType to have a new service type added to
-     * @param serviceComponentType ComponentType to be added to the
-     * ProductType
-     */
-    public ProductType addServiceComponentType(ProductType productType, ComponentType serviceComponentType){
-        BasicProductType basicProdType = (BasicProductType)productType;
-
-        ComponentTypeID productTypeID = (ComponentTypeID)basicProdType.getID();
-        this.setParentComponentTypeID(serviceComponentType, productTypeID);
-        //add the service ComponentTypeID to the BasicProductType
-        basicProdType.addServiceTypeID((ComponentTypeID)serviceComponentType.getID());
-
-        return basicProdType;
-    }
-
-    /**
-     * Removes the service type represented by the indicated ComponentType from
-     * the list of legal service types of the indicated ProductType.
-     * @param productType ProductType to have the service type taken from
-     * @param serviceComponentType ComponentType to be taken from the
-     * ProductType
-     */
-    public ProductType removeServiceComponentType(ProductType productType, ComponentType serviceComponentType){
-        BasicProductType basicProdType = (BasicProductType)productType;
-
-        ComponentTypeID productTypeID = (ComponentTypeID)basicProdType.getID();
-        this.setParentComponentTypeID(serviceComponentType, productTypeID);
-        //add the service ComponentTypeID to the BasicProductType
-        basicProdType.removeServiceTypeID((ComponentTypeID)serviceComponentType.getID());
-
-        return basicProdType;
-    }
 
     /**
      * Sets the LogConfiguration in effect for the Configuration
@@ -2229,19 +2060,19 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
     }
 
     public ComponentType setLastChangedHistory(ComponentType type, String lastChangedBy, String lastChangedDate) {
-		return ConfigurationObjectEditorHelper.setLastChangedHistory(type, lastChangedBy, lastChangedDate);
+		return BasicUtil.setLastChangedHistory(type, lastChangedBy, lastChangedDate);
 
     }
     public ComponentType setCreationChangedHistory(ComponentType type, String createdBy, String creationDate) {
-		return ConfigurationObjectEditorHelper.setCreationChangedHistory(type, createdBy, creationDate);
+		return BasicUtil.setCreationChangedHistory(type, createdBy, creationDate);
     }
 
     public ComponentObject setLastChangedHistory(ComponentObject defn, String lastChangedBy, String lastChangedDate) {
-		return ConfigurationObjectEditorHelper.setLastChangedHistory(defn, lastChangedBy, lastChangedDate);
+		return BasicUtil.setLastChangedHistory(defn, lastChangedBy, lastChangedDate);
 
     }
     public ComponentObject setCreationChangedHistory(ComponentObject defn, String createdBy, String creationDate) {
-		return ConfigurationObjectEditorHelper.setCreationChangedHistory(defn, createdBy, creationDate);
+		return BasicUtil.setCreationChangedHistory(defn, createdBy, creationDate);
     }
 
 
@@ -2337,38 +2168,17 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
             // this should never happen except in development, no need to translate
             throw new UnsupportedOperationException("Cannot call method delete(ComponentObject, Configuration) to delete a configuration, call delete(Configuration)."); //$NON-NLS-1$
         }
+        
+        BasicConfiguration basicConfig = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
 
-        Configuration config = ConfigurationObjectEditorHelper.delete((ComponentObjectID) target.getID(), configuration);
+        basicConfig.removeComponentObject( (ComponentObjectID) target.getID());
 
         this.createDestroyAction(target.getID(), target);
 
-        return config;
+        return basicConfig;
     }
 
-    /**
-     * Change the name of a previously defined PSC in the Next Startup config.
-     * @param psc The psc whose name to change.
-     * @param name The new name.
-     * @return The PSC with its name changed.
-     */
-    public ProductServiceConfig renamePSC(ProductServiceConfig psc, String name) throws ConfigurationException {
-        if ( psc == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
-        }
-        BasicProductServiceConfig target = (BasicProductServiceConfig) verifyTargetClass(psc,BasicProductServiceConfig.class);
-        ConfigurationID configID = target.getConfigurationID();
-
-//        ProductServiceConfigID newID = new ProductServiceConfigID(configID, name);
-//        ComponentTypeID typeID = target.getComponentTypeID();
-        target = (BasicProductServiceConfig) BasicUtil.createComponentDefn(ComponentDefn.PSC_COMPONENT_CODE, configID, psc.getComponentTypeID(), name) ;
-            
-        createExchangeAction( target.getID(), ConfigurationModel.Attribute.NAME,
-                              target.getName(), name );
-        
-//            new BasicProductServiceConfig(configID, newID, psc.getProductTypeID());
-        return target;
-    }
-
+ 
     /**
      * Change the name of a previously defined VM in the Next Startup config.
      * @param vm The VM whose name to change.
@@ -2397,29 +2207,13 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
 
     public boolean isDeployed(ServiceComponentDefnID defnID, Configuration config) {
-        Iterator iterator = config.getDeployedComponents().iterator();
-        while (iterator.hasNext()) {
-            DeployedComponent comp = (DeployedComponent)iterator.next();
-            ServiceComponentDefnID depDefnID = comp.getServiceComponentDefnID();
-            if (defnID.equals(depDefnID)) {
-                return true;
-            }
+        Collection dcs = config.getDeployedComponents(defnID);
+        if (dcs != null && dcs.size() > 0) {
+        	return true;
+
         }
         return false;
     }
-
-    // since a component name must be unique within a configuration then
-    // this simple method can validate an existance of a service defn.
-//    public boolean doesComponentDefnExist(String name, Configuration config) {
-//        Iterator iterator = config.getComponentDefns().values().iterator();
-//        while (iterator.hasNext()) {
-//            ComponentDefn comp = (ComponentDefn)iterator.next();
-//            if (name.equalsIgnoreCase(comp.getName())) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
 
     /**
      * Sets the system next startup configuration
@@ -2427,24 +2221,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
      */
     public void setBootStrapConfiguration(ConfigurationID configurationID) throws ConfigurationException {
         this.createExchangeAction(configurationID, ConfigurationModel.Attribute.NEXT_STARTUP_CONFIGURATION, configurationID, configurationID);
-    }
-
-    /**
-     * Sets the system next startup configuration
-     */
-/*    
-    public void setOperationalConfiguration(ConfigurationID configurationID) throws ConfigurationException {
-        this.createExchangeAction(configurationID, ConfigurationModel.Attribute.CURRENT_CONFIGURATION, configurationID, configurationID);
-    }
-*/
-    /**
-     * Sets the system startup configuration (This method will not be declared
-     * in the public interface {@link ConfigurationObjectEditor}, since
-     * the startup configuration should not be modifiable.  But, this method
-     * is needed by the JDBC service provider.)
-     */
-    public void setStartupConfiguration(ConfigurationID configurationID) throws ConfigurationException {
-        this.createExchangeAction(configurationID, ConfigurationModel.Attribute.STARTUP_CONFIGURATION, configurationID, configurationID);
     }
 
     /**
@@ -2512,14 +2288,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         return target;
    }
 
-//    public Configuration addConfigurationComponentDefn(Configuration t, ComponentDefn defn ) {
-//
-//        BasicConfiguration target = (BasicConfiguration) verifyTargetClass(t,BasicConfiguration.class);
-//		target.addComponentDefn(defn);
-//
-//        return target;
-//   }
-
     public Configuration setConfigurationDeployedComponents(Configuration t, Collection deployedComponents) {
 
         BasicConfiguration target = (BasicConfiguration) verifyTargetClass(t,BasicConfiguration.class);
@@ -2536,13 +2304,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         return target;
     }
 
-//    public Configuration addConfigurationDeployedComponent(Configuration t, DeployedComponent deployedComponent) {
-//
-//        BasicConfiguration target = (BasicConfiguration) verifyTargetClass(t,BasicConfiguration.class);
-//
-//		target.addDeployedComponent(deployedComponent);
-//        return target;
-//    }
 
     public Configuration setConfigurationHostComponents(Configuration t, Collection hostComponents) {
 
@@ -2559,13 +2320,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
 
         return target;
     }
-
-//    public Configuration addConfigurationHostComponent(Configuration t, Host host) {
-//
-//        BasicConfiguration target = (BasicConfiguration) verifyTargetClass(t,BasicConfiguration.class);
-//		target.addHost(host);
-//        return target;
-//    }
 
 
     public Properties getEditableProperties(ComponentObject t) {
@@ -2616,34 +2370,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         return newDefn;
     }
 
-    public ConnectorBinding createConnectorComponent(Configuration configuration, ComponentTypeID typeID, String componentName, ProductServiceConfigID pscID) {
-        if ( configuration == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
-        }
-        if ( pscID == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfigID.class.getName()));
-        }
-        ProductServiceConfig psc = (ProductServiceConfig)configuration.getComponentDefn(pscID);
-        if (psc == null ) {
-            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ProductServiceConfig.class.getName()));
-        }
-
-		BasicConnectorBinding newServiceDefn = (BasicConnectorBinding) 
-            createConnectorComponent((ConfigurationID) configuration.getID(), typeID, componentName, null);
-
-    	// add the service to the psc so that this relationship is found in the deployServiceDefn method
-		addServiceComponentDefn(psc, (ServiceComponentDefnID) newServiceDefn.getID());
-
-        BasicConfiguration bc = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
-        bc.addComponentDefn(newServiceDefn);
-
-        //automatically deploy the service anywhere that the PSC is already deployed
-        this.deployServiceDefn(bc,newServiceDefn,pscID);
-
-        return newServiceDefn;
-    }
-
-
     public ConnectorBinding createConnectorComponent(ConfigurationID configurationID, ConnectorBinding original, String newName, String routingUUID) {
 
         if (original == null ) {
@@ -2690,8 +2416,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
                                           originalConnector.getComponentTypeID(), newName);
 
         defn.setRoutingUUID( originalConnector.getRoutingUUID() );
-
-        defn.setIsQueuedService(originalConnector.isQueuedService());
 
         createCreationAction(defn.getID(), defn);
 
@@ -2794,96 +2518,39 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
     // ----------------------------------------------------------------------------------
 
     /**
-     * Deploys a ServiceComponentDefn anywhere that it's PSC is already
-     * deployed.  This method is harmless to call if the
-     * ServiceComponentDefn is already deployed anywhere.  It is
-     * also harmless to call if the PSC has not been deployed at
-     * all (meaning no other services of the PSC have been deployed.)
-     * If the ServiceComponentDefn does not belong to the PSC, it
-     * will be added.  A Collection of any newly-created
-     * DeployedComponent objects is returned.
+     * Deploys a ServiceComponentDefn to the specified VM
+     *  This method is harmless to call if the
+     * ServiceComponentDefn is already deployed anywhere.  
      * @param configuration must be the Configuration containing both
      * the ServiceComponentDefn and PSC ID parameters (but this is not
      * checked for in this method)
      * @param serviceComponentDefn to be deployed
-     * @param pscID PSC ID that may already be deployed somewhere in the
-     * Configuration parameter
-     * @return Collection of newly-created DeployedComponent objects
+     * @param VMID VM ID indicates the process to deploy the service to
+     * @return DeployedComponent of newly-created DeployedComponent object
      */
-    public Collection deployServiceDefn(Configuration configuration, ServiceComponentDefn serviceComponentDefn, ProductServiceConfigID pscID) {
-        Collection result = null;
-
-        BasicServiceComponentDefn basicService = (BasicServiceComponentDefn) verifyTargetClass(serviceComponentDefn,BasicServiceComponentDefn.class);
+    public DeployedComponent deployServiceDefn(Configuration configuration, ServiceComponentDefn serviceComponentDefn, VMComponentDefnID vmID) {
+         BasicServiceComponentDefn basicService = (BasicServiceComponentDefn) verifyTargetClass(serviceComponentDefn,BasicServiceComponentDefn.class);
         BasicConfiguration targetConfig = (BasicConfiguration) verifyTargetClass(configuration,BasicConfiguration.class);
 
         //we must automagically create DeployedComponents for the newly-
         //enabled service defn, wherever its PSC has already been deployed
         DeployedComponent aDeployedComponent = null;
-        ProductServiceConfigID aPscID = null;
-        HostID hostID = null;
-        VMComponentDefnID vmID = null;
-        ConfigurationID configID = (ConfigurationID)targetConfig.getID();
+        
+         ConfigurationID configID = (ConfigurationID)targetConfig.getID();
         ServiceComponentDefnID serviceDefnID = (ServiceComponentDefnID)basicService.getID();
-        //ProductServiceConfigID pscID = targetConfig.getPSCForServiceDefn(serviceDefnID);
+ 
+        VMComponentDefn vm = targetConfig.getVMComponentDefn(vmID);
+        HostID hostID = vm.getHostID();
+        DeployedComponent deployComponent = targetConfig.getDeployedServiceForVM( serviceDefnID, vm);
+        
+        // if its not deployed, deploy it
+        if (deployComponent == null) {
+            DeployedComponentID id = new DeployedComponentID(serviceDefnID.getName(), configID,  hostID, vmID, serviceDefnID);
+            deployComponent = this.createDeployedServiceComponent(serviceDefnID.getName(), configuration, hostID, vmID, basicService);
 
-        ProductServiceConfig psc = targetConfig.getPSC(pscID);
-
-        HashSet deployedIDs = new HashSet();
-        for ( Iterator iter = targetConfig.getDeployedComponents().iterator(); iter.hasNext(); ){
-            aDeployedComponent = (DeployedComponent)iter.next();
-            aPscID = aDeployedComponent.getProductServiceConfigID();
-            if (aPscID != null && aPscID.equals(pscID)){
-                hostID = aDeployedComponent.getHostID();
-                vmID = aDeployedComponent.getVMComponentDefnID();
-
-
-                DeployedComponentID id = new DeployedComponentID(serviceDefnID.getName(), configID,  hostID, vmID, pscID, serviceDefnID);
-                if (!deployedIDs.contains(id)){
-                    deployedIDs.add(id);
-                    
-                    DeployedComponent deployComponent = this.createDeployedServiceComponent(serviceDefnID.getName(), configuration, hostID, vmID, basicService, aPscID);
-//                    BasicDeployedComponent deployComponent = new BasicDeployedComponent(id,
-//                                                                            configID,
-//                                                                            hostID,
-//                                                                            vmID,
-//                                                                            serviceDefnID,
-//                                                                            pscID,
-//                                                                            basicService.getComponentTypeID());
-//
-//                    createCreationAction(id, deployComponent );
-
-//                    try {
-//                        DeployedComponent newService = (DeployedComponent) deployComponent.clone();
-//                        targetConfig.addDeployedComponent(newService);
-                        if (result == null){
-                            result = new ArrayList();
-                        }
-                        result.add(deployComponent);
-
-
-                        if (psc.getServiceComponentDefnIDs() == null) {
-		                        addServiceComponentDefn(psc, serviceDefnID);
-
-                        } else {
-                        	if (!psc.getServiceComponentDefnIDs().contains(serviceDefnID)) {
-		                        addServiceComponentDefn(psc, serviceDefnID);
-                        	}
-                        }
-
-//                    } catch (CloneNotSupportedException e) {
-//                        throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0078,
-//                                   new Object[] {DeployedComponent.class.getName(),  e.getMessage()}));
-//                    }
-                }
-            }
         }
-        //this will overwrite the service if it already is in the Configuration
-        targetConfig.addComponentDefn(basicService);
 
-        if (result == null){
-            result = Collections.EMPTY_LIST;
-        }
-        return result;
+        return deployComponent;
     }
 
 }

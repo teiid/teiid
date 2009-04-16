@@ -26,7 +26,11 @@ import java.io.Serializable;
 
 public class ServiceID implements Serializable {
 
-    private long id;
+/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1776393684657738553L;
+	private long id;
     private String hostName;
     private String processName;
 

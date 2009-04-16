@@ -28,8 +28,6 @@ import java.util.EventObject;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefn;
 
@@ -205,19 +203,19 @@ public class ConfigurationChangeEvent
      * or an ancestor.
      * @return the deployed PSC or <code>null</code>
      */
-    public ProductServiceConfig getDeployedPsc() {
-        ProductServiceConfig psc = null;
-        if (isDeployedPscChange()) {
-            psc = (ProductServiceConfig)getSource();
-        }
-        else {
-            int index = getAncestorIndex(DEPLOYED_PSC);
-            if (index != -1) {
-                psc = (ProductServiceConfig)ancestors[index];
-            }
-        }
-        return psc;
-    }
+//    public ProductServiceConfig getDeployedPsc() {
+//        ProductServiceConfig psc = null;
+//        if (isDeployedPscChange()) {
+//            psc = (ProductServiceConfig)getSource();
+//        }
+//        else {
+//            int index = getAncestorIndex(DEPLOYED_PSC);
+//            if (index != -1) {
+//                psc = (ProductServiceConfig)ancestors[index];
+//            }
+//        }
+//        return psc;
+//    }
 
     /**
      * Gets the deployed service if either a deployed service was the event
@@ -272,38 +270,38 @@ public class ConfigurationChangeEvent
      * Gets the product if either a product was the event source or an ancestor.
      * @return the product or <code>null</code>
      */
-    public ProductType getProduct() {
-        ProductType product = null;
-        if (isProductChange()) {
-            product = (ProductType)getSource();
-        }
-        else {
-            int index = getAncestorIndex(PRODUCT);
-            if (index != -1) {
-                product = (ProductType)ancestors[index];
-            }
-        }
-        return product;
-    }
+//    public ProductType getProduct() {
+//        ProductType product = null;
+//        if (isProductChange()) {
+//            product = (ProductType)getSource();
+//        }
+//        else {
+//            int index = getAncestorIndex(PRODUCT);
+//            if (index != -1) {
+//                product = (ProductType)ancestors[index];
+//            }
+//        }
+//        return product;
+//    }
 
     /**
      * Gets the PSC definition if either a PSC definition was the event source
      * or an ancestor.
      * @return the PSC definition or <code>null</code>
      */
-    public ProductServiceConfig getPscDefinition() {
-        ProductServiceConfig psc = null;
-        if (isPscDefinitionChange()) {
-            psc = (ProductServiceConfig)getSource();
-        }
-        else {
-            int index = getAncestorIndex(PSC_DEFN);
-            if (index != -1) {
-                psc = (ProductServiceConfig)ancestors[index];
-            }
-        }
-        return psc;
-    }
+//    public ProductServiceConfig getPscDefinition() {
+//        ProductServiceConfig psc = null;
+//        if (isPscDefinitionChange()) {
+//            psc = (ProductServiceConfig)getSource();
+//        }
+//        else {
+//            int index = getAncestorIndex(PSC_DEFN);
+//            if (index != -1) {
+//                psc = (ProductServiceConfig)ancestors[index];
+//            }
+//        }
+//        return psc;
+//    }
 
     /**
      * Gets the service definition if either a service definition was the event
@@ -534,15 +532,16 @@ public class ConfigurationChangeEvent
         ancestors = theAncestors;
         Object source = getSource();
 
-        if (source instanceof ProductServiceConfig) {
-            if (ancestors[0] instanceof ProductType) {
-                type |= PSC_DEFN;
-            }
-            else {
-                type |= DEPLOYED_PSC;
-            }
-        }
-        else if (source instanceof ServiceComponentDefn) {
+//        if (source instanceof ProductServiceConfig) {
+//            if (ancestors[0] instanceof ProductType) {
+//                type |= PSC_DEFN;
+//            }
+//            else {
+//                type |= DEPLOYED_PSC;
+//            }
+//        }
+//        else
+        if (source instanceof ServiceComponentDefn) {
             type |= SERVICE_DEFN;
         }
         else if (source instanceof VMComponentDefn) {
@@ -551,9 +550,9 @@ public class ConfigurationChangeEvent
         else if (source instanceof Host) {
             type |= HOST;
         }
-        else if (source instanceof ProductType) {
-            type |= PRODUCT;
-        }
+//        else if (source instanceof ProductType) {
+//            type |= PRODUCT;
+//        }
         else if (source instanceof Configuration) {
             type |= CONFIGURATION;
         }
@@ -572,39 +571,42 @@ public class ConfigurationChangeEvent
             if (isProcessChange()) {
                 index = 0;
             }
-            else if (isDeployedPscChange()) {
+//            else if (isDeployedPscChange()) {
+//                index = 1;
+//            }
+            else if (isDeployedServiceChange()) {
                 index = 1;
             }
-            else if (isDeployedServiceChange()) {
-                index = 2;
-            }
         }
-        else if (theAncestorType == DEPLOYED_PSC) {
+        else if (theAncestorType == DEPLOYED_SERVICE) {
             if (isDeployedServiceChange()) {
                 index = 0;
             }
         }
         else if (theAncestorType == PROCESS) {
-            if (isDeployedPscChange()) {
-                index = 0;
-            }
-            else if (isDeployedServiceChange()) {
-                index = 1;
-            }
-        }
-        else if (theAncestorType == PRODUCT) {
-            if (isPscDefinitionChange()) {
-                index = 0;
-            }
-            else if (isServiceDefinitionChange()) {
-                index = 1;
-            }
-        }
-        else if (theAncestorType == PSC_DEFN) {
-            if (isServiceDefinitionChange()) {
+//            if (isDeployedPscChange()) {
+//                index = 0;
+//            }
+//            else 
+            	
+            if (isDeployedServiceChange()) {
                 index = 0;
             }
         }
+ //       else if (theAncestorType == PRODUCT) {
+//            if (isPscDefinitionChange()) {
+//                index = 0;
+//            }
+//            else 
+//            if (isServiceDefinitionChange()) {
+//                index = 0;
+//            }
+//        }
+//        else if (theAncestorType == PSC_DEFN) {
+//            if (isServiceDefinitionChange()) {
+//                index = 0;
+//            }
+//        }
         return index;
     }
 

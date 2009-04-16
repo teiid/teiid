@@ -123,7 +123,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
             
             ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, ConnectorService.SERVICE_NAME,
                                                                         "connectorBinding2", ConnectorBindingType.COMPONENT_TYPE_NAME, //$NON-NLS-1$
-                                                                        "connectorBinding2", "2.2.2.2", deployedComponent, null,   //$NON-NLS-1$ //$NON-NLS-2$ 
+                                                                        "connectorBinding2", "2.2.2.2", deployedComponent,    //$NON-NLS-1$ //$NON-NLS-2$ 
                                                                         ServiceState.STATE_CLOSED,
                                                                         new Date(), false, new NoOpMessageBus());
             return binding;
@@ -132,7 +132,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
 
             ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, ConnectorService.SERVICE_NAME,
                                                                         "connectorBinding3", ConnectorBindingType.COMPONENT_TYPE_NAME, //$NON-NLS-1$
-                                                                        "connectorBinding3", "3.3.3.3", deployedComponent, null,  //$NON-NLS-1$ //$NON-NLS-2$
+                                                                        "connectorBinding3", "3.3.3.3", deployedComponent,   //$NON-NLS-1$ //$NON-NLS-2$
                                                                         ServiceState.STATE_CLOSED,
                                                                         new Date(), false, new NoOpMessageBus());                                                                        
             return binding;
@@ -143,7 +143,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
             
             ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, QueryService.SERVICE_NAME,
                                                                         "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                                                                        "dqp2", "2.2.2.2", deployedComponent, null, //$NON-NLS-1$ //$NON-NLS-2$ 
+                                                                        "dqp2", "2.2.2.2", deployedComponent,  //$NON-NLS-1$ //$NON-NLS-2$ 
                                                                         ServiceState.STATE_CLOSED,
                                                                         new Date(),  
                                                                         false, new NoOpMessageBus()); 
@@ -153,7 +153,7 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
 
             ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, QueryService.SERVICE_NAME,
                                                                         "dqp3", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                                                                        "dqp3", "3.3.3.3", deployedComponent, null, //$NON-NLS-1$ //$NON-NLS-2$ 
+                                                                        "dqp3", "3.3.3.3", deployedComponent, //$NON-NLS-1$ //$NON-NLS-2$ 
                                                                         ServiceState.STATE_CLOSED,
                                                                         new Date(),  
                                                                         false, new NoOpMessageBus()); 

@@ -28,18 +28,13 @@ public interface ConfigurationPropertyNames {
     static final String APPLICATION_VERSION_CREATED_BY = "ApplicationVersion"; //$NON-NLS-1$
     static final String USER_CREATED_BY = "UserCreatedBy"; //$NON-NLS-1$
     static final String CONFIGURATION_VERSION = "ConfigurationVersion"; //$NON-NLS-1$
-    static final String METAMATRIX_SYSTEM_VERSION = "MetaMatrixSystemVersion"; //$NON-NLS-1$
-    static final String TIME = "Time"; //$NON-NLS-1$
-
-    // at 4.2 is where the configuration format changes, so anything prior
-    // to this version will use the old (3.0) import/export utility
-    static final String MM_CONFIG_4_2_VERSION = "4.2"; //$NON-NLS-1$
-    static final String MM_CONFIG_3_0_VERSION = "3.0"; //$NON-NLS-1$
-    
+    static final String SYSTEM_VERSION = "SystemVersion"; //$NON-NLS-1$
+    static final String TIME = "Time"; //$NON-NLS-1$    
     
     // NOTE: if the latest config version is changed, then the com.metamatrix.vdb.internal.def.VDBDefPropertyNames 
     // needs to be change, which will impact the importing of .DEF files.
-    static final double MM_LATEST_CONFIG_VERSION = 4.2;
+    static final double CONFIG_CURR_VERSION_DBL = 6.0;
+    static final String CONFIG_CURR_VERSION = "6.0";
     
     
     public static final String MEMBERSHIP_ADMIN_PASSWORD = "security.membership.admin.password"; //$NON-NLS-1$

@@ -30,8 +30,12 @@ import java.util.Properties;
  */
 public class HostData extends ComponentData {
 
-    // Collection of ProcessData objects
-    private Collection processes;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7192156515568357069L;
+	// Collection of ProcessData objects
+    private  Collection<ProcessData> processes;
     private Properties properties;
 
 
@@ -40,7 +44,7 @@ public class HostData extends ComponentData {
      *
      * @param hostName Name of host
      */
-    public HostData(String hostName, Collection processes, boolean deployed, boolean registered, Properties props) {
+    public HostData(String hostName, Collection<ProcessData> processes, boolean deployed, boolean registered, Properties props) {
         super(hostName, deployed, registered);
         this.processes = processes;
         this.properties = props;

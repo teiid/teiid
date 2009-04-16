@@ -46,6 +46,7 @@ import com.metamatrix.common.config.api.AuthenticationProviderID;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentObject;
+import com.metamatrix.common.config.api.ComponentObjectID;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeDefnID;
@@ -60,10 +61,6 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ProductType;
-import com.metamatrix.common.config.api.ProductTypeID;
 import com.metamatrix.common.config.api.PropDefnAllowedValueID;
 import com.metamatrix.common.config.api.ResourceModel;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
@@ -78,16 +75,17 @@ import com.metamatrix.common.config.api.exceptions.InvalidComponentException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidDeployedComponentException;
 import com.metamatrix.common.config.api.exceptions.InvalidPropertyValueException;
+import com.metamatrix.common.config.model.BasicComponentObject;
 import com.metamatrix.common.config.model.BasicComponentType;
 import com.metamatrix.common.config.model.BasicComponentTypeDefn;
 import com.metamatrix.common.config.model.BasicConfiguration;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.config.model.BasicHost;
-import com.metamatrix.common.config.model.BasicProductType;
+import com.metamatrix.common.config.model.BasicServiceComponentDefn;
 import com.metamatrix.common.config.model.BasicSharedResource;
+import com.metamatrix.common.config.model.BasicUtil;
 import com.metamatrix.common.config.model.ConfigurationModel;
 import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
-import com.metamatrix.common.config.model.ConfigurationObjectEditorHelper;
 import com.metamatrix.common.config.model.PropertyValidations;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.namedobject.BaseID;
@@ -96,7 +94,6 @@ import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.DateUtil;
-import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
 
@@ -187,20 +184,7 @@ public class XMLActionUpdateStrategy  {
 
 				executeActions(m, id, actions, transaction);
 
-			}			
-
-
-        } else if (target instanceof ProductTypeID) {
-            ProductTypeID id = (ProductTypeID) target;
-            // apply changes to all configurations
-
-            Collection trans = transaction.getObjects();
-            for (Iterator it=trans.iterator(); it.hasNext(); ) {
-                ConfigurationModelContainerImpl m = (ConfigurationModelContainerImpl) it.next();
-//                  System.out.println("STRATEGY: Update Config " + m.getConfigurationID());
-
-                executeActions(m, id, actions, transaction);
-            }            
+			}			          
             
         } else if (target instanceof ComponentTypeID) {
             ComponentTypeID id = (ComponentTypeID) target;
@@ -236,18 +220,6 @@ public class XMLActionUpdateStrategy  {
 
         } else if (target instanceof DeployedComponentID) {
             DeployedComponentID id = (DeployedComponentID) target;
-
-			Collection trans = transaction.getObjects();
-			for (Iterator it=trans.iterator(); it.hasNext(); ) {
-				ConfigurationModelContainerImpl m = (ConfigurationModelContainerImpl) it.next();
-				executeActions(m, id, actions, transaction);
-			}
-
-
-       } else if (target instanceof ProductServiceConfigID ) {
-			ProductServiceConfigID id = (ProductServiceConfigID) target;
-
-//			System.out.println("STRATEGY: Update PSC ComponentDefn " + id);
 
 			Collection trans = transaction.getObjects();
 			for (Iterator it=trans.iterator(); it.hasNext(); ) {
@@ -333,27 +305,12 @@ public class XMLActionUpdateStrategy  {
         ComponentType type = config.getComponentType(id.getFullName());
 
         if (type == null) {
-            type =  config.getProductType(id.getFullName());
-            if (type == null) {
-                throw new InvalidComponentException(ConfigPlugin.Util.getString("XMLActionUpdateStrategy.Unable_to_add_component_type_not_found", new Object[] {targetID, id})); //$NON-NLS-1$
-            }
-        }
+                 throw new InvalidComponentException(ConfigPlugin.Util.getString("XMLActionUpdateStrategy.Unable_to_add_component_type_not_found", new Object[] {targetID, id})); //$NON-NLS-1$
+         }
         
         return type;
 
     }
-    
-//    private ProductType getProductType(ConfigurationModelContainer config, ComponentTypeID id, BaseID targetID)throws ConfigurationException {
-//        
-//        ProductType type = (ProductType) config.getProductType(id.getFullName());
-//
-//        if (type == null) {
-//                throw new InvalidComponentException(ConfigPlugin.Util.getString("XMLActionUpdateStrategy.Unable_to_add_component_type_not_found", new Object[] {targetID, id})); //$NON-NLS-1$
-//        }
-//        
-//        return type;
-//
-//    }    
 
 
     public Set executeActions(ConfigurationModelContainerImpl config,
@@ -372,7 +329,7 @@ public class XMLActionUpdateStrategy  {
 
 		affectedIDs.add(targetID);
 
-		Configuration cfg = config.getConfiguration();
+		BasicConfiguration cfg = (BasicConfiguration) config.getConfiguration();
 
 		try {
 
@@ -407,8 +364,7 @@ public class XMLActionUpdateStrategy  {
 					processPropertyForNewObject(rd, type, config, transaction
 							.getLockAcquiredBy());
 
-					ConfigurationObjectEditorHelper
-							.addConfigurationComponentDefn(cfg, rd);
+					cfg.addComponentDefn(rd);
 
 				} else if (action instanceof AddObject
 						|| action instanceof RemoveObject
@@ -434,7 +390,7 @@ public class XMLActionUpdateStrategy  {
 				} else if (action instanceof DestroyObject) {
 
 					if (rd != null) {
-						ConfigurationObjectEditorHelper.delete(targetID, cfg);
+						delete(targetID, cfg);
 						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 					}
 
@@ -472,7 +428,7 @@ public class XMLActionUpdateStrategy  {
         int actionIndex = -1;
         affectedIDs.add(targetID);
 
-		Configuration cfg = config.getConfiguration();
+		BasicConfiguration cfg = (BasicConfiguration) config.getConfiguration();
 
 
         try {
@@ -504,7 +460,7 @@ public class XMLActionUpdateStrategy  {
                         throw new InvalidDeployedComponentException(ConfigMessages.CONFIG_0077, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0077,  targetID.getName()));
                     }
 
-					ConfigurationObjectEditorHelper.addDeployedComponent(cfg, dc);
+                    cfg.addDeployedComponent(dc);
 
                 } else if (action instanceof AddObject ||
                 			action instanceof RemoveObject ||
@@ -529,7 +485,7 @@ public class XMLActionUpdateStrategy  {
 
 
                     if (dc != null) {
-						ConfigurationObjectEditorHelper.delete(targetID, config.getConfiguration());
+						delete(targetID, config.getConfiguration());
 						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
@@ -556,163 +512,6 @@ public class XMLActionUpdateStrategy  {
     }
 
 
-    public  Set executeActions(ConfigurationModelContainerImpl config, ProductServiceConfigID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidDeployedComponentException, ConfigurationException{
-    Set affectedIDs = new HashSet();
-        if ( actions.isEmpty() ) {
-            return affectedIDs;
-        }
-//		System.out.println("STRATEGY: PSC Target " + targetID + " on config " + config.getConfigurationID());
-
-        int actionIndex = -1;
-
-        affectedIDs.add(targetID);
-
-		Configuration cfg = config.getConfiguration();
-
-        try {
-
-           // Iterate through the actions ...
-            Iterator iter = actions.iterator();
-            while ( iter.hasNext() ) {
-                ActionDefinition action = (ActionDefinition) iter.next();
-                actionIndex++;
-                Object args[] = action.getArguments();
-				ComponentDefn cd = cfg.getPSC(targetID);
-
-                if(action instanceof CreateObject ) {
-
-                    if (cd!= null) {
-                        DuplicateComponentException e = new DuplicateComponentException(ConfigMessages.CONFIG_0080, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0080, targetID));
-                        e.setActionIndex(actionIndex);
-                        throw e;
-                    }
-                    cd = (ComponentDefn) args[0];
-
-					cd = (ComponentDefn) setCreationDate(cd, transaction.getLockAcquiredBy());
-
-
-//		System.out.println("STRATEGY: Add PSC Target " + targetID);
-
-                    ConfigurationObjectEditorHelper.addConfigurationComponentDefn(cfg, cd);
-
-                } else if (action instanceof AddObject ||
-                			action instanceof RemoveObject) {
-
-                 	if (cd == null) {
-                    	throw new InvalidComponentException(ConfigMessages.CONFIG_0081, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0081, targetID));
-                	}
-
-                //    ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
-                    ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
-					cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
-                                      
-
-        			processPropertyChanges(action,
-    									cd,
-    									type,
-    									config,
-    									transaction.getLockAcquiredBy());
-
-
-            } else if (action instanceof ExchangeObject)  {
-               		ExchangeObject anAction = (ExchangeObject) action;
-
-                 	if (cd == null) {
-                    	throw new InvalidComponentException(ConfigMessages.CONFIG_0081, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0081, targetID));
-                	}
-
-                    //ComponentType type = config.getComponentType(cd.getComponentTypeID().getFullName());
-                    ComponentType type = getComponentType(config, cd.getComponentTypeID(), targetID); 
-
-
-             		if (anAction.hasAttributeCode() &&
-                       (anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.PROPERTY.getCode() ||
-                        anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.PROPERTIES.getCode() ) )  {
-							cd = (ComponentDefn) setLastChangedDate(cd, transaction.getLockAcquiredBy());
-
-		        			processPropertyChanges(action,
-		    									cd,
-		    									type,
-		    									config,
-		    									transaction.getLockAcquiredBy());
-
-                                                        
-                    } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.UPDATE_PSC.getCode()) {
-                         ProductServiceConfig psc = (ProductServiceConfig) cd;
-        
-                         psc = ConfigurationObjectEditorHelper.resetServices(psc);
-   
-                         Collection svcIDs = (Collection) anAction.getPreviousValue();
-                         Boolean enabled = (Boolean)anAction.getNewValue();
-                    
-                    
-                         for (Iterator it=svcIDs.iterator(); it.hasNext(); ) {
-                             ServiceComponentDefnID id = (ServiceComponentDefnID) it.next();
-                             ConfigurationObjectEditorHelper.addServiceComponentDefn(psc, id);
-                             ConfigurationObjectEditorHelper.setEnabled( id, psc , enabled.booleanValue());                                                        
-                         }
-                         setLastChangedDate(psc, transaction.getLockAcquiredBy());                    
-                   
- 
-
-                    } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.IS_ENABLED.getCode()) {
-
-	                	if (cd instanceof ProductServiceConfig) {
-	                		ProductServiceConfig psc = (ProductServiceConfig) cd;
-
-	                		ServiceComponentDefnID svcID = (ServiceComponentDefnID) anAction.getPreviousValue();
-                        	Boolean enabled = (Boolean)anAction.getNewValue();
-
-	                		ConfigurationObjectEditorHelper.setEnabled( svcID, psc , enabled.booleanValue());
-
-					 		setLastChangedDate(psc, transaction.getLockAcquiredBy());
-
-
-	                	} else {
-
-	                    	throw new InvalidComponentException(ConfigMessages.CONFIG_0082, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0082, targetID));
-
-	                	}
-
-                	} else {
-                        throw new InvalidArgumentException(ConfigMessages.CONFIG_0079, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0079, anAction.getActionDescription()));
-                    }
-
-
-                } else if (action instanceof DestroyObject) {
-
-                    if (cd != null) {
-//		System.out.println("STRATEGY: Destroy ComponentDefn Target " + targetID);
-
-						ConfigurationObjectEditorHelper.delete(targetID, cfg);
-						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
-
-                    }
-
-
-                } else {
-                    throw new InvalidArgumentException(ConfigMessages.CONFIG_0075, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0075, action.getActionDescription()));
-                }
-
-            }
-
-
-        } catch (ConfigurationException ce) {
-            throw ce;
-
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e);
-            e2.setActionIndex(actionIndex);
-            throw e2;
-        }
-
-
-        return affectedIDs;
-
-    }
-
-
-
     public  Set executeActions(ConfigurationModelContainerImpl config,  ServiceComponentDefnID targetID, List actions, XMLConfigurationConnector transaction) throws InvalidDeployedComponentException, ConfigurationException{
     Set affectedIDs = new HashSet();
         if ( actions.isEmpty() ) {
@@ -724,7 +523,7 @@ public class XMLActionUpdateStrategy  {
 
         affectedIDs.add(targetID);
 
-		Configuration cfg = config.getConfiguration();
+		BasicConfiguration cfg = (BasicConfiguration) config.getConfiguration();
 
         try {
 
@@ -757,7 +556,7 @@ public class XMLActionUpdateStrategy  {
 
 //		System.out.println("STRATEGY: Add ComponentDefn Target " + targetID);
 
-                    ConfigurationObjectEditorHelper.addConfigurationComponentDefn(cfg, cd);
+                    cfg.addComponentDefn(cd);
 
                 } else if (action instanceof AddObject ||
                 			action instanceof RemoveObject)  {
@@ -802,15 +601,15 @@ public class XMLActionUpdateStrategy  {
                     } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.NAME.getCode()) {
                     	throw new InvalidArgumentException(ConfigMessages.CONFIG_0085, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0085, action.getActionDescription(), targetID));
 
-                    } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.PSC_NAME.getCode()) {
-                    	ProductServiceConfigID pscID = (ProductServiceConfigID)anAction.getNewValue();
-						ProductServiceConfig psc = config.getConfiguration().getPSC(pscID);
-
-						 setLastChangedDate(psc, transaction.getLockAcquiredBy());
-
-
-						// add the service the PSC
-						  ConfigurationObjectEditorHelper.addServiceComponentDefn(psc, targetID);
+//                    } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.PSC_NAME.getCode()) {
+//                    	ProductServiceConfigID pscID = (ProductServiceConfigID)anAction.getNewValue();
+//						ProductServiceConfig psc = config.getConfiguration().getPSC(pscID);
+//
+//						 setLastChangedDate(psc, transaction.getLockAcquiredBy());
+//
+//
+//						// add the service the PSC
+//						  ConfigurationObjectEditorHelper.addServiceComponentDefn(psc, targetID);
 
                     } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.IS_ENABLED.getCode()) {
                         throw new InvalidArgumentException(ConfigMessages.CONFIG_0086, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0086, anAction.getActionDescription()));
@@ -818,7 +617,7 @@ public class XMLActionUpdateStrategy  {
                     } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.ROUTING_UUID.getCode()) {
 
 	                	if (cd instanceof ServiceComponentDefn) {
-	                		ConfigurationObjectEditorHelper.setRoutingUUID((ServiceComponentDefn) cd, (String) anAction.getNewValue());
+	                		setRoutingUUID((ServiceComponentDefn) cd, (String) anAction.getNewValue());
 
 				 			setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
@@ -840,7 +639,7 @@ public class XMLActionUpdateStrategy  {
 
                 	if (cd != null) {
 //		System.out.println("STRATEGY: Destroy ServiceDefn Target " + targetID);
-						ConfigurationObjectEditorHelper.delete(targetID, cfg);
+						delete(targetID, cfg);
 						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
@@ -878,7 +677,7 @@ public class XMLActionUpdateStrategy  {
 
         affectedIDs.add(targetID);
 
-		Configuration cfg = config.getConfiguration();
+		BasicConfiguration cfg = (BasicConfiguration) config.getConfiguration();
 
         try {
 
@@ -908,8 +707,8 @@ public class XMLActionUpdateStrategy  {
                     // process properties for any encryptions
                     processPropertyForNewObject(cd, type, config, transaction.getLockAcquiredBy());
 
-                    ConfigurationObjectEditorHelper.addConfigurationComponentDefn(cfg, cd);
-
+                    cfg.addComponentDefn(cd);
+ 
                 } else if (action instanceof AddObject ||
                 			action instanceof RemoveObject)  {
 
@@ -982,7 +781,7 @@ public class XMLActionUpdateStrategy  {
                     if (cd != null) {
 //		System.out.println("STRATEGY: Destroy ComponentDefn Target " + targetID);
 
-						ConfigurationObjectEditorHelper.delete(targetID, cfg);
+						delete(targetID, cfg);
 						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
@@ -1019,12 +818,9 @@ public class XMLActionUpdateStrategy  {
 
         int actionIndex = -1;
 
-//        BindingAdjustments data = new BindingAdjustments();
-
         affectedIDs.add(targetID);
 
- //       ComponentDefn dvt;
-		Configuration cfg = config.getConfiguration();
+		BasicConfiguration cfg = (BasicConfiguration) config.getConfiguration();
 
         try {
 
@@ -1056,7 +852,7 @@ public class XMLActionUpdateStrategy  {
 
 //		System.out.println("STRATEGY: Add ConnectorBinding Target " + dvt.getID() + " to config " + cfg.getID());
 
-                	ConfigurationObjectEditorHelper.addConfigurationComponentDefn(cfg, cd);
+                    cfg.addComponentDefn(cd);
 
                 } else if (action instanceof AddObject ||
                 			action instanceof RemoveObject)  {
@@ -1108,21 +904,21 @@ public class XMLActionUpdateStrategy  {
                     	throw new InvalidArgumentException(ConfigMessages.CONFIG_0094, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0094, action.getActionDescription(),targetID));
 
 
-                    } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.PSC_NAME.getCode()) {
-
-//	System.out.println("STRATEGY: Exchange ConnectorBinding PSC for Target " + dvt.getID() + " for PSC exchange");
-
-                        ProductServiceConfigID pscID = (ProductServiceConfigID)anAction.getNewValue();
-						ProductServiceConfig psc = config.getConfiguration().getPSC(pscID);
-
-						if (psc == null) {
-	                    	throw new InvalidComponentException(ConfigMessages.CONFIG_0095, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0095, pscID, config.getConfigurationID()));
-						}
-
-				 		 setLastChangedDate(psc, transaction.getLockAcquiredBy());
-
-						// add the service the PSC
-						  ConfigurationObjectEditorHelper.addServiceComponentDefn(psc, targetID);
+//                    } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.PSC_NAME.getCode()) {
+//
+////	System.out.println("STRATEGY: Exchange ConnectorBinding PSC for Target " + dvt.getID() + " for PSC exchange");
+//
+//                        ProductServiceConfigID pscID = (ProductServiceConfigID)anAction.getNewValue();
+//						ProductServiceConfig psc = config.getConfiguration().getPSC(pscID);
+//
+//						if (psc == null) {
+//	                    	throw new InvalidComponentException(ConfigMessages.CONFIG_0095, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0095, pscID, config.getConfigurationID()));
+//						}
+//
+//				 		 setLastChangedDate(psc, transaction.getLockAcquiredBy());
+//
+//						// add the service the PSC
+//						  ConfigurationObjectEditorHelper.addServiceComponentDefn(psc, targetID);
 
 
                     } else if (anAction.hasAttributeCode() && anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.IS_ENABLED.getCode()) {
@@ -1135,7 +931,7 @@ public class XMLActionUpdateStrategy  {
 
 				 		    cd = (ConnectorBinding) setLastChangedDate(cd, transaction.getLockAcquiredBy());
 
-	                		ConfigurationObjectEditorHelper.setRoutingUUID((ConnectorBinding) cd, (String) anAction.getNewValue());
+	                		setRoutingUUID((ConnectorBinding) cd, (String) anAction.getNewValue());
 
                     } else {
                         throw new InvalidArgumentException(ConfigMessages.CONFIG_0096, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0096, anAction.getActionDescription() ));
@@ -1146,7 +942,7 @@ public class XMLActionUpdateStrategy  {
                     if (cd != null) {
 //		System.out.println("STRATEGY: Destroy ConnectorBinding Target " + targetID);
 
-						ConfigurationObjectEditorHelper.delete(targetID, cfg);
+						delete(targetID, cfg);
 						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
 
                     }
@@ -1203,8 +999,9 @@ public class XMLActionUpdateStrategy  {
 
                 if (action.hasAttributeCode() &&
                            (action.getAttributeCode().intValue() == ConfigurationModel.Attribute.CURRENT_CONFIGURATION.getCode() ||
-                            action.getAttributeCode().intValue() == ConfigurationModel.Attribute.NEXT_STARTUP_CONFIGURATION.getCode() ||
-                            action.getAttributeCode().intValue() == ConfigurationModel.Attribute.STARTUP_CONFIGURATION.getCode())        ) {
+                            action.getAttributeCode().intValue() == ConfigurationModel.Attribute.NEXT_STARTUP_CONFIGURATION.getCode()  ) ) {
+                        //    || action.getAttributeCode().intValue() == ConfigurationModel.Attribute.STARTUP_CONFIGURATION.getCode()) 
+                           
                   throw new InvalidArgumentException(ConfigMessages.CONFIG_0097, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0097, action.getActionDescription() ));
                 }
 
@@ -1341,11 +1138,11 @@ public class XMLActionUpdateStrategy  {
 
                     config.addComponentType(dvt);
 
-					if (dvt.isOfTypeConnector()) {
-						// the new type must be added to the connector product type.
-	                    ProductType pt = config.getProductType(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME);
-                        ConfigurationObjectEditorHelper.addServiceComponentType(pt, dvt);
-					}
+//					if (dvt.isOfTypeConnector()) {
+//						// the new type must be added to the connector product type.
+//	                    ProductType pt = config.getProductType(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME);
+//                        ConfigurationObjectEditorHelper.addServiceComponentType(pt, dvt);
+//					}
 
                 } else if (action instanceof AddObject ||
                 			action instanceof RemoveObject) {
@@ -1407,24 +1204,6 @@ public class XMLActionUpdateStrategy  {
 						config.remove(targetID);
 
 						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
-
-
-//						if (type instanceof ProductType) {
-//
-//						} else {
-							// if its not a product type then the regular component
-							// type needs to be removed the its related product type
-							Iterator it = config.getProductTypes().iterator();
-							while(it.hasNext()) {
-								ProductType pt = (ProductType) it.next();
-								if (pt.contains((ComponentTypeID) type.getID())) {
-                                    ConfigurationObjectEditorHelper.removeServiceComponentType(pt, type);
-								}
-							}
-
-//						}
-
-
 
                     }
 
@@ -1602,8 +1381,9 @@ public class XMLActionUpdateStrategy  {
 
 
 				 	dvt = (BasicHost) setCreationDate(dvt, transaction.getLockAcquiredBy());
-
-                    ConfigurationObjectEditorHelper.addHostComponent(config.getConfiguration(), dvt);
+				 	
+				 	BasicConfiguration bc = (BasicConfiguration) config.getConfiguration();
+				 	bc.addHost(dvt);
 
                 } else if (action instanceof AddObject ||
                 			action instanceof RemoveObject ||
@@ -1632,7 +1412,7 @@ public class XMLActionUpdateStrategy  {
 
                     if (host != null) {
                     	// if the host is deleted, so must the dependent objects be deleted (if they exist)
-						ConfigurationObjectEditorHelper.delete(targetID, config.getConfiguration());
+						delete(targetID, config.getConfiguration());
 						setLastChangedDate(config.getConfiguration(), transaction.getLockAcquiredBy());
                     }
 
@@ -1804,101 +1584,101 @@ public class XMLActionUpdateStrategy  {
      * @param componentTypes is the configuration to be updated
      */
 
-    public Set executeActions(ConfigurationModelContainerImpl config, ProductTypeID targetID, List actions, XMLConfigurationConnector transaction )
-                        throws InvalidConfigurationException, ConfigurationException{
-
-        Set affectedIDs = new HashSet();
-        if ( actions.isEmpty() ) {
-            return affectedIDs;
-        }
-
-        int actionIndex = -1;
-
-        affectedIDs.add(targetID);
-        BasicProductType dvt = null;
-
-        try {
-
-           // Iterate through the actions ...
-            Iterator iter = actions.iterator();
-            while ( iter.hasNext() ) {
-                ActionDefinition action = (ActionDefinition) iter.next();
-                actionIndex++;
-                Object args[] = action.getArguments();
-
-                if(action instanceof CreateObject ) {
-                    ProductType rd = config.getProductType(targetID.getFullName());
-
-                    if (rd != null) {
-                        // because rd are not configuration bound, the create
-                        // for the rd will only be added where it does not exist
-                        continue;
-                    }
-                    dvt = (BasicProductType) args[0];
-
-                    dvt = (BasicProductType) setCreationDate(dvt, transaction.getLockAcquiredBy());
-
-
-                    config.addProductType(dvt);
-
-                } else if (action instanceof AddObject ||
-                            action instanceof RemoveObject ||
-                            action instanceof ExchangeObject)  {
-                    
-                    throw new InvalidArgumentException(ConfigMessages.CONFIG_0075, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0075, action.getActionDescription()));
-                    
+//    public Set executeActions(ConfigurationModelContainerImpl config, ProductTypeID targetID, List actions, XMLConfigurationConnector transaction )
+//                        throws InvalidConfigurationException, ConfigurationException{
 //
-//                    ProductType rd = config.getProductType(targetID.getFullName());
+//        Set affectedIDs = new HashSet();
+//        if ( actions.isEmpty() ) {
+//            return affectedIDs;
+//        }
 //
-//                    if (rd == null) {
-//                        throw new InvalidComponentException(ConfigMessages.CONFIG_0106,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0106, targetID));
-//                    }
+//        int actionIndex = -1;
 //
+//        affectedIDs.add(targetID);
+//        BasicProductType dvt = null;
 //
-//                    ComponentType type = config.getComponentType(rd.getComponentTypeID().getFullName());
-//                    rd = (SharedResource)setLastChangedDate(editor, rd, transaction.getLockAcquiredBy());
+//        try {
 //
-//                    processPropertyChanges(action,
-//                                    rd,
-//                                    type,
-//                                    config,
-//                                    transaction.getLockAcquiredBy());
+//           // Iterate through the actions ...
+//            Iterator iter = actions.iterator();
+//            while ( iter.hasNext() ) {
+//                ActionDefinition action = (ActionDefinition) iter.next();
+//                actionIndex++;
+//                Object args[] = action.getArguments();
 //
-//
-
-                } else if (action instanceof DestroyObject) {
-                    // CANNOT REMOVE PRODUCT TYPES, they are predetermined for each release
-                    
-                    throw new InvalidArgumentException(ConfigMessages.CONFIG_0075, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0075, action.getActionDescription()));
-                    
+//                if(action instanceof CreateObject ) {
 //                    ProductType rd = config.getProductType(targetID.getFullName());
 //
 //                    if (rd != null) {
-//                        config.remove(targetID);
-//                        setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
-//
+//                        // because rd are not configuration bound, the create
+//                        // for the rd will only be added where it does not exist
+//                        continue;
 //                    }
-
-                } else {
-                    throw new InvalidArgumentException(ConfigMessages.CONFIG_0075,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0075, action.getActionDescription()));
-                }
-
-            }
-
-
-        } catch (ConfigurationException ce) {
-            throw ce;
-
-        } catch ( Exception e ) {
-            ConfigurationException e2 = new ConfigurationException(e);
-            e2.setActionIndex(actionIndex);
-            throw e2;
-        }
-
-
-        return affectedIDs;
-    }
-    
+//                    dvt = (BasicProductType) args[0];
+//
+//                    dvt = (BasicProductType) setCreationDate(dvt, transaction.getLockAcquiredBy());
+//
+//
+//                    config.addProductType(dvt);
+//
+//                } else if (action instanceof AddObject ||
+//                            action instanceof RemoveObject ||
+//                            action instanceof ExchangeObject)  {
+//                    
+//                    throw new InvalidArgumentException(ConfigMessages.CONFIG_0075, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0075, action.getActionDescription()));
+//                    
+////
+////                    ProductType rd = config.getProductType(targetID.getFullName());
+////
+////                    if (rd == null) {
+////                        throw new InvalidComponentException(ConfigMessages.CONFIG_0106,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0106, targetID));
+////                    }
+////
+////
+////                    ComponentType type = config.getComponentType(rd.getComponentTypeID().getFullName());
+////                    rd = (SharedResource)setLastChangedDate(editor, rd, transaction.getLockAcquiredBy());
+////
+////                    processPropertyChanges(action,
+////                                    rd,
+////                                    type,
+////                                    config,
+////                                    transaction.getLockAcquiredBy());
+////
+////
+//
+//                } else if (action instanceof DestroyObject) {
+//                    // CANNOT REMOVE PRODUCT TYPES, they are predetermined for each release
+//                    
+//                    throw new InvalidArgumentException(ConfigMessages.CONFIG_0075, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0075, action.getActionDescription()));
+//                    
+////                    ProductType rd = config.getProductType(targetID.getFullName());
+////
+////                    if (rd != null) {
+////                        config.remove(targetID);
+////                        setLastChangedDate(editor, config.getConfiguration(), transaction.getLockAcquiredBy());
+////
+////                    }
+//
+//                } else {
+//                    throw new InvalidArgumentException(ConfigMessages.CONFIG_0075,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0075, action.getActionDescription()));
+//                }
+//
+//            }
+//
+//
+//        } catch (ConfigurationException ce) {
+//            throw ce;
+//
+//        } catch ( Exception e ) {
+//            ConfigurationException e2 = new ConfigurationException(e);
+//            e2.setActionIndex(actionIndex);
+//            throw e2;
+//        }
+//
+//
+//        return affectedIDs;
+//    }
+//    
 
     // ----------------------------------------------------------------------------------------
     //                P R O P E R T Y    M E T H O D S
@@ -1913,7 +1693,10 @@ public class XMLActionUpdateStrategy  {
 // because new objects may no longer have seperate actions for their properties, the
 // properties that they have must be checked for passwords so that
 // they can be encrypted.
-        Properties props = ConfigurationObjectEditorHelper.getEditableProperties(object);
+    	
+        BasicComponentObject bco = (BasicComponentObject) object;
+    	
+        Properties props = bco.getEditableProperties();
 
         updateProperties(object, props, ConfigurationObjectEditor.SET, type, config, principal);
 
@@ -2028,7 +1811,7 @@ public class XMLActionUpdateStrategy  {
 
             }
 
-			ConfigurationObjectEditorHelper.modifyProperties(object, passwordProps, operation);
+			modifyProperties(object, passwordProps, operation);
 
     }
 
@@ -2054,15 +1837,24 @@ public class XMLActionUpdateStrategy  {
 
             if (operation == ConfigurationObjectEditor.ADD) {
             	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "adding", propName, "with value", propValue); //$NON-NLS-1$ //$NON-NLS-2$
-                ConfigurationObjectEditorHelper.addProperty(object, propName, propValue);
+                BasicComponentObject target = (BasicComponentObject) object;
+
+                target.addProperty(propName, propValue);
 
             } else if (operation == ConfigurationObjectEditor.SET) {
             	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "setting", propName, "to value", propValue); //$NON-NLS-1$ //$NON-NLS-2$
-                ConfigurationObjectEditorHelper.setProperty(object, propName, propValue);
+
+                BasicComponentObject target = (BasicComponentObject) object;
+
+                target.removeProperty(propName);
+
+                target.addProperty(propName, propValue);
 
             } else if (operation == ConfigurationObjectEditor.REMOVE) {
             	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "removing", propName); //$NON-NLS-1$
-            	ConfigurationObjectEditorHelper.removeProperty(object, propName);
+                BasicComponentObject target = (BasicComponentObject) object;
+
+                target.removeProperty(propName);
             }
     }
 
@@ -2168,14 +1960,14 @@ public class XMLActionUpdateStrategy  {
 
    		String lastChangedDate = DateUtil.getCurrentDateAsString();
 
-   		return ConfigurationObjectEditorHelper.setLastChangedHistory(defn, principal, lastChangedDate);
+   		return BasicUtil.setLastChangedHistory(defn, principal, lastChangedDate);
    }
 
    private ComponentType setLastChangedDate(ComponentType defn, String principal) {
 
    		String lastChangedDate = DateUtil.getCurrentDateAsString();
 
-   		return ConfigurationObjectEditorHelper.setLastChangedHistory(defn, principal, lastChangedDate);
+   		return BasicUtil.setLastChangedHistory(defn, principal, lastChangedDate);
    }
 
 
@@ -2183,19 +1975,91 @@ public class XMLActionUpdateStrategy  {
 
    		String creationDate = DateUtil.getCurrentDateAsString();
 
-   		defn = ConfigurationObjectEditorHelper.setLastChangedHistory(defn, principal, creationDate);
+   		defn = BasicUtil.setLastChangedHistory(defn, principal, creationDate);
 
-   		return ConfigurationObjectEditorHelper.setCreationChangedHistory(defn, principal, creationDate);
+   		return BasicUtil.setCreationChangedHistory(defn, principal, creationDate);
    }
 
    private ComponentType setCreationDate(ComponentType defn, String principal) {
 
    		String creationDate = DateUtil.getCurrentDateAsString();
 
-   		defn = ConfigurationObjectEditorHelper.setLastChangedHistory(defn, principal, creationDate);
+   		defn = BasicUtil.setLastChangedHistory(defn, principal, creationDate);
 
-   		return ConfigurationObjectEditorHelper.setCreationChangedHistory(defn, principal, creationDate);
+   		return BasicUtil.setCreationChangedHistory(defn, principal, creationDate);
    }
+   
+   
+	private Configuration delete( ComponentObjectID targetID, Configuration configuration ) throws ConfigurationException {
+        //System.out.println("<!><!><!><!>deleting " + target + ", delete dependencies: " + deleteDependencies);
+
+        BasicConfiguration basicConfig = (BasicConfiguration) configuration;
+        basicConfig.removeComponentObject( targetID);
+
+        return basicConfig;
+    }
+	
+    /**
+     * The command to signify setting of an attribute.
+     */
+    public static final int SET = 0;
+
+    /**
+     * The command to signify addition of an attribute.
+     */
+    public static final int ADD = 1;
+
+    /**
+     * The command to signify removal of an attribute.
+     */
+    public static final int REMOVE = 2;
+	private ComponentObject modifyProperties( ComponentObject t, Properties props, int command ) {
+	    	Assertion.isNotNull(t);
+
+	    	if (props == null) {
+	    		return t;
+	    	}
+
+
+	        BasicComponentObject target = (BasicComponentObject) t;
+	        Properties newProps = null;
+
+	        switch ( command ) {
+	            case ADD:
+	                newProps = new Properties();
+	                newProps.putAll( target.getEditableProperties() );
+	                newProps.putAll( props );
+
+	                target.addProperties(newProps);
+
+	                break;
+	            case REMOVE:
+	                newProps = new Properties();
+	                newProps.putAll( target.getEditableProperties() );
+	                Iterator iter = props.keySet().iterator();
+	                while ( iter.hasNext() ) {
+	                    newProps.remove( iter.next() );
+	                }
+
+	                target.setProperties(newProps);
+	                break;
+	            case SET:
+	                target.setProperties(props);
+	                break;
+	        }
+
+	        return target;
+
+
+	    }	
+	
+    private void setRoutingUUID(ServiceComponentDefn serviceComponentDefn, String newRoutingUUID){
+    	Assertion.isNotNull(serviceComponentDefn);
+
+        BasicServiceComponentDefn basicService = (BasicServiceComponentDefn) serviceComponentDefn;
+        basicService.setRoutingUUID(newRoutingUUID);
+
+    }	
 
 }
 

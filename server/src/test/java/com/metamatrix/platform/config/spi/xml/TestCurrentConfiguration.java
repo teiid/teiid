@@ -25,15 +25,12 @@ package com.metamatrix.platform.config.spi.xml;
 import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.platform.config.BaseTest;
 import com.metamatrix.platform.config.util.CurrentConfigHelper;
 
 public class TestCurrentConfiguration extends BaseTest {
-
-    protected static final String CONFIG_30_FILE = "config30_ns.xml"; //$NON-NLS-1$
     
 	private static String PRINCIPAL = "TestCurrentConfiguration";       //$NON-NLS-1$
 
@@ -94,29 +91,7 @@ public class TestCurrentConfiguration extends BaseTest {
     }   
     
      
-    public void test30SystemInitialization() throws Exception {
-        
-        printMsg("**** Starting test30SystemInitialization");       //$NON-NLS-1$
-
-        init(CONFIG_30_FILE);
-                                                            
-        Configuration config = CurrentConfiguration.getInstance().getConfiguration();
-        
-        if (config == null) {
-            fail("Configuration was not obtained from CurrentConfiguration after system initialization is performed."); //$NON-NLS-1$
-        }
-        
-        HelperTestConfiguration.validateConfigContents(config);
-        
-        
-        Properties configProps = CurrentConfiguration.getInstance().getProperties();  
-        if (configProps == null || configProps.isEmpty()) {
-            fail("No Global Configuration Properties were found"); //$NON-NLS-1$
-        }
-            
-    
-        printMsg("**** Completed test30SystemInitialization"); //$NON-NLS-1$
-    }
+ 
     
     private void validConfigurationModel() throws Exception {
         ConfigurationModelContainer ccm = CurrentConfiguration.getInstance().getConfigurationModel();

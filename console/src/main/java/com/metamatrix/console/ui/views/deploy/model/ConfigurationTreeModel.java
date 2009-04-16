@@ -24,16 +24,18 @@
 package com.metamatrix.console.ui.views.deploy.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.SwingUtilities;
 
+import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductType;
+import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.log.LogManager;
@@ -70,8 +72,8 @@ public final class ConfigurationTreeModel
         DeployPkgUtils.getString("dtm.deploymentshdrnode"); //$NON-NLS-1$
 
     /** The text of all the PSC definitions header nodes. */
-    public static final String PSC_DEFS_HDR =
-        DeployPkgUtils.getString("dtm.pscdefshdrnode"); //$NON-NLS-1$
+//    public static final String PSC_DEFS_HDR =
+//        DeployPkgUtils.getString("dtm.pscdefshdrnode"); //$NON-NLS-1$
 
     ///////////////////////////////////////////////////////////////////////////
     // FIELDS
@@ -81,20 +83,20 @@ public final class ConfigurationTreeModel
     private HashMap objNodeMap = new HashMap();
 
     //key=ConfigurationID, value=DefaultTreeNode for Deployments Header
-    private HashMap configDeployHdrMap = new HashMap();
+//    private HashMap configDeployHdrMap = new HashMap();
 
     //key=ConfigurationID, value=DefaultTreeNode for PSC Definitions Header
-    private HashMap configPscDefHdrMap = new HashMap();
+ //   private HashMap configPscDefHdrMap = new HashMap();
 
     //key=hostID, value=HashMap (key=ConfigurationID, value=node-HostWrapper as content)
     private HashMap hostConfigMap = new HashMap();
 
     //key=ComponentTypeID of product, value=HashMap (key=ConfigurationID, value=DefaultTreeNode)
-    private HashMap prodConfigMap = new HashMap();
+//    private HashMap prodConfigMap = new HashMap();
 
     // deployed pscs
     //key=VMComponentDefnID, value=(key=ProductServiceConfig ID,value=node-PscWrapper)
-    private HashMap procPscMap = new HashMap();
+ //   private HashMap procPscMap = new HashMap();
 
     // psc defns
     //key=ProductServiceConfigID, value=(key=ConfigurationID, value=node-PscWrapper)
@@ -119,6 +121,31 @@ public final class ConfigurationTreeModel
 
         super(new DefaultTreeNode());
         root = (DefaultTreeNode)getRoot();
+        System.out.println("root");
+    }
+    
+   public void init(Configuration theConfig) {
+	   addConfig(theConfig, false);
+     	Collection objs = theConfig.getHosts();
+    	for (Iterator<Host> it=objs.iterator(); it.hasNext();) {
+    		Host h = (Host)it.next();
+    		addDeloyedHost(h, theConfig, false);
+        	Collection vms = theConfig.getVMsForHost((HostID)h.getID()) ;
+        	for (Iterator<VMComponentDefn> vmit=vms.iterator(); vmit.hasNext();) {
+        		VMComponentDefn vm = vmit.next();
+        		this.addDeployedProcess(vm, h, theConfig, false);
+        		
+            	Collection svcs = theConfig.getDeployedServicesForVM(vm);
+            	for (Iterator<DeployedComponent> svcit=svcs.iterator(); svcit.hasNext();) {
+            		DeployedComponent dep = svcit.next();
+            		this.addDeployedService(dep, vm, h, theConfig, false);
+             		
+            	}
+        		
+        	}  
+    		
+    	}
+  	
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -129,27 +156,29 @@ public final class ConfigurationTreeModel
      * Adds a configuration node to the model.
      * @param theConfig the user object of the configuration node being created
      */
-    private void addConfig(Configuration theConfig) {
+    private void addConfig(Configuration theConfig, boolean fireevent) {
         // create configuration node
         SortableChildrenNode configNode = createNode(theConfig, root);
 
         // add deployments header
-        SortableChildrenNode deployHdrNode = new SortableChildrenNode(DEPLOYMENTS_HDR, theConfig);
-        configNode.addChild(deployHdrNode);
-        configDeployHdrMap.put(theConfig.getID(), deployHdrNode);
+//        SortableChildrenNode deployHdrNode = new SortableChildrenNode(DEPLOYMENTS_HDR, theConfig);
+//        configNode.addChild(deployHdrNode);
+//        configDeployHdrMap.put(theConfig.getID(), deployHdrNode);
 
         // add psc defs header
-        SortableChildrenNode pscDefsHdrNode = new SortableChildrenNode(PSC_DEFS_HDR, theConfig);
-        configNode.addChild(pscDefsHdrNode);
-        configPscDefHdrMap.put(theConfig.getID(), pscDefsHdrNode);
+//        SortableChildrenNode pscDefsHdrNode = new SortableChildrenNode(PSC_DEFS_HDR, theConfig);
+//        configNode.addChild(pscDefsHdrNode);
+//        configPscDefHdrMap.put(theConfig.getID(), pscDefsHdrNode);
 
         // notify tree model listeners
-        ConfigurationTreeModelEvent event =
-            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
-                                            configNode,
-                                            configNode,
-                                            null);
-        fireConfigurationChange(event);
+        if (fireevent) {
+	        ConfigurationTreeModelEvent event =
+	            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
+	                                            configNode,
+	                                            configNode,
+	                                            null);
+	        fireConfigurationChange(event);
+        }
     }
 
     /**
@@ -171,12 +200,18 @@ public final class ConfigurationTreeModel
     public void addDeployedHost(
         Host theHost,
         Configuration theConfig) {
+    	
+    	addDeloyedHost(theHost, theConfig, true);
+    	
+    }
+    
+    private void addDeloyedHost(Host theHost, Configuration theConfig, boolean fireevent) {
 
         DefaultTreeNode configNode = getUserObjectNode(theConfig);
-        DefaultTreeNode deployHdrNode =
-            (DefaultTreeNode)configDeployHdrMap.get(theConfig.getID());
+//        DefaultTreeNode deployHdrNode =
+//            (DefaultTreeNode)configDeployHdrMap.get(theConfig.getID());
         DefaultTreeNode hostNode =
-            createHostNode(theHost, theConfig, deployHdrNode);
+            createHostNode(theHost, theConfig, configNode);
         HashMap map = (HashMap)hostConfigMap.get(theHost.getID());
         if (map == null) {
             // has not been deployed
@@ -186,12 +221,14 @@ public final class ConfigurationTreeModel
         map.put(theConfig.getID(), hostNode);
 
         // notify tree model listeners
-        ConfigurationTreeModelEvent event =
-            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
-                                            hostNode,
-                                            configNode,
-                                            new DefaultTreeNode[] {configNode});
-        fireConfigurationChange(event);
+        if (fireevent) {
+	        ConfigurationTreeModelEvent event =
+	            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
+	                                            hostNode,
+	                                            configNode,
+	                                            new DefaultTreeNode[] {configNode});
+	        fireConfigurationChange(event);
+        }
     }
 
     /**
@@ -206,18 +243,27 @@ public final class ConfigurationTreeModel
         VMComponentDefn theProcess,
         Host theHost,
         Configuration theConfig) {
+    	addDeployedProcess(theProcess, theHost, theConfig, true);
+    }
+    
+    private void addDeployedProcess(VMComponentDefn theProcess,
+    		Host theHost,
+    		Configuration theConfig,
+    		boolean fireevent) {
 
         DefaultTreeNode configNode = getUserObjectNode(theConfig);
         DefaultTreeNode hostNode = getHostNode(theHost, theConfig);
         if (hostNode != null) {
             DefaultTreeNode processNode = createNode(theProcess, hostNode);
     
-            ConfigurationTreeModelEvent event = 
-                new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW, 
-                    processNode,
-                    configNode, 
-                    new DefaultTreeNode[] {hostNode, configNode});
-            fireConfigurationChange(event);
+            if (fireevent) {
+	            ConfigurationTreeModelEvent event = 
+	                new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW, 
+	                    processNode,
+	                    configNode, 
+	                    new DefaultTreeNode[] {hostNode, configNode});
+	            fireConfigurationChange(event);
+            }
         }
     }
 
@@ -230,15 +276,15 @@ public final class ConfigurationTreeModel
      * @param theConfig the user object of the new node's configuration ancestor
      *            node
      */
-    public void addDeployedPsc(
-        ProductServiceConfig thePsc,
-        VMComponentDefn theProcess,
-        Host theHost,
-        Configuration theConfig) {
-
-        // event fired by the createPscNode method
-        createPscNode(thePsc, theProcess, theHost, theConfig);
-    }
+//    public void addDeployedPsc(
+//        ProductServiceConfig thePsc,
+//        VMComponentDefn theProcess,
+//        Host theHost,
+//        Configuration theConfig) {
+//
+//        // event fired by the createPscNode method
+//        createPscNode(thePsc, theProcess, theHost, theConfig);
+//    }
 
     /**
      * Adds a deployed service node to the model.
@@ -249,62 +295,61 @@ public final class ConfigurationTreeModel
      * @param theConfig the user object of the new node's configuration ancestor
      * node
      */
-/*    public void addDeployedService(
-        DeployedComponent theService,
-        ProductServiceConfig thePsc,
-        VMComponentDefn theProcess,
-        Host theHost,
-        Configuration theConfig) {
+//    public void addDeployedService(
+//        DeployedComponent theService,
+//        VMComponentDefn theProcess,
+//        Host theHost,
+//        Configuration theConfig) {
+//
+//        DefaultTreeNode pscNode = getPscNode(thePsc, theProcess);
+//        DefaultTreeNode serviceNode = createNode(theService, pscNode);
+//        DefaultTreeNode processNode = serviceNode.getParent();
+//        DefaultTreeNode hostNode = processNode.getParent();
+//        DefaultTreeNode configNode = getUserObjectNode(theConfig);
+//
+//        // notify tree model listeners
+//        ConfigurationTreeModelEvent event =
+//            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
+//                                            serviceNode,
+//                                            configNode,
+//                                            new DefaultTreeNode[] {pscNode,
+//                                                                   processNode,
+//                                                                   hostNode,
+//                                                                   configNode});
+//        fireConfigurationChange(event);
+//    }
 
-        DefaultTreeNode pscNode = getPscNode(thePsc, theProcess);
-        DefaultTreeNode serviceNode = createNode(theService, pscNode);
-        DefaultTreeNode processNode = serviceNode.getParent();
-        DefaultTreeNode hostNode = processNode.getParent();
-        DefaultTreeNode configNode = getUserObjectNode(theConfig);
-
-        // notify tree model listeners
-        ConfigurationTreeModelEvent event =
-            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
-                                            serviceNode,
-                                            configNode,
-                                            new DefaultTreeNode[] {pscNode,
-                                                                   processNode,
-                                                                   hostNode,
-                                                                   configNode});
-        fireConfigurationChange(event);
-    }
-*/
     /**
      * Adds a product node to the model.
      * @param theProduct the user object of the product node being created
      * @param theConfig the user object of the new node's configuration
      * ancestor node
      */
-    private void addProduct(
-        ProductType theProduct,
-        Configuration theConfig) {
-
-        DefaultTreeNode configNode = getUserObjectNode(theConfig);
-        DefaultTreeNode pscDefHdrNode =
-            (DefaultTreeNode)configPscDefHdrMap.get(theConfig.getID());
-        DefaultTreeNode productNode = createNode(theProduct, pscDefHdrNode);
-
-        HashMap map = (HashMap)prodConfigMap.get(theProduct.getID());
-        if (map == null) {
-            // has no PSCs for any config
-            map = new HashMap();
-            prodConfigMap.put(theProduct.getID(), map);
-        }
-        map.put(theConfig.getID(), productNode);
-
-        // notify tree model listeners
-        ConfigurationTreeModelEvent event =
-            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
-                                            productNode,
-                                            configNode,
-                                            new DefaultTreeNode[] {configNode});
-        fireConfigurationChange(event);
-    }
+//    private void addProduct(
+//        ProductType theProduct,
+//        Configuration theConfig) {
+//
+//        DefaultTreeNode configNode = getUserObjectNode(theConfig);
+//        DefaultTreeNode pscDefHdrNode =
+//            (DefaultTreeNode)configPscDefHdrMap.get(theConfig.getID());
+//        DefaultTreeNode productNode = createNode(theProduct, pscDefHdrNode);
+//
+//        HashMap map = (HashMap)prodConfigMap.get(theProduct.getID());
+//        if (map == null) {
+//            // has no PSCs for any config
+//            map = new HashMap();
+//            prodConfigMap.put(theProduct.getID(), map);
+//        }
+//        map.put(theConfig.getID(), productNode);
+//
+//        // notify tree model listeners
+//        ConfigurationTreeModelEvent event =
+//            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
+//                                            productNode,
+//                                            configNode,
+//                                            new DefaultTreeNode[] {configNode});
+//        fireConfigurationChange(event);
+//    }
 
     /**
      * Adds a PSC definition node to the model.
@@ -313,45 +358,60 @@ public final class ConfigurationTreeModel
      * @param theConfig the user object of the new node's configuration
      * ancestor node
      */
-    public void addPscDefn(
-        ProductServiceConfig thePsc,
-        ProductType theProduct,
-        Configuration theConfig) {
-
-        // event fired by the createPscNode method
-        createPscNode(thePsc, theProduct, theConfig);
-    }
+//    public void addPscDefn(
+//        ProductServiceConfig thePsc,
+//        ProductType theProduct,
+//        Configuration theConfig) {
+//
+//        // event fired by the createPscNode method
+//        createPscNode(thePsc, theProduct, theConfig);
+//    }
 
     /**
      * Adds a service definition node to the model.
-     * @param theService the user object of the service definition node
+     * @param theService the user object of the deployed service definition node
      * being created
-     * @param thePsc the user object of the new node's PSC definition
+     * @param theProcess the user object of the new node's VMComponentDefn
      * ancestor node
-     * @param theProduct the users object of the new node's product ancestor node
+     * @param theHost the users object of the new node's Host ancestor node
      * @param theConfig the user object of the new node's configuration
      * ancestor node
      */
-    public void addServiceDefinition(
-        ServiceComponentDefn theService,
-        ProductServiceConfig thePsc,
-        ProductType theProduct,
+    public void addDeployedService(
+        DeployedComponent theService,
+        VMComponentDefn theProcess,
+        Host theHost,
         Configuration theConfig) {
+    	addDeployedService(theService, theProcess, theHost, theConfig, true);
+    }
+    
+    private void addDeployedService(
+            DeployedComponent theService,
+            VMComponentDefn theProcess,
+            Host theHost,
+            Configuration theConfig,
+            boolean fireevent) {
 
-        DefaultTreeNode pscNode = getPscNode(thePsc, theConfig);
-        DefaultTreeNode serviceNode = createNode(theService, pscNode);
-        DefaultTreeNode productNode = serviceNode.getParent();
+ //       DefaultTreeNode pscNode = getPscNode(thePsc, theConfig);
+        
+        DefaultTreeNode processNode = getUserObjectNode(theProcess);
+
+        DefaultTreeNode serviceNode = createNode(theService, processNode);
+        DefaultTreeNode hostNode = getHostNode(theHost, theConfig);
+//        DefaultTreeNode productNode = serviceNode.getParent();
         DefaultTreeNode configNode = getUserObjectNode(theConfig);
 
         // notify tree model listeners
-        ConfigurationTreeModelEvent event =
-            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
-                                            serviceNode,
-                                            configNode,
-                                            new DefaultTreeNode[] {pscNode,
-                                                                   productNode,
-                                                                   configNode});
-        fireConfigurationChange(event);
+        if (fireevent) {
+	        ConfigurationTreeModelEvent event =
+	            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
+	                                            serviceNode,
+	                                            configNode,
+	                                            new DefaultTreeNode[] {processNode,
+	                                                                   hostNode,
+	                                                                   configNode});
+	        fireConfigurationChange(event);
+        }
     }
 
     /**
@@ -366,7 +426,7 @@ public final class ConfigurationTreeModel
         
                 if (theEvent.isNew()) {
                     if (theEvent.isConfigurationChange()) {
-                        addConfig(config);
+                        addConfig(config, true);
                     }
                     else if (theEvent.isHostChange()) {
                         addDeployedHost(theEvent.getHost(), config);
@@ -376,20 +436,20 @@ public final class ConfigurationTreeModel
                                            theEvent.getHost(),
                                            config);
                     }
-                    else if (theEvent.isPscDefinitionChange()) {
-                        addPscDefn(theEvent.getPscDefinition(),
-                                   theEvent.getProduct(),
-                                   config);
-                    }
-                    else if (theEvent.isDeployedPscChange()) {
-                        addDeployedPsc(theEvent.getDeployedPsc(),
+//                    else if (theEvent.isPscDefinitionChange()) {
+//                        addPscDefn(theEvent.getPscDefinition(),
+//                                   theEvent.getProduct(),
+//                                   config);
+//                    }
+                    else if (theEvent.isDeployedServiceChange()) {
+                        addDeployedService(theEvent.getDeployedService(),
                                        theEvent.getProcess(),
                                        theEvent.getHost(),
                                        config);
                     }
-                    else if (theEvent.isProductChange()) {
-                        addProduct(theEvent.getProduct(), config);
-                    }
+//                    else if (theEvent.isProductChange()) {
+//                        addProduct(theEvent.getProduct(), config);
+//                    }
                 }
                 else if (theEvent.isDeleted()) {
                     if (theEvent.isHostChange()) {
@@ -400,13 +460,13 @@ public final class ConfigurationTreeModel
                                               theEvent.getHost(),
                                               config);
                     }
-                    else if (theEvent.isPscDefinitionChange()) {
-                            deletePscDefintion(theEvent.getPscDefinition(),
-                                               theEvent.getProduct(),
-                                               config);
-                        }
-                    else if (theEvent.isDeployedPscChange()) {
-                            deleteDeployedPsc(theEvent.getDeployedPsc(),
+//                    else if (theEvent.isPscDefinitionChange()) {
+//                            deletePscDefintion(theEvent.getPscDefinition(),
+//                                               theEvent.getProduct(),
+//                                               config);
+//                        }
+                    else if (theEvent.isDeployedServiceChange()) {
+                            deleteDeployedService(theEvent.getDeployedService(),
                                               theEvent.getProcess(),
                                               theEvent.getHost(),
                                               theEvent.getConfiguration());
@@ -421,15 +481,14 @@ public final class ConfigurationTreeModel
                                               theEvent.getHost(),
                                               theEvent.getConfiguration());
                     }
-                    else if (theEvent.isPscDefinitionChange()) {
-                        modifyPscDefinition(theEvent.getPscDefinition(),
-                                            theEvent.getProduct(),
-                                            config);
+                    else if (theEvent.isDeployedServiceChange()) {
+                        modifyDeployedService(theEvent.getDeployedService(),
+                        		   theEvent.getProcess(),
+                                   theEvent.getHost(),
+                                   theEvent.getConfiguration());
                     }
                     else if (theEvent.isServiceDefinitionChange()) {
                         modifyServiceDefintion(theEvent.getServiceDefinition(),
-                                               theEvent.getPscDefinition(),
-                                               theEvent.getProduct(),
                                                config);
                     }
                 }
@@ -475,36 +534,36 @@ public final class ConfigurationTreeModel
      * @param theProduct the user object of the new node's parent node
      * @param theConfig the user object of the new node's configuration node
      */
-    private void createPscNode(
-        ProductServiceConfig thePsc,
-        ProductType theProduct,
-        Configuration theConfig) {
-
-        PscWrapper wrapper = new PscWrapper(thePsc, theConfig);
-
-        HashMap map = (HashMap)prodConfigMap.get(theProduct.getID());
-        DefaultTreeNode productNode =
-            (DefaultTreeNode)map.get(theConfig.getID());
-        DefaultTreeNode pscNode = createNode(wrapper, productNode);
-        DefaultTreeNode configNode = getUserObjectNode(theConfig);
-
-        map = (HashMap)pscConfigMap.get(thePsc.getID());
-        if (map == null) {
-            // new psc
-            map = new HashMap();
-            pscConfigMap.put(thePsc.getID(), map);
-        }
-        map.put(theConfig.getID(), pscNode);
-
-        // notify tree model listeners
-        ConfigurationTreeModelEvent event =
-            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
-                                            pscNode,
-                                            configNode,
-                                            new DefaultTreeNode[] {productNode,
-                                                                   configNode});
-        fireConfigurationChange(event);
-    }
+//    private void createPscNode(
+//        ProductServiceConfig thePsc,
+//        ProductType theProduct,
+//        Configuration theConfig) {
+//
+//        PscWrapper wrapper = new PscWrapper(thePsc, theConfig);
+//
+//        HashMap map = (HashMap)prodConfigMap.get(theProduct.getID());
+//        DefaultTreeNode productNode =
+//            (DefaultTreeNode)map.get(theConfig.getID());
+//        DefaultTreeNode pscNode = createNode(wrapper, productNode);
+//        DefaultTreeNode configNode = getUserObjectNode(theConfig);
+//
+//        map = (HashMap)pscConfigMap.get(thePsc.getID());
+//        if (map == null) {
+//            // new psc
+//            map = new HashMap();
+//            pscConfigMap.put(thePsc.getID(), map);
+//        }
+//        map.put(theConfig.getID(), pscNode);
+//
+//        // notify tree model listeners
+//        ConfigurationTreeModelEvent event =
+//            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
+//                                            pscNode,
+//                                            configNode,
+//                                            new DefaultTreeNode[] {productNode,
+//                                                                   configNode});
+//        fireConfigurationChange(event);
+//    }
 
     /**
      * Creates a PSC tree node used for deployed PSCs.
@@ -514,40 +573,40 @@ public final class ConfigurationTreeModel
      * @param theConfig the user object of the new node's configuration ancestor
      * node
      */
-    private void createPscNode(
-        ProductServiceConfig thePsc,
-        VMComponentDefn theProcess,
-        Host theHost,
-        Configuration theConfig) {
-
-        PscWrapper wrapper = new PscWrapper(thePsc, theProcess);
-        DefaultTreeNode processNode = getUserObjectNode(theProcess);
-        if (processNode == null) {
-            return;
-        }
-        
-        DefaultTreeNode pscNode = createNode(wrapper, processNode);
-        DefaultTreeNode hostNode = pscNode.getParent();
-        DefaultTreeNode configNode = getUserObjectNode(theConfig);
-
-        HashMap map = (HashMap)procPscMap.get(theProcess.getID());
-        if (map == null) {
-            // process doesn't have any PSCs yet
-            map = new HashMap();
-            procPscMap.put(theProcess.getID(), map);
-        }
-        map.put(thePsc.getID(), pscNode);
-
-        // notify tree model listeners
-        ConfigurationTreeModelEvent event =
-            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
-                                            pscNode,
-                                            configNode,
-                                            new DefaultTreeNode[] {processNode,
-                                                                   hostNode,
-                                                                   configNode});
-        fireConfigurationChange(event);
-    }
+//    private void createPscNode(
+//        ProductServiceConfig thePsc,
+//        VMComponentDefn theProcess,
+//        Host theHost,
+//        Configuration theConfig) {
+//
+//        PscWrapper wrapper = new PscWrapper(thePsc, theProcess);
+//        DefaultTreeNode processNode = getUserObjectNode(theProcess);
+//        if (processNode == null) {
+//            return;
+//        }
+//        
+//        DefaultTreeNode pscNode = createNode(wrapper, processNode);
+//        DefaultTreeNode hostNode = pscNode.getParent();
+//        DefaultTreeNode configNode = getUserObjectNode(theConfig);
+//
+//        HashMap map = (HashMap)procPscMap.get(theProcess.getID());
+//        if (map == null) {
+//            // process doesn't have any PSCs yet
+//            map = new HashMap();
+//            procPscMap.put(theProcess.getID(), map);
+//        }
+//        map.put(thePsc.getID(), pscNode);
+//
+//        // notify tree model listeners
+//        ConfigurationTreeModelEvent event =
+//            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
+//                                            pscNode,
+//                                            configNode,
+//                                            new DefaultTreeNode[] {processNode,
+//                                                                   hostNode,
+//                                                                   configNode});
+//        fireConfigurationChange(event);
+//    }
 
     /**
      * Deletes a host node from the model.
@@ -606,7 +665,7 @@ public final class ConfigurationTreeModel
     }
 
     /**
-     * Deletes a deployed PSC node from the model.
+     * Deletes a deployed Deployed Service node from the model.
      * @param thePsc the user object of the deployed PSC node being created
      * @param theProcess the user object of the deleted node's process
      * ancestor node
@@ -614,26 +673,23 @@ public final class ConfigurationTreeModel
      * @param theConfig the user object of the deleted node's configuration
      * ancestor node
      */
-    public void deleteDeployedPsc(
-        ProductServiceConfig thePsc,
+    public void deleteDeployedService(
+        DeployedComponent theService,
         VMComponentDefn theProcess,
         Host theHost,
         Configuration theConfig) {
 
-        DefaultTreeNode pscNode = getPscNode(thePsc, theProcess);
-        DefaultTreeNode processNode = pscNode.getParent();
+        DefaultTreeNode serviceNode = getUserObjectNode(theService);
+
+        DefaultTreeNode processNode = serviceNode.getParent();
         DefaultTreeNode hostNode = processNode.getParent();
         DefaultTreeNode configNode = getUserObjectNode(theConfig);
 
-        // delete from model
-        removeUserObject(pscNode.getContent());
-        HashMap map = (HashMap)procPscMap.get(theProcess.getID());
-        map.remove(thePsc.getID());
 
         // notify tree model listeners
         ConfigurationTreeModelEvent event =
             new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.DELETED,
-                                            pscNode,
+                                            serviceNode,
                                             configNode,
                                             new DefaultTreeNode[] {processNode,
                                                                    hostNode,
@@ -649,27 +705,27 @@ public final class ConfigurationTreeModel
      * @param theConfig the user object of the deleted node's configuration
      * ancestor node
      */
-    public void deletePscDefintion(
-        ProductServiceConfig thePsc,
-        ProductType theProduct,
-        Configuration theConfig) {
-
-        DefaultTreeNode pscNode = getPscNode(thePsc, theConfig);
-        DefaultTreeNode productNode = pscNode.getParent();
-        DefaultTreeNode configNode = getUserObjectNode(theConfig);
-
-        // delete from model
-        removeUserObject(pscNode.getContent());
-
-        // notify tree model listeners
-        ConfigurationTreeModelEvent event =
-            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.DELETED,
-                                            pscNode,
-                                            configNode,
-                                            new DefaultTreeNode[] {productNode,
-                                                                   configNode});
-        fireConfigurationChange(event);
-    }
+//    public void deletePscDefintion(
+//        ProductServiceConfig thePsc,
+//        ProductType theProduct,
+//        Configuration theConfig) {
+//
+//        DefaultTreeNode pscNode = getPscNode(thePsc, theConfig);
+//        DefaultTreeNode productNode = pscNode.getParent();
+//        DefaultTreeNode configNode = getUserObjectNode(theConfig);
+//
+//        // delete from model
+//        removeUserObject(pscNode.getContent());
+//
+//        // notify tree model listeners
+//        ConfigurationTreeModelEvent event =
+//            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.DELETED,
+//                                            pscNode,
+//                                            configNode,
+//                                            new DefaultTreeNode[] {productNode,
+//                                                                   configNode});
+//        fireConfigurationChange(event);
+//    }
 
     /**
      * Notifies all registered {@link ConfigurationChangeListener}s that the
@@ -692,9 +748,9 @@ public final class ConfigurationTreeModel
      * @param theConfig the configuration whose header node is being requested
      * @return the deployments header node
      */
-    public DefaultTreeNode getDeploymentsHeaderNode(Configuration theConfig) {
-        return (DefaultTreeNode)configDeployHdrMap.get(theConfig.getID());
-    }
+//    public DefaultTreeNode getDeploymentsHeaderNode(Configuration theConfig) {
+//        return (DefaultTreeNode)configDeployHdrMap.get(theConfig.getID());
+//    }
 
     /**
      * Gets the host node of the given configuration. 
@@ -720,9 +776,9 @@ public final class ConfigurationTreeModel
      * @param theConfig the configuration whose header node is being requested
      * @return the PSC definitions header node
      */
-    public DefaultTreeNode getPscDefinitionsHeaderNode(Configuration theConfig) {
-        return (DefaultTreeNode)configPscDefHdrMap.get(theConfig.getID());
-    }
+//    public DefaultTreeNode getPscDefinitionsHeaderNode(Configuration theConfig) {
+//        return (DefaultTreeNode)configPscDefHdrMap.get(theConfig.getID());
+//    }
 
     /**
      * Gets the requested PSC definition node.
@@ -730,13 +786,13 @@ public final class ConfigurationTreeModel
      * @param theConfig the user object of the PSC definition node's configuration
      * ancestor node
      */
-    public DefaultTreeNode getPscNode(
-        ProductServiceConfig thePsc,
-        Configuration theConfig) {
-
-        HashMap map = (HashMap)pscConfigMap.get(thePsc.getID());
-        return (DefaultTreeNode)map.get(theConfig.getID());
-    }
+//    public DefaultTreeNode getPscNode(
+//        ProductServiceConfig thePsc,
+//        Configuration theConfig) {
+//
+//        HashMap map = (HashMap)pscConfigMap.get(thePsc.getID());
+//        return (DefaultTreeNode)map.get(theConfig.getID());
+//    }
 
     /**
      * Gets the requested deployed PSC node.
@@ -744,13 +800,13 @@ public final class ConfigurationTreeModel
      * @param theProcess the user object of the deployed PSC node's process
      * ancestor node
      */
-    public DefaultTreeNode getPscNode(
-        ProductServiceConfig thePsc,
-        VMComponentDefn theProcess) {
-
-        HashMap map = (HashMap)procPscMap.get(theProcess.getID());
-        return (DefaultTreeNode)map.get(thePsc.getID());
-    }
+//    public DefaultTreeNode getPscNode(
+//        ProductServiceConfig thePsc,
+//        VMComponentDefn theProcess) {
+//
+//        HashMap map = (HashMap)procPscMap.get(theProcess.getID());
+//        return (DefaultTreeNode)map.get(thePsc.getID());
+//    }
 
     /**
      * Gets the requested user object's node.
@@ -769,8 +825,9 @@ public final class ConfigurationTreeModel
      * <code>false</code> otherwise.
      */
     public boolean isHeaderNode(DefaultTreeNode theNode) {
-        return (isDeploymentsHeaderNode(theNode) ||
-                isPscDefinitionsHeaderNode(theNode));
+    	return (theNode == root);
+    //    return (isDeploymentsHeaderNode(theNode));
+//        ||                isPscDefinitionsHeaderNode(theNode));
     }
 
     /**
@@ -779,9 +836,9 @@ public final class ConfigurationTreeModel
      * @return <code>true</code> if the node is a deployments header node;
      * <code>false</code> otherwise.
      */
-    public boolean isDeploymentsHeaderNode(DefaultTreeNode theNode) {
-        return configDeployHdrMap.containsValue(theNode);
-    }
+//    public boolean isDeploymentsHeaderNode(DefaultTreeNode theNode) {
+//        return configDeployHdrMap.containsValue(theNode);
+//    }
 
     /**
      * Indicates if the given node is a PSC definitions header node.
@@ -789,9 +846,9 @@ public final class ConfigurationTreeModel
      * @return <code>true</code> if the node is a PSC definitions header node;
      * <code>false</code> otherwise.
      */
-    public boolean isPscDefinitionsHeaderNode(DefaultTreeNode theNode) {
-        return configPscDefHdrMap.containsValue(theNode);
-    }
+//    public boolean isPscDefinitionsHeaderNode(DefaultTreeNode theNode) {
+//        return configPscDefHdrMap.containsValue(theNode);
+//    }
 
     /**
      * Modifies a deployed host node in the model.
@@ -845,13 +902,13 @@ public final class ConfigurationTreeModel
      * @param theConfig the user object of the modified node's configuration
      * ancestor node
      */
-    public void modifyPscDefinition(
-        ProductServiceConfig thePsc,
-        ProductType theProduct,
-        Configuration theConfig) {
-
-        // not sure if anything needs to be done here
-    }
+//    public void modifyPscDefinition(
+//        ProductServiceConfig thePsc,
+//        ProductType theProduct,
+//        Configuration theConfig) {
+//
+//        // not sure if anything needs to be done here
+//    }
 
     /**
      * Modifies a service definitions node in the model.
@@ -865,12 +922,30 @@ public final class ConfigurationTreeModel
      */
     public void modifyServiceDefintion(
         ServiceComponentDefn theService,
-        ProductServiceConfig thePsc,
-        ProductType theProduct,
         Configuration theConfig) {
 
         // not sure if anything needs to be done here
     }
+    
+    /**
+     * Modifies a service definitions node in the model.
+     * @param theService the user object of the node being modified
+     * @param thePsc the user object of the modified node's PSC definition
+     * ancestor node
+     * @param theProduct the user object of the modified node's product
+     * ancestor node
+     * @param theConfig the user object of the modified node's configuration
+     * ancestor node
+     */
+    public void modifyDeployedService(
+        DeployedComponent theService,
+        VMComponentDefn theProcess,
+        Host theHost,
+        Configuration theConfig) {
+
+
+        // not sure if anything needs to be done here
+    }    
 
     /**
      * Clears all nodes and all caches.
@@ -878,11 +953,11 @@ public final class ConfigurationTreeModel
     public void refresh() {
         root.removeAllChildren();
         objNodeMap.clear();
-        configDeployHdrMap.clear();
-        configPscDefHdrMap.clear();
+ //       configDeployHdrMap.clear();
+ //       configPscDefHdrMap.clear();
         hostConfigMap.clear();
-        prodConfigMap.clear();
-        procPscMap.clear();
+ //       prodConfigMap.clear();
+ //       procPscMap.clear();
         pscConfigMap.clear();
         fireModelChangedEvent(this, root);
     }
@@ -923,138 +998,138 @@ public final class ConfigurationTreeModel
      * The <code>PscWrapper</code> class wraps a {@link ProductServiceConfig} so
      * that PSC definitions and deployed PSCs can be distinguished.
      */
-    public class PscWrapper {
-
-        ///////////////////////////////////////////////////////////////////////
-        // FIELDS
-        ///////////////////////////////////////////////////////////////////////
-
-        private ProductServiceConfig psc;
-        private VMComponentDefn proc;
-        private Configuration config;
-
-        ///////////////////////////////////////////////////////////////////////
-        // CONSTRUCTORS
-        ///////////////////////////////////////////////////////////////////////
-
-        /**
-         * Constructs a <code>PscWrapper</code> that wraps a deployed PSC.
-         * @param thePsc the user object of the deployed PSC
-         * @param theProcess the user object of the deployed PSC's process
-         */
-        public PscWrapper(
-            ProductServiceConfig thePsc,
-            VMComponentDefn theProcess) {
-
-            psc = thePsc;
-            proc = theProcess;
-        }
-
-        /**
-         * Constructs a <code>PscWrapper</code> that wraps a PSC definition.
-         * @param thePsc the user object of the deployed PSC
-         * @param theConfig the user object of the deployed PSC's configuration
-         */
-        public PscWrapper(
-            ProductServiceConfig thePsc,
-            Configuration theConfig) {
-
-            psc = thePsc;
-            config = theConfig;
-        }
-
-        ///////////////////////////////////////////////////////////////////////
-        // METHODS
-        ///////////////////////////////////////////////////////////////////////
-
-        /**
-         * Indicates if the given input parameter is equal to this object.
-         * @param theObject the object being compared
-         * @return <code>true</code> if equal; <code>false</code> otherwise.
-         */
-        public boolean equals(Object theObject) {
-            if (theObject instanceof PscWrapper) {
-                PscWrapper otherObj = (PscWrapper)theObject;
-                if (psc.equals(otherObj.getPsc())) {
-                    if (isDefinition() == otherObj.isDefinition()) {
-                        if (isDefinition()) {
-                            return (config.equals(otherObj.getConfig()));
-                        }
-                        return (proc.equals(otherObj.getProcess()));
-                    }
-                }
-                return false;
-
-            }
-            return false;
-        }
-
-        /**
-         * Gets the associated configuration. Only used if wrapping a PSC
-         * definition.
-         * @return the associated configuration of the PSC definition or
-         * <code>null</code> if wrapping a deployed PSC.
-         */
-        public Configuration getConfig() {
-            return config;
-        }
-
-        /**
-         * Gets the associated process. Only used if wrapping a deployed PSC.
-         * @return the associated process of the deployed PSC or
-         * <code>null</code> if wrapping a PSC definition.
-         */
-        public VMComponentDefn getProcess() {
-            return proc;
-        }
-
-        /**
-         * Gets the wrapped PSC object.
-         * @return the wrapped PSC object
-         */
-        public ProductServiceConfig getPsc() {
-            return psc;
-        }
-
-        /**
-         * Indicates if this object wraps a PSC definition.
-         * @return <code>true</code> if this object wraps a PSC definition;
-         * <code>false</code> otherwise.
-         */
-        public boolean isDefinition() {
-            return (config != null);
-        }
-
-        /**
-         * Indicates if this object wraps a deployed PSC.
-         * @return <code>true</code> if this object wraps a deployed PSC;
-         * <code>false</code> otherwise.
-         */
-        public boolean isDeployed() {
-            return (proc != null);
-        }
-
-        /**
-         * Gets a hash code value.
-         * @return a hash code value
-         */
-        public int hashCode() {
-            int result = psc.hashCode();
-            if (isDefinition()) {
-                return result + config.hashCode();
-            }
-            return result + proc.hashCode();
-        }
-
-        /**
-         * Gets this object's string representation which is it's associated
-         * {@link ProductServiceConfig}'s <code>toString</code>.
-         * @return the string representation
-         */
-        public String toString() {
-            return psc.toString();
-        }
-    }
+//    public class PscWrapper {
+//
+//        ///////////////////////////////////////////////////////////////////////
+//        // FIELDS
+//        ///////////////////////////////////////////////////////////////////////
+//
+//        private ProductServiceConfig psc;
+//        private VMComponentDefn proc;
+//        private Configuration config;
+//
+//        ///////////////////////////////////////////////////////////////////////
+//        // CONSTRUCTORS
+//        ///////////////////////////////////////////////////////////////////////
+//
+//        /**
+//         * Constructs a <code>PscWrapper</code> that wraps a deployed PSC.
+//         * @param thePsc the user object of the deployed PSC
+//         * @param theProcess the user object of the deployed PSC's process
+//         */
+//        public PscWrapper(
+//            ProductServiceConfig thePsc,
+//            VMComponentDefn theProcess) {
+//
+//            psc = thePsc;
+//            proc = theProcess;
+//        }
+//
+//        /**
+//         * Constructs a <code>PscWrapper</code> that wraps a PSC definition.
+//         * @param thePsc the user object of the deployed PSC
+//         * @param theConfig the user object of the deployed PSC's configuration
+//         */
+//        public PscWrapper(
+//            ProductServiceConfig thePsc,
+//            Configuration theConfig) {
+//
+//            psc = thePsc;
+//            config = theConfig;
+//        }
+//
+//        ///////////////////////////////////////////////////////////////////////
+//        // METHODS
+//        ///////////////////////////////////////////////////////////////////////
+//
+//        /**
+//         * Indicates if the given input parameter is equal to this object.
+//         * @param theObject the object being compared
+//         * @return <code>true</code> if equal; <code>false</code> otherwise.
+//         */
+//        public boolean equals(Object theObject) {
+//            if (theObject instanceof PscWrapper) {
+//                PscWrapper otherObj = (PscWrapper)theObject;
+//                if (psc.equals(otherObj.getPsc())) {
+//                    if (isDefinition() == otherObj.isDefinition()) {
+//                        if (isDefinition()) {
+//                            return (config.equals(otherObj.getConfig()));
+//                        }
+//                        return (proc.equals(otherObj.getProcess()));
+//                    }
+//                }
+//                return false;
+//
+//            }
+//            return false;
+//        }
+//
+//        /**
+//         * Gets the associated configuration. Only used if wrapping a PSC
+//         * definition.
+//         * @return the associated configuration of the PSC definition or
+//         * <code>null</code> if wrapping a deployed PSC.
+//         */
+//        public Configuration getConfig() {
+//            return config;
+//        }
+//
+//        /**
+//         * Gets the associated process. Only used if wrapping a deployed PSC.
+//         * @return the associated process of the deployed PSC or
+//         * <code>null</code> if wrapping a PSC definition.
+//         */
+//        public VMComponentDefn getProcess() {
+//            return proc;
+//        }
+//
+//        /**
+//         * Gets the wrapped PSC object.
+//         * @return the wrapped PSC object
+//         */
+//        public ProductServiceConfig getPsc() {
+//            return psc;
+//        }
+//
+//        /**
+//         * Indicates if this object wraps a PSC definition.
+//         * @return <code>true</code> if this object wraps a PSC definition;
+//         * <code>false</code> otherwise.
+//         */
+//        public boolean isDefinition() {
+//            return (config != null);
+//        }
+//
+//        /**
+//         * Indicates if this object wraps a deployed PSC.
+//         * @return <code>true</code> if this object wraps a deployed PSC;
+//         * <code>false</code> otherwise.
+//         */
+//        public boolean isDeployed() {
+//            return (proc != null);
+//        }
+//
+//        /**
+//         * Gets a hash code value.
+//         * @return a hash code value
+//         */
+//        public int hashCode() {
+//            int result = psc.hashCode();
+//            if (isDefinition()) {
+//                return result + config.hashCode();
+//            }
+//            return result + proc.hashCode();
+//        }
+//
+//        /**
+//         * Gets this object's string representation which is it's associated
+//         * {@link ProductServiceConfig}'s <code>toString</code>.
+//         * @return the string representation
+//         */
+//        public String toString() {
+//            return psc.toString();
+//        }
+//    }
 
     ///////////////////////////////////////////////////////////////////////////
     // HostWrapper INNER CLASS

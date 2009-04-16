@@ -30,7 +30,12 @@ import java.io.Serializable;
  */
 public class ComponentData implements Serializable {
 
-    // Name that this object represents.
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1276023440163989298L;
+
+	// Name that this object represents.
     private String name;
 
     /** indicates if component is in operational configuration */

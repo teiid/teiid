@@ -40,9 +40,11 @@ import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.platform.service.api.ServiceInterface;
@@ -377,7 +379,7 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @param connectorBindingName
      * @param connectorType
      *            Connector Type for this Connector Binding
-     * @param pscName Name of the PSC to deploy the Connector Binding to.  
+     * @param vmName Name of the PSC to deploy the Connector Binding to.  
      *         If pscName is null, this method does not deploy the Connector Binding to a PSC.
      * @param principalName
      *            User Name of user who is making the change
@@ -388,7 +390,7 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      */
     ConnectorBinding createConnectorBinding(String connectorBindingName,
                                                    String connectorType,
-                                                   String pscName,
+                                                   String vmName,
                                                    String principalName,
                                                    Properties properties) throws ConfigurationException;
     
@@ -429,8 +431,8 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      *  
      * @param inputStream 
      * @param name Name of Connector Binding to import
-     * @param pscName Name of the PSC to deploy the Connector Binding to.  
-     * If pscName is null, this method does not deploy the Connector Binding to a PSC.
+     * @param vmName Name of the VM to deploy the Connector Binding to.  
+     * If vmName is null, this method does not deploy the Connector Binding .
      * @param principalName
      * @return ConnectorBinding
      * @throws ConfigurationException
@@ -438,7 +440,7 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      */
     public ConnectorBinding importConnectorBinding(InputStream inputStream,
                                                    String name,
-                                                   String pscName,
+                                                   String vmName,
                                                    String principalName) throws ConfigurationException;
         
     /**
@@ -471,25 +473,22 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
     
     
     /**
-     * Deploys the ServiceComponentDefns indicated by the ProductServiceConfig,
+     * Deploys the ServiceComponentDefns 
      * contained by the Configuration, onto the specified Host and VM.
      * 
-     * @param theHost host on which the services will be deployed
-     * @param theProcess VM on which the services will be deployed
-     * @param pscName Name of the PSC
+     * @param theProcessID for the VM on which the services will be deployed
+     * @param serviceName Name of the ServiceComponentDefn
      * @param principalName User Name deploying the Services
      * 
-     * @return Collection of DeployedComponent objects, each representing
-     * one of the deployed ServiceComponentDefns 
+     * @return DeployedComponent of the ServiceComponentDefns that was deployed
      * 
      * @throws ConfigurationException
      * @throws ModificationException
-     * @since 4.3
+     * @since 6.1
      */
     
-    public Collection deployPSC(Host theHost,
-                                VMComponentDefn theProcess,
-                                String pscName,
+    public DeployedComponent deployService(VMComponentDefnID theProcessID,
+                                String serviceName,
                                 String principalName) throws ConfigurationException,ModificationException;
 
     

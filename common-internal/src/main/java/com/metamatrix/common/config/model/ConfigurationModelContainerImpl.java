@@ -33,6 +33,7 @@ import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.api.AuthenticationProvider;
+import com.metamatrix.common.config.api.ComponentObjectID;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
@@ -43,10 +44,6 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ProductType;
-import com.metamatrix.common.config.api.ProductTypeID;
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ResourceDescriptorID;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
@@ -63,20 +60,18 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
 
     private BasicConfiguration configuration=null;
 
-    private transient ConfigurationObjectEditorHelper editor = null;
-
     private Map compTypes = Collections.synchronizedMap(new HashMap(45));
-
-    private Map prodTypes = Collections.synchronizedMap(new HashMap(10));
-
 
     private Map resources = Collections.synchronizedMap(new HashMap(25));
     
     public ConfigurationModelContainerImpl() {
 
     }
-        
-    public ConfigurationModelContainerImpl(ArrayList configObjects) throws ConfigurationException {
+    
+ 
+
+
+	public ConfigurationModelContainerImpl(ArrayList configObjects) throws ConfigurationException {
         this.setConfigurationObjects(configObjects);
     }       
     
@@ -87,13 +82,6 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
     public ConfigurationModelContainerImpl(Configuration config) {
 
     	this.configuration = (BasicConfiguration) config;
-    }
-
-    protected ConfigurationObjectEditorHelper getEditor() {
-    	if (editor == null) {
-    		editor = new ConfigurationObjectEditorHelper();
-    	}
-    	return editor;
     }
 
     public Configuration getConfiguration() {
@@ -128,8 +116,6 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
             
             configObjects.addAll(getConfiguration().getDeployedComponents());
 
-            configObjects.addAll(getConfiguration().getPSCs());
-
 // Add the objects that are not configuration based, meaning they
 // are not added,updated,delete within the context of a configuration
             configObjects.addAll(getHosts());
@@ -138,7 +124,6 @@ public class ConfigurationModelContainerImpl implements ConfigurationModelContai
 
             configObjects.addAll(getComponentTypes().values());
 
-            configObjects.addAll(getProductTypes());
 
             configObjects.addAll(getResources());
 
@@ -302,9 +287,11 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
 
     return getSuperComponentTypeDefinitions(defnMap, defns, superType);
    }
-    
+   
 
-    public ComponentType getComponentType(String fullName) {
+
+
+	public ComponentType getComponentType(String fullName) {
     	if (compTypes.containsKey(fullName)) {
 	        return (ComponentType) compTypes.get(fullName);
     	}
@@ -365,19 +352,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
      return pools;
    }
 
-   public ProductType getProductType(String name) {
-    	if (prodTypes.containsKey(name)) {
-	        return (ProductType) prodTypes.get(name);
-    	}
-    	return null;
-   }
-
-   public Collection getProductTypes() {
-       Collection pts = new ArrayList(this.prodTypes.size());
-       pts.addAll(this.prodTypes.values());
-       return pts;
-   }
-
 
    public SharedResource getResource(String resourceName) {
    		if (resources.containsKey(resourceName)) {
@@ -392,20 +366,20 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
    		return result;
    }
 
-   public ConfigurationModelContainer copyAs(ConfigurationID configID) throws ConfigurationException {
-    	BasicConfigurationObjectEditor ceditor = new BasicConfigurationObjectEditor(false);
-
-
-        Configuration newConfig = ceditor.createConfiguration(configuration, configID.getFullName());
-        ConfigurationModelContainerImpl newConfigModel = new ConfigurationModelContainerImpl(newConfig);
-
-		newConfigModel.setComponentTypes(this.compTypes);
-		newConfigModel.setProductTypes(this.prodTypes.values());
-
-        newConfigModel.setResources(this.resources);
-
-        return newConfigModel;
-    }
+//   public ConfigurationModelContainer copyAs(ConfigurationID configID) throws ConfigurationException {
+//    	BasicConfigurationObjectEditor ceditor = new BasicConfigurationObjectEditor(false);
+//
+//
+//        Configuration newConfig = ceditor.createConfiguration(configuration, configID.getFullName());
+//        ConfigurationModelContainerImpl newConfigModel = new ConfigurationModelContainerImpl(newConfig);
+//
+//		newConfigModel.setComponentTypes(this.compTypes);
+////		newConfigModel.setProductTypes(this.prodTypes.values());
+//
+//        newConfigModel.setResources(this.resources);
+//
+//        return newConfigModel;
+//    }
 
 
    public void setComponentTypes(Map newCompTypes) {
@@ -417,14 +391,14 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
    		}
      }
 
-   public void setProductTypes(Collection newProdTypes) {
-        this.prodTypes = Collections.synchronizedMap(new HashMap(newProdTypes.size()));
-
-   		Iterator it = newProdTypes.iterator();
-   		while (it.hasNext()) {
-   			addProductType((ProductType)it.next());
-   		}
-     }
+//   public void setProductTypes(Collection newProdTypes) {
+//        this.prodTypes = Collections.synchronizedMap(new HashMap(newProdTypes.size()));
+//
+//   		Iterator it = newProdTypes.iterator();
+//   		while (it.hasNext()) {
+//   			addProductType((ProductType)it.next());
+//   		}
+//     }
 
 
    public void setResources(Map theResources) {
@@ -457,9 +431,9 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
     }
     
 
-    public void addProductType(ProductType type) {
-            prodTypes.put(type.getFullName(), type);
-    }
+//    public void addProductType(ProductType type) {
+//            prodTypes.put(type.getFullName(), type);
+//    }
     
     
     
@@ -481,8 +455,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         	if (configuration == null) {
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
-
-			ConfigurationObjectEditorHelper.addConfigurationComponentDefn(configuration, scd);
+    		configuration.addComponentDefn(scd);
 
         } else if(obj instanceof DeployedComponent) {
             DeployedComponent deployedComp = (DeployedComponent) obj;
@@ -491,7 +464,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-            ConfigurationObjectEditorHelper.addConfigurationDeployedComponent(configuration, deployedComp);
+        	configuration.addDeployedComponent(deployedComp);
 
         } else if (obj instanceof VMComponentDefn) {
             VMComponentDefn vm = (VMComponentDefn) obj;
@@ -500,7 +473,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-            ConfigurationObjectEditorHelper.addConfigurationComponentDefn(configuration, vm);
+        	configuration.addComponentDefn(vm);
 
         } else if (obj instanceof Host) {
             Host host = (Host) obj;
@@ -508,17 +481,17 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-			ConfigurationObjectEditorHelper.addConfigurationHostComponent(configuration, host);
+        	configuration.addHost(host);
 
-        } else if (obj instanceof ProductServiceConfig) {
-            ProductServiceConfig psc = (ProductServiceConfig) obj;
-
-
-        	if (configuration == null) {
-        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
-        	}
-
-			ConfigurationObjectEditorHelper.addConfigurationComponentDefn(configuration, psc);
+//        } else if (obj instanceof ProductServiceConfig) {
+//            ProductServiceConfig psc = (ProductServiceConfig) obj;
+//
+//
+//        	if (configuration == null) {
+//        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
+//        	}
+//
+//			ConfigurationObjectEditorHelper.addConfigurationComponentDefn(configuration, psc);
 
         } else if (obj instanceof SharedResource) {
 
@@ -530,8 +503,8 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
 
         	AuthenticationProvider rd = (AuthenticationProvider) obj;
 
-        	ConfigurationObjectEditorHelper.addConfigurationComponentDefn(configuration, rd);
-
+        	configuration.addComponentDefn(rd);
+ 
 
         } else if (obj instanceof ResourceDescriptor) {
 
@@ -541,7 +514,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         			throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-			ConfigurationObjectEditorHelper.addConfigurationComponentDefn(configuration, rd);
+        	configuration.addComponentDefn(rd);
 
 
         } else if (obj instanceof Configuration) {
@@ -551,9 +524,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         			throw new ConfigurationException(ErrorMessageKeys.CONFIG_0002, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0002));
 
 			}
-        } else if (obj instanceof ProductType) {
-            addProductType((ProductType) obj);
-
 
         } else if (obj instanceof ComponentType) {
             addComponentType((ComponentType) obj);
@@ -626,8 +596,8 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
          } else if (objID instanceof HostID) {
              remove((HostID) objID);
              
-         } else if (objID instanceof ProductServiceConfigID) {
-             remove((ProductServiceConfigID) objID);
+//         } else if (objID instanceof ProductServiceConfigID) {
+//             remove((ProductServiceConfigID) objID);
 
          } else if (objID instanceof SharedResourceID) {
              removeSharedResource((SharedResourceID) objID);
@@ -635,8 +605,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
          } else if (objID instanceof ResourceDescriptorID) {
              remove((ResourceDescriptorID) objID);
 
-         } else if (objID instanceof ProductTypeID) {
-             removeProductType((ProductTypeID) objID);
 
          } else if (objID instanceof ComponentTypeID) {
              removeComponentType((ComponentTypeID) objID);
@@ -654,18 +622,14 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
     		compTypes.remove(typeID.getFullName());
     	}
         
-        Collection c = getProductTypes();
-        for (final Iterator i = c.iterator(); i.hasNext();) {
-            final BasicProductType type = (BasicProductType)i.next();
-            type.removeServiceTypeID(typeID);            
-        } // for
+//        Collection c = getProductTypes();
+//        for (final Iterator i = c.iterator(); i.hasNext();) {
+//            final BasicProductType type = (BasicProductType)i.next();
+//            type.removeServiceTypeID(typeID);            
+//        } // for
     }
     
-    private void removeProductType(ProductTypeID typeID) {
-        if (prodTypes.containsKey(typeID.getFullName())) {
-            prodTypes.remove(typeID.getFullName());
-        }
-    }    
+ 
 
     private void removeSharedResource(SharedResourceID rdID) {
     	if (resources.containsKey(rdID.getFullName())) {
@@ -689,7 +653,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-			ConfigurationObjectEditorHelper.delete(defnID, configuration);
+			delete(defnID, configuration);
 	}
 
     private void remove(VMComponentDefnID defnID) throws ConfigurationException {
@@ -698,7 +662,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-			ConfigurationObjectEditorHelper.delete(defnID, configuration);
+			delete(defnID, configuration);
     }
 
     private void remove(DeployedComponentID dcID) throws ConfigurationException {
@@ -707,7 +671,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-			ConfigurationObjectEditorHelper.delete(dcID, configuration);
+			delete(dcID, configuration);
     }
 
     private void remove(HostID hostID) throws ConfigurationException {
@@ -716,16 +680,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-			ConfigurationObjectEditorHelper.delete(hostID, configuration);
-    }
-
-    private void remove(ProductServiceConfigID pscID) throws ConfigurationException {
-
-        	if (configuration == null) {
-        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
-        	}
-
-			ConfigurationObjectEditorHelper.delete(pscID, configuration);
+			delete(hostID, configuration);
     }
 
     private void remove(ResourceDescriptorID rdID) throws ConfigurationException {
@@ -734,7 +689,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
         	}
 
-			ConfigurationObjectEditorHelper.delete(rdID, configuration);
+			delete(rdID, configuration);
      }
 
 
@@ -744,10 +699,20 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
 
         ConfigurationModelContainerImpl newConfig = new ConfigurationModelContainerImpl(config);
 		newConfig.setComponentTypes(this.compTypes);
-		newConfig.setProductTypes(this.prodTypes.values());
+//		newConfig.setProductTypes(this.prodTypes.values());
         newConfig.setResources(this.resources);
 
         return newConfig;
     }
+    
+	private Configuration delete( ComponentObjectID targetID, Configuration configuration ) throws ConfigurationException {
+        //System.out.println("<!><!><!><!>deleting " + target + ", delete dependencies: " + deleteDependencies);
+
+        BasicConfiguration basicConfig = (BasicConfiguration) configuration;
+        basicConfig.removeComponentObject( targetID);
+
+        return basicConfig;
+    }   
+    
 
 }

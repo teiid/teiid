@@ -26,14 +26,16 @@ import java.util.Collection;
 import java.util.Date;
 
 import com.metamatrix.common.config.api.ComponentDefnID;
-import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.config.model.BasicServiceComponentDefn;
-
 import com.metamatrix.platform.service.api.ServiceID;
 
 public class ServiceData extends ComponentData {
 
-    /** Identifies service for purpose of looking up in registry */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 2408872419190347292L;
+
+	/** Identifies service for purpose of looking up in registry */
     private ServiceID serviceID;
 
     /**
@@ -47,9 +49,7 @@ public class ServiceData extends ComponentData {
 
     /** indicates if service is an essential service */
     private boolean essential;
-
-    private DeployedComponent deployedComponent;
-
+    
     /** defines service in configuration */
     private ComponentDefnID defnID;
 
@@ -77,16 +77,16 @@ public class ServiceData extends ComponentData {
      * @throws RegistryException if an an error occurs creating remote instance of service.
      */
     public ServiceData(ServiceID serviceID, String serviceName, String instanceName,
-                                  ComponentDefnID defnID, DeployedComponent deployedComponent,
+                                  ComponentDefnID defnID, String deployedComponentName,
                                   Collection queueNames,
                                   int state, Date time, boolean essential, boolean deployed,
                                   boolean registered, Throwable initError) {
 
 //        super(serviceName, deployed, registered);
-        super(BasicServiceComponentDefn.getDisplayableName(deployedComponent.getName()), deployed, registered);
+        super(deployedComponentName, deployed, registered);
         this.serviceID = serviceID;
+
         this.defnID = defnID;
-        this.deployedComponent = deployedComponent;
         this.queueNames = queueNames;
         this.currentState = state;
         this.stateChangeTime = time;
@@ -126,11 +126,7 @@ public class ServiceData extends ComponentData {
     public ComponentDefnID getComponentDefnID() {
         return this.defnID;
     }
-
-    public DeployedComponent getDeployedComponent() {
-        return this.deployedComponent;
-    }
-
+    
     public Throwable getInitError() {
         return this.initError;
     }
@@ -160,7 +156,10 @@ public class ServiceData extends ComponentData {
         if ( obj instanceof ServiceData ) {
 
             ServiceData that = (ServiceData) obj;
-            return deployedComponent.equals(that.getDeployedComponent());
+            return (this.serviceID.getHostName().equals(that.getServiceID().getHostName()) && 
+            		this.serviceID.getProcessName().equals(that.serviceID.getProcessName()) && 
+            		this.getComponentDefnID().equals(that.getComponentDefnID()));
+//eployedComponent.equals(that.getDeployedComponent());
 //            return defnID.equals(that.getComponentDefnID());
         }
 

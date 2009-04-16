@@ -34,22 +34,6 @@ package com.metamatrix.common.config.api;
  */
 public interface SharedResource extends ComponentObject {
 
-    
-  
-
-	/** 
-     * The JDBC_RESOURCE_TYPE resource is the generic resource used for 
-     * majority of the internal resources
-     */  
-    public static final String JDBC_COMPONENT_TYPE_NAME = "JDBC Resource Type";    //$NON-NLS-1$
-
-	public static final ComponentTypeID JDBC_COMPONENT_TYPE_ID = new ComponentTypeID(JDBC_COMPONENT_TYPE_NAME);
-
-	/** The JMS_RESOURCE_TYPE resource is used to define jms resources. */  
-    public static final String JMS_COMPONENT_TYPE_NAME = "JMS Resource Type";    //$NON-NLS-1$
-
-
-	public static final ComponentTypeID JMS_COMPONENT_TYPE_ID = new ComponentTypeID(JMS_COMPONENT_TYPE_NAME);
 
 	/** The MISC_RESOURCE_TYPE resource is used to define resources that need any specific type association. */  
     public static final String MISC_COMPONENT_TYPE_NAME = "Miscellaneous Resource Type";    //$NON-NLS-1$
@@ -57,11 +41,6 @@ public interface SharedResource extends ComponentObject {
 
 	public static final ComponentTypeID MISC_COMPONENT_TYPE_ID = new ComponentTypeID(MISC_COMPONENT_TYPE_NAME);
 
-	/** The SEARCHBASE_RESOURCE_TYPE resource is used to define external searchbase resources. */  
-    public static final String SEARCHBASE_COMPONENT_TYPE_NAME = "Searchbase Resource Type";    //$NON-NLS-1$
-
-
-	public static final ComponentTypeID SEARCHBASE_COMPONENT_TYPE_ID = new ComponentTypeID(SEARCHBASE_COMPONENT_TYPE_NAME);
     
 
 

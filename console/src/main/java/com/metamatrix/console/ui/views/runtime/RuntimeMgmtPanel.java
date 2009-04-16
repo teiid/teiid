@@ -83,7 +83,6 @@ import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.StaticTreeUtilities;
 import com.metamatrix.console.util.StaticUtilities;
 import com.metamatrix.platform.admin.api.runtime.HostData;
-import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.toolbox.ui.widget.DialogWindow;
@@ -613,8 +612,8 @@ public final class RuntimeMgmtPanel
             getRuntimeMgmtManager().startService((ServiceData)userObj);
         } else if (userObj instanceof ProcessData) {
             getRuntimeMgmtManager().startProcess((ProcessData)userObj);
-        } else if (userObj instanceof PSCData) {
-            getRuntimeMgmtManager().startPsc((PSCData)userObj);
+//        } else if (userObj instanceof PSCData) {
+//            getRuntimeMgmtManager().startPsc((PSCData)userObj);
         } else if (userObj instanceof HostData) {
             getRuntimeMgmtManager().startHost((HostData)userObj);
         }
@@ -640,9 +639,9 @@ public final class RuntimeMgmtPanel
                 }
             }
             titleId = "dlg.stopprocess.title"; //$NON-NLS-1$
-        } else if (userObj instanceof PSCData) {
-            msgId = "dlg.stoppsc.msg"; //$NON-NLS-1$
-            titleId = "dlg.stoppsc.title"; //$NON-NLS-1$
+//        } else if (userObj instanceof PSCData) {
+//            msgId = "dlg.stoppsc.msg"; //$NON-NLS-1$
+//            titleId = "dlg.stoppsc.title"; //$NON-NLS-1$
         } else if (userObj instanceof HostData) {
             if (procsTblModel.getRowCount() == 1) {
                 msgId = "dlg.stoponlyhost.msg"; //$NON-NLS-1$
@@ -663,8 +662,8 @@ public final class RuntimeMgmtPanel
                     getRuntimeMgmtManager().stopService((ServiceData)userObj);
                 } else if (userObj instanceof ProcessData) {
                     getRuntimeMgmtManager().stopProcess((ProcessData)userObj);
-                } else if (userObj instanceof PSCData) {
-                    getRuntimeMgmtManager().stopPsc((PSCData)userObj);
+//                } else if (userObj instanceof PSCData) {
+//                    getRuntimeMgmtManager().stopPsc((PSCData)userObj);
                 } else if (userObj instanceof HostData) {
                     getRuntimeMgmtManager().stopHost((HostData)userObj);
                 }
@@ -693,9 +692,9 @@ public final class RuntimeMgmtPanel
                 }
             }
             titleId = "dlg.stopnowprocess.title"; //$NON-NLS-1$
-        } else if (userObj instanceof PSCData) {
-            msgId = "dlg.stopnowpsc.msg"; //$NON-NLS-1$
-            titleId = "dlg.stopnowpsc.title"; //$NON-NLS-1$
+//        } else if (userObj instanceof PSCData) {
+//            msgId = "dlg.stopnowpsc.msg"; //$NON-NLS-1$
+//            titleId = "dlg.stopnowpsc.title"; //$NON-NLS-1$
         } else if (userObj instanceof HostData) {
             if (procsTblModel.getRowCount() == 1) {
                 msgId = "dlg.stopnowonlyhost.msg"; //$NON-NLS-1$
@@ -717,8 +716,8 @@ public final class RuntimeMgmtPanel
                     getRuntimeMgmtManager().stopServiceNow((ServiceData)userObj);
                 } else if (userObj instanceof ProcessData) {
                     getRuntimeMgmtManager().stopProcessNow((ProcessData)userObj);
-                } else if (userObj instanceof PSCData) {
-                    getRuntimeMgmtManager().stopPscNow((PSCData)userObj);
+//                } else if (userObj instanceof PSCData) {
+//                    getRuntimeMgmtManager().stopPscNow((PSCData)userObj);
                 } else if (userObj instanceof HostData) {
                     getRuntimeMgmtManager().stopHostNow((HostData)userObj);
                 }
@@ -901,9 +900,9 @@ public final class RuntimeMgmtPanel
             boolean[] enablements = new boolean[TOTAL_OPERATIONS];
             if (userObj instanceof ServiceData) {
                 enablements = nodeSelected((ServiceData)userObj);
-            } else if (userObj instanceof PSCData) {
-                ProcessData process = (ProcessData)node.getParent().getContent();
-                enablements = nodeSelected((PSCData)userObj, process);
+//            } else if (userObj instanceof PSCData) {
+//                ProcessData process = (ProcessData)node.getParent().getContent();
+//                enablements = nodeSelected((PSCData)userObj, process);
             } else if (userObj instanceof ProcessData) {
                 enablements = nodeSelected((ProcessData)userObj);
             } else if (userObj instanceof HostData) {
@@ -950,11 +949,11 @@ public final class RuntimeMgmtPanel
      * @return
      * @since 4.4
      */
-    private boolean[] nodeSelected(PSCData pscData, ProcessData process) {
-        pnlOps.setVisibleService(false, 0, false);
-        tree.setPopupMenuFactory(popTree);
-        return RuntimeMgmtUtils.getOperationsEnablements(pscData, process);
-    }
+//    private boolean[] nodeSelected(PSCData pscData, ProcessData process) {
+//        pnlOps.setVisibleService(false, 0, false);
+//        tree.setPopupMenuFactory(popTree);
+//        return RuntimeMgmtUtils.getOperationsEnablements(pscData, process);
+//    }
 
     /** 
      * @param serviceData

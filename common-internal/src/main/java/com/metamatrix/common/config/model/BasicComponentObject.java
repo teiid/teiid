@@ -102,7 +102,7 @@ public abstract class BasicComponentObject extends BasicObject implements Compon
      * @param properties the set of properties for this service; a reference to
      * this Properties instance should <i>not</i> be maintained by the caller
      */
-    void setProperties(Properties properties){
+    public void setProperties(Properties properties){
         Properties p = null;
 
         if (properties != null) {
@@ -123,25 +123,25 @@ public abstract class BasicComponentObject extends BasicObject implements Compon
 /**
  * Add a name/value pair as a new property setting for the current <code>Configuration</code>. 
  */
-    void addProperty(String name, String value) {
+    public void addProperty(String name, String value) {
 	    properties.put(name, value);
     }
 /**
  * Add a the newProperties to the current properties settings. 
  */
-    void addProperties(Properties newProperties) {
+    public void addProperties(Properties newProperties) {
 	    properties.putAll(newProperties);
     }
 /**
  * Remove a property setting based on the name 
  */
-    void removeProperty(String name) {
+    public void removeProperty(String name) {
 	    properties.remove(name);
     }
 /**
  * Remove the <code>Collection</code> of propertyNames from tthe current properties settings. 
  */
-    void removeProperties(Collection propertyNames) {
+    public void removeProperties(Collection propertyNames) {
 	    for (Iterator it = propertyNames.iterator(); it.hasNext(); ) {
 		    removeProperty( (String) it.next() );
 	    }
@@ -228,7 +228,7 @@ public abstract class BasicComponentObject extends BasicObject implements Compon
  /**
  * Helper method to enable building the property hierarchy for deployed Components
  */
-    Properties getEditableProperties() {
+   public Properties getEditableProperties() {
       return this.properties;
     }
 

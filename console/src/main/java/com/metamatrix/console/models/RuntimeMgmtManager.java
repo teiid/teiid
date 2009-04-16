@@ -34,7 +34,6 @@ import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
 import com.metamatrix.platform.admin.api.runtime.HostData;
-import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
@@ -117,16 +116,16 @@ public final class RuntimeMgmtManager
                " >"; //$NON-NLS-1$
     }
 
-    public Integer[] getPscCounts(ProcessData theProcess) {
+    public Integer[] getServiceCounts(ProcessData theProcess) {
         Integer[] counts = (Integer[])procPscMap.get(theProcess);
         if (counts == null) {
             int notRegistered = 0;
             int registered = 0;
-            Collection pscs = theProcess.getPSCs();
-            if ((pscs != null) && !pscs.isEmpty()) {
-                Iterator itr = pscs.iterator();
-                PSCData psc = (PSCData)itr.next();
-                if (psc.isRegistered()) {
+            Collection svcs = theProcess.getServices();
+            if ((svcs != null) && !svcs.isEmpty()) {
+                Iterator itr = svcs.iterator();
+                ServiceData svc = (ServiceData)itr.next();
+                if (svc.isRegistered()) {
                     registered++;
                 }
                 else {
@@ -196,15 +195,15 @@ public final class RuntimeMgmtManager
                                 //
                                 // loop through PSCs
                                 //
-                                Collection pscs = process.getPSCs();
-                                if ((pscs != null) && (!pscs.isEmpty())) {
-                                    Iterator pscItr = pscs.iterator();
-                                    while (pscItr.hasNext()) {
-                                        PSCData psc = (PSCData)pscItr.next();
+//                                Collection pscs = process.getPSCs();
+//                                if ((pscs != null) && (!pscs.isEmpty())) {
+//                                    Iterator pscItr = pscs.iterator();
+//                                    while (pscItr.hasNext()) {
+//                                        PSCData psc = (PSCData)pscItr.next();
                                         //
                                         // loop through services
                                         //
-                                        Collection services = psc.getServices();
+                                        Collection services = process.getServices();
                                         if ((services != null) &&
                                             (!services.isEmpty())) {
                                             Iterator serviceItr =
@@ -220,8 +219,8 @@ public final class RuntimeMgmtManager
                                                 }
                                             }
                                         }
-                                    } // end while PSCs
-                                } // end if PSCs
+//                                    } // end while PSCs
+//                                } // end if PSCs
                                 
                             } // end while Processes
                             
@@ -292,19 +291,19 @@ public final class RuntimeMgmtManager
         }
     }
 
-    public void startPsc(PSCData thePsc)
-        throws ExternalException {
-        refreshImpl();
-        try {
-        	getAPI().startPSC(thePsc.getPscID());
-        }
-        catch (Exception theException) {
-            
-            throw new ExternalException(
-                formatErrorMsg("startPsc", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
-                theException);
-        }
-    }
+//    public void startPsc(PSCData thePsc)
+//        throws ExternalException {
+//        refreshImpl();
+//        try {
+//        	getAPI().startPSC(thePsc.getPscID());
+//        }
+//        catch (Exception theException) {
+//            
+//            throw new ExternalException(
+//                formatErrorMsg("startPsc", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
+//                theException);
+//        }
+//    }
 
     public void startService(ServiceData theService)
         throws ExternalException {
@@ -370,31 +369,31 @@ public final class RuntimeMgmtManager
         }
     }
 
-    public void stopPsc(PSCData thePsc)
-        throws ExternalException {
-        refreshImpl();
-        try {
-        	getAPI().stopPSC(thePsc.getPscID());
-        }
-        catch (Exception theException) {
-            throw new ExternalException(
-                formatErrorMsg("stopPsc", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
-                theException);
-        }
-    }
+//    public void stopPsc(PSCData thePsc)
+//        throws ExternalException {
+//        refreshImpl();
+//        try {
+//        	getAPI().stopPSC(thePsc.getPscID());
+//        }
+//        catch (Exception theException) {
+//            throw new ExternalException(
+//                formatErrorMsg("stopPsc", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
+//                theException);
+//        }
+//    }
 
-    public void stopPscNow(PSCData thePsc)
-        throws ExternalException {
-        refreshImpl();
-        try {
-        	getAPI().stopPSCNow(thePsc.getPscID());
-        }
-        catch (Exception theException) {
-            throw new ExternalException(
-                formatErrorMsg("stopPscNow", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
-                theException);
-        }
-    }
+//    public void stopPscNow(PSCData thePsc)
+//        throws ExternalException {
+//        refreshImpl();
+//        try {
+//        	getAPI().stopPSCNow(thePsc.getPscID());
+//        }
+//        catch (Exception theException) {
+//            throw new ExternalException(
+//                formatErrorMsg("stopPscNow", "psc=" + thePsc, theException), //$NON-NLS-1$ //$NON-NLS-2$
+//                theException);
+//        }
+//    }
 
     public void stopService(ServiceData theService)
         throws ExternalException {
@@ -467,15 +466,15 @@ public final class RuntimeMgmtManager
                                 //
                                 // loop through PSCs
                                 //
-                                Collection pscs = process.getPSCs();
-                                if ((pscs != null) && (!pscs.isEmpty())) {
-                                    Iterator pscItr = pscs.iterator();
-                                    while (pscItr.hasNext()) {
-                                        PSCData psc = (PSCData)pscItr.next();
+//                                Collection pscs = process.getPSCs();
+//                                if ((pscs != null) && (!pscs.isEmpty())) {
+//                                    Iterator pscItr = pscs.iterator();
+//                                    while (pscItr.hasNext()) {
+//                                        PSCData psc = (PSCData)pscItr.next();
                                         //
                                         // loop through services
                                         //
-                                        Collection services = psc.getServices();
+                                        Collection services = process.getServices();
                                         if ((services != null) &&
                                             (!services.isEmpty())) {
                                             Iterator serviceItr =
@@ -489,8 +488,8 @@ public final class RuntimeMgmtManager
                                                 }
                                             }
                                         }
-                                    }
-                                }
+//                                    }
+//                                }
                             }
                         }
                     }

@@ -45,10 +45,7 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.RuntimeStateAdminAPI;
-import com.metamatrix.platform.admin.api.runtime.HostData;
-import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
-import com.metamatrix.platform.admin.api.runtime.PscID;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -368,54 +365,54 @@ public class RuntimeStateAdminAPIImpl implements RuntimeStateAdminAPI {
      *             if an error occurred in communicating with a component.
      */
     @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
-    public void startPSC(PscID pscID) throws AuthorizationException,
-                                                  InvalidSessionException,
-                                                  MetaMatrixComponentException,
-                                                  MultipleException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession();
-        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0022, new Object[] {pscID, token.getUsername()}));
-
-        SystemState state = helper.getSystemState();
-        Iterator hosts = state.getHosts().iterator();
-        while (hosts.hasNext()) {
-            HostData hostData = (HostData)hosts.next();
-            Iterator processes = hostData.getProcesses().iterator();
-            while (processes.hasNext()) {
-                ProcessData processData = (ProcessData)processes.next();
-                Iterator pscs = processData.getPSCs().iterator();
-                while (pscs.hasNext()) {
-                    PSCData pscData = (PSCData)pscs.next();
-                    if (pscData.getPscID().equals(pscID)) {
-                        startPSCServices(processData, pscData);
-                        return;
-                    }
-                }
-            }
-        }
-    }
+//    public void startPSC(PscID pscID) throws AuthorizationException,
+//                                                  InvalidSessionException,
+//                                                  MetaMatrixComponentException,
+//                                                  MultipleException {
+//
+//        // Validate caller's session
+//        SessionToken token = AdminAPIHelper.validateSession();
+//        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0022, new Object[] {pscID, token.getUsername()}));
+//
+//        SystemState state = helper.getSystemState();
+//        Iterator hosts = state.getHosts().iterator();
+//        while (hosts.hasNext()) {
+//            HostData hostData = (HostData)hosts.next();
+//            Iterator processes = hostData.getProcesses().iterator();
+//            while (processes.hasNext()) {
+//                ProcessData processData = (ProcessData)processes.next();
+//                Iterator pscs = processData.getPSCs().iterator();
+//                while (pscs.hasNext()) {
+//                    PSCData pscData = (PSCData)pscs.next();
+//                    if (pscData.getPscID().equals(pscID)) {
+//                        startPSCServices(processData, pscData);
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     // Helper method to start all services that are in a PSC
-    private void startPSCServices(ProcessData processData, PSCData pscData) 
+    private void startProcessServices(ProcessData processData) 
     	throws MetaMatrixComponentException,MultipleException {
 
         // check that process is running
         if (!processData.isRegistered()) {
-            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0069,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0069,pscData.getName(),processData.getName()));
+            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0069,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0069,processData.getName(),processData.getName()));
         }
 
         ProcessManagement vm = null;
         try {
             vm = helper.getVMControllerInterface(processData.getHostName(), processData.getName());
         } catch (ResourceNotBoundException e) {
-            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0070,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0070,pscData.getName(),processData.getName()));
+            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0070,PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0070,processData.getName(),processData.getHostName()));
         }
 
         List exceptions = new ArrayList();
 
         // loop thru and start each service in psc.
-        Iterator services = pscData.getServices().iterator();
+        Iterator services = processData.getServices().iterator();
         while (services.hasNext()) {
             ServiceData serviceData = (ServiceData)services.next();
             // If already registered then insure proper state.
@@ -450,7 +447,7 @@ public class RuntimeStateAdminAPIImpl implements RuntimeStateAdminAPI {
 
         if (!exceptions.isEmpty()) {
             throw new MultipleException(exceptions, ErrorMessageKeys.ADMIN_0073,
-                                        PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0073, pscData.getName()));
+                                        PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0073, processData.getName(), processData.getHostName()));
         }
     }
 
@@ -459,100 +456,100 @@ public class RuntimeStateAdminAPIImpl implements RuntimeStateAdminAPI {
      * @see com.metamatrix.platform.admin.api.RuntimeStateAdminAPI#stopPSC(com.metamatrix.platform.admin.api.runtime.PscID)
      * @since 4.3
      */
-    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
-    public void stopPSCNow(PscID pscID) throws AuthorizationException,
-                                       InvalidSessionException,
-                                       MetaMatrixComponentException,
-                                       MultipleException {
-    	stopPSC(pscID, true);
-    }
+ //   @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+//    public void stopPSCNow(PscID pscID) throws AuthorizationException,
+//                                       InvalidSessionException,
+//                                       MetaMatrixComponentException,
+//                                       MultipleException {
+//    	stopPSC(pscID, true);
+//    }
     
     /** 
      * @see com.metamatrix.platform.admin.api.RuntimeStateAdminAPI#stopPSCNow(com.metamatrix.platform.admin.api.runtime.PscID)
      * @since 4.3
      */
-    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
-    public void stopPSC(PscID pscID) throws AuthorizationException,
-                                                 InvalidSessionException,
-                                                 MetaMatrixComponentException,
-                                                 MultipleException {
-        stopPSC(pscID, false);
-    }
+//    @RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
+//    public void stopPSC(PscID pscID) throws AuthorizationException,
+//                                                 InvalidSessionException,
+//                                                 MetaMatrixComponentException,
+//                                                 MultipleException {
+//        stopPSC(pscID, false);
+//    }
 
     
     
-    private void stopPSC(PscID pscID,
-                                      boolean now) throws AuthorizationException,
-                                                 InvalidSessionException,
-                                                 MetaMatrixComponentException,
-                                                 MultipleException {
-
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession();
-        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0023, new Object[] {pscID, token.getUsername()}));
-
-        SystemState state = getSystemState();
-        Iterator hosts = state.getHosts().iterator();
-        while (hosts.hasNext()) {
-            HostData hostData = (HostData)hosts.next();
-            Iterator processes = hostData.getProcesses().iterator();
-            while (processes.hasNext()) {
-                ProcessData processData = (ProcessData)processes.next();
-                Iterator pscs = processData.getPSCs().iterator();
-                while (pscs.hasNext()) {
-                    PSCData pscData = (PSCData)pscs.next();
-                    if (pscData.getPscID().equals(pscID)) {
-                        stopPSCServices(processData, pscData, now);
-                        return;
-                    }
-                }
-            }
-        }
-    }
+//    private void stopPSC(PscID pscID,
+//                                      boolean now) throws AuthorizationException,
+//                                                 InvalidSessionException,
+//                                                 MetaMatrixComponentException,
+//                                                 MultipleException {
+//
+//        // Validate caller's session
+//        SessionToken token = AdminAPIHelper.validateSession();
+//        LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0023, new Object[] {pscID, token.getUsername()}));
+//
+//        SystemState state = getSystemState();
+//        Iterator hosts = state.getHosts().iterator();
+//        while (hosts.hasNext()) {
+//            HostData hostData = (HostData)hosts.next();
+//            Iterator processes = hostData.getProcesses().iterator();
+//            while (processes.hasNext()) {
+//                ProcessData processData = (ProcessData)processes.next();
+//                Iterator pscs = processData.getPSCs().iterator();
+//                while (pscs.hasNext()) {
+//                    PSCData pscData = (PSCData)pscs.next();
+//                    if (pscData.getPscID().equals(pscID)) {
+//                        stopPSCServices(processData, pscData, now);
+//                        return;
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     // Helper method to stop all services that are in a psc
-    private void stopPSCServices(ProcessData processData,
-                                 PSCData pscData,
-                                 boolean now) throws MetaMatrixComponentException,
-                                             MultipleException {
-
-        // check if already running
-        if (!pscData.isRegistered()) {
-            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0056,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0056, pscData.getName()));
-        }
-
-        ProcessManagement vm = null;
-        try {
-            vm = helper.getVMControllerInterface(processData.getHostName(), processData.getName());
-        } catch (ResourceNotBoundException e) {
-            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0074,
-                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0074,
-                                                                                 pscData.getName(),
-                                                                                 processData.getName()));
-        }
-
-        List exceptions = new ArrayList();
-
-        // loop thru and stop each service in psc.
-        Iterator services = pscData.getServices().iterator();
-        while (services.hasNext()) {
-            ServiceData serviceData = (ServiceData)services.next();
-            try {
-                ServiceID serviceID = serviceData.getServiceID();
-                if (serviceID != null) {
-                    vm.stopService(serviceID, now, false);
-                }
-            } catch (ServiceException se) {
-                exceptions.add(se);
-            }
-        }
-
-        if (!exceptions.isEmpty()) {
-            throw new MultipleException(exceptions, ErrorMessageKeys.ADMIN_0076,
-                                        PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0076, pscData.getName()));
-        }
-    }
+//    private void stopPSCServices(ProcessData processData,
+//                                 PSCData pscData,
+//                                 boolean now) throws MetaMatrixComponentException,
+//                                             MultipleException {
+//
+//        // check if already running
+//        if (!pscData.isRegistered()) {
+//            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0056,
+//                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0056, pscData.getName()));
+//        }
+//
+//        ProcessManagement vm = null;
+//        try {
+//            vm = helper.getVMControllerInterface(processData.getHostName(), processData.getName());
+//        } catch (ResourceNotBoundException e) {
+//            throw new MetaMatrixComponentException(ErrorMessageKeys.ADMIN_0074,
+//                                                   PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0074,
+//                                                                                 pscData.getName(),
+//                                                                                 processData.getName()));
+//        }
+//
+//        List exceptions = new ArrayList();
+//
+//        // loop thru and stop each service in psc.
+//        Iterator services = pscData.getServices().iterator();
+//        while (services.hasNext()) {
+//            ServiceData serviceData = (ServiceData)services.next();
+//            try {
+//                ServiceID serviceID = serviceData.getServiceID();
+//                if (serviceID != null) {
+//                    vm.stopService(serviceID, now, false);
+//                }
+//            } catch (ServiceException se) {
+//                exceptions.add(se);
+//            }
+//        }
+//
+//        if (!exceptions.isEmpty()) {
+//            throw new MultipleException(exceptions, ErrorMessageKeys.ADMIN_0076,
+//                                        PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0076, pscData.getName()));
+//        }
+//    }
 
    
     /**
@@ -753,37 +750,37 @@ public class RuntimeStateAdminAPIImpl implements RuntimeStateAdminAPI {
      *      java.lang.String, java.lang.String, java.lang.String)
      * @since 4.2.1
      */
-    public PscID getPscIDByName(String hostName,
-                                String processName,
-                                String pscName) throws ResourceNotBoundException,
-                                               AuthorizationException,
-                                               InvalidSessionException,
-                                               MetaMatrixComponentException {
-        AdminAPIHelper.validateSession();
-        PscID result = null;
-
-        Iterator vmIter = registry.getVMs(hostName).iterator();
-        if (!vmIter.hasNext()) {
-            return result;
-        }
-
-        while (result == null && vmIter.hasNext()) {
-            ProcessRegistryBinding processBinding = (ProcessRegistryBinding)vmIter.next();
-            if (processBinding.getHostName().equalsIgnoreCase(hostName) && processBinding.getProcessName().equalsIgnoreCase(processName)) {
-
-                Iterator serviceIter = this.registry.getServiceBindings(hostName, processBinding.getProcessName()).iterator();
-                while (result == null && serviceIter.hasNext()) {
-                    ServiceRegistryBinding binding = (ServiceRegistryBinding)serviceIter.next();
-                    if (binding.getHostName().equalsIgnoreCase(hostName) &&
-
-                    binding.getPscID().getName().equalsIgnoreCase(pscName)) {
-                        result = new PscID(binding.getPscID(), processName);
-                    }
-                }
-            }
-        }
-        return result;
-    }
+//    public PscID getPscIDByName(String hostName,
+//                                String processName,
+//                                String pscName) throws ResourceNotBoundException,
+//                                               AuthorizationException,
+//                                               InvalidSessionException,
+//                                               MetaMatrixComponentException {
+//        AdminAPIHelper.validateSession();
+//        PscID result = null;
+//
+//        Iterator vmIter = registry.getVMs(hostName).iterator();
+//        if (!vmIter.hasNext()) {
+//            return result;
+//        }
+//
+//        while (result == null && vmIter.hasNext()) {
+//            ProcessRegistryBinding processBinding = (ProcessRegistryBinding)vmIter.next();
+//            if (processBinding.getHostName().equalsIgnoreCase(hostName) && processBinding.getProcessName().equalsIgnoreCase(processName)) {
+//
+//                Iterator serviceIter = this.registry.getServiceBindings(hostName, processBinding.getProcessName()).iterator();
+//                while (result == null && serviceIter.hasNext()) {
+//                    ServiceRegistryBinding binding = (ServiceRegistryBinding)serviceIter.next();
+//                    if (binding.getHostName().equalsIgnoreCase(hostName) &&
+//
+//                    binding.getPscID().getName().equalsIgnoreCase(pscName)) {
+//                        result = new PscID(binding.getPscID(), processName);
+//                    }
+//                }
+//            }
+//        }
+//        return result;
+//    }
 
     /** 
      * @see com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPI#getVMControllerBindings()

@@ -35,22 +35,19 @@ public class ServiceComponentDefnID extends ComponentDefnID {
         super(fullName);
     }
     
-    public ServiceComponentDefnID(ConfigurationID configID, String name, ProductServiceConfigID pscID) {
- 		super(ServiceComponentDefnID.createName(configID, name, pscID));
-    } 
+//    public ServiceComponentDefnID(ConfigurationID configID, String name) {
+// 		super(ServiceComponentDefnID.createName(configID, name));
+//    } 
     
     
     /**
     * Responsible for creating the structuring id for this VM Component
     */
-    private static final String createName(ConfigurationID configID, String name, ProductServiceConfigID pscID) {
+    private static final String createName(ConfigurationID configID, String name) {
 		Assertion.isNotNull(configID);
-		Assertion.isNotNull(pscID);
 		Assertion.isNotNull(name);
 
         StringBuffer sb = new StringBuffer(configID.getName());
-        sb.append(IDVerifier.DELIMITER_CHARACTER);        
-        sb.append(pscID.getName());
         sb.append(IDVerifier.DELIMITER_CHARACTER);        
         sb.append(name);
 

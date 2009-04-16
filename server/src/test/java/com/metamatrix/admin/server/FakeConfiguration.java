@@ -45,17 +45,15 @@ import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.HostType;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
+import com.metamatrix.common.config.model.BasicComponentObject;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.config.model.BasicVMComponentDefn;
-import com.metamatrix.common.config.model.ConfigurationObjectEditorHelper;
 import com.metamatrix.common.config.model.ConfigurationVisitor;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.namedobject.BaseID;
@@ -142,10 +140,9 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID1 = new DeployedComponentID("connectorBinding1", Configuration.NEXT_STARTUP_ID, (HostID) h.getID(),  //$NON-NLS-1$
                                                                            processID1); 
         ConnectorBindingID connectorBindingID1 = new ConnectorBindingID(Configuration.NEXT_STARTUP_ID, "connectorBinding1"); //$NON-NLS-1$
-        ProductServiceConfigID pscID1 = new ProductServiceConfigID(Configuration.NEXT_STARTUP_ID, "psc1");  //$NON-NLS-1$
-        BasicDeployedComponent deployedComponent1 = new BasicDeployedComponent(deployedComponentID1, Configuration.NEXT_STARTUP_ID, 
+         BasicDeployedComponent deployedComponent1 = new BasicDeployedComponent(deployedComponentID1, Configuration.NEXT_STARTUP_ID, 
                                                                                (HostID) h.getID(), processID1, 
-                                                                          connectorBindingID1, pscID1,
+                                                                          connectorBindingID1, 
                                                                           ConnectorBindingType.CONNECTOR_TYPE_ID);
         deployedComponent1.setDescription("connectorBinding1"); //$NON-NLS-1$
         deployedComponents.add(deployedComponent1);
@@ -162,10 +159,9 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID2 = new DeployedComponentID("connectorBinding2", Configuration.NEXT_STARTUP_ID, (HostID) h2.getID(),  //$NON-NLS-1$
                                                                            processID2); 
         ConnectorBindingID connectorBindingID2 = new ConnectorBindingID(Configuration.NEXT_STARTUP_ID, "connectorBinding2"); //$NON-NLS-1$
-        ProductServiceConfigID pscID2 = new ProductServiceConfigID(Configuration.NEXT_STARTUP_ID, "psc2");  //$NON-NLS-1$
         BasicDeployedComponent deployedComponent2 = new BasicDeployedComponent(deployedComponentID2, Configuration.NEXT_STARTUP_ID, 
                                                                                (HostID) h2.getID(), processID2, 
-                                                                          connectorBindingID2, pscID2,
+                                                                          connectorBindingID2, 
                                                                           ConnectorBindingType.CONNECTOR_TYPE_ID);
         deployedComponent2.setDescription("connectorBinding2"); //$NON-NLS-1$
         deployedComponents.add(deployedComponent2);
@@ -183,10 +179,9 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID3 = new DeployedComponentID("connectorBinding3", Configuration.NEXT_STARTUP_ID, (HostID) h3.getID(),  //$NON-NLS-1$
                                                                            processID3); 
         ConnectorBindingID connectorBindingID3 = new ConnectorBindingID(Configuration.NEXT_STARTUP_ID, "connectorBinding3"); //$NON-NLS-1$
-        ProductServiceConfigID pscID3 = new ProductServiceConfigID(Configuration.NEXT_STARTUP_ID, "psc3");  //$NON-NLS-1$
         BasicDeployedComponent  deployedComponent3 = new BasicDeployedComponent(deployedComponentID3, Configuration.NEXT_STARTUP_ID, 
                                                                                 (HostID) h3.getID(), processID3, 
-                                                                          connectorBindingID3, pscID3,
+                                                                          connectorBindingID3, 
                                                                           ConnectorBindingType.CONNECTOR_TYPE_ID);
         deployedComponent3.setDescription("connectorBinding3"); //$NON-NLS-1$
         deployedComponents.add(deployedComponent3);
@@ -199,7 +194,7 @@ public class FakeConfiguration implements Configuration {
         ServiceComponentDefnID defnID1A = new ServiceComponentDefnID(Configuration.NEXT_STARTUP_ID, "dqp1"); //$NON-NLS-1$
         BasicDeployedComponent deployedComponent1A = new BasicDeployedComponent(deployedComponentID1A, Configuration.NEXT_STARTUP_ID, 
                                                                                 (HostID) h.getID(), processID1, 
-                                                                          defnID1A, pscID1,
+                                                                          defnID1A, 
                                                                           new ComponentTypeID("QueryService")); //$NON-NLS-1$
         deployedComponent1A.setDescription("dqp1"); //$NON-NLS-1$
         deployedComponents.add(deployedComponent1A);
@@ -210,7 +205,7 @@ public class FakeConfiguration implements Configuration {
         ServiceComponentDefnID defnID2A = new ServiceComponentDefnID(Configuration.NEXT_STARTUP_ID, "dqp2"); //$NON-NLS-1$
         BasicDeployedComponent deployedComponent2A = new BasicDeployedComponent(deployedComponentID2A, Configuration.NEXT_STARTUP_ID, 
                                                                                 (HostID) h2.getID(), processID2, 
-                                                                          defnID2A, pscID2,
+                                                                          defnID2A, 
                                                                           new ComponentTypeID("QueryService")); //$NON-NLS-1$
         deployedComponent2A.setDescription("dqp2"); //$NON-NLS-1$
         deployedComponents.add(deployedComponent2A);
@@ -221,7 +216,7 @@ public class FakeConfiguration implements Configuration {
         ServiceComponentDefnID defnID3A = new ServiceComponentDefnID(Configuration.NEXT_STARTUP_ID, "dqp3"); //$NON-NLS-1$
         BasicDeployedComponent  deployedComponent3A = new BasicDeployedComponent(deployedComponentID3A, Configuration.NEXT_STARTUP_ID, 
                                                                                  (HostID) h3.getID(), processID3, 
-                                                                          defnID3A, pscID3,
+                                                                          defnID3A, 
                                                                           new ComponentTypeID("QueryService")); //$NON-NLS-1$
         deployedComponent3A.setDescription("dqp3"); //$NON-NLS-1$
         deployedComponents.add(deployedComponent3A);
@@ -253,14 +248,14 @@ public class FakeConfiguration implements Configuration {
         return null;
     }
 
-    public Collection getDeployedComponents(ComponentDefnID componentDefnID,
-                                            ProductServiceConfigID pscID) {
-        return null;
-    }
+//    public Collection getDeployedComponents(ComponentDefnID componentDefnID,
+//                                            ProductServiceConfigID pscID) {
+//        return null;
+//    }
 
-    public boolean isPSCDeployed(ProductServiceConfigID pscID) {
-        return false;
-    }
+//    public boolean isPSCDeployed(ProductServiceConfigID pscID) {
+//        return false;
+//    }
 
     public DeployedComponent getDeployedComponent(DeployedComponentID deployedComponentID) {
         return null;
@@ -307,16 +302,8 @@ public class FakeConfiguration implements Configuration {
         return null;
     }
 
-    public Collection getDeployedServices(VMComponentDefn vm,
-                                          ProductServiceConfig psc) {
-        return null;
-    }
 
     public Collection getPSCsForVM(VMComponentDefn vm) {
-        return null;
-    }
-
-    public ProductServiceConfig getPSC(ComponentDefnID pscID) {
         return null;
     }
 
@@ -359,8 +346,10 @@ public class FakeConfiguration implements Configuration {
                                                                           ConnectorBindingType.CONNECTOR_TYPE_ID); 
             connectorBinding.setRoutingUUID(name+"uuid"); //$NON-NLS-1$
 
-            ConfigurationObjectEditorHelper.addProperty(connectorBinding, "prop1", "value1"); //$NON-NLS-1$ //$NON-NLS-2$
-            ConfigurationObjectEditorHelper.addProperty(connectorBinding, "prop2", "value2"); //$NON-NLS-1$ //$NON-NLS-2$
+            BasicComponentObject target = (BasicComponentObject) connectorBinding;
+
+            target.addProperty("prop1", "value1");
+            target.addProperty("prop2", "value2");
             
 
             return connectorBinding;            

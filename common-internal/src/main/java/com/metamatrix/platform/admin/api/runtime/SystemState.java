@@ -36,7 +36,11 @@ import com.metamatrix.platform.service.api.ServiceState;
  */
 public class SystemState implements Serializable {
 
-    private Collection hosts;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 8316522636781619120L;
+	private Collection<HostData> hosts;
 
     /**
      * Create a new instance of VMRegistryBinding.
@@ -78,7 +82,7 @@ public class SystemState implements Serializable {
         
         List services = new ArrayList();
 
-         // loop thru all hosts/processes/psc and
+         // loop thru all hosts/processes and
          // get serviceData objects.
          Iterator hosts = this.hosts.iterator();
          while (hosts.hasNext()) {
@@ -86,11 +90,7 @@ public class SystemState implements Serializable {
              Iterator processes = hData.getProcesses().iterator();
              while (processes.hasNext()) {
                  ProcessData pData = (ProcessData) processes.next();
-                 Iterator pscs = pData.getPSCs().iterator();
-                 while (pscs.hasNext()) {
-                     PSCData pscData = (PSCData) pscs.next();
-                     services.addAll(pscData.getServices());
-                 }
+                 services.addAll(pData.getServices());
              }
          }
          

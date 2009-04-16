@@ -27,10 +27,12 @@ package com.metamatrix.metadata.runtime.vdb.defn;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.actions.ObjectEditor;
@@ -45,8 +47,6 @@ import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingID;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
@@ -112,30 +112,33 @@ public class VDBCreation  {
         VDBDefn def = vdbArchive.getConfigurationDef();
         Map connectorBindings =  def.getConnectorBindings();
         Map connectorTypes = def.getConnectorTypes();
+        
+        Set addedTypes = new HashSet(connectorTypes.size());
 
-        Map createdPSC = new HashMap(10);
         ConfigurationModelContainer cmc =null; 
         
         Map reMapBinding = new HashMap(connectorBindings.size());
         XMLConfigurationConnector writer = getWriter();
         BasicConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(true);
 
+        if (cmc == null) {
+            cmc = CurrentConfiguration.getInstance().getConfigurationModel(); 
+        }   
+        
         for (Iterator it= connectorBindings.values().iterator(); it.hasNext(); ) {
             ConnectorBinding cb = (ConnectorBinding) it.next();
 
             // add the components to configuration
             ComponentType ct = (ComponentType) connectorTypes.get(cb.getComponentTypeID().getName());
-
-            if (cmc == null) {
-                cmc = CurrentConfiguration.getInstance().getConfigurationModel(); 
-            }                
-            ConnectorBinding existingBinding = addConfigurationObjects(cmc, cb, ct, createdPSC, writer, editor);
+             
+            ConnectorBinding existingBinding = addConfigurationObjects(cmc, cb, ct,  writer, editor, addedTypes);
             // if the binding is returned, it indicates the binding already existed and
             // therefore will need to be remapped in its related model so that the 
             // model-to-binding mapping is correct
             if (existingBinding != null) {
                 reMapBinding.put(cb.getRoutingUUID(), existingBinding);
             }
+
         }
         
         writer.executeActions(editor.getDestination().popActions());
@@ -179,24 +182,30 @@ public class VDBCreation  {
      * @throws Exception
      * @since 4.2
      */
-    protected ConnectorBinding addConfigurationObjects(ConfigurationModelContainer cmc, ConnectorBinding binding, ComponentType type, Map createdPSC, XMLConfigurationConnector writer, BasicConfigurationObjectEditor editor)throws Exception {
-        ComponentType tExist = null;
-        if (type != null) {
-            tExist = cmc.getComponentType(type.getFullName());
+    protected ConnectorBinding addConfigurationObjects(ConfigurationModelContainer cmc, ConnectorBinding binding, ComponentType type, XMLConfigurationConnector writer, BasicConfigurationObjectEditor editor, Set addedTypes)throws Exception {
+        boolean addType = false;
+
+    	ComponentType tExist = null;
+        if (type != null ) {
+        	if ( ! addedTypes.contains(type.getID())) {
+        
+        		tExist = cmc.getComponentType(type.getFullName());
+        		if (tExist == null) {
+        			addType=true;
+        		}
+            }
         } else {
+        	// if here, the type wasnt in the .def file, therefore it must already exist
+        	
             tExist = cmc.getComponentType(binding.getComponentTypeID().getFullName());
+            if (tExist == null) {
+                throw new MetaMatrixException(RuntimeMetadataPlugin.Util.getString("VDBCreation.No_type_passed_and_bindingtype_not_found", new Object[] { binding.getFullName(), binding.getComponentTypeID().getFullName()})); //$NON-NLS-1$
+           	
+            }
             type = tExist;
         }
         
-        boolean addType = false;
-        if (tExist != null) {
-            addType = false;
-        } else if (type != null) {
-            addType = true;
-        } else {
-            throw new MetaMatrixException(RuntimeMetadataPlugin.Util.getString("VDBCreation.No_type_passed_and_bindingtype_not_found", new Object[] { binding.getFullName(), binding.getComponentTypeID().getFullName()})); //$NON-NLS-1$
-        }
-        
+
         boolean bindingExist = false;                               
 
         // determine if the binding exist,
@@ -227,6 +236,8 @@ public class VDBCreation  {
                 editor.createComponentTypeDefn(type, ctd.getPropertyDefinition(), false);
 
             }
+            
+            addedTypes.add(type.getID());
         } else if (updateBindingProperties) {
             // if the bindings are being updated, the type needs to be updated to ensure
             // the matching componenttypedefns exists.
@@ -264,7 +275,7 @@ public class VDBCreation  {
                 }
                 LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.5", new Object[] {binding.getName(), processName} )); //$NON-NLS-1$
 
-                processDeployment(depVM, cmc, (beenCreated?beenCreated:bindingExist), binding, type, createdPSC, editor);
+                processDeployment(depVM, cmc, (beenCreated?beenCreated:bindingExist), binding, type, editor);
 
                 beenCreated = true;
             }            
@@ -290,7 +301,7 @@ public class VDBCreation  {
                 if (depVM == null) {
                        throw new MetaMatrixException(RuntimeMetadataPlugin.Util.getString("VDBCreation.4")); //$NON-NLS-1$
                 }
-                processDeployment(depVM, cmc, bindingExist, binding, type, createdPSC, editor);
+                processDeployment(depVM, cmc, bindingExist, binding, type, editor);
             }                        
         }
         
@@ -304,99 +315,100 @@ public class VDBCreation  {
         return bExist;
     }
     
-    private void processDeployment(VMComponentDefn depVM, ConfigurationModelContainer cmc, boolean bindingExist, ConnectorBinding binding, ComponentType type, Map createdPSC, ConfigurationObjectEditor editor ) throws Exception {
-        // get the deployed Connector Type PSC to this vm
-        // only can the ConnectorType PSC have a binding deployed to it
-        ProductServiceConfig pscdep = null;
+    private void processDeployment(VMComponentDefn depVM, ConfigurationModelContainer cmc, boolean bindingExist, ConnectorBinding binding, ComponentType type, ConfigurationObjectEditor editor ) throws Exception {
+ 
+ 
+//    	
+//                final String pscName = depVM.getName() + "PSC";  //$NON-NLS-1$
+//                ProductServiceConfigID did = new ProductServiceConfigID(pscName);
+//                if (cmc.getConfiguration().getPSC(did) !=null) {
+//                    pscdep = cmc.getConfiguration().getPSC(did);
+//                    isPSCDeployed = true;
+//                } else if (createdPSC.containsKey(pscName)) {
+//                    pscdep = (ProductServiceConfig) createdPSC.get(pscName);
+//                    isPSCDeployed = true;
+//                } else  {
+//                	LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.11", new Object[] {binding.getName(), depVM.getName()} )); //$NON-NLS-1$
+//                    
+//                    pscdep = editor.createProductServiceConfig(cmc.getConfiguration(), ConnectorBindingType.CONNECTOR_PROD_TYPEID, pscName);
+//                    createdPSC.put(pscdep.getName(), pscdep);
+//                }
+//
 
-        pscdep = getPSCForDeployedVM(depVM, cmc);
-        boolean isPSCDeployed = false;
-
-        if (pscdep == null) {
-            // create psc
-                final String pscName = depVM.getName() + "PSC";  //$NON-NLS-1$
-                ProductServiceConfigID did = new ProductServiceConfigID(pscName);
-                if (cmc.getConfiguration().getPSC(did) !=null) {
-                    pscdep = cmc.getConfiguration().getPSC(did);
-                    isPSCDeployed = true;
-                } else if (createdPSC.containsKey(pscName)) {
-                    pscdep = (ProductServiceConfig) createdPSC.get(pscName);
-                    isPSCDeployed = true;
-                } else  {
-                	LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.11", new Object[] {pscName, binding.getName()} )); //$NON-NLS-1$
-                    
-                    pscdep = editor.createProductServiceConfig(cmc.getConfiguration(), ConnectorBindingType.CONNECTOR_PROD_TYPEID, pscName);
-                    createdPSC.put(pscdep.getName(), pscdep);
-                }
-        } else {
-            isPSCDeployed = true;
-        }
-
-        ProductServiceConfigID deployPSCID = (ProductServiceConfigID) pscdep.getID();
+ //       ProductServiceConfigID deployPSCID = (ProductServiceConfigID) pscdep.getID();
                 
         if (!bindingExist) {
-            if (isPSCDeployed) {
-//                System.out.println("Binding Doesnt exist, PSC is Deployed  PSC: " + pscdep.getID());
-
-                ConnectorBinding defn = editor.createConnectorComponent(cmc.getConfiguration(),
-                                 (ComponentTypeID) type.getID(), 
-                                 binding.getName(), 
-                                 (ProductServiceConfigID) pscdep.getID());
-                             
-                editor.setRoutingUUID(defn, binding.getRoutingUUID());
-                editor.modifyProperties(defn, binding.getProperties(), ObjectEditor.ADD);   
-
-                pscdep = editor.addServiceComponentDefn(pscdep,
-                                     (ServiceComponentDefnID) defn.getID());
-
-            } else {
+//            if (isPSCDeployed) {
+////                System.out.println("Binding Doesnt exist, PSC is Deployed  PSC: " + pscdep.getID());
+//
+//                ConnectorBinding defn = editor.createConnectorComponent(cmc.getConfiguration(),
+//                                 (ComponentTypeID) type.getID(), 
+//                                 binding.getName(), 
+//                                 (ProductServiceConfigID) pscdep.getID());
+//                             
+//                editor.setRoutingUUID(defn, binding.getRoutingUUID());
+//                editor.modifyProperties(defn, binding.getProperties(), ObjectEditor.ADD);   
+//
+//                pscdep = editor.addServiceComponentDefn(pscdep,
+//                                     (ServiceComponentDefnID) defn.getID());
+//
+//            } else {
              
-                ConnectorBinding defn =  editor.createConnectorComponent(cmc.getConfiguration(),
+                ConnectorBinding defn =  editor.createConnectorComponent(cmc.getConfigurationID(),
                                  (ComponentTypeID) type.getID(), 
                                  binding.getName(), 
-                                 deployPSCID);
+                                 null);
             
                 editor.setRoutingUUID(defn, binding.getRoutingUUID());
     
                 editor.modifyProperties(defn, binding.getProperties(), ObjectEditor.ADD);   
-             
+  
             // add to the psc, but this does not deploy
-                pscdep = editor.addServiceComponentDefn(pscdep,
-                                     (ServiceComponentDefnID) defn.getID());
+//                pscdep = editor.addServiceComponentDefn(pscdep,
+//                                     (ServiceComponentDefnID) defn.getID());
 
             // deploy all the services for this psc since it is not deployed
 
-               Collection dcs = editor.deployProductServiceConfig(cmc.getConfiguration(), pscdep, depVM.getHostID(), (VMComponentDefnID) depVM.getID());
+ //              Collection dcs = editor.deployProductServiceConfig(cmc.getConfiguration(), pscdep, depVM.getHostID(), (VMComponentDefnID) depVM.getID());
  //              System.out.println("Binding Doesnt exist, PSC is NOT Deployed - VM: " + depVM.getVMComponentDefnID());
 
 
-                if (dcs.isEmpty()) {
-                    String msg = RuntimeMetadataPlugin.Util.getString("VDBCreation.Error_deploying_binding", new Object[]{defn.getName(), pscdep.getName()});//$NON-NLS-1$
-                    throw new Exception(msg);
-                }
+//                if (dcs.isEmpty()) {
+//                    String msg = RuntimeMetadataPlugin.Util.getString("VDBCreation.Error_deploying_binding", new Object[]{defn.getName(), pscdep.getName()});//$NON-NLS-1$
+//                    throw new Exception(msg);
+//                }
                 
-            }
-            createdPSC.put(pscdep.getName(), pscdep);
-            LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.3", new Object[] {binding.getName(), depVM.getName(), pscdep.getName()}) ); //$NON-NLS-1$
-            
-        } else {
-            //if its gotten this far, then the binding is not deployed
-            // but check if the PSC is alredy deployed
-            if (isPSCDeployed) {
-//                System.out.println("Binding Exist, PSC is Deployed PSC: " + pscdep.getID());
-                
-                pscdep = editor.addServiceComponentDefn(pscdep, (ConnectorBindingID) binding.getID());
-                editor.deployServiceDefn(cmc.getConfiguration(),  binding, (ProductServiceConfigID) pscdep.getID());
-            } else {   
-//                System.out.println("Binding Exist, PSC is NOt Deployed - VM: " + depVM.getVMComponentDefnID());
-                pscdep = editor.addServiceComponentDefn(pscdep, (ConnectorBindingID) binding.getID());
-            // at this point, the binding already exist, but has not been deployed 
-                editor.deployProductServiceConfig(cmc.getConfiguration(), pscdep, depVM.getHostID(), (VMComponentDefnID) depVM.getID());
-            }
-            createdPSC.put(pscdep.getName(), pscdep);
-            LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.2", new Object[] {binding.getName(), depVM.getName(), pscdep.getName()}) ); //$NON-NLS-1$
+ //           }
+ //           createdPSC.put(pscdep.getName(), pscdep);
+ 
 
-        }
+ //           LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.3", new Object[] {binding.getName(), depVM.getName(), pscdep.getName()}) ); //$NON-NLS-1$
+            
+        } 
+        
+//        else {
+//            //if its gotten this far, then the binding is not deployed
+//            // but check if the PSC is alredy deployed
+//            if (isPSCDeployed) {
+////                System.out.println("Binding Exist, PSC is Deployed PSC: " + pscdep.getID());
+//                
+//                pscdep = editor.addServiceComponentDefn(pscdep, (ConnectorBindingID) binding.getID());
+//                editor.deployServiceDefn(cmc.getConfiguration(),  binding, (ProductServiceConfigID) pscdep.getID());
+//            } else {   
+////                System.out.println("Binding Exist, PSC is NOt Deployed - VM: " + depVM.getVMComponentDefnID());
+//                pscdep = editor.addServiceComponentDefn(pscdep, (ConnectorBindingID) binding.getID());
+//            // at this point, the binding already exist, but has not been deployed 
+//                editor.deployProductServiceConfig(cmc.getConfiguration(), pscdep, depVM.getHostID(), (VMComponentDefnID) depVM.getID());
+//            }
+//            createdPSC.put(pscdep.getName(), pscdep);
+//            LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.2", new Object[] {binding.getName(), depVM.getName(), pscdep.getName()}) ); //$NON-NLS-1$
+//
+//        }
+        
+        
+       	editor.deployServiceDefn(cmc.getConfiguration(), binding, (VMComponentDefnID) depVM.getID() );
+     	LogManager.logWarning(LogCommonConstants.CTX_CONFIG,RuntimeMetadataPlugin.Util.getString("VDBCreation.11", new Object[] {binding.getName(), depVM.getName()} )); //$NON-NLS-1$
+
     }
     
     private VMComponentDefn getDeployedVM(String processName,ConfigurationModelContainer cmc) throws Exception {
@@ -432,26 +444,6 @@ public class VDBCreation  {
         return null;
     }
     
-    
-     private ProductServiceConfig getPSCForDeployedVM(VMComponentDefn vm, ConfigurationModelContainer cmc) throws Exception {
-
-        ProductServiceConfig psc = null;
-        Collection pscs = cmc.getConfiguration().getPSCsForVM(vm);
-        for (Iterator pscsIt=pscs.iterator(); pscsIt.hasNext();) {
-            ProductServiceConfig p = (ProductServiceConfig) pscsIt.next();
-            // if this is a connector type psc then this is it
-            if (p.getComponentTypeID().equals(ConnectorBindingType.CONNECTOR_PROD_TYPEID)) {
-                psc = p;
-                break;
-            }
-        }
-        
-        if (psc == null) {
-            return null;
-        }
-        return psc;        
-        
-    }
     
     // this find the deployed BInding in the specified VM
     private DeployedComponent getDeployedBinding(String bindingName, VMComponentDefn depVM, ConfigurationModelContainer cmc) throws Exception {

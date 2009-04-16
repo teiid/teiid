@@ -36,28 +36,28 @@ public class AuthenticationProviderID extends ComponentDefnID {
         super(fullName);
     }
     
-    public AuthenticationProviderID(String name, ProductServiceConfigID pscID) {
-        super(AuthenticationProviderID.createName(Configuration.NEXT_STARTUP_ID, name, pscID));
-    } 
+//    public AuthenticationProviderID(String name, ProductServiceConfigID pscID) {
+//        super(AuthenticationProviderID.createName(Configuration.NEXT_STARTUP_ID, name, pscID));
+//    } 
     
     
     /**
     * Responsible for creating the structuring id for this VM Component
     */
     
-    private static final String createName(ConfigurationID configID, String name, ProductServiceConfigID pscID) {
-		Assertion.isNotNull(configID);
-		Assertion.isNotNull(name);
-       
-        
-        StringBuffer sb = new StringBuffer();
-        sb.append(pscID.getName());
-        sb.append(IDVerifier.DELIMITER_CHARACTER);        
-        sb.append(name);
-
-        return sb.toString();
-
-  }
+//    private static final String createName(ConfigurationID configID, String name, ProductServiceConfigID pscID) {
+//		Assertion.isNotNull(configID);
+//		Assertion.isNotNull(name);
+//       
+//        
+//        StringBuffer sb = new StringBuffer();
+//        sb.append(pscID.getName());
+//        sb.append(IDVerifier.DELIMITER_CHARACTER);        
+//        sb.append(name);
+//
+//        return sb.toString();
+//
+//  }
       
 
 

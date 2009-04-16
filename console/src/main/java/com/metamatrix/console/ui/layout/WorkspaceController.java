@@ -54,6 +54,7 @@ import com.metamatrix.console.ui.views.authorization.SummaryMain;
 import com.metamatrix.console.ui.views.connector.ConnectorPanel;
 import com.metamatrix.console.ui.views.connectorbinding.ConnectorBindingPanel;
 import com.metamatrix.console.ui.views.deploy.DeployMainPanel;
+import com.metamatrix.console.ui.views.deploy.ServiceDefinitionPanel;
 import com.metamatrix.console.ui.views.entitlements.EntitlementsPanel;
 import com.metamatrix.console.ui.views.extensionsource.ExtensionSourcesPanel;
 import com.metamatrix.console.ui.views.logsetup.SystemLogSetUpPanel;
@@ -368,6 +369,8 @@ public class WorkspaceController implements
             panel = createResourcesPanel(connection);
         } else if (cls == TransactionsPanel.class) {
         	panel = createTransactionsPanel(connection);
+        } else if (cls == ServiceDefinitionPanel.class) {
+        	panel = createServicesDefnPanel(connection);
         }
         if (panel instanceof AutoRefreshable) {
             addToAutoRefreshableXref(panel);
@@ -455,6 +458,11 @@ public class WorkspaceController implements
         ConnectorBindingPanel panel = new ConnectorBindingPanel(connection);
         return panel;
     }
+    
+    private WorkspacePanel createServicesDefnPanel(ConnectionInfo connection) {
+    	ServiceDefinitionPanel panel = new ServiceDefinitionPanel(connection);
+        return panel;
+    }    
 
     private WorkspacePanel createAuthSummaryPanel(ConnectionInfo connection) {
         SummaryMain panel = new SummaryMain(connection);

@@ -67,7 +67,6 @@ import javax.swing.tree.TreeSelectionModel;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.util.ConfigurationPropertyNames;
@@ -94,7 +93,6 @@ import com.metamatrix.console.ui.views.deploy.event.ConfigurationTreeModelEvent;
 import com.metamatrix.console.ui.views.deploy.event.ConfigurationTreeModelListener;
 import com.metamatrix.console.ui.views.deploy.model.ConfigurationTreeModel;
 import com.metamatrix.console.ui.views.deploy.model.ConfigurationTreeModel.HostWrapper;
-import com.metamatrix.console.ui.views.deploy.model.ConfigurationTreeModel.PscWrapper;
 import com.metamatrix.console.ui.views.deploy.util.DeployPkgUtils;
 import com.metamatrix.console.ui.views.runtime.util.RuntimeMgmtUtils;
 import com.metamatrix.console.util.DialogUtility;
@@ -151,11 +149,7 @@ public final class DeployMainPanel
     private ConfigSummaryPanel pnlConfigSummary;
     private DeployedHostPanel pnlDeployedHost;
     private DeployedProcessPanel pnlDeployedProcess;
-    private DeployedPscPanel pnlDeployedPsc;
     private DeployedServicePanel pnlDeployedService;
-    private PscSummaryPanel pnlPscSummary;
-    private ProductDefinitionPanel pnlProductDefn;
-    private PscDefinitionPanel pnlPscDefn;
     private ServiceDefinitionPanel pnlServiceDefn;
     private DeploymentsSummaryPanel pnlDeploymentsSummary;
     private JPanel pnlTreeOpsSizer;
@@ -406,6 +400,8 @@ public final class DeployMainPanel
         tree.getSelectionModel().setSelectionMode(
             TreeSelectionModel.SINGLE_TREE_SELECTION);
         treeModel = new ConfigurationTreeModel();
+        treeModel.init(getConfigurationManager().getConfig(Configuration.NEXT_STARTUP_ID));
+
         tree.setModel(treeModel);
         renderer = new ConfigurationTreeCellRenderer(connection);
         tree.setCellRenderer(renderer);
@@ -603,9 +599,10 @@ public final class DeployMainPanel
                 if (!treeModel.isHeaderNode(node) &&
                     (node != treeModel.getRoot())) {
                     Object content = node.getContent();
-                    if (content instanceof PscWrapper) {
-                        ancestors.add(((PscWrapper)content).getPsc());
-                    } else if (content instanceof HostWrapper) {
+//                    if (content instanceof PscWrapper) {
+//                        ancestors.add(((PscWrapper)content).getPsc());
+//                    } else 
+                    if (content instanceof HostWrapper) {
                         ancestors.add(((HostWrapper)content).getHost());
                     } else {
                         ancestors.add(content);
@@ -753,17 +750,18 @@ public final class DeployMainPanel
             pnlDetail = null;
 
             // need to select same node as before refresh, if possible
-            boolean deploymentHdr = false;
-            boolean pscDefHdr = false;
+ //           boolean deploymentHdr = false;
+ //           boolean pscDefHdr = false;
             Object userObj = null;
             if( saveNode != null ) {
                 userObj = saveNode.getContent();
             }
-            if (treeModel.isDeploymentsHeaderNode(saveNode)) {
-                deploymentHdr = true;
-            } else if (treeModel.isPscDefinitionsHeaderNode(saveNode)) {
-                pscDefHdr = true;
-            }
+  //          if (treeModel.isDeploymentsHeaderNode(saveNode)) {
+  //              deploymentHdr = true;
+   //         } 
+//            else if (treeModel.isPscDefinitionsHeaderNode(saveNode)) {
+//                pscDefHdr = true;
+//            }
 
 			DefaultTreeNode tempSaveNode = saveNode;
             saveNode = null;
@@ -806,14 +804,14 @@ public final class DeployMainPanel
 
             //select same node as before refresh if it still exists
             DefaultTreeNode node = null;
-            if (deploymentHdr) {
-                node = treeModel.getDeploymentsHeaderNode((Configuration)userObj);
-            } else if (pscDefHdr) {
-                node = treeModel.getPscDefinitionsHeaderNode(
-                        (Configuration)userObj);
-            } else {
+///            if (deploymentHdr) {
+//                node = treeModel.getDeploymentsHeaderNode((Configuration)userObj);
+//            } else if (pscDefHdr) {
+//                node = treeModel.getPscDefinitionsHeaderNode(
+//                        (Configuration)userObj);
+ //           } else {
                 node = treeModel.getUserObjectNode(userObj);
-            }
+  //          }
             eventProcessing = false;
             
             
@@ -861,6 +859,10 @@ public final class DeployMainPanel
 
     private void selectNode(final DefaultTreeNode theNode) {
         //update tree in the Swing Thread
+    	if (theNode == null) {
+    		new Exception("Null Node").printStackTrace();
+    		return;
+    	}
         Runnable runnable = new Runnable() {
             public void run() {
                 ArrayList pathNodes = new ArrayList();
@@ -1044,7 +1046,7 @@ public final class DeployMainPanel
                 Configuration config = theEvent.getConfiguration();
                 if (config.getID().equals(pnlDetail.getConfigId())) {
                     // select the appropriate deployment summary node
-                    selectNode(treeModel.getDeploymentsHeaderNode(config));
+                    selectNode(treeModel.getUserObjectNode(config));
                 }
             } else if (!(pnlDetail instanceof DeployedProcessPanel) ||
                      ((pnlDetail instanceof DeployedProcessPanel) &&
@@ -1179,42 +1181,44 @@ public final class DeployMainPanel
                         // TreeWidget switches to the wait cursor automatically
                         configId = getConfigId(node);
                         Object domainObj = node.getContent();
-                        if (treeModel.isDeploymentsHeaderNode(node)) {
-                            if (pnlDeploymentsSummary == null) {
-                                pnlDeploymentsSummary =
-                                        new DeploymentsSummaryPanel(configId,
-                                        connection);
-                            }
-                            pnl = pnlDeploymentsSummary;
-                        } else if (treeModel.isPscDefinitionsHeaderNode(node)) {
-                            if (pnlPscSummary == null) {
-                                pnlPscSummary = new PscSummaryPanel(configId,
-                                		connection);
-                            }
-                            pnl = pnlPscSummary;
-                        } else if (domainObj instanceof PscWrapper) {
-                            PscWrapper wrapper = (PscWrapper)domainObj;
-                            if (wrapper.isDefinition()) {
-                                if (pnlPscDefn == null) {
-                                    pnlPscDefn = new PscDefinitionPanel(  
-                                            configId,connection, this);
-                                }
-                                pnl = pnlPscDefn;
-                            } else {
-                                if (pnlDeployedPsc == null) {
-                                    pnlDeployedPsc = new DeployedPscPanel(connection,
-                                            configId);
-                                }
-                                pnl = pnlDeployedPsc;
-                            }
-                            domainObj = wrapper.getPsc();
-                        } else if (domainObj instanceof ServiceComponentDefn) {
-                            if (pnlServiceDefn == null) {
-                                pnlServiceDefn = new ServiceDefinitionPanel(
-                                		true, null, configId, connection);
-                            }
-                            pnl = pnlServiceDefn;
-                        } else if (domainObj instanceof Configuration) {
+//                        if (treeModel.isDeploymentsHeaderNode(node)) {
+//                            if (pnlDeploymentsSummary == null) {
+//                                pnlDeploymentsSummary =
+//                                        new DeploymentsSummaryPanel(configId,
+//                                        connection);
+//                            }
+//                            pnl = pnlDeploymentsSummary;
+//                        } else if (treeModel.isPscDefinitionsHeaderNode(node)) {
+//                            if (pnlPscSummary == null) {
+//                                pnlPscSummary = new PscSummaryPanel(configId,
+//                                		connection);
+//                            }
+//                            pnl = pnlPscSummary;
+//                        } else if (domainObj instanceof PscWrapper) {
+//                            PscWrapper wrapper = (PscWrapper)domainObj;
+//                            if (wrapper.isDefinition()) {
+//                                if (pnlPscDefn == null) {
+//                                    pnlPscDefn = new PscDefinitionPanel(  
+//                                            configId,connection, this);
+//                                }
+//                                pnl = pnlPscDefn;
+//                            } else {
+//                                if (pnlDeployedPsc == null) {
+//                                    pnlDeployedPsc = new DeployedPscPanel(connection,
+//                                            configId);
+//                                }
+//                                pnl = pnlDeployedPsc;
+//                            }
+//                            domainObj = wrapper.getPsc();
+//                        } else 
+//                        if (domainObj instanceof ServiceComponentDefn) {
+//                            if (pnlServiceDefn == null) {
+//                                pnlServiceDefn = new ServiceDefinitionPanel(
+//                                		true, null, configId, connection);
+//                            }
+//                            pnl = pnlServiceDefn;
+//                        } else 
+                        if (domainObj instanceof Configuration) {
                             if (pnlConfigSummary == null) {
                                 pnlConfigSummary = new ConfigSummaryPanel(
                                         configId, connection);
@@ -1227,12 +1231,12 @@ public final class DeployMainPanel
                             }
                             pnl = pnlDeployedHost;
                             domainObj = ((HostWrapper)domainObj).getHost();
-                        } else if (domainObj instanceof ProductType) {
-                            if (pnlProductDefn == null) {
-                                pnlProductDefn = new ProductDefinitionPanel(
-                                        configId, connection);
-                            }
-                            pnl = pnlProductDefn;
+//                        } else if (domainObj instanceof ProductType) {
+//                            if (pnlProductDefn == null) {
+//                                pnlProductDefn = new ProductDefinitionPanel(
+//                                        configId, connection);
+//                            }
+//                            pnl = pnlProductDefn;
                         } else if (domainObj instanceof VMComponentDefn) {
                             if (pnlDeployedProcess == null) {
                                 pnlDeployedProcess = new DeployedProcessPanel(
@@ -1247,17 +1251,25 @@ public final class DeployMainPanel
                             pnl = pnlDeployedService;
                         } else {
                             
-                            String msg = DeployPkgUtils.getString("dmp.msg.unknowntype") + //$NON-NLS-1$
-                            domainObj.getClass();
-                            
-                            IllegalStateException ise = new IllegalStateException(msg);
-                            ExceptionUtility.showMessage(
-                                                         DeployPkgUtils.getString("msg.configmgrproblem", //$NON-NLS-1$
-                                                         new Object[] {getClass(), "valueChanged"}), //$NON-NLS-1$
-                                                         ""+msg, ise); //$NON-NLS-1$
-                                                 LogManager.logError(LogContexts.PSCDEPLOY, ise,
-                                                         "valueChanged"); //$NON-NLS-1$
-                            return;
+                            if (pnlDeploymentsSummary == null) {
+                                pnlDeploymentsSummary =
+                                        new DeploymentsSummaryPanel(configId,
+                                        connection);
+                            }
+                            pnl = pnlDeploymentsSummary;
+                       	
+//                        	
+//                            String msg = DeployPkgUtils.getString("dmp.msg.unknowntype") + //$NON-NLS-1$
+//                            domainObj.getClass();
+//                            
+//                            IllegalStateException ise = new IllegalStateException(msg);
+//                            ExceptionUtility.showMessage(
+//                                                         DeployPkgUtils.getString("msg.configmgrproblem", //$NON-NLS-1$
+//                                                         new Object[] {getClass(), "valueChanged"}), //$NON-NLS-1$
+//                                                         ""+msg, ise); //$NON-NLS-1$
+//                                                 LogManager.logError(LogContexts.PSCDEPLOY, ise,
+//                                                         "valueChanged"); //$NON-NLS-1$
+//                            return;
                         }
 
                         // set config type if different than last selected
@@ -1293,9 +1305,10 @@ public final class DeployMainPanel
 
                         saveNode = node;
                         // check to see if configuration of node is editable
-                        boolean enable = editMode &&
-                                getConfigurationManager().isEditable(configId);
-                        pnl.setEnabled(enable);
+//                        boolean enable = editMode &&
+//                                getConfigurationManager().isEditable(configId);
+                        
+                        pnl.setEnabled(true);
 
                         currentTreePath = theEvent.getNewLeadSelectionPath();
                     } else {

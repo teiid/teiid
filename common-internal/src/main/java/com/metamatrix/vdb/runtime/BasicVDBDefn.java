@@ -33,7 +33,7 @@ import java.util.Properties;
 
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.config.util.ConfigUtil;
+import com.metamatrix.common.config.model.BasicUtil;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.common.vdb.api.VDBStream;
@@ -160,7 +160,7 @@ public class BasicVDBDefn extends BasicVDBInfo implements VDBDefn {
             }
             
             // rename the binding and add it back
-            ConnectorBinding newcb = ConfigUtil.getEditor().createConnectorComponent(cb.getConfigurationID(), cb, newBindingName, cb.getRoutingUUID()); 
+            ConnectorBinding newcb = BasicUtil.getEditor().createConnectorComponent(cb.getConfigurationID(), cb, newBindingName, cb.getRoutingUUID()); 
             addConnectorBinding(newcb);
             
          }

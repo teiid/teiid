@@ -36,7 +36,6 @@ import javax.swing.JDialog;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.config.api.ProductServiceConfig;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.connections.ConnectionInfo;
@@ -53,13 +52,13 @@ public class NewBindingWizardController extends WizardInterfaceImpl {
 
     private final static int CONNECTOR_SELECT_PAGE_NUM = 0;
     private final static int SPECIFICATION_PAGE_NUM = 1;
-    private final static int PSC_ENABLE_PAGE_NUM = 2;
+//    private final static int PSC_ENABLE_PAGE_NUM = 2;
 
     private NewBindingWizardConnectorSelectPanel connectorSelectPanel;
     private ComponentType currentlySelectedConnector = null;
     private String sNewCBName = null;
     private NewBindingWizardSpecificationPanel specsPanel;
-    private NewBindingWizardPSCEnablePanel pscEnablePanel;
+//    private NewBindingWizardPSCEnablePanel pscEnablePanel;
 
     private JDialog dialog;
     private int currentPage = -1;
@@ -85,13 +84,14 @@ public class NewBindingWizardController extends WizardInterfaceImpl {
     public ServiceComponentDefn runWizard() {
         connectorSelectPanel = new NewBindingWizardConnectorSelectPanel(this, connection);
         specsPanel = new NewBindingWizardSpecificationPanel(this, connection);
-        pscEnablePanel = new NewBindingWizardPSCEnablePanel(this, connection);
+ //       pscEnablePanel = new NewBindingWizardPSCEnablePanel(this, connection);
 
-        if ((connectorSelectPanel != null) && (specsPanel != null) && (pscEnablePanel != null)) {
+        if ((connectorSelectPanel != null) && (specsPanel != null) ) {
+        		// && (pscEnablePanel != null)) {
 
             addPage(connectorSelectPanel);
             addPage(specsPanel);
-            addPage(pscEnablePanel);
+ //           addPage(pscEnablePanel);
 
             dialog = new JDialog(ConsoleMainFrame.getInstance(), "Create New Connector Binding Wizard"); //$NON-NLS-1$
             dialog.setModal(true);
@@ -226,11 +226,11 @@ public class NewBindingWizardController extends WizardInterfaceImpl {
                 break;
 
             case SPECIFICATION_PAGE_NUM:
-                pscEnablePanel.setNewConnectorBindingInfo(this.getNewBindingName(), this.getSelectedConnectorName());
+//                pscEnablePanel.setNewConnectorBindingInfo(this.getNewBindingName(), this.getSelectedConnectorName());
                 break;
 
-            case PSC_ENABLE_PAGE_NUM:
-                break;
+//            case PSC_ENABLE_PAGE_NUM:
+//                break;
         }
         return bContinue;
     }
@@ -303,9 +303,9 @@ public class NewBindingWizardController extends WizardInterfaceImpl {
     private void createBinding() {
         ConnectorBinding binding = specsPanel.getNewConnectorBinding();
         ConfigurationObjectEditor coe = specsPanel.getConfigurationObjectEditor();
-        ProductServiceConfig[] enabledConfigs = pscEnablePanel.getEnabledConfigs();
+ //       ProductServiceConfig[] enabledConfigs = pscEnablePanel.getEnabledConfigs();
         try {
-            getConnectorManager().createConnectorBinding(binding, coe, enabledConfigs);
+            getConnectorManager().createConnectorBinding(binding, coe);
             scdNewConnectorBinding = binding;
         } catch (Exception ex) {
             String msg = "Error creating connector binding."; //$NON-NLS-1$

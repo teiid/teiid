@@ -42,7 +42,6 @@ import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.config.api.ProductServiceConfig;
 import com.metamatrix.common.config.util.ConfigurationImportExportUtility;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
@@ -69,15 +68,15 @@ public class ImportBindingWizardController extends WizardInterfaceImpl implement
     
     protected final static int FILE_SELECTOR_PAGE     = 0;
     protected final static int CONNECTOR_ID_PAGE      = 1;
-    protected final static int PSC_ASSIGNMENT_PAGE      = 2;    
-    protected final static int CONFIRMATION_PAGE      = 3;
+ //   protected final static int PSC_ASSIGNMENT_PAGE      = 2;    
+    protected final static int CONFIRMATION_PAGE      = 2;
     
     protected final static int CALLED_FOR_CONNECTOR_TYPE = 1;
     protected final static int CALLED_FOR_CONNECTOR_BINDING = 2;
    
     
     protected ImportWizardFileSelectorPanel fileSelectorPanel;
-    protected ImportBindingWizardPSCEnablePanel pscEnablePanel;
+//    protected ImportBindingWizardPSCEnablePanel pscEnablePanel;
     private ImportBindingWizardRenamePanel itemRenamePanel;
     
     private ButtonWidget nextButton;
@@ -187,12 +186,12 @@ public class ImportBindingWizardController extends WizardInterfaceImpl implement
         itemRenamePanel = new ImportBindingWizardRenamePanel(this, connectorManager); 
 
         //        confirmPanel = new ImportWizardConfirmationPanel(this, this, CALLED_FOR_CONNECTOR_BINDING);
-        pscEnablePanel = new ImportBindingWizardPSCEnablePanel(this, connectorManager);
+//        pscEnablePanel = new ImportBindingWizardPSCEnablePanel(this, connectorManager);
             //new NewBindingWizardPSCEnablePanel(this, connectorManager);
        
         addPage(fileSelectorPanel);
         addPage(itemRenamePanel);
-        addPage(pscEnablePanel);        
+ //       addPage(pscEnablePanel);        
 //        addPage(confirmPanel);
         
         dialogTitle = "Import Connector Binding(s) Wizard"; //$NON-NLS-1$
@@ -261,9 +260,10 @@ public class ImportBindingWizardController extends WizardInterfaceImpl implement
                 if (renameMapping == null || renameMapping.isEmpty()) {
                     // nothing to import
                     bContinue = false;
-                } else {
-                    pscEnablePanel.setNewConnectorBindingInfo(renameMapping.values());
                 }
+//                else {
+//                    pscEnablePanel.setNewConnectorBindingInfo(renameMapping.values());
+//                }
 
                 break;
 //            case CONFIRMATION_PAGE:
@@ -272,7 +272,7 @@ public class ImportBindingWizardController extends WizardInterfaceImpl implement
 //                break;
                 
                 
-            case PSC_ASSIGNMENT_PAGE:
+//            case PSC_ASSIGNMENT_PAGE:
 //                pscEnablePanel.get
 //                    bContinue = createNewItem(deFile);
 //                    if (bContinue) {
@@ -286,7 +286,7 @@ public class ImportBindingWizardController extends WizardInterfaceImpl implement
 
                 
                 
-                break;
+ //               break;
         }
         if (bContinue) {
             currentPage += 1;
@@ -300,10 +300,10 @@ public class ImportBindingWizardController extends WizardInterfaceImpl implement
         
         Collection newBindings = createNewBindings();
         
-        ProductServiceConfig[] enabledConfigs = 
-            pscEnablePanel.getEnabledConfigs();
+//        ProductServiceConfig[] enabledConfigs = 
+//            pscEnablePanel.getEnabledConfigs();
         
-        if (saveNewItemToServer(newBindings, enabledConfigs)) {
+        if (saveNewItemToServer(newBindings)) {
             validateExtensions(newBindings);
             dialog.dispose();
         }
@@ -613,12 +613,12 @@ public class ImportBindingWizardController extends WizardInterfaceImpl implement
         return cieuImportUtil;
     }    
     
-    protected boolean saveNewItemToServer(Collection bindings, ProductServiceConfig[] pscs) {
+    protected boolean saveNewItemToServer(Collection bindings) {
         try {
             
             ConfigurationObjectEditor newComponentEditor = getNewItemEditor();
             
-            connectorManager.createConnectorBinding(bindings, newComponentEditor, pscs);
+            connectorManager.createConnectorBinding(bindings, newComponentEditor, null);
         } catch (Exception e) {
             String msg;
                 msg = "Failed attempting to save changes on server."; //$NON-NLS-1$

@@ -417,7 +417,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         
         MMResource resource = (MMResource) results.iterator().next();
         assertEquals("resource1", resource.getIdentifier()); //$NON-NLS-1$
-        assertEquals(SharedResource.JDBC_COMPONENT_TYPE_NAME, resource.getResourceType());
+        assertEquals(SharedResource.MISC_COMPONENT_TYPE_NAME, resource.getResourceType());
         assertEquals("pool", resource.getConnectionPoolIdentifier()); //$NON-NLS-1$
         
         

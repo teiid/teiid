@@ -37,7 +37,7 @@ public class XMLConfigReaderWriter implements ConfigReaderWriter {
         
     
     public ComponentType loadConnectorType(InputStream stream) throws InvalidConfigurationElementException, IOException {             
-		return getImportExportUtility().importConnector(stream, getEditor(), null);
+		return getImportExportUtility().importComponentType(stream, getEditor(), null);
     }
     
 	public Object[] loadConnectorBinding(InputStream stream) throws ConfigObjectsNotResolvableException, InvalidConfigurationElementException, IOException {             

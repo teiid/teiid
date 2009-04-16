@@ -303,7 +303,7 @@ public class TestClusteredRegistryState extends TestCase {
 	static ServiceRegistryBinding buildServiceRegistryBinding(int id, ProcessRegistryBinding process, String type) {
 		ServiceID sid = new ServiceID(id, process.getHostName(), process.getProcessName());
 		//ServiceInterface si = SimpleMock.createSimpleMock(ServiceInterface.class);
-	    return new ServiceRegistryBinding(sid, null, type,"instance-"+id, null,"deployed-"+id, process.getHostName(), null, null, ServiceState.STATE_OPEN,new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$ //$NON-NLS-2$
+	    return new ServiceRegistryBinding(sid, null, type,"instance-"+id, null,"deployed-"+id, process.getHostName(), null,  ServiceState.STATE_OPEN,new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {

@@ -31,7 +31,6 @@ import javax.swing.JTree;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.console.connections.ConnectionInfo;
@@ -49,32 +48,25 @@ public final class ConfigurationTreeCellRenderer
     // CONSTANTS
     ///////////////////////////////////////////////////////////////////////////
 
-    private static final Icon NEXT_CONFIG_ICON;
+//    private static final Icon NEXT_CONFIG_ICON;
     private static final Icon HOST_ICON;
     private static final Icon PROCESS_ICON;
     private static final Icon SERVICE_ICON;
-    private static final Icon PSC_ICON;
-    private static final Icon DEPLOYMENTS_ICON;
-    private static final Icon CONNECTOR_ICON;
-    private static final Icon METAMATRIX_SERVER_ICON;
-    private static final Icon PLATFORM_ICON;
-    private static final Icon PSC_HDR_ICON;
+//    private static final Icon DEPLOYMENTS_ICON;
 
     ///////////////////////////////////////////////////////////////////////////
     // INITIALIZER
     ///////////////////////////////////////////////////////////////////////////
 
     static {
-        NEXT_CONFIG_ICON = DeployPkgUtils.getIcon("icon.nextstartup"); //$NON-NLS-1$
+ //       NEXT_CONFIG_ICON = DeployPkgUtils.getIcon("icon.nextstartup"); //$NON-NLS-1$
         HOST_ICON = DeployPkgUtils.getIcon("icon.host"); //$NON-NLS-1$
         PROCESS_ICON = DeployPkgUtils.getIcon("icon.process"); //$NON-NLS-1$
         SERVICE_ICON = DeployPkgUtils.getIcon("icon.service"); //$NON-NLS-1$
-        PSC_ICON = DeployPkgUtils.getIcon("icon.psc"); //$NON-NLS-1$
-        DEPLOYMENTS_ICON = DeployPkgUtils.getIcon("icon.deployments"); //$NON-NLS-1$
-        CONNECTOR_ICON = DeployPkgUtils.getIcon("icon.connector"); //$NON-NLS-1$
-        METAMATRIX_SERVER_ICON = DeployPkgUtils.getIcon("icon.mmserver"); //$NON-NLS-1$
-        PLATFORM_ICON = DeployPkgUtils.getIcon("icon.platform"); //$NON-NLS-1$
-        PSC_HDR_ICON = DeployPkgUtils.getIcon("icon.pschdr"); //$NON-NLS-1$
+//        DEPLOYMENTS_ICON = DeployPkgUtils.getIcon("icon.deployments"); //$NON-NLS-1$
+//        CONNECTOR_ICON = DeployPkgUtils.getIcon("icon.connector"); //$NON-NLS-1$
+//        METAMATRIX_SERVER_ICON = DeployPkgUtils.getIcon("icon.mmserver"); //$NON-NLS-1$
+//        PLATFORM_ICON = DeployPkgUtils.getIcon("icon.platform"); //$NON-NLS-1$
     }
 
     private ConnectionInfo connectionInfo;
@@ -108,29 +100,14 @@ public final class ConfigurationTreeCellRenderer
         // set the icon
         Object userObj = ((DefaultTreeNode)value).getContent();
         if (userObj instanceof Configuration) {
-            if (((DefaultTreeNode)value).getName().equals(
-                ConfigurationTreeModel.DEPLOYMENTS_HDR)) {
-                setIcon(DEPLOYMENTS_ICON);
-            } else if (((DefaultTreeNode)value).getName().equals(
-                ConfigurationTreeModel.PSC_DEFS_HDR)) {
-                setIcon(PSC_HDR_ICON);
-            } else {
-                ConfigurationID configId =
-                    (ConfigurationID)((Configuration)userObj).getID();
-                if (getConfigurationManager().isNextStartUpConfig(configId)) {
-                	setIcon(NEXT_CONFIG_ICON);
-                }
-            }
+//                ConfigurationID configId =
+//                    (ConfigurationID)((Configuration)userObj).getID();
         } else if (userObj instanceof ServiceComponentDefn) {
             setIcon(SERVICE_ICON);
-		} else if (userObj instanceof ConfigurationTreeModel.PscWrapper) {
-            setIcon(PSC_ICON);
 		} else if (userObj instanceof VMComponentDefn) {
             setIcon(PROCESS_ICON);
         } else if (userObj instanceof ConfigurationTreeModel.HostWrapper) {
             setIcon(HOST_ICON);
-        } else if (userObj instanceof ProductType) {
-            setIcon(METAMATRIX_SERVER_ICON);
         } else if (userObj instanceof DeployedComponent) {
             setIcon(SERVICE_ICON);
         }

@@ -36,28 +36,5 @@ public abstract class ConfigurationVisitor {
     
     abstract void visitComponent(ComponentType compType);
     
-  
-//    abstract void visitConfiguration(Configuration configuration);
-//    
-//    abstract void visitConfigurationInfo(ConfigurationInfo info);
-//    
-//    abstract void visitVMComponentDefn(VMComponentDefn defn);
-//    
-//    abstract void visitDeployedComponent(DeployedComponent deployedComponent);
-//    
-//    abstract void visitServiceComponentDefn(ServiceComponentDefn defn);
-//    
-//    abstract void visitConnectorComponent(ConnectorBinding connector);
-//    
-//    abstract void visitResourceDescriptor(ResourceDescriptor descriptor);
-//    
-//    
-//    abstract void visitProductServiceConfig(ProductServiceConfig config);  
-//    
-//    abstract void visitHost(Host host);   
-//    
-//    abstract void visitComponentType(ComponentType compType);    
-//     
-      
 }
     

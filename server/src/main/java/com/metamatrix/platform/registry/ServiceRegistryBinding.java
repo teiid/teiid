@@ -33,7 +33,6 @@ import java.util.Date;
 import java.util.Iterator;
 
 import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.service.api.ServiceID;
@@ -108,8 +107,8 @@ public class ServiceRegistryBinding implements Serializable {
     /** defines service in configuration */
     private DeployedComponent deployedComponent;
 
-    /** identifies psc this service belongs to. */
-    private ProductServiceConfigID pscID;
+//    /** identifies psc this service belongs to. */
+//    private ProductServiceConfigID pscID;
 
     /** collection of queue names for service */
     private Collection queueNames;
@@ -138,7 +137,6 @@ public class ServiceRegistryBinding implements Serializable {
     public ServiceRegistryBinding(ServiceID serviceID, ServiceInterface si, String serviceType, String instanceName,
                                   String componentType, String deployedName,
                                   String hostName, DeployedComponent deployedComponent,
-                                  ProductServiceConfigID pscID,
                                   int state, Date time, boolean essential, MessageBus bus) {
 
         this.serviceID = serviceID;
@@ -148,7 +146,6 @@ public class ServiceRegistryBinding implements Serializable {
         this.deployedName = deployedName;
         this.hostName = hostName;
         this.deployedComponent = deployedComponent;
-        this.pscID = pscID;
         this.currentState = state;
         this.stateChangeTime = time;
         this.essential = essential;
@@ -226,9 +223,9 @@ public class ServiceRegistryBinding implements Serializable {
         return this.deployedComponent;
     }
 
-    public ProductServiceConfigID getPscID() {
-        return this.pscID;
-    }
+//    public ProductServiceConfigID getPscID() {
+//        return this.pscID;
+//    }
 
     public boolean isServiceBad() {
         return (currentState == ServiceState.STATE_CLOSED ||
@@ -282,7 +279,7 @@ public class ServiceRegistryBinding implements Serializable {
         b.append("\n\tserviceType: " + serviceType); //$NON-NLS-1$
         b.append("\n\tinstanceName: " + instanceName); //$NON-NLS-1$
         b.append("\n\thostName: " + hostName); //$NON-NLS-1$
-        b.append("\n\tpscName: " + pscID); //$NON-NLS-1$
+//        b.append("\n\tpscName: " + pscID); //$NON-NLS-1$
         b.append("\n\tDeployedComponent: " + deployedComponent); //$NON-NLS-1$
         b.append("\n\tcurrentState: " + currentState); //$NON-NLS-1$
         b.append("\n\tessential: " + (essential?"true":"false")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

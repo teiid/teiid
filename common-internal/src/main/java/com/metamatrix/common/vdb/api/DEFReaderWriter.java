@@ -41,8 +41,8 @@ import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
-import com.metamatrix.common.config.xml.XMLConfig_42_HelperImpl;
-import com.metamatrix.common.config.xml.XMLElementNames;
+import com.metamatrix.common.config.xml.XMLConfig_ElementNames;
+import com.metamatrix.common.config.xml.XMLHelperImpl;
 import com.metamatrix.common.xml.XMLReaderWriter;
 import com.metamatrix.common.xml.XMLReaderWriterImpl;
 import com.metamatrix.core.vdb.VDBStatus;
@@ -190,16 +190,16 @@ public class DEFReaderWriter {
 
 
     private void loadConnectorTypes (BasicVDBDefn vdbDefn, Element root) throws IOException{
-        Element components = root.getChild(XMLElementNames.ComponentTypes.ELEMENT);
+        Element components = root.getChild(XMLConfig_ElementNames.ComponentTypes.ELEMENT);
         if (components == null) {
         	return;
         }
         
         // TODO: eventually we need to get rid of this below class.
-        XMLConfig_42_HelperImpl helper = new XMLConfig_42_HelperImpl();
+        XMLHelperImpl helper = new XMLHelperImpl();
         
         try {
-			List<Element> connectorTypes= components.getChildren(XMLElementNames.ComponentTypes.ComponentType.ELEMENT);
+			List<Element> connectorTypes= components.getChildren(XMLConfig_ElementNames.ComponentTypes.ComponentType.ELEMENT);
 			for(Element connectorTypeElement:connectorTypes) {
 				vdbDefn.addConnectorType(helper.loadComponentType(connectorTypeElement));
 			}
@@ -211,16 +211,16 @@ public class DEFReaderWriter {
     }
     
     private void loadConnectorBindings (BasicVDBDefn vdbDefn, Element root) throws IOException{
-        Element components = root.getChild(XMLElementNames.ConnectorComponents.ELEMENT);
+        Element components = root.getChild(XMLConfig_ElementNames.Configuration.ConnectorComponents.ELEMENT);
         if (components == null) {
         	return;
         }
         
         // TODO: eventually we need to get rid of this below class.
-        XMLConfig_42_HelperImpl helper = new XMLConfig_42_HelperImpl();
+        XMLHelperImpl helper = new XMLHelperImpl();
         
         try {
-			List<Element> connectorBindings= components.getChildren(XMLElementNames.ConnectorComponents.ConnectorComponent.ELEMENT);
+			List<Element> connectorBindings= components.getChildren(XMLConfig_ElementNames.Configuration.ConnectorComponents.ConnectorComponent.ELEMENT);
 			for(Element bindingElement:connectorBindings) {
 				vdbDefn.addConnectorBinding(helper.loadConnectorBinding(bindingElement));
 			}
@@ -257,7 +257,7 @@ public class DEFReaderWriter {
        }
        
        // write the connector types elements
-       Element componentTypesElement = new Element(XMLElementNames.ComponentTypes.ELEMENT);
+       Element componentTypesElement = new Element(XMLConfig_ElementNames.ComponentTypes.ELEMENT);
        Collection<ComponentType> connectorTypes= def.getConnectorTypes().values();
        for(ComponentType connectorType:connectorTypes) {
     	   componentTypesElement.addContent(createConnectorType(connectorType));
@@ -265,7 +265,7 @@ public class DEFReaderWriter {
        rootElement.addContent(componentTypesElement);
        
        // write the connector bindings elements
-       Element connectorBindingsElement = new Element(XMLElementNames.ConnectorComponents.ELEMENT);
+       Element connectorBindingsElement = new Element(XMLConfig_ElementNames.Configuration.ConnectorComponents.ELEMENT);
        Collection<ConnectorBinding> connectorBindings= def.getConnectorBindings().values();
        for(ConnectorBinding connectorBinding:connectorBindings) {
     	   connectorBindingsElement.addContent(createConnectorBinding(connectorBinding));
@@ -329,13 +329,13 @@ public class DEFReaderWriter {
 
    private Element createConnectorType(com.metamatrix.common.config.api.ComponentType connectorType) {
        // TODO: eventually we need to get rid of this below class.
-       XMLConfig_42_HelperImpl helper = new XMLConfig_42_HelperImpl();
+       XMLHelperImpl helper = new XMLHelperImpl();
        return helper.createComponentTypeElement(connectorType);
    }
 
 	private Element createConnectorBinding(ConnectorBinding binding) {
 		// TODO: eventually we need to get rid of this below class.
-		XMLConfig_42_HelperImpl helper = new XMLConfig_42_HelperImpl();
+		XMLHelperImpl helper = new XMLHelperImpl();
 		return helper.createConnectorBindingElement(binding, false);
 	}
    
@@ -376,7 +376,7 @@ public class DEFReaderWriter {
 	   public static final String APPLICATION_CREATED_BY = "ApplicationCreatedBy"; //$NON-NLS-1$
 	   public static final String APPLICATION_VERSION = "ApplicationVersion"; //$NON-NLS-1$
 	   public static final String USER_CREATED_BY = "UserCreatedBy"; //$NON-NLS-1$
-	   public static final String SYSTEM_VERSION = "MetaMatrixSystemVersion"; //$NON-NLS-1$
+	   public static final String SYSTEM_VERSION = "SystemVersion"; //$NON-NLS-1$
 	   public static final String MODIFICATION_TIME = "Time"; //$NON-NLS-1$	   
    }
    

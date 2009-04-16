@@ -37,7 +37,6 @@ import com.metamatrix.console.ui.util.property.GuiComponentFactory;
 import com.metamatrix.console.ui.util.property.PropertyProvider;
 import com.metamatrix.console.ui.views.runtime.OperationsPanel;
 import com.metamatrix.platform.admin.api.runtime.HostData;
-import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.service.api.ServiceState;
@@ -208,43 +207,43 @@ public final class RuntimeMgmtUtils
         return enablements;
     }
 
-    public static boolean[] getOperationsEnablements(
-        PSCData thePsc,
-        ProcessData theProcess) {
-
-        // booleans default to false so just set true operations
-        boolean[] enablements = new boolean[OperationsPanel.TOTAL_OPERATIONS];
-        if (thePsc.isRegistered()) {
-            enablements[STOP_ORDINAL_POSITION] = true;
-            enablements[STOP_NOW_ORDINAL_POSITION] = true;
-        }
-        else {
-            if (theProcess.isRegistered()) {
-                enablements[START_ORDINAL_POSITION] = true;
-            }
-        }
-        
-        // if has one suspended service then resume can be enabled
-        // if has one open/running service then suspend can be enabled
-        //if there is one that is not open and not suspended, enable start
-        Collection services = thePsc.getServices();
-        if ((services != null) && (!services.isEmpty())) {
-            Iterator servItr = services.iterator();
-            while (servItr.hasNext()) {
-                ServiceData service = (ServiceData)servItr.next();
-                int state = service.getCurrentState();
-
-                if(state != ServiceState.STATE_OPEN){
-                    enablements[START_ORDINAL_POSITION] = true;
-                } else if (state == ServiceState.STATE_INIT_FAILED || 
-                                state == ServiceState.STATE_FAILED ||
-                                state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
-                    enablements[SHOW_SERVICE_ERROR_ORDINAL_POSITION] = true;
-                }
-            }
-        }
-        return enablements;
-    }
+//    public static boolean[] getOperationsEnablements(
+//        PSCData thePsc,
+//        ProcessData theProcess) {
+//
+//        // booleans default to false so just set true operations
+//        boolean[] enablements = new boolean[OperationsPanel.TOTAL_OPERATIONS];
+//        if (thePsc.isRegistered()) {
+//            enablements[STOP_ORDINAL_POSITION] = true;
+//            enablements[STOP_NOW_ORDINAL_POSITION] = true;
+//        }
+//        else {
+//            if (theProcess.isRegistered()) {
+//                enablements[START_ORDINAL_POSITION] = true;
+//            }
+//        }
+//        
+//        // if has one suspended service then resume can be enabled
+//        // if has one open/running service then suspend can be enabled
+//        //if there is one that is not open and not suspended, enable start
+//        Collection services = thePsc.getServices();
+//        if ((services != null) && (!services.isEmpty())) {
+//            Iterator servItr = services.iterator();
+//            while (servItr.hasNext()) {
+//                ServiceData service = (ServiceData)servItr.next();
+//                int state = service.getCurrentState();
+//
+//                if(state != ServiceState.STATE_OPEN){
+//                    enablements[START_ORDINAL_POSITION] = true;
+//                } else if (state == ServiceState.STATE_INIT_FAILED || 
+//                                state == ServiceState.STATE_FAILED ||
+//                                state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
+//                    enablements[SHOW_SERVICE_ERROR_ORDINAL_POSITION] = true;
+//                }
+//            }
+//        }
+//        return enablements;
+//    }
     
 
     public static boolean[] getOperationsEnablements(ServiceData theService) {

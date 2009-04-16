@@ -5,7 +5,7 @@
         <ApplicationCreatedBy>MetaMatrix Console</ApplicationCreatedBy>
         <ApplicationVersion>5.5:2849</ApplicationVersion>
         <UserCreatedBy>metamatrixadmin</UserCreatedBy>
-        <MetaMatrixSystemVersion>5.5</MetaMatrixSystemVersion>
+        <SystemVersion>5.5</SystemVersion>
         <Time>2007-10-18T11:01:41.622-06:00</Time>
     </Header>
     <VDBInfo>

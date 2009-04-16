@@ -22,7 +22,6 @@
 
 package com.metamatrix.common.config.api;
 
-import com.metamatrix.core.util.MetaMatrixProductVersion;
 
 
 /**
@@ -32,9 +31,12 @@ public interface ConnectorBindingType extends ServiceComponentType {
 
     public static final String COMPONENT_TYPE_NAME = "Connector"; //$NON-NLS-1$
     public static final ComponentTypeID CONNECTOR_TYPE_ID = new ComponentTypeID(COMPONENT_TYPE_NAME);
-    public static final ProductTypeID CONNECTOR_PROD_TYPEID = new ProductTypeID(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME);
-    
+     
+    /*
+     * NOTE: These attributes must match the ConnectorAPI property names in org.teiid.connector.internal.ConnectorPropertyNames
+     */
     public interface Attributes {
+        public static final String IS_XA = "IsXA"; //$NON-NLS-1$
         public static final String CONNECTOR_CLASS = "ConnectorClass";//$NON-NLS-1$
         public static final String MM_JAR_PROTOCOL = "extensionjar"; //$NON-NLS-1$   
         public static final String CONNECTOR_CLASSPATH = "ConnectorClassPath"; //$NON-NLS-1$

@@ -38,7 +38,7 @@ public interface ComponentType extends BaseObject {
     public static final int RESOURCE_COMPONENT_TYPE_CODE = 4;      
     public static final int VM_COMPONENT_TYPE_CODE = 5;
 
-    public static final int PSC_COMPONENT_TYPE_CODE = 6;
+//    public static final int PSC_COMPONENT_TYPE_CODE = 6;
     public static final int HOST_COMPONENT_TYPE_CODE = 7;
     public static final int DEPLOYED_COMPONENT_TYPE_CODE = 8;
     
@@ -46,6 +46,7 @@ public interface ComponentType extends BaseObject {
    
     
 //    public static final int SHARED_RESOURCE_COMPONENT_TYPE_CODE = 10;
+    
 
     /**
      * Returns the <code>Collection</code> of <code>ComponentTypeDefn</code>s
@@ -125,29 +126,13 @@ public interface ComponentType extends BaseObject {
      * Returns true if this component type is monitored
      * @return boolean true if monitored
      */
-    boolean isMonitored();
-    
-    /**
-     * Returns true if this component type is a member of the connectors product type based on
-     * @link com.metamatrix.core.util.MetaMatrixProductVersion#CONNECTOR_PRODUCT_TYPE_NAME
-     * @return boolean true if a member of the connectors product type
-     */
-    boolean isOfConnectorProductType();    
+    boolean isMonitored(); 
     
     /**
      * Returns true if this component type is a connector type
      * @return boolean true if a connector type
      */
-    boolean isOfTypeConnector();
-    
-    /**
-     * Returns true if this component type is a XA connector type. 
-     * If this is <code>true</code>, then @link #isOfTypeConnector()
-     * will also be true.  However, @link #isOfTypeConnector() can be true
-     * and this can be <code>false</code>.
-     * @return boolean true if a connector type
-     */
-    boolean isOfTypeXAConnector();    
+    boolean isOfTypeConnector();   
 
     /**
      * Returns the principal who created this type

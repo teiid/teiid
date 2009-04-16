@@ -58,8 +58,8 @@ import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
+import com.metamatrix.metadata.runtime.vdb.defn.VDBCreation;
 import com.metamatrix.metadata.runtime.vdb.defn.VDBDefnFactory;
-import com.metamatrix.metadata.runtime.vdb.defn.VDBDefnImport;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 import com.metamatrix.platform.admin.api.EntitlementMigrationReport;
 import com.metamatrix.platform.admin.api.PermissionDataNode;
@@ -674,8 +674,10 @@ public class RuntimeMetadataAdminAPIImpl implements RuntimeMetadataAdminAPI {
         try {
         	vdbArchive = new VDBArchive(new ByteArrayInputStream(vdbStream));
         	
-            return VDBDefnImport.importVDBDefn(vdbArchive, callerToken.getUsername());
-            
+        	// don't update bindings, the process from the client perspective is to prompt the user
+        	// for which vms to deploy the bindings to
+            return importVDBDefn(vdbArchive, callerToken.getUsername(), false, Collections.EMPTY_LIST);
+             
         } catch (VirtualDatabaseException e) {
             throw e;
         } catch (Exception e) {
@@ -699,6 +701,13 @@ public class RuntimeMetadataAdminAPIImpl implements RuntimeMetadataAdminAPI {
         	}
         }
     }
+    
+    private VirtualDatabase importVDBDefn(VDBArchive vdb, String principal, boolean updateExistingBinding, List vms) throws Exception {
+        VDBCreation vdbc = new VDBCreation();
+        vdbc.setUpdateBindingProperties(updateExistingBinding);
+        vdbc.setVMsToDeployBindings(vms);
+        return vdbc.loadVDBDefn(vdb,principal);
+    } 
 
     /**
      * Get the visibility levels for models in a given virtual database.

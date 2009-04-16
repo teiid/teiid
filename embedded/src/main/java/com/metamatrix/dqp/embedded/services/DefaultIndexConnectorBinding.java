@@ -67,13 +67,6 @@ class DefaultIndexConnectorBinding implements ConnectorBinding {
         return INDEX_CONNECTOR_NAME;
     }
     
-    /** 
-     * @see com.metamatrix.common.config.api.ServiceComponentDefn#isQueuedService()
-     * @since 4.3
-     */
-    public boolean isQueuedService() {
-        return false;
-    }
 
     /** 
      * @see com.metamatrix.common.config.api.ServiceComponentDefn#accept(com.metamatrix.common.config.model.ConfigurationVisitor)
@@ -90,8 +83,17 @@ class DefaultIndexConnectorBinding implements ConnectorBinding {
     public String getRoutingUUID() {
         return INDEX_CONNECTOR_NAME;
     }
-
+    
+    
     /** 
+      * @since 6.1
+     */
+	public boolean isXASupported() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	/** 
      * @see com.metamatrix.common.config.api.ComponentDefn#getConfigurationID()
      * @since 4.3
      */

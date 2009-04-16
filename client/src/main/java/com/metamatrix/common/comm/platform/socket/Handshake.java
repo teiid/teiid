@@ -24,7 +24,7 @@ package com.metamatrix.common.comm.platform.socket;
 
 import java.io.Serializable;
 
-import com.metamatrix.core.util.MetaMatrixProductVersion;
+import com.metamatrix.common.util.ApplicationInfo;
 
 /**
  * Represents the information needed in a socket connection handshake  
@@ -33,7 +33,7 @@ public class Handshake implements Serializable {
     
 	private static final long serialVersionUID = 7839271224736355515L;
     
-    private String version = MetaMatrixProductVersion.VERSION_NUMBER;
+    private String version = ApplicationInfo.getInstance().getMajorReleaseNumber();
     private byte[] publicKey;
     
     /** 

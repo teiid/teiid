@@ -2,10 +2,10 @@
 <ConfigurationDocument>
     <Header>
         <ApplicationCreatedBy>ConfigurationAdministration</ApplicationCreatedBy>
-        <ApplicationVersionCreatedBy>4.2</ApplicationVersionCreatedBy>
+        <ApplicationVersionCreatedBy>6.0</ApplicationVersionCreatedBy>
         <UserCreatedBy>Configuration</UserCreatedBy>
         <ConfigurationVersion>4.2</ConfigurationVersion>
-        <MetaMatrixSystemVersion>4.2</MetaMatrixSystemVersion>
+        <SystemVersion>6.0</SystemVersion>
         <Time>2004-06-30T12:23:53.919-06:00</Time>
     </Header>
     <Configuration Name="Next Startup" ComponentType="Configuration" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
@@ -77,9 +77,17 @@
                 </Properties>
                      <DeployedService Name="MembershipService" ComponentType="MembershipService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
                     <DeployedService Name="SessionService" ComponentType="SessionService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
-                    <DeployedService Name="AuthorizationService" ComponentType="AuthorizationService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
+                    <DeployedService Name="AuthorizationService" ComponentType="AuthorizationService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
+                    	<Properties>
+                        	<Property Name="component.enabled">true</Property>
+                   		 </Properties>
+					</DeployedService>
                     <DeployedService Name="ConfigurationService" ComponentType="ConfigurationService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
-                     <DeployedService Name="QueryService" ComponentType="QueryService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
+                     <DeployedService Name="QueryService" ComponentType="QueryService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" >
+            			<Properties>					
+ 							<Property Name="component.enabled">false</Property>
+		            	</Properties>
+					</DeployedService>
                     <DeployedService Name="RuntimeMetadataService" ComponentType="RuntimeMetadataService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
              </Process>
         </Host>
@@ -172,8 +180,10 @@
         </ComponentType>
         <ComponentType Name="Host" ComponentTypeCode="7" Deployable="true" Deprecated="false" Monitorable="false" ParentComponentType="Configuration" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.950-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.950-06:00">
         </ComponentType>
-        <ComponentType Name="DeployedComponent" ComponentTypeCode="8" Deployable="false" Deprecated="false" Monitorable="false" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.970-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.970-06:00" />
-        <ComponentType Name="VM" ComponentTypeCode="5" Deployable="true" Deprecated="false" Monitorable="false" ParentComponentType="Host" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.944-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.944-06:00">
+        <ComponentType Name="DeployedComponent" ComponentTypeCode="8" Deployable="false" Deprecated="false" Monitorable="false" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.970-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.970-06:00" >
+            <PropertyDefinition Name="component.enabled" DisplayName="Enabled Flag" ShortDescription="The enabled flag allows for disabling of the service or connector from starting without have to remove it from deployment." DefaultValue="true" Multiplicity="1" PropertyType="Boolean" />
+ 		</ComponentType>
+       <ComponentType Name="VM" ComponentTypeCode="5" Deployable="true" Deprecated="false" Monitorable="false" ParentComponentType="Host" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.944-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.944-06:00">
             <PropertyDefinition Name="vm.starter.cmd.java_opts" DisplayName="Java Options" ShortDescription="These are the java options passed in before the main class" DefaultValue="-server -Djava.io.tmpdir=${metamatrix.host.dir}/data/tmp -ms${vm.starter.minHeapSize}m -mx${vm.starter.maxHeapSize}m" />
             <PropertyDefinition Name="vm.enabled" DisplayName="Start Enabled Flag" ShortDescription="The enabled flag allows for disabling the VM from starting without have to remove it from deployment." DefaultValue="true" Multiplicity="1" PropertyType="Boolean" />
             <PropertyDefinition Name="vm.timetolive" DisplayName="Socket Worker Thread Time-To-Live (ms)" ShortDescription="Time-to-live (in milliseconds) for threads used to do work on client requests." DefaultValue="30000" />
@@ -696,4 +706,36 @@
         </ComponentType>
                         
     </ComponentTypes>
+    <SharedResources>
+        <Resource Name="JGroups" ComponentType="Miscellaneous Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <Properties>
+                <Property Name="udp.multicast_supported">true</Property>
+                <Property Name="udp.mcast_messagebus_port">(multicast.port)</Property>
+                <Property Name="udp.mcast_jndi_port">5556</Property>
+                <Property Name="udp.mcast_addr">(multicast.address)</Property>
+                <Property Name="ping.gossip_host">(gossip_host)</Property>
+                <Property Name="ping.gossip_port">5555</Property>
+                <Property Name="metamatrix.cluster.name">(cluster.name)</Property>
+                <Property Name="jgroups.other.channel.settings">MERGE2(min_interval=5000;max_interval=10000):FD_SOCK:VERIFY_SUSPECT(timeout=1500):pbcast.NAKACK(gc_lag=50;retransmit_timeout=300,600,1200,2400,4800):UNICAST(timeout=5000):pbcast.STABLE(desired_avg_gossip=20000):FRAG(frag_size=4096;down_thread=false;up_thread=false):pbcast.GMS(join_timeout=5000;join_retry_timeout=2000;shun=false;print_local_addr=true):pbcast.STATE_TRANSFER
+                </Property>
+            </Properties>
+        </Resource>
+        <Resource Name="SSL" ComponentType="Miscellaneous Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <Properties>
+                <Property Name="com.metamatrix.ssl.keystoretype">JKS</Property>
+                <Property Name="com.metamatrix.ssl.protocol">SSLv3</Property>
+                <Property Name="com.metamatrix.ssl.keymanagementalgorithm">SunX509</Property>
+            </Properties>
+        </Resource>
+        <Resource Name="XATransactionManager" ComponentType="Miscellaneous Resource Type" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <Properties>
+                <Property Name="metamatrix.xatxnmgr.log_base_dir">txnlog</Property>
+                <Property Name="metamatrix.xatxnmgr.max_timeout">120000</Property>
+                <Property Name="metamatrix.xatxnmgr.max_log_filesize_in_mb">10</Property>
+                <Property Name="metamatrix.xatxnmgr.max_rolled_log_files">100</Property>
+                <Property Name="metamatrix.xatxnmgr.separate_log">true</Property>
+                <Property Name="metamatrix.xatxnmgr.txnstatus_port">0</Property>
+            </Properties>
+        </Resource>
+    </SharedResources>
 </ConfigurationDocument>

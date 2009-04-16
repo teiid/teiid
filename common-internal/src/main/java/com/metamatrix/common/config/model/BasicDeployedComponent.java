@@ -33,7 +33,6 @@ import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.namedobject.BaseID;
@@ -52,6 +51,8 @@ import com.metamatrix.common.namedobject.BaseID;
  */
 public class BasicDeployedComponent extends BasicComponentObject implements DeployedComponent, Serializable {
 
+	private static final String ENABLED="component.enabled";
+	
     private ConfigurationID configurationID;
 
     /**
@@ -74,8 +75,6 @@ public class BasicDeployedComponent extends BasicComponentObject implements Depl
      */
     private VMComponentDefnID vmComponentID;
 
-    private ProductServiceConfigID pscID;
-
     /**
      * Constructor takes a <code>ComponentID, HostID, </code> and <code> Collection </code> of system components to declare a component as being deployed.
      *  @param deployedID is the DeployedComponentID
@@ -85,20 +84,17 @@ public class BasicDeployedComponent extends BasicComponentObject implements Depl
      *  @param serviceComponentID is the ServiceComponentID (null if this is a deployed VM)
      */
     public BasicDeployedComponent(DeployedComponentID deployedId, ConfigurationID configId, HostID hostId, VMComponentDefnID vmId, ComponentTypeID deployedTypeID) {
-        this(deployedId, configId, hostId, vmId, null, null, deployedTypeID);
+        this(deployedId, configId, hostId, vmId, null,  deployedTypeID);
 
     }
 
-    public BasicDeployedComponent(DeployedComponentID deployedId, ConfigurationID configId, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefnID serviceId, ProductServiceConfigID pscID, ComponentTypeID deployedTypeID) {
+    public BasicDeployedComponent(DeployedComponentID deployedId, ConfigurationID configId, HostID hostId, VMComponentDefnID vmId, ServiceComponentDefnID serviceId, ComponentTypeID deployedTypeID) {
         super(deployedId, deployedTypeID);
         this.configurationID = configId;
         this.hostID = hostId;
         this.vmComponentID = vmId;
         if (serviceId != null) {
             this.componentID = serviceId;
-        }
-        if (pscID != null){
-            this.pscID = pscID;
         }
         
     }
@@ -110,10 +106,25 @@ public class BasicDeployedComponent extends BasicComponentObject implements Depl
         this.vmComponentID = deployedComponent.getVMComponentDefnID();
         if (deployedComponent.getServiceComponentDefnID() != null) {
             this.componentID = deployedComponent.getServiceComponentDefnID();
-            this.pscID = deployedComponent.getProductServiceConfigID();
         }
+        this.addProperties(deployedComponent.getEditableProperties());
     }
+    
+    
 
+    public boolean isEnabled() {
+    	String enabled = this.getProperty(ENABLED);
+    	if (enabled == null || enabled.trim().length() == 0) {
+    		return true;
+    	}
+    	return (new Boolean(enabled).booleanValue());
+
+    }
+    
+    public void setIsEnabled(boolean enable) {
+    		this.addProperty(ENABLED, new Boolean(enable).toString());
+    }
+    
     /**
      * Indicates whether this object represents a deployed
      * service component definition (returns true) or
@@ -149,16 +160,6 @@ public class BasicDeployedComponent extends BasicComponentObject implements Depl
     }
     
     
-    /**
-     * Returns the <code>ProductServiceConfigID</code> of the ServiceComponentDefn that is
-     * deployed.  Null will be returned if this <code>DeployedComponent</code>
-     * is a deployed VM.
-     * @return the component id, null when this is a deployed VM
-     */
-    public ProductServiceConfigID getProductServiceConfigID(){
-        return pscID;
-    }
-
     public ServiceComponentDefnID getServiceComponentDefnID() {
 	    return componentID;
     }
@@ -200,13 +201,7 @@ public class BasicDeployedComponent extends BasicComponentObject implements Depl
             }
 
             return componentID.equals(componentObjectId);
-        } else if (componentObjectId instanceof ProductServiceConfigID) {
-            if (pscID == null) {
-                return false;
-            }
-
-            return pscID.equals(componentObjectId);
-        }
+        } 
 
         return false;
     }

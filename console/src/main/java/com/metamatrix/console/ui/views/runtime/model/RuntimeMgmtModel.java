@@ -43,7 +43,6 @@ import com.metamatrix.console.util.ExceptionUtility;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.platform.admin.api.runtime.HostData;
-import com.metamatrix.platform.admin.api.runtime.PSCData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.ServiceData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
@@ -117,33 +116,33 @@ public final class RuntimeMgmtModel
 
         theStats.addProcess(theProcess);
         DefaultTreeNode procNode = createNode(theProcess, theHostNode);
-        Collection pscs = theProcess.getPSCs();
-        if (pscs != null) {
-            Iterator pscItr = pscs.iterator();
-            while (pscItr.hasNext()) {
-                addPsc((PSCData)pscItr.next(), procNode, theStats);
+        Collection svcs = theProcess.getServices();
+        if (svcs != null) {
+            Iterator svcItr = svcs.iterator();
+            while (svcItr.hasNext()) {
+                addService((ServiceData)svcItr.next(), procNode, theStats);
             }
         }
     }
 
-    private void addPsc(
-        PSCData thePsc,
-        DefaultTreeNode theProcessNode,
-        HostStatistics theStats) {
-
-        DefaultTreeNode pscNode = createNode(thePsc, theProcessNode);
-        Collection services = thePsc.getServices();
-        if (services != null) {
-            Iterator serviceItr = services.iterator();
-            while (serviceItr.hasNext()) {
-                addService((ServiceData)serviceItr.next(), pscNode, theStats);
-            }
-        }
-    }
+//    private void addPsc(
+//        PSCData thePsc,
+//        DefaultTreeNode theProcessNode,
+//        HostStatistics theStats) {
+//
+//        DefaultTreeNode pscNode = createNode(thePsc, theProcessNode);
+//        Collection services = thePsc.getServices();
+//        if (services != null) {
+//            Iterator serviceItr = services.iterator();
+//            while (serviceItr.hasNext()) {
+//                addService((ServiceData)serviceItr.next(), pscNode, theStats);
+//            }
+//        }
+//    }
 
     private void addService(
         ServiceData theService,
-        DefaultTreeNode thePscNode,
+        DefaultTreeNode theProcessNode,
         HostStatistics theStats) {
         theStats.addService(theService);
         serviceList.add(theService);
@@ -156,7 +155,7 @@ public final class RuntimeMgmtModel
                 lastChangeDate = changeDate;
             }
         }
-        createNode(theService, thePscNode);
+        createNode(theService, theProcessNode);
     }
 
     public ArrayList getServiceList(){

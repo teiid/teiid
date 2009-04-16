@@ -60,7 +60,7 @@ public final class ConfigSummaryPanel
     ///////////////////////////////////////////////////////////////////////////
 
     private TableWidget tblDeployments;
-    private TableWidget tblPscs;
+    private TableWidget tblSvcs;
 
     ///////////////////////////////////////////////////////////////////////////
     // FIELDS
@@ -68,7 +68,7 @@ public final class ConfigSummaryPanel
 
     private Configuration config;
     private DefaultTableModel deployTblModel;
-    private DefaultTableModel pscsTblModel;
+    private DefaultTableModel svcsTblModel;
 
     ///////////////////////////////////////////////////////////////////////////
     // CONSTRUCTORS
@@ -123,7 +123,7 @@ public final class ConfigSummaryPanel
         pnlDeployments.add(spnDeployments);
 
         JPanel pnlPscs = new JPanel(new GridLayout(1, 1));
-        tBorder = new TitledBorder(getString("csp.pnlPscs.title")); //$NON-NLS-1$
+        tBorder = new TitledBorder(getString("csp.pnlSvcs.title")); //$NON-NLS-1$
                                                
         pnlPscs.setBorder(
             new CompoundBorder(tBorder,
@@ -136,17 +136,17 @@ public final class ConfigSummaryPanel
         gbc.weighty = 1.0;
         pnl.add(pnlPscs, gbc);
 
-        tblPscs = new TableWidget();
-        pscsTblModel =
+        tblSvcs = new TableWidget();
+        svcsTblModel =
             DeployPkgUtils.setup(
-                tblPscs,
-                DeployPkgUtils.PSC_SERV_DEF_HDRS,
+                tblSvcs,
+                DeployPkgUtils.SERV_DEF_HDRS,
                 DeployPkgUtils.getInt("csp.psctblrows", 10), //$NON-NLS-1$
                 null);
-        tblPscs.setComparator(new DeployTableSorter());
+        tblSvcs.setComparator(new DeployTableSorter());
 
-        JScrollPane spnPscs = new JScrollPane(tblPscs);
-        pnlPscs.add(spnPscs);
+        JScrollPane spnSvcs = new JScrollPane(tblSvcs);
+        pnlPscs.add(spnSvcs);
         return pnl;
     }
 
@@ -176,14 +176,14 @@ public final class ConfigSummaryPanel
 
         try {
             // clear and load deployments table
-            DeployPkgUtils.loadDeployments(config, deployTblModel, getConnectionInfo());
+            DeployPkgUtils.loadProcesses(config, deployTblModel, getConnectionInfo());
             tblDeployments.sizeColumnsToFitData();
             sortFirstColumnInTable(tblDeployments);
             // clear and load psc service defintion table
-            DeployPkgUtils.loadPscServiceDefintions(config, pscsTblModel,
+           DeployPkgUtils.loadServiceDefintions(config, svcsTblModel,
                                                     getConnectionInfo());
-            tblPscs.sizeColumnsToFitData();
-            sortFirstColumnInTable(tblPscs);
+            tblSvcs.sizeColumnsToFitData();
+            sortFirstColumnInTable(tblSvcs);
         }
         catch (ExternalException theException) {
             ExceptionUtility.showMessage(

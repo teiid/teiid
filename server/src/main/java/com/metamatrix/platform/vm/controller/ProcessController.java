@@ -53,7 +53,6 @@ import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.HostType;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
@@ -307,7 +306,7 @@ public abstract class ProcessController implements ProcessManagement {
 
                 if (scd.isEssential()) {
                     essentialServices.add(depComp);
-                } else {
+                } else if (depComp.isEnabled()) {
                     otherServices.add(depComp);
                 }
             }
@@ -412,7 +411,7 @@ public abstract class ProcessController implements ProcessManagement {
         PropertiesUtils.putAll(serviceProps, props);
         PropertiesUtils.setOverrideProperies(serviceProps, vmProps);
         
-        ProductServiceConfigID pscID = deployedService.getProductServiceConfigID();
+ //       ProductServiceConfigID pscID = deployedService.getProductServiceConfigID();
         String serviceClassName = serviceProps.getProperty( ServicePropertyNames.SERVICE_CLASS_NAME );
 
         if (serviceClassName != null && serviceClassName.length() > 0) {
@@ -430,7 +429,7 @@ public abstract class ProcessController implements ProcessManagement {
                 String routingID = scd.getRoutingUUID();
                 serviceProps.put(ServicePropertyNames.SERVICE_ROUTING_ID, routingID);
             }
-            startService(this.clientServices, serviceClassName, serviceID, deployedService, pscID, serviceProps, synch );
+            startService(this.clientServices, serviceClassName, serviceID, deployedService, serviceProps, synch );
 
         } else {
             String msg = PlatformPlugin.Util.getString(LogMessageKeys.VM_0026, new Object[] {ServicePropertyNames.SERVICE_CLASS_NAME, deployedService.getServiceComponentDefnID().getName(), processName, host.getID().getName()});
@@ -646,14 +645,14 @@ public abstract class ProcessController implements ProcessManagement {
      * @param serviceProps Properties required to start service.
      * @param synch Flag to indicate if service should be started synchronously are asynchronously.
      */
-    private void startService(final ClientServiceRegistry clientServiceRegistry, final String serviceClassName, final ServiceID serviceID, final DeployedComponent deployedComponent, final ProductServiceConfigID pscID, final Properties serviceProps, boolean synch) {
+    private void startService(final ClientServiceRegistry clientServiceRegistry, final String serviceClassName, final ServiceID serviceID, final DeployedComponent deployedComponent, final Properties serviceProps, boolean synch) {
 
         if (!synch) {
             //add work to the pool
             startServicePool.execute( new Runnable() {
 				public void run() {
 					try {
-						startService(clientServiceRegistry, serviceID, deployedComponent,serviceClassName, pscID, serviceProps);
+						startService(clientServiceRegistry, serviceID, deployedComponent,serviceClassName, serviceProps);
 					} catch (ServiceException e) {
 						logException(e, e.getMessage());
 					}					
@@ -661,7 +660,7 @@ public abstract class ProcessController implements ProcessManagement {
             });
         } else {
             //start synchronously
-            startService(clientServiceRegistry, serviceID, deployedComponent,serviceClassName, pscID, serviceProps);
+            startService(clientServiceRegistry, serviceID, deployedComponent,serviceClassName, serviceProps);
         }
     }
     
@@ -713,7 +712,7 @@ public abstract class ProcessController implements ProcessManagement {
     	return this.commonExtensionClassLoader;
     }
     
-    private void startService(ClientServiceRegistry serverListenerRegistry, ServiceID serviceID, DeployedComponent deployedComponent,final String serviceClass,ProductServiceConfigID pscID,Properties serviceProps) {
+    private void startService(ClientServiceRegistry serverListenerRegistry, ServiceID serviceID, DeployedComponent deployedComponent,final String serviceClass,Properties serviceProps) {
         String serviceInstanceName = null;
 
         ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
@@ -737,7 +736,7 @@ public abstract class ProcessController implements ProcessManagement {
             final ServiceInterface service  = (ServiceInterface) Thread.currentThread().getContextClassLoader().loadClass(serviceClass).newInstance();
 
             // Create ServiceRegistryBinding and register
-            final ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, service, routingID,serviceInstanceName, componentType, serviceInstanceName,host.getFullName(), deployedComponent, pscID, service.getCurrentState(), service.getStateChangeTime(),essential, this.messageBus);
+            final ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, service, routingID,serviceInstanceName, componentType, serviceInstanceName,host.getFullName(), deployedComponent,  service.getCurrentState(), service.getStateChangeTime(),essential, this.messageBus);
             
             logMessage(PlatformPlugin.Util.getString("ServiceController.0",serviceInstanceName)); //$NON-NLS-1$
             

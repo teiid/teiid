@@ -40,7 +40,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.ModificationActionQueue;
-import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentObject;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
@@ -50,13 +49,8 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ProductType;
-import com.metamatrix.common.config.api.ProductTypeID;
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
@@ -106,29 +100,29 @@ public final class ConfigurationManager
 
     private ConfigurationObjectEditor configEditor;
 
-    private HashMap configs = new HashMap();
+    private ConfigurationModelContainer config = null;
 
     //key=HostID
     //value=HashMap (key=ConfigID, value=Collection of VMComponentDefnIDs)
-    private HashMap hostDeployments = new HashMap();
+ //   private HashMap hostDeployments = new HashMap();
     
     // Key=VMComponentDefn id
     // value=Collection of ProductServiceConfigIDs
-    private HashMap deployedPscs = new HashMap();
+//    private HashMap deployedPscs = new HashMap();
     
     // Key=ProductServiceConfig id
     // value=(key=VMComponentDefnID value=Collection of DeployedComponentID-services)
     // ProductServiceConfigID -> {VMComponentDefnID -> ArrayList[DeployedComponentID]}
-    private HashMap deployedServices = new HashMap();
+ //   private HashMap deployedServices = new HashMap();
     
     //Key=id, value=ProductType/
 //    private HashMap products = new HashMap();
 
     //key=ProductType ID, value=HashMap (key=ConfigID, value=Collection of psc def IDs)
-    private HashMap prodPscDefs = new HashMap();
+//    private HashMap prodPscDefs = new HashMap();
 
     //key=ProductServiceConfigID id, value=value=Collection of service def IDs
-    private HashMap serviceDefnMap = new HashMap();
+//    private HashMap serviceDefnMap = new HashMap();
 
     private ConfigurationID nextStartUpId = Configuration.NEXT_STARTUP_ID;
 
@@ -216,16 +210,13 @@ public final class ConfigurationManager
     }
     
     private void notifyHostChangeToConfigs(Host theHost, int eventType) {
-        Iterator itr = configs.values().iterator();
-        while (itr.hasNext()) {
-            ConfigurationModelContainer config = (ConfigurationModelContainer)itr.next();
-            fireConfigurationChange(
+             fireConfigurationChange(
                 new ConfigurationChangeEvent(
                     eventType,
                     theHost,
                     config.getConfiguration(),
                     new Object[] { config.getConfiguration()}));
-        }
+
     }
 
     /**
@@ -235,18 +226,18 @@ public final class ConfigurationManager
      * @param theProcess the process the PSCs belong to
      * @param theConfigId the ID of the configuration
      */
-    public void changeDeployedPsc(
-        ProductServiceConfig theOldPsc,
-        ProductServiceConfig theNewPsc,
-        VMComponentDefn theProcess,
-        Host theHost,
-        ConfigurationID theConfigId)
-        throws ExternalException {
-
-//??// this should really be wrapped in a transaction!!!!
-        deleteDeployedPsc(theOldPsc, theProcess, theHost, theConfigId);
-        deployPsc(theNewPsc, theProcess, theHost, theConfigId);
-    }
+//    public void changeDeployedPsc(
+//        ProductServiceConfig theOldPsc,
+//        ProductServiceConfig theNewPsc,
+//        VMComponentDefn theProcess,
+//        Host theHost,
+//        ConfigurationID theConfigId)
+//        throws ExternalException {
+//
+////??// this should really be wrapped in a transaction!!!!
+//        deleteDeployedPsc(theOldPsc, theProcess, theHost, theConfigId);
+//        deployPsc(theNewPsc, theProcess, theHost, theConfigId);
+//    }
 
     public void commitImportedObjects(Collection theImportedObjects)
         throws ExternalException {
@@ -370,19 +361,19 @@ public final class ConfigurationManager
             getAPI().executeTransaction(editor.getDestination().popActions());
             
             // update local cache
-            HashMap map = (HashMap)hostDeployments.get(theHost.getID());
-            if (map == null) {
-                // this is first deployed process
-                map = new HashMap();
-                hostDeployments.put(theHost.getID(), map);
-            }
-            Collection procs = (Collection)map.get(theConfigId);
-            if (procs == null) {
-                // first deployed process
-                procs = new ArrayList(1);
-                map.put(theConfigId, procs);
-            }
-            procs.add(processDefn.getID());            
+//            HashMap map = (HashMap)hostDeployments.get(theHost.getID());
+//            if (map == null) {
+//                // this is first deployed process
+//                map = new HashMap();
+//                hostDeployments.put(theHost.getID(), map);
+//            }
+//            Collection procs = (Collection)map.get(theConfigId);
+//            if (procs == null) {
+//                // first deployed process
+//                procs = new ArrayList(1);
+//                map.put(theConfigId, procs);
+//            }
+ //           procs.add(processDefn.getID());            
 
             // notify listeners
             fireConfigurationChange(
@@ -416,63 +407,63 @@ public final class ConfigurationManager
      * definition is contained in.
      * @throws ExternalException if problem occurs creating the PSC definition
      */
-    public ProductServiceConfig copyPscDef(
-        String thePscDefName,
-        ProductServiceConfig thePscBeingCopied,
-        ConfigurationID theConfigId)
-        throws ExternalException {
-
-        ConfigurationObjectEditor editor = null;
-        String attemptedAction = ""; //$NON-NLS-1$
-        try {
-            Configuration config = getConfig(theConfigId);
-            editor = getEditor();
-            attemptedAction = "createProductServiceConfig()"; //$NON-NLS-1$
-            ProductServiceConfig pscDef =
-                editor.createProductServiceConfig(
-                    config, thePscBeingCopied, thePscDefName);
-            attemptedAction = "executeTransaction()"; //$NON-NLS-1$
-            getAPI().executeTransaction(editor.getDestination().popActions());
-            
-            // update cache
-            ProductType product = getProduct(thePscBeingCopied);
-            Map map = (Map)prodPscDefs.get(product.getID());
-            attemptedAction = "map.get()"; //$NON-NLS-1$
-            Collection pscDefs = (Collection)map.get(theConfigId);
-            if (pscDefs == null) {
-                pscDefs = new ArrayList();
-            }
-            attemptedAction = "pscDefs.add()"; //$NON-NLS-1$
-            pscDefs.add(pscDef.getID());            
-            
-            // notify listeners
-            attemptedAction = "fireConfigurationChange()"; //$NON-NLS-1$
-            fireConfigurationChange(
-                new ConfigurationChangeEvent(
-                    ConfigurationChangeEvent.NEW,
-                    pscDef,
-                    config,
-                    new Object[] {getProduct(pscDef), config}));
-
-            // add Service defns
-            attemptedAction = "getServiceDefinitions()"; //$NON-NLS-1$
-            getServiceDefinitions(pscDef, config);
-            return pscDef;
-        } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            throw new ExternalException(
-                formatErrorMsg("createPscDef", //$NON-NLS-1$
-                               "psc name=" + thePscDefName + //$NON-NLS-1$
-                                   ", source PSC=" + thePscBeingCopied + //$NON-NLS-1$
-                                   ", config=" + theConfigId + //$NON-NLS-1$
-                                   ", attempted action = " + attemptedAction, //$NON-NLS-1$
-                               theException),
-                theException);
-        }
-    }
+//    public ProductServiceConfig copyPscDef(
+//        String thePscDefName,
+//        ProductServiceConfig thePscBeingCopied,
+//        ConfigurationID theConfigId)
+//        throws ExternalException {
+//
+//        ConfigurationObjectEditor editor = null;
+//        String attemptedAction = ""; //$NON-NLS-1$
+//        try {
+//            Configuration config = getConfig(theConfigId);
+//            editor = getEditor();
+//            attemptedAction = "createProductServiceConfig()"; //$NON-NLS-1$
+//            ProductServiceConfig pscDef =
+//                editor.createProductServiceConfig(
+//                    config, thePscBeingCopied, thePscDefName);
+//            attemptedAction = "executeTransaction()"; //$NON-NLS-1$
+//            getAPI().executeTransaction(editor.getDestination().popActions());
+//            
+//            // update cache
+//            ProductType product = BasicProductType.PRODUCT_TYPE;
+//            Map map = (Map)prodPscDefs.get(product.getID());
+//            attemptedAction = "map.get()"; //$NON-NLS-1$
+//            Collection pscDefs = (Collection)map.get(theConfigId);
+//            if (pscDefs == null) {
+//                pscDefs = new ArrayList();
+//            }
+//            attemptedAction = "pscDefs.add()"; //$NON-NLS-1$
+//            pscDefs.add(pscDef.getID());            
+//            
+//            // notify listeners
+//            attemptedAction = "fireConfigurationChange()"; //$NON-NLS-1$
+//            fireConfigurationChange(
+//                new ConfigurationChangeEvent(
+//                    ConfigurationChangeEvent.NEW,
+//                    pscDef,
+//                    config,
+//                    new Object[] {BasicProductType.PRODUCT_TYPE, config}));
+//
+//            // add Service defns
+//            attemptedAction = "getServiceDefinitions()"; //$NON-NLS-1$
+//            getServiceDefinitions(pscDef, config);
+//            return pscDef;
+//        } catch (Exception theException) {
+//            // rollback
+//            if (editor != null) {
+//                editor.getDestination().popActions();
+//            }
+//            throw new ExternalException(
+//                formatErrorMsg("createPscDef", //$NON-NLS-1$
+//                               "psc name=" + thePscDefName + //$NON-NLS-1$
+//                                   ", source PSC=" + thePscBeingCopied + //$NON-NLS-1$
+//                                   ", config=" + theConfigId + //$NON-NLS-1$
+//                                   ", attempted action = " + attemptedAction, //$NON-NLS-1$
+//                               theException),
+//                theException);
+//        }
+//    }
     
     /**
      * Updates a PSC definition. The the service IDs will replace the current
@@ -481,62 +472,63 @@ public final class ConfigurationManager
      * @param theServiceIds the service IDs to replace current service IDs
      * @throws ExternalException if problem occurs updating the PSC definition
      */
-    public ProductServiceConfig updatePscDef(
-        ProductServiceConfig thePscDef,
-        Collection theServiceIds)
-        throws ExternalException {  
-            
-            ConfigurationObjectEditor editor = null;
-            String attemptedAction = ""; //$NON-NLS-1$
-            try {
-                Configuration config = getConfig(Configuration.NEXT_STARTUP_ID);
-                editor = getEditor();
-                attemptedAction = "updateProductServiceConfig()"; //$NON-NLS-1$
-                
-                thePscDef = editor.updateProductServiceConfig(config, thePscDef, theServiceIds);
-                
-                attemptedAction = "executeTransaction()"; //$NON-NLS-1$
-                getAPI().executeTransaction(editor.getDestination().popActions());
-                
-                ProductType product = getProduct(thePscDef);
-                Map map = (Map)prodPscDefs.get(product.getID());
-                attemptedAction = "map.get()"; //$NON-NLS-1$
-                Collection pscDefs = (Collection)map.get(config.getID());
-                if (pscDefs == null) {
-                    pscDefs = new ArrayList();
-                }
-                attemptedAction = "pscDefs.updated()"; //$NON-NLS-1$
-                pscDefs.add(thePscDef.getID());
-                
-                // notify listeners
-                attemptedAction = "fireConfigurationChange()"; //$NON-NLS-1$
-                fireConfigurationChange(
-                    new ConfigurationChangeEvent(
-                        ConfigurationChangeEvent.MODIFIED,
-                        thePscDef,
-                        config,
-                        new Object[] {getProduct(thePscDef), config}));
-
-                // add Service defns
-                attemptedAction = "getServiceDefinitions()"; //$NON-NLS-1$
-                getServiceDefinitions(thePscDef, config);
-                return thePscDef;
-           } catch (Exception theException) {
-                // rollback
-                if (editor != null) {
-                    editor.getDestination().popActions();
-                }
-                throw new ExternalException(
-                    formatErrorMsg("updatePscDef", //$NON-NLS-1$
-                                   "psc name=" + thePscDef.getName() + //$NON-NLS-1$
-                                       ", prodType=" + thePscDef.getComponentTypeID() + //$NON-NLS-1$
-                                       ", config=" + Configuration.NEXT_STARTUP_ID + //$NON-NLS-1$
-                                       ", attempted action = " + attemptedAction, //$NON-NLS-1$
-                                   theException),
-                    theException);
-            }
-            
-        }  
+//    public ProductServiceConfig updatePscDef(
+//        ProductServiceConfig thePscDef,
+//        Collection theServiceIds)
+//        throws ExternalException {  
+//            
+//            ConfigurationObjectEditor editor = null;
+//            String attemptedAction = ""; //$NON-NLS-1$
+//            try {
+//                Configuration config = getConfig(Configuration.NEXT_STARTUP_ID);
+//                editor = getEditor();
+//                attemptedAction = "updateProductServiceConfig()"; //$NON-NLS-1$
+//                
+//                thePscDef = editor.updateProductServiceConfig(config, thePscDef, theServiceIds);
+//                
+//                attemptedAction = "executeTransaction()"; //$NON-NLS-1$
+//                getAPI().executeTransaction(editor.getDestination().popActions());
+//                
+//                ProductType product = BasicProductType.PRODUCT_TYPE;
+//                	//getProduct(thePscDef);
+//                Map map = (Map)prodPscDefs.get(product.getID());
+//                attemptedAction = "map.get()"; //$NON-NLS-1$
+//                Collection pscDefs = (Collection)map.get(config.getID());
+//                if (pscDefs == null) {
+//                    pscDefs = new ArrayList();
+//                }
+//                attemptedAction = "pscDefs.updated()"; //$NON-NLS-1$
+//                pscDefs.add(thePscDef.getID());
+//                
+//                // notify listeners
+//                attemptedAction = "fireConfigurationChange()"; //$NON-NLS-1$
+//                fireConfigurationChange(
+//                    new ConfigurationChangeEvent(
+//                        ConfigurationChangeEvent.MODIFIED,
+//                        thePscDef,
+//                        config,
+//                        new Object[] {BasicProductType.PRODUCT_TYPE, config}));
+//
+//                // add Service defns
+//                attemptedAction = "getServiceDefinitions()"; //$NON-NLS-1$
+//                getServiceDefinitions(thePscDef, config);
+//                return thePscDef;
+//           } catch (Exception theException) {
+//                // rollback
+//                if (editor != null) {
+//                    editor.getDestination().popActions();
+//                }
+//                throw new ExternalException(
+//                    formatErrorMsg("updatePscDef", //$NON-NLS-1$
+//                                   "psc name=" + thePscDef.getName() + //$NON-NLS-1$
+//                                       ", prodType=" + thePscDef.getComponentTypeID() + //$NON-NLS-1$
+//                                       ", config=" + Configuration.NEXT_STARTUP_ID + //$NON-NLS-1$
+//                                       ", attempted action = " + attemptedAction, //$NON-NLS-1$
+//                                   theException),
+//                    theException);
+//            }
+//            
+//        }  
     
     /**
      * Creates a PSC definition. New PSC definitions are created by copying
@@ -547,70 +539,70 @@ public final class ConfigurationManager
      * definition is contained in.
      * @throws ExternalException if problem occurs creating the PSC definition
      */
-    public ProductServiceConfig createPscDef(
-        String thePscDefName,
-        ProductTypeID thePscProdTypeID,
-        Collection theServiceIds,
-        ConfigurationID theConfigId)
-        throws ExternalException {
-
-        ConfigurationObjectEditor editor = null;
-        String attemptedAction = ""; //$NON-NLS-1$
-        try {
-            Configuration config = getConfig(theConfigId);
-            editor = getEditor();
-            attemptedAction = "createProductServiceConfig()"; //$NON-NLS-1$
-            ProductServiceConfig pscDef = 
-            	editor.createProductServiceConfig(config, thePscProdTypeID, thePscDefName);
-            	
-            	
-           	for (Iterator sidIt=theServiceIds.iterator(); sidIt.hasNext(); ) {
-           		ServiceComponentDefnID id = (ServiceComponentDefnID) sidIt.next();
-           		
-            	editor.addServiceComponentDefn(pscDef, id);
-           	}
-            	
-            attemptedAction = "executeTransaction()"; //$NON-NLS-1$
-            getAPI().executeTransaction(editor.getDestination().popActions());
-            
-            ProductType product = getProduct(pscDef);
-            Map map = (Map)prodPscDefs.get(product.getID());
-            attemptedAction = "map.get()"; //$NON-NLS-1$
-            Collection pscDefs = (Collection)map.get(theConfigId);
-            if (pscDefs == null) {
-                pscDefs = new ArrayList();
-            }
-            attemptedAction = "pscDefs.add()"; //$NON-NLS-1$
-            pscDefs.add(pscDef.getID());
-                        
-            // notify listeners
-            attemptedAction = "fireConfigurationChange()"; //$NON-NLS-1$
-            fireConfigurationChange(
-                new ConfigurationChangeEvent(
-                    ConfigurationChangeEvent.NEW,
-                    pscDef,
-                    config,
-                    new Object[] {getProduct(pscDef), config}));
-
-            // add Service defns
-            attemptedAction = "getServiceDefinitions()"; //$NON-NLS-1$
-            getServiceDefinitions(pscDef, config);
-            return pscDef;
-        } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            throw new ExternalException(
-                formatErrorMsg("createPscDef", //$NON-NLS-1$
-                               "psc name=" + thePscDefName + //$NON-NLS-1$
-                               	   ", prodType=" + thePscProdTypeID + //$NON-NLS-1$
-                                   ", config=" + theConfigId + //$NON-NLS-1$
-                                   ", attempted action = " + attemptedAction, //$NON-NLS-1$
-                               theException),
-                theException);
-        }
-    }
+//    public ProductServiceConfig createPscDef(
+//        String thePscDefName,
+//        ProductTypeID thePscProdTypeID,
+//        Collection theServiceIds,
+//        ConfigurationID theConfigId)
+//        throws ExternalException {
+//
+//        ConfigurationObjectEditor editor = null;
+//        String attemptedAction = ""; //$NON-NLS-1$
+//        try {
+//            Configuration config = getConfig(theConfigId);
+//            editor = getEditor();
+//            attemptedAction = "createProductServiceConfig()"; //$NON-NLS-1$
+//            ProductServiceConfig pscDef = 
+//            	editor.createProductServiceConfig(config, thePscProdTypeID, thePscDefName);
+//            	
+//            	
+//           	for (Iterator sidIt=theServiceIds.iterator(); sidIt.hasNext(); ) {
+//           		ServiceComponentDefnID id = (ServiceComponentDefnID) sidIt.next();
+//           		
+//            	editor.addServiceComponentDefn(pscDef, id);
+//           	}
+//            	
+//            attemptedAction = "executeTransaction()"; //$NON-NLS-1$
+//            getAPI().executeTransaction(editor.getDestination().popActions());
+//            
+//            ProductType product = BasicProductType.PRODUCT_TYPE;
+//            Map map = (Map)prodPscDefs.get(product.getID());
+//            attemptedAction = "map.get()"; //$NON-NLS-1$
+//            Collection pscDefs = (Collection)map.get(theConfigId);
+//            if (pscDefs == null) {
+//                pscDefs = new ArrayList();
+//            }
+//            attemptedAction = "pscDefs.add()"; //$NON-NLS-1$
+//            pscDefs.add(pscDef.getID());
+//                        
+//            // notify listeners
+//            attemptedAction = "fireConfigurationChange()"; //$NON-NLS-1$
+//            fireConfigurationChange(
+//                new ConfigurationChangeEvent(
+//                    ConfigurationChangeEvent.NEW,
+//                    pscDef,
+//                    config,
+//                    new Object[] {BasicProductType.PRODUCT_TYPE, config}));
+//
+//            // add Service defns
+//            attemptedAction = "getServiceDefinitions()"; //$NON-NLS-1$
+//            getServiceDefinitions(pscDef, config);
+//            return pscDef;
+//        } catch (Exception theException) {
+//            // rollback
+//            if (editor != null) {
+//                editor.getDestination().popActions();
+//            }
+//            throw new ExternalException(
+//                formatErrorMsg("createPscDef", //$NON-NLS-1$
+//                               "psc name=" + thePscDefName + //$NON-NLS-1$
+//                               	   ", prodType=" + thePscProdTypeID + //$NON-NLS-1$
+//                                   ", config=" + theConfigId + //$NON-NLS-1$
+//                                   ", attempted action = " + attemptedAction, //$NON-NLS-1$
+//                               theException),
+//                theException);
+//        }
+//    }
     
 
     /**
@@ -649,69 +641,69 @@ public final class ConfigurationManager
         }
     }
 
-    public void deleteDeployedPsc(
-        ProductServiceConfig thePsc,
-        VMComponentDefn theProcess,
-        Host theHost,
-        ConfigurationID theConfigId)
-        throws ExternalException {
-
-        ConfigurationObjectEditor editor = null;
-        try {
-            // since PSCs are not really deployed, must get all their deployed
-            // services and delete them
-            Configuration config = getConfig(theConfigId);
-            // each process has only one deployed component
-//            Collection deployedComps =
-//                config.getDeployedComponents((ComponentDefnID)theProcess.getID());
-//            if ((deployedComps == null) || (deployedComps.isEmpty())) {
-//                throw new IllegalStateException(
-//                    "ConfigurationManager.deleteDeployedPsc:" + //$NON-NLS-1$
-//                        " VM does not have a deployed component. PSC=" + thePsc + //$NON-NLS-1$
-//                        ", process=" + theProcess + ", config=" + theConfigId); //$NON-NLS-1$ //$NON-NLS-2$
+//    public void deleteDeployedPsc(
+//        ProductServiceConfig thePsc,
+//        VMComponentDefn theProcess,
+//        Host theHost,
+//        ConfigurationID theConfigId)
+//        throws ExternalException {
+//
+//        ConfigurationObjectEditor editor = null;
+//        try {
+//            // since PSCs are not really deployed, must get all their deployed
+//            // services and delete them
+//            Configuration config = getConfig(theConfigId);
+//            // each process has only one deployed component
+////            Collection deployedComps =
+////                config.getDeployedComponents((ComponentDefnID)theProcess.getID());
+////            if ((deployedComps == null) || (deployedComps.isEmpty())) {
+////                throw new IllegalStateException(
+////                    "ConfigurationManager.deleteDeployedPsc:" + //$NON-NLS-1$
+////                        " VM does not have a deployed component. PSC=" + thePsc + //$NON-NLS-1$
+////                        ", process=" + theProcess + ", config=" + theConfigId); //$NON-NLS-1$ //$NON-NLS-2$
+////            }
+////            DeployedComponent deployedVm =
+////                (DeployedComponent)deployedComps.iterator().next();
+//            Collection services = config.getDeployedServices(theProcess, thePsc);
+//            if (services != null) {
+//                editor = getEditor();
+//                Iterator servItr = services.iterator();
+//                while (servItr.hasNext()) {
+//                    ComponentObject service = (ComponentObject)servItr.next();
+//                    editor.delete(service, config, true);
+//
+//                }
+//                // persist delete
+//                getAPI().executeTransaction(editor.getDestination().popActions());
+//                
+//                Collection pscs = (Collection)deployedPscs.get(theProcess.getID());
+//                pscs.remove(thePsc.getID());
+//                HashMap map = (HashMap)deployedServices.get(thePsc.getID());
+//                map.remove(theProcess.getID());
+//                
+//
+//                // notify listeners
+//                fireConfigurationChange(
+//                    new ConfigurationChangeEvent(
+//                        ConfigurationChangeEvent.DELETED,
+//                        thePsc,
+//                        config,
+//                        new Object[] {theProcess, theHost, config}));
 //            }
-//            DeployedComponent deployedVm =
-//                (DeployedComponent)deployedComps.iterator().next();
-            Collection services = config.getDeployedServices(theProcess, thePsc);
-            if (services != null) {
-                editor = getEditor();
-                Iterator servItr = services.iterator();
-                while (servItr.hasNext()) {
-                    ComponentObject service = (ComponentObject)servItr.next();
-                    editor.delete(service, config, true);
-
-                }
-                // persist delete
-                getAPI().executeTransaction(editor.getDestination().popActions());
-                
-                Collection pscs = (Collection)deployedPscs.get(theProcess.getID());
-                pscs.remove(thePsc.getID());
-                HashMap map = (HashMap)deployedServices.get(thePsc.getID());
-                map.remove(theProcess.getID());
-                
-
-                // notify listeners
-                fireConfigurationChange(
-                    new ConfigurationChangeEvent(
-                        ConfigurationChangeEvent.DELETED,
-                        thePsc,
-                        config,
-                        new Object[] {theProcess, theHost, config}));
-            }
-        } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            throw new ExternalException(
-                formatErrorMsg("deleteDeployedPsc", //$NON-NLS-1$
-                               "PSC=" + thePsc + ", process=" + theProcess + //$NON-NLS-1$ //$NON-NLS-2$
-                                   ", host=" + theHost + //$NON-NLS-1$
-                                   ", config=" + theConfigId, //$NON-NLS-1$
-                               theException),
-                theException);
-        }
-    }
+//        } catch (Exception theException) {
+//            // rollback
+//            if (editor != null) {
+//                editor.getDestination().popActions();
+//            }
+//            throw new ExternalException(
+//                formatErrorMsg("deleteDeployedPsc", //$NON-NLS-1$
+//                               "PSC=" + thePsc + ", process=" + theProcess + //$NON-NLS-1$ //$NON-NLS-2$
+//                                   ", host=" + theHost + //$NON-NLS-1$
+//                                   ", config=" + theConfigId, //$NON-NLS-1$
+//                               theException),
+//                theException);
+//        }
+//    }
 
     public void deleteHost(
         Host theHost,
@@ -743,16 +735,13 @@ public final class ConfigurationManager
     }
 
     private void deleteHostFromConfigs(Host theHost) {
-        Iterator itr = configs.values().iterator();
-        while (itr.hasNext()) {
-            ConfigurationModelContainer config = (ConfigurationModelContainer)itr.next();
-            fireConfigurationChange(
+             fireConfigurationChange(
                 new ConfigurationChangeEvent(
                     ConfigurationChangeEvent.DELETED,
                     theHost,
                     config.getConfiguration(),
                     new Object[] {config.getConfiguration()}));
-        }
+
     }
 
     public void deleteProcess(
@@ -776,24 +765,18 @@ public final class ConfigurationManager
 
             // update caches
             BaseID processID = theProcess.getID();
-            Collection pscs = (Collection)deployedPscs.get(processID);
-            if (pscs != null) {
-                // process first deployed psc
-                pscs = new ArrayList();
-                deployedPscs.remove(processID);
-            }
             
-            Iterator pscItr = deployedServices.values().iterator();
-            while (pscItr.hasNext()) {
-                Map pscToSvcMap = (Map) pscItr.next();
-                pscToSvcMap.remove(processID);
-            }
+//            Iterator pscItr = deployedServices.values().iterator();
+//            while (pscItr.hasNext()) {
+//                Map pscToSvcMap = (Map) pscItr.next();
+//                pscToSvcMap.remove(processID);
+//            }
 
-            HashMap map = (HashMap)hostDeployments.get(hostId);
-            Collection procs = (Collection)map.get(theConfigId);
-            if (procs != null) {
-                procs.remove(processID);
-            }
+//            HashMap map = (HashMap)hostDeployments.get(hostId);
+//            Collection procs = (Collection)map.get(theConfigId);
+//            if (procs != null) {
+//                procs.remove(processID);
+//            }
             
             // notify listeners
             Host host = config.getHost(hostId.getFullName());
@@ -816,116 +799,116 @@ public final class ConfigurationManager
         }
     }
 
-    public void deletePscDefinition(
-        ProductServiceConfig thePsc,
-        ProductType theProduct,
-        ConfigurationID theConfigId)
-        throws ExternalException {
-
-        try {
-            delete(thePsc, theConfigId, false);
-            
-            // update cache
-            Map map = (Map)prodPscDefs.get(theProduct.getID());
-            Collection pscDefs = (Collection)map.get(theConfigId);
-            if (pscDefs != null) {
-                pscDefs.remove(thePsc.getID());            
-            }
-
-            // notify listeners
-            fireConfigurationChange(
-                new ConfigurationChangeEvent(
-                    ConfigurationChangeEvent.DELETED,
-                    thePsc,
-                    getConfig(theConfigId),
-                    new Object[] {theProduct,
-                                  getConfig(theConfigId)}));
-        } catch (Exception theException) {
-            throw new ExternalException(
-                formatErrorMsg("deletePscDefinition", //$NON-NLS-1$
-                               "PSC=" + thePsc + //$NON-NLS-1$
-                                   ", product=" + theProduct + //$NON-NLS-1$
-                                   ", config=" + theConfigId, //$NON-NLS-1$
-                               theException),
-                theException);
-        }
-    }
+//    public void deletePscDefinition(
+//        ProductServiceConfig thePsc,
+//        ProductType theProduct,
+//        ConfigurationID theConfigId)
+//        throws ExternalException {
+//
+//        try {
+//            delete(thePsc, theConfigId, false);
+//            
+//            // update cache
+//            Map map = (Map)prodPscDefs.get(theProduct.getID());
+//            Collection pscDefs = (Collection)map.get(theConfigId);
+//            if (pscDefs != null) {
+//                pscDefs.remove(thePsc.getID());            
+//            }
+//
+//            // notify listeners
+//            fireConfigurationChange(
+//                new ConfigurationChangeEvent(
+//                    ConfigurationChangeEvent.DELETED,
+//                    thePsc,
+//                    getConfig(theConfigId),
+//                    new Object[] {theProduct,
+//                                  getConfig(theConfigId)}));
+//        } catch (Exception theException) {
+//            throw new ExternalException(
+//                formatErrorMsg("deletePscDefinition", //$NON-NLS-1$
+//                               "PSC=" + thePsc + //$NON-NLS-1$
+//                                   ", product=" + theProduct + //$NON-NLS-1$
+//                                   ", config=" + theConfigId, //$NON-NLS-1$
+//                               theException),
+//                theException);
+//        }
+//    }
 
     // creates a new PSC under a process
-    public void deployPsc(
-        ProductServiceConfig thePsc,
-        VMComponentDefn theProcess,
-        Host theHost,
-        ConfigurationID theConfigId)
-        throws ExternalException {
-
-        ConfigurationObjectEditor editor = null;
-        try {
-            editor = getEditor();
-            Configuration config = getConfig(theConfigId);
-            Collection result =
-                editor.deployProductServiceConfig(
-                    config,
-                    thePsc,
-                    (HostID)theHost.getID(),
-                    (VMComponentDefnID)theProcess.getID());
-            getAPI().executeTransaction(editor.getDestination().popActions());
-            
-            // update cache
-            Collection pscs = (Collection)deployedPscs.get(theProcess.getID());
-            if (pscs == null) {
-                // process first deployed psc
-                pscs = new ArrayList();
-                deployedPscs.put(theProcess.getID(), pscs);
-            }
-            pscs.add(thePsc.getID());
-            HashMap map = new HashMap();
-            Collection ids = new ArrayList(result.size());
-            for (Iterator it=result.iterator(); it.hasNext(); ) {
-                DeployedComponent dc=(DeployedComponent)it.next();
-                ids.add(dc.getID());
-            }
-            map.put(theProcess.getID(), ids);
-            deployedServices.put(thePsc.getID(), map);            
-
-            // notify listeners
-            fireConfigurationChange(
-                new ConfigurationChangeEvent(
-                    ConfigurationChangeEvent.NEW,
-                    thePsc,
-                    config,
-                    new Object[] {theProcess,
-                                  theHost,
-                                  config}));
-            if (result != null) {
-                Iterator itr = result.iterator();
-                while (itr.hasNext()) {
-                    DeployedComponent service = (DeployedComponent)itr.next();
-                    fireConfigurationChange(
-                        new ConfigurationChangeEvent(
-                            ConfigurationChangeEvent.NEW,
-                            service,
-                            config,
-                            new Object[] {thePsc, theProcess, theHost, config}));
-                }
-            }
-
-            // update cache
-           } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            throw new ExternalException(
-                formatErrorMsg("deployPsc", //$NON-NLS-1$
-                               "PSC=" + thePsc + //$NON-NLS-1$
-                                   ", process=" + theProcess + //$NON-NLS-1$
-                                   ", host=" + theHost + //$NON-NLS-1$
-                                   ", config=" + theConfigId, //$NON-NLS-1$
-                               theException),
-                theException);
-        }
-    }
+//    public void deployPsc(
+//        ProductServiceConfig thePsc,
+//        VMComponentDefn theProcess,
+//        Host theHost,
+//        ConfigurationID theConfigId)
+//        throws ExternalException {
+//
+//        ConfigurationObjectEditor editor = null;
+//        try {
+//            editor = getEditor();
+//            Configuration config = getConfig(theConfigId);
+//            Collection result =
+//                editor.deployProductServiceConfig(
+//                    config,
+//                    thePsc,
+//                    (HostID)theHost.getID(),
+//                    (VMComponentDefnID)theProcess.getID());
+//            getAPI().executeTransaction(editor.getDestination().popActions());
+//            
+//            // update cache
+//            Collection pscs = (Collection)deployedPscs.get(theProcess.getID());
+//            if (pscs == null) {
+//                // process first deployed psc
+//                pscs = new ArrayList();
+//                deployedPscs.put(theProcess.getID(), pscs);
+//            }
+//            pscs.add(thePsc.getID());
+//            HashMap map = new HashMap();
+//            Collection ids = new ArrayList(result.size());
+//            for (Iterator it=result.iterator(); it.hasNext(); ) {
+//                DeployedComponent dc=(DeployedComponent)it.next();
+//                ids.add(dc.getID());
+//            }
+//            map.put(theProcess.getID(), ids);
+//            deployedServices.put(thePsc.getID(), map);            
+//
+//            // notify listeners
+//            fireConfigurationChange(
+//                new ConfigurationChangeEvent(
+//                    ConfigurationChangeEvent.NEW,
+//                    thePsc,
+//                    config,
+//                    new Object[] {theProcess,
+//                                  theHost,
+//                                  config}));
+//            if (result != null) {
+//                Iterator itr = result.iterator();
+//                while (itr.hasNext()) {
+//                    DeployedComponent service = (DeployedComponent)itr.next();
+//                    fireConfigurationChange(
+//                        new ConfigurationChangeEvent(
+//                            ConfigurationChangeEvent.NEW,
+//                            service,
+//                            config,
+//                            new Object[] {thePsc, theProcess, theHost, config}));
+//                }
+//            }
+//
+//            // update cache
+//           } catch (Exception theException) {
+//            // rollback
+//            if (editor != null) {
+//                editor.getDestination().popActions();
+//            }
+//            throw new ExternalException(
+//                formatErrorMsg("deployPsc", //$NON-NLS-1$
+//                               "PSC=" + thePsc + //$NON-NLS-1$
+//                                   ", process=" + theProcess + //$NON-NLS-1$
+//                                   ", host=" + theHost + //$NON-NLS-1$
+//                                   ", config=" + theConfigId, //$NON-NLS-1$
+//                               theException),
+//                theException);
+//        }
+//    }
 
     private void fireConfigurationChange(ConfigurationChangeEvent theEvent) {
         LogManager.logDetail(LogContexts.PSCDEPLOY,
@@ -961,7 +944,7 @@ public final class ConfigurationManager
     }
     
     public ConfigurationModelContainer getConfigModel(ConfigurationID theId) {
-        return (ConfigurationModelContainer) configs.get(theId); 
+        return  config; 
     }
 
     public Collection getConfigObjects(ConfigurationID theConfigId)
@@ -980,103 +963,101 @@ public final class ConfigurationManager
         }
     }
 
-    public Collection getDeployedPscs(VMComponentDefn theProcess)
-        throws ExternalException {
-
-        ComponentDefnID procId = (ComponentDefnID)theProcess.getID();
-        Configuration config = getConfig(theProcess.getConfigurationID());
-
-        Collection result = (Collection)deployedPscs.get(procId);
-        if (result == null) {
-            // deployed pscs have not been requested   
- 
-            if (config == null) {
-                LogManager.logCritical(
-                    LogContexts.PSCDEPLOY,
-                    "ConfigurationManager.getDeployedPscs:" + //$NON-NLS-1$
-                        "Configuration for process " + theProcess + //$NON-NLS-1$
-                        " not found."); //$NON-NLS-1$
-            } else {
-    
-//                    Collection deployedComps =
-//                        config.getDeployedComponents(procId);
-//                    if ((deployedComps != null) && (!deployedComps.isEmpty())) {
-                        try {
-//                            Iterator itr = deployedComps.iterator();
-//                            DeployedComponent dp = (DeployedComponent)itr.next();
-                            // per Scott, process will only have one
-                            // deployed component
-                            result = config.getPSCsForVM(theProcess);
-                            
-                            
-                            Collection ids = new ArrayList(result.size());
-                            for (Iterator it=result.iterator(); it.hasNext(); ) {
-                                ProductServiceConfig psc=(ProductServiceConfig)it.next();
-                                ids.add(psc.getID());
-                            }
-                            deployedPscs.put(theProcess.getID(), ids);
-                                                        
-                            // cache the pscs
-                            // fire the events
-                            if (result != null) {
-                                Host host = getHost(theProcess);
-                                Iterator pscItr = result.iterator();
-                                while (pscItr.hasNext()) {
-                                    ProductServiceConfig psc =
-                                        (ProductServiceConfig)pscItr.next();
-                                                                  
-                                        fireConfigurationChange(
-                                            new ConfigurationChangeEvent(
-                                                ConfigurationChangeEvent.NEW,
-                                                 psc,
-                                                 config,
-                                                 new Object[] {theProcess,
-                                                               host,
-                                                               config}));
-        
-                                        // cache the deployed services
-                                        getDeployedServices(psc, theProcess);
-
-                                }
-                               
-                            }
-                        } catch (Exception theException) {
-                            throw new ExternalException(
-                                formatErrorMsg("getDeployedPscs", //$NON-NLS-1$
-                                               "process=" + theProcess, //$NON-NLS-1$
-                                               theException),
-                                theException);
-                        }
-                //    }
-            }
-        } else {
-            Collection r = new ArrayList(result.size());
-            for (Iterator it=result.iterator(); it.hasNext();) {
-                ProductServiceConfigID pscID = (ProductServiceConfigID) it.next();
-                r.add( config.getPSC(pscID) );
-                
-            }
-            result = r;
-        }
- 
-        return result;
-    }
+//    public Collection getDeployedPscs(VMComponentDefn theProcess)
+//        throws ExternalException {
+//
+//        ComponentDefnID procId = (ComponentDefnID)theProcess.getID();
+//        Configuration config = getConfig(theProcess.getConfigurationID());
+//
+//        Collection result = (Collection)deployedPscs.get(procId);
+//        if (result == null) {
+//            // deployed pscs have not been requested   
+// 
+//            if (config == null) {
+//                LogManager.logCritical(
+//                    LogContexts.PSCDEPLOY,
+//                    "ConfigurationManager.getDeployedPscs:" + //$NON-NLS-1$
+//                        "Configuration for process " + theProcess + //$NON-NLS-1$
+//                        " not found."); //$NON-NLS-1$
+//            } else {
+//    
+////                    Collection deployedComps =
+////                        config.getDeployedComponents(procId);
+////                    if ((deployedComps != null) && (!deployedComps.isEmpty())) {
+//                        try {
+////                            Iterator itr = deployedComps.iterator();
+////                            DeployedComponent dp = (DeployedComponent)itr.next();
+//                            // per Scott, process will only have one
+//                            // deployed component
+//                            result = config.getPSCsForVM(theProcess);
+//                            
+//                            
+//                            Collection ids = new ArrayList(result.size());
+//                            for (Iterator it=result.iterator(); it.hasNext(); ) {
+//                                ProductServiceConfig psc=(ProductServiceConfig)it.next();
+//                                ids.add(psc.getID());
+//                            }
+//                            deployedPscs.put(theProcess.getID(), ids);
+//                                                        
+//                            // cache the pscs
+//                            // fire the events
+//                            if (result != null) {
+//                                Host host = getHost(theProcess);
+//                                Iterator pscItr = result.iterator();
+//                                while (pscItr.hasNext()) {
+//                                    ProductServiceConfig psc =
+//                                        (ProductServiceConfig)pscItr.next();
+//                                                                  
+//                                        fireConfigurationChange(
+//                                            new ConfigurationChangeEvent(
+//                                                ConfigurationChangeEvent.NEW,
+//                                                 psc,
+//                                                 config,
+//                                                 new Object[] {theProcess,
+//                                                               host,
+//                                                               config}));
+//        
+//                                        // cache the deployed services
+//                                        getDeployedServices(psc, theProcess);
+//
+//                                }
+//                               
+//                            }
+//                        } catch (Exception theException) {
+//                            throw new ExternalException(
+//                                formatErrorMsg("getDeployedPscs", //$NON-NLS-1$
+//                                               "process=" + theProcess, //$NON-NLS-1$
+//                                               theException),
+//                                theException);
+//                        }
+//                //    }
+//            }
+//        } else {
+//            Collection r = new ArrayList(result.size());
+//            for (Iterator it=result.iterator(); it.hasNext();) {
+//                ProductServiceConfigID pscID = (ProductServiceConfigID) it.next();
+//                r.add( config.getPSC(pscID) );
+//                
+//            }
+//            result = r;
+//        }
+// 
+//        return result;
+//    }
 
     public Collection getDeployedServices(
-        ProductServiceConfig thePsc,
         VMComponentDefn theProcess)
         throws ExternalException {
 
-        ProductServiceConfigID pscId = (ProductServiceConfigID)thePsc.getID();
-        Configuration config = getConfig(thePsc.getConfigurationID());
+         Configuration config = getConfig(theProcess.getConfigurationID());
         
-        HashMap map = (HashMap)deployedServices.get(pscId);
-        if (map == null) {
-            map = new HashMap();
-        }
+//        HashMap map = (HashMap)deployedServices.get(pscId);
+//        if (map == null) {
+//            map = new HashMap();
+//        }
         Collection ids = null;
-        Collection result = (Collection)map.get(theProcess.getID());
-        if ((result == null) && !map.containsKey(theProcess.getID())) {
+        Collection result = null;
+//        if ((result == null) && !map.containsKey(theProcess.getID())) {
 
             // get the process deployed component
             // will only have one
@@ -1090,7 +1071,7 @@ public final class ConfigurationManager
 //                    DeployedComponent dp = (DeployedComponent)itr.next();
                     
                     // get the services that are deployed to the VM and PSC
-                    Collection serviceComps = config.getDeployedServices(theProcess, thePsc);
+                    Collection serviceComps = config.getDeployedServicesForVM(theProcess);
                     if (serviceComps != null) {
                         result = new ArrayList(serviceComps.size());
                         ids = new ArrayList(serviceComps.size());
@@ -1105,25 +1086,23 @@ public final class ConfigurationManager
                                         ConfigurationChangeEvent.NEW,
                                         service,
                                         config,
-                                        new Object[] {thePsc,
-                                                      theProcess,
+                                        new Object[] {theProcess,
                                                       getHost(theProcess),
                                                       config}));
                         }
 
                     }
                     
-                    if (map == null) {
-                        map = new HashMap();
-                    }
-                    map.put(theProcess.getID(), ids);
-                    deployedServices.put(pscId, map);                    
+//                    if (map == null) {
+//                        map = new HashMap();
+//                    }
+//                    map.put(theProcess.getID(), ids);
+//                    deployedServices.put(pscId, map);                    
                   } catch (Exception theException) {
                     throw new ExternalException(
                         formatErrorMsg("getDeployedServices", //$NON-NLS-1$
-                                       "PSC=" + thePsc + //$NON-NLS-1$
-                                           ", process=" + theProcess + //$NON-NLS-1$
-                                           ", config=" + config, //$NON-NLS-1$
+                                       "Process=" + theProcess + //$NON-NLS-1$
+                                            ", config=" + config, //$NON-NLS-1$
                                        theException),
                         theException);
                 }
@@ -1131,16 +1110,16 @@ public final class ConfigurationManager
 //               map.put(theProcess.getID(), null);
 //               deployedServices.put(pscId, map);
 //           }
-        } else {
-            Collection r = new ArrayList(result.size());
-            for (Iterator it=result.iterator(); it.hasNext();) {
-                DeployedComponentID dcID = (DeployedComponentID) it.next();
-                r.add( config.getDeployedComponent(dcID) );
-                
-            }
-            result = r;
-            
-        }
+//        } else {
+//            Collection r = new ArrayList(result.size());
+//            for (Iterator it=result.iterator(); it.hasNext();) {
+//                DeployedComponentID dcID = (DeployedComponentID) it.next();
+//                r.add( config.getDeployedComponent(dcID) );
+//                
+//            }
+//            result = r;
+//            
+//        }
         return result;
     }
 
@@ -1211,27 +1190,29 @@ public final class ConfigurationManager
                     LogContexts.PSCDEPLOY,
                     "ConfigurationManager.getHostProcesses:" + //$NON-NLS-1$
                         "Configuration " + config + " not found."); //$NON-NLS-1$ //$NON-NLS-2$
-            } else {
+                result = Collections.EMPTY_LIST;
                 
-
-                HashMap map = (HashMap)hostDeployments.get(theHost.getID());
-                if (map == null) {
-                    // host deployed processes has not be requested
-                    map = new HashMap();
-                    hostDeployments.put(theHost.getID(), map);
-                }
-                if (map.containsKey(theConfigId)) {
-                    // is cached, but collection can be null if
-                    // no deployed processes
-                    ids = (Collection)map.get(theConfigId);
-
-                    result = new ArrayList(ids.size());
-                    for (Iterator it=ids.iterator(); it.hasNext();) {
-                        VMComponentDefnID vmID = (VMComponentDefnID) it.next();
-                        result.add( config.getVMComponentDefn(vmID));               
-                    }
-                    
-                } else {
+            } 
+                
+//
+//                HashMap map = (HashMap)hostDeployments.get(theHost.getID());
+//                if (map == null) {
+//                    // host deployed processes has not be requested
+//                    map = new HashMap();
+//                    hostDeployments.put(theHost.getID(), map);
+//                }
+//                if (map.containsKey(theConfigId)) {
+//                    // is cached, but collection can be null if
+//                    // no deployed processes
+//                    ids = (Collection)map.get(theConfigId);
+//
+//                    result = new ArrayList(ids.size());
+//                    for (Iterator it=ids.iterator(); it.hasNext();) {
+//                        VMComponentDefnID vmID = (VMComponentDefnID) it.next();
+//                        result.add( config.getVMComponentDefn(vmID));               
+//                    }
+//                    
+//                } else {
                     // not been cached                
                 
                 // see if it already cached
@@ -1240,7 +1221,7 @@ public final class ConfigurationManager
                     if (hostProcesses == null) {
                         // host has no deployed processes
                         // cache it
-                        map.put(theConfigId, null);
+ //                       map.put(theConfigId, null);
                         result = Collections.EMPTY_LIST;
                     } else {
                         result = new ArrayList(hostProcesses.size());
@@ -1267,13 +1248,13 @@ public final class ConfigurationManager
                                                           config}));
     
                                     // call this to cache the pscs
-                                    getDeployedPscs(process);
+ //                                   getDeployedPscs(process);
                             } // end of while
-                            map.put(theConfigId, ids);
+ //                           map.put(theConfigId, ids);
                         } // end if itr of host processes
                     } // end of hostprocesses = null
-                } // end of map not containing configid
-            }  // end of where config = null
+ //               } // end of map not containing configid
+ //           }  // end of where config = null
             return result;
         } catch (Exception theException) {
             throw new ExternalException(
@@ -1284,40 +1265,40 @@ public final class ConfigurationManager
         }
     }
 
-    public ProductType getProduct(ProductTypeID theId) {
-        return this.getConfigModel(Configuration.NEXT_STARTUP_ID).getProductType(theId.getFullName());
+ //   private ProductType getProduct(ProductTypeID theId) {
+ ////   	return BasicProductType.PRODUCT_TYPE;
+//        return this.getConfigModel(Configuration.NEXT_STARTUP_ID).getProductType(theId.getFullName());
 //        return (ProductType)products.get(theId);
-    }
+ //   }
 
-    public ProductType getProduct(ProductServiceConfig thePsc) {
-        ProductTypeID prodId = (ProductTypeID) thePsc.getComponentTypeID();
-        return getProduct(prodId);
-    }
+//    public ProductType getProduct(ProductServiceConfig thePsc) {
+//        ProductTypeID prodId = (ProductTypeID) thePsc.getComponentTypeID();
+//        return getProduct(prodId);
+//    }
 
-    public Map getAllProductPscs(ConfigurationID theConfigId)
-        throws ExternalException {
-        HashMap map = new HashMap();
-        Collection prods = getProducts();
-        if (prods != null) {
-            Configuration config = getConfig(theConfigId);
+//    public Map getAllProductPscs(ConfigurationID theConfigId)
+//        throws ExternalException {
+//        HashMap map = new HashMap();
+//
+//            Configuration config = getConfig(theConfigId);
+//
+//            ArrayList pscs = new ArrayList();
+//            ProductType prod = BasicProductType.PRODUCT_TYPE;
+//            Collection temp = getPscDefinitions(prod, config);
+//            if (temp != null) {
+//                pscs.addAll(temp);
+//            }
+//            map.put(prod, pscs);
+//
+//
+//        return map;
+//    }
 
-            Iterator prodItr = prods.iterator();
-            while (prodItr.hasNext()) {
-                ArrayList pscs = new ArrayList();
-                ProductType prod = (ProductType)prodItr.next();
-                Collection temp = getPscDefinitions(prod, config);
-                if (temp != null) {
-                    pscs.addAll(temp);
-                }
-                map.put(prod, pscs);
-            }
-        }
-        return map;
-    }
-
-    public Collection getProducts() {
-        return this.getConfigModel(Configuration.NEXT_STARTUP_ID).getProductTypes();
-    }
+//    public Collection getProducts() {
+//    	Collection products = new ArrayList(1);
+//    	products.add(BasicProductType.PRODUCT_TYPE);
+//        return products;
+//    }
 
     public ConfigurationPropertiedObjectEditor getPropertiedObjectEditor()
         throws ExternalException {
@@ -1389,130 +1370,134 @@ public final class ConfigurationManager
     }
     
     
+//
+//    private Collection getPscs(
+//        ServiceComponentDefn theService,
+//        Configuration theConfig) {
+//
+//          Iterator itr = serviceDefnMap.keySet().iterator();
+//          ProductServiceConfigID pscId = null;
+//        
+//          Collection result = new ArrayList(20);
+//          while (itr.hasNext()) {
+//              Object key = itr.next();
+//              Collection serviceIDs = (Collection)serviceDefnMap.get(key);
+//              if (serviceIDs.contains(theService.getID())) {
+//                  pscId = (ProductServiceConfigID)key;
+//                  ProductServiceConfig psConfig = theConfig.getPSC(pscId);
+//                  if(psConfig!=null) {
+//                	  result.add(psConfig);
+//                  }
+//              }
+//        
+//          }
+//          return result;
+//        
+//     }
 
-    private Collection getPscs(
-        ServiceComponentDefn theService,
-        Configuration theConfig) {
-
-          Iterator itr = serviceDefnMap.keySet().iterator();
-          ProductServiceConfigID pscId = null;
-        
-          Collection result = new ArrayList(20);
-          while (itr.hasNext()) {
-              Object key = itr.next();
-              Collection serviceIDs = (Collection)serviceDefnMap.get(key);
-              if (serviceIDs.contains(theService.getID())) {
-                  pscId = (ProductServiceConfigID)key;
-                  ProductServiceConfig psConfig = theConfig.getPSC(pscId);
-                  if(psConfig!=null) {
-                	  result.add(psConfig);
-                  }
-              }
-        
-          }
-          return result;
-        
-     }
-
-        public Collection getPscDefinitions(
-            ProductType theProduct,
-            Configuration theConfiguration)
-            throws ExternalException {
-
-            Collection result = null;
-            Collection ids = null;
-            ConfigurationID configId = (ConfigurationID)theConfiguration.getID();
-            ProductTypeID prodId = (ProductTypeID)theProduct.getID();
-            HashMap map = (HashMap)prodPscDefs.get(prodId);
-            if ((map == null) && !prodPscDefs.containsKey(prodId)) {
-                // product pscs has not be requested
-                map = new HashMap();
-                prodPscDefs.put(prodId, map);
-            }
-            if (map.containsKey(configId)) {
-                // is cached, but collection can be null if no psc defs
-                ids = (Collection)map.get(configId);
-                result = new ArrayList(ids.size());
-                for (Iterator it=ids.iterator(); it.hasNext();) {
-                    ProductServiceConfigID pscID = (ProductServiceConfigID) it.next();
-                    result.add( theConfiguration.getPSC(pscID) );
-                }
-                    
-                 
-                
-            } else {
-                // not been cached
-                Collection pscIds = theConfiguration.getComponentDefnIDs(prodId);
-                if (pscIds != null) {
-                    result = new ArrayList(pscIds.size());
-                    ids = new ArrayList(pscIds.size());
-                    Iterator pscIdItr = pscIds.iterator();
-                    while (pscIdItr.hasNext()) {
-                        ProductServiceConfigID pscId =
-                            (ProductServiceConfigID)pscIdItr.next();
-                        ProductServiceConfig psc =
-                            theConfiguration.getPSC(pscId);
-                            //getComponentDefn(pscId);
-                        result.add(psc);
-                        ids.add(pscId);
-
-                        fireConfigurationChange(
-                            new ConfigurationChangeEvent(
-                                ConfigurationChangeEvent.NEW,
-                                psc,
-                                theConfiguration,
-                                new Object[] {theProduct, theConfiguration}));
-                        //fireModelChangedEvent(MODEL_CHANGED);
-                        getServiceDefinitions(psc, theConfiguration);
-
-                    }
-                    map.put(configId, ids);
-                }
-
-            }
-            return result;
-        }
-        
+//        public Collection getPscDefinitions(
+//            ProductType theProduct,
+//            Configuration theConfiguration)
+//            throws ExternalException {
+//
+//            Collection result = null;
+//            Collection ids = null;
+//            ConfigurationID configId = (ConfigurationID)theConfiguration.getID();
+//            ProductTypeID prodId = (ProductTypeID)theProduct.getID();
+//            HashMap map = (HashMap)prodPscDefs.get(prodId);
+//            if ((map == null) && !prodPscDefs.containsKey(prodId)) {
+//                // product pscs has not be requested
+//                map = new HashMap();
+//                prodPscDefs.put(prodId, map);
+//            }
+//            if (map.containsKey(configId)) {
+//                // is cached, but collection can be null if no psc defs
+//                ids = (Collection)map.get(configId);
+//                result = new ArrayList(ids.size());
+//                for (Iterator it=ids.iterator(); it.hasNext();) {
+//                    ProductServiceConfigID pscID = (ProductServiceConfigID) it.next();
+//                    result.add( theConfiguration.getPSC(pscID) );
+//                }
+//                    
+//                 
+//                
+//            } else {
+//                // not been cached
+//                Collection pscIds = theConfiguration.getComponentDefnIDs(prodId);
+//                if (pscIds != null) {
+//                    result = new ArrayList(pscIds.size());
+//                    ids = new ArrayList(pscIds.size());
+//                    Iterator pscIdItr = pscIds.iterator();
+//                    while (pscIdItr.hasNext()) {
+//                        ProductServiceConfigID pscId =
+//                            (ProductServiceConfigID)pscIdItr.next();
+//                        ProductServiceConfig psc =
+//                            theConfiguration.getPSC(pscId);
+//                            //getComponentDefn(pscId);
+//                        result.add(psc);
+//                        ids.add(pscId);
+//
+//                        fireConfigurationChange(
+//                            new ConfigurationChangeEvent(
+//                                ConfigurationChangeEvent.NEW,
+//                                psc,
+//                                theConfiguration,
+//                                new Object[] {theProduct, theConfiguration}));
+//                        //fireModelChangedEvent(MODEL_CHANGED);
+//                        getServiceDefinitions(psc, theConfiguration);
+//
+//                    }
+//                    map.put(configId, ids);
+//                }
+//
+//            }
+//            return result;
+//        }
+//        
    public Collection getServiceDefinitions(
-        ProductServiceConfig thePsc,
+        VMComponentDefn theVM,
         Configuration theConfiguration)
         throws ExternalException {
 
 
-        Object product = getProduct(thePsc);
-         Collection services = null;
-        ProductServiceConfigID pscId = (ProductServiceConfigID)thePsc.getID();
+        Collection services = null;
+        VMComponentDefnID vmId = (VMComponentDefnID)theVM.getID();
         
         Collection svcIDs = null;
-        if (serviceDefnMap.containsKey(theConfiguration.getID())) {
-            // is cached, but collection can be null if no psc defs
-            svcIDs = (Collection)serviceDefnMap.get(theConfiguration.getID());
-            services = new ArrayList(svcIDs.size());
-            for (Iterator it=svcIDs.iterator(); it.hasNext();) {
-                ServiceComponentDefnID id =
-                    (ServiceComponentDefnID)it.next();
-                ServiceComponentDefn service =
-                    (ServiceComponentDefn)theConfiguration.getComponentDefn(id);
-                
-                services.add( service );
-            }
-        } else {
+        
+ //       Collection svcdefns = theConfiguration.getDeployedServicesForVM(theVM);
+        
+        
+//        if (serviceDefnMap.containsKey(theConfiguration.getID())) {
+//            // is cached, but collection can be null if no psc defs
+//            svcIDs = (Collection)serviceDefnMap.get(theConfiguration.getID());
+//            services = new ArrayList(svcIDs.size());
+//            for (Iterator it=svcIDs.iterator(); it.hasNext();) {
+//                ServiceComponentDefnID id =
+//                    (ServiceComponentDefnID)it.next();
+//                ServiceComponentDefn service =
+//                    (ServiceComponentDefn)theConfiguration.getComponentDefn(id);
+//                
+//                services.add( service );
+//            }
+//        } else {
         
 //            svcIDs = (Collection)serviceDefs.get(pscId);
               
             // service defs have not been cached
-            Collection sdfnIds = thePsc.getServiceComponentDefnIDs();
-            if (sdfnIds != null) {
+        	Host host = theConfiguration.getHost(theVM.getHostID().getName());
+            Collection svcdfns = theConfiguration.getDeployedServicesForVM(theVM);
+            if (svcdfns != null) {
 
-                services = new ArrayList(sdfnIds.size());
-                svcIDs = new ArrayList(sdfnIds.size());
-                Iterator servIdItr = sdfnIds.iterator();
+                services = new ArrayList(svcdfns.size());
+                svcIDs = new ArrayList(svcdfns.size());
+                Iterator servIdItr = svcdfns.iterator();
                 while (servIdItr.hasNext()) {
                     
-                    ServiceComponentDefnID id =
-                        (ServiceComponentDefnID)servIdItr.next();
                     ServiceComponentDefn service =
-                        (ServiceComponentDefn)theConfiguration.getComponentDefn(id);
+                        (ServiceComponentDefn)servIdItr.next();
+                    ServiceComponentDefnID id = (ServiceComponentDefnID) service.getID();
+ 
                     services.add(service);
                     svcIDs.add(id);
                     
@@ -1521,8 +1506,8 @@ public final class ConfigurationManager
                                 ConfigurationChangeEvent.NEW,
                                 service,
                                 theConfiguration,
-                                new Object[] {thePsc,
-                                              product,
+                                new Object[] {theVM,
+                                              host,
                                               theConfiguration}));
 
                 }
@@ -1530,9 +1515,9 @@ public final class ConfigurationManager
             }
             
 //            serviceDefs.put(pscId, svcIDs);
-            serviceDefnMap.put(pscId, svcIDs);
+ //           serviceDefnMap.put(pscId, svcIDs);
             
-        } 
+ //       } 
         
 //        else {
 //           
@@ -1574,34 +1559,14 @@ public final class ConfigurationManager
         Host theHost,
         ConfigurationID theConfigId) {
 
-        ConfigurationModelContainer model = getConfigModel(theConfigId);
-            if (model.getConfiguration().getHost(theHost.getFullName()) != null) {
-                return true;
-            }
+    	if (this.getHost(theHost.getFullName(), theConfigId) != null) {
+    		return true;
+    	}
+
         return false;
         
     }
 
-    /**
-     * Indicates if the configuration can be edited.
-     * @param theId the configuration identifier whose mode is being requested
-     * @return <code>true</code> if configuration can be edited;
-     * <code>false</code> otherwise.
-     */
-    public boolean isEditable(ConfigurationID theId) {
-        return isNextStartUpConfig(theId);
-    }
-
-    /**
-     * Indicates if the given parameter is the identifier of the
-     * next startup configuration.
-     * @param theId the identifier being compared
-     * @return <code>true</code> if equal to the next startup configuration;
-     * <code>false</code> otherwise.
-     */
-    public boolean isNextStartUpConfig(ConfigurationID theId) {
-        return nextStartUpId.equals(theId);
-    }
 
     public boolean isRefreshNeeded() {
         return refreshNeeded;
@@ -1638,10 +1603,7 @@ public final class ConfigurationManager
             Host host = (Host)modify(theHost, theProperties);
             // modify host in all configurations
             
-            Iterator itr = configs.values().iterator();
-            while (itr.hasNext()) {
-                ConfigurationModelContainer config = (ConfigurationModelContainer)itr.next();
-                if (isDeployed(theHost, config.getConfigurationID())) {
+                 if (isDeployed(theHost, config.getConfigurationID())) {
                     fireConfigurationChange(
                         new ConfigurationChangeEvent(
                             ConfigurationChangeEvent.MODIFIED,
@@ -1649,9 +1611,9 @@ public final class ConfigurationManager
                             config.getConfiguration(),
                             new Object[] {config.getConfiguration()}));
                 }
-            }
 
-                        return host;
+
+                return host;
         } catch (Exception theException) {
             throw new ExternalException(
                 formatErrorMsg("modifyHost", "host=" + theHost, theException), //$NON-NLS-1$ //$NON-NLS-2$
@@ -1704,31 +1666,31 @@ public final class ConfigurationManager
     
     
 
-    public ProductServiceConfig modifyPsc(
-        ProductServiceConfig thePscDef,
-        Properties theProperties)
-        throws ExternalException {
-
-        try {
-            ProductServiceConfig pscDef =
-                (ProductServiceConfig)modify(thePscDef, theProperties);
-            Configuration config = getConfig(pscDef.getConfigurationID());
-            ProductType product = getProduct(thePscDef);
-
-            // update local cache
-            fireConfigurationChange(
-                new ConfigurationChangeEvent(
-                    ConfigurationChangeEvent.MODIFIED,
-                    pscDef,
-                    config,
-                    new Object[] {product, config}));
-            return pscDef;
-        } catch (Exception theException) {
-            throw new ExternalException(
-                formatErrorMsg("modifyPsc", "PSC=" + thePscDef, theException), //$NON-NLS-1$ //$NON-NLS-2$
-                theException);
-        }
-    }
+//    public ProductServiceConfig modifyPsc(
+//        ProductServiceConfig thePscDef,
+//        Properties theProperties)
+//        throws ExternalException {
+//
+//        try {
+//            ProductServiceConfig pscDef =
+//                (ProductServiceConfig)modify(thePscDef, theProperties);
+//            Configuration config = getConfig(pscDef.getConfigurationID());
+//            ProductType product = BasicProductType.PRODUCT_TYPE;
+//
+//            // update local cache
+//            fireConfigurationChange(
+//                new ConfigurationChangeEvent(
+//                    ConfigurationChangeEvent.MODIFIED,
+//                    pscDef,
+//                    config,
+//                    new Object[] {product, config}));
+//            return pscDef;
+//        } catch (Exception theException) {
+//            throw new ExternalException(
+//                formatErrorMsg("modifyPsc", "PSC=" + thePscDef, theException), //$NON-NLS-1$ //$NON-NLS-2$
+//                theException);
+//        }
+//    }
 
     public ServiceComponentDefn modifyService(
         ServiceComponentDefn theService,
@@ -1739,20 +1701,16 @@ public final class ConfigurationManager
             ServiceComponentDefn service =
                 (ServiceComponentDefn)modify(theService, theProperties);
             Configuration config = getConfig(service.getConfigurationID());
-                        
-            Collection pscs = getPscs(service, config);            
             
-            for (Iterator it=pscs.iterator(); it.hasNext(); ) {
-                ProductServiceConfig psc = (ProductServiceConfig) it.next();
-                ProductType product = getProduct(psc);
-                
+             
+                 
                 fireConfigurationChange(
                     new ConfigurationChangeEvent(
                         ConfigurationChangeEvent.MODIFIED,
                         service,
                         config,
-                        new Object[] {psc, product, config}));
-            }
+                        new Object[] {config}));
+
             return service;
         } catch (Exception theException) {
             throw new ExternalException(
@@ -1762,34 +1720,13 @@ public final class ConfigurationManager
                 theException);
         }
     }
-
-    private void addConfig(ConfigurationModelContainer theConfig) {
-        configs.put(theConfig.getConfigurationID(), theConfig);
-        
-        fireConfigurationChange(
-            new ConfigurationChangeEvent(
-                ConfigurationChangeEvent.NEW,
-                theConfig.getConfiguration(),
-        theConfig.getConfiguration(),
-                null));
-        Iterator itr = getProducts().iterator();
-        while (itr.hasNext()) {
-            ProductType product = (ProductType)itr.next();
-            fireConfigurationChange(
-                new ConfigurationChangeEvent(
-                    ConfigurationChangeEvent.NEW,
-                    product,
-                    theConfig.getConfiguration(),
-                    new Object[] {theConfig.getConfiguration()}));
-        }
-    }
     
     public void refresh(){
         super.refresh();
         this.setRefreshNeeded();
         try {
             refreshImpl();
-//            refreshConfigs();
+            refreshConfigs();
         } catch (ExternalException e) {
             LogManager.logCritical(
                 LogContexts.CONFIG,
@@ -1806,8 +1743,7 @@ public final class ConfigurationManager
 				new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_START,
 			this));         	
 
-        configs.clear();
-
+ 
         try {
             ConfigurationModelContainer nextStartUp = getAPI().getConfigurationModel(Configuration.NEXT_STARTUP);
             if (nextStartUp == null) {
@@ -1816,7 +1752,7 @@ public final class ConfigurationManager
                     "ConfigurationManager.refreshConfigs:" + //$NON-NLS-1$
                         "Next Startup Configuration is null."); //$NON-NLS-1$
             } else {
-                addConfig(nextStartUp);
+                config = nextStartUp;
             }
 
 			fireConfigurationChange(
@@ -1831,55 +1767,6 @@ public final class ConfigurationManager
         }
     }
 
-    private void refreshDeployedHosts()
-        throws ExternalException {
-
-            hostDeployments.clear();
-            deployedPscs.clear();
-            deployedServices.clear();
-
-        Iterator configItr = configs.values().iterator();
-        while (configItr.hasNext()) {
-            ConfigurationModelContainer config = (ConfigurationModelContainer)configItr.next();
-            Iterator itr = config.getHosts().iterator(); 
-            while (itr.hasNext()) {
-                Host host = (Host)itr.next();
-                getHostProcesses(host, config.getConfigurationID());
-            }
-        }
-    }
-
-
-
-    private void refreshHosts()
-        throws ExternalException {
-
-        try {
-            Collection hostCollection = getConfigModel(Configuration.NEXT_STARTUP_ID).getHosts();
-            if ((hostCollection == null) || (hostCollection.isEmpty()))  {
-                LogManager.logCritical(
-                    LogContexts.CONFIG,
-                    "ConfigurationManager.refreshHosts:" + //$NON-NLS-1$
-                      "No hosts found or is null."); //$NON-NLS-1$
-            } else {
-                Iterator itr = hostCollection.iterator();
-                while (itr.hasNext()) {
-                    Host host = (Host)itr.next();
-                    LogManager.logDetail(
-                        LogContexts.CONFIG,
-                        "ConfigurationManager.refreshHosts:" + //$NON-NLS-1$
-                            "Adding Host:" + host); //$NON-NLS-1$
-                    notifyHostChangeToConfigs(host, ConfigurationChangeEvent.NEW);
-
-                }
-            }
-        } catch (Exception theException) {
-            throw new ExternalException(
-                formatErrorMsg("refreshHosts", theException), //$NON-NLS-1$
-                theException);
-        }
-    }
-
     public void refreshImpl()
         throws ExternalException {
 
@@ -1887,31 +1774,14 @@ public final class ConfigurationManager
             new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_START,
                                          this));
         refreshConfigs();
-        refreshHosts();
-        refreshDeployedHosts();
-        refreshPscDefinitions();
-        fireConfigurationChange(
+//        refreshHosts();
+ //       refreshDeployedHosts();
+         fireConfigurationChange(
             new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_END,
                                          this));
         refreshNeeded = false;
     }
 
-    private void refreshPscDefinitions()
-        throws ExternalException {
-
-            prodPscDefs.clear();
-            serviceDefnMap.clear();
-
-        Iterator configItr = configs.values().iterator();
-        while (configItr.hasNext()) {
-            ConfigurationModelContainer config = (ConfigurationModelContainer)configItr.next();
-            Iterator prodItr = getProducts().iterator();
-            while (prodItr.hasNext()) {
-                ProductType product = (ProductType)prodItr.next();
-                getPscDefinitions(product, config.getConfiguration());
-            }
-        }
-    }
 
     /**
      * Removes the given listener from those being notified.
@@ -1924,8 +1794,7 @@ public final class ConfigurationManager
     }
 
     public void setEnabled(
-        ServiceComponentDefn theService,
-        ProductServiceConfig psc,
+        DeployedComponent thedeployed,
         boolean theEnableFlag,
         Configuration theConfig)
         throws ExternalException {
@@ -1933,33 +1802,10 @@ public final class ConfigurationManager
         ConfigurationObjectEditor editor = null;
         try {
             editor = getEditor();
-           Collection deletedServComps =
-                editor.setEnabled(theConfig, theService, psc, theEnableFlag, true);
+           thedeployed = editor.setEnabled(thedeployed, theEnableFlag);
                 
            getAPI().executeTransaction(editor.getDestination().popActions());
-           
-    // update cache
-            
-            
-            if (!deletedServComps.isEmpty()) {
-                Iterator itr = deletedServComps.iterator();
-                while (itr.hasNext()) {
-                    DeployedComponent dc = (DeployedComponent)itr.next();
-                    ProductServiceConfigID pscId = dc.getProductServiceConfigID();
-                    VMComponentDefnID vmId = dc.getVMComponentDefnID();
-                    Map map = (Map)deployedServices.get(pscId);
-                    Collection services = (Collection)map.get(vmId);
-                    if (theEnableFlag) {
-                        if (services == null) {
-                            services = new ArrayList();
-                        }
-                        services.add(dc.getID());
-                    } else {
-                        services.remove(dc.getID());
-                    }
-                }
-            }            
-            
+             
         } catch (Exception theException) {
             // rollback
             if (editor != null) {
@@ -1967,7 +1813,7 @@ public final class ConfigurationManager
             }
             throw new ExternalException(
                 formatErrorMsg("setEnabled", //$NON-NLS-1$
-                               "service=" + theService + //$NON-NLS-1$
+                               "service=" + thedeployed.getName() + //$NON-NLS-1$
                                    ", enable=" + theEnableFlag + //$NON-NLS-1$
                                    ", config=" + theConfig, //$NON-NLS-1$
                                theException),

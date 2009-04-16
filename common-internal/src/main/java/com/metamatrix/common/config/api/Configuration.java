@@ -173,14 +173,14 @@ public interface Configuration extends ComponentObject {
      *  @param pscID is the ProductServiceConfig for which the component belongs
      *  @return Collection of deployed components that belong to the ProductServiceConfig
      */
-    Collection getDeployedComponents(ComponentDefnID componentDefnID, ProductServiceConfigID pscID);
+//    Collection getDeployedComponents(ComponentDefnID componentDefnID, ProductServiceConfigID pscID);
     
     
     /**
      * Returns true if the PSC is deployed to any host.
      * @returns boolean true if the PSC is deployed
      */
-    boolean isPSCDeployed(ProductServiceConfigID pscID);
+ //   boolean isPSCDeployed(ProductServiceConfigID pscID);
 
     
     /**
@@ -252,7 +252,6 @@ public interface Configuration extends ComponentObject {
      * be returned for the <i>deployed</i> vm that they are deployed to,
      * <i>not</i> the vm component definition which may itself be deployed
      * many times.
-     * @deprecated As of v2.0, replaced by {@link #getDeployedServicesForVM(DeployedComponent)}
      */
     Collection getDeployedServicesForVM(VMComponentDefnID vmComponentID) ;
 
@@ -277,7 +276,7 @@ public interface Configuration extends ComponentObject {
      * @return Collection of DeployedComponent objects representing deployed
      * services
      */
-    Collection getDeployedServices(VMComponentDefn vm, ProductServiceConfig psc) ;
+ //   Collection getDeployedServices(VMComponentDefn vm, ProductServiceConfig psc) ;
 
     /**
      * Returns a Collection of ProductServiceConfig objects which have
@@ -291,7 +290,7 @@ public interface Configuration extends ComponentObject {
      * VMComponentDefn
      * @return Collection of ProductServiceConfig objects
      */
-    Collection getPSCsForVM(VMComponentDefn vm) ;
+//    Collection getPSCsForVM(VMComponentDefn vm) ;
 
 
 	/**
@@ -299,7 +298,7 @@ public interface Configuration extends ComponentObject {
 	 * @param pscID is the id for specific ProductServiceConfig
 	 * @return ProductServiceConfig to be returned
      */
-	ProductServiceConfig getPSC(ComponentDefnID pscID) ;
+//	ProductServiceConfig getPSC(ComponentDefnID pscID) ;
 
 
     /**
@@ -313,7 +312,7 @@ public interface Configuration extends ComponentObject {
      * @return Collection of type {@link ProductServiceConfigID PSCID} that contain the
      * ServiceComponentDefnID, or empty collection if none is found
      */
-    Collection getPSCsForServiceDefn(ServiceComponentDefnID serviceDefnID) ;
+ //   Collection getPSCsForServiceDefn(ServiceComponentDefnID serviceDefnID) ;
 
     /**
      *  Returns a <code>Collection</code> of component objects that are dependent on the
@@ -391,7 +390,7 @@ public interface Configuration extends ComponentObject {
      * all the ProductServiceConfig defined.
      * @return Collection of type <code>ProductServiceConfig</code>
      */
-    Collection getPSCs();
+//    Collection getPSCs();
   
      /**
      * Returns a <code>ServiceComponentDefn</code> 

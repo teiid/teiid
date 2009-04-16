@@ -39,9 +39,6 @@ import com.metamatrix.common.config.api.ConnectorBinding;
 */
 public interface ConfigurationImportExportUtility {
 
-
-    public static final int COMPONENT_TYPE_INDEX = 0;
-    public static final int SERVICE_COMPONENT_DEFN_INDEX = 1;
     
     /**
     * <p>This method will write to the passed in InputStream instance a 
@@ -96,7 +93,7 @@ public interface ConfigurationImportExportUtility {
     * that cannot be resolved to other configuration objects in the passed in 
     * Collection
     */
-    public void exportConfiguration(OutputStream stream, Collection configurationObjects, Properties props)throws IOException, ConfigObjectsNotResolvableException;
+    public void exportConfiguration(OutputStream stream, Collection<?> configurationObjects, Properties props)throws IOException, ConfigObjectsNotResolvableException;
     
     
     
@@ -131,7 +128,7 @@ public interface ConfigurationImportExportUtility {
     * the representation of the configuration element as it exists in the 
     * InputStream resource, usually some type of formatting problem.
     */
-    public Collection importConfigurationObjects(InputStream stream, ConfigurationObjectEditor editor, String newName)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException;
+    public Collection<?> importConfigurationObjects(InputStream stream, ConfigurationObjectEditor editor, String newName)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException;
 
     /**
     * <p>This method will be used to import a ComponentType Object from given a
@@ -171,7 +168,7 @@ public interface ConfigurationImportExportUtility {
      * the representation of the configuration element as it exists in the
      * DirectoryEntry resource, usually some type of formatting problem.
      */    
-    public Collection importComponentTypes(InputStream stream,
+    public Collection<?> importComponentTypes(InputStream stream,
                                            ConfigurationObjectEditor editor)
                                            throws IOException, InvalidConfigurationElementException;
     
@@ -271,30 +268,6 @@ public interface ConfigurationImportExportUtility {
     public void exportConnectorBindings(OutputStream stream, ConnectorBinding[] bindings, ComponentType[] types, Properties props) throws IOException, ConfigObjectsNotResolvableException ;
     
     /**
-    * <p>This method will be used to import a Connector ComponentType Object from given a
-    * InputStream .</p>
-    * 
-    * <p>This method also allows you to rename the imported ComponentType object
-    * possibly to avoid name conflicts with other objects already in the server.</p>
-    *
-    * <p>If the name parameter submitted is null, the name of the configuration
-    * object as it exists in the InputStream will be used.</p>
-    *
-    * @param editor the ConfigurationObjectEditor to use to create the Configuration
-    * objects in the InputStream resource.
-    * @param stream the input stream to read the configuration object
-    * representation from
-    * @return the configuration object that was represented as data in the 
-    * InputStream resource
-    * @param name the name for the ComponentType object to be created.
-    * @throws IOException if there is an error reading from the InputStream
-    * @throws InvalidConfigurationElementException if there is a problem with
-    * the representation of the configuration element as it exists in the 
-    * InputStream resource, usually some type of formatting problem.
-    */
-    public ComponentType importConnector(InputStream stream, ConfigurationObjectEditor editor, String newName)throws IOException, InvalidConfigurationElementException;
-   
-    /**
     * <p>This method will be used to import a group of Connector Bindings 
     * Objects given a ImputStream.  If the ImputStream resource does not contain enough
     * data to recombine a complete Connector, then a ConfigurationObjectsNotResolvableException
@@ -324,7 +297,7 @@ public interface ConfigurationImportExportUtility {
     * the representation of the configuration element as it exists in the 
     * InputStream resource, usually some type of formatting problem.
     */
-    public Collection importConnectorBindings(InputStream stream, ConfigurationObjectEditor editor)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException;
+    public Collection<ConnectorBinding> importConnectorBindings(InputStream stream, ConfigurationObjectEditor editor)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException;
 
 
     /**

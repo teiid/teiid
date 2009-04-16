@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -299,7 +300,10 @@ public final class CurrentConfiguration {
      * @see #ProductType
      */
     public Collection getProductTypes() throws ConfigurationException {
-        return getReader().getConfigurationModel().getProductTypes();
+    	Collection c = new ArrayList(1);
+    	return c;
+//    	c.add(BasicProductType.PRODUCT_TYPE);
+//        return  c;
     }
       
     /**

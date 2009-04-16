@@ -51,15 +51,14 @@ import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
+import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.InvalidArgumentException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.ComponentCryptoUtil;
@@ -838,7 +837,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      */
     public ConnectorBinding createConnectorBinding(String connectorBindingName,
                                                    String connectorType,
-                                                   String pscName,
+                                                   String vmName,
                                                    String principalName,
                                                    Properties properties) throws ConfigurationException {
 
@@ -860,20 +859,37 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             config = getNextStartupConfiguration();
 
             /* ServiceComponentDefn scd = */
-            editor.createServiceComponentDefn((ConfigurationID)config.getID(),
-                                              (ComponentTypeID)ctConnector.getID(),
-                                              connectorBindingName);
+//            editor.createServiceComponentDefn((ConfigurationID)config.getID(),
+//                                              (ComponentTypeID)ctConnector.getID(),
+//                                              connectorBindingName);
 
             binding = createConnectorBinding(ctConnector, editor, connectorBindingName);
             binding = (ConnectorBinding)editor.modifyProperties(binding, properties, ConfigurationObjectEditor.SET);
 
-            if (pscName != null && !pscName.equals("")) { //$NON-NLS-1$
-                ProductServiceConfig psc = this.getPSCByName(config, pscName);
-                ServiceComponentDefnID bindingID = (ServiceComponentDefnID)binding.getID();
-                editor.addServiceComponentDefn(psc, bindingID);
-
-                editor.deployServiceDefn(config, binding, (ProductServiceConfigID)psc.getID());
+ 
+            if (vmName != null) {
+            	if (vmName.equalsIgnoreCase("all")) {
+            		Collection<VMComponentDefn> vms = config.getVMComponentDefns();
+            		for (Iterator<VMComponentDefn> it=vms.iterator(); it.hasNext();) {
+            			 VMComponentDefn vm = (VMComponentDefn) it.next();
+            			 
+            			 DeployedComponent dc = this.deployeServiceDefnToVM( (VMComponentDefnID)vm.getID(), connectorBindingName, editor, principalName);
+            		}
+            		
+            	} else {
+            		// TODO:  the method from serveradminapi passes in "ALL" and its not currently
+            		// called from anywhere else
+            		
+            	}
+            	
             }
+//            if (pscName != null && !pscName.equals("")) { //$NON-NLS-1$
+//                ProductServiceConfig psc = this.getPSCByName(config, pscName);
+//                ServiceComponentDefnID bindingID = (ServiceComponentDefnID)binding.getID();
+//                editor.addServiceComponentDefn(psc, bindingID);
+//
+//                editor.deployServiceDefn(config, binding, (ProductServiceConfigID)psc.getID());
+//            }
 
             executeTransaction(editor.getDestination().popActions(), principalName);
 
@@ -909,15 +925,15 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         return null;
     }
 
-    private ProductServiceConfig getPSCByName(Configuration config,
-                                              String pscName) throws InvalidArgumentException {
-        ProductServiceConfig result = null;
-        if (config != null) {
-            ProductServiceConfigID pscID = new ProductServiceConfigID(((ConfigurationID)config.getID()), pscName);
-            result = config.getPSC(pscID);
-        }
-        return result;
-    }
+//    private ProductServiceConfig getPSCByName(Configuration config,
+//                                              String pscName) throws InvalidArgumentException {
+//        ProductServiceConfig result = null;
+//        if (config != null) {
+//            ProductServiceConfigID pscID = new ProductServiceConfigID(((ConfigurationID)config.getID()), pscName);
+//            result = config.getPSC(pscID);
+//        }
+//        return result;
+//    }
 
     private ConnectorBinding createConnectorBinding(ComponentType ctConnector,
                                                     ConfigurationObjectEditor coe,
@@ -983,7 +999,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      */
     public ConnectorBinding importConnectorBinding(InputStream inputStream,
                                                    String name,
-                                                   String pscName,
+                                                   String vmName,
                                                    String principalName) throws ConfigurationException{
         ConnectorBinding newBinding = null;
         ConfigurationObjectEditor editor = createEditor();
@@ -995,12 +1011,25 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             
             //deploy to the specified PSC
             Configuration config = getNextStartupConfiguration();
-            if (pscName != null && !pscName.equals("")) { //$NON-NLS-1$
-                ProductServiceConfig psc = this.getPSCByName(config, pscName);
-                ServiceComponentDefnID bindingID = (ServiceComponentDefnID) newBinding.getID();
-                editor.addServiceComponentDefn(psc, bindingID);
-
-                editor.deployServiceDefn(config, newBinding, (ProductServiceConfigID)psc.getID());
+            if (vmName != null && !vmName.equals("")) { //$NON-NLS-1$
+            	Collection<VMComponentDefn> vms = null;
+            	if (vmName.equalsIgnoreCase("all")) {
+            		vms = this.getCurrentConfiguration().getVMComponentDefns();
+            		
+            	} else {
+            		
+            	}
+            	
+            	if (vms != null) {
+            		ServiceComponentDefnID bindingID = (ServiceComponentDefnID) newBinding.getID();
+            		for (Iterator<VMComponentDefn> it=vms.iterator(); it.hasNext();) {
+            			VMComponentDefn vm = it.next();
+            			 editor.deployServiceDefn(config, newBinding, (VMComponentDefnID) vm.getID() );
+	
+            		}
+            	}
+                
+               
             }            
             
             executeTransaction(editor.getDestination().popActions(), principalName);
@@ -1087,39 +1116,32 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
     
     /**
-     * Deploys the ServiceComponentDefns indicated by the ProductServiceConfig,
+     * Deploys the ServiceComponentDefns 
      * contained by the Configuration, onto the specified Host and VM.
      * 
      * @param theHost host on which the services will be deployed
      * @param theProcess VM on which the services will be deployed
-     * @param pscName Name of the PSC
+     * @param serviceName Name of the ServiceComponentDefn
      * @param principalName User Name deploying the Services
      * 
-     * @return Collection of DeployedComponent objects, each representing
-     * one of the deployed ServiceComponentDefns 
+     * @return DeployedComponent of the ServiceComponentDefns that was deployed
      * 
      * @throws ConfigurationException
      * @throws ModificationException
-     * @since 4.3
+     * @since 6.1
      */
     
-    public Collection deployPSC(Host theHost,
-                                VMComponentDefn theProcess,
-                                String pscName,
-                                String principalName) throws ConfigurationException,
-                                                     ModificationException {
+    public DeployedComponent deployService(VMComponentDefnID theProcessID,
+            String serviceName,
+            String principalName) throws ConfigurationException,ModificationException {
 
-        Collection deployComponentList = null;
+        DeployedComponent deployComponent = null;
 
         ConfigurationObjectEditor editor = null;
         try {
             editor = createEditor();
-            Configuration config = getNextStartupConfiguration();
-            ProductServiceConfig thePSC = getPSCByName(config, pscName);
-            deployComponentList = editor.deployProductServiceConfig(config,
-                                                                    thePSC,
-                                                                    (HostID)theHost.getID(),
-                                                                    (VMComponentDefnID)theProcess.getID());
+            
+            deployComponent = deployeServiceDefnToVM(theProcessID, serviceName, editor, principalName);
             executeTransaction(editor.getDestination().popActions(), principalName);
         } catch (ConfigurationException theException) {
             // rollback
@@ -1128,11 +1150,22 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             }
             throw theException;
         }
-        return deployComponentList;
+        return deployComponent;
     }
     
+    private DeployedComponent deployeServiceDefnToVM(VMComponentDefnID theProcessID,
+            String serviceName,
+            ConfigurationObjectEditor editor,
+            String principalName) throws ConfigurationException,ModificationException {
     
-    
+        DeployedComponent deployComponent = null;
+
+            Configuration config = getNextStartupConfiguration();
+            ServiceComponentDefn scd = config.getServiceComponentDefn(serviceName);
+            deployComponent = editor.deployServiceDefn(config, scd,  theProcessID);
+ 
+        return deployComponent;
+    }
     /**
      * Check whether the encrypted properties for the specified ComponentDefns can be decrypted.
      * @param defns List<ComponentDefn>

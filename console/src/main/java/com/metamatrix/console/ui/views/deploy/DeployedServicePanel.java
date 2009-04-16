@@ -35,8 +35,6 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductType;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
@@ -76,9 +74,9 @@ public final class DeployedServicePanel
     private JPanel pnlPropsOuter;
     private TextFieldWidget txfHost;
     private TextFieldWidget txfProc;
-    private TextFieldWidget txfProd;
-    private TextFieldWidget txfPsc;
-    private TextFieldWidget txfService;
+ //   private TextFieldWidget txfProd;
+ //   private TextFieldWidget txfPsc;
+ //   private TextFieldWidget txfService;
 
     ///////////////////////////////////////////////////////////////////////////
     // FIELDS
@@ -136,59 +134,61 @@ public final class DeployedServicePanel
         gbc.anchor = GridBagConstraints.WEST;
         pnl.add(txfProc, gbc);
 
-        LabelWidget lblProd = DeployPkgUtils.createLabel("dvp.lblProduct"); //$NON-NLS-1$
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.insets = new Insets(3, 3, 10, 3);
-        gbc.anchor = GridBagConstraints.EAST;
-        pnl.add(lblProd, gbc);
+//        LabelWidget lblProd = DeployPkgUtils.createLabel("dvp.lblProduct"); //$NON-NLS-1$
+//        gbc.gridx = 0;
+//        gbc.gridy = 1;
+//        gbc.insets = new Insets(3, 3, 10, 3);
+//        gbc.anchor = GridBagConstraints.EAST;
+//        pnl.add(lblProd, gbc);
+//
+//        txfProd = DeployPkgUtils.createTextField("type.productname"); //$NON-NLS-1$
+//        txfProd.setEditable(false);
+//        gbc.gridx = 1;
+//        gbc.gridy = 1;
+//        gbc.anchor = GridBagConstraints.WEST;
+//        pnl.add(txfProd, gbc);
+//
+//        LabelWidget lblPsc = DeployPkgUtils.createLabel("dvp.lblPsc"); //$NON-NLS-1$
+//        gbc.gridx = 2;
+//        gbc.gridy = 1;
+//        gbc.anchor = GridBagConstraints.EAST;
+//        pnl.add(lblPsc, gbc);
+//
+//        txfPsc = DeployPkgUtils.createTextField("type.pscname"); //$NON-NLS-1$
+//        txfPsc.setEditable(false);
+//        gbc.gridx = 3;
+//        gbc.gridy = 1;
+//        gbc.anchor = GridBagConstraints.WEST;
+//        pnl.add(txfPsc, gbc);
 
-        txfProd = DeployPkgUtils.createTextField("type.productname"); //$NON-NLS-1$
-        txfProd.setEditable(false);
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        pnl.add(txfProd, gbc);
-
-        LabelWidget lblPsc = DeployPkgUtils.createLabel("dvp.lblPsc"); //$NON-NLS-1$
-        gbc.gridx = 2;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.EAST;
-        pnl.add(lblPsc, gbc);
-
-        txfPsc = DeployPkgUtils.createTextField("type.pscname"); //$NON-NLS-1$
-        txfPsc.setEditable(false);
-        gbc.gridx = 3;
-        gbc.gridy = 1;
-        gbc.anchor = GridBagConstraints.WEST;
-        pnl.add(txfPsc, gbc);
-
-        LabelWidget lblService = DeployPkgUtils.createLabel("dvp.lblService"); //$NON-NLS-1$
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.insets = new Insets(3, 3, 3, 3);
-        gbc.anchor = GridBagConstraints.EAST;
-        pnl.add(lblService, gbc);
-
-        txfService = DeployPkgUtils.createTextField("type.servicename"); //$NON-NLS-1$
-        txfService.setEditable(false);
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.anchor = GridBagConstraints.WEST;
-        pnl.add(txfService, gbc);
+//        LabelWidget lblService = DeployPkgUtils.createLabel("dvp.lblService"); //$NON-NLS-1$
+//        gbc.gridx = 0;
+//        gbc.gridy = 2;
+//        gbc.insets = new Insets(3, 3, 3, 3);
+//        gbc.anchor = GridBagConstraints.EAST;
+//        pnl.add(lblService, gbc);
+//
+//        txfService = DeployPkgUtils.createTextField("type.servicename"); //$NON-NLS-1$
+//        txfService.setEditable(false);
+//        gbc.gridx = 1;
+//        gbc.gridy = 2;
+//        gbc.anchor = GridBagConstraints.WEST;
+//        pnl.add(txfService, gbc);
 
         LabelWidget lblEssential = DeployPkgUtils.createLabel("dvp.lblEssential"); //$NON-NLS-1$
-        gbc.gridx = 2;
+        gbc.gridx = 1;
         gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.EAST;
         pnl.add(lblEssential, gbc);
 
         chkEssential = new CheckBox();
         chkEssential.setEnabled(false);
-        gbc.gridx = 3;
+        gbc.gridx = 2;
         gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
         pnl.add(chkEssential, gbc);
+        
+        
 
         pnlPropsOuter = new JPanel(new GridLayout(1, 1));
         TitledBorder tBorder = new TitledBorder(getString("dvp.pnlProps.title")); //$NON-NLS-1$
@@ -240,6 +240,8 @@ public final class DeployedServicePanel
                                         theDomainObject.getClass()}));
         }
 
+        DeployedComponent dc = (DeployedComponent) theDomainObject;
+
         ServiceComponentDefnID id =
             ((DeployedComponent)theDomainObject).getServiceComponentDefnID();
         Configuration config = 
@@ -250,30 +252,32 @@ public final class DeployedServicePanel
         super.setDomainObject(service, theAncestors);
         setTitleSuffix(service.toString());
         
-        txfService.setText(service.toString());
+ //       txfService.setText(service.toString());
         
-        Host host = (Host)theAncestors[2];
+        Host host = (Host)theAncestors[1];
         txfHost.setText(host.getName());
         
-        VMComponentDefn process = (VMComponentDefn)theAncestors[1];
+        VMComponentDefn process = (VMComponentDefn)theAncestors[0];
         txfProc.setText(process.getName());
         
-        ProductServiceConfig psc = (ProductServiceConfig)theAncestors[0];
-        txfPsc.setText(psc.getName());
+//        ProductServiceConfig psc = (ProductServiceConfig)theAncestors[0];
+//        txfPsc.setText(psc.getName());
+//        
+//        ProductType product = getConfigurationManager().getProduct(psc);
+//        txfProd.setText(product.getName());
         
-        ProductType product = getConfigurationManager().getProduct(psc);
-        txfProd.setText(product.getName());
-        
-        String essential = service.getProperty(ESSENTIAL_PROP);
-        if (essential == null) {
-            essential = ""; //$NON-NLS-1$
-        }
-        chkEssential.setSelected((new Boolean(essential)).booleanValue());
+//        String essential = service.getProperty(ESSENTIAL_PROP);
+//        if (essential == null) {
+//            essential = ""; //$NON-NLS-1$
+//        }
+        chkEssential.setSelected(service.isEssential());
         
         PropertiedObject propObj = getConfigurationManager()
-        .getPropertiedObjectForComponentObject(service);
+        .getPropertiedObjectForComponentObject(dc);
         pnlProps.setNameColumnHeaderWidth(0);
         pnlProps.setPropertiedObject(propObj);
+
+       
     }
 
 }

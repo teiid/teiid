@@ -41,6 +41,21 @@ public class BasicConnectorBinding extends BasicServiceComponentDefn implements 
     protected BasicConnectorBinding(BasicConnectorBinding component) {
         super(component);
     }
+    
+    /**
+     * Returns true if this component type supports XA transactions. 
+     * If this is <code>true</code>, then @link #isOfTypeConnector()
+     * will also be true.  However, @link #isOfTypeConnector() can be true
+     * and this can be <code>false</code>.
+     * @return boolean true if a connector type
+     */
+    public boolean isXASupported() {
+    	String xa = this.getProperty(ConnectorBindingType.Attributes.IS_XA);
+    	if (xa != null && xa.equalsIgnoreCase("true")) {
+    		return true;
+    	}
+    	return false;
+    }
 
     /**
      * Return a deep cloned instance of this object.  Subclasses must override

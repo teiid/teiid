@@ -26,33 +26,22 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.Properties;
 
-import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
-import com.metamatrix.common.config.api.ProductType;
-import com.metamatrix.common.config.api.ProductTypeID;
-import com.metamatrix.common.config.api.ServiceComponentDefn;
-import com.metamatrix.common.config.api.ServiceComponentDefnID;
+import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.BaseTest;
@@ -269,24 +258,24 @@ public class TestXMLConfigImportExport extends BaseTest {
             
             commit();
             
-            ProductServiceConfig psc = com.metamatrix.common.config.util.ConfigUtil.getFirstDeployedConnectorProductTypePSC(config);
+ //           ProductServiceConfig psc = com.metamatrix.common.config.util.ConfigUtil.getFirstDeployedConnectorProductTypePSC(config);
             
-            ProductServiceConfigID pscID = null;
+//           ProductServiceConfigID pscID = null;
 
 //            ComponentDefn defn = null;
-            if (psc != null) {
-                pscID = (ProductServiceConfigID)psc.getID();
-                
-            } else {
-                psc = helperTestAddPSC("TestPSC_" + String.valueOf( (new Date()).getTime()), (ServiceComponentDefnID) newdefn.getID(),  Configuration.NEXT_STARTUP_ID ); //$NON-NLS-1$
-                pscID = (ProductServiceConfigID)psc.getID();
-                
-            }
+//            if (psc != null) {
+//                pscID = (ProductServiceConfigID)psc.getID();
+//                
+//            } else {
+//                psc = helperTestAddPSC("TestPSC_" + String.valueOf( (new Date()).getTime()), (ServiceComponentDefnID) newdefn.getID(),  Configuration.NEXT_STARTUP_ID ); //$NON-NLS-1$
+//                pscID = (ProductServiceConfigID)psc.getID();
+//                
+//            }
 	        // add to the psc, but does not deploy
-            psc = getEditor().addServiceComponentDefn(psc, (ServiceComponentDefnID) newdefn.getID());
-
+ //           psc = getEditor().addServiceComponentDefn(psc, (ServiceComponentDefnID) newdefn.getID());
+            VMComponentDefn vmdefn = (VMComponentDefn) config.getConfiguration().getVMComponentDefns().iterator().next();
 			// deploys the binding if the psc is deployed
-            getEditor().deployServiceDefn(config.getConfiguration(), newdefn, pscID);
+            getEditor().deployServiceDefn(config.getConfiguration(), newdefn, (VMComponentDefnID) vmdefn.getID());
 	         				
             commit();
 //			List actions = reditor.getDestination().popActions();						
@@ -315,87 +304,83 @@ public class TestXMLConfigImportExport extends BaseTest {
     }
     
     
+//    
+//    private ProductServiceConfig helperTestAddPSC(String pscName, ServiceComponentDefnID id, ConfigurationID configID) {
+//        printMsg("Starting helperTestAddPSC");       //$NON-NLS-1$
+//        ProductServiceConfig newDefn = null;            
+//      try {
+//        
+//            
+//            Configuration config = this.getConfigModel().getConfiguration();
+//            
+//            Collection types = this.getConfigModel().getProductTypes();
+//                    
+//            ConnectorBinding defn =  config.getConnectorBinding(id)  ; 
+//            
+//            newDefn = addPSC(pscName, defn, config, types, getEditor());
+//                        
+//
+//            printMsg("helperTestAddPSC actions committed"); //$NON-NLS-1$
+//        
+//            
+//            HelperTestConfiguration.validateComponentDefn(newDefn);
+//            
+////          ConfigurationPrinter.printComponentObject(h, false, System.out);
+//                    
+//          
+// 
+//      } catch (Exception e) {
+//        e.printStackTrace();
+//            fail(e.getMessage());
+//        }
+//        printMsg("Completed helperTestAddPSC"); //$NON-NLS-1$
+//        return newDefn;
+//    }
     
-    private ProductServiceConfig helperTestAddPSC(String pscName, ServiceComponentDefnID id, ConfigurationID configID) {
-        printMsg("Starting helperTestAddPSC");       //$NON-NLS-1$
-        ProductServiceConfig newDefn = null;            
-      try {
-        
-            
-            Configuration config = this.getConfigModel().getConfiguration();
-            
-            Collection types = this.getConfigModel().getProductTypes();
-                    
-            ConnectorBinding defn =  config.getConnectorBinding(id)  ; 
-            
-            newDefn = addPSC(pscName, defn, config, types, getEditor());
-                        
-
-            printMsg("helperTestAddPSC actions committed"); //$NON-NLS-1$
-        
-            
-            HelperTestConfiguration.validateComponentDefn(newDefn);
-            
-//          ConfigurationPrinter.printComponentObject(h, false, System.out);
-                    
-          
- 
-      } catch (Exception e) {
-        e.printStackTrace();
-            fail(e.getMessage());
-        }
-        printMsg("Completed helperTestAddPSC"); //$NON-NLS-1$
-        return newDefn;
-    }
     
-    
-    private ProductServiceConfig addPSC(String name, ServiceComponentDefn svc, Configuration config, Collection types, BasicConfigurationObjectEditor editor) throws Exception {
-
-        ProductType connType = findProductType(MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME, types);
-        if (connType == null) {
-            throw new ConfigurationException("AddPSC Error - unable to fine component type " + MetaMatrixProductVersion.CONNECTOR_PRODUCT_TYPE_NAME); //$NON-NLS-1$
-        }
-
-    
-
-            printMsg("addPSC found product type " + connType.getFullName()); //$NON-NLS-1$
-
-            ProductServiceConfig newPSC = getEditor().createProductServiceConfig((ConfigurationID) config.getID(), (ProductTypeID) connType.getID(), name);
-            
-            if (newPSC == null) {
-                throw new ConfigurationException("AddPSC Error - editor is unable to create new PSC " + name + " of type " + connType.getFullName()); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            
-            newPSC = (ProductServiceConfig) getEditor().setLastChangedHistory(newPSC, PRINCIPAL, DateUtil.getCurrentDateAsString());
-            newPSC = (ProductServiceConfig) getEditor().setCreationChangedHistory(newPSC, PRINCIPAL, DateUtil.getCurrentDateAsString());
-                            
-            printMsg("addPSC created new PSC " + newPSC.getFullName()); //$NON-NLS-1$
-
-            this.getEditor().addServiceComponentDefn(config, newPSC,  (ServiceComponentDefnID) svc.getID());
-            printMsg("addPSC add service to PSC "); //$NON-NLS-1$
-            
-            commit();
-            
-            ProductServiceConfig psc = CurrentConfiguration.getInstance().getConfiguration().getPSC((ProductServiceConfigID) newPSC.getID());
-            assertNotNull(psc);
-                
-            return newPSC;
-    }
+//    private ProductServiceConfig addPSC(String name, ServiceComponentDefn svc, Configuration config, Collection types, BasicConfigurationObjectEditor editor) throws Exception {
+//
+//        ProductType connType = BasicProductType.PRODUCT_TYPE;
+//    
+//
+//            printMsg("addPSC found product type " + connType.getFullName()); //$NON-NLS-1$
+//
+//            ProductServiceConfig newPSC = getEditor().createProductServiceConfig((ConfigurationID) config.getID(), (ProductTypeID) connType.getID(), name);
+//            
+//            if (newPSC == null) {
+//                throw new ConfigurationException("AddPSC Error - editor is unable to create new PSC " + name + " of type " + connType.getFullName()); //$NON-NLS-1$ //$NON-NLS-2$
+//            }
+//            
+//            newPSC = (ProductServiceConfig) getEditor().setLastChangedHistory(newPSC, PRINCIPAL, DateUtil.getCurrentDateAsString());
+//            newPSC = (ProductServiceConfig) getEditor().setCreationChangedHistory(newPSC, PRINCIPAL, DateUtil.getCurrentDateAsString());
+//                            
+//            printMsg("addPSC created new PSC " + newPSC.getFullName()); //$NON-NLS-1$
+//
+//            this.getEditor().addServiceComponentDefn(config, newPSC,  (ServiceComponentDefnID) svc.getID());
+//            printMsg("addPSC add service to PSC "); //$NON-NLS-1$
+//            
+//            commit();
+//            
+//            ProductServiceConfig psc = CurrentConfiguration.getInstance().getConfiguration().getPSC((ProductServiceConfigID) newPSC.getID());
+//            assertNotNull(psc);
+//                
+//            return newPSC;
+//    }
     
  
-    public ProductType findProductType(String name, Collection types) {
-        ProductType connType = null;
-       for (Iterator it=types.iterator(); it.hasNext(); ) {
-           connType = (ProductType) it.next();
-           if (connType.getFullName().equals(name)) {
-               return connType;
-           }
-
-           connType = null;    
-       }
-
-       return connType;
-    }
+//    public ProductType findProductType(String name, Collection types) {
+//        ProductType connType = null;
+//       for (Iterator it=types.iterator(); it.hasNext(); ) {
+//           connType = (ProductType) it.next();
+//           if (connType.getFullName().equals(name)) {
+//               return connType;
+//           }
+//
+//           connType = null;    
+//       }
+//
+//       return connType;
+//    }
     
     
     

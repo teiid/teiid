@@ -78,11 +78,10 @@ import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.HostType;
-import com.metamatrix.common.config.api.ProductServiceConfig;
-import com.metamatrix.common.config.api.ProductServiceConfigID;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
@@ -116,8 +115,8 @@ import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
+import com.metamatrix.metadata.runtime.vdb.defn.VDBCreation;
 import com.metamatrix.metadata.runtime.vdb.defn.VDBDefnFactory;
-import com.metamatrix.metadata.runtime.vdb.defn.VDBDefnImport;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.server.admin.apiimpl.MaterializationLoadScriptsImpl;
@@ -138,9 +137,9 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     private static final String CONNECTION_PROPERTY_USER = "User"; //$NON-NLS-1$
     private static final String CONNECTION_PROPERTY_URL = "URL"; //$NON-NLS-1$
 
-    private static String METAMATRIXPROCESS_PSC = ProductServiceConfigID.STANDARD_CONNECTOR_PSC; 
-    private static String PLATFORM_STANDARD_PSC = ProductServiceConfigID.STANDARD_PLATFORM_PSC; 
-    private static String QUERY_ENGINE_PSC = ProductServiceConfigID.METAMATRIX_SERVER_QUERY_ENGINE_PSC;
+ //   private static String METAMATRIXPROCESS_PSC = ProductServiceConfigID.STANDARD_CONNECTOR_PSC; 
+ //   private static String PLATFORM_STANDARD_PSC = ProductServiceConfigID.STANDARD_PLATFORM_PSC; 
+ //   private static String QUERY_ENGINE_PSC = ProductServiceConfigID.METAMATRIX_SERVER_QUERY_ENGINE_PSC;
     private static String FUNCTION_DEFINITIONS_MODEL = "FunctionDefinitions.xmi"; //$NON-NLS-1$
 
     
@@ -191,7 +190,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             try {
                 binding = getConfigurationServiceProxy().createConnectorBinding(connectorBindingName,
                                                                                 connectorTypeIdentifier,
-                                                                                METAMATRIXPROCESS_PSC,
+                                                                                "ALL",  // deploy to all vms
                                                                                 getUserName(),
                                                                                 properties);
                 if (binding == null) {
@@ -264,7 +263,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
             
             try {
                 is = ObjectConverterUtil.convertToInputStream(xmlFile);
-                binding = getConfigurationServiceProxy().importConnectorBinding(is, connectorBindingName, METAMATRIXPROCESS_PSC, getUserName());
+                // pass "ALL" to deploy newly created binding to all vms
+                binding = getConfigurationServiceProxy().importConnectorBinding(is, connectorBindingName, "ALL", getUserName());
                 if (binding == null) {
                     throwProcessingException("ServerConfigAdminImpl.Connector_Type_was_null", new Object[] {connectorBindingName}); //$NON-NLS-1$
                 }
@@ -612,19 +612,17 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 			processDefn = getConfigurationServiceProxy().addProcess(processName, hostName, getUserName(), properties);
 
 			if (processDefn != null) {
-			    Collection pscs = this.getConfigurationModel().getConfiguration().getPSCs();
-			    if (pscs != null && ! pscs.isEmpty()) {
-			        ProductServiceConfig psc = null;
-			        for (Iterator it=pscs.iterator(); it.hasNext();) {
-			             psc =(ProductServiceConfig) it.next();
-			         // only if the MMProcessPSC is defined can this automatically deploy it.
-			            if (psc.getName().equalsIgnoreCase(METAMATRIXPROCESS_PSC)) {
-			                getConfigurationServiceProxy().deployPSC(theHost, processDefn, METAMATRIXPROCESS_PSC, getUserName());                          
+			    Collection svcs = this.getConfigurationModel().getConfiguration().getServiceComponentDefns();
+			    if (svcs != null && ! svcs.isEmpty()) {
+			        ServiceComponentDefn svc = null;
+			        for (Iterator it=svcs.iterator(); it.hasNext();) {
+			             svc =(ServiceComponentDefn) it.next();
+			         // deploy essential services
+			             if (svc.isEssential()) {
+			                getConfigurationServiceProxy().deployService((VMComponentDefnID) processDefn.getID(), svc.getName(), getUserName());                          
 			            } 
 			        }
 			    }
-			    getConfigurationServiceProxy().deployPSC(theHost, processDefn, PLATFORM_STANDARD_PSC, getUserName());
-			    getConfigurationServiceProxy().deployPSC(theHost, processDefn, QUERY_ENGINE_PSC, getUserName());
 
 			} else {
 			    final Object[] params = new Object[] {
@@ -686,7 +684,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 
         VirtualDatabase newVDB = null;
     	try {
-			newVDB = VDBDefnImport.importVDBDefn(vdb, getUserName(), updateBindings);
+    	
+			newVDB = importVDBDefn(vdb, getUserName(), updateBindings, Collections.EMPTY_LIST);
 		} catch (Exception e) {
 			// TODO: remove the generalization of exception
 			throw new AdminComponentException(e);
@@ -702,6 +701,13 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         
         return convertToAdminVDB(newVDB);
     }
+    
+    private VirtualDatabase importVDBDefn(VDBArchive vdb, String principal, boolean updateExistingBinding, List vms) throws Exception {
+        VDBCreation vdbc = new VDBCreation();
+        vdbc.setUpdateBindingProperties(updateExistingBinding);
+        vdbc.setVMsToDeployBindings(vms);
+        return vdbc.loadVDBDefn(vdb,principal);
+    } 
     
     /**
      * @see com.metamatrix.admin.api.server.ServerConfigAdmin#generateMaterializationScripts(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)

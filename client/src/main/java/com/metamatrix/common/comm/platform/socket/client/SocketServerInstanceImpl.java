@@ -54,11 +54,11 @@ import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.Handshake;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.Cryptor;
 import com.metamatrix.common.util.crypto.DhKeyGenerator;
 import com.metamatrix.common.util.crypto.NullCryptor;
-import com.metamatrix.core.util.MetaMatrixProductVersion;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.ResultsFuture;
 
@@ -116,7 +116,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     }
     
     static String getVersionInfo() {
-        return MetaMatrixProductVersion.VERSION_NUMBER;
+        return ApplicationInfo.getInstance().getMajorReleaseNumber();
     }
     
     private void doHandshake() throws IOException, CommunicationException {

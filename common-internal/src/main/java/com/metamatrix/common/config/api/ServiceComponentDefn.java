@@ -31,7 +31,6 @@ public interface ServiceComponentDefn extends ComponentDefn {
 
 //    public static final String COMPONENT_TYPE_NAME = "Service";
 
-    boolean isQueuedService();
     void accept(ConfigurationVisitor visitor);
     
     

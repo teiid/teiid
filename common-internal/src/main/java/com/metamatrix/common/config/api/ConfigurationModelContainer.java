@@ -100,7 +100,6 @@ public interface ConfigurationModelContainer extends Cloneable {
      * @since 4.1
      */
     ComponentTypeDefn getComponentTypeDefinition(ComponentTypeID typeID, String defnName);
-           
     
     /**
      * Return the ComponentType for the specified name
@@ -135,21 +134,19 @@ public interface ConfigurationModelContainer extends Cloneable {
      * @return
      * @since 4.2
      */
-    Collection getProductTypes();
+ //   Collection getProductTypes();
     
     /**
      * Return a <code>ProductType</code> based on the specified name.
      * @return
      * @since 4.2
      */
-    ProductType getProductType(String fullname);    
+ //   ProductType getProductType(String fullname);    
     
     SharedResource getResource(String resourceName);
     
     Collection getResources();
     
-    
-	ConfigurationModelContainer copyAs(ConfigurationID configID) throws ConfigurationException;
 	           
     Object clone();
     

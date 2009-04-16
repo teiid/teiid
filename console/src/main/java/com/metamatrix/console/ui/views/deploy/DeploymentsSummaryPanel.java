@@ -217,7 +217,7 @@ public final class DeploymentsSummaryPanel
 
         try {
             // clear and load deployments table
-            DeployPkgUtils.loadDeployments(config, deployTblModel, getConnectionInfo());
+            DeployPkgUtils.loadProcesses(config, deployTblModel, getConnectionInfo());
             tblDeployments.sizeColumnsToFitData();
             sortFirstColumnInTable(tblDeployments);
         }

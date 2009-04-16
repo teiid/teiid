@@ -121,7 +121,7 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
     public void exportConfiguration(OutputStream stream,
                      Collection configurationObjects, Properties props)
                      throws IOException, ConfigObjectsNotResolvableException {
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
         util.exportConfiguration(stream, configurationObjects, props);
     }
 
@@ -159,7 +159,7 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
                      Properties props) throws IOException {
 
         
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
         util.exportComponentType(stream, type, props);
     }
     
@@ -197,7 +197,7 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
                      Properties props) throws IOException {
 
         
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
         util.exportComponentTypes(stream, types, props);
     }    
 
@@ -326,7 +326,7 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
 
         Element root = doc.getRootElement();
 
-             XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+             ConfigurationImportExport util = new ConfigurationImportExport();
             return util.importConfigurationObjects(root, editor, name);
 
     }
@@ -382,12 +382,12 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
         //vah 7/22/04 the format of the configuration changed
         // in version 4.2, any version prior to this will use
         // the 3.0 version utility
-            XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+            ConfigurationImportExport util = new ConfigurationImportExport();
             return util.importComponentType(root, editor, name);
 
         
         
-//        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+//        ConfigurationImportExport util = new ConfigurationImportExport();
 //        return util.importComponentType(stream, editor, name);
     }
     /**
@@ -442,44 +442,12 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
                   ConfigurationObjectEditor editor)
                   throws IOException, InvalidConfigurationElementException {
 
-
-         boolean is42Compatible = XMLHelperUtil.is42ConfigurationCompatible(root); 
-         
-         return importComponentTypes(root, editor, is42Compatible);
-         
+         ConfigurationImportExport util = new ConfigurationImportExport();
+         return util.importComponentTypes(root, editor);        
          
      }
 
-
-     /**
-      * <p>This method will be used to import 1 or more a ComponentType Objects.</p>
-      * The ComponentTypes element must be a child of the root element passed in.
-      *
-      * @param editor the ConfigurationObjectEditor to use to create the Configuration
-      * objects.
-      * @param root Element contains the ComponentTypes to import
-      * @param is42Compatible indicates backwards compatible.
-      * @return Collection of objects of type <code>ComponentType</code>
-      * @throws IOException if there is an error reading from the DirectoryEntry
-      * @throws InvalidConfigurationElementException if there is a problem with
-      * the representation of the configuration element as it exists in the
-      * DirectoryEntry resource, usually some type of formatting problem.
-      */
-
-      public Collection importComponentTypes(Element root,
-                   ConfigurationObjectEditor editor, boolean is42Compatible)
-                   throws IOException, InvalidConfigurationElementException {
-          
-          //vah 7/22/04 the format of the configuration changed
-          // in version 4.2, any version prior to this will use
-          // the 3.0 version utility
-               XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
-              return util.importComponentTypes(root, editor);
-
-          
-      }
-     
-
+    
     /**
     * <p>This method will be used to import a ServiceComponentDefn Object given a Directory
     * entry instance.  If the DirectoryEntry resource does not contain enough
@@ -497,8 +465,8 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
     * each is defined by the following static variables:</p>
     *
     * <pre>
-    * ConfigurationImportExportUtility.COMPONENT_TYPE_INDEX
-    * ConfigurationImportExportUtility.SERVICE_COMPONENT_DEFN_INDEX
+    * ConfigurationImportExport.COMPONENT_TYPE_INDEX
+    * ConfigurationImportExport.SERVICE_COMPONENT_DEFN_INDEX
     * </pre>
     *
     * <p>These array indices are also used to override the ComponentType name
@@ -635,20 +603,20 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
     * ComponentType is not the type referenced by the passed in ServiceComponentDefn.
     */
     public void exportConnectorBinding(OutputStream stream, ConnectorBinding defn, ComponentType type, Properties props) throws IOException, ConfigObjectsNotResolvableException  {
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
       
       util.exportConnectorBinding(stream, defn, type, props);
     }
     
     
-    public void exportConnectorBindings(ConnectorBinding[] bindings,
-                                        ComponentType[] types,
-                                        Element root) {
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
-        
-        util.exportConnectorBindings(bindings, types, root);
-        
-    }
+//    public void exportConnectorBindings(ConnectorBinding[] bindings,
+//                                        ComponentType[] types,
+//                                        Element root) {
+//        ConfigurationImportExport util = new ConfigurationImportExport();
+//        
+//        util.exportConnectorBindings(bindings, types, root);
+//        
+//    }
     
     /**
     * <p>This method will generally be used to create a file representation of 
@@ -682,79 +650,48 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
     */
     
     public void exportConnectorBindings(OutputStream stream, ConnectorBinding[] bindings, ComponentType[] types, Properties props) throws IOException, ConfigObjectsNotResolvableException  {       
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
         util.exportConnectorBindings(stream, bindings, types, props);
     }
-    
-    
-    public ComponentType importConnector(InputStream stream, ConfigurationObjectEditor editor, String newName)throws IOException, InvalidConfigurationElementException {
-        // no special implementation changes needed to import Connectors
-        return importComponentType(stream, editor, newName);
-    }
 
 
-//    public static ConnectorBinding importConnectorBinding(String fileName, ConfigurationObjectEditor editor, String newName) throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException {
-//        // vah 7/22/04 bindings didnt change when the import/exporter utility was changed
-//        // therefore, it doesn't matter which importer is used
-//    	ConfigurationImportExportUtility util = new XMLConfig_42_ImportExportUtility();
-//
-//    	File f = new File(fileName);
-//
-//    	if (!f.exists()) {
-//    		throw new IOException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0009, fileName));
-//    	}
-//        FileInputStream fis = null;
-//        try {
-//        	fis = new FileInputStream(f);
-//    
-//        	ConnectorBinding cb = util.importConnectorBinding(fis, editor, newName);
-//    
-//    
-//        	return cb;
-//        } finally {
-//            if (fis != null) {
-//                fis.close();
-//            }
-//        }
-//
-//    }
     public ConnectorBinding importConnectorBinding(InputStream stream, ConfigurationObjectEditor editor, String newName)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException {
 
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
         return util.importConnectorBinding(stream, editor, newName);
 }
 
     public Collection importExistingConnectorBindings(Element root, ConfigurationObjectEditor editor, boolean importExistingBinding)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException {
 
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
 
         return util.importConnectorBindings(root, editor, importExistingBinding);
     }
     
     public Collection importConnectorBindings(Element root, ConfigurationObjectEditor editor)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException {
 
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
 
         return util.importConnectorBindings(root, editor, false);
     }
     
     public Collection importConnectorBindings(InputStream stream, ConfigurationObjectEditor editor)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException {
 
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
 
         return util.importConnectorBindings(stream, editor, false);
     }
     
     public Collection importExistingConnectorBindings(InputStream stream, ConfigurationObjectEditor editor, boolean useExistingBinding)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException {
 
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
 
         return util.importConnectorBindings(stream, editor, useExistingBinding);
     }
 
     public Object[] importConnectorBindingAndType(InputStream stream, ConfigurationObjectEditor editor, String[] newName)throws IOException, ConfigObjectsNotResolvableException, InvalidConfigurationElementException {
 
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
         return util.importConnectorBindingAndType(stream, editor, newName);
     }
 
@@ -774,7 +711,7 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
     */
     public void resolveConfigurationObjects(Collection collection) throws ConfigObjectsNotResolvableException{
 
-        XMLConfig_42_ImportExportUtility util = new XMLConfig_42_ImportExportUtility();
+        ConfigurationImportExport util = new ConfigurationImportExport();
         
         util.resolveConfigurationObjects(collection);
 
@@ -790,7 +727,7 @@ public class XMLConfigurationImportExportUtility implements ConfigurationImportE
      *           extension1.jar
      *           extension2.jar
      *  
-     * @see com.metamatrix.common.config.util.ConfigurationImportExportUtility#importConnectorArchive(java.io.InputStream, com.metamatrix.common.config.api.ConfigurationObjectEditor)
+     * @see com.metamatrix.common.config.util.ConfigurationImportExport#importConnectorArchive(java.io.InputStream, com.metamatrix.common.config.api.ConfigurationObjectEditor)
      * @since 4.3.2
      */
     public ConnectorArchive importConnectorArchive(InputStream stream, ConfigurationObjectEditor editor) 

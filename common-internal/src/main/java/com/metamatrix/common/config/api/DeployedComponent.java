@@ -62,6 +62,12 @@ public interface DeployedComponent extends ComponentObject {
      * when the deployed component is a VM.
      */
     public static final Long SERVICE_UID_FOR_DEPLOYED_VM = new Long(0);
+    
+    /**
+     * Indicates if the deployed component is enabled for starting.
+     * @return true if the deployed component is enabled for starting
+     */
+    boolean isEnabled();
 
     /**
      * <p>
@@ -94,15 +100,6 @@ public interface DeployedComponent extends ComponentObject {
      * @return the component id, null when this is a deployed VM
      */
     public ServiceComponentDefnID getServiceComponentDefnID();
-
-    /**
-     * Returns the <code>ProductServiceConfigID</code> of the service that is
-     * deployed (if it is a service).
-     * Null will be returned if this <code>DeployedComponent</code>
-     * is a deployed VM.
-     * @return the component id, null when this is a deployed VM
-     */
-    public ProductServiceConfigID getProductServiceConfigID();
 
     /**
      * Returns the <code>ComponentID</code> for the VM that this component
