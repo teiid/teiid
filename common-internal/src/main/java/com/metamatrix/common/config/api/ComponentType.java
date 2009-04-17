@@ -45,7 +45,7 @@ public interface ComponentType extends BaseObject {
     public static final int AUTHPROVIDER_COMPONENT_TYPE_CODE =11;
    
     
-//    public static final int SHARED_RESOURCE_COMPONENT_TYPE_CODE = 10;
+    public static final int SHARED_RESOURCE_COMPONENT_TYPE_CODE = 10;
     
 
     /**
