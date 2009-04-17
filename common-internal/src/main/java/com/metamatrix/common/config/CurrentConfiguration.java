@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
+import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
@@ -288,24 +289,11 @@ public final class CurrentConfiguration {
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      * @see com.metamatrix.common.api.ComponentType
      */
-    public Collection getComponentTypes(boolean includeDeprecated) throws ConfigurationException {
+    public Collection<ComponentType> getComponentTypes(boolean includeDeprecated) throws ConfigurationException {
         return getReader().getConfigurationModel().getComponentTypes().values();
     }
     
-    /**
-     * Returns a <code>Collection</code> of type <code>ProductType</code> that represents
-     * all the ComponentTypes defined.
-     * @return List of type <code>ProductType</code>
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @see #ProductType
-     */
-    public Collection getProductTypes() throws ConfigurationException {
-    	Collection c = new ArrayList(1);
-    	return c;
-//    	c.add(BasicProductType.PRODUCT_TYPE);
-//        return  c;
-    }
-      
+     
     /**
      * Returns the Host based on the current running machine. 
      * @return the full Host object
