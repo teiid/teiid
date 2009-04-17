@@ -254,13 +254,13 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     	}
 
         final String url = connectionProps.getProperty(JDBCPropertyNames.URL);
-        if (url == null || url.trim().length() == 0) {
-            throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Missing_JDBC_database_name_3")); //$NON-NLS-1$
-        }
-        
-    	if (temp instanceof Driver) {
+
+        if (temp instanceof Driver) {
     		final Driver driver = (Driver)temp;
     		// check URL if there is one
+            if (url == null || url.trim().length() == 0) {
+                throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Missing_JDBC_database_name_3")); //$NON-NLS-1$
+            }
             validateURL(driver, url);
     		this.ds = (DataSource)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {DataSource.class}, new InvocationHandler() {
     			@Override
@@ -289,7 +289,9 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     			}
     		});
     	} else {
-    		parseURL(url, connectionProps);
+    		if (url != null && url.trim().length() > 0) {
+    			connectionProps.setProperty(JDBCPropertyNames.URL, url);
+    		}
     		if (temp instanceof DataSource) {
 	    		this.ds = (DataSource)temp;
 	            PropertiesUtils.setBeanProperties(this.ds, connectionProps, null);
@@ -323,57 +325,6 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
         if(!acceptsURL ){
             throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Driver__7", driver.getClass().getName(), url)); //$NON-NLS-1$
         }
-    }
-    
-    /**
-     * Parse URL for DataSource connection properties and add to connectionProps.
-     * @param url
-     * @param connectionProps
-     * @throws ConnectorException 
-     */
-    static void parseURL(final String url, final Properties connectionProps) throws ConnectorException {
-        // Will be: [jdbc:mmx:dbType://aHost:aPort], [DatabaseName=aDataBase], [CollectionID=aCollectionID], ...
-        final String[] urlParts = url.split(";"); //$NON-NLS-1$
-
-        // Will be: [jdbc:mmx:dbType:], [aHost:aPort]
-        final String[] protoHost = urlParts[0].split("//"); //$NON-NLS-1$
-
-        // Will be: [aHost], [aPort]
-        final String[] hostPort = protoHost[1].split(":"); //$NON-NLS-1$
-        connectionProps.setProperty(XAJDBCPropertyNames.SERVER_NAME, hostPort[0]);
-        connectionProps.setProperty(XAJDBCPropertyNames.PORT_NUMBER, hostPort[1]);
-
-        // For "databaseName", "SID", and all optional props
-        // (<propName1>=<propValue1>;<propName2>=<propValue2>;...)
-        for ( int i = 1; i < urlParts.length; i++ ) {
-            final String nameVal = urlParts[i];
-            // Will be: [propName], [propVal]
-            final String[] aProp = nameVal.split("="); //$NON-NLS-1$
-            if ( aProp.length > 1) {
-                // Set optional prop names lower case so that we can find
-                // set method names for them when we introspect the DataSource
-                connectionProps.setProperty(aProp[0].toLowerCase(), aProp[1]);
-            }
-        }
-        
-        String serverName = connectionProps.getProperty(XAJDBCPropertyNames.SERVER_NAME);
-        String serverPort = connectionProps.getProperty(XAJDBCPropertyNames.PORT_NUMBER);
-    	if ( serverName == null || serverName.trim().length() == 0 ) {
-            throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.MissingProp",  //$NON-NLS-1$
-                    XAJDBCPropertyNames.SERVER_NAME));
-        }
-        if ( serverPort == null || serverPort.trim().length() == 0 ) {
-            throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.MissingProp",  //$NON-NLS-1$
-                    XAJDBCPropertyNames.PORT_NUMBER));
-        }
-        
-     // Unique resource name for this connector
-        final StringBuffer dataSourceResourceName = new StringBuffer(connectionProps.getProperty(XAJDBCPropertyNames.DATASOURCE_NAME, "XADS")); //$NON-NLS-1$
-        dataSourceResourceName.append('_'); 
-        dataSourceResourceName.append(serverName);
-        dataSourceResourceName.append('_'); 
-        dataSourceResourceName.append(connectionProps.getProperty(ConnectorPropertyNames.CONNECTOR_ID));
-        connectionProps.setProperty( XAJDBCPropertyNames.DATASOURCE_NAME, dataSourceResourceName.toString());
     }
     
     public int getDefaultTransactionIsolationLevel() {
