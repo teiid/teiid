@@ -37,8 +37,8 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
-import org.jboss.netty.handler.codec.serialization.ObjectDecoderInputStream;
-import org.jboss.netty.handler.codec.serialization.ObjectEncoderOutputStream;
+import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
+import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
