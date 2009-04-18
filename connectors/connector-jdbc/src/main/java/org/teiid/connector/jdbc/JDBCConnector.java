@@ -289,9 +289,6 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
     			}
     		});
     	} else {
-    		if (url != null && url.trim().length() > 0) {
-    			connectionProps.setProperty(JDBCPropertyNames.URL, url);
-    		}
     		if (temp instanceof DataSource) {
 	    		this.ds = (DataSource)temp;
 	            PropertiesUtils.setBeanProperties(this.ds, connectionProps, null);
