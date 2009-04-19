@@ -89,5 +89,9 @@
 			<groupId>com.google.code.guice</groupId>
 			<artifactId>guice</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>jgroups</groupId>
+			<artifactId>jgroups</artifactId>
+		</dependency>
 	</dependencies>
 </project>
