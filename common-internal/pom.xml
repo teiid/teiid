@@ -33,12 +33,7 @@
 			<groupId>jdom</groupId>
 			<artifactId>jdom</artifactId>
 		</dependency>
-		
-		<dependency>
-			<groupId>jgroups</groupId>
-			<artifactId>jgroups</artifactId>
-		</dependency>
-		
+				
 		<dependency>
 			<groupId>beanshell</groupId>
 			<artifactId>bsh</artifactId>
