@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.dqp.internal.process.PreparedPlanCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -133,7 +134,7 @@ public class MetaDataProcessor {
         	RequestWorkItem workItem = requestManager.getRequestWorkItem(requestID);
             return getMetadataForCommand(workItem.getOriginalCommand());
         } 
-        return obtainMetadataForPreparedSql(preparedSql, workContext.getConnectionID(), allowDoubleQuotedVariable);
+        return obtainMetadataForPreparedSql(preparedSql, workContext, allowDoubleQuotedVariable);
     }
     
     // For each projected symbol, construct a metadata map
@@ -204,17 +205,18 @@ public class MetaDataProcessor {
         return columnMetadata;
     }
 
-    private MetadataResult obtainMetadataForPreparedSql(String sql, String sessionId, boolean isDoubleQuotedVariablesAllowed) throws QueryParserException, QueryResolverException, MetaMatrixComponentException {
+    private MetadataResult obtainMetadataForPreparedSql(String sql, DQPWorkContext workContext, boolean isDoubleQuotedVariablesAllowed) throws QueryParserException, QueryResolverException, MetaMatrixComponentException {
         Command command = null;
         
-        PreparedPlanCache.PreparedPlan plan = planCache.getPreparedPlan(sessionId, sql);
+        ParseInfo info = new ParseInfo();
+        // Defect 19747 - the parser needs the following connection property to decide whether to treat double-quoted strings as variable names
+        info.allowDoubleQuotedVariable = isDoubleQuotedVariablesAllowed;
+        CacheID id = new PreparedPlanCache.CacheID(workContext, info, sql);
+        PreparedPlanCache.PreparedPlan plan = planCache.getPreparedPlan(id);
         if(plan != null) {
             command = plan.getCommand();
         } else {
             QueryParser parser = QueryParser.getQueryParser();
-            ParseInfo info = new ParseInfo();
-            // Defect 19747 - the parser needs the following connection property to decide whether to treat double-quoted strings as variable names
-            info.allowDoubleQuotedVariable = isDoubleQuotedVariablesAllowed;
             command = parser.parseCommand(sql, info);
             QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, false, this.metadata, AnalysisRecord.createNonRecordingRecord());                        
         }

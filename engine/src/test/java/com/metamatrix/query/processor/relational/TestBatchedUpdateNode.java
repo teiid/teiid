@@ -41,7 +41,7 @@ import com.metamatrix.query.optimizer.batch.TestBatchedUpdatePlanner;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.visitor.NeedsEvaluationVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.util.CommandContext;
 
@@ -55,7 +55,7 @@ public class TestBatchedUpdateNode {
     	List<Command> commands = TestBatchedUpdatePlanner.helpGetCommands(sql, md);
     	List<Boolean> shouldEvaluate = new ArrayList<Boolean>(commands.size());
     	for (Command command : commands) {
-			shouldEvaluate.add(NeedsEvaluationVisitor.needsEvaluation(command));
+			shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(command));
 		}
         BatchedUpdateNode node = new BatchedUpdateNode(1, commands, null, shouldEvaluate, "myModelName"); //$NON-NLS-1$
         CommandContext context = new CommandContext();

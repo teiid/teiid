@@ -31,6 +31,7 @@ import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.resolver.TestResolver;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
@@ -40,6 +41,7 @@ import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.util.CommandContext;
 
 
@@ -66,7 +68,7 @@ public class TestAccessNode extends TestCase {
     }
     
     public void testOpen_Defect16059() throws Exception {
-        Query query = (Query)QueryParser.getQueryParser().parseCommand("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL"); //$NON-NLS-1$
+    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NULL", FakeMetadataFactory.example1Cached(), null); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
         
@@ -74,7 +76,7 @@ public class TestAccessNode extends TestCase {
     }
     
     public void testOpen_Defect16059_2() throws Exception {
-        Query query = (Query)QueryParser.getQueryParser().parseCommand("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL"); //$NON-NLS-1$
+    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5 AND ? IS NOT NULL", FakeMetadataFactory.example1Cached(), null); //$NON-NLS-1$
         IsNullCriteria nullCrit = (IsNullCriteria)((CompoundCriteria)query.getCriteria()).getCriteria(1);
         nullCrit.setExpression(new Constant(null));
         
@@ -84,7 +86,7 @@ public class TestAccessNode extends TestCase {
     public void testExecCount()throws Exception{
         // Setup
         AccessNode node = new AccessNode(1);
-        Query query = (Query)QueryParser.getQueryParser().parseCommand("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5"); //$NON-NLS-1$
+    	Query query = (Query)TestResolver.helpResolve("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5", FakeMetadataFactory.example1Cached(), null); //$NON-NLS-1$
         node.setCommand(query);
         CommandContext context = new CommandContext();
         context.setProcessorID("processorID"); //$NON-NLS-1$

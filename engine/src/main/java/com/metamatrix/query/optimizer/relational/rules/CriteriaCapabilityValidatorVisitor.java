@@ -54,7 +54,7 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 
 /**
  */
@@ -228,7 +228,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     public void visit(Function obj) {
         try {
             //if the function can be evaluated then return as it will get replaced during the final rewrite 
-            if (EvaluateExpressionVisitor.willBecomeConstant(obj, true)) { 
+            if (EvaluatableVisitor.willBecomeConstant(obj, true)) { 
                 return; 
             }
             if(obj.getFunctionDescriptor().getPushdown() == FunctionMethod.CANNOT_PUSHDOWN || ! CapabilitiesUtil.supportsScalarFunction(modelID, obj, metadata, capFinder)) {

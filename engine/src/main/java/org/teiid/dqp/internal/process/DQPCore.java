@@ -37,7 +37,6 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
 import javax.transaction.xa.Xid;
 
-import org.teiid.connector.api.CacheScope;
 import org.teiid.dqp.internal.cache.CacheID;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
@@ -426,8 +425,6 @@ public class DQPCore extends Application implements ClientSideDQP {
         } catch (Exception e) {
             LogManager.logWarning(LogConstants.CTX_DQP, e, "Failed to remove buffered tuples for connection " + sessionId); //$NON-NLS-1$
         }
-        // cleanup the prepared plan cache
-        this.prepPlanCache.clear(sessionId);
         
         if (transactionService != null) {
             try {

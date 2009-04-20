@@ -98,6 +98,10 @@ public class CommandContext implements Cloneable {
     
     private VariableContext variableContext = new VariableContext();
     
+    private CommandContext parent;
+    
+    private boolean sessionFunctionEvaluated;
+    
     /**
      * Construct a new context.
      * @param collectNodeStatistics TODO
@@ -149,10 +153,26 @@ public class CommandContext implements Cloneable {
         this.planToProcessConverter = context.planToProcessConverter;
         this.queryProcessorFactory = context.queryProcessorFactory;
         this.variableContext = context.variableContext;
+        this.parent = context;
     }
         
     public CommandContext() {        
     }
+    
+    public boolean isSessionFunctionEvaluated() {
+    	if (parent != null) {
+    		return parent.isSessionFunctionEvaluated();
+    	}
+		return sessionFunctionEvaluated;
+	}
+    
+    public void setSessionFunctionEvaluated(boolean sessionFunctionEvaluated) {
+    	if (parent != null) {
+    		parent.setCollectNodeStatistics(sessionFunctionEvaluated);
+    	} else {
+    		this.sessionFunctionEvaluated = sessionFunctionEvaluated;
+    	}
+	}
     
     /**
      * @return
@@ -301,6 +321,9 @@ public class CommandContext implements Cloneable {
     }
     
     public double getNextRand() {
+    	if (parent != null) {
+    		return parent.getNextRand();
+    	}
         if (random == null) {
             random = new Random();
         }
@@ -308,6 +331,9 @@ public class CommandContext implements Cloneable {
     }
     
     public double getNextRand(long seed) {
+    	if (parent != null) {
+    		return parent.getNextRand(seed);
+    	}
         if (random == null) {
             random = new Random();
         }

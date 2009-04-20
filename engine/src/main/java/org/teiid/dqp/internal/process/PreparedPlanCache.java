@@ -22,15 +22,18 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
-import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.query.analysis.AnalysisRecord;
+import com.metamatrix.query.parser.ParseInfo;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
  * This class is used to cahce plan and related objects for prepared statement
@@ -38,7 +41,8 @@ import com.metamatrix.query.sql.symbol.Reference;
 public class PreparedPlanCache {
 	public static final int DEFAULT_MAX_SIZE_TOTAL = 100;
 
-	private LRUCache<CacheID, PreparedPlan> cache;
+	private Map<CacheID, PreparedPlan> cache;
+	private int maxSize;
 	
 	PreparedPlanCache(){
 		this(DEFAULT_MAX_SIZE_TOTAL);
@@ -48,7 +52,8 @@ public class PreparedPlanCache {
 		if(maxSize < 0){
 			maxSize = DEFAULT_MAX_SIZE_TOTAL;
 		}
-		cache = new LRUCache<CacheID, PreparedPlan>(maxSize);
+		this.maxSize = maxSize;
+		cache = Collections.synchronizedMap(new LRUCache<CacheID, PreparedPlan>(maxSize));
 	}	
 	
 	/**
@@ -57,71 +62,65 @@ public class PreparedPlanCache {
 	 * @param session ClientConnection
 	 * @return PreparedPlan for the given clientConn and SQl query. Null if not exist.
 	 */
-	public synchronized PreparedPlan getPreparedPlan(String sessionId, String sql){
-		ArgCheck.isNotNull(sessionId);
-		ArgCheck.isNotNull(sql);
-		
-		CacheID cID = new CacheID(sessionId, sql);
-		
-		return cache.get(cID);
+	public PreparedPlan getPreparedPlan(CacheID id){
+		id.setSessionId(id.originalSessionId);
+		PreparedPlan result = cache.get(id);
+		if (result == null) {
+			id.setSessionId(null);
+		}
+		return cache.get(id);
 	}
 	
 	/**
 	 * Create PreparedPlan for the given clientConn and SQl query
 	 */
-	public synchronized PreparedPlan createPreparedPlan(String sessionId, String sql){
-		ArgCheck.isNotNull(sessionId);
-		ArgCheck.isNotNull(sql);
-		
-		CacheID cID = new CacheID(sessionId, sql);
-		PreparedPlan preparedPlan = cache.get(cID);
-		if(preparedPlan == null){
-			preparedPlan = new PreparedPlan();
-			cache.put(cID, preparedPlan);
+	public void putPreparedPlan(CacheID id, boolean sessionSpecific, PreparedPlan plan){
+		if (sessionSpecific) {
+			id.setSessionId(id.originalSessionId);
+		} else {
+			id.setSessionId(null);
 		}
-		return preparedPlan;
+		this.cache.put(id, plan);
 	}
 	
 	/**
-	 * Clear the cahced plans for the given clientConn
+	 * Clear all the cached plans for all the clientConns
 	 * @param clientConn ClientConnection
 	 */
-	public synchronized void clear(String sessionId){
-		ArgCheck.isNotNull(sessionId);
-		//do not do anything
-	}
-
-	/**
-	 * Clear all the cahced plans for all the clientConns
-	 * @param clientConn ClientConnection
-	 */
-	public synchronized void clearAll(){
+	public void clearAll(){
 		cache.clear();
 	}	
 	
 	static class CacheID{
-		private String sessionId;
 		private String sql;
-		int hashCode;
-		private boolean isPreparedBatchUpdate;
-		
-		CacheID(String sessionId, String sql){
-			this.sessionId = sessionId;
+		private VDBKey vdbInfo;
+		private ParseInfo pi;
+		private String sessionId;
+		private String originalSessionId;
+		private int hashCode;
+				
+		CacheID(DQPWorkContext context, ParseInfo pi, String sql){
 			this.sql = sql;
-			hashCode = HashCodeUtil.hashCode(HashCodeUtil.hashCode(0, sessionId), sql);
+			this.vdbInfo = new VDBKey(context.getVdbName(), context.getVdbVersion());
+			this.pi = pi;
+			this.originalSessionId = context.getConnectionID();
 		}
 		
+		private void setSessionId(String sessionId) {
+			this.sessionId = sessionId;
+			hashCode = HashCodeUtil.hashCode(HashCodeUtil.hashCode(HashCodeUtil.hashCode(HashCodeUtil.hashCode(0, vdbInfo), sql), pi), sessionId);
+		}
+						
 		public boolean equals(Object obj){
 	        if(obj == this) {
 	            return true;
-	        } else if(obj == null || ! (obj instanceof CacheID)) {
+	        } 
+	        if(! (obj instanceof CacheID)) {
 	            return false;
-	        } else {
-	        	CacheID that = (CacheID)obj;
-	            return this.sessionId.equals(that.sessionId)
-	            && this.isPreparedBatchUpdate == that.isPreparedBatchUpdate
-					&& this.sql.equals(that.sql);
-			}
+	        } 
+        	CacheID that = (CacheID)obj;
+            return this.pi.equals(that.pi) && this.vdbInfo.equals(that.vdbInfo) && this.sql.equals(that.sql) 
+            	&& ((this.sessionId == null && that.sessionId == null) || this.sessionId.equals(that.sessionId));
 		}
 		
 	    public int hashCode() {
@@ -207,7 +206,7 @@ public class PreparedPlanCache {
 		return cache.size();
 	}
     int getSpaceAllowed() {
-        return cache.getSpaceLimit();
+        return maxSize;
     }
     
 }

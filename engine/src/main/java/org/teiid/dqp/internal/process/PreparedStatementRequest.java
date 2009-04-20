@@ -26,6 +26,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.dqp.internal.process.PreparedPlanCache.CacheID;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -138,12 +140,12 @@ public class PreparedStatementRequest extends Request {
      * @see org.teiid.dqp.internal.process.Request#generatePlan()
      */
     protected Command generatePlan() throws QueryPlannerException, QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
-    	
     	String sqlQuery = requestMsg.getCommands()[0];
-        prepPlan = prepPlanCache.getPreparedPlan(this.workContext.getConnectionID(), sqlQuery);
+    	CacheID id = new PreparedPlanCache.CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
+        prepPlan = prepPlanCache.getPreparedPlan(id);
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
-            prepPlan = prepPlanCache.createPreparedPlan(this.workContext.getConnectionID(), sqlQuery);
+            prepPlan = new PreparedPlanCache.PreparedPlan();
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
         }
 
@@ -153,10 +155,11 @@ public class PreparedStatementRequest extends Request {
         if (cachedPlan == null) {
         	prepPlan.setRewritenCommand(super.generatePlan());
         	
-        	if (!this.addedLimit) { //TODO: this is a little problematic 
+        	if (!this.addedLimit) { //TODO: this is a little problematic
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
 		        prepPlan.setPlan((ProcessorPlan)processPlan.clone());
 		        prepPlan.setAnalysisRecord(analysisRecord);
+		        this.prepPlanCache.putPreparedPlan(id, this.context.isSessionFunctionEvaluated(), prepPlan);
         	}
         	command = prepPlan.getCommand();
         } else {

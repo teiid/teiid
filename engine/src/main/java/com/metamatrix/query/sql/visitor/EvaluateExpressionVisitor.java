@@ -37,6 +37,7 @@ import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -74,7 +75,7 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
      */
     public Expression replaceExpression(Expression expr) {
         //if the expression is a constant or is not evaluatable, just return
-        if (expr instanceof Constant || expr instanceof ScalarSubquery || (!(expr instanceof Reference) && !EvaluatableVisitor.isEvaluatable(expr, false, true, false, false))) {
+        if (expr instanceof Constant || expr instanceof ScalarSubquery || (!(expr instanceof Reference) && !EvaluatableVisitor.isEvaluatable(expr, EvaluationLevel.PROCESSING))) {
             return expr;
         }
 
@@ -95,18 +96,14 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
      *  evaluatable during planning
      */
     public static final boolean willBecomeConstant(LanguageObject obj) {
-        return willBecomeConstant(obj, false);
-    }
-    
-    public static final boolean willBecomeConstant(LanguageObject obj, boolean pushdown) {
-        return EvaluatableVisitor.isEvaluatable(obj, false, false, true, pushdown);
+        return EvaluatableVisitor.willBecomeConstant(obj, false);
     }
     
     /**
      *  Should be called to check if the object can fully evaluated
      */
     public static final boolean isFullyEvaluatable(LanguageObject obj, boolean duringPlanning) {
-        return EvaluatableVisitor.isEvaluatable(obj, duringPlanning, true, true, false);
+        return EvaluatableVisitor.isEvaluatable(obj, duringPlanning?EvaluationLevel.PLANNING:EvaluationLevel.PROCESSING);
     }
         
     public static final void replaceExpressions(LanguageObject obj, boolean deep, LookupEvaluator dataMgr, CommandContext context)

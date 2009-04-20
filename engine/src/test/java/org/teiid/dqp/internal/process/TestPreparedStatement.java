@@ -27,12 +27,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.PreparedPlanCache;
-import org.teiid.dqp.internal.process.PreparedStatementRequest;
-import org.teiid.dqp.internal.process.TestRequest.FakeApplicationEnvironment;
-
 import junit.framework.TestCase;
+
+import org.teiid.dqp.internal.process.TestRequest.FakeApplicationEnvironment;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
@@ -52,7 +49,6 @@ import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
@@ -68,14 +64,14 @@ public class TestPreparedStatement extends TestCase{
 		int hitCount;
 		
 		@Override
-		public synchronized PreparedPlan getPreparedPlan(
-				String clientConn, String sql) {
-			PreparedPlan plan = super.getPreparedPlan(clientConn, sql);
-			if (plan != null && plan.getPlan() != null) {
+		public PreparedPlan getPreparedPlan(CacheID id) {
+			PreparedPlan result = super.getPreparedPlan(id);
+			if (result != null) {
 				hitCount++;
 			}
-			return plan;
+			return result;
 		}
+		
 	}
 		
 	public TestPreparedStatement(String name) { 
@@ -89,8 +85,12 @@ public class TestPreparedStatement extends TestCase{
 		
         helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement);
 	}
-		
+	
     static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement) throws Exception { 
+    	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false);
+    }
+
+    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, boolean differentPlan) throws Exception { 
         TestablePreparedPlanCache prepPlan = new TestablePreparedPlanCache();
         //Create plan
         PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, SESSION_ID, callableStatement, false);
@@ -110,7 +110,7 @@ public class TestPreparedStatement extends TestCase{
         //get the plan again with a new connection
         assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, 7, callableStatement, false));
 
-        assertEquals("new connection should not have used the same plan", 1, prepPlan.hitCount); //$NON-NLS-1$
+        assertEquals(differentPlan?1:2, prepPlan.hitCount); 
 	}
     	    
     public void testWhere() throws Exception { 
@@ -127,6 +127,23 @@ public class TestPreparedStatement extends TestCase{
 		values.add(new Short((short)0));
         
 		helpTestProcessing(preparedSql, values, expected, FakeMetadataFactory.example1Cached(), false);
+	}
+    
+    public void testSessionSpecificFunction() throws Exception { 
+        // Create query 
+        String preparedSql = "SELECT user(), e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "foo",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "foo",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }) //$NON-NLS-1$
+        };    
+    
+		List values = new ArrayList();
+		values.add(new Short((short)0));
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, true);
 	}
     
     public void testFunctionWithReferencePushDown() throws Exception { 

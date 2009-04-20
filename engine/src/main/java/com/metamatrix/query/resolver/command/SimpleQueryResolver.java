@@ -92,7 +92,7 @@ public class SimpleQueryResolver implements CommandResolver {
     private static final String ALL_IN_GROUP_SUFFIX = ".*"; //$NON-NLS-1$
 
     private static Command resolveVirtualGroup(GroupSymbol virtualGroup, Command parentCommand, QueryMetadataInterface metadata, AnalysisRecord analysis)
-    throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException, QueryParserException {
+    throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
         QueryNode qnode = null;
         
         Object metadataID = virtualGroup.getMetadataID();
@@ -253,7 +253,7 @@ public class SimpleQueryResolver implements CommandResolver {
     }
 
     private static Command convertToSubquery(QueryNode qnode, boolean nocache, QueryMetadataInterface metadata)
-    throws QueryResolverException, MetaMatrixComponentException, QueryParserException {
+    throws QueryResolverException, MetaMatrixComponentException {
 
         // Parse this node's command
         Command command = qnode.getCommand();
@@ -605,8 +605,6 @@ public class SimpleQueryResolver implements CommandResolver {
                 throw new MetaMatrixRuntimeException(e);
             } catch(MetaMatrixComponentException e) {
                 throw new MetaMatrixRuntimeException(e);                        
-            } catch (QueryParserException e) {
-            	throw new MetaMatrixRuntimeException(e);
 			}
         }
         

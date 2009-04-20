@@ -82,8 +82,8 @@ import com.metamatrix.query.sql.symbol.ContextReference;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
-import com.metamatrix.query.sql.visitor.NeedsEvaluationVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class PlanToProcessConverter {
@@ -306,7 +306,7 @@ public class PlanToProcessConverter {
                         } catch (QueryMetadataException err) {
                             throw new MetaMatrixComponentException(err);
                         }
-                        aNode.setShouldEvaluateExpressions(NeedsEvaluationVisitor.needsEvaluation(command));
+                        aNode.setShouldEvaluateExpressions(EvaluatableVisitor.needsProcessingEvaluation(command));
                     }
                     
                     try {

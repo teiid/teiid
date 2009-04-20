@@ -44,4 +44,21 @@ public class ParseInfo {
 	public boolean allowDoubleQuotedVariable() {
 	    return allowDoubleQuotedVariable;
 	}
+	
+	@Override
+	public int hashCode() {
+		return allowDoubleQuotedVariable?1:0;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof ParseInfo)) {
+			return false;
+		}
+		ParseInfo other = (ParseInfo)obj;
+		return this.allowDoubleQuotedVariable == other.allowDoubleQuotedVariable;
+	}
 }

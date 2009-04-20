@@ -25,6 +25,8 @@
  */
 package com.metamatrix.query.sql.visitor;
 
+import java.util.TreeSet;
+
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.metadata.TempMetadataID;
@@ -46,118 +48,124 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
 /**
  * <p>This visitor class will traverse a language object tree, and determine
  * if the current expression can be evaluated</p>
- * 
- * <p>The public visit() methods should NOT be called directly.</p>
- * 
- * There are three possible scenarios:
- * 
- * duringPlanning | fullyEvaluatable
- * ---------------------------------
- * false          | false            = will become processing time constant
- * false          | true             = processing time evaluation possible
- * true           | true             = planning time evaluation possible (should always be deterministic)
- * 
  */
 public class EvaluatableVisitor extends LanguageVisitor {
+	
+	public enum EvaluationLevel {
+		PLANNING,
+		PROCESSING,
+		PUSH_DOWN,
+	}
 
-    protected boolean evaluationPossible = true;
-    
-    //TODO: there aren't really 16 states here, this should be minimized
-    private boolean duringPlanning = false;
-    private boolean fullyEvaluatable = false;
-    private boolean deterministic = false;
-    private boolean pushdown = false;
-    
-    public EvaluatableVisitor(boolean duringPlanning, boolean fullyEvaluatable) {
-        this.duringPlanning = duringPlanning;
-        this.fullyEvaluatable = fullyEvaluatable;
-    }
-
+	private TreeSet<EvaluationLevel> levels = new TreeSet<EvaluationLevel>();
+	private EvaluationLevel targetLevel;
+	private int determinismLevel;
+	private boolean hasCorrelatedReferences;
+	    
     public void visit(Function obj) {
+        this.setDeterminismLevel(obj.getFunctionDescriptor().getDeterministic());
         if (obj.getFunctionDescriptor().getPushdown() == FunctionMethod.MUST_PUSHDOWN) {
-            evaluationNotPossible();
-        } else if (duringPlanning) {
-            if (obj.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
-                evaluationNotPossible();
-            } else if (obj.getFunctionDescriptor().getDeterministic() >= FunctionMethod.COMMAND_DETERMINISTIC) {
-                evaluationNotPossible();
-            }
-        } else if (deterministic && obj.getFunctionDescriptor().getDeterministic() == FunctionMethod.NONDETERMINISTIC) {
-            evaluationNotPossible();
+            evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+        } else if (obj.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)
+        		//TODO: if we had the context here we could plan better for non-prepared requests
+        		|| obj.getFunctionDescriptor().getDeterministic() >= FunctionMethod.COMMAND_DETERMINISTIC) {
+            evaluationNotPossible(EvaluationLevel.PROCESSING);
         }
     }
     
-    private boolean evaluationNotPossible() {
-        evaluationPossible = false;
-        setAbort(true);
-        return evaluationPossible;
+    private void setDeterminismLevel(int value) {
+    	determinismLevel = Math.max(determinismLevel, value);
+    }
+    
+    private void evaluationNotPossible(EvaluationLevel newLevel) {
+    	levels.add(newLevel);
+    	EvaluationLevel level = levels.last();
+    	if (targetLevel != null && level.compareTo(targetLevel) > 0) {
+    		setAbort(true);
+    	}
     }
         
     public void visit(ElementSymbol obj) {
     	//if the element is a variable, or an element that will have a value, it will be evaluatable at runtime
-    	if (duringPlanning || fullyEvaluatable) {
-    		evaluationNotPossible();
-    	} else {
-    		//begin hack for not having the metadata passed in
-    		if (obj.getGroupSymbol().getMetadataID() instanceof TempMetadataID) {
-    			TempMetadataID tid = (TempMetadataID)obj.getGroupSymbol().getMetadataID();
-    			if (tid.isScalarGroup()) {
-    				return;
-    			}
-    		}
-    		evaluationNotPossible();
-    	}
+		//begin hack for not having the metadata passed in
+		if (obj.getGroupSymbol().getMetadataID() instanceof TempMetadataID) {
+			TempMetadataID tid = (TempMetadataID)obj.getGroupSymbol().getMetadataID();
+			if (tid.isScalarGroup()) {
+				evaluationNotPossible(EvaluationLevel.PROCESSING);
+				return;
+			}
+		}
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     
     public void visit(ExpressionSymbol obj) {
-        evaluationNotPossible();
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     
     public void visit(AggregateSymbol obj) {
-        evaluationNotPossible();
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     
+    /**
+     * We assume the non-push down for correlation variables,
+     * then make specific checks when correlated variables are allowed.
+     */
     public void visit(Reference obj) {
-        if (duringPlanning || fullyEvaluatable) {
-            evaluationNotPossible();
-        } else if (pushdown && obj.isCorrelated()) {
-        	evaluationNotPossible();
-        }
+        hasCorrelatedReferences |= obj.isCorrelated();
+    	evaluationNotPossible(EvaluationLevel.PROCESSING);
     }
     
     public void visit(StoredProcedure proc){
-        evaluationNotPossible();  
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     
     public void visit(ScalarSubquery obj){
-        evaluationNotPossible();  
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     
     public void visit(DependentSetCriteria obj) {
-        evaluationNotPossible();
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     
     public void visit(ExistsCriteria obj) {
-        evaluationNotPossible(); 
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }        
 
     public void visit(SubquerySetCriteria obj) {
-        evaluationNotPossible(); 
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }        
 
     public void visit(SubqueryCompareCriteria obj) {
-        evaluationNotPossible(); 
+		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     
-    public boolean isEvaluationPossible() {
-        return evaluationPossible;
+    private boolean isEvaluationPossible() {
+    	if (levels.isEmpty()) {
+    		return true;
+    	}
+    	return levels.last().compareTo(targetLevel) <= 0;
     }
     
-    static final boolean isEvaluatable(LanguageObject obj, boolean duringPlanning, boolean fullyEvaluatable, boolean deterministic, boolean pushdown) {
-        EvaluatableVisitor visitor = new EvaluatableVisitor(duringPlanning, fullyEvaluatable);
-        visitor.deterministic = deterministic;
-        visitor.pushdown = pushdown;
+    public static final boolean isEvaluatable(LanguageObject obj, EvaluationLevel target) {
+        EvaluatableVisitor visitor = new EvaluatableVisitor();
+        visitor.targetLevel = target;
         PreOrderNavigator.doVisit(obj, visitor);
         return visitor.isEvaluationPossible();
+    }
+    
+    public static final boolean willBecomeConstant(LanguageObject obj, boolean pushdown) {
+        EvaluatableVisitor visitor = new EvaluatableVisitor();
+        visitor.targetLevel = EvaluationLevel.PROCESSING;
+        PreOrderNavigator.doVisit(obj, visitor);
+        if (pushdown && (visitor.hasCorrelatedReferences || visitor.determinismLevel >= FunctionMethod.NONDETERMINISTIC)) {
+        	return false;
+        }
+        return visitor.isEvaluationPossible();
+    }
+    
+    public static final boolean needsProcessingEvaluation(LanguageObject obj) {
+        EvaluatableVisitor visitor = new EvaluatableVisitor();
+        PreOrderNavigator.doVisit(obj, visitor);
+        return visitor.levels.contains(EvaluationLevel.PROCESSING);
     }
 }

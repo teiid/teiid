@@ -335,8 +335,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
 
     private Command parseCommand() throws QueryParserException {
         String[] commands = requestMsg.getCommands();
-        ParseInfo parseInfo = new ParseInfo();
-    	parseInfo.allowDoubleQuotedVariable = requestMsg.isDoubleQuotedVariableAllowed();
+        ParseInfo parseInfo = createParseInfo(this.requestMsg);
         if (!requestMsg.isBatchedUpdate()) {
         	String commandStr = commands[0];
             return QueryParser.getQueryParser().parseCommand(commandStr, parseInfo);
@@ -348,6 +347,12 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
         return new BatchedUpdateCommand(parsedCommands);
     }
+
+	public static ParseInfo createParseInfo(RequestMessage requestMsg) {
+		ParseInfo parseInfo = new ParseInfo();
+    	parseInfo.allowDoubleQuotedVariable = requestMsg.isDoubleQuotedVariableAllowed();
+		return parseInfo;
+	}
 
     public static void validateWithVisitor(
         AbstractValidationVisitor visitor,

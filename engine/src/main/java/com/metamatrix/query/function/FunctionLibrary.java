@@ -36,6 +36,7 @@ import com.metamatrix.query.function.metadata.FunctionMethod;
 import com.metamatrix.query.function.metadata.FunctionParameter;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
+import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 
@@ -347,6 +348,11 @@ public class FunctionLibrary {
             if (method == null){
                 throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0002, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0002, localDescriptor.getName()));
             }
+        }
+        
+        if (fd.getDeterministic() >= FunctionMethod.SESSION_DETERMINISTIC && values.length > 0 && values[0] instanceof CommandContext) {
+        	CommandContext cc = (CommandContext)values[0];
+        	cc.setSessionFunctionEvaluated(true);
         }
         
         // Invoke the method and return the result

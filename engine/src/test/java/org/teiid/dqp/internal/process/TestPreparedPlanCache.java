@@ -26,46 +26,56 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.teiid.dqp.internal.process.PreparedPlanCache;
+import static org.junit.Assert.*;
 
-import junit.framework.TestCase;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.teiid.dqp.internal.process.PreparedPlanCache;
+import org.teiid.dqp.internal.process.PreparedPlanCache.CacheID;
 
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.query.analysis.AnalysisRecord;
+import com.metamatrix.query.parser.ParseInfo;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.relational.ProjectNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.sql.lang.Command;
 
-
-public class TestPreparedPlanCache extends TestCase{
+public class TestPreparedPlanCache {
     private static final String EXAMPLE_QUERY = "SELECT * FROM table"; //$NON-NLS-1$
-	private final static String token = "1"; //$NON-NLS-1$
-	private final static  String token2 = "2"; //$NON-NLS-1$
-
-	public TestPreparedPlanCache(String name) {
-        super(name);
-    }
+	private final static DQPWorkContext token = new DQPWorkContext();
+	private final static  DQPWorkContext token2 = new DQPWorkContext();
+	
+	private final static ParseInfo pi = new ParseInfo();
+	
+	@BeforeClass public static void setUpOnce() {
+		token.setVdbName("foo"); //$NON-NLS-1$
+		token.setVdbVersion("1"); //$NON-NLS-1$
+		token2.setVdbName("foo"); //$NON-NLS-1$
+		token2.setVdbVersion("2"); //$NON-NLS-1$
+	}
     
     //====Tests====//
-    public void testCreatePreparedPlan(){
+    @Test public void testPutPreparedPlan(){
     	PreparedPlanCache cache = new PreparedPlanCache();
+    	
+    	CacheID id = new PreparedPlanCache.CacheID(token, pi, EXAMPLE_QUERY + 1);
     	
     	//No PreparedPlan at the begining
-    	assertNull(cache.getPreparedPlan(token, EXAMPLE_QUERY + 1));
+    	assertNull(cache.getPreparedPlan(id));
     	//create one
-    	cache.createPreparedPlan(token, EXAMPLE_QUERY + 1);
+    	cache.putPreparedPlan(id, true, new PreparedPlanCache.PreparedPlan());
     	//should have one now
-    	assertNotNull("Unable to get prepared plan from cache", cache.getPreparedPlan(token, EXAMPLE_QUERY + 1)); //$NON-NLS-1$
+    	assertNotNull("Unable to get prepared plan from cache", cache.getPreparedPlan(id)); //$NON-NLS-1$
     }
     
-    public void testGetPreparedPlan(){
+    @Test public void testGetPreparedPlan(){
     	PreparedPlanCache cache = new PreparedPlanCache();
-    	helpCreatePreparedPlans(cache, token, 0, 10);
-    	helpCreatePreparedPlans(cache, token2, 0, 15);
+    	helpPutPreparedPlans(cache, token, 0, 10);
+    	helpPutPreparedPlans(cache, token2, 0, 15);
     	
     	//read an entry for session2 (token2)
-    	PreparedPlanCache.PreparedPlan pPlan = cache.getPreparedPlan(token2, EXAMPLE_QUERY + 12);
+    	PreparedPlanCache.PreparedPlan pPlan = cache.getPreparedPlan(new PreparedPlanCache.CacheID(token2, pi, EXAMPLE_QUERY + 12));
     	assertNotNull("Unable to get prepared plan from cache", pPlan); //$NON-NLS-1$
     	assertEquals("Error getting plan from cache", new RelationalPlan(new ProjectNode(12)).toString(), pPlan.getPlan().toString()); //$NON-NLS-1$
     	assertEquals("Error getting command from cache", EXAMPLE_QUERY + 12, pPlan.getCommand().toString()); //$NON-NLS-1$
@@ -73,55 +83,55 @@ public class TestPreparedPlanCache extends TestCase{
     	assertEquals("Error gettting reference from cache", "ref12", pPlan.getReferences().get(0)); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testClearAll(){
+    @Test public void testClearAll(){
     	PreparedPlanCache cache = new PreparedPlanCache();
     	
     	//create one for each session token
-    	cache.createPreparedPlan(token, EXAMPLE_QUERY + 1);
-    	cache.createPreparedPlan(token2, EXAMPLE_QUERY + 1);
+    	helpPutPreparedPlans(cache, token, 1, 1);
+    	helpPutPreparedPlans(cache, token2, 1, 1);
     	//should have one
-    	assertNotNull("Unable to get prepared plan from cache for token", cache.getPreparedPlan(token, EXAMPLE_QUERY + 1)); //$NON-NLS-1$
+    	assertNotNull("Unable to get prepared plan from cache for token", cache.getPreparedPlan(new PreparedPlanCache.CacheID(token, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$
     	cache.clearAll();
     	//should not exist for token
-    	assertNull("Failed remove from cache", cache.getPreparedPlan(token, EXAMPLE_QUERY + 1)); //$NON-NLS-1$ 
+    	assertNull("Failed remove from cache", cache.getPreparedPlan(new PreparedPlanCache.CacheID(token, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$ 
     	//should not exist for token2
-    	assertNull("Unable to get prepared plan from cache for token2", cache.getPreparedPlan(token2, EXAMPLE_QUERY + 1)); //$NON-NLS-1$ 
+    	assertNull("Unable to get prepared plan from cache for token2", cache.getPreparedPlan(new PreparedPlanCache.CacheID(token2, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$ 
     }
     
-    public void testMaxSize(){
+    @Test public void testMaxSize(){
         PreparedPlanCache cache = new PreparedPlanCache(100);
-        helpCreatePreparedPlans(cache, token, 0, 101);
+        helpPutPreparedPlans(cache, token, 0, 101);
         //the first one should be gone because the max size is 100
-        assertNull(cache.getPreparedPlan(token, EXAMPLE_QUERY + 0)); 
+        assertNull(cache.getPreparedPlan(new PreparedPlanCache.CacheID(token, pi, EXAMPLE_QUERY + 0))); 
         
-        assertNotNull(cache.getPreparedPlan(token, EXAMPLE_QUERY + 12)); 
-        helpCreatePreparedPlans(cache, token, 102, 50);
+        assertNotNull(cache.getPreparedPlan(new PreparedPlanCache.CacheID(token, pi, EXAMPLE_QUERY + 12))); 
+        helpPutPreparedPlans(cache, token, 102, 50);
         //"sql12" should still be there based on lru  policy
-        assertNotNull(cache.getPreparedPlan(token, EXAMPLE_QUERY + 12)); 
+        assertNotNull(cache.getPreparedPlan(new PreparedPlanCache.CacheID(token, pi, EXAMPLE_QUERY + 12))); 
         
-        helpCreatePreparedPlans(cache, token2, 0, 121);
-        helpCreatePreparedPlans(cache, token, 0, 50);
+        helpPutPreparedPlans(cache, token2, 0, 121);
+        helpPutPreparedPlans(cache, token, 0, 50);
         assertTrue(cache.getSpaceUsed() <= 100);
     }
     
-    public void testZeroSizeCache() {
+    @Test public void testZeroSizeCache() {
         // Create with 0 size cache
         PreparedPlanCache cache = new PreparedPlanCache(0);
         assertEquals(0, cache.getSpaceAllowed());
         
         // Add 1 plan and verify it is not in the cache
-        helpCreatePreparedPlans(cache, token, 0, 1);
-        assertNull(cache.getPreparedPlan(token, EXAMPLE_QUERY + 0)); 
+        helpPutPreparedPlans(cache, token, 0, 1);
+        assertNull(cache.getPreparedPlan(new PreparedPlanCache.CacheID(token, pi, EXAMPLE_QUERY + 0))); 
         assertEquals(0, cache.getSpaceUsed());
         
         // Add another plan and verify it is not in the cache
-        helpCreatePreparedPlans(cache, token, 1, 1);
-        assertNull(cache.getPreparedPlan(token, EXAMPLE_QUERY + 1)); 
+        helpPutPreparedPlans(cache, token, 1, 1);
+        assertNull(cache.getPreparedPlan(new PreparedPlanCache.CacheID(token, pi, EXAMPLE_QUERY + 1))); 
         assertEquals(0, cache.getSpaceUsed());        
     }
     
     // set init size to negative number, which should default to 100 (default)
-    public void testNegativeSizeCacheUsesDefault() {
+    @Test public void testNegativeSizeCacheUsesDefault() {
         PreparedPlanCache negativeSizedCache = new PreparedPlanCache(-1000);
         PreparedPlanCache defaultSizedCache = new PreparedPlanCache();
         
@@ -130,15 +140,18 @@ public class TestPreparedPlanCache extends TestCase{
     }
     
     //====Help methods====//
-    private void helpCreatePreparedPlans(PreparedPlanCache cache, String token, int start, int count){
-    	for(int i=start; i<count; i++){
+    private void helpPutPreparedPlans(PreparedPlanCache cache, DQPWorkContext session, int start, int count){
+    	for(int i=0; i<count; i++){
     		Command dummy;
 			try {
-				dummy = QueryParser.getQueryParser().parseCommand(EXAMPLE_QUERY + i); 
+				dummy = QueryParser.getQueryParser().parseCommand(EXAMPLE_QUERY + (start + i)); 
 			} catch (QueryParserException e) {
 				throw new RuntimeException(e);
 			}
-    		PreparedPlanCache.PreparedPlan pPlan = cache.createPreparedPlan(token, dummy.toString());
+	    	CacheID id = new PreparedPlanCache.CacheID(session, pi, dummy.toString());
+
+	    	PreparedPlanCache.PreparedPlan pPlan = new PreparedPlanCache.PreparedPlan();
+    		cache.putPreparedPlan(id, true, pPlan);
     		pPlan.setCommand(dummy); 
     		pPlan.setPlan(new RelationalPlan(new ProjectNode(i)));
             Map props = new HashMap();

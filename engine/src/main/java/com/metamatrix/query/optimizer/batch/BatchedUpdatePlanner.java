@@ -53,7 +53,7 @@ import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.util.VariableContext;
-import com.metamatrix.query.sql.visitor.NeedsEvaluationVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 
@@ -131,7 +131,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                     	contexts.add(allContexts.get(commandIndex));
                     	shouldEvaluate.add(Boolean.TRUE);
                     } else {
-                    	shouldEvaluate.add(NeedsEvaluationVisitor.needsEvaluation(updateCommand));
+                    	shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(updateCommand));
                     }
                     // Find out if there are other commands called on the same physical model
                     // immediately and contiguously after this one
@@ -144,7 +144,7 @@ public class BatchedUpdatePlanner implements CommandPlanner {
                             	contexts.add(allContexts.get(batchIndex));
                             	shouldEvaluate.add(Boolean.TRUE);
                             } else {
-                            	shouldEvaluate.add(NeedsEvaluationVisitor.needsEvaluation(batchingCandidate));
+                            	shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(batchingCandidate));
                             }
                         } else { // Otherwise, stop batching at this point. The next command may well be the start of a new batch
                             break batchLoop;
