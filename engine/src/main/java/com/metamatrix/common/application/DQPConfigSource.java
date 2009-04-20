@@ -32,7 +32,6 @@ import com.google.inject.Binder;
  */
 public interface DQPConfigSource {
 
-    public static final String MIN_FETCH_SIZE = "MinFetchSize"; //$NON-NLS-1$
 	public static final String MAX_FETCH_SIZE = "MaxFetchSize"; //$NON-NLS-1$
 	public static final String MAX_CODE_TABLE_RECORDS = "MaxCodeTableRecords"; //$NON-NLS-1$
 	public static final String MAX_CODE_TABLES = "MaxCodeTables"; //$NON-NLS-1$
@@ -43,7 +42,7 @@ public interface DQPConfigSource {
 	public static final String USE_RESULTSET_CACHE = "ResultSetCacheEnabled"; //$NON-NLS-1$
 	public static final String RESULTSET_CACHE_SCOPE = "ResultSetCacheScope"; //$NON-NLS-1$
 	public static final String STREAMING_BATCH_SIZE     = "metamatrix.server.streamingBatchSize"; //$NON-NLS-1$
-	public static final String PROCESS_POOL_THREAD_TTL = "ProcessPoolThreadTTL"; //$NON-NLS-1$
+
 	public static final String PROCESS_POOL_MAX_THREADS = "ProcessPoolMaxThreads"; //$NON-NLS-1$
 	public static final String PROCESSOR_DEBUG_ALLOWED = "ProcessorDebugAllowed"; //$NON-NLS-1$
     public static final String COMMAND_LOGGER_CLASSNAME = "metamatrix.server.commandLoggerClassname"; //$NON-NLS-1$
