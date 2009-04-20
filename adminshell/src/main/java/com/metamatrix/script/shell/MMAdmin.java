@@ -60,7 +60,8 @@ public class MMAdmin {
                 
                 if (Capabilities.haveSwing() && gui) {
                     //bsh.util.Util.startSplashScreen();
-                    interpreter.eval("desktop()"); //$NON-NLS-1$                    
+                    interpreter.eval("desktop()"); //$NON-NLS-1$
+                    interpreter.getOut().flush();
                 } else {
                     interpreter.run();
                 }

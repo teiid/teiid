@@ -30,6 +30,6 @@ printBanner()
 		print(" Note: Every comand MUST end with semi-colon [;] and are ");
 		print(" always in form 'command([param]*?);'");
 		print("**********************************************************************");
-		print(" ");
+		print("\n\n");
 	}
 }

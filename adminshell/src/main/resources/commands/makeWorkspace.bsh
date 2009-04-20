@@ -31,6 +31,7 @@ makeWorkspace( String name )
     SimpleParser mmparser = new SimpleParser();
 	this.console.setParser(mmparser);    
     interpreter.eval("importCommands(\"commands\")");
+    interpreter.eval("load(\"server\")"); //$NON-NLS-1$
     mmparser.setInterpreter(this.interpreter);
     // Ramesh Changes done
     
