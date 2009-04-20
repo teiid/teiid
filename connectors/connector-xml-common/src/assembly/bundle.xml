@@ -9,18 +9,11 @@
   
   <includeBaseDirectory>false</includeBaseDirectory>
     
-  <dependencySets>
-    <dependencySet>
-      <useProjectArtifact>false</useProjectArtifact>      
-      <useTransitiveDependencies>false</useTransitiveDependencies>
-      <useTransitiveFiltering>false</useTransitiveFiltering>
-      <useDefaultExcludes>true</useDefaultExcludes>
-      <unpack>false</unpack>
-      
-      <excludes>
-        <exclude>teiid:*</exclude>
-      </excludes>      
-    </dependencySet>
-  </dependencySets>
+  <fileSets>
+    <fileSet>
+      <directory>target/dependency</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+  </fileSets>   
 
 </assembly>
