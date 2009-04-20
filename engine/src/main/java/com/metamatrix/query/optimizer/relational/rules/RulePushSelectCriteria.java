@@ -260,12 +260,10 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     
                     satisfyAccessPatterns(critNode, currentNode);
                     
-                    if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET) 
-                                    && CapabilitiesUtil.getMaxInCriteriaSize(RuleRaiseAccess.getModelIDFromAccess(currentNode, metadata), metadata, capFinder) > 0) {
+                    if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
                         //once a dependent crit node is pushed, don't bother pushing it further into the command
                         //dependent access node will use this as an assumption for where dependent sets can appear in the command
                         critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.TRUE);
-                        
                         currentNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
                         return currentNode.getFirstChild();
                     } 

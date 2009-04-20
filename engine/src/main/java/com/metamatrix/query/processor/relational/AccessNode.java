@@ -211,7 +211,7 @@ public class AccessNode extends RelationalNode {
 		target.modelName = source.modelName;
 		target.connectorBindingId = source.connectorBindingId;
 		target.shouldEvaluate = source.shouldEvaluate;
-		target.command = (Command)source.command.clone();
+		target.command = source.command;
 	}
 
     /*

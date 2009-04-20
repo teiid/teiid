@@ -22,33 +22,21 @@
 
 package com.metamatrix.query.sql.visitor;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.eval.LookupEvaluator;
 import com.metamatrix.query.sql.LanguageObject;
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.CompoundCriteria;
-import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.sql.lang.DependentSetCriteria;
-import com.metamatrix.query.sql.lang.JoinPredicate;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.navigator.DeepPostOrderNavigator;
 import com.metamatrix.query.sql.navigator.PostOrderNavigator;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.util.ValueIterator;
+import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -64,79 +52,13 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
     private CommandContext context;
     private LookupEvaluator dataMgr;
         
-    public EvaluateExpressionVisitor() {
+    EvaluateExpressionVisitor() {
         super(null);
     }
 
     public void setContext(CommandContext context) {
         this.context = context;
     }
-                                
-    // ######### Visit methods that are replacing DependentSetCriteria with resolved SetCriteria ########
-    
-    public void visit(CompoundCriteria obj) {
-        List crit = obj.getCriteria();
-        List newCrit = new ArrayList(crit.size());
-        Iterator iter = crit.iterator();
-        while(iter.hasNext()) {
-            newCrit.add(checkDependentCriteria((Criteria) iter.next()));
-        }
-        obj.setCriteria(newCrit);
-    }
-
-    public void visit(JoinPredicate obj) {
-        List joinCrit = obj.getJoinCriteria();
-        List newCrit = new ArrayList(joinCrit.size());
-        Iterator iter = joinCrit.iterator();
-        while(iter.hasNext()) {
-            newCrit.add(checkDependentCriteria((Criteria) iter.next()));
-        }
-        obj.setJoinCriteria(newCrit);
-    }
-
-    public void visit(Query obj) {
-        obj.setCriteria(checkDependentCriteria(obj.getCriteria()));
-        obj.setHaving(checkDependentCriteria(obj.getHaving()));
-    }
-
-    private Criteria checkDependentCriteria(Criteria crit) {
-        if (!(crit instanceof DependentSetCriteria)) {
-            return crit;
-        }
-        return replaceDependentCriteria((DependentSetCriteria)crit);            
-    }
-
-    public Criteria replaceDependentCriteria(DependentSetCriteria crit) {
-        ValueIterator iter = crit.getValueIterator();
-        if(iter == null) {
-            // Something has gone horribly wrong!  This should never happen
-            Assertion.failed(QueryPlugin.Util.getString("EvaluateExpressionVisitor.Cant_get_iterator", crit.getValueExpression().toString())); //$NON-NLS-1$
-        }
-            
-        try {
-            List vals = new ArrayList();
-            while(iter.hasNext()) {
-                Object val = iter.next();
-                if(val != null) {
-                    vals.add(new Constant(val));
-                }
-            }
-            
-            if(vals.size() > 0) {                    
-                SetCriteria sc = new SetCriteria();
-                sc.setExpression(crit.getExpression());
-                sc.setValues(vals);
-                return sc;
-            }
-            
-            // No values - return criteria that is always false
-            return new CompareCriteria(new Constant(new Integer(0)), CompareCriteria.EQ, new Constant(new Integer(1)));
-            
-        } catch(MetaMatrixComponentException e) {
-            throw new MetaMatrixRuntimeException(e);
-        }
-    }
-    
 
     /**
      * Evaluate the expression.  This method takes into account whether the 
@@ -151,12 +73,8 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
      * @return
      */
     public Expression replaceExpression(Expression expr) {
-        if(!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty()) {
-            return expr;
-        }
-               
         //if the expression is a constant or is not evaluatable, just return
-        if (expr instanceof Constant || (!(expr instanceof Reference) && !EvaluatableVisitor.isEvaluatable(expr, false, true, false, false))) {
+        if (expr instanceof Constant || expr instanceof ScalarSubquery || (!(expr instanceof Reference) && !EvaluatableVisitor.isEvaluatable(expr, false, true, false, false))) {
             return expr;
         }
 

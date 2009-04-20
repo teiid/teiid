@@ -22,15 +22,11 @@
 
 package com.metamatrix.query.sql.lang;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageVisitor;
+import com.metamatrix.query.sql.symbol.ContextReference;
 import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.util.ValueIterator;
-import com.metamatrix.query.sql.util.ValueIteratorSource;
-import com.metamatrix.query.util.ErrorMessageKeys;
 
 
 /** 
@@ -39,44 +35,27 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  * by a separate processing node.
  * @since 5.0.1
  */
-public class DependentSetCriteria extends AbstractSetCriteria {
-
-    /**
-     * Specifies who will provide the value iterator later during execution.  The
-     * ValueIterator is typically not ready yet, so we can't hold it directly.
-     */
-    private ValueIteratorSource valueIteratorSource;
-    
+public class DependentSetCriteria extends AbstractSetCriteria implements ContextReference {
+	
     /**
      * Specifies the expression whose values we want to return in the iterator
      */
     private Expression valueExpression;
+    private String id;
     
     /** 
      * Construct with the left expression 
      */
-    public DependentSetCriteria(Expression expr) {
+    public DependentSetCriteria(Expression expr, String id) {
         setExpression(expr);
+        this.id = id;
     }    
-
-    /** 
- 	 * Get the valute iterator source, which will provide the iterator
-     * when it is ready during processing.   
-     * @return Returns the valueIteratorSource.
-     */
-    public ValueIteratorSource getValueIteratorSource() {
-        return this.valueIteratorSource;
+        
+    @Override
+    public String getContextSymbol() {
+    	return id;
     }
 
-    
-    /** 
-     * Set the value iterator source, which will provide value iterators during processing.
-     * @param valueIteratorSource The valueIteratorSource to set.
-     */
-    public void setValueIteratorSource(ValueIteratorSource valueIteratorSource) {
-        this.valueIteratorSource = valueIteratorSource;
-    }    
-    
     /** 
      * Get the independent value expression
      * @return Returns the valueExpression.
@@ -94,25 +73,6 @@ public class DependentSetCriteria extends AbstractSetCriteria {
         this.valueExpression = valueExpression;
     }
     
-    /**
-     * Returns a ValueIterator to obtain the values in this IN criteria's value set.
-     * This method can only be safely called if the ValueIteratorSource is ready.
-     * @return this object's ValueIterator instance 
-     * @throws MetaMatrixRuntimeException if the subquery for this set criteria
-     * has not yet been processed and no value iterator is available
-     * @see com.metamatrix.query.sql.lang.AbstractSetCriteria#getValueIterator()
-     */
-    public ValueIterator getValueIterator() {
-        ValueIterator valueIterator = this.valueIteratorSource.getValueIterator(this.valueExpression);
-        
-        if(valueIterator == null) {
-            throw new MetaMatrixRuntimeException(ErrorMessageKeys.SQL_0012, QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0012));
-        }
-        
-        valueIterator.reset();
-        return valueIterator;
-    }
-
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
@@ -165,21 +125,11 @@ public class DependentSetCriteria extends AbstractSetCriteria {
             copy = (Expression) getExpression().clone();
         }
 
-        DependentSetCriteria criteriaCopy = new DependentSetCriteria(copy);
+        DependentSetCriteria criteriaCopy = new DependentSetCriteria(copy, id);
         criteriaCopy.setNegated(isNegated());
-        criteriaCopy.setValueIteratorSource(getValueIteratorSource());
         criteriaCopy.setValueExpression((Expression) getValueExpression().clone());
+        criteriaCopy.id = this.id;
         return criteriaCopy;
-    }
-    
-    /** 
-     * This method is not supported for DependentSetCriteria as it will obtain it's 
-     * value iterators for the ValueIteratorSource.
-     * @see com.metamatrix.query.sql.lang.AbstractSetCriteria#setValueIterator(com.metamatrix.query.sql.util.ValueIterator)
-     * @throws UnsupportedOperationException Always
-     */
-    public void setValueIterator(ValueIterator valueIterator) {
-        throw new UnsupportedOperationException("DependentSetCriteria.setValueIterator() should never be called as the value iterator is produced dynamically."); //$NON-NLS-1$
     }
     
 }

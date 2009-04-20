@@ -22,15 +22,12 @@
 
 package com.metamatrix.query.sql.symbol;
 
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.query.QueryPlugin;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
-import com.metamatrix.query.sql.util.ValueIterator;
-import com.metamatrix.query.sql.util.ValueIteratorProvider;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
-import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
  * This is an Expression implementation that can be used in a SELECT clause.
@@ -40,15 +37,14 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  * of this could be used wherever an Expression is legal, but it is
  * specifically needed for the SELECT clause.
  */
-public class ScalarSubquery implements Expression, SubqueryContainer, ValueIteratorProvider {
+public class ScalarSubquery implements Expression, SubqueryContainer, ContextReference {
 
+	private static AtomicInteger ID = new AtomicInteger();
+	
     private Command command;
     private Class type;
     private int hashCode;
-
-    // This is "transient" state, available only during query
-    // processing.  It is not cloned, if present.
-    private ValueIterator valueIterator;
+    private String id = "$sc/id" + ID.getAndIncrement(); //$NON-NLS-1$
 
     /**
      * Default constructor
@@ -60,34 +56,15 @@ public class ScalarSubquery implements Expression, SubqueryContainer, ValueItera
     public ScalarSubquery(Command subqueryCommand){
         this.setCommand(subqueryCommand);
     }
-
-    /**
-     * Returns always the same instance of a ValueIterator, but
-     * {@link ValueIterator#reset resets} it each time this method is called
-     * @return this object's ValueIterator instance (always the same instance)
-     * @throws MetaMatrixRuntimeException if the subquery for this set criteria
-     * has not yet been processed and no value iterator is available
-     * @see com.metamatrix.query.sql.lang.SubqueryLanguageObject#getValueIterator()
-     */
-    public ValueIterator getValueIterator() {
-        if (this.valueIterator == null){
-            throw new MetaMatrixRuntimeException(ErrorMessageKeys.SQL_0034, QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0034));
-        }
-        this.valueIterator.reset();
-        return this.valueIterator;
+    
+    @Override
+    public String getContextSymbol() {
+    	return id;
     }
-
-    /**
-     * Set the ValueIterator on this object (the ValueIterator will encapsulate
-     * the single-column results of the subquery processor plan).  This
-     * ValueIterator must be set before processing (before the Criteria can be
-     * evaluated).  Also, this ValueIterator should be considered transient -
-     * only available during processing - and it will not be cloned should
-     * this Criteria object be cloned.
-     * @param valueIterator encapsulating the results of the sub query
-     */
-    public void setValueIterator(ValueIterator valueIterator) {
-        this.valueIterator = valueIterator;
+    
+    @Override
+    public Expression getValueExpression() {
+    	return null;
     }
 
     /**

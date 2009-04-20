@@ -47,6 +47,7 @@ import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
+import com.metamatrix.query.sql.symbol.ContextReference;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
@@ -55,6 +56,7 @@ import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.symbol.TestCaseExpression;
 import com.metamatrix.query.sql.symbol.TestSearchedCaseExpression;
+import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
 import com.metamatrix.query.util.CommandContext;
 
@@ -264,28 +266,35 @@ public class TestExpressionEvaluator extends TestCase {
         ScalarSubquery expr = new ScalarSubquery(new Query());
         ArrayList values = new ArrayList(1);
         values.add("a"); //$NON-NLS-1$
-        CollectionValueIterator valueIter = new CollectionValueIterator(values);
-        expr.setValueIterator(valueIter);
-        
-        assertEquals("a", Evaluator.evaluate(expr) ); //$NON-NLS-1$
+        Object expected = "a"; //$NON-NLS-1$
+        helpTestWithValueIterator(expr, values, expected);
     }
+
+	private void helpTestWithValueIterator(ScalarSubquery expr,
+			List<?> values, Object expected)
+			throws BlockedException,
+			MetaMatrixComponentException, ExpressionEvaluationException {
+		final CollectionValueIterator valueIter = new CollectionValueIterator(values);
+        CommandContext cc = new CommandContext() {
+        	@Override
+        	public ValueIterator getValueIterator(ContextReference ref)
+        			throws MetaMatrixComponentException {
+        		return valueIter;
+        	}
+        };
+        assertEquals(expected, new Evaluator(Collections.emptyMap(), null, cc).evaluate(expr, null) );
+	}
 
     public void testScalarSubquery2() throws Exception{
         ScalarSubquery expr = new ScalarSubquery(new Query());
         ArrayList values = new ArrayList(1);
         values.add(null);
-        CollectionValueIterator valueIter = new CollectionValueIterator(values);
-        expr.setValueIterator(valueIter);
-        
-        assertEquals(null, Evaluator.evaluate(expr) );
+        helpTestWithValueIterator(expr, values, null);
     }
 
     public void testScalarSubquery3() throws Exception{
         ScalarSubquery expr = new ScalarSubquery(new Query());
-        CollectionValueIterator valueIter = new CollectionValueIterator(Collections.EMPTY_LIST);
-        expr.setValueIterator(valueIter);
-        
-        assertEquals(null, Evaluator.evaluate(expr) );
+        helpTestWithValueIterator(expr, Collections.emptyList(), null);
     }
 
     public void testScalarSubqueryFails() throws Exception{
@@ -293,11 +302,9 @@ public class TestExpressionEvaluator extends TestCase {
         ArrayList values = new ArrayList(2);
         values.add("a"); //$NON-NLS-1$
         values.add("b"); //$NON-NLS-1$
-        CollectionValueIterator valueIter = new CollectionValueIterator(values);
-        expr.setValueIterator(valueIter);
         
         try {
-        	Evaluator.evaluate(expr);
+        	helpTestWithValueIterator(expr, values, null);
             fail("Expected ExpressionEvaluationException but got none"); //$NON-NLS-1$
         } catch (ExpressionEvaluationException e) {
             assertEquals("Unable to evaluate (<undefined>): The command of this scalar subquery returned more than one value: <undefined>", e.getMessage()); //$NON-NLS-1$

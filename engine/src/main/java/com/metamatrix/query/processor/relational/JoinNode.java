@@ -36,7 +36,6 @@ import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
-import com.metamatrix.query.sql.symbol.Expression;
 
 /** 
  * @since 4.2
@@ -51,7 +50,7 @@ public class JoinNode extends RelationalNode {
     
     private JoinStrategy joinStrategy;
     private JoinType joinType;
-    private DependentValueSource dependentValueSource;
+    private String dependentValueSource;
    
     // Set up state - need to be cloned but not reset
     private List leftExpressions;
@@ -133,21 +132,9 @@ public class JoinNode extends RelationalNode {
         
         clonedNode.joinCriteria = this.joinCriteria;
         
-        if (leftExpressions != null) {
-            List leftCopy = new ArrayList(leftExpressions.size());
-            for(int i=0; i<leftExpressions.size(); i++) {
-                leftCopy.add(((Expression)leftExpressions.get(i)).clone());
-            }
-            clonedNode.leftExpressions = leftCopy;
-        }
+        clonedNode.leftExpressions = leftExpressions;
         
-        if (rightExpressions != null) {
-            List rightCopy = new ArrayList(rightExpressions.size());
-            for(int i=0; i<rightExpressions.size(); i++) {
-                rightCopy.add(((Expression)rightExpressions.get(i)).clone());
-            }
-            clonedNode.rightExpressions = rightCopy;
-        }
+        clonedNode.rightExpressions = rightExpressions;
         clonedNode.dependentValueSource = this.dependentValueSource;
         
         return clonedNode;
@@ -168,7 +155,7 @@ public class JoinNode extends RelationalNode {
         if (state == State.LOAD_RIGHT) {
             if (isDependent() && !this.rightOpened) { 
                 TupleSourceID tsID = this.joinStrategy.leftSource.getTupleSourceID();
-                this.dependentValueSource.setTupleSource(this.getBufferManager().getTupleSource(tsID), tsID);
+                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, new DependentValueSource(tsID, this.getBufferManager()));
                 //open the right side now that the tuples have been collected
                 this.getChildren()[1].open();
                 this.rightOpened = true;
@@ -259,7 +246,7 @@ public class JoinNode extends RelationalNode {
     /** 
      * @param isDependent The isDependent to set.
      */
-    public void setDependentValueSource(DependentValueSource dependentValueSource) {
+    public void setDependentValueSource(String dependentValueSource) {
         this.dependentValueSource = dependentValueSource;
     }
     

@@ -182,11 +182,7 @@ public class BatchedUpdateNode extends RelationalNode {
      * @since 4.2
      */
     public Object clone() {
-        List clonedCommands = new ArrayList(updateCommands.size());
-        for (int i = 0; i < updateCommands.size(); i++) {
-            clonedCommands.add(((Command)updateCommands.get(i)).clone());
-        }
-        BatchedUpdateNode clonedNode = new BatchedUpdateNode(getID(), clonedCommands, contexts, shouldEvaluate, modelName);
+        BatchedUpdateNode clonedNode = new BatchedUpdateNode(getID(), updateCommands, contexts, shouldEvaluate, modelName);
         super.copy(this, clonedNode);
         return clonedNode;
     }

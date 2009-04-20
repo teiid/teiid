@@ -123,13 +123,12 @@ public class IfInstruction extends ProgramInstruction {
      * Returns a deep clone
      */
     public Object clone(){
-    	Criteria cloneCriteria = (Criteria) this.condition.clone();
     	Program cloneIf = (Program) this.ifProgram.clone();
     	Program cloneElse = null;
     	if(elseProgram != null) {
     		cloneElse = (Program) this.elseProgram.clone();
     	}
-        IfInstruction clone = new IfInstruction(cloneCriteria, cloneIf, cloneElse);
+        IfInstruction clone = new IfInstruction(this.condition, cloneIf, cloneElse);
         return clone;
     }
 

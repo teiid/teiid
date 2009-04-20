@@ -28,13 +28,20 @@ import java.util.Random;
 import java.util.Stack;
 import java.util.TimeZone;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryProcessingException;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.optimizer.relational.PlanToProcessConverter;
 import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.sql.symbol.ContextReference;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.util.ValueIterator;
+import com.metamatrix.query.sql.util.ValueIteratorSource;
 import com.metamatrix.query.sql.util.VariableContext;
 
 /** 
@@ -89,7 +96,7 @@ public class CommandContext implements Cloneable {
     
     private QueryProcessor.ProcessorFactory queryProcessorFactory;
     
-    private VariableContext variableContext;
+    private VariableContext variableContext = new VariableContext();
     
     /**
      * Construct a new context.
@@ -403,4 +410,25 @@ public class CommandContext implements Cloneable {
 		toPush.setParentContext(this.variableContext);
 		this.variableContext = toPush;
 	}
+	
+	public Object getFromContext(Expression expression) throws MetaMatrixComponentException {
+		if (variableContext == null || !(expression instanceof ElementSymbol)) {
+			throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
+		}
+		Object value = variableContext.getValue((ElementSymbol)expression);
+		if (value == null && !variableContext.containsVariable((ElementSymbol)expression)) {
+			throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
+		}
+		return value;
+	}
+	
+	public ValueIterator getValueIterator(ContextReference ref)
+			throws MetaMatrixComponentException {
+		if (variableContext == null) {
+			throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, ref.getContextSymbol(), "No value was available")); //$NON-NLS-1$
+		}
+		ValueIteratorSource dvs = (ValueIteratorSource) this.variableContext.getGlobalValue(ref.getContextSymbol());
+		return dvs.getValueIterator(ref.getValueExpression());
+	}
+
 }

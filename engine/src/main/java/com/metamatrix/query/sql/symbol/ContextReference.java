@@ -20,41 +20,12 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.query.processor.relational;
+package com.metamatrix.query.sql.symbol;
 
-import java.util.List;
+public interface ContextReference {
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-
-/** 
- * @since 4.3
- */
-interface TupleSourceIterator {
-
-    /**
-     * @see java.util.Iterator#hasNext()
-     */
-    boolean hasNext() throws MetaMatrixComponentException, MetaMatrixProcessingException;
-
-    /**
-     * Returns constant Object values, not Expressions.
-     * @see java.util.Iterator#next()
-     */
-    List next() throws MetaMatrixComponentException, MetaMatrixProcessingException;
-
-    /**
-     * Flags a reset as being needed
-     * @see com.metamatrix.query.sql.util.ValueIterator#reset()
-     */
-    void reset();
-    
-    void mark();
-    
-    int getCurrentIndex();
-    
-    void setPosition(int position);
-    
-    //int available();
-
+	public String getContextSymbol();
+	
+	public Expression getValueExpression();
+	
 }

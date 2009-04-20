@@ -27,18 +27,18 @@ import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.eval.Evaluator;
-import com.metamatrix.query.sql.lang.AbstractSetCriteria;
+import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Reference;
-import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.sql.util.VariableContext;
 
 public class DependentProcedureCriteriaProcessor extends DependentCriteriaProcessor {
@@ -52,16 +52,11 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
                                                Criteria dependentCriteria,
                                                List references,
                                                List defaults,
-                                               Evaluator eval) {
+                                               Evaluator eval) throws ExpressionEvaluationException, MetaMatrixComponentException {
         super(1, dependentNode, dependentCriteria);
         this.eval = eval;
         this.inputDefaults = defaults;
         this.inputReferences = references;
-    }
-    
-    public void reset() {
-        super.reset();
-        critInProgress = null;
     }
     
     /**
@@ -81,6 +76,12 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
 
             context.remove(ref.getExpression());
         }
+        
+    	if (critInProgress == QueryRewriter.FALSE_CRITERIA) {
+    		critInProgress = null;
+    		consumedCriteria();
+    		return false;
+    	}
 
         boolean validRow = true;
 
@@ -91,14 +92,7 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
             boolean nullAllowed = false;
             Reference parameter = null;
 
-            if (crit instanceof AbstractSetCriteria) {
-                AbstractSetCriteria asc = (AbstractSetCriteria)crit;
-                ValueIterator iter = asc.getValueIterator();
-                if (iter.hasNext()) {
-                    value = asc.getValueIterator().next();
-                }
-                parameter = (Reference)asc.getExpression();
-            } else if (crit instanceof IsNullCriteria) {
+            if (crit instanceof IsNullCriteria) {
                 parameter = (Reference)((IsNullCriteria)crit).getExpression();
                 nullAllowed = true;
             } else if (crit instanceof CompareCriteria) {
@@ -150,5 +144,5 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
 
         return true;
     }
-
+    
 }

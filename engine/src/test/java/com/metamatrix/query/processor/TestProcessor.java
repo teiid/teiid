@@ -5479,7 +5479,7 @@ public class TestProcessor extends TestCase {
         // Collect reference, set value
         Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
         VariableContext vc = new VariableContext();
-        vc.setValue(ref.getExpression()	, "a    "); //$NON-NLS-1$
+        vc.setGlobalValue(ref.getContextSymbol(),  "a    "); //$NON-NLS-1$
         CommandContext context = createCommandContext();
         context.setVariableContext(vc);
         // Run query
@@ -5521,7 +5521,7 @@ public class TestProcessor extends TestCase {
         // Collect reference, set value
         Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
         VariableContext vc = new VariableContext();
-        vc.setValue(ref.getExpression()	, "a"); //$NON-NLS-1$
+        vc.setGlobalValue(ref.getContextSymbol(), "a"); //$NON-NLS-1$
         CommandContext context = createCommandContext();
         context.setVariableContext(vc);
         
@@ -7870,7 +7870,7 @@ public class TestProcessor extends TestCase {
         
         Reference ref = ReferenceCollectorVisitor.getReferences(command).iterator().next();
         VariableContext vc = new VariableContext();
-        vc.setValue(ref.getExpression(), "a"); //$NON-NLS-1$
+        vc.setGlobalValue(ref.getContextSymbol(), "a"); //$NON-NLS-1$
         CommandContext context = createCommandContext();
         context.setVariableContext(vc);
         

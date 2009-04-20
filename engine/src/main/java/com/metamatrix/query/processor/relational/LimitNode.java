@@ -150,15 +150,8 @@ public class LimitNode extends RelationalNode {
     }
     
     public Object clone() {
-        Expression clonedLimit = null;
-        if (limitExpr != null) {
-        	clonedLimit = (Expression)limitExpr.clone();
-        }
-        Expression clonedOffset = null;
-        if (offsetExpr != null) {
-            clonedOffset = (Expression)offsetExpr.clone();
-        }
-        LimitNode node = new LimitNode(getID(), clonedLimit, clonedOffset);
+        
+        LimitNode node = new LimitNode(getID(), limitExpr, offsetExpr);
         copy(this, node);
         node.rowCounter = this.rowCounter;
         return node;

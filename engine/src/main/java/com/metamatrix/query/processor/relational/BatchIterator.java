@@ -27,10 +27,12 @@ import java.util.NoSuchElementException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 
 final class BatchIterator implements
-                                 TupleSourceIterator {
+                                 IndexedTupleSource {
 
     private final RelationalNode source;
 
@@ -65,9 +67,20 @@ final class BatchIterator implements
         }
         return true;
     }
-
-    public List next() throws MetaMatrixComponentException,
-                      MetaMatrixProcessingException {
+    
+    @Override
+    public void closeSource() throws MetaMatrixComponentException {
+    	
+    }
+    
+    @Override
+    public List<SingleElementSymbol> getSchema() {
+    	return source.getElements();
+    }
+    
+    @Override
+    public List<?> nextTuple() throws MetaMatrixComponentException,
+    		MetaMatrixProcessingException {
         if (currentTuple == null && !hasNext()) {
             throw new NoSuchElementException();
         }
@@ -84,6 +97,7 @@ final class BatchIterator implements
         //does nothing
     }
 
+    @Override
     public int getCurrentIndex() {
         return currentRow;
     }

@@ -30,62 +30,30 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.SymbolMap;
-import com.metamatrix.query.sql.util.ValueIterator;
-import com.metamatrix.query.sql.util.ValueIteratorProvider;
 import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.util.CommandContext;
 
 /**
  * <p>This utility handles the work of processing a subquery; certain types
  * of processor nodes will use an instance of this class to do that work.
- * All the corresponding "child" or "sub" ProcessorPlans
- * (one for each ValueIteratorProvider) must be processed before the
- * client processor node can do it's work.</p>
- *
- * <p>For example, a DependentSelectNode is basically a select node where
- * part of the criteria is a subquery.  The criteria cannot be evaluated
- * until the values of the subquery result are available.  A
- * DependentProjectNode is a project node where one of the projected
- * symbols is a scalar subquery.  That project cannot be performed until
- * the scalar subquery is executed and it's value is available so that the
- * subquery can be evaluated as an expression.</p>
- *
- * <p>The ValueIteratorProvider interface abstracts a language object that
- * needs to have it's subquery processed and the resulting values given to
- * it.  This utility class does the processing of the subquery ProcessorPlan,
- * and provides the ValueIteratorProvider instance with a ValueIterator
- * instance, which iterates over the subquery results.</p>
  */
 public class SubqueryProcessorUtility {
 	
-	/**
-     * List of ProcessorPlans for each subquery.  Contents match
-     * 1-for-1 with the contents of {@link #valueIteratorProviders} List
-     * see {@link #setPlansAndValueProviders}
-     */
-	private List<ProcessorPlan> processorPlans = new ArrayList<ProcessorPlan>();
+	private List<? extends ProcessorPlan> processorPlans;
+	private List<String> contextReferences;
+	private SymbolMap correlatedReferences;
+
 	private List<QueryProcessor> processors = new ArrayList<QueryProcessor>();
-
-	/**
-     * List of ValueIteratorProvider for each subquery.  Contents match
-     * 1-for-1 with the contents of {@link #processorPlans} List
-     * see {@link #setPlansAndValueProviders}
-     */
-	private List<ValueIteratorProvider> valueIteratorProviders;
-
-    private SymbolMap correlatedReferences;
-
+    
 	// "Placeholder" state, for resuming processing after
 	// a BlockedException - not cloned
 	private int currentIndex = 0;
@@ -97,23 +65,24 @@ public class SubqueryProcessorUtility {
 	
 	private VariableContext currentContext;
 
-	public SubqueryProcessorUtility(List<ValueIteratorProvider> valList, SymbolMap references) {
-		for (ValueIteratorProvider val : valList) {
-			SubqueryContainer sc = (SubqueryContainer)val;
-			this.processorPlans.add((ProcessorPlan)sc.getCommand().getProcessorPlan().clone());
-		}
-		this.valueIteratorProviders = valList;
+	public SubqueryProcessorUtility(List<? extends ProcessorPlan> valList, List<String> contextReferences, SymbolMap references) {
+		this.processorPlans = valList;
+		this.contextReferences = contextReferences;
 		if (references != null && !references.asMap().isEmpty()) {
 			this.correlatedReferences = references;
 		}
 	}
-
-	List<ProcessorPlan> getSubqueryPlans(){
-		return this.processorPlans;
+	
+	public SubqueryProcessorUtility clone() {
+		List<ProcessorPlan> plans = new ArrayList<ProcessorPlan>(processorPlans.size());
+		for (ProcessorPlan processorPlan : processorPlans) {
+			plans.add((ProcessorPlan)processorPlan.clone());
+		}
+		return new SubqueryProcessorUtility(plans, contextReferences, correlatedReferences);
 	}
 
-	List getValueIteratorProviders(){
-		return this.valueIteratorProviders;
+	List<? extends ProcessorPlan> getSubqueryPlans(){
+		return this.processorPlans;
 	}
 
 	void reset() {
@@ -212,10 +181,8 @@ public class SubqueryProcessorUtility {
 			}
 
 			// Process the results
-			IndexedTupleSource subqueryResults = null;
 			try {
 				this.currentProcessor.process(Integer.MAX_VALUE);
-				subqueryResults = parent.getBufferManager().getTupleSource(this.currentProcessor.getResultsID());
 				this.currentProcessor.getProcessorPlan().reset();
 			} catch (MetaMatrixProcessingException e) {
 				throw e;
@@ -226,9 +193,7 @@ public class SubqueryProcessorUtility {
 			}
 
 			// Set the results on the ValueIteratorProviders
-            ValueIteratorProvider vip = this.valueIteratorProviders.get(this.currentIndex);
-            ValueIterator iterator = new TupleSourceValueIterator(subqueryResults, 0);
-			vip.setValueIterator(iterator);
+			parent.getContext().getVariableContext().setGlobalValue(this.contextReferences.get(this.currentIndex), new DependentValueSource(this.currentProcessor.getResultsID(), parent.getBufferManager()));
 
             this.currentProcessor = null;
 			this.currentIndex++;

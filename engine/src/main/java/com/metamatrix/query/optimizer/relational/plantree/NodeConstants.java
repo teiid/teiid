@@ -85,7 +85,7 @@ public final class NodeConstants {
         JOIN_STRATEGY,      // JoinStrategyType
         LEFT_EXPRESSIONS,   // List <SingleElementSymbol> 
         RIGHT_EXPRESSIONS,  // List <SingleElementSymbol> 
-        DEPENDENT_VALUE_SOURCE, // DependentValueSource for supplying multiple value iterators to remote nodes
+        DEPENDENT_VALUE_SOURCE, // String
         NON_EQUI_JOIN_CRITERIA,      // List <CompareCriteria>
         SORT_LEFT,  // Boolean
         SORT_RIGHT,     // Boolean

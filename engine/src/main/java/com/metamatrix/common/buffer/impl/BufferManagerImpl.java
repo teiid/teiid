@@ -22,7 +22,6 @@
 
 package com.metamatrix.common.buffer.impl;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,10 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.LobTupleBatch;
@@ -395,7 +391,7 @@ public class BufferManagerImpl implements BufferManager {
 
 		TupleSourceInfo info = getTupleSourceInfo(tupleSourceID, true);
         int batchSize = this.config.getProcessorBatchSize();
-        return new TupleSourceImpl(tupleSourceID, info.getTupleSchema(), batchSize);
+        return new TupleSourceImpl(this, tupleSourceID, info.getTupleSchema(), batchSize);
     }
 
     /**
@@ -891,110 +887,6 @@ public class BufferManagerImpl implements BufferManager {
             }
         }
         return info;
-    }
-
-    private class TupleSourceImpl implements IndexedTupleSource {
-        private TupleSourceID tupleSourceID;
-        private List schema;
-        private int batchSize;
-        private WeakReference currentBatch;
-        private int currentRow = 1;
-
-        TupleSourceImpl(TupleSourceID tupleSourceID, List schema, int batchSize){
-            this.tupleSourceID = tupleSourceID;
-            this.schema = schema;
-            this.batchSize = batchSize;
-        }
-
-        public List getSchema(){
-            return this.schema;
-        }
-
-        public List nextTuple()
-        throws MetaMatrixComponentException{
-            TupleBatch batch = getBatch();
-            if(batch.getRowCount() == 0) {
-                // Check if last
-                try {
-                    TupleSourceStatus status = getStatus(this.tupleSourceID);
-                    if(status == TupleSourceStatus.FULL) {
-                        unpinCurrentBatch();
-                        return null;
-                    } 
-                    throw BlockedException.INSTANCE;
-                } catch(TupleSourceNotFoundException e) {
-                    throw new ComponentNotFoundException(e, e.getMessage());
-                }
-            }
-
-            return batch.getTuple(currentRow++);
-        }
-
-        public void closeSource()
-        throws MetaMatrixComponentException{
-            // Reset to same state as newly-instantiated TupleSourceImpl
-            unpinCurrentBatch();
-            this.currentRow = 1;
-            //TODO: this is not quite correct wrt the javadoc, close does
-            //not need to ensure that we are back at the beginning
-        }
-        
-        public int getCurrentTupleIndex() {
-            return currentRow;
-        }
-        
-        public void setCurrentTupleIndex(int index) {
-            currentRow = index;
-        }
-        
-        private TupleBatch getCurrentBatch() {
-            if (currentBatch != null) {
-                return (TupleBatch)currentBatch.get();
-            }
-            return null;
-        }
-
-        private void unpinCurrentBatch()
-        throws MetaMatrixComponentException {
-            TupleBatch batch = getCurrentBatch();
-            if(batch != null ) {
-                try {
-                    unpinTupleBatch(this.tupleSourceID, batch.getBeginRow(), batch.getEndRow());
-                } catch (TupleSourceNotFoundException e) {
-					throw new MetaMatrixComponentException(e);
-				} finally {
-                    currentBatch = null;
-                }
-            }
-        }
-        
-        // Retrieves the necessary batch based on the currentRow
-        private TupleBatch getBatch()
-        throws MetaMatrixComponentException{
-            TupleBatch batch = getCurrentBatch();
-            if (batch != null) {
-                if (currentRow < batch.getEndRow() && currentRow > batch.getBeginRow()) {
-                    return batch;
-                }
-                unpinCurrentBatch();
-            } 
-            
-            try{
-                batch = pinTupleBatch(this.tupleSourceID, currentRow, (currentRow + batchSize -1));
-                currentBatch = new WeakReference(batch);
-            } catch (MemoryNotAvailableException e) {
-                /* Defect 18499 - ProcessWorker doesn't know how to handle MemoryNotAvailableException properly,
-                 * and this should always be converted to a BlockedOnMemoryException during processing so that
-                 * the work can be requeued.
-                 */
-                throw BlockedOnMemoryException.INSTANCE;
-            } catch(MetaMatrixComponentException e) {
-                throw e;
-            } catch(TupleSourceNotFoundException e){
-                throw new MetaMatrixComponentException(e);
-            }
-            return batch;
-        }
     }
 
     /** 

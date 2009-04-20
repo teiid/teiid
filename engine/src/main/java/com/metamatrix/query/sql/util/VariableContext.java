@@ -25,7 +25,10 @@ package com.metamatrix.query.sql.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class VariableContext {
 
@@ -48,8 +51,27 @@ public class VariableContext {
     	this.variableMap = new HashMap();
     }
 
+    public void setGlobalValue(String variable, Object value) {
+    	if (this.parentContext != null) {
+    		this.parentContext.setGlobalValue(variable, value);
+    	} else {
+    		variableMap.put(variable, value);
+    	}
+    }
+    
+    public Object getGlobalValue(String variable) throws MetaMatrixComponentException {
+    	if (this.parentContext != null) {
+    		return this.parentContext.getGlobalValue(variable);
+    	} 
+    	Object value = variableMap.get(variable);
+    	if (value == null && !variableMap.containsKey(variable)) {
+    		throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, variable, "No value was available")); //$NON-NLS-1$
+    	}
+    	return value;
+    }
+    
     /**
-     * Set the value for the given, if the variable aready exits replaces its value
+     * Set the value for the given, if the variable already exits replaces its value
      * with the given value else adds a new variable to the map.
      * @param variable The <code>ElementSymbol</code> to be added as a variable.
      * @param value The value to be set for the given variable.
@@ -135,6 +157,7 @@ public class VariableContext {
             if(this.parentContext != null) {
                 return this.parentContext.isEmpty();
             }
+            return true;
         }
         return false;
     }

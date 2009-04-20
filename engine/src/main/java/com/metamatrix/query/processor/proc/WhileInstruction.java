@@ -61,7 +61,7 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
      * Returns a deep clone
      */
     public Object clone(){
-        return new WhileInstruction((Program)this.whileProgram.clone(), (Criteria)this.condition.clone());
+        return new WhileInstruction((Program)this.whileProgram.clone(), this.condition);
     }
 
     public String toString() {

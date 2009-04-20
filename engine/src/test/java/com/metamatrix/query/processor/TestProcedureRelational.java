@@ -167,7 +167,7 @@ public class TestProcedureRelational {
     }
     
     @Test public void testProcAsTable3(){
-        String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1 in (1,2,3) and param2 in ('a', 'b')"; //$NON-NLS-1$
+        String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1 in (1,2,3) and param2 in ('a', 'b') order by param1, param2"; //$NON-NLS-1$
 
         // Create expected results
         List[] expected = new List[] { 

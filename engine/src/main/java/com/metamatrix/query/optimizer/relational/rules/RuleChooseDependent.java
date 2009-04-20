@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -42,14 +43,12 @@ import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
-import com.metamatrix.query.processor.relational.DependentValueSource;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.DependentSetCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.SymbolMap;
-import com.metamatrix.query.sql.util.ValueIteratorSource;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.LogConstants;
@@ -58,6 +57,8 @@ import com.metamatrix.query.util.LogConstants;
  * Finds nodes that can be turned into dependent joins 
  */
 public final class RuleChooseDependent implements OptimizerRule {
+	
+	private static AtomicInteger ID = new AtomicInteger();
 
     private static class CandidateJoin {
         PlanNode joinNode;
@@ -305,11 +306,11 @@ public final class RuleChooseDependent implements OptimizerRule {
             return false;
         }
 
+        String id = "$dsc/id" + ID.getAndIncrement(); //$NON-NLS-1$
         // Create DependentValueSource and set on the independent side as this will feed the values
-        DependentValueSource valueIterSrc = new DependentValueSource();            
-        joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, valueIterSrc);
+        joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
 
-        List crits = getDependentCriteriaNodes(valueIterSrc, independentExpressions, dependentExpressions);
+        List crits = getDependentCriteriaNodes(id, independentExpressions, dependentExpressions);
         
         PlanNode newRoot = sourceNode;
         
@@ -331,8 +332,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @return
      * @since 4.3
      */
-    private List getDependentCriteriaNodes( ValueIteratorSource iterSrc,
-                                           List independentExpressions,
+    private List getDependentCriteriaNodes(String id, List independentExpressions,
                                            List dependentExpressions) {
         
         List result = new LinkedList();
@@ -343,9 +343,8 @@ public final class RuleChooseDependent implements OptimizerRule {
         while(depIter.hasNext()) {
             Expression depExpr = (Expression) depIter.next();
             Expression indepExpr = (Expression) indepIter.next();
-            DependentSetCriteria crit = new DependentSetCriteria(SymbolMap.getExpression(depExpr));
+            DependentSetCriteria crit = new DependentSetCriteria(SymbolMap.getExpression(depExpr), id);
             crit.setValueExpression(indepExpr);
-            crit.setValueIteratorSource(iterSrc);
             
             PlanNode selectNode = GenerateCanonical.createSelectNode(crit, false);
             

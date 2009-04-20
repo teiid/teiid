@@ -28,8 +28,6 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.query.sql.util.SymbolMap;
-import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 
 /**
  * A project node containing one or more scalar subqueries.
@@ -40,14 +38,13 @@ import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 public class DependentProjectNode extends ProjectNode {
 
     private SubqueryProcessorUtility subqueryProcessor;
-    private SymbolMap correlatedReferences;
 
     /**
      * @param nodeID
      */
-    public DependentProjectNode(int nodeID, SymbolMap correlatedReferences) {
+    public DependentProjectNode(int nodeID, SubqueryProcessorUtility spu) {
         super(nodeID);
-        this.correlatedReferences = correlatedReferences;
+        this.subqueryProcessor = spu;
     }
 
     public void reset() {
@@ -65,13 +62,6 @@ public class DependentProjectNode extends ProjectNode {
         this.subqueryProcessor.open(this);
     }
     
-    @Override
-    public void setSelectSymbols(List symbols) {
-    	super.setSelectSymbols(symbols);
-		List valueList = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.getSelectSymbols());
-		this.subqueryProcessor = new SubqueryProcessorUtility(valueList, this.correlatedReferences);
-    }
-
     /**
      * Closes the subquery processor (which removes the temporary tuple 
      * sources of the subquery results)
@@ -107,9 +97,8 @@ public class DependentProjectNode extends ProjectNode {
      * @see java.lang.Object#clone()
      */
     public Object clone(){
-        DependentProjectNode clonedNode = new DependentProjectNode(super.getID(), this.correlatedReferences);
+        DependentProjectNode clonedNode = new DependentProjectNode(super.getID(), this.subqueryProcessor.clone());
         super.copy(this, clonedNode);
-        
         return clonedNode;
     }   
 

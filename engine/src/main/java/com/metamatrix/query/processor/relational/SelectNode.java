@@ -170,12 +170,8 @@ public class SelectNode extends RelationalNode {
 	
 	protected void copy(SelectNode source, SelectNode target){
 		super.copy(source, target);
-		if(criteria != null){
-			target.setCriteria((Criteria)source.criteria.clone());
-		}
-		if(elementMap != null){
-			target.elementMap = new HashMap(source.elementMap);
-		}
+		target.criteria = criteria;
+		target.elementMap = source.elementMap;
 	}
     
     /* 

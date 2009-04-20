@@ -443,12 +443,8 @@ public class GroupingNode extends RelationalNode {
 	public Object clone(){
 		GroupingNode clonedNode = new GroupingNode(super.getID());
 		super.copy(this, clonedNode);
-		if(sortElements != null){
-			clonedNode.sortElements = new ArrayList(sortElements);
-		}
-		if(sortTypes != null){
-			clonedNode.sortTypes = new ArrayList(sortTypes);
-		}
+		clonedNode.sortElements = sortElements;
+		clonedNode.sortTypes = sortTypes;
 		return clonedNode;
 	}
 

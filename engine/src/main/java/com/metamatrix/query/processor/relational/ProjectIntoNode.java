@@ -203,8 +203,8 @@ public class ProjectIntoNode extends RelationalNode {
         ProjectIntoNode clonedNode = new ProjectIntoNode(super.getID());
         super.copy(this, clonedNode);
 
-        clonedNode.intoGroup = (GroupSymbol) intoGroup.clone();
-        clonedNode.intoElements = new ArrayList(intoElements);
+        clonedNode.intoGroup = intoGroup;
+        clonedNode.intoElements = intoElements;
         clonedNode.modelName = this.modelName;
         clonedNode.doBatching = this.doBatching;
         clonedNode.doBulkInsert = this.doBulkInsert;

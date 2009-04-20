@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -67,9 +66,9 @@ public class DependentProcedureAccessNode extends AccessNode {
      * @see com.metamatrix.query.processor.relational.PlanExecutionNode#clone()
      */
     public Object clone() {
-        DependentProcedureAccessNode copy = new DependentProcedureAccessNode(getID(), (Criteria)inputCriteria.clone(),
-                                                                                   new ArrayList(inputReferences),
-                                                                                   new ArrayList(inputDefaults));
+        DependentProcedureAccessNode copy = new DependentProcedureAccessNode(getID(), inputCriteria,
+                                                                                   inputReferences,
+                                                                                   inputDefaults);
         copy(this, copy);
         return copy;
     }

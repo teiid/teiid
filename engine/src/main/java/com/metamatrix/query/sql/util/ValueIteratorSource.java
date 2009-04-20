@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.sql.util;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.sql.symbol.Expression;
 
 
@@ -39,14 +41,10 @@ public interface ValueIteratorSource {
      * not ready yet, return null to indicate that.
      * @param valueExpression The expression we are retrieving an iterator for  
      * @return ValueIterator if ready, null otherwise
+     * @throws MetaMatrixComponentException 
+     * @throws TupleSourceNotFoundException 
      * @since 5.0.1
      */
-    ValueIterator getValueIterator(Expression valueExpression);
-    
-    /**
-     * Check whether the source is ready to provide valid iterators
-     * @return True if iterator is ready
-     */
-    boolean isReady();
+    ValueIterator getValueIterator(Expression valueExpression) throws MetaMatrixComponentException;
     
 }

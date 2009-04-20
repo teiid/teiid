@@ -44,15 +44,12 @@ import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.DependentSetCriteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
-import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Reference;
@@ -162,40 +159,25 @@ public class RulePlanProcedures implements OptimizerRule {
             
             LanguageVisitor visitor = new LanguageVisitor() {      
                 public void visit(CompareCriteria compCrit){
-                    if(compCrit.getOperator() != CompareCriteria.EQ){
-                        return;
-                    }
-                    if (checkForInput(compCrit.getLeftExpression()) && !checkForAnyInput(compCrit.getRightExpression())) {
+                    if (compCrit.getOperator() == CompareCriteria.EQ && checkForInput(compCrit.getLeftExpression()) && !checkForAnyInput(compCrit.getRightExpression())) {
                         addInputNode((Reference)compCrit.getLeftExpression());
                     }
                 }
                 
-                public void visit(NotCriteria obj) {
-                    setAbort(true);
-                }
-                
-                public void visit(CompoundCriteria obj) {
-                    setAbort(true);
-                }
-
                 private void addInputNode(Reference param) {
                     params.add(param.getExpression());
                     conjuncts.add(crit);
                     NodeEditor.removeChildNode(currentNode.getParent(), currentNode);
-                    setAbort(true);
                 }
                 
                 public void visit(IsNullCriteria isNull){
-                    if (isNull.isNegated()) {
-                        return;
-                    }
-                    if (checkForInput(isNull.getExpression())) {
+                    if (!isNull.isNegated() && checkForInput(isNull.getExpression())) {
                         addInputNode((Reference)isNull.getExpression());
                     }
                 }
                 
                 public void visit(SetCriteria obj) {
-                    if (checkForInput(obj.getExpression()) && !checkForAnyInput(obj.getValues())) {
+                    if (!obj.isNegated() && checkForInput(obj.getExpression()) && !checkForAnyInput(obj.getValues())) {
                         addInputNode((Reference)obj.getExpression());
                     }
                 }
@@ -234,8 +216,7 @@ public class RulePlanProcedures implements OptimizerRule {
                 }
                 
             };
-
-            PreOrderNavigator.doVisit(crit, visitor);
+            crit.acceptVisitor(visitor);
         }
     }
     

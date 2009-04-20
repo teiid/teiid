@@ -228,7 +228,7 @@ public class PreparedStatementRequest extends Request {
 		}
 		
 		if (paramValues.size() > 1) {
-			this.context.setVariableContext(null);
+			this.context.setVariableContext(new VariableContext());
 		} 
 		
 		if (supportPreparedBatchUpdate || paramValues.size() == 1) {
@@ -287,7 +287,7 @@ public class PreparedStatementRequest extends Request {
 	        }
 	        	        
 	        //bind variable
-	        result.setValue(param.getExpression(), value);
+	        result.setGlobalValue(param.getContextSymbol(), value);
 	    }
 	    
 	    context.setVariableContext(result);

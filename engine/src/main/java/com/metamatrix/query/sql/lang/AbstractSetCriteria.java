@@ -23,15 +23,13 @@
 package com.metamatrix.query.sql.lang;
 
 import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.util.ValueIteratorProvider;
 
 /**
  * This is an abstract class to define some common functionality in the two varieties of 
  * IN criteria:  {@link SetCriteria} (where values are specified) and {@link SubquerySetCriteria}
  * (where a subquery is defined and will supply the values for the IN set).  
  */
-public abstract class AbstractSetCriteria extends PredicateCriteria 
-implements ValueIteratorProvider{
+public abstract class AbstractSetCriteria extends PredicateCriteria {
 
     /** The left expression */
     private Expression expression;

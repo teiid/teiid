@@ -32,7 +32,7 @@ import com.metamatrix.query.sql.visitor.SQLStringVisitor;
  * to an element from another scope).  This reference may resolve to many different values
  * during evaluation.  For any particular bound value, it is treated as a constant.
  */
-public class Reference implements Expression {
+public class Reference implements Expression, ContextReference {
 
     private boolean positional;
 
@@ -73,11 +73,18 @@ public class Reference implements Expression {
     public int getIndex() {
         return this.refIndex;
     }
+    
+    @Override
+    public String getContextSymbol() {
+    	return "$param/pos" + this.refIndex; //$NON-NLS-1$
+    }
+    
+    @Override
+    public Expression getValueExpression() {
+    	return this.expression;
+    }
 
     public ElementSymbol getExpression() {
-    	if (this.isPositional() && this.expression == null) {
-    		return new ElementSymbol("$param/pos" + this.refIndex); //$NON-NLS-1$
-    	}
         return this.expression;    
     }
 

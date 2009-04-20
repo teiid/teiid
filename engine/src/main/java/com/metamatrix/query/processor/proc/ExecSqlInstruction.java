@@ -97,12 +97,7 @@ public class ExecSqlInstruction extends CommandInstruction {
      * Returns a deep clone
      */
     public Object clone(){
-        GroupSymbol clonedIntoGroup = null;
-        if(this.intoGroup != null){
-            clonedIntoGroup = (GroupSymbol)intoGroup.clone();
-        }
-        
-        ExecSqlInstruction clone = new ExecSqlInstruction((ProcessorPlan)commandPlan.clone(), clonedIntoGroup);
+        ExecSqlInstruction clone = new ExecSqlInstruction((ProcessorPlan)commandPlan.clone(), intoGroup);
         return clone;
     }
 

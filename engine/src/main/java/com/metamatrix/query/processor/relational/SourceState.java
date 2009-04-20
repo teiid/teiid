@@ -38,8 +38,7 @@ class SourceState {
     private IndexedTupleSource tupleSource;
     private TupleSourceID tsID;
     private List<Object> outerVals;
-    private TupleSourceIterator iterator;
-    private List expressions;
+    private IndexedTupleSource iterator;
     private int[] expressionIndexes;
     private List currentTuple;
     private int maxProbeMatch = 1;
@@ -65,7 +64,7 @@ class SourceState {
     }
     
     public List saveNext() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        this.currentTuple = this.getIterator().next();
+        this.currentTuple = this.getIterator().nextTuple();
         return currentTuple;
     }
     
@@ -112,10 +111,10 @@ class SourceState {
         }
     }
     
-    TupleSourceIterator getIterator() {
+    IndexedTupleSource getIterator() {
         if (this.iterator == null) {
             if (this.tupleSource != null) {
-                iterator = new IndexedTupleSourceIterator(this.tupleSource);
+                iterator = this.tupleSource;
             } else {
                 // return a TupleBatch tuplesource iterator
                 iterator = new BatchIterator(this.source);

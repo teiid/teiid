@@ -23,23 +23,37 @@
 package com.metamatrix.common.buffer;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 
+public interface IndexedTupleSource extends TupleSource {
 
-/** 
- * @since 4.2
- */
-public interface IndexedTupleSource extends
-                                   TupleSource {
+	/**
+	 * @return true if there are more tuples
+	 * @throws MetaMatrixComponentException
+	 * @throws MetaMatrixProcessingException
+	 */
+	boolean hasNext() throws MetaMatrixComponentException, MetaMatrixProcessingException;
 
-    
-    /**
-     * Returns the index of the current tuple in the tuple source.
-     */
-    int getCurrentTupleIndex();
-    
-    /**
-     * Set the current index of the tuple source.  Allows the user of the tuple source to
-     * set the row that is retrieved.
-     */
-    void setCurrentTupleIndex(int index) throws MetaMatrixComponentException;
+	/**
+	 * Save the current position that can be restored with a call to {@link #reset()}
+	 */
+	void mark();
+
+	/**
+	 * Restore the previous mark and set the mark back to the first position.
+	 */
+	void reset();
+
+	/**
+	 * Set the tuple source position
+	 * @param position
+	 */
+	void setPosition(int position);
+	
+	/**
+	 * Get the current position.  The position is 1 based and reports the position of the
+	 * tuple that will be retrieved with a call to {@link TupleSource#nextTuple()}
+	 * @return
+	 */
+	int getCurrentIndex();
 }

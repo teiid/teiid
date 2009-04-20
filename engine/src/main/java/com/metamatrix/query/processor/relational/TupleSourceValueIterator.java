@@ -37,11 +37,11 @@ import com.metamatrix.query.sql.util.ValueIterator;
  */
 class TupleSourceValueIterator implements ValueIterator{
 
-    private TupleSourceIterator tupleSourceIterator;
+    private IndexedTupleSource tupleSourceIterator;
     private int columnIndex;
     
     TupleSourceValueIterator(IndexedTupleSource tupleSource, int columnIndex){
-        this.tupleSourceIterator = new IndexedTupleSourceIterator(tupleSource);
+        this.tupleSourceIterator = tupleSource;
         this.columnIndex = columnIndex;
 	}
     
@@ -62,7 +62,7 @@ class TupleSourceValueIterator implements ValueIterator{
 	 */
 	public Object next() throws MetaMatrixComponentException{
 	    try {
-            return tupleSourceIterator.next().get(columnIndex);
+            return tupleSourceIterator.nextTuple().get(columnIndex);
         } catch (MetaMatrixProcessingException err) {
             throw new MetaMatrixComponentException(err, err.getMessage());
         }

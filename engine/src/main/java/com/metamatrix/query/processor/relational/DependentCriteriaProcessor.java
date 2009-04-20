@@ -23,201 +23,209 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.query.processor.relational.DependentSourceState.SetState;
+import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
+import com.metamatrix.query.sql.lang.CompareCriteria;
+import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.DependentSetCriteria;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.SetCriteria;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.ValueIterator;
-import com.metamatrix.query.sql.util.ValueIteratorSource;
 
 public class DependentCriteriaProcessor {
+	
+    public static class SetState {
 
-    class TupleState implements DependentSourceState {
+        Collection<Object> replacement = new LinkedHashSet<Object>();
+
+        Expression valueExpression;
+
+        ValueIterator valueIterator;
+
+        Object nextValue;
+
+        boolean isNull;
+    }
+
+    class TupleState {
 
         private SortUtility sortUtility;
-        private TupleSourceID outputID;
-        private List dependentSetStates;
-        private DependentValueSource valueSource = new DependentValueSource();
+        private DependentValueSource dvs;
+        private List<SetState> dependentSetStates = new LinkedList<SetState>();
+        private String valueSource;
 
-        public TupleState(List sortSymbols,
-                                    TupleSource ts,
-                                    TupleSourceID tsID) throws MetaMatrixComponentException {
-
-            List sortDirection = new ArrayList(sortSymbols.size());
-
-            for (int i = 0; i < sortSymbols.size(); i++) {
-                sortDirection.add(Boolean.valueOf(OrderBy.ASC));
-            }
-
-            this.sortUtility = new SortUtility(tsID, ts.getSchema(), sortSymbols, sortDirection, true, dependentNode.getBufferManager(),
-                                               dependentNode.getConnectionID());
+        public TupleState(String source) {
+        	this.valueSource = source;
         }
 
         public void sort() throws BlockedException,
                    MetaMatrixComponentException {
-            if (outputID == null) {
-                outputID = sortUtility.sort();
+            if (dvs == null) {
+            	if (sortUtility == null) {
+            		List<Expression> sortSymbols = new ArrayList<Expression>(dependentSetStates.size());
+	                List<Boolean> sortDirection = new ArrayList<Boolean>(sortSymbols.size());
+	                for (int i = 0; i < dependentSetStates.size(); i++) {
+	                    sortDirection.add(Boolean.valueOf(OrderBy.ASC));
+	                    sortSymbols.add(dependentSetStates.get(i).valueExpression);
+	                }
+	                DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
+	                TupleSource ts;
+					try {
+						ts = dependentNode.getBufferManager().getTupleSource(originalVs.getTupleSourceID());
+					} catch (TupleSourceNotFoundException e) {
+						throw new MetaMatrixComponentException(e);
+					}
+	                this.sortUtility = new SortUtility(originalVs.getTupleSourceID(), ts.getSchema(), sortSymbols, sortDirection, true, dependentNode.getBufferManager(),
+	                                                   dependentNode.getConnectionID());
+            	}
+            	dvs = new DependentValueSource(sortUtility.sort(), dependentNode.getBufferManager());
+            	for (SetState setState : dependentSetStates) {
+                    setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
+    			}
             }
         }
         
         public void close() throws MetaMatrixComponentException {
-            if (outputID != null) {
+            if (dvs != null) {
+            	sortUtility = null;
                 try {
-                    dependentNode.getBufferManager().removeTupleSource(outputID);
+                    dependentNode.getBufferManager().removeTupleSource(dvs.getTupleSourceID());
                 } catch (TupleSourceNotFoundException e) {
-                    throw new MetaMatrixComponentException(e, e.getMessage());
                 }
-                outputID = null;
+                dvs = null;
             }
         }
-        
-        public ValueIterator getValueIterator(SetState setState) {
-            return valueSource.getValueIterator(setState.valueExpression);
-        }
-        
-        public void connectValueSource() throws MetaMatrixComponentException {
-            try {
-                valueSource.setTupleSource(dependentNode.getBufferManager().getTupleSource(outputID), outputID);
-            } catch (TupleSourceNotFoundException err) {
-                throw new MetaMatrixComponentException(err);
-            }
-        }
-
-        public List getDepedentSetStates() {
+                
+        public List<SetState> getDepedentSetStates() {
             return dependentSetStates;
         }
-
-        public void setDependentSetStates(List states) {
-            this.dependentSetStates = states;
-        }
+        
     }
     
-    private final static class FixedState implements DependentSourceState {
-        
-        private List dependentSetStates;
-        private Collection values;
-        
-        public FixedState(SetCriteria crit) {
-            this.values = new ArrayList(crit.getValues());
-        }
-
-        public void sort() throws BlockedException,
-                          MetaMatrixComponentException {
-            //do nothing, it should already be sorted
-        }
-
-        public void close() throws MetaMatrixComponentException {
-            //do nothing
-        }
-
-        public ValueIterator getValueIterator(SetState setState) {
-            return new CollectionValueIterator(values);
-        }
-
-        public void connectValueSource() throws MetaMatrixComponentException {
-            //do nothing
-        }
-
-        public List getDepedentSetStates() {
-            return dependentSetStates;
-        }
-
-        public void setDependentSetStates(List states) {
-            this.dependentSetStates = states;
-        }
-    }
-
-    private final static class SimpleValueIteratorSource implements
-                                                        ValueIteratorSource {
-
-        private Collection values;
-
-        public SimpleValueIteratorSource(Collection values) {
-            this.values = values;
-        }
-
-        public ValueIterator getValueIterator(Expression valueExpression) {
-            return new CollectionValueIterator(values);
-        }
-
-        public boolean isReady() {
-            return true;
-        }
-    }
-
-    private static final int INITIAL = 1;
     private static final int SORT = 2;
     private static final int SET_PROCESSING = 3;
 
+    //constructor state
     private int maxSetSize;
-
-    // processing state
     private RelationalNode dependentNode;
     private Criteria dependentCrit;
-    private int phase = INITIAL;
-    private List sources;
-    private LinkedHashMap dependentState;
-    private LinkedList restartIndexes;
-    private int currentIterator;
-    private boolean hasNextCommand;
 
-    public DependentCriteriaProcessor(int maxSetSize, RelationalNode dependentNode, Criteria dependentCriteria) {
+    //initialization state
+    private List<Criteria> queryCriteria;
+    private Map<Integer, SetState> setStates = new HashMap<Integer, SetState>();
+    private LinkedHashMap<String, TupleState> dependentState = new LinkedHashMap<String, TupleState>();
+    private List<List<SetState>> sources = new ArrayList<List<SetState>>();
+
+    // processing state
+    private int phase = SORT;
+    private LinkedList<Integer> restartIndexes = new LinkedList<Integer>();
+    private int currentIndex;
+    private boolean hasNextCommand;
+    
+
+    public DependentCriteriaProcessor(int maxSetSize, RelationalNode dependentNode, Criteria dependentCriteria) throws ExpressionEvaluationException, MetaMatrixComponentException {
         this.maxSetSize = maxSetSize;
         this.dependentNode = dependentNode;
         this.dependentCrit = dependentCriteria;
+        queryCriteria = Criteria.separateCriteriaByAnd(dependentCrit);
+        
+        for (int i = 0; i < queryCriteria.size(); i++) {
+        	Criteria criteria = queryCriteria.get(i);
+            if (!(criteria instanceof AbstractSetCriteria)) {
+                continue;
+            }
+            
+            if (criteria instanceof SetCriteria) {
+                SetCriteria setCriteria = (SetCriteria)criteria;
+                if (setCriteria.isNegated() || setCriteria.getNumberOfValues() <= maxSetSize) {
+                    continue;
+                }
+                SetState state = new SetState();
+                setStates.put(i, state);
+            	Evaluator evaluator = new Evaluator(Collections.emptyMap(), dependentNode.getDataManager(), dependentNode.getContext());
+                LinkedHashSet<Object> values = new LinkedHashSet<Object>();
+                for (Expression expr : (Collection<Expression>)setCriteria.getValues()) {
+					values.add(evaluator.evaluate(expr, null));
+				}
+                state.valueIterator = new CollectionValueIterator(values);
+                sources.add(Arrays.asList(state));
+            } else if (criteria instanceof DependentSetCriteria) {
+            	DependentSetCriteria dsc = (DependentSetCriteria)criteria;
+                String source = dsc.getContextSymbol();
+                
+                SetState state = new SetState();
+                setStates.put(i, state);
+                state.valueExpression = dsc.getValueExpression();
+                TupleState ts = dependentState.get(source);
+                if (ts == null) {
+                	ts = new TupleState(source);
+                	dependentState.put(source, ts);
+                    sources.add(ts.getDepedentSetStates());
+                }
+                ts.getDepedentSetStates().add(state);
+            } 
+        }        
     }
 
     public void close() throws MetaMatrixComponentException {
         if (dependentState != null) {
-            for (int i = 0; i < sources.size(); i++) {
-                DependentSourceState dss = (DependentSourceState)dependentState.get(sources.get(i));
-                dss.close();
-            }
+            for (TupleState state : dependentState.values()) {
+				state.close();
+			}
         }
-    }
-
-    public void reset() {
-        dependentState = null;
-        phase = INITIAL;
     }
 
     public Criteria prepareCriteria() throws MetaMatrixComponentException {
 
-        if (phase == INITIAL) {
-            initializeDependentState();
-
-            phase = SORT;
-        }
-
         if (phase == SORT) {
-            sortDependentSources();
+        	for (TupleState state : dependentState.values()) {
+                state.sort();
+            }
 
             phase = SET_PROCESSING;
         }
 
-        if (!dependentState.isEmpty()) {
-            replaceDependentValueIterators();
+        replaceDependentValueIterators();
+        
+        LinkedList<Criteria> crits = new LinkedList<Criteria>();
+        
+        for (int i = 0; i < queryCriteria.size(); i++) {
+        	SetState state = this.setStates.get(i);
+        	if (state == null) {
+        		crits.add((Criteria)queryCriteria.get(i).clone());
+        	} else {
+        		Criteria crit = replaceDependentCriteria((AbstractSetCriteria)queryCriteria.get(i), state);
+        		if (crit == QueryRewriter.FALSE_CRITERIA) {
+        			return QueryRewriter.FALSE_CRITERIA;
+        		}
+        		crits.add(crit);
+        	}
         }
         
-        Criteria result = (Criteria)dependentCrit.clone();
-
-        return result;
+        if (crits.size() == 1) {
+        	return crits.get(0);
+        }
+        return new CompoundCriteria(CompoundCriteria.AND, crits);
     }
     
     public void consumedCriteria() {
@@ -227,137 +235,18 @@ public class DependentCriteriaProcessor {
             return;
         }
         
-        int restartIndex = ((Integer)restartIndexes.removeLast()).intValue();
+        int restartIndex = restartIndexes.removeLast().intValue();
         
         for (int i = restartIndex; i < sources.size(); i++) {
 
-            DependentSourceState dss = (DependentSourceState)dependentState.get(sources.get(i));
+            List<SetState> source = sources.get(i);
 
-            for (int j = 0; j < dss.getDepedentSetStates().size(); j++) {
-
-                SetState state = (SetState)dss.getDepedentSetStates().get(j);
-
-                state.replacement.clear();
+            for (SetState setState : source) {
+            	setState.replacement.clear();
             }
         }
 
-        currentIterator = restartIndex;
-    }
-
-    private void initializeDependentState() throws MetaMatrixComponentException {
-        hasNextCommand = false;
-        dependentState = new LinkedHashMap();
-        currentIterator = 0;
-        restartIndexes = new LinkedList();
-
-        List queryCriteria = Criteria.separateCriteriaByAnd(dependentCrit);
-
-        for (Iterator i = queryCriteria.iterator(); i.hasNext();) {
-            Criteria criteria = (Criteria)i.next();
-
-            if (!(criteria instanceof AbstractSetCriteria)) {
-                continue;
-            }
-            
-            Object source = null;
-            
-            if (criteria instanceof SetCriteria) {
-                SetCriteria setCriteria = (SetCriteria)criteria;
-                if (setCriteria.getNumberOfValues() <= maxSetSize) {
-                    continue;
-                }
-                source = new Object(); //we just need a consistent hash key
-
-            // jh Case 6435a                
-            } else if (criteria instanceof DependentSetCriteria) {
-                source = ((DependentSetCriteria)criteria).getValueIteratorSource();                
-            } else {
-                continue;
-            }
-            List sets = (List)dependentState.get(source);
-
-            if (sets == null) {
-                sets = new LinkedList();
-                dependentState.put(source, sets);
-            }
-
-            sets.add(criteria);
-        }
-
-        sources = new ArrayList(dependentState.keySet());
-
-        for (Iterator i = dependentState.entrySet().iterator(); i.hasNext();) {
-
-            Map.Entry entry = (Map.Entry)i.next();
-            
-            if (entry.getKey() instanceof DependentValueSource) {
-
-                DependentValueSource dvs = (DependentValueSource)entry.getKey();
-    
-                List sets = (List)entry.getValue();
-    
-                List symbols = new ArrayList(sets.size());
-    
-                for (int j = 0; j < sets.size(); j++) {
-    
-                    DependentSetCriteria crit = (DependentSetCriteria)sets.get(j);
-    
-                    SetState state = new SetState();
-                    state.valueExpression = crit.getValueExpression();
-                    symbols.add(state.valueExpression);
-    
-                    sets.set(j, state);
-    
-                    crit.setValueIteratorSource(new SimpleValueIteratorSource(state.replacement));
-                }
-    
-                DependentSourceState dss = new TupleState(symbols, dvs.getTupleSource(), dvs.getTupleSourceID());
-    
-                entry.setValue(dss);
-    
-                dss.setDependentSetStates(sets);
-            } else {
-                
-                List sets = (List)entry.getValue();
-                
-                SetCriteria crit = (SetCriteria)sets.get(0);
-                
-                DependentSourceState dss = new FixedState(crit);
-                
-                SetState state = new SetState();
-                state.valueExpression = crit.getExpression();
-
-                sets.set(0, state);
-
-                crit.setValues(state.replacement);
-                
-                entry.setValue(dss);
-    
-                dss.setDependentSetStates(sets);
-            }
-        }
-    }
-
-    private void sortDependentSources() throws BlockedException,
-                                       MetaMatrixComponentException {
-        for (int i = 0; i < sources.size(); i++) {
-            DependentSourceState dss = (DependentSourceState)dependentState.get(sources.get(i));
-
-            dss.sort();
-        }
-
-        // all have been sorted, now create the tuple source iterators
-        for (int i = 0; i < sources.size(); i++) {
-            DependentSourceState dss = (DependentSourceState)dependentState.get(sources.get(i));
-
-            dss.connectValueSource();
-
-            for (int j = 0; j < dss.getDepedentSetStates().size(); j++) {
-                SetState setState = (SetState)dss.getDepedentSetStates().get(j);
-
-                setState.valueIterator = dss.getValueIterator(setState);
-            }
-        }
+        currentIndex = restartIndex;
     }
 
     /**
@@ -369,9 +258,9 @@ public class DependentCriteriaProcessor {
      */
     private void replaceDependentValueIterators() throws MetaMatrixComponentException {
 
-        for (; currentIterator < sources.size(); currentIterator++) {
+        for (; currentIndex < sources.size(); currentIndex++) {
 
-            DependentSourceState dss = (DependentSourceState)dependentState.get(sources.get(currentIterator));
+            List<SetState> source = sources.get(currentIndex);
 
             boolean done = false;
 
@@ -380,9 +269,7 @@ public class DependentCriteriaProcessor {
                 boolean isNull = false;
                 boolean lessThanMax = true;
 
-                for (int i = 0; i < dss.getDepedentSetStates().size(); i++) {
-                    SetState state = (SetState)dss.getDepedentSetStates().get(i);
-
+                for (SetState state : source) {
                     if (state.nextValue == null && !state.isNull) {
                         if (state.valueIterator.hasNext()) {
                             state.nextValue = state.valueIterator.next();
@@ -399,16 +286,14 @@ public class DependentCriteriaProcessor {
                 }
 
                 if (done) {
-                    if (!restartIndexes.isEmpty() && ((Integer)restartIndexes.getLast()).intValue() == currentIterator) {
+                    if (!restartIndexes.isEmpty() && restartIndexes.getLast().intValue() == currentIndex) {
                         restartIndexes.removeLast();
                     }
                     break;
                 }
 
                 if (lessThanMax || isNull) {
-                    for (int i = 0; i < dss.getDepedentSetStates().size(); i++) {
-                        SetState state = (SetState)dss.getDepedentSetStates().get(i);
-
+                	for (SetState state : source) {
                         if (!isNull) {
                             state.replacement.add(state.nextValue);
                         }
@@ -416,7 +301,7 @@ public class DependentCriteriaProcessor {
                         state.isNull = false;
                     }
                 } else {
-                    restartIndexes.add(new Integer(currentIterator));
+                    restartIndexes.add(currentIndex);
                     done = true;
                 }
             }
@@ -427,6 +312,25 @@ public class DependentCriteriaProcessor {
 
     protected boolean hasNextCommand() {
         return hasNextCommand;
+    }
+    
+    public Criteria replaceDependentCriteria(AbstractSetCriteria crit, SetState state) {
+    	if (state.replacement.isEmpty()) {
+            // No values - return criteria that is always false
+            return QueryRewriter.FALSE_CRITERIA;
+    	}
+    	if (state.replacement.size() == 1) {
+    		return new CompareCriteria(crit.getExpression(), CompareCriteria.EQ, new Constant(state.replacement.iterator().next()));
+    	}
+        List vals = new ArrayList(state.replacement.size());
+        for (Object val : state.replacement) {
+            vals.add(new Constant(val));
+        }
+        
+        SetCriteria sc = new SetCriteria();
+        sc.setExpression(crit.getExpression());
+        sc.setValues(vals);
+        return sc;
     }
 
 }

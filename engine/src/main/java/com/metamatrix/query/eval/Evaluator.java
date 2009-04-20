@@ -45,7 +45,9 @@ import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.metadata.FunctionMethod;
+import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
+import com.metamatrix.query.sql.lang.CollectionValueIterator;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -53,11 +55,12 @@ import com.metamatrix.query.sql.lang.ExistsCriteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
+import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.ContextReference;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
@@ -308,7 +311,14 @@ public class Evaluator {
             return null;
         }
         Boolean result = Boolean.FALSE;
-		ValueIterator valueIter = criteria.getValueIterator();
+
+        ValueIterator valueIter = null;
+        if (criteria instanceof SetCriteria) {
+        	valueIter = new CollectionValueIterator(((SetCriteria)criteria).getValues());
+        } else {
+        	ContextReference ref = (ContextReference)criteria;
+        	valueIter = getContext(criteria).getValueIterator(ref);
+        }
         while(valueIter.hasNext()) {
             Object possibleValue = valueIter.next();
             Object value = null;
@@ -378,7 +388,7 @@ public class Evaluator {
             result = Boolean.TRUE;
         }
 
-        ValueIterator valueIter = criteria.getValueIterator();
+        ValueIterator valueIter = getContext(criteria).getValueIterator(criteria);
         while(valueIter.hasNext()) {
             Object value = valueIter.next();
 
@@ -461,7 +471,7 @@ public class Evaluator {
     public boolean evaluate(ExistsCriteria criteria, List tuple)
         throws BlockedException, MetaMatrixComponentException {
 
-        ValueIterator valueIter = criteria.getValueIterator();
+        ValueIterator valueIter = getContext(criteria).getValueIterator(criteria);
         if(valueIter.hasNext()) {
             return true;
         }
@@ -497,12 +507,7 @@ public class Evaluator {
 	           return internalEvaluate(expr, tuple);
 	       } 
 	       
-	       if (expression instanceof ElementSymbol && this.context != null && this.context.getVariableContext() != null 
-	    		   && this.context.getVariableContext().containsVariable((ElementSymbol)expression)) {
-    		   return this.context.getVariableContext().getValue((ElementSymbol)expression);
-	       }
-	       // instead of assuming null, throw an exception.  a problem in planning has occurred
-	       throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
+	       return getContext(expression).getFromContext(expression);
 	   } 
 	   if(expression instanceof Constant) {
 	       return ((Constant) expression).getValue();
@@ -514,6 +519,9 @@ public class Evaluator {
 	       return evaluate((SearchedCaseExpression) expression, tuple);
 	   } else if(expression instanceof Reference) {
 		   Reference ref = (Reference)expression;
+		   if (ref.isPositional() && ref.getExpression() == null) {
+			   return getContext(ref).getVariableContext().getGlobalValue(ref.getContextSymbol());
+		   }
 		   return internalEvaluate(ref.getExpression(), tuple);
 	   } else if(expression instanceof ScalarSubquery) {
 	       return evaluate((ScalarSubquery) expression, tuple);
@@ -607,9 +615,9 @@ public class Evaluator {
 	
 	private Object evaluate(ScalarSubquery scalarSubquery, List tuple)
 	    throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
-	
+		
 	    Object result = null;
-	    ValueIterator valueIter = scalarSubquery.getValueIterator();
+        ValueIterator valueIter = getContext(scalarSubquery).getValueIterator(scalarSubquery);
 	    if(valueIter.hasNext()) {
 	        result = valueIter.next();
 	        if(valueIter.hasNext()) {
@@ -619,6 +627,13 @@ public class Evaluator {
 	        }
 	    }
 	    return result;
-	}        
-    
+	}
+
+	private CommandContext getContext(LanguageObject expression) throws MetaMatrixComponentException {
+		if (context == null) {
+			throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
+		}
+		return context;
+	}       
+	    
 }

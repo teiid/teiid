@@ -22,13 +22,17 @@
 
 package com.metamatrix.query.sql.lang;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 
-import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.query.sql.*;
-import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.core.util.EquivalenceUtil;
-import com.metamatrix.query.sql.util.ValueIterator;
+import com.metamatrix.core.util.HashCodeUtil;
+import com.metamatrix.query.sql.LanguageVisitor;
+import com.metamatrix.query.sql.symbol.Expression;
 
 /**
  * A criteria which is true is the expression's value is a member in a list 
@@ -78,24 +82,6 @@ public class SetCriteria extends AbstractSetCriteria {
         this.values = values;
     }
     
-	/**
-	 * Returns a new instance of a ValueIterator
-	 * @return new ValueIterator instance
-	 * @see com.metamatrix.query.sql.lang.AbstractSetCriteria#getValueIterator()
-	 */
-	public ValueIterator getValueIterator() {
-		return new CollectionValueIterator(this.values);
-	}    
-
-    /**
-     * This method is purposely not implemented.  The values are
-     * set through the constructor or the {@link #setValues} method.
-     * @see com.metamatrix.query.sql.util.ValueIteratorProvider#setValueIterator(com.metamatrix.query.sql.util.ValueIterator)
-     */
-    public void setValueIterator(ValueIterator valueIterator) {
-        //Do nothing
-    }
-
     /**
      * Sets the membership expression and the set of value expressions
      * @param expression The membership expression

@@ -85,7 +85,7 @@ public class TestSelectNode extends TestCase {
         for (int i = 0; i < expected.length; i++) {
         	while (true) {
 	        	try {
-	        		assertEquals("Rows don't match at " + i, expected[i], iterator.next()); //$NON-NLS-1$
+	        		assertEquals("Rows don't match at " + i, expected[i], iterator.nextTuple()); //$NON-NLS-1$
 	        		break;
 	        	} catch (BlockedException e) {
 	        		continue;

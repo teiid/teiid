@@ -99,7 +99,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             instanceNode.setConnectorBindingId(bindingUUID);
             
             // Modify the command to pull the instance column and evaluate the criteria
-            Command command = instanceNode.getCommand();
+            Command command = (Command)instanceNode.getCommand().clone();
             
             // Replace all multi-source elements with the source name
             DeepPreOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(bindingName));

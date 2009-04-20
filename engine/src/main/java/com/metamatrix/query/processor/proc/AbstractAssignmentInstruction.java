@@ -103,10 +103,8 @@ public abstract class AbstractAssignmentInstruction extends CommandInstruction {
     
     
     protected void cloneState(AbstractAssignmentInstruction clone) {
-        clone.setVariable((ElementSymbol)getVariable().clone());
-        if (expression != null) {
-            clone.setExpression((Expression)getExpression().clone());
-        }
+        clone.setVariable(this.variable);
+        clone.setExpression(this.expression);
         if (processPlan != null) {
             clone.setProcessPlan((ProcessorPlan)getProcessPlan().clone());
         }

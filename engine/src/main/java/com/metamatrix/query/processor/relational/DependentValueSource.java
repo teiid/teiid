@@ -22,10 +22,11 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.List;
-
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
+import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.sql.util.ValueIteratorSource;
@@ -36,47 +37,35 @@ import com.metamatrix.query.sql.util.ValueIteratorSource;
 public class DependentValueSource implements
                                  ValueIteratorSource {
 
-    // Runtime
-    private IndexedTupleSource tupleSource;
     private TupleSourceID tupleSourceID;
+    private BufferManager bm;
     
-    public DependentValueSource() {
-        super();
-    }
-
-    public void setTupleSource(IndexedTupleSource tupleSource, TupleSourceID tupleSourceID) {
-        this.tupleSource = tupleSource;
+    public DependentValueSource(TupleSourceID tupleSourceID, BufferManager bm) {
         this.tupleSourceID = tupleSourceID;
+        this.bm = bm;
     }
     
     public TupleSourceID getTupleSourceID() {
-        return tupleSourceID;
-    }
-    
-    public IndexedTupleSource getTupleSource() {
-        return tupleSource;
-    }
-    
-    public boolean isReady() {
-        return this.tupleSource != null;
-    }
+		return tupleSourceID;
+	}
     
     /** 
+     * @throws MetaMatrixComponentException 
+     * @throws TupleSourceNotFoundException 
      * @see com.metamatrix.query.sql.util.ValueIteratorSource#getValueIterator(com.metamatrix.query.sql.symbol.Expression)
      */
-    public ValueIterator getValueIterator(Expression valueExpression) {
-        TupleSourceValueIterator iter = null;
-        if(this.tupleSource != null) {
-            List schema = tupleSource.getSchema();
-            int columnIndex = schema.indexOf(valueExpression);
-            iter = new TupleSourceValueIterator(this.tupleSource, columnIndex);
-        }
-        return iter;
+    public ValueIterator getValueIterator(Expression valueExpression) throws  MetaMatrixComponentException {
+    	IndexedTupleSource its;
+		try {
+			its = bm.getTupleSource(tupleSourceID);
+		} catch (TupleSourceNotFoundException e) {
+			throw new MetaMatrixComponentException(e);
+		}
+    	int index = 0;
+    	if (valueExpression != null) {
+    		index = its.getSchema().indexOf(valueExpression);
+    	}
+        return new TupleSourceValueIterator(its, index);
     }
            
-    public void reset() {
-        // Reset runtime state
-        this.tupleSource = null;
-    }
-
 }
