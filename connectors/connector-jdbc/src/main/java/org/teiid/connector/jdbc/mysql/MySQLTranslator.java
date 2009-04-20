@@ -81,7 +81,7 @@ public class MySQLTranslator extends Translator {
 		Statement stmt = null;
 		try {
 			stmt = connection.createStatement();
-			stmt.execute("set SESSION sql-mode = 'ANSI'"); //$NON-NLS-1$
+			stmt.execute("set SESSION sql_mode = 'ANSI'"); //$NON-NLS-1$
 		} catch (SQLException e) {
 			getEnvironment().getLogger().logError("Error setting ANSI mode", e); //$NON-NLS-1$
 		} finally {
