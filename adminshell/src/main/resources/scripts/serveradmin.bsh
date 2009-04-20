@@ -333,9 +333,16 @@ Collection getResources(String resourceIdentifier) {
  *             if there's a system error.
  * @since 4.3
  */
-void exportLogs(String filename) {
+void exportLogs(String fileName) {
     checkAdmin();
-    ObjectConverterUtil.write(currentContext().internalAdmin.exportLogs(), filename);    
+    contents = currentContext().internalAdmin.exportLogs();    
+    if (contents != null) {
+    	ObjectConverterUtil.write(contents, fileName);
+    }
+    else {
+    	throw new AdminProcessingException("Log file is not found for exporting");
+    }
+    
 }
 
 
@@ -591,9 +598,15 @@ void importDataRoles(String vdbName, String vdbVersion, String filename) {
  * @return - char[] stream containing the XML contents of the roles.
  * @throws AdminException
  */
-void exportDataRoles(String vdbName, String vdbVersion, String filename) {
+void exportDataRoles(String vdbName, String vdbVersion, String fileName) {
     checkAdmin();
-    ObjectConverterUtil.write(currentContext().internalAdmin.exportDataRoles(vdbName, vdbVersion), filename);  
+    contents = currentContext().internalAdmin.exportDataRoles(vdbName, vdbVersion);  
+    if (contents != null) {
+    	ObjectConverterUtil.write(contents, fileName);
+    }
+    else {
+    	throw new AdminProcessingException("Data roles not found for VDB "+ vdbName + " with version "+ vdbVersion);
+    }
 }
 
 

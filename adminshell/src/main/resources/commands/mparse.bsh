@@ -6,10 +6,25 @@ String mparse() {
     // the same string to be sent to bsh.
     String orig_str = mmstr.trim();
     String str = orig_str.toLowerCase();
+    boolean record = false;
     
-    if (str.matches("(select|insert|delete|update|exec|execute|create|drop)\\W.+")){ 
-        mmstr="execute(\""+orig_str.substring(0,orig_str.length()-1)+"\");\n";
+    if (str.endsWith(";") && str.matches("(select|insert|delete|update|exec|execute|create|drop)\\W.+")){ 
+        mmstr="execute(\""+orig_str.substring(0,orig_str.length()-1)+"\");";
+        record = true;
     }
-    record(mmstr+"\n");
-    return mmstr+"\n";
+    else if (str.matches("(help|exit|dir|pwd)\\(?\\)?")) {
+    	idx = str.indexOf("(");
+    	if (idx == -1) {
+    		mmstr = str+"();";	
+    	}
+    	else {
+    		mmstr = str+";";
+    	}
+    	record=true;
+    }
+    if(record) {
+    	record(mmstr+"\n");
+    	return mmstr;
+    }
+    return str;
 }

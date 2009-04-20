@@ -12,9 +12,9 @@
 import javax.swing.*;
 import bsh.Interpreter;
 import bsh.BshClassManager;
-import test.metamatrix.script.shell.JConsole;
+import com.metamatrix.script.shell.JConsole;
 import bsh.util.NameCompletionTable;
-import test.metamatrix.script.shell.*;
+import com.metamatrix.script.shell.*;
 
 makeWorkspace( String name ) 
 {

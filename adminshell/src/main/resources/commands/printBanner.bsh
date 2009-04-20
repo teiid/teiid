@@ -18,12 +18,18 @@ printBanner()
 	    this.jconsole = bsh.console;
 	    jconsole.println( 
 			new ImageIcon( getResource("/bsh/util/lib/small_bean_shell.gif")) );
-	    jconsole.print("MetaMatrix Admin Scripting Environment",
+	    	jconsole.print("Teiid Admin Shell",
 			new Font("SansSerif", Font.BOLD, 12), 
 			new Color(20,100,20) );
 	    jconsole.println();
 
-	} else
-		print("MetaMatrix Admin Scripting Environment");
-
+	} else {
+		print("**********************************************************************");
+ 		print(" You are running Admin Shell in interactive mode. To see all ");
+		print(" the commands available type 'help();' or 'exit();' to exit the shell.");
+		print(" Note: Every comand MUST end with semi-colon [;] and are ");
+		print(" always in form 'command([param]*?);'");
+		print("**********************************************************************");
+		print(" ");
+	}
 }

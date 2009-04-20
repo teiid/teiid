@@ -91,7 +91,13 @@ VDB addVDB(String name, String vdbFile, AdminOptions options) {
 void exportVDB(String name, String vdbVersion, String fileName){
     debug("Exporting VDB " + name + " version " + vdbVersion + " to file " + fileName);
     checkAdmin();
-    ObjectConverterUtil.write(currentContext().internalAdmin.exportVDB(name, vdbVersion), fileName);
+    contents = currentContext().internalAdmin.exportVDB(name, vdbVersion);
+    if (contents != null) {
+    	ObjectConverterUtil.write(contents, fileName);
+    }
+    else {
+    	throw new AdminProcessingException("VDB with name "+ name + " is not found to export");
+    }
 }
 
 
@@ -224,7 +230,13 @@ void deleteConnectorBinding(String bindingName) throws AdminException {
 void exportConnectorBinding(String bindingName, String fileName){
     debug("Exporting Connector Binding " + bindingName + " to file " + fileName);
     checkAdmin();
-    ObjectConverterUtil.write(currentContext().internalAdmin.exportConnectorBinding(bindingName), fileName);
+    contents = currentContext().internalAdmin.exportConnectorBinding(bindingName);
+    if (contents) {
+    	ObjectConverterUtil.write(contents, fileName);	
+    }
+    else {
+    	throw new AdminProcessingException("Connector Binding "+ bindingName + " not found for exporting");
+    }
 }
 
 /**
@@ -321,8 +333,17 @@ void deleteExtensionModule(String sourceName) {
  */
 void exportExtensionModule(String sourceName, String fileName) {
     debug("exporting extension module: "+sourceName);
-    checkAdmin();    
-    ObjectConverterUtil.write(currentContext().internalAdmin.exportExtensionModule(sourceName), fileName);
+    checkAdmin();
+
+    contents = currentContext().internalAdmin.exportExtensionModule(sourceName);
+
+    if (contents) {
+    	ObjectConverterUtil.write(contents, fileName);	
+    }
+    else {
+    	throw new AdminProcessingException("Extension Module "+ sourceName + " not found for exporting");
+    }
+    
 }
 
 /**
@@ -435,7 +456,14 @@ void deleteConnectorType(String name){
 void exportConnectorType(String connectorTypeIdentifier, String fileName) {
     debug("Exporting Connector Type " + connectorTypeIdentifier + " to file " + fileName);
     checkAdmin();
-    ObjectConverterUtil.write(currentContext().internalAdmin.exportConnectorType(connectorTypeIdentifier), fileName);
+    
+    contents = currentContext().internalAdmin.exportConnectorType(connectorTypeIdentifier);
+    if (contents != null) {
+    	ObjectConverterUtil.write(contents, fileName);
+    }
+    else {
+    	throw new AdminProcessingException("Connector type with name "+ connectorTypeIdentifier + " is not found to export");
+    }
 }
 
 /**
@@ -453,7 +481,16 @@ void exportConnectorType(String connectorTypeIdentifier, String fileName) {
 void exportConnectorArchive(String connectorTypeIdentifier, String fileName) {
     debug("Exporting Connector Archive " + connectorTypeIdentifier + " to file " + fileName);
     checkAdmin();
-    ObjectConverterUtil.write(currentContext().internalAdmin.exportConnectorArchive(connectorTypeIdentifier), fileName);
+    
+    contents = currentContext().internalAdmin.exportConnectorArchive(connectorTypeIdentifier);
+    
+    if (contents != null) {
+    	ObjectConverterUtil.write(contents, fileName);
+    }
+    else {
+    	throw new AdminProcessingException("Connector type with name "+ connectorTypeIdentifier + " is not found to export");
+    }
+    
 }
 
 //** property methods******************************************************************
@@ -553,7 +590,14 @@ void updateSystemProperties(Properties properties) {
 void exportConfiguration(String fileName) {
     debug("Exporting System configuration to file " + fileName);
     checkAdmin();
-    ObjectConverterUtil.write(currentContext().internalAdmin.exportConfiguration(), fileName);    
+    contents = currentContext().internalAdmin.exportConfiguration();    
+    if (contents != null) {
+    	ObjectConverterUtil.write(contents, fileName);
+    }
+    else {
+    	throw new AdminProcessingException("Configuration is not found for export");
+    }
+    
 }
 
 /**

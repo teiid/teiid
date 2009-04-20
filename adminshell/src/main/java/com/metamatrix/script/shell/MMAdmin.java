@@ -35,9 +35,6 @@ import bsh.Interpreter;
  * Invokes the BeanShell window, specifically designed for the metamatrix purposes.
  * The difference with this shell is, it will plug in a customer parser on top the
  * BeanShell, and load up all the MetaMatrix commands.
- * 
- * @author Ramesh Reddy
- * @since 4.3
  */
 public class MMAdmin {
     
@@ -62,7 +59,7 @@ public class MMAdmin {
                 p.setInterpreter(interpreter);
                 
                 if (Capabilities.haveSwing() && gui) {
-                    bsh.util.Util.startSplashScreen();
+                    //bsh.util.Util.startSplashScreen();
                     interpreter.eval("desktop()"); //$NON-NLS-1$                    
                 } else {
                     interpreter.run();

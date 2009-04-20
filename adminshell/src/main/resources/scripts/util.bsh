@@ -6,7 +6,7 @@ debug=false;
 
 getBshPrompt() { 
     if (currentContext().internalPrompt == void || currentContext().internalPrompt == null) {
-        return "mmadmin $ ";
+        return "admin $ ";
     }
     return currentContext().internalPrompt;
 }

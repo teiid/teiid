@@ -43,8 +43,6 @@ import bsh.Interpreter;
  * on the bean shell command line, and we can intercept and issue right beanshell
  * command to execute the same.
  * 
- * @author Ramesh Reddy
- * @since 4.3
  */
 public class ReaderInterceptor extends Reader {
     private BufferedReader in = null;     // Stream to Sniff
@@ -99,9 +97,11 @@ public class ReaderInterceptor extends Reader {
                         }
                     }
                     
-                    if (line.endsWith(";")) {   //$NON-NLS-1$             
-                        currentStr = parser.convert(sb.toString().trim());
+                    currentStr = parser.convert(sb.toString().trim());
+                    
+                    if (currentStr.endsWith(";")) {   //$NON-NLS-1$                                     
                         if (logger != null && !currentStr.equals(";")) { //$NON-NLS-1$
+                        	currentStr += "\n"; //$NON-NLS-1$
                             logger.write(currentStr);
                             logger.write(System.getProperty("line.separator")); //$NON-NLS-1$
                             logger.flush();
