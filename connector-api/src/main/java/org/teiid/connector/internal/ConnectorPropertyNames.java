@@ -36,12 +36,6 @@ public class ConnectorPropertyNames {
      */
     public static final String MAX_THREADS = "ConnectorMaxThreads"; //$NON-NLS-1$
 
-    /**
-     * The environment property name whose value defines the maximum length of time
-	 * a processor thread may live idle.  This property is required and is in milliseconds.
-     */
-    public static final String THREAD_TTL = "ConnectorThreadTTL"; //$NON-NLS-1$
-
 	/**
 	 * This property can be used to specify the maximum number of rows to be returned
 	 * from the datasource of this connector. The connector should stop adding records

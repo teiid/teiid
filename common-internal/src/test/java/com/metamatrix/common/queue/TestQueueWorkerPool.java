@@ -42,7 +42,7 @@ public class TestQueueWorkerPool {
         final int WORK_ITEMS = 10;
         final int MAX_THREADS = 5;
 
-        final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", MAX_THREADS, 120000); //$NON-NLS-1$
+        final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", MAX_THREADS); //$NON-NLS-1$
         
         for(int i=0; i<WORK_ITEMS; i++) {
             pool.execute(new FakeWorkItem(SINGLE_WAIT));
@@ -60,7 +60,7 @@ public class TestQueueWorkerPool {
         final long SINGLE_WAIT = 50;
         final long NUM_THREADS = 5;
 
-        final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+        final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5); //$NON-NLS-1$
         
         for(int i=0; i<NUM_THREADS; i++) {            
         	pool.execute(new FakeWorkItem(SINGLE_WAIT));
@@ -80,13 +80,13 @@ public class TestQueueWorkerPool {
     }
     
     @Test(expected=RejectedExecutionException.class) public void testShutdown() throws Exception {
-    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5); //$NON-NLS-1$
         pool.shutdown();
     	pool.execute(new FakeWorkItem(1));
     }
     
     @Test public void testScheduleCancel() throws Exception {
-    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5); //$NON-NLS-1$
     	ScheduledFuture<?> future = pool.scheduleAtFixedRate(new Runnable() {
     		@Override
     		public void run() {
@@ -97,7 +97,7 @@ public class TestQueueWorkerPool {
     }
     
     @Test public void testSchedule() throws Exception {
-    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5); //$NON-NLS-1$
         final ArrayList<String> result = new ArrayList<String>(); 
     	ScheduledFuture<?> future = pool.schedule(new Runnable() {
     		@Override
@@ -121,7 +121,7 @@ public class TestQueueWorkerPool {
     }
     
     @Test(expected=ExecutionException.class) public void testScheduleException() throws Exception {
-    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5); //$NON-NLS-1$
     	ScheduledFuture<?> future = pool.schedule(new Runnable() {
     		@Override
     		public void run() {
@@ -135,7 +135,7 @@ public class TestQueueWorkerPool {
      * Here each execution exceeds the period
      */
     @Test public void testScheduleRepeated() throws Exception {
-    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5); //$NON-NLS-1$
     	final ArrayList<String> result = new ArrayList<String>();
     	ScheduledFuture<?> future = pool.scheduleAtFixedRate(new Runnable() {
     		@Override
@@ -154,7 +154,7 @@ public class TestQueueWorkerPool {
     }
     
     @Test public void testFailingWork() throws Exception {
-    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5, 120000); //$NON-NLS-1$
+    	final WorkerPool pool = WorkerPoolFactory.newWorkerPool("test", 5); //$NON-NLS-1$
     	final AtomicInteger count = new AtomicInteger();
     	pool.execute(new Runnable() {
     		@Override

@@ -56,7 +56,7 @@ public class ProxyManager implements RegistryListener{
      * Thread that updates the service instances of the service selection policies
      * when notification of a Registry change event has occurred.
      */
-    private WorkerPool updatePool = WorkerPoolFactory.newWorkerPool("RegistryUpdate", 1, 60000); //$NON-NLS-1$
+    private WorkerPool updatePool = WorkerPoolFactory.newWorkerPool("RegistryUpdate", 1); //$NON-NLS-1$
     
 	ClusteredRegistryState registry;
 	

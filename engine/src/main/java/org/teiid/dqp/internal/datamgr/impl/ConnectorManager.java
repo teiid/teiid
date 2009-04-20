@@ -97,7 +97,6 @@ import com.metamatrix.query.sql.lang.Command;
 public class ConnectorManager implements ApplicationService {
 
     public static final int DEFAULT_MAX_PROCESSOR_THREADS = 15;
-    public static final int DEFAULT_PROCESSOR_TREAD_TTL = 120000;
     private static final String DEFAULT_MAX_RESULTSET_CACHE_SIZE = "20"; //$NON-NLS-1$
     private static final String DEFAULT_MAX_RESULTSET_CACHE_AGE = "3600000"; //$NON-NLS-1$
 
@@ -307,9 +306,8 @@ public class ConnectorManager implements ApplicationService {
         }
 
         int maxThreads = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_THREADS, DEFAULT_MAX_PROCESSOR_THREADS);
-        int threadTTL = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.THREAD_TTL, DEFAULT_PROCESSOR_TREAD_TTL);
 
-        connectorWorkerPool = WorkerPoolFactory.newWorkerPool(connectorName, maxThreads, threadTTL);
+        connectorWorkerPool = WorkerPoolFactory.newWorkerPool(connectorName, maxThreads);
 
         // Create the Connector env
         Properties clonedProps = PropertiesUtils.clone(props);

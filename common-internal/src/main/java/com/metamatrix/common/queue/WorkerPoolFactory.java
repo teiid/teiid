@@ -356,7 +356,7 @@ public class WorkerPoolFactory {
 	 * @param numThreads the maximum number of worker threads allowed
 	 * @return 
 	 */
-	public static WorkerPool newWorkerPool(String name, int numThreads, long keepAlive) {
+	public static WorkerPool newWorkerPool(String name, int numThreads) {
 		return new StatsCapturingSharedThreadPoolExecutor(name, numThreads);
 	}
     

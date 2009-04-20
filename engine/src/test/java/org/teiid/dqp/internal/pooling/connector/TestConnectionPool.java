@@ -51,7 +51,7 @@ public class TestConnectionPool {
     private ConnectionPool userIDPool;
     private ConnectionPool singleIDPool;
     private static ArrayList<Exception> EXCEPTIONS = new ArrayList<Exception>();
-    private static WorkerPool pool = WorkerPoolFactory.newWorkerPool(TestConnectionPool.class.getSimpleName(), 1, 1000);
+    private static WorkerPool pool = WorkerPoolFactory.newWorkerPool(TestConnectionPool.class.getSimpleName(), 1);
     
     @AfterClass public static void tearDownOnce() {
     	pool.shutdownNow();

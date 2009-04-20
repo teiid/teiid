@@ -117,7 +117,6 @@ public class DQPCore extends Application implements ClientSideDQP {
     private static final int DEFAULT_MAX_CODE_TABLES = 20;
     private static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     private static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
-    private static final String DEAFULT_PROCESS_WORKER_TIMEOUT = "120000"; //$NON-NLS-1$
     private static final int DEFAULT_MAX_PROCESS_WORKERS = 15;
     private static final String DEFAULT_MAX_RESULTSET_CACHE_SIZE = "50"; //$NON-NLS-1$
     private static final String DEFAULT_MAX_RESULTSET_CACHE_AGE = "3600000"; //$NON-NLS-1$
@@ -623,8 +622,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         metadataService = (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE);
 
         // Create the worker pools to tie the queues together
-        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, PropertiesUtils.getIntProperty(props, DQPConfigSource.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS), 
-                Integer.parseInt(props.getProperty(DQPConfigSource.PROCESS_POOL_THREAD_TTL, DEAFULT_PROCESS_WORKER_TIMEOUT))); 
+        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, PropertiesUtils.getIntProperty(props, DQPConfigSource.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)); 
  
         tempTableStoresHolder = new TempTableStoresHolder(bufferManager);
         

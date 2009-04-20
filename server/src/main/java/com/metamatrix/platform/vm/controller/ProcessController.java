@@ -121,8 +121,7 @@ public abstract class ProcessController implements ProcessManagement {
     public final static String SERVICE_ID = "Service"; //$NON-NLS-1$
 
     public static final String STARTER_MAX_THREADS = "vm.starter.maxThreads"; //$NON-NLS-1$
-    /**Time-to-live for threads used to start services (ms)*/    
-    public static final String STARTER_TIMETOLIVE = "vm.starter.timetolive"; //$NON-NLS-1$
+    
     /**Interval to check the state of services (ms)*/    
     public static final String SERVICE_MONITOR_INTERVAL = "metamatrix.server.serviceMonitorInterval"; //$NON-NLS-1$
         
@@ -177,9 +176,8 @@ public abstract class ProcessController implements ProcessManagement {
     	    	
         Properties configProps = CurrentConfiguration.getInstance().getProperties(); 
         int maxThreads = PropertiesUtils.getIntProperty(configProps, STARTER_MAX_THREADS, DEFAULT_STARTER_MAX_THREADS);
-        int timeToLive = PropertiesUtils.getIntProperty(configProps, STARTER_TIMETOLIVE, DEFAULT_STARTER_TIMETOLIVE);
     	
-        this.startServicePool = WorkerPoolFactory.newWorkerPool("StartServiceQueue", maxThreads, timeToLive); //$NON-NLS-1$
+        this.startServicePool = WorkerPoolFactory.newWorkerPool("StartServiceQueue", maxThreads); //$NON-NLS-1$
         
 		initVMProperties();
 		

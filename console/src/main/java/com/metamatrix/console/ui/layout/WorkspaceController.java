@@ -100,7 +100,7 @@ public class WorkspaceController implements
         super();
         workspace = ws;
         
-        workerPool = WorkerPoolFactory.newWorkerPool("WorkspaceControllerQueue", 1, 1000); //$NON-NLS-1$
+        workerPool = WorkerPoolFactory.newWorkerPool("WorkspaceControllerQueue", 1); //$NON-NLS-1$
     }
 
     public static void createInstance(Workspace workspace) {

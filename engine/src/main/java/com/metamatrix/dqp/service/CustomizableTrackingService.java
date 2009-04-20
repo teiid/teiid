@@ -69,21 +69,10 @@ public class CustomizableTrackingService implements TrackingService {
      * Whether to log source command. Defaults to false.
      */
     public static final String SYSTEM_TXN_STORE_SRCCMD  = "metamatrix.transaction.log.storeSRCCMD"; //$NON-NLS-1$
-
-    /**
-     * The name of the System property that contains the time to live (in milliseconds) for threads
-     * in the LogManager.  The time to live is simply the period of thread inactivity
-     * that determines when a thread may be expired.  This is an optional property
-     * that defaults to '600000' milliseconds (or 10 minutes).
-     */
-    public static final String SYSTEM_LOG_THREAD_TTL            = "metamatrix.transaction.log.threadTTL"; //$NON-NLS-1$
     
-    protected static final long DEFAULT_LOG_THREAD_TTL           = 600000; // 10 minute default 
-
     private CommandLoggerSPI commandLogger;
     private boolean recordUserCommands;
     private boolean recordSourceCommands;
-    private long workerTTL;
     
     private WorkerPool logQueue;
 
@@ -224,8 +213,6 @@ public class CustomizableTrackingService implements TrackingService {
         if(propvalue != null){
             recordSourceCommands = Boolean.valueOf(propvalue).booleanValue();
         }
-        
-        workerTTL = PropertiesUtils.getLongProperty(props, SYSTEM_LOG_THREAD_TTL, DEFAULT_LOG_THREAD_TTL);
     }
     
     /** 
@@ -233,8 +220,7 @@ public class CustomizableTrackingService implements TrackingService {
      */
     public void start(ApplicationEnvironment environment) throws ApplicationLifecycleException {
         logQueue = WorkerPoolFactory.newWorkerPool("CustomTracker", //$NON-NLS-1$
-                                  1,   // Use only a single thread
-                                  workerTTL);
+                                  1);
     }
 
     /** 

@@ -80,7 +80,7 @@ public class SocketListener implements ChannelListenerFactory {
         }
 
        	this.server = server;
-        this.workerPool = WorkerPoolFactory.newWorkerPool("SocketWorker", maxWorkers, 120000); //$NON-NLS-1$
+        this.workerPool = WorkerPoolFactory.newWorkerPool("SocketWorker", maxWorkers); //$NON-NLS-1$
         this.nettyPool = Executors.newCachedThreadPool();
         if (LogManager.isMessageToBeRecorded(SocketVMController.SOCKET_CONTEXT, MessageLevel.DETAIL)) { 
             LogManager.logDetail(SocketVMController.SOCKET_CONTEXT, "server = " + this.server + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$

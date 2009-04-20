@@ -31,7 +31,7 @@ import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 public class AsynchEventBroker extends AbstractEventBroker {
-    private WorkerPool workerPool = WorkerPoolFactory.newWorkerPool("AsyncEventBroker", 1, 120000); //$NON-NLS-1$
+    private WorkerPool workerPool = WorkerPoolFactory.newWorkerPool("AsyncEventBroker", 1); //$NON-NLS-1$
     private static final String DEFAULT_NAME = CorePlugin.Util.getString("AsynchEventBroker.DefaultName"); //$NON-NLS-1$
     
     private static final long SHUTDOWN_TIMEOUT_MILLIS = 10000;  // 10 seconds
