@@ -22,30 +22,29 @@
 
 package com.metamatrix.server.query.service;
 
+import com.metamatrix.common.application.DQPConfigSource;
+
 public class QueryServicePropertyNames {
 
-    public static final String PROCESS_POOL_MAX_THREADS = "ProcessPoolMaxThreads"; //$NON-NLS-1$
-    public static final String PROCESS_POOL_THREAD_TTL = "ProcessPoolThreadTTL"; //$NON-NLS-1$
+    public static final String PROCESS_POOL_MAX_THREADS = DQPConfigSource.PROCESS_POOL_MAX_THREADS;
 
-	public static final String MIN_FETCH_SIZE = "MinFetchSize"; //$NON-NLS-1$
-	public static final String MAX_FETCH_SIZE = "MaxFetchSize"; //$NON-NLS-1$
+    public static final String MAX_FETCH_SIZE = DQPConfigSource.MAX_FETCH_SIZE;
     
-	public static final String MAX_CODE_TABLE_RECORDS = "MaxCodeTableRecords"; //$NON-NLS-1$
-	public static final String MAX_CODE_TABLES = "MaxCodeTables"; //$NON-NLS-1$
+	public static final String MAX_CODE_TABLE_RECORDS = DQPConfigSource.MAX_CODE_TABLE_RECORDS;
+
+	public static final String MAX_CODE_TABLES = DQPConfigSource.MAX_CODE_TABLES;
 	
-    public static final String PROCESSOR_TIMESLICE = "ProcessorTimeslice"; //$NON-NLS-1$
+    public static final String PROCESSOR_TIMESLICE = DQPConfigSource.PROCESSOR_TIMESLICE;
     
     public static final String UDF_SOURCE = "UDFSource"; //$NON-NLS-1$
-    
-//    public static final String SOCKET_WORKER_POOL_MAX_THREADS = "SocketWorkerPoolMaxThreads"; //$NON-NLS-1$
-//    public static final String SOCKET_WORKER_POOL_THREAD_TTL = "SocketWorkerPoolThreadTTL"; //$NON-NLS-1$
-//    
-//    public static final String SOCKET_PORT = "SocketPort"; //$NON-NLS-1$
 
-    public static final String USE_RESULTSET_CACHE = "ResultSetCacheEnabled"; //$NON-NLS-1$
-    public static final String MAX_RESULTSET_CACHE_SIZE = "ResultSetCacheMaxSize"; //$NON-NLS-1$
-    public static final String MAX_RESULTSET_CACHE_AGE = "ResultSetCacheMaxAge"; //$NON-NLS-1$
-    public static final String RESULTSET_CACHE_SCOPE = "ResultSetCacheScope"; //$NON-NLS-1$
+    public static final String USE_RESULTSET_CACHE = DQPConfigSource.USE_RESULTSET_CACHE;
 
-	public static final String MAX_PLAN_CACHE_SIZE = "MaxPlanCacheSize"; //$NON-NLS-1$
+    public static final String MAX_RESULTSET_CACHE_SIZE = DQPConfigSource.MAX_RESULTSET_CACHE_SIZE;
+
+    public static final String MAX_RESULTSET_CACHE_AGE = DQPConfigSource.MAX_RESULTSET_CACHE_AGE;
+ 
+    public static final String RESULTSET_CACHE_SCOPE = DQPConfigSource.RESULTSET_CACHE_SCOPE;
+
+	public static final String MAX_PLAN_CACHE_SIZE = DQPConfigSource.MAX_PLAN_CACHE_SIZE;
 }

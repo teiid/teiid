@@ -51,7 +51,6 @@ import com.metamatrix.server.dqp.service.PlatformDataService;
 import com.metamatrix.server.dqp.service.PlatformTransactionService;
 import com.metamatrix.server.dqp.service.PlatformVDBService;
 import com.metamatrix.server.dqp.service.tracker.DatabaseCommandLogger;
-import com.metamatrix.server.query.service.QueryServicePropertyNames;
 
 /**
  */
@@ -66,20 +65,6 @@ public class PlatformConfigSource implements DQPConfigSource {
     
     public PlatformConfigSource(Properties queryServiceProps, Properties currentConfiguration, Object clientId, Host host, String processName) {
         dqpProps = PropertiesUtils.clone(queryServiceProps, currentConfiguration, true);
-        dqpProps.setProperty(DQPConfigSource.PROCESS_POOL_MAX_THREADS, queryServiceProps.getProperty(QueryServicePropertyNames.PROCESS_POOL_MAX_THREADS));
-        dqpProps.setProperty(DQPConfigSource.PROCESS_POOL_THREAD_TTL, queryServiceProps.getProperty(QueryServicePropertyNames.PROCESS_POOL_THREAD_TTL));
-        dqpProps.setProperty(DQPConfigSource.MIN_FETCH_SIZE, queryServiceProps.getProperty(QueryServicePropertyNames.MIN_FETCH_SIZE));
-        dqpProps.setProperty(DQPConfigSource.MAX_FETCH_SIZE, queryServiceProps.getProperty(QueryServicePropertyNames.MAX_FETCH_SIZE));
-        dqpProps.setProperty(DQPConfigSource.MAX_CODE_TABLE_RECORDS, queryServiceProps.getProperty(QueryServicePropertyNames.MAX_CODE_TABLE_RECORDS));
-        dqpProps.setProperty(DQPConfigSource.MAX_CODE_TABLES, queryServiceProps.getProperty(QueryServicePropertyNames.MAX_CODE_TABLES));
-        dqpProps.setProperty(DQPConfigSource.PROCESSOR_TIMESLICE, queryServiceProps.getProperty(QueryServicePropertyNames.PROCESSOR_TIMESLICE));
-        
-        dqpProps.setProperty(DQPConfigSource.USE_RESULTSET_CACHE, queryServiceProps.getProperty(QueryServicePropertyNames.USE_RESULTSET_CACHE));
-        dqpProps.setProperty(DQPConfigSource.MAX_RESULTSET_CACHE_SIZE, queryServiceProps.getProperty(QueryServicePropertyNames.MAX_RESULTSET_CACHE_SIZE));
-        dqpProps.setProperty(DQPConfigSource.MAX_RESULTSET_CACHE_AGE, queryServiceProps.getProperty(QueryServicePropertyNames.MAX_RESULTSET_CACHE_AGE));
-        dqpProps.setProperty(DQPConfigSource.RESULTSET_CACHE_SCOPE, queryServiceProps.getProperty(QueryServicePropertyNames.RESULTSET_CACHE_SCOPE));
-
-        dqpProps.setProperty(DQPConfigSource.MAX_PLAN_CACHE_SIZE, queryServiceProps.getProperty(QueryServicePropertyNames.MAX_PLAN_CACHE_SIZE));
         
         String procDebugStr = currentConfiguration.getProperty(PROC_DEBUG_ALLOWED);
         if(procDebugStr != null) {
