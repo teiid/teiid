@@ -59,20 +59,26 @@ public class TestSocketServerConnection extends TestCase {
 		
 		Throwable t;
 		
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public void assertIdentity(SessionToken sessionId)
 				throws InvalidSessionException, MetaMatrixComponentException {
 			
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public ResultsFuture<?> logoff()
 				throws InvalidSessionException,
 				MetaMatrixComponentException {
 			return null;
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public LogonResult logon(
 				Properties connectionProperties)
 				throws LogonException,
@@ -80,7 +86,9 @@ public class TestSocketServerConnection extends TestCase {
 			return new LogonResult(new SessionToken(new MetaMatrixSessionID(1), "fooUser"), new Properties(), "fake"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public ResultsFuture<?> ping()
 				throws InvalidSessionException,
 				MetaMatrixComponentException {
@@ -120,7 +128,9 @@ public class TestSocketServerConnection extends TestCase {
 	public void testLogonFailsWithMultipleHosts() throws Exception {
 		Properties p = new Properties();
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public SocketServerInstance getServerInstance(HostInfo info,
 					boolean ssl) throws CommunicationException, IOException {
 				throw new SingleInstanceCommunicationException();
@@ -182,7 +192,9 @@ public class TestSocketServerConnection extends TestCase {
 		Properties p = new Properties();
 		ServerDiscovery discovery = new UrlServerDiscovery(new MMURL(hostInfo.getHostName(), hostInfo.getPortNumber(), false));
 		SocketServerInstanceFactory instanceFactory = new SocketServerInstanceFactory() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public SocketServerInstance getServerInstance(final HostInfo info,
 					boolean ssl) throws CommunicationException, IOException {
 				SocketServerInstance instance = Mockito.mock(SocketServerInstance.class);
