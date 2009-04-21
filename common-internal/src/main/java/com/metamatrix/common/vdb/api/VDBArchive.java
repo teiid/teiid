@@ -171,6 +171,7 @@ public class VDBArchive {
 			} else {
 				appendManifest(this.def, manifest);
 			}
+			this.def.setHasWSDLDefined(this.wsdlAvailable);
 			
 		} finally {
 			archive.close();
