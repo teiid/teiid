@@ -10,6 +10,8 @@ import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import junit.framework.TestCase;
+
 import org.junit.Test;
 
 import com.metamatrix.api.exception.ExceptionHolder;
@@ -19,8 +21,9 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.core.util.UnitTestUtil;
 
-public class TestExceptionHolder {
-		
+public class TestExceptionHolder extends TestCase {
+	
+	//## JDBC4.0-begin ##		
 	@SuppressWarnings("all")
 	public static class BadException extends MetaMatrixProcessingException {
 		private Object obj;
@@ -95,4 +98,11 @@ public class TestExceptionHolder {
         assertTrue(e instanceof MetaMatrixRuntimeException);
         assertEquals("Unknown Exception", e.getMessage()); //$NON-NLS-1$
 	}		
+	//## JDBC4.0-end ##
+	
+	/*## JDBC3.0-JDK1.5-begin ##
+	public void testPass(){
+	// since the jar files required are built with 1.6, it will always fail, so just comment the test for 1.5
+	} 
+	## JDBC3.0-JDK1.5-end ##*/
 }

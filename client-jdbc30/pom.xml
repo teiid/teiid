@@ -99,7 +99,6 @@
                             <goal>run</goal>
                         </goals>
                     </execution>
-                    <!-- 
                     <execution>
                         <id>generate-1.5-test</id>
                         <phase>generate-sources</phase>
@@ -149,7 +148,6 @@
                             <goal>run</goal>
                         </goals>
                     </execution>     
-                    -->               
                 </executions>
             </plugin>            
         </plugins>
@@ -162,7 +160,6 @@
               <include>**/*</include>
             </includes>
           </resource>
-          <!-- 
           <resource>
             <directory>${project.build.directory}/generated-sources/test/resources</directory>
             <filtering>false</filtering>
@@ -170,7 +167,6 @@
               <include>**/*</include>
             </includes>
           </resource>
-          -->
         </resources>   
              
     </build>  
