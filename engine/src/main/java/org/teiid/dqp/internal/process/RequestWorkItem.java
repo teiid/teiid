@@ -361,7 +361,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		if (this.processingException != null) {
 			sendError();			
 		} else {
-	        dqpCore.logMMCommand(requestMsg, false, false, this.processor.getHighestRow());
+	        dqpCore.logMMCommand(this, false, false, this.processor.getHighestRow());
 		}
 	}
 
@@ -708,6 +708,10 @@ public class RequestWorkItem extends AbstractWorkItem {
 
 	TransactionContext getTransactionContext() {
 		return transactionContext;
+	}
+	
+	void setTransactionContext(TransactionContext transactionContext) {
+		this.transactionContext = transactionContext;
 	}
 	
 	Collection<DataTierTupleSource> getConnectorRequests() {

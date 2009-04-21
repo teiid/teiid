@@ -93,7 +93,7 @@ public class CachedRequestWorkItem extends RequestWorkItem {
 	@Override
 	protected void attemptClose() {
 		this.isClosed = true;
-		dqpCore.logMMCommand(requestMsg, false, false, -1);
+		dqpCore.logMMCommand(this, false, false, -1);
 		this.dqpCore.removeRequest(this);
 	}
 	

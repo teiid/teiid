@@ -37,6 +37,7 @@ import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
 import javax.transaction.xa.Xid;
 
+import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.cache.CacheID;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
@@ -228,8 +229,6 @@ public class DQPCore extends Application implements ClientSideDQP {
 
 	public ResultsFuture<ResultsMessage> executeRequest(long reqID,
 			RequestMessage requestMsg) {
-    	logMMCommand(requestMsg, true, false, 0); //TODO: there is no transaction at this point 
-
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		RequestID requestID = workContext.getRequestID(reqID);
 		requestMsg.markProcessingStart();
@@ -260,6 +259,7 @@ public class DQPCore extends Application implements ClientSideDQP {
             workItem = new RequestWorkItem(this, requestMsg, request, resultsFuture.getResultsReceiver(), requestID, workContext);
         }
         
+    	logMMCommand(workItem, true, false, 0); //TODO: there is no transaction at this point 
         addRequest(requestID, workItem);
         
         this.addWork(workItem);      
@@ -452,7 +452,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         	markCancelled = workItem.requestCancel();
         }
     	if (markCancelled) {
-            logMMCommand(workItem.requestMsg, false, true, 0);
+            logMMCommand(workItem, false, true, 0);
     	} else {
     		LogManager.logDetail(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.failed_to_cancel")); //$NON-NLS-1$
     	}
@@ -499,17 +499,22 @@ public class DQPCore extends Application implements ClientSideDQP {
 		}
 	}
     
-    void logMMCommand(RequestMessage msg, boolean isBegin, boolean isCancel, int rowCount) {
-        if(this.tracker == null || msg == null || !tracker.willRecordMMCmd()){
+    void logMMCommand(RequestWorkItem workItem, boolean isBegin, boolean isCancel, int rowCount) {
+        if(this.tracker == null || !tracker.willRecordMMCmd()){
             return;
         }
+        RequestMessage msg = workItem.requestMsg;
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         RequestID rID = new RequestID(workContext.getConnectionID(), msg.getExecutionId());
         String command = null;
-        String txnID = null;
     	if(isBegin && !isCancel){
     		command = msg.getCommandString();
     	}
+    	String txnID = null;
+		TransactionContext tc = workItem.getTransactionContext();
+		if (tc != null) {
+			txnID = tc.getTxnID();
+		}
     	String appName = workContext.getAppName();
         // Log to request log
         short point = isBegin? TrackerLogConstants.CMD_POINT.BEGIN:TrackerLogConstants.CMD_POINT.END;
@@ -548,6 +553,10 @@ public class DQPCore extends Application implements ClientSideDQP {
 
 	TrackingService getTracker() {
 		return tracker;
+	}
+	
+	void setTracker(TrackingService tracker) {
+		this.tracker = tracker;
 	}
 
 	public TransactionService getTransactionService() {

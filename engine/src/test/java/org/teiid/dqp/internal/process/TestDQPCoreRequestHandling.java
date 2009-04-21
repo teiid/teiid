@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.mockito.Mockito;
+import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.DataTierTupleSource;
@@ -34,16 +36,14 @@ import org.teiid.dqp.internal.process.RequestWorkItem;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixException;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.service.TrackingService;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
-import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -92,7 +92,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
 	private RequestID addRequest(DQPCore rm, String sessionId, int executionId) {
 		RequestMessage r0 = new RequestMessage("test command"); //$NON-NLS-1$
         RequestID id = new RequestID(sessionId, executionId);
-        addRequest(rm, r0, id, null, null, new TupleSourceID("ts-1"), null, null, null);  //$NON-NLS-1$
+        addRequest(rm, r0, id, null, null);  //$NON-NLS-1$
 		return id;
 	}
 
@@ -119,7 +119,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null, new TupleSourceID("ts-1"), null, null, null);  //$NON-NLS-1$
+        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);  //$NON-NLS-1$
         assertTrue(workItem.resultsCursor.resultsRequested);
     }
     
@@ -128,7 +128,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
 
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null, new TupleSourceID("ts-1"), null, null, null);  //$NON-NLS-1$
+        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);  //$NON-NLS-1$
                 
         workItem.addSourceFailureDetails(getSourceFailures("Model1", "Binding1", "Warning1")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         workItem.addSourceFailureDetails(getSourceFailures("Model2", "Binding2", "Warning2")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -141,10 +141,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
                     RequestMessage requestMsg,
                     RequestID id,
                     Command originalCommand,
-                    QueryProcessor processor,
-                    TupleSourceID resultsID,
-                    AnalysisRecord analysisRecord,
-                    Collection schemas, DQPWorkContext workContext) {
+                    DQPWorkContext workContext) {
      
     	if (workContext == null) {
 	    	workContext = new DQPWorkContext();
@@ -160,7 +157,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null, null, null, null, null);
+        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
         AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.dqpWorkContext, 1);
 
         DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null, new ConnectorID("connID"), workItem); //$NON-NLS-1$
@@ -174,7 +171,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null, null, null, null, null);
+        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
         AtomicRequestMessage atomicReq = new AtomicRequestMessage(workItem.requestMsg, workItem.dqpWorkContext, 1);
 
         DataTierTupleSource info = new DataTierTupleSource(null, atomicReq, null, new ConnectorID("connID"), workItem); //$NON-NLS-1$
@@ -184,6 +181,21 @@ public class TestDQPCoreRequestHandling extends TestCase {
         
         DataTierTupleSource arInfo = workItem.getConnectorRequest(atomicReq.getAtomicRequestID());
         assertNull(arInfo);
+    }
+    
+    public void testLogTxnID() {
+    	DQPCore rm = new DQPCore();
+    	TrackingService ts = Mockito.mock(TrackingService.class);
+    	Mockito.stub(ts.willRecordMMCmd()).toReturn(true);
+    	rm.setTracker(ts);
+        RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
+        RequestID requestID = new RequestID(SESSION_STRING, 1);
+        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
+        TransactionContext tc = Mockito.mock(TransactionContext.class);
+        Mockito.stub(tc.getTxnID()).toReturn("mytxnid"); //$NON-NLS-1$
+        workItem.setTransactionContext(tc);
+        rm.logMMCommand(workItem, true, true, -1);
+        Mockito.verify(ts, Mockito.times(1)).log("C.0", "mytxnid", (short)1, (short)1, null, null, null, null, null, null, -1); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

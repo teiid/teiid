@@ -130,7 +130,7 @@ public class TestDataTierManager extends TestCase {
         context.setVdbVersion("1"); //$NON-NLS-1$
         context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
         processor = new QueryProcessor(new FakeProcessorPlan(), context, bs.getBufferManager(), dtm);
-        workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, processor, null, null, null, workContext);
+        workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, workContext);
         
         request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);

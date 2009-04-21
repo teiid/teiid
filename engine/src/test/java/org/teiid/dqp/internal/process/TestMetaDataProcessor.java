@@ -79,7 +79,7 @@ public class TestMetaDataProcessor extends TestCase {
         // Initialize components
         RequestID requestID = workContext.getRequestID(1);  
         RequestMessage requestMsg = new RequestMessage(sql);
-        TestDQPCoreRequestHandling.addRequest(requestMgr, requestMsg, requestID, command, null, null, AnalysisRecord.createNonRecordingRecord(), null, null); //$NON-NLS-1$
+        TestDQPCoreRequestHandling.addRequest(requestMgr, requestMsg, requestID, command, null); //$NON-NLS-1$
         
         ApplicationEnvironment env = new ApplicationEnvironment();
         FakeVDBService vdbService = new FakeVDBService();
