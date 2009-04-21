@@ -166,7 +166,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 			ElementSymbol element = (ElementSymbol) varIter.next();
 			
 			if (!usingQuery) {
-				ResolverUtil.setTypeIfReference(expression, element.getType(), insert);
+				ResolverUtil.setDesiredType(expression, element.getType(), insert);
 			}
 
             if(element.getType() != null && expression.getType() != null) {

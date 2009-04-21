@@ -130,7 +130,7 @@ public class TestFunctionLibrary {
     
 	private void helpFindConversions(String fname, Class[] types, FunctionDescriptor[] expected) {
 
-		FunctionDescriptor[] actual = library.determineNecessaryConversions(fname, types, false);
+		FunctionDescriptor[] actual = library.determineNecessaryConversions(fname, null, types, false);
 		
 		if(expected == null) {
 			if(actual != null) { 

@@ -30,7 +30,7 @@ import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
+import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -44,7 +44,7 @@ public class TestFunctionResolving {
         Function function = new Function("convert", new Expression[] {new Constant(new Character('a')), new Constant(DataTypeManager.DefaultDataTypes.DATE)}); //$NON-NLS-1$
         
         try {
-            ResolverVisitorUtil.resolveFunction(function, FakeMetadataFactory.example1Cached());
+            ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
             fail("excpetion expected"); //$NON-NLS-1$
         } catch (QueryResolverException err) {
             assertEquals("The conversion from char to date is not allowed.", err.getMessage()); //$NON-NLS-1$
@@ -53,10 +53,12 @@ public class TestFunctionResolving {
     
     @Test public void testResolvesClosestType() throws Exception {
         ElementSymbol e1 = new ElementSymbol("pm1.g1.e1"); //$NON-NLS-1$
+        //dummy resolve to a byte
         e1.setType(DataTypeManager.DefaultDataClasses.BYTE);
+        e1.setMetadataID(new Object()); 
         Function function = new Function("abs", new Expression[] {e1}); //$NON-NLS-1$
         
-        ResolverVisitorUtil.resolveFunction(function, FakeMetadataFactory.example1Cached());
+        ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
         
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, function.getType());
     }
@@ -64,7 +66,7 @@ public class TestFunctionResolving {
     @Test public void testResolveConvertReference() throws Exception {
         Function function = new Function("convert", new Expression[] {new Reference(0), new Constant(DataTypeManager.DefaultDataTypes.BOOLEAN)}); //$NON-NLS-1$
         
-        ResolverVisitorUtil.resolveFunction(function, FakeMetadataFactory.example1Cached());
+        ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
         
         assertEquals(DataTypeManager.DefaultDataClasses.BOOLEAN, function.getType());
         assertEquals(DataTypeManager.DefaultDataClasses.BOOLEAN, function.getArgs()[0].getType());
@@ -74,7 +76,7 @@ public class TestFunctionResolving {
         Function function = new Function("LCASE", new Expression[] {new Reference(0)}); //$NON-NLS-1$
         
         try {
-            ResolverVisitorUtil.resolveFunction(function, FakeMetadataFactory.example1Cached());
+        	ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
             fail("excpetion expected"); //$NON-NLS-1$
         } catch (QueryResolverException err) {
             assertEquals("The function 'LCASE(?)' has more than one possible signature.", err.getMessage()); //$NON-NLS-1$
@@ -120,7 +122,7 @@ public class TestFunctionResolving {
 	private Function helpResolveFunction(String sql) throws QueryParserException,
 			QueryResolverException, MetaMatrixComponentException {
 		Function func = (Function)QueryParser.getQueryParser().parseExpression(sql);
-    	ResolverVisitorUtil.resolveFunction(func, FakeMetadataFactory.example1Cached());
+		ResolverVisitor.resolveLanguageObject(func, FakeMetadataFactory.example1Cached());
     	assertEquals(DataTypeManager.DefaultDataClasses.STRING, func.getType());
     	return func;
 	}

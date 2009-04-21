@@ -48,6 +48,7 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.CompareCriteria;
@@ -384,7 +385,7 @@ public class RulePushAggregates implements
                 Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {
                     newAgg, convertTargetType
                 });
-                ResolverVisitorUtil.resolveFunction(convertFunc, metadata);
+                ResolverVisitor.resolveLanguageObject(convertFunc, metadata);
 
                 newExpression = convertFunc;  
                 nestedAggregates.add(partitionAgg);
@@ -397,7 +398,7 @@ public class RulePushAggregates implements
                 AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", ReservedWords.SUM, false, countAgg); //$NON-NLS-1$
 
                 Function divideFunc = new Function("/", new Expression[] {sumSumAgg, sumCountAgg}); //$NON-NLS-1$
-                ResolverVisitorUtil.resolveFunction(divideFunc, metadata);
+                ResolverVisitor.resolveLanguageObject(divideFunc, metadata);
 
                 newExpression = divideFunc;
                 nestedAggregates.add(countAgg);

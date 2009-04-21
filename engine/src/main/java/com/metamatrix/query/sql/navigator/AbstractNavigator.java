@@ -40,7 +40,7 @@ public class AbstractNavigator extends LanguageVisitor {
         this.visitor = visitor;
     }
     
-    protected LanguageVisitor getVisitor() {
+    public LanguageVisitor getVisitor() {
         return this.visitor;
     }
 

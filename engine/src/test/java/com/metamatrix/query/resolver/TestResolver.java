@@ -4653,4 +4653,8 @@ public class TestResolver extends TestCase {
     	assertEquals(1, proc.getProjectedSymbols().size());
     }
     
+    public void testSecondPassFunctionResolving() {
+    	helpResolve("SELECT pm1.g1.e1 FROM pm1.g1 where lower(?) = e1 "); //$NON-NLS-1$
+    }
+    
 }

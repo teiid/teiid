@@ -213,10 +213,10 @@ public class ResolverUtil {
     private static Expression getConversion(Expression sourceExpression,
                                             String sourceTypeName,
                                             String targetTypeName) {
-        Class srcType = DataTypeManager.getDataTypeClass(sourceTypeName);
+        Class<?> srcType = DataTypeManager.getDataTypeClass(sourceTypeName);
 
         FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();
-        FunctionDescriptor fd = library.findFunction(FunctionLibrary.CONVERT, new Class[] { srcType, DataTypeManager.DefaultDataClasses.STRING });
+        FunctionDescriptor fd = library.findTypedConversionFunction(srcType, DataTypeManager.getDataTypeClass(targetTypeName));
 
         Function conversion = new Function(fd.getName(), new Expression[] { sourceExpression, new Constant(targetTypeName) });
         conversion.setType(DataTypeManager.getDataTypeClass(targetTypeName));
@@ -232,12 +232,20 @@ public class ResolverUtil {
      * @param targetType the target type, if the expression's type is null.
      * @throws QueryResolverException if unable to set the reference type to the target type.
      */
-    public static void setTypeIfReference(Expression expression, Class<?> targetType, LanguageObject surroundingExpression) throws QueryResolverException {
-        if ((expression instanceof Reference) && ((Reference)expression).isPositional()) {
-        	if (targetType == null) {
-        		throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0026, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0026, surroundingExpression));
+    public static void setDesiredType(Expression expression, Class<?> targetType, LanguageObject surroundingExpression) throws QueryResolverException {
+        if (expression instanceof Reference) {
+        	Reference ref = (Reference)expression;
+        	if (ref.isPositional() && ref.getType() == null) {
+	        	if (targetType == null) {
+	        		throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0026, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0026, surroundingExpression));
+	        	}
+	            ref.setType(targetType);
         	}
-            ((Reference)expression).setType(targetType);
+        } else if (expression instanceof Function) {
+        	Function f = (Function)expression;
+        	if (f.getType() == null) {
+	        	f.setType(targetType);
+        	}
         }
     }
     
@@ -550,9 +558,9 @@ public class ResolverUtil {
 
     public static void resolveLimit(Limit limit) throws QueryResolverException {
         if (limit.getOffset() != null) {
-            setTypeIfReference(limit.getOffset(), DataTypeManager.DefaultDataClasses.INTEGER, limit);
+            setDesiredType(limit.getOffset(), DataTypeManager.DefaultDataClasses.INTEGER, limit);
         }
-        setTypeIfReference(limit.getRowLimit(), DataTypeManager.DefaultDataClasses.INTEGER, limit);
+        setDesiredType(limit.getRowLimit(), DataTypeManager.DefaultDataClasses.INTEGER, limit);
     }
     
     public static void resolveImplicitTempGroup(TempMetadataAdapter metadata, GroupSymbol symbol, List symbols) 
@@ -629,7 +637,7 @@ public class ResolverUtil {
                     ((ScalarSubquery)expr).setType(replacement);                                        
                 } else {
                 	try {
-						ResolverUtil.setTypeIfReference(expr, replacement, symbol);
+						ResolverUtil.setDesiredType(expr, replacement, symbol);
 					} catch (QueryResolverException e) {
 						//cannot happen
 					}

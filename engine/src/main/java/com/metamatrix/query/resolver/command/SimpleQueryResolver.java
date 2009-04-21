@@ -298,6 +298,8 @@ public class SimpleQueryResolver implements CommandResolver {
         try {
             QueryResolverVisitor qrv = new QueryResolverVisitor(query, metadata, useMetadataCommands, analysis);
             qrv.visit(query);
+            ResolverVisitor visitor = (ResolverVisitor)qrv.getVisitor();
+			visitor.throwException(true);
         } catch (MetaMatrixRuntimeException e) {
             if (e.getChild() instanceof QueryMetadataException) {
                 throw (QueryMetadataException)e.getChild();
@@ -362,12 +364,13 @@ public class SimpleQueryResolver implements CommandResolver {
         protected void postVisitVisitor(LanguageObject obj) {
             super.postVisitVisitor(obj);
             ResolverVisitor visitor = (ResolverVisitor)getVisitor();
-            if (visitor.getComponentException() != null) {
-                throw new MetaMatrixRuntimeException(visitor.getComponentException());
-            }
-            if (visitor.getResolverException() != null) {
-                throw new MetaMatrixRuntimeException(visitor.getResolverException());
-            }
+            try {
+				visitor.throwException(false);
+			} catch (QueryResolverException e) {
+				throw new MetaMatrixRuntimeException(e);
+			} catch (MetaMatrixComponentException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}
         }
                 
         /**
