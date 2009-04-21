@@ -98,11 +98,23 @@
 	    <display-name>MetaMatrix VDB Resource Servlet</display-name>
 	    <servlet-class>com.metamatrix.soap.servlet.MMGetVDBResourceServlet</servlet-class>
     </servlet>    	
+    
+    <servlet>
+	    <servlet-name>MMDiscoverWSDLServlet</servlet-name>
+	    <display-name>MetaMatrix Discover WSDL URLs Servlet</display-name>
+	    <servlet-class>com.metamatrix.soap.servlet.MMDiscoverWSDLServlet</servlet-class>
+   </servlet>
 
 	<servlet>
 	    <servlet-name>MMWSDLURLGenerator</servlet-name>
 	    <display-name>MetaMatrix WSDL URL Generator Servlet</display-name>
 	    <servlet-class>com.metamatrix.soap.servlet.WSDLURLGenerator</servlet-class>
+   	</servlet>
+   	
+   	<servlet>
+		<servlet-name>MMGetWSDLServlet</servlet-name>
+		<display-name>MetaMatrix Get WSDL Servlet</display-name>
+		<servlet-class>com.metamatrix.soap.servlet.MMGetWSDLServlet</servlet-class>
    	</servlet>
    	
     <servlet-mapping>
@@ -115,11 +127,10 @@
 	    <url-pattern>/servlet/WSDLURLGenerator</url-pattern>
     </servlet-mapping>
     
-    <servlet>
-	    <servlet-name>MMDiscoverWSDLServlet</servlet-name>
-	    <display-name>MetaMatrix Discover WSDL URLs Servlet</display-name>
-	    <servlet-class>com.metamatrix.soap.servlet.MMDiscoverWSDLServlet</servlet-class>
-   </servlet>
+    <servlet-mapping>
+	    <servlet-name>MMGetWSDLServlet</servlet-name>
+	    <url-pattern>/wsdl/*</url-pattern>
+    </servlet-mapping>
 
    <servlet-mapping>
        <servlet-name>AxisServlet</servlet-name>
