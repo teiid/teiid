@@ -59,7 +59,6 @@ import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.util.BindVariableVisitor;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
@@ -876,7 +875,7 @@ public class TestResolver extends TestCase {
     }
 
     public void testHavingWithAggsOfDifferentTypes() {
-        helpResolveException("SELECT * FROM pm1.g1 GROUP BY e4 HAVING MIN(e1) = MIN(e2)"); //$NON-NLS-1$
+        helpResolve("SELECT * FROM pm1.g1 GROUP BY e4 HAVING MIN(e1) = MIN(e2)"); //$NON-NLS-1$
     }
     
     public void testCaseInGroupBy() {

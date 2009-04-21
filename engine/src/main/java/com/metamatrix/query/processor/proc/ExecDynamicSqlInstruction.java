@@ -149,11 +149,6 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 	public void process(ProgramEnvironment env) throws BlockedException,
 			MetaMatrixComponentException, MetaMatrixProcessingException {
 
-		LogManager
-				.logTrace(
-						LogConstants.CTX_DQP,
-						"Processing ExecDynamicSqlInstruction as part of processing the update procedure"); //$NON-NLS-1$
-
 		ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
         
 		VariableContext localContext = procEnv.getCurrentVariableContext();

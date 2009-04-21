@@ -6976,7 +6976,7 @@ public class TestOptimizer extends TestCase {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
          
         ProcessorPlan plan = helpPlan(
-            "SELECT ClobValue from LOB.LobTbl WHERE convert(ClobValue, string) = '1'",  //$NON-NLS-1$
+            "SELECT ClobValue from LOB.LobTbl WHERE convert(ClobValue, string) = ?",  //$NON-NLS-1$
             metadata,
             null, capFinder,
             new String[] {"SELECT ClobValue FROM LOB.LobTbl"}, //$NON-NLS-1$

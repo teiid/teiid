@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +57,7 @@ public class SelectNode extends RelationalNode {
         blockedOnPrepare = false;
         blockedBatch = null;
         blockedRow = 0;
+        evaluator = null;
     }
 
 	public void setCriteria(Criteria criteria) { 

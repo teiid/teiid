@@ -175,7 +175,7 @@ public class ResolverUtil {
         }
         
         if(canImplicitlyConvert(sourceTypeName, targetTypeName) 
-                        || (sourceExpression instanceof Constant && canConvertConstant(sourceTypeName, targetTypeName, (Constant)sourceExpression))) {
+                        || (sourceExpression instanceof Constant && convertConstant(sourceTypeName, targetTypeName, (Constant)sourceExpression) != null)) {
             return getConversion(sourceExpression, sourceTypeName, targetTypeName);
         }
 
@@ -183,29 +183,31 @@ public class ResolverUtil {
         throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0041, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0041, new Object[] {targetTypeName, sourceExpression, sourceTypeName}));
     }
 
-    private static boolean canConvertConstant(String sourceTypeName,
+    public static Constant convertConstant(String sourceTypeName,
                                            String targetTypeName,
                                            Constant constant) throws QueryResolverException {
-        if (DataTypeManager.isTransformable(sourceTypeName, targetTypeName)) {
-            
-            //try to get the converted constant, if this fails then it is not in a valid format
-            Constant result = getProperlyTypedConstant(constant.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
-            
-            if (DataTypeManager.DefaultDataTypes.STRING.equals(sourceTypeName)) {
-                return true;
-            }
-            
-            //for non-strings, ensure that the conversion is consistent
-            if (DataTypeManager.isTransformable(targetTypeName, sourceTypeName)) {
-                Constant reverse = getProperlyTypedConstant(result.getValue(), constant.getType());
-                
-                if (constant.equals(reverse)) {
-                    return true;
-                }
-            }
+        if (!DataTypeManager.isTransformable(sourceTypeName, targetTypeName)) {
+        	return null;
         }
             
-        return false;
+        //try to get the converted constant, if this fails then it is not in a valid format
+        Constant result = getProperlyTypedConstant(constant.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
+        
+        if (DataTypeManager.DefaultDataTypes.STRING.equals(sourceTypeName)) {
+            return result;
+        }
+        
+        //for non-strings, ensure that the conversion is consistent
+        if (!DataTypeManager.isTransformable(targetTypeName, sourceTypeName)) {
+        	return null;
+        }
+        Constant reverse = getProperlyTypedConstant(result.getValue(), constant.getType());
+        
+        if (constant.equals(reverse)) {
+            return result;
+        }
+            
+        return null;
     }
 
     private static Expression getConversion(Expression sourceExpression,

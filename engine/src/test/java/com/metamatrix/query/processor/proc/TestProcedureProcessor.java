@@ -262,9 +262,9 @@ public class TestProcedureProcessor extends TestCase {
             elementSymbols,
             
             new List[] { 
-                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
-                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+                Arrays.asList( new Object[] { "First", new Short((short)5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Second", new Short((short)15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", new Short((short)51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
                 } );
         
         return dataMgr;
@@ -1821,7 +1821,7 @@ public class TestProcedureProcessor extends TestCase {
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
         // Create expected results
-        List[] expected = new List[] { Arrays.asList(new Object[] { "First", new Integer(5)})};           //$NON-NLS-1$      
+        List[] expected = new List[] { Arrays.asList(new Object[] { "First", new Short((short)5)})};           //$NON-NLS-1$      
         
         helpTestProcess(plan, expected, dataMgr);
      }

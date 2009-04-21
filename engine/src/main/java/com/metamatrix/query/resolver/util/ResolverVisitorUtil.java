@@ -45,7 +45,6 @@ import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.query.metadata.TempMetadataID;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
@@ -146,96 +145,60 @@ public class ResolverVisitorUtil {
     	Expression leftExpression = ccrit.getLeftExpression();
     	Expression rightExpression = ccrit.getRightExpression();
     
-    	boolean leftIsAggregate = (leftExpression instanceof AggregateSymbol);
-    	boolean rightIsAggregate = (rightExpression instanceof AggregateSymbol);
-    
     	// Check typing between expressions
         ResolverUtil.setTypeIfReference(leftExpression, rightExpression.getType(), ccrit);
         ResolverUtil.setTypeIfReference(rightExpression, leftExpression.getType(), ccrit);
     
-    	if(! leftExpression.getType().equals(rightExpression.getType()) ) {
-    
-    		boolean converted = false;
-    
-    		// Try to apply an implicit conversion from one side to the other
-    		String leftTypeName = DataTypeManager.getDataTypeName(leftExpression.getType());
-    		String rightTypeName = DataTypeManager.getDataTypeName(rightExpression.getType());
-    
-            // Special cases when right expression is a constant
-            if(rightExpression instanceof Constant) {
-                // Auto-convert constant string on right to expected type on left
-                try {
-                    ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName));
-                    converted = true;                                           
-                } catch (QueryResolverException qre) {
-                    //ignore
-                }
-            } 
-            
-            // Special cases when left expression is a constant
-            if(!converted && leftExpression instanceof Constant) {
-                // Auto-convert constant string on left to expected type on right
-                try {
-                    ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName));
-                    converted = true;                                           
-                } catch (QueryResolverException qre) {
-                    //ignore
-                }
-            }
-    
-            // Try to apply a conversion generically (except when aggregate involved)
-            if(!converted) {
-    			// Try to apply conversion to left if not aggregate
-    			if(! leftIsAggregate && ResolverUtil.canImplicitlyConvert(leftTypeName, rightTypeName)) {
-    				ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName) );
-    				converted = true;
-    			}
-    
-    			// Try to apply conversion to right if left not converted and right not aggregate
-    			if(! converted && ! rightIsAggregate && ResolverUtil.canImplicitlyConvert(rightTypeName, leftTypeName)) {
-    				ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName) );
-    				converted = true;
-    			}
-    	    }
-    
-    	    // Could not resolve - try last ditch effort to convert agg expression or throw exception
-    		if(! converted) {
-                if(rightIsAggregate) {
-                    if(leftIsAggregate) {
-                        // both are aggs of differing types - can't reconcile
-                        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0064, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0064));
-                    }
-                    AggregateSymbol aggRight = (AggregateSymbol) rightExpression;
-                    String aggFunc = aggRight.getAggregateFunction();
-                    // Convert expression inside MIN/MAX function rather than converting aggregate
-                    if((aggFunc.equals(ReservedWords.MIN) || aggFunc.equals(ReservedWords.MAX)) &&
-                        ResolverUtil.canImplicitlyConvert(rightTypeName, leftTypeName)) {
-                        aggRight.setExpression(ResolverUtil.convertExpression(aggRight.getExpression(), rightTypeName, leftTypeName) );
-                    } else {
-                        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0028, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0028));
-                    }
-                } else if(leftIsAggregate) {
-                    AggregateSymbol aggLeft = (AggregateSymbol) leftExpression;
-                    String aggFunc = aggLeft.getAggregateFunction();
-                    // Convert expression inside MIN/MAX function rather than converting aggregate
-                    if((aggFunc.equals(ReservedWords.MIN) || aggFunc.equals(ReservedWords.MAX)) &&
-                        ResolverUtil.canImplicitlyConvert(leftTypeName, rightTypeName)) {
-                            aggLeft.setExpression(ResolverUtil.convertExpression(aggLeft.getExpression(), leftTypeName, rightTypeName) );
-                    } else {
-                        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0028, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0028));
-                    }
-                } else {
-                	String commonType = ResolverUtil.getCommonType(new String[] {leftTypeName, rightTypeName});
-                	
-                	if (commonType == null) {
-	                    // Neither are aggs, but types can't be reconciled
-	                    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0027, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0027, new Object[] { leftTypeName, rightTypeName, ccrit }));
-                	}
-                	ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, commonType) );
-    				ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, commonType) );
-                }
-    		}
+    	if(leftExpression.getType().equals(rightExpression.getType()) ) {
+    		return;
     	}
+    
+		// Try to apply an implicit conversion from one side to the other
+		String leftTypeName = DataTypeManager.getDataTypeName(leftExpression.getType());
+		String rightTypeName = DataTypeManager.getDataTypeName(rightExpression.getType());
+
+        // Special cases when right expression is a constant
+        if(rightExpression instanceof Constant) {
+            // Auto-convert constant string on right to expected type on left
+            try {
+                ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName));
+                return;
+            } catch (QueryResolverException qre) {
+                //ignore
+            }
+        } 
+        
+        // Special cases when left expression is a constant
+        if(leftExpression instanceof Constant) {
+            // Auto-convert constant string on left to expected type on right
+            try {
+                ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName));
+                return;                                           
+            } catch (QueryResolverException qre) {
+                //ignore
+            }
+        }
+
+        // Try to apply a conversion generically
+		
+        if(ResolverUtil.canImplicitlyConvert(leftTypeName, rightTypeName)) {
+			ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, rightTypeName) );
+			return;
+		}
+
+		if(ResolverUtil.canImplicitlyConvert(rightTypeName, leftTypeName)) {
+			ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, leftTypeName) );
+			return;
+	    }
+
+    	String commonType = ResolverUtil.getCommonType(new String[] {leftTypeName, rightTypeName});
+    	
+    	if (commonType == null) {
+            // Neither are aggs, but types can't be reconciled
+            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0027, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0027, new Object[] { leftTypeName, rightTypeName, ccrit }));
+    	}
+    	ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, commonType) );
+		ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, commonType) );
     }
 
     static void resolveMatchCriteria(MatchCriteria mcrit)

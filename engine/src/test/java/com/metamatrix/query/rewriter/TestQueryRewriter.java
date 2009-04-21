@@ -22,8 +22,6 @@
 
 package com.metamatrix.query.rewriter;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -62,7 +60,6 @@ import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
-import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
@@ -268,7 +265,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     public void testRewriteCrit6() {
-        helpTestRewriteCriteria("1 = convert(pm1.g1.e1,integer) + 10", "convert(pm1.g1.e1, integer) = -9"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("1 = convert(pm1.g1.e1,integer) + 10", "pm1.g1.e1 = '-9'"); //$NON-NLS-1$ //$NON-NLS-2$
     } 
     
     public void testRewriteCrit7() {
@@ -525,7 +522,12 @@ public class TestQueryRewriter extends TestCase {
 
     public void testRewriteCrit_formatLong() {
         helpTestRewriteCriteria("formatLong(convert(pm1.g1.e2, long), '#,##0') = '1,234,567,890,123'", //$NON-NLS-1$
-                                "convert(pm1.g1.e2, long) = 1234567890123" );         //$NON-NLS-1$
+                                "1 = 0" );         //$NON-NLS-1$
+    }
+    
+    public void testRewriteCrit_formatLong1() {
+        helpTestRewriteCriteria("formatLong(convert(pm1.g1.e2, long), '#,##0') = '1,234,567,890'", //$NON-NLS-1$
+                                "pm1.g1.e2 = 1234567890" );         //$NON-NLS-1$
     }
     
     public void testRewriteCrit_formatTimestampInvert() { 
@@ -542,28 +544,22 @@ public class TestQueryRewriter extends TestCase {
         helpTestRewriteCriteria(original, expected);
     } 
 
-    public void testRewriteCrit_formatBigInteger() {
+    public void testRewriteCrit_formatBigInteger() throws Exception {
         String original = "formatBigInteger(convert(pm1.g1.e2, biginteger), '#,##0') = '1,234,567,890'"; //$NON-NLS-1$
-        String expected = "convert(pm1.g1.e2, biginteger) = 1234567890"; //$NON-NLS-1$
+        String expected = "pm1.g1.e2 = 1234567890"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria(original, metadata);
         Criteria expectedCrit = parseCriteria(expected, metadata);
-        ((CompareCriteria)expectedCrit).setRightExpression(new Constant(new BigInteger("1234567890"))); //$NON-NLS-1$
         
         // rewrite
-        try { 
-            Criteria actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
-            assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
-        } catch(QueryValidatorException e) { 
-            e.printStackTrace();
-            fail("Exception during rewriting (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        Criteria actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
+        assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
     }
 
     public void testRewriteCrit_formatFloat() throws Exception {
-        String original = "formatFloat(convert(pm1.g1.e2, float), '#,##0.###') = '1,234.123'"; //$NON-NLS-1$
-        String expected = "convert(pm1.g1.e2, float) = 1234.123"; //$NON-NLS-1$
+        String original = "formatFloat(convert(pm1.g1.e4, float), '#,##0.###') = '1,234.123'"; //$NON-NLS-1$
+        String expected = "pm1.g1.e4 = 1234.123046875"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria(original, metadata);
@@ -571,15 +567,11 @@ public class TestQueryRewriter extends TestCase {
         // rewrite
         Criteria actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
         assertEquals("Did not rewrite correctly: ", expected, actual.toString()); //$NON-NLS-1$
-        
-        Function left = (Function)((CompareCriteria)actual).getLeftExpression();
-        
-        assertFalse(left.isImplicit());
     }
 
-    public void testRewriteCrit_formatDouble() {
-        String original = "formatDouble(convert(pm1.g1.e2, double), '$#,##0.00') = '$1,234.50'"; //$NON-NLS-1$
-        String expected = "convert(pm1.g1.e2, double) = 1234.5"; //$NON-NLS-1$
+    public void testRewriteCrit_formatDouble() throws Exception {
+        String original = "formatDouble(convert(pm1.g1.e4, double), '$#,##0.00') = '$1,234.50'"; //$NON-NLS-1$
+        String expected = "pm1.g1.e4 = '1234.5'"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria(original, metadata);
@@ -587,32 +579,21 @@ public class TestQueryRewriter extends TestCase {
         ((CompareCriteria)expectedCrit).setRightExpression(new Constant(new Double(1234.5)));
         
         // rewrite
-        try { 
-            Criteria actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
-            assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
-        } catch(QueryValidatorException e) { 
-            e.printStackTrace();
-            fail("Exception during rewriting (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        Criteria actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
+        assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatBigDecimal() {
-        String original = "formatBigDecimal(convert(pm1.g1.e2, bigdecimal), '#,##0.###') = convert(1234.5, bigdecimal)"; //$NON-NLS-1$
-        String expected = "convert(pm1.g1.e2, bigdecimal) = 1234.5"; //$NON-NLS-1$
+    public void testRewriteCrit_formatBigDecimal() throws Exception {
+        String original = "formatBigDecimal(convert(pm1.g1.e4, bigdecimal), '#,##0.###') = convert(1234.5, bigdecimal)"; //$NON-NLS-1$
+        String expected = "pm1.g1.e4 = 1234.5"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria(original, metadata);
         Criteria expectedCrit = parseCriteria(expected, metadata);
-        ((CompareCriteria)expectedCrit).setRightExpression(new Constant(new BigDecimal("1234.5"))); //$NON-NLS-1$
         
         // rewrite
-        try { 
-            Criteria actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
-            assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
-        } catch(QueryValidatorException e) { 
-            e.printStackTrace();
-            fail("Exception during rewriting (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        Criteria actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
+        assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
     }
     
     public void testRewriteCritTimestampDiffDate1() {
@@ -1000,7 +981,7 @@ public class TestQueryRewriter extends TestCase {
 		
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT e2 FROM pm1.g1 WHERE convert(sqrt(pm1.g1.e2), integer) = 10;\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "SELECT e2 FROM pm1.g1 WHERE sqrt(pm1.g1.e2) = 10.0;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 		
 		String procReturned = this.getReWrittenProcedure(procedure, userQuery, 
@@ -1118,7 +1099,7 @@ public class TestQueryRewriter extends TestCase {
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
 		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT pm1.g1.e2 FROM pm1.g1 WHERE (CONCAT(e1, 'z') = CONCAT(CONCAT(e1, 'z'), 'y')) AND (convert(CONCAT(e1, 'k'), integer) = 1);\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "SELECT pm1.g1.e2 FROM pm1.g1 WHERE (CONCAT(e1, 'z') = CONCAT(CONCAT(e1, 'z'), 'y')) AND (CONCAT(e1, 'k') = '1');\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getReWrittenProcedure(procedure, userQuery, 
@@ -1602,14 +1583,12 @@ public class TestQueryRewriter extends TestCase {
         helpTestRewriteCriteria("convert(pm1.g1.e1, string) = 'x'", "pm1.g1.e1 = 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
-    /** Test some other type besides 'string' has no effect */
     public void testRewriteCase1954d() {
-        helpTestRewriteCriteria("convert(pm1.g1.e1, timestamp) = {ts '2005-01-03 00:00:00.0'}", "convert(pm1.g1.e1, timestamp) = {ts '2005-01-03 00:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("convert(pm1.g1.e1, timestamp) = {ts '2005-01-03 00:00:00.0'}", "pm1.g1.e1 = '2005-01-03 00:00:00.0'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    /** Test some other type besides 'string' has no effect */
     public void testRewriteCase1954e() {
-        helpTestRewriteCriteria("convert(pm1.g1.e4, integer) = 2", "convert(pm1.g1.e4, integer) = 2"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("convert(pm1.g1.e4, integer) = 2", "pm1.g1.e4 = 2.0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /** Check that this fails, x is not convertable to an int */
@@ -1627,7 +1606,7 @@ public class TestQueryRewriter extends TestCase {
     }    
 
     public void testRewriteCase1954SetA() {
-        helpTestRewriteCriteria("convert(pm1.g1.e2, string) in ('2', 'x')", "convert(pm1.g1.e2, string) in ('2', 'x')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("convert(pm1.g1.e2, string) in ('2', 'x')", "pm1.g1.e2 = 2"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
     public void testRewriteCase1954SetB() {

@@ -54,7 +54,6 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
@@ -144,7 +143,6 @@ import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
 import com.metamatrix.query.sql.visitor.ExpressionMappingVisitor;
 import com.metamatrix.query.sql.visitor.PredicateCollectorVisitor;
-import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -1458,9 +1456,7 @@ public class QueryRewriter {
      * <code>typedColumn = 5 </code> 
      * 
      * Right expression has already been checked to be a Constant, left expression to be
-     * a function.  Function is known to be "convert" or "cast".  The scope of this change
-     * will be limited to the case where the left expression is attempting to convert to
-     * 'string'.  
+     * a function.  Function is known to be "convert" or "cast".
      * 
      * @param crit CompareCriteria
      * @return same Criteria instance (possibly optimized)
@@ -1474,44 +1470,31 @@ public class QueryRewriter {
         
         String leftExprTypeName = DataTypeManager.getDataTypeName(leftExpr.getType());
         
-        if (leftExpr.getType() == DataTypeManager.DefaultDataClasses.NULL || rightConstant.getType() != DataTypeManager.DefaultDataClasses.STRING) {
+        if (leftExpr.getType() == DataTypeManager.DefaultDataClasses.NULL) {
             return crit;
         }
         
-        Transform transform = DataTypeManager.getTransform(leftExprTypeName, DataTypeManager.DefaultDataTypes.STRING);
-        
-        if (transform.isNarrowing()) {
-            return crit;
-        }
-                
-        FunctionLibrary funcLib = FunctionLibraryManager.getFunctionLibrary();
-        
-        FunctionDescriptor descriptor = funcLib.findTypedConversionFunction(rightConstant.getType(), leftExpr.getType());
-            
-        if(descriptor == null){
-            return crit;
-        }            
-        
+        Constant result = null;
         try {
-            Object result = funcLib.invokeFunction(
-                descriptor, new Object[] { rightConstant.getValue(), leftExprTypeName } );
-            crit.setRightExpression(new Constant(result, descriptor.getReturnType()));
-            crit.setLeftExpression(leftExpr);
-        } catch(InvalidFunctionException e) {
-            String errorMsg = QueryExecPlugin.Util.getString("QueryRewriter.criteriaError", crit); //$NON-NLS-1$
-            throw new QueryValidatorException(e, errorMsg);
-        } catch(FunctionExecutionException e) {
-            if (crit.getOperator() == CompareCriteria.EQ) {
+            result = ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(rightConstant.getType()), leftExprTypeName, rightConstant);
+        } catch(QueryResolverException e) {
+            
+        }
+        
+        if (result == null) {
+        	if (crit.getOperator() == CompareCriteria.EQ) {
                 return FALSE_CRITERIA;
             }
             return TRUE_CRITERIA;
         }
+        
+        crit.setRightExpression(result);
+        crit.setLeftExpression(leftExpr);
 
         if (leftExpr instanceof Function) {
             return simplifyWithInverse(crit);
         }
         
-        // Fall through and return original criteria
         return crit;
     }
 
@@ -1541,61 +1524,49 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      * @since 4.2
      */
-    private static SetCriteria simplifyConvertFunction(SetCriteria crit) throws QueryValidatorException {
-
-
+    private static Criteria simplifyConvertFunction(SetCriteria crit, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getExpression();
         Expression leftExpr = leftFunction.getArgs()[0];
-        Expression targetType = leftFunction.getArgs()[1];
         String leftExprTypeName = DataTypeManager.getDataTypeName(leftExpr.getType());
         
         Iterator i = crit.getValues().iterator();
         Collection newValues = new ArrayList(crit.getNumberOfValues());
-        boolean success = true;
         
-        try {
-            while (i.hasNext()) {
-                Object next = i.next();
-                if (next instanceof Constant) {
-    
-                    Constant rightConstant = (Constant) next;
-                    Class rightConstantType = rightConstant.getType();
-                    
-                    
-                    if(targetType.getType().equals(rightConstantType) && targetType.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
-                        FunctionLibrary funcLib = FunctionLibraryManager.getFunctionLibrary();
-                        FunctionDescriptor descriptor = funcLib.findTypedConversionFunction(rightConstantType, leftExpr.getType());
-                        
-                        if(descriptor != null){
-                            Object result = funcLib.invokeFunction(
-                                descriptor, new Object[] { rightConstant.getValue(), leftExprTypeName } );
-                            newValues.add(new Constant(result, descriptor.getReturnType()));
-                        } else {
-                            success = false;
-                            break;
-                        }
-                    } else {
-                        success = false;
-                        break;
-                    }
-                    
-                } else {
-                    success = false;
-                    break;
-                }
+        boolean convertedAll = true;
+        boolean removedSome = false;
+        while (i.hasNext()) {
+            Object next = i.next();
+            if (!(next instanceof Constant)) {
+            	convertedAll = false;
+            	continue;
             }
-        } catch(InvalidFunctionException e) {
-            String errorMsg = QueryExecPlugin.Util.getString("QueryRewriter.criteriaError", crit); //$NON-NLS-1$
-            throw new QueryValidatorException(e, errorMsg);
-        } catch(FunctionExecutionException e) {
-            return crit;
+
+            Constant rightConstant = (Constant) next;
+            
+            Constant result = null;
+            try {
+                result = ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(rightConstant.getType()), leftExprTypeName, rightConstant);
+            } catch(QueryResolverException e) {
+                
+            }
+            
+            if (result != null) {
+            	newValues.add(result);
+            } else {
+            	removedSome = true;
+            	i.remove();
+            }
         }
         
-        if (success) {
-            crit.setExpression(leftExpr);
-            crit.setValues(newValues);
+        if (!convertedAll) {
+        	if (!removedSome) {
+        		return crit; //just return as is
+        	}
+        	return rewriteCriteria(crit, procCommand, context, metadata);
         }
-        return crit;
+        crit.setExpression(leftExpr);
+        crit.setValues(newValues);
+        return rewriteCriteria(crit, procCommand, context, metadata);
     }
         
     private static CompareCriteria simplifyParseFormatFunction(CompareCriteria crit) throws QueryValidatorException {
@@ -1943,9 +1914,7 @@ public class QueryRewriter {
         
         if (newVals.size() == 1) {
             Expression value = (Expression)newVals.iterator().next();
-            if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(value).size() == 0) {
-                return rewriteCriteria(new CompareCriteria(criteria.getExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, value), procCommand, context, metadata);
-            }
+            return rewriteCriteria(new CompareCriteria(criteria.getExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, value), procCommand, context, metadata);
         } else if (newVals.size() == 0) {
             return FALSE_CRITERIA;
         }
@@ -1954,13 +1923,7 @@ public class QueryRewriter {
             
             Function leftFunction = (Function)criteria.getExpression();
             if(FunctionLibrary.isConvert(leftFunction)) {
-                Iterator i = criteria.getValues().iterator();
-                while (i.hasNext()) {
-                    if (!(i.next() instanceof Constant)) {
-                        return criteria;
-                    }
-                }
-                criteria = simplifyConvertFunction(criteria);        
+                return simplifyConvertFunction(criteria, procCommand, context, metadata);        
             }
         }
 

@@ -38,7 +38,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.LogCommonConstants;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.spi.CommandLoggerSPI;
