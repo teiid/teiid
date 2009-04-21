@@ -1,0 +1,191 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <artifactId>teiid</artifactId>
+        <groupId>org.jboss.teiid</groupId>
+        <version>6.0.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.jboss.teiid</groupId>
+    <artifactId>teiid-client-jdbc30</artifactId>
+    <name>JDBC 3.0 Client</name>
+    <version>6.0.0-SNAPSHOT</version>
+    <description>JDBC 3.0 Compatible Client for JDK1.5</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                    <showDeprecation>false</showDeprecation>
+                    <showWarnings>false</showWarnings>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*TestCase.java</include>
+                        <include>**/*Test.java</include>
+                        <include>**/Test*.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/Abstract*TestCase.java</exclude>
+                        <!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
+                        <include>**/Test*$*.java</include>
+                    </excludes>
+                </configuration>
+            </plugin>
+            
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant</artifactId>
+                        <version>1.7.0</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>generate-1.5</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <tasks>                                        
+                                <copy todir="${project.build.directory}/generated-sources/main/java" overwrite="true">
+                                    <fileset dir="${basedir}/../client-jdbc/src/main/java">
+                                        <include name="**/*.java"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/../common-core/src/main/java">
+                                        <include name="**/*.java"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/../client/src/main/java">
+                                        <include name="**/*.java"/>
+                                    </fileset>
+                                    
+                                    <filterset begintoken="/*## " endtoken=" ##">
+                                        <filter token="JDBC3.0-JDK1.5-begin" value=""/>
+                                        <filter token="JDBC3.0-JDK1.5-end" value=""/>
+                                    </filterset>
+                        
+                                    <filterset begintoken="## " endtoken=" ##*/">
+                                        <filter token="JDBC3.0-JDK1.5-begin" value=""/>
+                                        <filter token="JDBC3.0-JDK1.5-end" value=""/>
+                                    </filterset>
+                        
+                                    <filterset begintoken="//## " endtoken=" ##">
+                                        <filter token="JDBC4.0-begin" value="/*"/>
+                                        <filter token="JDBC4.0-end" value="*/"/>
+                                    </filterset>
+                                </copy>                             
+                                <copy todir="${project.build.directory}/generated-sources/main/resources" overwrite="true">
+                                    <fileset dir="${basedir}/../client-jdbc/src/main/resources">
+                                        <include name="**/*"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/../common-core/src/main/resources">
+                                        <include name="**/*"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/../client/src/main/resources">
+                                        <include name="**/*"/>
+                                    </fileset>
+                                </copy>
+                            </tasks>
+                            <sourceRoot>${project.build.directory}/generated-sources/main/java</sourceRoot>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                    <!-- 
+                    <execution>
+                        <id>generate-1.5-test</id>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <tasks>                                        
+                                <copy todir="${project.build.directory}/generated-sources/test/java" overwrite="true">
+                                    <fileset dir="${basedir}/../client-jdbc/src/test/java">
+                                        <include name="**/*.java"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/../common-core/src/test/java">
+                                        <include name="**/*.java"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/../client/src/test/java">
+                                        <include name="**/*.java"/>
+                                    </fileset>
+                                    
+                                    <filterset begintoken="/*## " endtoken=" ##">
+                                        <filter token="JDBC3.0-JDK1.5-begin" value=""/>
+                                        <filter token="JDBC3.0-JDK1.5-end" value=""/>
+                                    </filterset>
+                        
+                                    <filterset begintoken="## " endtoken=" ##*/">
+                                        <filter token="JDBC3.0-JDK1.5-begin" value=""/>
+                                        <filter token="JDBC3.0-JDK1.5-end" value=""/>
+                                    </filterset>
+                        
+                                    <filterset begintoken="//## " endtoken=" ##">
+                                        <filter token="JDBC4.0-begin" value="/*"/>
+                                        <filter token="JDBC4.0-end" value="*/"/>
+                                    </filterset>
+                                </copy>                             
+                                <copy todir="${project.build.directory}/generated-sources/test/resources" overwrite="true">
+                                    <fileset dir="${basedir}/../client-jdbc/src/test/resources">
+                                        <include name="**/*"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/../common-core/src/test/resources">
+                                        <include name="**/*"/>
+                                    </fileset>
+                                    <fileset dir="${basedir}/../client/src/test/resources">
+                                        <include name="**/*"/>
+                                    </fileset>
+                                </copy>                                
+                            </tasks>
+                            <testSourceRoot>${project.build.directory}/generated-sources/test/java</testSourceRoot>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>     
+                    -->               
+                </executions>
+            </plugin>            
+        </plugins>
+        
+        <resources>
+          <resource>
+            <directory>${project.build.directory}/generated-sources/main/resources</directory>
+            <filtering>false</filtering>
+            <includes>
+              <include>**/*</include>
+            </includes>
+          </resource>
+          <!-- 
+          <resource>
+            <directory>${project.build.directory}/generated-sources/test/resources</directory>
+            <filtering>false</filtering>
+            <includes>
+              <include>**/*</include>
+            </includes>
+          </resource>
+          -->
+        </resources>   
+             
+    </build>  
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
