@@ -22,6 +22,12 @@
 
 package com.metamatrix.common.util;
 
+import java.sql.SQLException;
+
+//## JDBC4.0-begin ##
+import java.sql.SQLFeatureNotSupportedException;
+//## JDBC4.0-end ##
+
 import java.util.regex.Pattern;
 
 import com.metamatrix.core.util.ArgCheck;
@@ -104,4 +110,15 @@ public class SqlUtil {
         }
         return isDifferent;
     }
+    
+    public static SQLException createFeatureNotSupportedException() {
+    	//## JDBC4.0-begin ##
+    	return new SQLFeatureNotSupportedException();
+    	//## JDBC4.0-end ##
+
+    	/*## JDBC3.0-JDK1.5-begin ##
+    	return new SQLException("unsupported feature");
+    	## JDBC3.0-JDK1.5-end ##*/
+    	
+    }    
 }

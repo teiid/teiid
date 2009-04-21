@@ -115,7 +115,12 @@ public class SocketUtil {
             // One way SSL with custom properties defined
             result = getClientSSLContext(null, null, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol);
         } else {
+        	//## JDBC4.0-begin ##
         	result = SSLContext.getDefault();
+        	//## JDBC4.0-end ##
+        	/*## JDBC3.0-JDK1.5-begin ##
+			result = SSLContext.getInstance("Default"); 
+ 	  	      ## JDBC3.0-JDK1.5-end ##*/
         }
         return new SSLSocketFactory(result, anon);
     }

@@ -688,11 +688,11 @@ public class TestMMResultSet extends TestCase {
         try {
 			return TestAllResultsImpl.helpTestBatching(statement, fetchSize, Math.min(fetchSize, totalResults), totalResults);
 		} catch (MetaMatrixProcessingException e) {
-			throw new SQLException(e);
+			throw new SQLException(e.getMessage());
 		} catch (InterruptedException e) {
-			throw new SQLException(e);
+			throw new SQLException(e.getMessage());
 		} catch (ExecutionException e) {
-			throw new SQLException(e);
+			throw new SQLException(e.getMessage());
 		}
     }
 

@@ -28,6 +28,8 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import com.metamatrix.core.util.UnitTestUtil;
+
 import junit.framework.TestCase;
 
 
@@ -51,7 +53,7 @@ public class TestClobValue extends TestCase {
         cv.setReferenceStreamId(key); 
         
         // now force to serialize
-        File saved = new File("clobassaved.bin"); //$NON-NLS-1$
+        File saved = new File(UnitTestUtil.getTestScratchPath()+"/clobassaved.bin"); //$NON-NLS-1$
         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(saved));
         out.writeObject(cv);
         out.close();

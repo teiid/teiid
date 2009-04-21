@@ -29,8 +29,8 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 
+import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.core.CorePlugin;
 
 /**
@@ -262,37 +262,37 @@ public class BlobImpl implements Blob, Serializable {
 	 * @see java.sql.Blob#setBytes(long, byte[])
 	 */
 	public int setBytes(long pos, byte[] bytes) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	/**
 	 * @see java.sql.Blob#setBytes(long, byte[], int, int)
 	 */
 	public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	/**
 	 * @see java.sql.Blob#setBinaryStream(long)
 	 */
 	public OutputStream setBinaryStream(long pos) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	/**
 	 * @see java.sql.Blob#truncate(long)
 	 */
 	public void truncate(long len) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void free() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public InputStream getBinaryStream(long arg0, long arg1)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 }
 

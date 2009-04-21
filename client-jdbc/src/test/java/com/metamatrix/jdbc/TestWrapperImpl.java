@@ -27,12 +27,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.SQLException;
+//## JDBC4.0-begin ##
 import java.sql.Wrapper;
+//## JDBC4.0-end ##
 
 import junit.framework.TestCase;
 
 public class TestWrapperImpl extends TestCase {
-	
+	//## JDBC4.0-begin ##
 	interface Foo extends Wrapper {
 		void callMe();
 	}
@@ -46,9 +48,9 @@ public class TestWrapperImpl extends TestCase {
 		}
 		
 	}
-	
+	//## JDBC4.0-end ##
 	public void testProxy() throws SQLException {
-	
+		//## JDBC4.0-begin ##
 		final FooImpl fooImpl = new FooImpl(); 
 		
 		Foo proxy = (Foo)Proxy.newProxyInstance(TestWrapperImpl.class.getClassLoader(), new Class[] {Foo.class}, new InvocationHandler() {
@@ -81,7 +83,7 @@ public class TestWrapperImpl extends TestCase {
 		} catch (SQLException e) {
 			assertEquals("Wrapped object is not an instance of class java.lang.String", e.getMessage());
 		}
-		
+		//## JDBC4.0-end ##
 	}
 
 }

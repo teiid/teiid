@@ -33,7 +33,7 @@ import org.mockito.Mockito;
 import com.metamatrix.api.exception.MetaMatrixException;
 
 public class TestSimplePooledConnectionSource extends TestCase {
-
+	//## JDBC4.0-begin ##
 	public void testMax() throws Exception {
 		Properties p = new Properties();
 		p.setProperty(SimplePooledConnectionSource.MAXIMUM_RESOURCE_POOL_SIZE, String.valueOf(2));
@@ -63,5 +63,5 @@ public class TestSimplePooledConnectionSource extends TestCase {
 		c.close();
 		assertSame(c, pool.getConnection());
 	}
-	
+	//## JDBC4.0-end ##
 }

@@ -27,7 +27,13 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.SQLException;
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+//## JDBC4.0-end ##
+
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
 
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;

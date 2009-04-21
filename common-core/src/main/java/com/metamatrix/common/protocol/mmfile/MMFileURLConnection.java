@@ -175,14 +175,18 @@ public class MMFileURLConnection extends MMURLConnection {
             String sort = props.getProperty(FILE_LIST_SORT, DATE);
             if (sort.equals(DATE)) { 
             	Arrays.sort(matchedFiles, new Comparator<File>() {
-					@Override
+        			//## JDBC4.0-begin ##
+        			@Override
+        			//## JDBC4.0-end ##
 					public int compare(File o1, File o2) { 
 						return Long.valueOf(o2.lastModified()).compareTo(o1.lastModified()); // latest first.
 					}
             	});
             } else if (sort.equals(ALPHA)) {
             	Arrays.sort(matchedFiles, new Comparator<File>() {
-					@Override
+        			//## JDBC4.0-begin ##
+        			@Override
+        			//## JDBC4.0-end ##
 					public int compare(File o1, File o2) {
 						return o1.getName().compareTo(o2.getName()); 
 					}
@@ -190,7 +194,9 @@ public class MMFileURLConnection extends MMURLConnection {
             	
             } else if (sort.equals(REVERSEALPHA)) { 
             	Arrays.sort(matchedFiles, new Comparator<File>() {
-					@Override
+        			//## JDBC4.0-begin ##
+        			@Override
+        			//## JDBC4.0-end ##
 					public int compare(File o1, File o2) { 
 						return o2.getName().compareTo(o1.getName());
 					}

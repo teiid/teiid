@@ -79,7 +79,9 @@ public class ServerAdminFactory {
     		return target;
     	}
     	
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
 			if (method.getName().equals("close")) { //$NON-NLS-1$

@@ -22,7 +22,13 @@
 
 package com.metamatrix.common.types.basic;
 
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+//## JDBC4.0-end ##
+
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
 
 import com.metamatrix.common.types.TransformationException;
 

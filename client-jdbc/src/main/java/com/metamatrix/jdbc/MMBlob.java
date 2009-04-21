@@ -27,12 +27,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 
 import com.metamatrix.common.lob.LobChunkInputStream;
 import com.metamatrix.common.types.BlobImpl;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.dqp.client.impl.StreamingLobChunckProducer;
 import com.metamatrix.jdbc.LobSearchUtil.StreamProvider;
 
@@ -185,28 +185,40 @@ public class MMBlob implements Blob, StreamProvider {
     }
         
 	public void free() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public InputStream getBinaryStream(long arg0, long arg1)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public OutputStream setBinaryStream(long arg0) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+
+	/**
+	 * @see java.sql.Blob#setBytes(long, byte[])
+	 */
+	public int setBytes(long pos, byte[] bytes) throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public int setBytes(long arg0, byte[] arg1) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+	/**
+	 * @see java.sql.Blob#setBytes(long, byte[], int, int)
+	 */
+	public int setBytes(long pos, byte[] bytes, int offset, int len) throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public int setBytes(long arg0, byte[] arg1, int arg2, int arg3)
-			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+	/**
+	 * @see java.sql.Blob#setBinaryStream(long)
+	 */
+	public OutputStream setBinaryStream(long pos) throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public void truncate(long arg0) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+	/**
+	 * @see java.sql.Blob#truncate(long)
+	 */
+	public void truncate(long len) throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 }

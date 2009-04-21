@@ -28,8 +28,14 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+//## JDBC4.0-end ##
+
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
+import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
 import javax.xml.transform.Result;
@@ -37,6 +43,8 @@ import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
+
+import com.metamatrix.common.util.SqlUtil;
 
 
 /** 
@@ -158,11 +166,11 @@ public class SQLXMLImpl implements SQLXML {
     }
 
 	public void free() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public <T extends Result> T setResult(Class<T> resultClass)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 }

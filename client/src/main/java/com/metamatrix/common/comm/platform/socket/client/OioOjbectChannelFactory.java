@@ -73,7 +73,9 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
             inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, MAX_OBJECT_SIZE);
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public void close() {
 			log.finer("closing socket"); //$NON-NLS-1$
 			try {
@@ -98,17 +100,23 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		    }
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public SocketAddress getRemoteAddress() {
 			return socket.getRemoteSocketAddress();
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public boolean isOpen() {
 			return !socket.isClosed();
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public Object read() throws IOException, ClassNotFoundException {
 			log.finer("reading message from socket"); //$NON-NLS-1$
 			synchronized (readLock) {
@@ -123,7 +131,9 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 			}
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public synchronized Future<?> write(Object msg) {
 			log.finer("writing message to socket"); //$NON-NLS-1$
 		    ResultsFuture<Void> result = new ResultsFuture<Void>();
@@ -152,7 +162,9 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		PropertiesUtils.setBeanProperties(this, props, "org.teiid.sockets"); //$NON-NLS-1$
 	}
 
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public ObjectChannel createObjectChannel(SocketAddress address, boolean ssl) throws IOException,
 			CommunicationException {
 		final Socket socket;

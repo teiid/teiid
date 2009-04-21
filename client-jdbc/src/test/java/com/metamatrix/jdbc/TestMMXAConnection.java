@@ -40,14 +40,16 @@ public class TestMMXAConnection extends TestCase {
 		final MMConnection mmConn = TestMMConnection.getMMConnection();
 
 		MMXAConnection xaConn = new MMXAConnection(new MMXAConnection.ConnectionSource() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public MMConnection createConnection() throws SQLException {
 				return mmConn;
 			}
 		});
 		
 		Connection conn = xaConn.getConnection();
-		Statement stmt = conn.createStatement();
+		MMStatement stmt = (MMStatement)conn.createStatement();
 		conn.setAutoCommit(false);
 		conn.close();
 
@@ -55,7 +57,7 @@ public class TestMMXAConnection extends TestCase {
 		assertTrue(conn.getAutoCommit());
 		
 		conn = xaConn.getConnection();
-		stmt = conn.createStatement();
+		stmt = (MMStatement)conn.createStatement();
 		XAResource resource = xaConn.getXAResource();
 		resource.start(new MMXid(1, new byte[0], new byte[0]), XAResource.TMNOFLAGS);
 		conn.close();

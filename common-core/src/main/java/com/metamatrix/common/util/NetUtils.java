@@ -118,7 +118,9 @@ public class NetUtils {
 			Enumeration<NetworkInterface> ne = NetworkInterface.getNetworkInterfaces();
 			while (ne.hasMoreElements()) {
 				NetworkInterface ni = ne.nextElement();
+				//## JDBC4.0-begin ##
 				if (ni.isUp()) {
+				//## JDBC4.0-end ##
 					Enumeration<InetAddress> addrs = ni.getInetAddresses();
 					while (addrs.hasMoreElements()) {
 						InetAddress addr = addrs.nextElement();
@@ -128,7 +130,9 @@ public class NetUtils {
 							return addr;
 						}
 					}
+				//## JDBC4.0-begin ##		
 				}
+				//## JDBC4.0-end ##
 			}
 		} catch (SocketException e) {
 			// treat this as address not found and return null;

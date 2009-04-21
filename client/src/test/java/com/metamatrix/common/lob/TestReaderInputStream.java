@@ -53,7 +53,7 @@ public class TestReaderInputStream extends TestCase {
 		ReaderInputStream ris = new ReaderInputStream(new StringReader(actual), Charset.forName("UTF-16"), 1); //$NON-NLS-1$
 		byte[] result = new byte[(actual.length()) * 2 + 2];
 		ris.read(result);
-		String resultString = new String(result, Charset.forName("UTF-16")); //$NON-NLS-1$
+		String resultString = new String(result, "UTF-16"); //$NON-NLS-1$
 		assertEquals(resultString, actual);
 	}
 	
@@ -62,7 +62,7 @@ public class TestReaderInputStream extends TestCase {
 		ReaderInputStream ris = new ReaderInputStream(new StringReader(actual), Charset.forName("US-ASCII"), 1); //$NON-NLS-1$
 		byte[] result = new byte[actual.length()];
 		ris.read(result);
-		String resultString = new String(result, Charset.forName("US-ASCII")); //$NON-NLS-1$
+		String resultString = new String(result, "US-ASCII"); //$NON-NLS-1$
 		assertEquals(resultString, actual);		
 	}
 

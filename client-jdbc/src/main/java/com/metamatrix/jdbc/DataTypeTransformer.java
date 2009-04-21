@@ -27,7 +27,12 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
 import java.sql.SQLException;
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+//## JDBC4.0-end ##
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
 import java.sql.Time;
 import java.sql.Timestamp;
 
@@ -253,5 +258,5 @@ final class DataTypeTransformer {
      */    
     static final SQLXML getSQLXML(Object value) throws SQLException {
     	return transform(value, SQLXML.class, DefaultDataClasses.XML, "SQLXML"); //$NON-NLS-1$
-    }    
+    }
 }

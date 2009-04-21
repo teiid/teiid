@@ -34,9 +34,13 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.Clob;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.Arrays;
+/*## JDBC3.0-JDK1.5-begin ##
+import java.io.UnsupportedEncodingException;
+## JDBC3.0-JDK1.5-end ##*/
 
+
+import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.core.CorePlugin;
 
 /**
@@ -111,7 +115,17 @@ public class ClobImpl implements Clob, Serializable {
      * <code>CLOB</code> value
      */
     public InputStream getAsciiStream() throws SQLException {
+    	//## JDBC4.0-begin ##
         byte[] bytes = new String(data).getBytes(Charset.forName("US-ASCII")); //$NON-NLS-1$
+      //## JDBC4.0-end ##
+		/*## JDBC3.0-JDK1.5-begin ##
+		byte[] bytes;
+		try {
+			bytes = new String(data).getBytes("US-ASCII"); //$NON-NLS-1$
+		} catch (UnsupportedEncodingException e) {
+			throw new SQLException(e.getMessage());
+		} 
+		## JDBC3.0-JDK1.5-end ##*/
         return new ByteArrayInputStream(bytes);
     }
 
@@ -285,43 +299,43 @@ public class ClobImpl implements Clob, Serializable {
 	 * @see java.sql.Clob#setString(long, java.lang.String)
 	 */
 	public int setString(long pos, String str) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	/**
 	 * @see java.sql.Clob#setString(long, java.lang.String, int, int)
 	 */
 	public int setString(long pos, String str, int offset, int len) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	/**
 	 * @see java.sql.Clob#setAsciiStream(long)
 	 */
 	public OutputStream setAsciiStream(long pos) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	/**
 	 * @see java.sql.Clob#setCharacterStream(long)
 	 */
 	public Writer setCharacterStream(long pos) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	/**
 	 * @see java.sql.Clob#truncate(long)
 	 */
 	public void truncate(long len) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void free() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public Reader getCharacterStream(long arg0, long arg1) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 }

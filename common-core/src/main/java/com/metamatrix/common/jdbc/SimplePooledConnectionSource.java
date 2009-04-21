@@ -7,7 +7,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.SQLException;
+//## JDBC4.0-begin ##
 import java.sql.SQLFeatureNotSupportedException;
+//## JDBC4.0-end ##
+
 import java.util.Properties;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
@@ -47,8 +50,12 @@ import com.metamatrix.common.util.PropertiesUtils;
  * 
  * TODO: Should be switched to proxool or some implementation
  */
-public class SimplePooledConnectionSource implements DataSource {
-	
+public class SimplePooledConnectionSource 
+	//## JDBC4.0-begin ##
+	implements DataSource 
+	//## JDBC4.0-end ##
+{
+	//## JDBC4.0-begin ##
     public static final String WAIT_TIME_FOR_RESOURCE= "pooling.resource.pool.wait.time"; //$NON-NLS-1$
     public static final String MAXIMUM_RESOURCE_POOL_SIZE = "pooling.resource.pool.maximum.size"; //$NON-NLS-1$
     public static final String RESOURCE_TEST_INTERVAL = "pooling.resource.pool.test.interval"; //$NON-NLS-1$
@@ -230,5 +237,7 @@ public class SimplePooledConnectionSource implements DataSource {
 	public <T> T unwrap(Class<T> arg0) throws SQLException {
 		throw new SQLFeatureNotSupportedException();
 	}
-
+	//## JDBC4.0-end ##
 }
+
+

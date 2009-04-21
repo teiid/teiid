@@ -30,16 +30,23 @@ import java.nio.charset.Charset;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.NClob;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.RowId;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
+
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+import java.sql.NClob;
+import java.sql.RowId;
+//## JDBC4.0-end ##
+
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
+
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -54,6 +61,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.BlobImpl;
 import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.client.MetadataResult;
@@ -168,7 +176,9 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         throw new MMSQLException(msg);
     }
 
-    @Override
+	//## JDBC4.0-begin ##
+	@Override
+	//## JDBC4.0-end ##
     public boolean execute() throws SQLException {
         executeSql(new String[] {this.prepareSql}, false, null);
         return hasResultSet();
@@ -187,13 +197,17 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 	   	return this.updateCounts;
     }
 
-    @Override
+	//## JDBC4.0-begin ##
+	@Override
+	//## JDBC4.0-end ##
     public ResultSet executeQuery() throws SQLException {
         executeSql(new String[] {this.prepareSql}, false, true);
         return resultSet;
     }
 
-    @Override
+	//## JDBC4.0-begin ##
+	@Override
+	//## JDBC4.0-end ##
     public int executeUpdate() throws SQLException {
         executeSql(new String[] {this.prepareSql}, false, false);
         return this.updateCounts[0];
@@ -467,7 +481,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
             setObject(parameterIndex, bigDecimalObject);
         }
     }
-
+    
     public void setObject(int parameterIndex, Object value, int targetJdbcType) throws SQLException {
 
         Object targetObject = null;
@@ -665,96 +679,99 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 	}
 
 	public void setArray(int parameterIndex, Array x) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setAsciiStream(int parameterIndex, InputStream x)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setAsciiStream(int parameterIndex, InputStream x, long length)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setBinaryStream(int parameterIndex, InputStream x)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setBinaryStream(int parameterIndex, InputStream x, long length)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setBlob(int parameterIndex, InputStream inputStream)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public void setBlob(int parameterIndex, InputStream inputStream, long length)
-			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+	public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setCharacterStream(int parameterIndex, Reader reader)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setCharacterStream(int parameterIndex, Reader reader,
 			long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setClob(int parameterIndex, Reader reader) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setClob(int parameterIndex, Reader reader, long length)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setNCharacterStream(int parameterIndex, Reader value)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setNCharacterStream(int parameterIndex, Reader value,
 			long length) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
+	//## JDBC4.0-begin ##
 	public void setNClob(int parameterIndex, NClob value) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
+	//## JDBC4.0-end ##
 
 	public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setNClob(int parameterIndex, Reader reader, long length)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setNString(int parameterIndex, String value)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public void setRef(int parameterIndex, Ref x) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
+	//## JDBC4.0-begin ##
 	public void setRowId(int parameterIndex, RowId x) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
+	//## JDBC4.0-end ##
 
 	public void setUnicodeStream(int parameterIndex, InputStream x, int length)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 }

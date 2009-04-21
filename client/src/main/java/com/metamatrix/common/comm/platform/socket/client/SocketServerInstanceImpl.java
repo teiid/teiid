@@ -236,7 +236,9 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     }
 
 	@SuppressWarnings("unchecked")
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public <T> T getService(Class<T> iface) {
 		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface));
 	}
@@ -251,7 +253,9 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 			this.secure = !ClientSideDQP.class.isAssignableFrom(targetClass);
 		}
 
+		//## JDBC4.0-begin ##
 		@Override
+		//## JDBC4.0-end ##
 		public Object invoke(Object proxy, Method method, Object[] args)
 				throws Throwable {
 			Throwable t = null;

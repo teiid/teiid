@@ -66,6 +66,7 @@ public class TestSQLXMLImpl extends TestCase {
         }        
     };
     
+	//## JDBC4.0-begin ##
     public void testGetSource() throws Exception {        
         SQLXMLImpl xml = new SQLXMLImpl(translator);
         assertTrue(xml.getSource(null) instanceof StreamSource);
@@ -73,6 +74,7 @@ public class TestSQLXMLImpl extends TestCase {
         StreamSource ss = (StreamSource)xml.getSource(null);
         assertEquals(testStr, getContents(ss.getReader()));
     }
+	//## JDBC4.0-end ##
     
     public void testGetCharacterStream() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(translator);

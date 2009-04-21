@@ -28,6 +28,8 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import com.metamatrix.core.util.UnitTestUtil;
+
 import junit.framework.TestCase;
 
 
@@ -53,7 +55,7 @@ public class TestXMLValue extends TestCase {
         xv.setPersistenceStreamId(pkey);
         
         // now force to serialize
-        File saved = new File("xmlsaved.bin"); //$NON-NLS-1$
+        File saved = new File(UnitTestUtil.getTestScratchPath()+"/xmlsaved.bin"); //$NON-NLS-1$
         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(saved));
         out.writeObject(xv);
         out.close();

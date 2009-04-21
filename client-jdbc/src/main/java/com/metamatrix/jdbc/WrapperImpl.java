@@ -23,12 +23,17 @@
 package com.metamatrix.jdbc;
 
 import java.sql.SQLException;
+//## JDBC4.0-begin ##
 import java.sql.Wrapper;
+//## JDBC4.0-end ##
 
 import com.metamatrix.core.util.ArgCheck;
 
-public class WrapperImpl implements Wrapper {
-	
+public class WrapperImpl 
+	//## JDBC4.0-begin ##
+	implements Wrapper 
+	//## JDBC4.0-end ##	
+	{
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
 		ArgCheck.isNotNull(iface);
 		

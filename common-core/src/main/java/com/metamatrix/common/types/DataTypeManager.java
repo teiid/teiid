@@ -24,7 +24,14 @@ package com.metamatrix.common.types;
 
 import java.sql.Blob;
 import java.sql.Clob;
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+//## JDBC4.0-end ##
+
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
+
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
@@ -974,55 +981,73 @@ public class DataTypeManager {
 	
 	static void loadSourceConversions() {
 		sourceConverters.put(Clob.class, new SourceTransform<Clob, ClobType>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public ClobType transform(Clob value) {
 				return new ClobType(value);
 			}
 		});
 		sourceConverters.put(char[].class, new SourceTransform<char[], ClobType>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public ClobType transform(char[] value) {
 				return new ClobType(new ClobImpl(value));
 			}
 		});
 		sourceConverters.put(Blob.class, new SourceTransform<Blob, BlobType>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public BlobType transform(Blob value) {
 				return new BlobType(value);
 			}
 		});
 		sourceConverters.put(byte[].class, new SourceTransform<byte[], BlobType>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public BlobType transform(byte[] value) {
 				return new BlobType(new BlobImpl(value));
 			}
 		});
 		sourceConverters.put(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public XMLType transform(SQLXML value) {
 				return new XMLType(value);
 			}
 		});
 		sourceConverters.put(DOMSource.class, new SourceTransform<DOMSource, XMLType>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public XMLType transform(DOMSource value) {
 				return new XMLType(new SQLXMLImpl(value));
 			}
 		});
 		sourceConverters.put(SAXSource.class, new SourceTransform<SAXSource, XMLType>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public XMLType transform(SAXSource value) {
 				return new XMLType(new SQLXMLImpl(value));
 			}
 		});
 		sourceConverters.put(StreamSource.class, new SourceTransform<StreamSource, XMLType>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public XMLType transform(StreamSource value) {
 				return new XMLType(new SQLXMLImpl(value));
 			}
 		});
 		sourceConverters.put(Date.class, new SourceTransform<Date, Timestamp>() {
+			//## JDBC4.0-begin ##
 			@Override
+			//## JDBC4.0-end ##
 			public Timestamp transform(Date value) {
 				return new Timestamp(value.getTime());
 			}

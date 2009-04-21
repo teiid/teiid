@@ -139,7 +139,9 @@ public class PlatformLog implements LogListener {
 				return t;
 			}});
 		this.executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
+		//## JDBC4.0-begin ##
 		this.executor.allowCoreThreadTimeOut(true);
+		//## JDBC4.0-end ##
 	}
     
     public List getLogListeners() {

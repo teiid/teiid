@@ -27,9 +27,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+//## JDBC4.0-begin ##
 import java.sql.RowIdLifetime;
+//## JDBC4.0-end ##
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +44,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
+import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.metadata.ResultsMetadataConstants;
@@ -3304,34 +3306,34 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 		return false;
 	}
 
-	public ResultSet getAttributes(String catalog, String schemaPattern,
-			String typeNamePattern, String attributeNamePattern)
+	public ResultSet getAttributes(String catalog, String schemaPattern, String typeNamePattern, String attributeNamePattern)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public ResultSet getClientInfoProperties() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public ResultSet getFunctionColumns(String catalog, String schemaPattern,
 			String functionNamePattern, String columnNamePattern)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public ResultSet getFunctions(String catalog, String schemaPattern,
 			String functionNamePattern) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
+	//## JDBC4.0-begin ##
 	public RowIdLifetime getRowIdLifetime() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
+	//## JDBC4.0-end ##
 
 	public ResultSet getSchemas(String catalog, String schemaPattern)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-	
 }

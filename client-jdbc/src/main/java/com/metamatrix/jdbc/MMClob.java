@@ -30,13 +30,13 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.Clob;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 
 import com.metamatrix.common.lob.LobChunkInputStream;
 import com.metamatrix.common.lob.ReaderInputStream;
 import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.Streamable;
+import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.dqp.client.impl.StreamingLobChunckProducer;
 
 /**
@@ -198,32 +198,32 @@ public class MMClob implements Clob {
     }
     	    
 	public void free() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
-
+	
 	public Reader getCharacterStream(long arg0, long arg1) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 	public OutputStream setAsciiStream(long arg0) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public Writer setCharacterStream(long arg0) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public int setString(long arg0, String arg1) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public int setString(long arg0, String arg1, int arg2, int arg3)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public void truncate(long arg0) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
 }

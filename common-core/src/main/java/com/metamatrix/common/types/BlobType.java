@@ -228,7 +228,7 @@ public final class BlobType implements Streamable, Blob {
         writer.close();
         return data;        
     }
-
+    //## JDBC4.0-begin ##
 	public void free() throws SQLException {
 		checkReference();
 		this.srcBlob.free();
@@ -239,4 +239,5 @@ public final class BlobType implements Streamable, Blob {
 		checkReference();
 		return this.srcBlob.getBinaryStream(pos, length);
 	}
+	//## JDBC4.0-end ##
 }

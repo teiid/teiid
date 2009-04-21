@@ -293,7 +293,7 @@ public final class ClobType implements Streamable, Clob, Sequencable {
             
         };
     }
-
+    //## JDBC4.0-begin ##
 	public void free() throws SQLException {
 		checkReference();
 		this.srcClob.free();
@@ -303,4 +303,5 @@ public final class ClobType implements Streamable, Clob, Sequencable {
 		checkReference();
 		return this.srcClob.getCharacterStream(pos, length);
 	}
+	//## JDBC4.0-end ##
 }

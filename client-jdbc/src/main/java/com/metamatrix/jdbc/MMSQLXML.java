@@ -29,8 +29,13 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+//## JDBC4.0-end ##
+
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
 
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -39,6 +44,7 @@ import javax.xml.transform.stream.StreamSource;
 import com.metamatrix.common.lob.LobChunkInputStream;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
+import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.dqp.client.impl.StreamingLobChunckProducer;
 
 
@@ -72,7 +78,12 @@ public class MMSQLXML implements SQLXML {
     public String getString() throws SQLException {
     	LobChunkInputStream in = new LobChunkInputStream(lobChunckFactory.getLobChunkProducer());
         try {
+        	//## JDBC4.0-begin ##
 			return new String(in.getByteContents(), Charset.forName("UTF-16")); //$NON-NLS-1$
+			//## JDBC4.0-end ##
+			/*## JDBC3.0-JDK1.5-begin ##
+			return new String(in.getByteContents(), "UTF-16"); //$NON-NLS-1$ 
+			## JDBC3.0-JDK1.5-end ##*/
 		} catch (IOException e) {
 			throw MMSQLException.create(e);
 		} 
@@ -94,28 +105,27 @@ public class MMSQLXML implements SQLXML {
 	}
 
 	public InputStream getBinaryStream() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
     
 	public void free() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public OutputStream setBinaryStream() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public Writer setCharacterStream() throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public <T extends Result> T setResult(Class<T> resultClass)
 			throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
 
 	public void setString(String value) throws SQLException {
-		throw new SQLFeatureNotSupportedException();
+		throw SqlUtil.createFeatureNotSupportedException();	
 	}
-
 }
