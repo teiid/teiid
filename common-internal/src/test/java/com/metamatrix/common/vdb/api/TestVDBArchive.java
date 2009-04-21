@@ -37,6 +37,23 @@ public class TestVDBArchive extends TestCase {
 	
 	
 	/*
+	 * Test the setting of the WSDL Defined flag
+	 */
+	public void testWSDLVDBArchive() throws Exception {
+		
+		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/BooksWebService_VDB.vdb", vdbPath);
+		
+		File vdbFile = new File(vdbPath);
+		
+		VDBArchive archive = new VDBArchive(vdbFile);
+		
+		assertEquals(true, archive.def.hasWSDLDefined());
+		
+		archive.close();
+		vdbFile.delete();
+	}
+	
+	/*
 	 * Updates based on the File VDB
 	 */
 	public void testFileVDBArchive() throws Exception {
