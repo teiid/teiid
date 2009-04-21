@@ -105,12 +105,16 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         }
     }
     
-    @Override
+	//## JDBC4.0-begin ##
+	@Override
+	//## JDBC4.0-end ##
     public HostInfo getHostInfo() {
     	return this.hostInfo;
     }
     
-    @Override
+	//## JDBC4.0-begin ##
+	@Override
+	//## JDBC4.0-end ##
     public SocketAddress getRemoteAddress() {
     	return this.socketChannel.getRemoteAddress();
     }

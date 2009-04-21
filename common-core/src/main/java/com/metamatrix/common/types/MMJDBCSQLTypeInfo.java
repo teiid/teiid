@@ -24,7 +24,13 @@ package com.metamatrix.common.types;
 
 import java.sql.Blob;
 import java.sql.Clob;
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+//## JDBC4.0-end ##
+
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
@@ -126,7 +132,15 @@ public final class MMJDBCSQLTypeInfo {
         CLASSNAME_TO_TYPE_MAP.put(OBJECT_CLASS.toLowerCase(), Integer.valueOf(Types.JAVA_OBJECT));
         CLASSNAME_TO_TYPE_MAP.put(CLOB_CLASS.toLowerCase(), Integer.valueOf(Types.CLOB));
         CLASSNAME_TO_TYPE_MAP.put(BLOB_CLASS.toLowerCase(), Integer.valueOf(Types.BLOB));
+        
+        //## JDBC4.0-begin ##
         CLASSNAME_TO_TYPE_MAP.put(XML_CLASS.toLowerCase(), Integer.valueOf(Types.SQLXML));
+        //## JDBC4.0-end ##
+
+        /*## JDBC3.0-JDK1.5-begin ##
+        CLASSNAME_TO_TYPE_MAP.put(XML_CLASS.toLowerCase(), Integer.valueOf(Types.JAVA_OBJECT)); 
+        ## JDBC3.0-JDK1.5-end ##*/
+        
     }
     
     /**

@@ -59,7 +59,9 @@ public class ExceptionHolder implements Externalizable {
 	}
 	
 	
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		List<String> classNames = (List<String>)in.readObject();;
 		String message = (String)in.readObject();
@@ -90,7 +92,9 @@ public class ExceptionHolder implements Externalizable {
 		}
 	}
 	
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public void writeExternal(ObjectOutput out) throws IOException {
 		List<String> classNames = new ArrayList<String>();
 		Class<?> clazz = exception.getClass();

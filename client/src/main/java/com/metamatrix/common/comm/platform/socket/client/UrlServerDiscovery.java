@@ -43,28 +43,38 @@ public class UrlServerDiscovery implements ServerDiscovery {
 		this.url = url;
 	}
 	
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public List<HostInfo> getKnownHosts(LogonResult result,
 			SocketServerInstance instance) {
 		return url.getHostInfo();
 	}
 
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public void init(MMURL url, Properties p) {
 		this.url = url;
 	}
 	
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public void connectionSuccessful(HostInfo info) {
 		
 	}
 
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public void markInstanceAsBad(HostInfo info) {
 		
 	}
 		
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public void shutdown() {
 		
 	}

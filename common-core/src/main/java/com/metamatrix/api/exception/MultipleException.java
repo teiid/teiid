@@ -95,13 +95,17 @@ public class MultipleException extends Exception implements Externalizable {
     	return this.throwablesList;
     }
 
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public void readExternal(ObjectInput in) throws IOException,ClassNotFoundException {
 		this.code = (String)in.readObject();
 		this.throwablesList = ExceptionHolder.toThrowables((List<ExceptionHolder>)in.readObject());
 	}
 
+	//## JDBC4.0-begin ##
 	@Override
+	//## JDBC4.0-end ##
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(code);
 		out.writeObject(ExceptionHolder.toExceptionHolders(throwablesList));
