@@ -60,18 +60,4 @@ public class TestJDBCConnector {
     public void test3() throws Exception {
         helpTestMaxIn(1, 1);
     }	
-    
-    @Test
-    public void testParseUrl() throws ConnectorException {
-    	String urlWithEmptyProp = "jdbc:mmx:db2://aHost:aPort;DatabaseName=DB2_DataBase;CollectionID=aCollectionID;PackageName=aPackageName;BogusProp=aBogusProp;UnEmptyProp=;"; //$NON-NLS-1$
-    	Properties props = new Properties();
-    	JDBCConnector.parseURL(urlWithEmptyProp, props);
-    	
-    	assertEquals("aPort", props.getProperty(XAJDBCPropertyNames.PORT_NUMBER)); //$NON-NLS-1$
-    	assertEquals("aHost", props.getProperty(XAJDBCPropertyNames.SERVER_NAME)); //$NON-NLS-1$
-    	assertEquals("XADS_aHost_null", props.getProperty(XAJDBCPropertyNames.DATASOURCE_NAME)); //$NON-NLS-1$
-    	assertEquals("aBogusProp", props.getProperty("bogusprop")); //$NON-NLS-1$ //$NON-NLS-2$
-    	assertNull(props.getProperty("unemptyprop")); //$NON-NLS-1$
-    }
-    
 }
