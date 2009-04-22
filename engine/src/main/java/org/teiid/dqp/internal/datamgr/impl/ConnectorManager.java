@@ -117,7 +117,7 @@ public class ConnectorManager implements ApplicationService {
     private MetadataService metadataService;
     private TrackingService tracker;
     private TransactionService transactionService;
-    private DQPContextCache contextCache;
+    private BufferService bufferService;
     
     private volatile Boolean started;
 
@@ -139,6 +139,7 @@ public class ConnectorManager implements ApplicationService {
     public ClassLoader getClassloader() {
 		return classloader;
 	}
+    
     
     public SourceCapabilities getCapabilities(RequestID requestID, Serializable executionPayload, DQPWorkContext message) throws ConnectorException {
         Connection conn = null;
@@ -162,7 +163,7 @@ public class ConnectorManager implements ApplicationService {
                         requestID.toString(), 
                         "capabilities-request", "0"); //$NON-NLS-1$ //$NON-NLS-2$ 
             	
-            	context.setContextCache(this.contextCache);
+            	context.setContextCache(getContextCache());
 
             	conn = connector.getConnection(context);
             	caps = conn.getCapabilities();
@@ -325,11 +326,7 @@ public class ConnectorManager implements ApplicationService {
         this.exceptionOnMaxRows = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false);
     	this.synchWorkers = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.SYNCH_WORKERS, true);
 
-    	BufferService bufferService = (BufferService)env.findService(DQPServiceNames.BUFFER_SERVICE);
-    	if (bufferService != null) {
-    		this.contextCache = bufferService.getContextCache();
-    	}
-    		
+     	this.bufferService = (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE);
         // Initialize and start the connector
         initStartConnector(connectorEnv);
         //check result set cache
@@ -626,7 +623,11 @@ public class ConnectorManager implements ApplicationService {
     }
     
     DQPContextCache getContextCache() {
-    	return this.contextCache;
+     	if (bufferService != null) {
+    		return bufferService.getContextCache();
+    	}
+
+    	return null;
     }
     
     /**
