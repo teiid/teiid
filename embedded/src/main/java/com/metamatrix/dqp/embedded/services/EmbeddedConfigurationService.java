@@ -53,6 +53,7 @@ import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.config.model.BasicComponentType;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -1108,7 +1109,20 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 
     private ComponentType addFullPropertyDefns(ConnectorBindingType type) {
     	BasicComponentType baseType = (BasicComponentType)type;
-    	baseType.setComponentTypeDefinitions(this.configurationModel.getAllComponentTypeDefinitions((ComponentTypeID)baseType.getID()));
+    	Collection c = this.configurationModel.getAllComponentTypeDefinitions((ComponentTypeID)baseType.getID());
+
+    	// if the type is found in the configuration.xml, then add its prop-definitions; else look for parent
+    	if (c == null || c.isEmpty()) {
+    		// this means user has added a new connector type
+    		c = this.configurationModel.getAllComponentTypeDefinitions(type.getSuperComponentTypeID());
+    	}
+    		
+		if (c != null && !c.isEmpty()) {
+			Set<PropertyDefinition> defns = new HashSet<PropertyDefinition>();
+			defns.addAll(c);
+			defns.addAll(type.getComponentTypeDefinitions());
+			baseType.setComponentTypeDefinitions(defns);
+		}
 		return baseType;
 	}
 
