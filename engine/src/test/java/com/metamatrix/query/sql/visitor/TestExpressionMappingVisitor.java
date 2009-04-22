@@ -23,6 +23,7 @@
 package com.metamatrix.query.sql.visitor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.CompareCriteria;
+import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -162,5 +164,23 @@ public class TestExpressionMappingVisitor extends TestCase {
         
         helpTest(TestSearchedCaseExpression.example(3), map, mapped);
     }
+    
+    /**
+     * We do not need to create an alias if the canonical short names match
+     */
+    public void testSelectAlias() {
+        ElementSymbol x = new ElementSymbol("y.x"); //$NON-NLS-1$
+        ElementSymbol y = new ElementSymbol("z.X"); //$NON-NLS-1$
+        
+        HashMap map = new HashMap();
+        map.put(x, y);
+        
+        LanguageObject toMap = new Select(Arrays.asList(x));
+        
+        ExpressionMappingVisitor.mapExpressions(toMap, map);
+        
+        assertEquals("Did not get expected mapped expression", "SELECT z.X", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
+    }
+
     
 }

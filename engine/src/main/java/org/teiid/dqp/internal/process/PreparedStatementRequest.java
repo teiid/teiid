@@ -84,9 +84,6 @@ public class PreparedStatementRequest extends Request {
     	handleCallableStatement(command);
     	
     	super.resolveCommand(command);
-
-    	//save the command in it's present form so that it can be validated later
-        prepPlan.setCommand((Command) command.clone());
     }
 
     /**
@@ -150,26 +147,24 @@ public class PreparedStatementRequest extends Request {
         }
 
         ProcessorPlan cachedPlan = prepPlan.getPlan();
-        Command command = prepPlan.getCommand();
         
         if (cachedPlan == null) {
         	prepPlan.setRewritenCommand(super.generatePlan());
-        	
         	if (!this.addedLimit) { //TODO: this is a little problematic
+            	prepPlan.setCommand(this.userCommand);
 		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
 		        prepPlan.setPlan((ProcessorPlan)processPlan.clone());
 		        prepPlan.setAnalysisRecord(analysisRecord);
 		        this.prepPlanCache.putPreparedPlan(id, this.context.isSessionFunctionEvaluated(), prepPlan);
         	}
-        	command = prepPlan.getCommand();
         } else {
         	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
             processPlan = (ProcessorPlan)cachedPlan.clone();
             //already in cache. obtain the values from cache
             analysisRecord = prepPlan.getAnalysisRecord();
             
-            this.userCommand = command;
-            createCommandContext(command);
+            this.userCommand = prepPlan.getCommand();
+            createCommandContext();
         }
                 
         if (requestMsg.isPreparedBatchUpdate()) {
@@ -178,7 +173,7 @@ public class PreparedStatementRequest extends Request {
 	        List<Reference> params = prepPlan.getReferences();
 	        List<?> values = requestMsg.getParameterValues();
 	
-			resolveAndValidateParameters(command, params, values);
+			resolveAndValidateParameters(this.userCommand, params, values);
         }
         return prepPlan.getRewritenCommand();
     }

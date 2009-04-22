@@ -49,17 +49,17 @@ import com.metamatrix.query.resolver.util.AccessPattern;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.lang.GroupBy;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.QueryCommand;
+import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.navigator.PostOrderNavigator;
-import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
-import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
@@ -206,95 +206,57 @@ public class FrameUtil {
             }
                             
         } else if(type == NodeConstants.Types.PROJECT) {                    
-            List<SingleElementSymbol> elements = (List<SingleElementSymbol>) node.getProperty(NodeConstants.Info.PROJECT_COLS);           
-            
-            for (int i = 0; i < elements.size(); i++) {
-                SingleElementSymbol symbol = elements.get(i);
-                SingleElementSymbol mappedSymbol = convertSingleElementSymbol(symbol, symbolMap, true);
-                elements.set(i, mappedSymbol);
-                      
-                if (newGroup == null) {
-                    GroupsUsedByElementsVisitor.getGroups(mappedSymbol, groups);
-                }
+            List<SingleElementSymbol> projectedSymbols = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.PROJECT_COLS);
+            Select select = new Select(projectedSymbols);
+            ExpressionMappingVisitor.mapExpressions(select, symbolMap);
+            node.setProperty(NodeConstants.Info.PROJECT_COLS, select.getSymbols());
+            if (newGroup == null) {
+                GroupsUsedByElementsVisitor.getGroups(select, groups);
             }
-            
         } else if(type == NodeConstants.Types.JOIN) { 
             // Convert join criteria property
             List<Criteria> joinCrits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-            if(joinCrits != null) { 
-            	for (int i = 0; i < joinCrits.size(); i++) {
-                    Criteria crit = joinCrits.get(i);
-                    crit = convertCriteria(crit, symbolMap);
-                    
-                    if (newGroup == null) {
-                        GroupsUsedByElementsVisitor.getGroups(crit, groups);
-                    }
-                    joinCrits.set(i, crit);
-                }   
+            if(joinCrits != null && !joinCrits.isEmpty()) {
+            	Criteria crit = new CompoundCriteria(joinCrits);
+            	crit = convertCriteria(crit, symbolMap);
+            	if (crit instanceof CompoundCriteria) {
+            		node.setProperty(NodeConstants.Info.JOIN_CRITERIA, ((CompoundCriteria)crit).getCriteria());
+            	} else {
+            		joinCrits = new ArrayList<Criteria>();
+            		joinCrits.add(crit);
+            		node.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCrits);
+            	}
+                if (newGroup == null) {
+                    GroupsUsedByElementsVisitor.getGroups(crit, groups);
+                }
             }
             
             convertAccessPatterns(symbolMap, node);
         
         } else if(type == NodeConstants.Types.SORT) { 
-            List<SingleElementSymbol> elements = (List<SingleElementSymbol>) node.getProperty(NodeConstants.Info.SORT_ORDER);         
-            
-            for (int i = 0; i < elements.size(); i++) {
-                SingleElementSymbol symbol = elements.get(i);
-                SingleElementSymbol mappedSymbol = convertSingleElementSymbol(symbol, symbolMap, true);
-                elements.set(i, mappedSymbol);
-                      
-                if (newGroup == null) {
-                    GroupsUsedByElementsVisitor.getGroups(mappedSymbol, groups);
-                }
+        	List<SingleElementSymbol> sortCols = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.SORT_ORDER);
+            OrderBy orderBy = new OrderBy(sortCols);
+            ExpressionMappingVisitor.mapExpressions(orderBy, symbolMap);
+            node.setProperty(NodeConstants.Info.SORT_ORDER, orderBy.getVariables());
+            if (newGroup == null) {
+                GroupsUsedByElementsVisitor.getGroups(orderBy, groups);
             }
-            
         } else if(type == NodeConstants.Types.GROUP) {  
-            // Grouping columns 
-            List groupCols = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
-            if(groupCols != null) {
-                List newGroupCols = new ArrayList(groupCols.size());            
-                Iterator groupIter = groupCols.iterator();                
-                while(groupIter.hasNext()) { 
-                    SingleElementSymbol groupCol = (SingleElementSymbol) groupIter.next();
-                    Expression mappedCol = convertSingleElementSymbol(groupCol, symbolMap, false);                   
-                    newGroupCols.add( mappedCol );
-                    
-                    if (newGroup == null) {
-                        GroupsUsedByElementsVisitor.getGroups(mappedCol, groups);
-                    }
-                }                        
-                node.setProperty(NodeConstants.Info.GROUP_COLS, newGroupCols);            
+        	List<SingleElementSymbol> groupCols = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.GROUP_COLS);
+            if (groupCols != null) {
+                GroupBy groupBy= new GroupBy(groupCols);
+                ExpressionMappingVisitor.mapExpressions(groupBy, symbolMap);
+                node.setProperty(NodeConstants.Info.GROUP_COLS, groupBy.getSymbols());
+                if (newGroup == null) {
+                    GroupsUsedByElementsVisitor.getGroups(groupCols, groups);
+                }
             }               
         } else if (type == NodeConstants.Types.SOURCE || type == NodeConstants.Types.ACCESS) {
             convertAccessPatterns(symbolMap, node);
         }
     }
     
-    static SingleElementSymbol convertSingleElementSymbol(SingleElementSymbol symbol, Map symbolMap, boolean shouldAlias) {
-    
-        // Preserve old "short name" of alias by aliasing
-        String name = symbol.getShortName();
-        
-        Expression mappedExpression = convertExpression(SymbolMap.getExpression(symbol), symbolMap);
-        
-        // Convert symbol using symbol map  
-        SingleElementSymbol mappedSymbol = null;
-        
-        if(!(mappedExpression instanceof SingleElementSymbol)) { 
-            mappedSymbol = new ExpressionSymbol(name, mappedExpression);
-        } else {
-            mappedSymbol = (SingleElementSymbol)mappedExpression;
-        }
-        
-        // Re-alias to maintain name if necessary
-        if(shouldAlias && (mappedSymbol instanceof ExpressionSymbol || !mappedSymbol.getShortCanonicalName().equals(name.toUpperCase()))) { 
-            mappedSymbol = new AliasSymbol(name, mappedSymbol);
-        }   
-        
-        return mappedSymbol;
-    }   
-    
-    static Expression convertExpression(Expression expression, Map symbolMap) {
+    private static Expression convertExpression(Expression expression, Map symbolMap) {
         
         if (expression == null || expression instanceof Constant) {
             return expression;
@@ -318,9 +280,7 @@ public class FrameUtil {
             }
         } 
         
-        ExpressionMappingVisitor emv = new ExpressionMappingVisitor(symbolMap);
-        
-        PreOrderNavigator.doVisit(expression, emv);
+        ExpressionMappingVisitor.mapExpressions(expression, symbolMap);
         
         return expression;
     }   
@@ -328,9 +288,7 @@ public class FrameUtil {
     static Criteria convertCriteria(Criteria criteria, final Map symbolMap)
         throws QueryPlannerException {
 
-        ExpressionMappingVisitor emv = new ExpressionMappingVisitor(symbolMap);
-        
-        PostOrderNavigator.doVisit(criteria, emv);
+        ExpressionMappingVisitor.mapExpressions(criteria, symbolMap);
         
         // Simplify criteria if possible
         try {

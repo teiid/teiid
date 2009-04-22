@@ -152,7 +152,7 @@ public class TestMetaDataProcessor extends TestCase {
         // Initialize components
         ApplicationEnvironment env = new ApplicationEnvironment();
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
-        MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, null, prepPlanCache, env, null);
+        MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, new DQPCore(), prepPlanCache, env, null);
                      
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName("MyVDB"); //$NON-NLS-1$

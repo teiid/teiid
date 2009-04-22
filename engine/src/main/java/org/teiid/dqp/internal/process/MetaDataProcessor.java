@@ -73,7 +73,6 @@ import com.metamatrix.query.tempdata.TempTableStore;
  */
 public class MetaDataProcessor {
 
-
     // Resources
     private MetadataService metadataService;
     private DQPCore requestManager;
@@ -118,10 +117,18 @@ public class MetaDataProcessor {
         if(multiModels != null && multiModels.size() > 0) { 
             this.metadata = new MultiSourceMetadataWrapper(this.metadata, multiModels);
         }
+
+        RequestWorkItem workItem = null;
+        try {
+        	workItem = requestManager.getRequestWorkItem(requestID);
+        } catch (MetaMatrixProcessingException e) {
+        	if (preparedSql == null) {
+        		throw e;
+        	}
+        }
         
         TempTableStore tempTableStore = null;
         if(tempTableStoresHolder != null) {
-            RequestWorkItem workItem = requestManager.safeGetWorkItem(requestID);
             if (workItem != null) {
                 tempTableStore = tempTableStoresHolder.getTempTableStore(workContext.getConnectionID());
             }
@@ -130,9 +137,8 @@ public class MetaDataProcessor {
             metadata = new TempMetadataAdapter(this.metadata, tempTableStore.getMetadataStore());
         }
         
-        if(preparedSql == null) {
-        	RequestWorkItem workItem = requestManager.getRequestWorkItem(requestID);
-            return getMetadataForCommand(workItem.getOriginalCommand());
+        if(workItem != null) {
+        	return getMetadataForCommand(workItem.getOriginalCommand());
         } 
         return obtainMetadataForPreparedSql(preparedSql, workContext, allowDoubleQuotedVariable);
     }
@@ -147,9 +153,7 @@ public class MetaDataProcessor {
                     if (((Query)originalCommand).getIsXML()) {
                         columnMetadata = new Map[1];
                         columnMetadata[0] = createXMLColumnMetadata((Query)originalCommand);
-                    } else if (((Query)originalCommand).getInto() != null) {
-                        columnMetadata = null;
-                    } else {
+                    } else if (((Query)originalCommand).getInto() == null) {
                         columnMetadata = createProjectedSymbolMetadata(originalCommand);
                     }
                 } else {
@@ -164,7 +168,6 @@ public class MetaDataProcessor {
             case Command.TYPE_DELETE:
             case Command.TYPE_CREATE:    
             case Command.TYPE_DROP:
-                columnMetadata = null;
                 break;    
             case Command.TYPE_XQUERY:
                 columnMetadata = new Map[1];
@@ -216,8 +219,7 @@ public class MetaDataProcessor {
         if(plan != null) {
             command = plan.getCommand();
         } else {
-            QueryParser parser = QueryParser.getQueryParser();
-            command = parser.parseCommand(sql, info);
+        	command = QueryParser.getQueryParser().parseCommand(sql, info);
             QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, false, this.metadata, AnalysisRecord.createNonRecordingRecord());                        
         }
         return getMetadataForCommand(command);            

@@ -359,7 +359,7 @@ public class TestJoinWithFunction extends TestCase {
 		Constant expectedConst = new Constant(new Double(10.0));
 		assertEquals("Did not get expected constant value for SqrtLeft in root node of plan: ",  //$NON-NLS-1$
 				expectedConst, 
-				((ExpressionSymbol) ((AliasSymbol) elem.get(8)).getSymbol()).getExpression()  // should be a AliasSymbol containing an expression 
+				((ExpressionSymbol)elem.get(8)).getExpression()  // should be a AliasSymbol containing an expression 
 			); 
 	}
 
@@ -427,7 +427,7 @@ public class TestJoinWithFunction extends TestCase {
 		Constant expectedConst = new Constant(new Double(10.0));
 		assertEquals("Did not get expected constant value for SqrtLeft in root node of plan: ",  //$NON-NLS-1$
 				expectedConst, 
-				((ExpressionSymbol) ((AliasSymbol) elem.get(8)).getSymbol()).getExpression()  // should be a AliasSymbol containing an expression 
+				((ExpressionSymbol) elem.get(8)).getExpression()  // should be a AliasSymbol containing an expression 
 			); 
 		assertEquals("Did not get expected constant value for SqrtTop in root node of plan: ",  //$NON-NLS-1$
 				expectedConst, 

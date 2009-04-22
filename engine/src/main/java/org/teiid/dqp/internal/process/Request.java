@@ -24,6 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -235,22 +236,22 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     }
     
-    protected void createCommandContext(Command command) throws QueryValidatorException {
+    protected void createCommandContext() throws QueryValidatorException {
     	boolean returnsResultSet = false;
     	this.returnsUpdateCount = true;
-        if(command instanceof Query) {
-        	Query query = (Query)command;
+        if(userCommand instanceof Query) {
+        	Query query = (Query)userCommand;
     		returnsResultSet = query.getInto() == null;
     		returnsUpdateCount = !returnsResultSet;
-        } else if (command instanceof SetQuery) {
+        } else if (userCommand instanceof SetQuery) {
         	returnsResultSet = true;
         	returnsUpdateCount = false;
-        } else if (command instanceof XQuery) {
+        } else if (userCommand instanceof XQuery) {
         	returnsResultSet = true;
         	returnsUpdateCount = false;
-        } else if (command instanceof StoredProcedure) {
+        } else if (userCommand instanceof StoredProcedure) {
         	returnsUpdateCount = false;
-        	StoredProcedure proc = (StoredProcedure)command;
+        	StoredProcedure proc = (StoredProcedure)userCommand;
         	returnsResultSet = proc.returnsResultSet();
         }
     	if (this.requestMsg.getRequireResultSet() != null && this.requestMsg.getRequireResultSet() != returnsResultSet) {
@@ -276,8 +277,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 workContext.getVdbName(), 
                 workContext.getVdbVersion(),
                 props,
-                useProcDebug(command), 
-                collectNodeStatistics(command));
+                useProcDebug(userCommand), 
+                collectNodeStatistics(userCommand));
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setConnectorBatchSize(bufferManager.getConnectorBatchSize());
         this.context.setStreamingBatchSize(chunkSize);
@@ -308,6 +309,13 @@ public class Request implements QueryProcessor.ProcessorFactory {
         if (this.tempTableStore != null) {
         	QueryResolver.setChildMetadata(command, tempTableStore.getMetadataStore().getData(), null);
         }
+    	//ensure that the user command is distinct from the processing command
+        //rewrite and planning may alter options, symbols, etc.
+        
+        //TODO clone after the resolve - but that doesn't currently work for exec resolving
+    	this.userCommand = (Command)command.clone();
+    	
+    	QueryResolver.resolveCommand(this.userCommand, Collections.emptyMap(), false, metadata, analysisRecord);
     	
     	QueryResolver.resolveCommand(command, metadata, analysisRecord);
     }
@@ -369,7 +377,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     }
 
-    protected void createProcessor() throws MetaMatrixComponentException {
+    protected void createProcessor(Command processingCommand) throws MetaMatrixComponentException {
         
         TransactionContext tc = null;
         
@@ -388,7 +396,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
             
             if(ExecutionProperties.AUTO_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
                 startAutoWrapTxn = true;
-            } else if ( userCommand.updatingModelCount(metadata) > 1) { 
+            } else if ( processingCommand.updatingModelCount(metadata) > 1) { 
                 if (ExecutionProperties.AUTO_WRAP_OPTIMISTIC.equals(requestMsg.getTxnAutoWrapMode())){ 
                     String msg = DQPPlugin.Util.getString("Request.txn_needed_wrong_mode", requestId); //$NON-NLS-1$
                     throw new MetaMatrixComponentException(msg);
@@ -467,13 +475,11 @@ public class Request implements QueryProcessor.ProcessorFactory {
                 
         resolveCommand(command);
         
-        createCommandContext(command);
+        createCommandContext();
         
         validateQuery(command, true);
         
         validateQueryValues(command);
-        
-        this.userCommand = command;
         
         command = QueryRewriter.rewrite(command, null, metadata, context);
         
@@ -590,13 +596,13 @@ public class Request implements QueryProcessor.ProcessorFactory {
                     
         initMetadata();
         
-        generatePlan();
+        Command processingCommand = generatePlan();
         
         validateEntitlement(userCommand);
         
         setSchemasForXMLPlan(userCommand, metadata);
         
-        createProcessor();
+        createProcessor(processingCommand);
     }
     
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext) throws MetaMatrixProcessingException, MetaMatrixComponentException {
@@ -641,16 +647,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
 			if (authSvc.checkingEntitlements()) {
 				AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(
 						this.workContext.getConnectionID(), authSvc);
-				if (command.getType() == Command.TYPE_XQUERY) {
-					// validate its first level children
-					Iterator iter = command.getSubCommands().iterator();
-					while (iter.hasNext()) {
-						validateWithVisitor(visitor, this.metadata,
-								(Command) iter.next(), true);
-					}
-				} else {
-					validateWithVisitor(visitor, this.metadata, command, true);
-				}
+				validateWithVisitor(visitor, this.metadata, command, true);
 			} else if (workContext.getUserName().equals(
 					AuthorizationService.DEFAULT_WSDL_USERNAME)) {
 				       if (command.getType() == Command.TYPE_STORED_PROCEDURE &&

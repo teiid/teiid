@@ -49,15 +49,10 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.sql.lang.GroupBy;
 import com.metamatrix.query.sql.lang.JoinType;
-import com.metamatrix.query.sql.lang.OrderBy;
-import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -68,7 +63,6 @@ import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.ExpressionMappingVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 
@@ -141,6 +135,7 @@ public class RulePushAggregates implements
     /**
      * Attempt to push the group node below one or more joins, manipulating the parent plan as necessary. This may involve
      * modifying symbols in parent nodes (to account for staged aggregates).
+     * @throws QueryPlannerException 
      * 
      * @since 4.2
      */
@@ -149,7 +144,7 @@ public class RulePushAggregates implements
                                Set<AggregateSymbol> allAggregates,
                                QueryMetadataInterface metadata,
                                CapabilitiesFinder capFinder) throws MetaMatrixComponentException,
-                                                            QueryMetadataException {
+                                                            QueryMetadataException, QueryPlannerException {
 
         Map<PlanNode, List<SingleElementSymbol>> aggregateMap = createNodeMapping(groupNode, allAggregates);
         Map<PlanNode, List<SingleElementSymbol>> groupingMap = createNodeMapping(groupNode, groupingExpressions);
@@ -220,7 +215,7 @@ public class RulePushAggregates implements
     private void stageAggregates(PlanNode groupNode,
                                  QueryMetadataInterface metadata,
                                  Set<SingleElementSymbol> stagedGroupingSymbols,
-                                 List<SingleElementSymbol> aggregates) throws MetaMatrixComponentException {
+                                 List<SingleElementSymbol> aggregates) throws MetaMatrixComponentException, QueryPlannerException {
         //remove any aggregates that are computed over a group by column
         Set<Expression> expressions = new HashSet<Expression>();
         for (SingleElementSymbol expression : stagedGroupingSymbols) {
@@ -414,74 +409,19 @@ public class RulePushAggregates implements
         return aggMap;
     }
     
-    static void mapExpressions(PlanNode node, Map<? extends Expression, ? extends Expression> exprMap) {
-        PlanNode current = node;
+    static void mapExpressions(PlanNode node, Map<? extends Expression, ? extends Expression> exprMap) 
+    throws QueryPlannerException {
         
-        while (current != null) {
+        while (node != null) {
+            FrameUtil.convertNode(node, null, null, exprMap);
             
-            // Convert expressions from correlated subquery references;
-            // currently only for SELECT or PROJECT nodes
-        	SymbolMap refs = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-            if (refs != null){
-                for (Map.Entry<ElementSymbol, Expression> ref : refs.asUpdatableMap().entrySet()) {
-                    Expression expr = ref.getValue();
-                    Expression mappedExpr = exprMap.get(expr);
-                    if (mappedExpr != null) {
-                        ref.setValue(mappedExpr);
-                    } else {
-                        ExpressionMappingVisitor.mapExpressions(ref.getValue(), exprMap);
-                    }
-                }
-            }
-            
-            switch (current.getType()) {
-                case NodeConstants.Types.SELECT: {
-                    Criteria crit = (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-                    ExpressionMappingVisitor.mapExpressions(crit, exprMap);
-                    break;
-                }
-                case NodeConstants.Types.PROJECT: {
-                    List<SingleElementSymbol> projectedSymbols = (List<SingleElementSymbol>)current.getProperty(NodeConstants.Info.PROJECT_COLS);
-                    Select select = new Select(projectedSymbols);
-                    ExpressionMappingVisitor.mapExpressions(select, exprMap);
-                    current.setProperty(NodeConstants.Info.PROJECT_COLS, select.getSymbols());
-                    break;
-                }
-                case NodeConstants.Types.SOURCE: {
-                    PlanNode projectNode = NodeEditor.findNodePreOrder(current, NodeConstants.Types.PROJECT);
-                    List<SingleElementSymbol> projectedSymbols = (List<SingleElementSymbol>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
-                    SymbolMap symbolMap = SymbolMap.createSymbolMap(current.getGroups().iterator().next(), projectedSymbols);
-                    current.setProperty(NodeConstants.Info.SYMBOL_MAP, symbolMap);
+            switch (node.getType()) {
+                case NodeConstants.Types.SOURCE:
+                case NodeConstants.Types.GROUP:
                     return;
-                }
-                case NodeConstants.Types.SORT: {
-                    List<SingleElementSymbol> sortCols = (List<SingleElementSymbol>)current.getProperty(NodeConstants.Info.SORT_ORDER);
-                    OrderBy orderBy = new OrderBy(sortCols);
-                    ExpressionMappingVisitor.mapExpressions(orderBy, exprMap);
-                    current.setProperty(NodeConstants.Info.PROJECT_COLS, orderBy.getVariables());
-                    break;
-                }
-                case NodeConstants.Types.JOIN: {
-                    List joinCriteria = (List)current.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-                    if (joinCriteria != null) {
-                        CompoundCriteria crit = new CompoundCriteria(joinCriteria);
-                        ExpressionMappingVisitor.mapExpressions(crit, exprMap);
-                        current.setProperty(NodeConstants.Info.JOIN_CRITERIA, crit.getCriteria());
-                    }
-                    break;
-                }
-                case NodeConstants.Types.GROUP: {
-                    List<SingleElementSymbol> groupCols = (List<SingleElementSymbol>)current.getProperty(NodeConstants.Info.GROUP_COLS);
-                    if (groupCols != null) {
-                        GroupBy groupBy= new GroupBy(groupCols);
-                        ExpressionMappingVisitor.mapExpressions(groupBy, exprMap);
-                        current.setProperty(NodeConstants.Info.GROUP_COLS, groupBy.getSymbols());
-                    }
-                    return;
-                }
             }
 
-            current = current.getParent();
+            node = node.getParent();
         }
     }
 

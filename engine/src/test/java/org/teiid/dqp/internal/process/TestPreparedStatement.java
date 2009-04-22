@@ -50,6 +50,7 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.TestProcessor;
+import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
@@ -218,9 +219,9 @@ public class TestPreparedStatement extends TestCase{
         workContext.setSessionToken(new SessionToken(new MetaMatrixSessionID(conn), "foo")); //$NON-NLS-1$        
         PreparedStatementRequest serverRequest = new PreparedStatementRequest(prepPlanCache) {
         	@Override
-        	protected void createProcessor()
+        	protected void createProcessor(Command processingCommand)
         			throws MetaMatrixComponentException {
-        		//don't bother
+        		
         	}
         };
         FakeApplicationEnvironment env = new FakeApplicationEnvironment(metadata, "example1", "1", "pm1", "1", "BINDING"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$

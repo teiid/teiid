@@ -684,7 +684,7 @@ public class RequestWorkItem extends AbstractWorkItem {
                     dqpWorkContext.getUserName(),
                     dqpWorkContext.getVdbName(),
                     dqpWorkContext.getVdbVersion(),
-                    (originalCommand != null ? originalCommand.toString() : null ),
+                    requestMsg.getCommandString(),
                     -1);
     }
 

@@ -104,7 +104,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
                     replacmentSymbol = new ExpressionSymbol(ses.getName(), replacement);
                 }
                 
-                if (alias && createAliases() && !replacmentSymbol.getShortName().equals(ses.getShortName())) {
+                if (alias && createAliases() && !replacmentSymbol.getShortCanonicalName().equals(ses.getShortCanonicalName())) {
                     replacmentSymbol = new AliasSymbol(ses.getShortName(), replacmentSymbol);
                 }
                 
