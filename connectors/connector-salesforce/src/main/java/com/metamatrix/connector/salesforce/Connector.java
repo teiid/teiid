@@ -121,7 +121,7 @@ public class Connector extends org.teiid.connector.basic.BasicConnector {
 		}
 		try {
 			String inLimitString = env.getProperties().getProperty("InLimit", Integer.toString(-1));
-			int inLimit = Integer.decode(inLimitString).intValue();
+			int inLimit = inLimitString == null ? -1 : Integer.decode(inLimitString).intValue();
 			salesforceCapabilites.setMaxInCriteriaSize(inLimit);
 		} catch (NumberFormatException e) {
 			throw new ConnectorException(Messages.getString("SalesforceConnection.bad.IN.value"));
