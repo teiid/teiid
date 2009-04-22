@@ -51,6 +51,7 @@ import com.sforce.soap.partner.SforceServiceLocator;
 import com.sforce.soap.partner.SoapBindingStub;
 import com.sforce.soap.partner.fault.ApiFault;
 import com.sforce.soap.partner.fault.UnexpectedErrorFault;
+import com.sforce.soap.partner.fault.InvalidQueryLocatorFault;
 import com.sforce.soap.partner.sobject.SObject;
 
 public class ConnectionImpl {
@@ -184,6 +185,8 @@ public class ConnectionImpl {
 	public QueryResult queryMore(String queryLocator) throws ConnectorException {
 		try {
 			return binding.queryMore(queryLocator);
+		} catch ( InvalidQueryLocatorFault e ) {
+			throw new ConnectorException(e.getMessage()); 
 		} catch (UnexpectedErrorFault e) {
 			throw new ConnectorException(e.getMessage());
 		} catch (ApiFault e) {
