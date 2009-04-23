@@ -24,6 +24,7 @@ package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,7 +132,7 @@ public class RelationalPlan extends BaseProcessorPlan {
     
 	public Object clone(){
 		RelationalPlan plan = new RelationalPlan((RelationalNode)root.clone());
-		plan.setOutputElements(new ArrayList(outputCols));
+		plan.setOutputElements(new ArrayList(( outputCols != null ? outputCols : Collections.EMPTY_LIST )));
 		return plan;
 	}
 	
