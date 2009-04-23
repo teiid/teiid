@@ -38,6 +38,7 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
+import com.metamatrix.common.jdbc.JDBCPlatform;
 import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.DateUtil;
@@ -66,12 +67,11 @@ public class DBLogReader implements LogReader {
 
     public static final String DEFAULT_TABLE_NAME = "LOGENTRIES";//$NON-NLS-1$
 
-
-   
-	
     private Properties properties;
 
     protected String tableName;
+    
+    protected String quote=null;
 
   
     
@@ -93,12 +93,25 @@ public class DBLogReader implements LogReader {
 
         // Get the table name
         this.tableName = properties.getProperty(TABLE_PROPERTY_NAME, DEFAULT_TABLE_NAME );
+        
+        Connection connection = null;
+        try {
+        	connection = getConnection();
+        	quote = JDBCPlatform.getIdentifierQuoteString(connection); 
+        	
+        } catch (SQLException e) {
+            throw new MetaMatrixComponentException(e, ErrorMessageKeys.LOG_ERR_0032, CommonPlugin.Util.getString(ErrorMessageKeys.LOG_ERR_0032, ""));
+        } finally {
+            close(connection);
+        }
+
      }
 
 
    
     protected Connection getConnection() throws SQLException {
     	return JDBCConnectionPoolHelper.getInstance().getConnection();
+    	
     }
     
 
@@ -136,7 +149,7 @@ public class DBLogReader implements LogReader {
         try {
             //get connection
             connection = getConnection();
-            
+                        
             //get sql
             sqlString = createSQL(startTime, endTime, levels, contexts, maxRows);
             
@@ -175,7 +188,7 @@ public class DBLogReader implements LogReader {
             // if we do it in LogEntryPropertyNames.ColumnName.EXCEPTION then
             // the console breaks.
             if (colName.equals(LogEntryPropertyNames.ColumnName.EXCEPTION)) {
-            	sql.append('"'+colName+'"');
+            	sql.append(quote +colName+ quote);
             } else {
             	sql.append(colName);
             }
