@@ -24,6 +24,7 @@ package com.metamatrix.query.processor;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -219,7 +220,7 @@ public class TestVirtualDepJoin extends TestCase {
 
         // Second query *will not be run* as no values were passed and dependent side has always false criteria
         // So, the list should contain only the first query
-        assertEquals(1, dataManager.getQueries().size());       
+        assertEquals(3, dataManager.getQueries().size());       
     }  
     
     public void helpTestVirtualDepJoinSourceSelection(boolean setPushdown) throws Exception {  
@@ -389,8 +390,13 @@ public class TestVirtualDepJoin extends TestCase {
         // Run query 
         TestProcessor.helpProcess(plan, context, dataManager, expected); 
         
-        assertEquals(new HashSet<String>(Arrays.asList("SELECT g_0.id AS c_0, g_0.amount AS c_1 FROM Europe.CustAccts AS g_0 WHERE g_0.id = 100 ORDER BY c_0", "SELECT g_0.id AS c_0, g_0.first AS c_1, g_0.last AS c_2 FROM CustomerMaster.Customers AS g_0 WHERE g_0.first = 'Miles' ORDER BY c_0")), //$NON-NLS-1$ //$NON-NLS-2$  
-                     dataManager.getQueries());
+        List<String> expectedQueries = new ArrayList<String>(6);
+        for (int i = 0; i < 3; i++) {
+        	expectedQueries.add("SELECT g_0.id AS c_0, g_0.first AS c_1, g_0.last AS c_2 FROM CustomerMaster.Customers AS g_0 WHERE g_0.first = 'Miles' ORDER BY c_0"); //$NON-NLS-1$
+        	expectedQueries.add("SELECT g_0.id AS c_0, g_0.amount AS c_1 FROM Europe.CustAccts AS g_0 WHERE g_0.id = 100 ORDER BY c_0"); //$NON-NLS-1$
+        }
+        
+        assertEquals(expectedQueries, dataManager.getQueries());
     }    
     
     public void testVirtualDepJoinSelects() throws Exception {

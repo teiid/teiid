@@ -80,38 +80,74 @@ public class TestPreparedStatement extends TestCase{
 	}	        	    
 	
 	static void helpTestProcessing(String preparedSql, List values, List[] expected, QueryMetadataInterface metadata, boolean callableStatement) throws Exception {
-		// Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        TestProcessor.sampleData1(dataManager);    
-		
-        helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement);
+        helpTestProcessing(preparedSql, values, expected, (ProcessorDataManager)null, metadata, callableStatement);
 	}
 	
     static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement) throws Exception { 
     	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false);
     }
 
-    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, boolean differentPlan) throws Exception { 
-        TestablePreparedPlanCache prepPlan = new TestablePreparedPlanCache();
-        //Create plan
-        PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, SESSION_ID, callableStatement, false);
+    static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement, boolean isSessionSpecific) throws Exception { 
+        helpTestProcessing(preparedSql, values, expected, dataManager, (CapabilitiesFinder)null, metadata, (TestablePreparedPlanCache)null, callableStatement, isSessionSpecific, /* isAlreadyCached */false); 
+    }
+    
+    static public void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, TestablePreparedPlanCache prepPlanCache, boolean callableStatement, boolean isSessionSpecific, boolean isAlreadyCached) throws Exception { 
+        TestablePreparedPlanCache pPlanCache = null;
+        CapabilitiesFinder cFinder = null;
+        ProcessorDataManager dManager = null;
+        
+        if ( dataManager == null ) {
+            // Construct data manager with data
+            dManager = new FakeDataManager();
+            TestProcessor.sampleData1((FakeDataManager)dManager);    
+        } else dManager = dataManager;
+        
+        if ( capFinder == null ) cFinder = new DefaultCapabilitiesFinder();
+        else cFinder = capFinder;
+        
+        if ( prepPlanCache == null ) pPlanCache = new TestablePreparedPlanCache();
+        else pPlanCache = prepPlanCache;
+        
+		// expected cache hit count
+        int exHitCount = -1;
+        
+		/*
+		 * If the plan is already cached we want our expected hit
+		 * count of the cache to be at least 2 because we will 
+		 * get the plan twice.  Otherwise, we want it to be 1.
+		 */
+        if ( isAlreadyCached ) {
+        	exHitCount = pPlanCache.hitCount + 2;
+        } else {
+        	exHitCount = pPlanCache.hitCount + 1;
+        }
+        
+        //Create plan or used cache plan if isPlanCached
+        PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, SESSION_ID, callableStatement, false);
 
         // Run query
-        TestProcessor.helpProcess(plan.processPlan, plan.context, dataManager, expected);
+        TestProcessor.helpProcess(plan.processPlan, plan.context, dManager, expected);
         
         //test cached plan
-    	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, SESSION_ID, callableStatement, false);
+    	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, SESSION_ID, callableStatement, false);
     	
         //make sure the plan is only created once
-        assertEquals("should reuse the plan", 1, prepPlan.hitCount); //$NON-NLS-1$
+        assertEquals("should reuse the plan", exHitCount, pPlanCache.hitCount); //$NON-NLS-1$
                 
         // Run query again
-        TestProcessor.helpProcess(plan.processPlan, plan.context, dataManager, expected);
+        TestProcessor.helpProcess(plan.processPlan, plan.context, dManager, expected);
         
         //get the plan again with a new connection
-        assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), metadata, prepPlan, 7, callableStatement, false));
+        assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, 7, callableStatement, false));
 
-        assertEquals(differentPlan?1:2, prepPlan.hitCount); 
+        /*
+         * If the command is not specific to a session we expect
+         * another hit against the cache because we will use the 
+         * cached plan, otherwise, a new plan would have been 
+         * created and the hit count will be unchanged.
+         */
+        if ( !isSessionSpecific ) exHitCount++;
+        assertEquals(exHitCount, pPlanCache.hitCount); 
 	}
     	    
     public void testWhere() throws Exception { 
@@ -181,14 +217,14 @@ public class TestPreparedStatement extends TestCase{
         TestOptimizer.checkNodeTypes(plan.processPlan, TestOptimizer.FULL_PUSHDOWN);  
     }
     
-	private PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, PreparedPlanCache prepPlanCache)
+	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values, PreparedPlanCache prepPlanCache)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
 			QueryPlannerException {    	
 		return helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), prepPlanCache, SESSION_ID, false, false);
     }
 	
-	private PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
+	static public PreparedStatementRequest helpGetProcessorPlan(String preparedSql, List values,
 			PreparedPlanCache prepPlanCache, int conn)
 			throws MetaMatrixComponentException, QueryParserException,
 			QueryResolverException, QueryValidatorException,
@@ -209,6 +245,9 @@ public class TestPreparedStatement extends TestCase{
         request.setPreparedStatement(true);
         request.setCallableStatement(callableStatement);
         request.setParameterValues(values);
+		if (values != null && values.size() > 0 && values.get(0) instanceof List) {
+			request.setPreparedBatchUpdate(true);
+		}
         if (limitResults) {
         	request.setRowLimit(1);
         }

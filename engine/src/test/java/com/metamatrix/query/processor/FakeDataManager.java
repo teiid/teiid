@@ -23,6 +23,7 @@
 package com.metamatrix.query.processor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,11 +38,14 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.metadata.TempMetadataID;
+import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.CommandContainer;
 import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SetQuery;
+import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -71,7 +75,7 @@ public class FakeDataManager implements ProcessorDataManager {
     private Map blockedState = new HashMap();
 
     // Track history to verify it later
-    private Set queries = new HashSet();
+    private List<String> queries = new ArrayList<String>();
     
 	public FakeDataManager() {
 	}
@@ -80,7 +84,7 @@ public class FakeDataManager implements ProcessorDataManager {
      * Return string form of all queries run against this FDM 
      * @return List<String>
      */
-    public Set getQueries() {
+    public List<String> getQueries() {
         return this.queries;
     }
 	        
@@ -89,6 +93,7 @@ public class FakeDataManager implements ProcessorDataManager {
 	}
 	
 	public void closeRequest(Object requestID) {
+		// does nothing?
     } 
 	
 	public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID)
@@ -96,7 +101,18 @@ public class FakeDataManager implements ProcessorDataManager {
         
         LogManager.logTrace(LOG_CONTEXT, new Object[]{"Register Request:", command, ",processorID:", processorID, ",model name:", modelName,",TupleSourceID nodeID:",new Integer(nodeID)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
-        queries.add(command.toString());
+        
+        if ( command instanceof CommandContainer ) {
+        	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 ) {
+            	for ( Iterator<Command> it = ((CommandContainer) command).getContainedCommands().iterator(); it.hasNext(); ) {
+            		this.queries.add(it.next().toString());
+            	}
+        	} else {
+        		this.queries.add(command.toString());
+        	}
+        } else {
+        	this.queries.add(command.toString());
+        }
 
         if (ReferenceCollectorVisitor.getReferences(command).size() > 0) {
             throw new IllegalArgumentException("Found references in the command registered with the DataManager."); //$NON-NLS-1$
@@ -108,8 +124,14 @@ public class FakeDataManager implements ProcessorDataManager {
         }else if(command instanceof SetQuery) {
             SetQuery union = (SetQuery) command;            
             group = getQueryGroup(union.getProjectedQuery());
-		}else if(command instanceof ProcedureContainer){
-			group = ((ProcedureContainer)command).getGroup();
+		} else if (command instanceof ProcedureContainer) {
+			group = ((ProcedureContainer) command).getGroup();
+		} else if ( command instanceof BatchedUpdateCommand ) {
+        	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 ) {
+        		if ( command.getSubCommands().get(0) instanceof Update ) {
+        			group = ((Update)command.getSubCommands().get(0)).getGroup();
+        		}
+        	}
 		}
 		
 		Object groupID = group.getMetadataID();
@@ -120,6 +142,13 @@ public class FakeDataManager implements ProcessorDataManager {
 		
 		List projectedSymbols = command.getProjectedSymbols();
 		int[] columnMap = getColumnMap(elements, projectedSymbols);
+		
+		/* 
+		*  updateCommands is used to hold a list of commands that 
+		*  either came from a BatchedUpdateCommand or a signle 
+		*  command from an Update command.
+		*/
+		List<Update> updateCommands = new ArrayList<Update>();
 		
 		// Apply query criteria to tuples
 		if(command instanceof Query){
@@ -150,6 +179,54 @@ public class FakeDataManager implements ProcessorDataManager {
 			    tuples = new List[filteredTuples.size()];
 			    filteredTuples.toArray(tuples);
 			}
+		} else if ( command instanceof Update ) {
+			// add single update command to a list to be executed
+			updateCommands.add((Update)command);
+		} else if ( command instanceof BatchedUpdateCommand ) {
+        	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 )
+				// add all update commands to a list to be executed
+        		for ( int i = 0; i < ((CommandContainer) command).getContainedCommands().size(); i++ ) 
+        			if ( ((CommandContainer) command).getContainedCommands().get(i) instanceof Update ) {
+        				updateCommands.add(((Update) ((CommandContainer) command).getContainedCommands().get(i)));
+        		}
+		}
+		
+		// if we had update commands added to the list, execute them now
+		if ( updateCommands.size() > 0 ) {
+		    List<List<Integer>> filteredTuples = new ArrayList<List<Integer>>();
+			for ( int c = 0; c < updateCommands.size(); c++ ) {
+				Update update = (Update)updateCommands.get(c);
+				if ( update.getCriteria() != null ) {
+				    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
+		            Map<Object, Integer> lookupMap = new HashMap<Object, Integer>();
+		            for(int i=0; i<elements.size(); i++) { 
+		                Object element = elements.get(i);
+	                    mapElementToIndex(lookupMap, element, new Integer(i), group);        
+		            }
+		            for(int i=0; i<projectedSymbols.size(); i++) { 
+		            	Object element = projectedSymbols.get(i);
+	                    mapElementToIndex(lookupMap, element, new Integer(columnMap[i]), group);
+		            }
+				    
+				    int updated = 0;
+				    for(int i=0; i<tuples.length; i++) {
+		                try {
+		    				if(new Evaluator(lookupMap, null, null).evaluate(update.getCriteria(), tuples[i])) {
+		                        updated++;
+		                    }
+		                } catch(CriteriaEvaluationException e) {
+		                    throw new MetaMatrixComponentException(e, e.getMessage());
+		                }
+				    }
+			    	List<Integer> updateTuple = new ArrayList<Integer>(1);
+			    	updateTuple.add( new Integer(updated) );
+                    filteredTuples.add(updateTuple);
+				}
+			}
+		    tuples = new List[filteredTuples.size()];
+		    filteredTuples.toArray(tuples);
+		    elements = new ArrayList<Object>(projectedSymbols);
+		    columnMap[0] = 0;
 		}		
 				
         FakeTupleSource ts= new FakeTupleSource(elements, tuples, projectedSymbols, columnMap);
