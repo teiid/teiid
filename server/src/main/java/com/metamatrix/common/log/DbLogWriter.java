@@ -29,6 +29,7 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Properties;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.JDBCConnectionPoolHelper;
@@ -164,6 +165,8 @@ public class DbLogWriter {
 	private String insert;
        
     private boolean shutdown = false;
+    
+    private String quote = null;
 
 
 	public DbLogWriter(Properties properties) {
@@ -223,6 +226,22 @@ public class DbLogWriter {
 		} catch(Exception e) {
 			// ignore and use default
 		}
+		
+        Connection connection = null;
+        try {
+        	connection = JDBCConnectionPoolHelper.getInstance().getConnection();
+        	quote = JDBCPlatform.getIdentifierQuoteString(connection); 
+        	
+        } catch (SQLException e) {
+         } finally {
+			if( connection != null ) {   
+				try {
+					connection.close(); 
+				} catch (SQLException e) {
+					
+				}
+			}
+		}
 
 	}
 
@@ -275,7 +294,6 @@ public class DbLogWriter {
 			insertStr.append(COMMA);
 			insertStr.append( ColumnName.THREAD );
 			insertStr.append(COMMA);
-			String quote = JDBCPlatform.getIdentifierQuoteString(c);
 			insertStr.append( quote+ ColumnName.EXCEPTION +quote );
 			insertStr.append(VALUES);
 			this.insert = insertStr.toString();
