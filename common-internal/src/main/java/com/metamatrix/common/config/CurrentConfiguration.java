@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -75,8 +74,9 @@ import com.metamatrix.core.util.ReflectionHelper;
  * </p>
  */
 public final class CurrentConfiguration {
-
-    public static final String BOOTSTRAP_FILE_NAME = "metamatrix.properties"; //$NON-NLS-1$
+	private static final String BOOTSTRAP_FILE_PROPERTY = "teiid.bootstrap.file"; //$NON-NLS-1$
+	
+    public static final String BOOTSTRAP_FILE_NAME = "teiid.properties"; //$NON-NLS-1$
     public static final String CONFIGURATION_READER_CLASS_PROPERTY_NAME = "metamatrix.config.reader"; //$NON-NLS-1$
     public static final String CLUSTER_NAME = "metamatrix.cluster.name"; //$NON-NLS-1$
     public static final String CONFIGURATION_NAME= "configuration.name"; //$NON-NLS-1$
@@ -330,8 +330,10 @@ public final class CurrentConfiguration {
 			Properties systemBootStrapProps = getSystemBootStrapProperties();
 			Properties bootstrapProps = new Properties(systemBootStrapProps);
 	        InputStream bootstrapPropStream = null;
+	        
+	        String bootstrapfile = systemBootStrapProps.getProperty(BOOTSTRAP_FILE_PROPERTY, BOOTSTRAP_FILE_NAME);
 	        try {
-	        	bootstrapPropStream = this.getClass().getClassLoader().getResourceAsStream(BOOTSTRAP_FILE_NAME);
+	        	bootstrapPropStream = this.getClass().getClassLoader().getResourceAsStream(bootstrapfile);
 	        	if (bootstrapPropStream != null) {
 	        		bootstrapProps.load(bootstrapPropStream);
 	        	}
