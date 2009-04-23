@@ -25,7 +25,6 @@
 package com.metamatrix.platform.config.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -51,7 +50,8 @@ public class CurrentConfigHelper {
 	
 	public void loadMetaMatrixPropertiesIntoSystem(String filename) throws Exception {
 		Properties bootstrapProps = new Properties();
-        InputStream bootstrapPropStream = new FileInputStream(new File(filename));
+        InputStream bootstrapPropStream =  this.getClass().getClassLoader().getResourceAsStream(filename);
+
 		bootstrapProps.load(bootstrapPropStream);
        	bootstrapProps.remove(CurrentConfiguration.CONFIGURATION_READER_CLASS_PROPERTY_NAME);
        	
