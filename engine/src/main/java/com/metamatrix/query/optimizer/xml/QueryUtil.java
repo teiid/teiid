@@ -44,7 +44,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
+import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Command;
@@ -151,7 +151,7 @@ public class QueryUtil {
         QueryNode queryNode = null;
         try {
             GroupSymbol gs = new GroupSymbol(groupName);
-            ResolverVisitorUtil.resolveGroup(gs, metadata);
+            ResolverUtil.resolveGroup(gs, metadata);
             queryNode = metadata.getVirtualPlan(gs.getMetadataID());
         } catch (QueryResolverException e) {
             throw new QueryPlannerException(e, ErrorMessageKeys.OPTIMIZER_0029, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0029, groupName));
@@ -179,7 +179,7 @@ public class QueryUtil {
     public static GroupSymbol createResolvedGroup(GroupSymbol group, QueryMetadataInterface metadata) 
         throws MetaMatrixComponentException {
         try {
-            ResolverVisitorUtil.resolveGroup(group, metadata);
+            ResolverUtil.resolveGroup(group, metadata);
             return group;
         } catch (QueryResolverException e) {
             throw new MetaMatrixComponentException(e);

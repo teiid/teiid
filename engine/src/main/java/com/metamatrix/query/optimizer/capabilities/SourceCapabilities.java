@@ -373,7 +373,11 @@ public interface SourceCapabilities {
         /**
          * @since 6.0.0 indicates support for where all
          */
-        REQUIRES_CRITERIA
+        REQUIRES_CRITERIA,
+        /**
+         * @since 6.1.0 indicates support for GROUP BY
+         */
+        QUERY_GROUP_BY
     }
 
     public enum Scope {

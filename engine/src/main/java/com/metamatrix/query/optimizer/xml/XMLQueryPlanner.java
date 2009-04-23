@@ -54,7 +54,6 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.RelationalNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -382,7 +381,7 @@ public class XMLQueryPlanner {
         throws QueryResolverException,QueryMetadataException,MetaMatrixComponentException {
         
         GroupSymbol oldGroupSymbol = new GroupSymbol(oldGroup);
-        ResolverVisitorUtil.resolveGroup(oldGroupSymbol, metadata);
+        ResolverUtil.resolveGroup(oldGroupSymbol, metadata);
         
         HashSet projectedElements = new HashSet(ResolverUtil.resolveElementsInGroup(oldGroupSymbol, metadata));
         

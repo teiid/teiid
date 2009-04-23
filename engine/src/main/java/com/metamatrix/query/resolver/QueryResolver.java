@@ -51,8 +51,8 @@ import com.metamatrix.query.resolver.command.UpdateProcedureResolver;
 import com.metamatrix.query.resolver.command.UpdateResolver;
 import com.metamatrix.query.resolver.command.XMLQueryResolver;
 import com.metamatrix.query.resolver.command.XQueryResolver;
+import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.From;
@@ -242,7 +242,7 @@ public class QueryResolver {
         
         GroupSymbol symbol = ((UnaryFromClause)clause).getGroup();
         
-        ResolverVisitorUtil.resolveGroup(symbol, metadata);
+        ResolverUtil.resolveGroup(symbol, metadata);
                 
         if (symbol.isProcedure()) {
             return false;

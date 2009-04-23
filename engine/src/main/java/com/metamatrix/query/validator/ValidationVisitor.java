@@ -41,8 +41,7 @@ import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil.ResolvedLookup;
+import com.metamatrix.query.resolver.util.ResolverUtil.ResolvedLookup;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.ProcedureReservedWords;
@@ -282,7 +281,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(Function obj) {
     	if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
-				ResolvedLookup resolvedLookup = ResolverVisitorUtil.resolveLookup(obj, getMetadata());
+				ResolverUtil.ResolvedLookup resolvedLookup = ResolverUtil.resolveLookup(obj, getMetadata());
 				if(ValidationVisitor.isNonComparable(resolvedLookup.getKeyElement())) {
 		            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_lookup_key", resolvedLookup.getKeyElement()), resolvedLookup.getKeyElement()); //$NON-NLS-1$            
 		        }

@@ -288,7 +288,7 @@ public class ResolverVisitor extends LanguageVisitor {
 
     public void visit(SubqueryCompareCriteria obj) {
         try {
-            obj.setLeftExpression(ResolverVisitorUtil.resolveSubqueryPredicateCriteria(obj.getLeftExpression(), obj));
+            obj.setLeftExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getLeftExpression(), obj));
         } catch(QueryResolverException e) {
             handleException(e);
         }
@@ -297,7 +297,7 @@ public class ResolverVisitor extends LanguageVisitor {
 
     public void visit(SubquerySetCriteria obj) {
         try {
-            obj.setExpression(ResolverVisitorUtil.resolveSubqueryPredicateCriteria(obj.getExpression(), obj));
+            obj.setExpression(ResolverUtil.resolveSubqueryPredicateCriteria(obj.getExpression(), obj));
         } catch(QueryResolverException e) {
             handleException(e);
         }
@@ -457,7 +457,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0037, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0037, new Object[] {DataTypeManager.getDataTypeName(srcTypeClass), dataType}));
 	        }
 	    } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
-			ResolverVisitorUtil.ResolvedLookup lookup = ResolverVisitorUtil.resolveLookup(function, metadata);
+			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
 	    } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.XPATHVALUE)) {
 	        // Validate the xpath value is valid

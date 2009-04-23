@@ -56,7 +56,6 @@ import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.BindVariableVisitor;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.ExistsCriteria;
@@ -390,7 +389,7 @@ public class SimpleQueryResolver implements CommandResolver {
         
         public void visit(GroupSymbol obj) {
             try {
-                ResolverVisitorUtil.resolveGroup(obj, metadata);
+                ResolverUtil.resolveGroup(obj, metadata);
             } catch (QueryResolverException err) {
                 throw new MetaMatrixRuntimeException(err);
             } catch (MetaMatrixComponentException err) {

@@ -59,6 +59,11 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     public void setMaxInCriteriaSize(int maxInCriteriaSize) {
         this.maxInCriteriaSize = maxInCriteriaSize;
     }
+    
+    @Override
+    public boolean supportsGroupBy() {
+    	return true;
+    }
 
     /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsAggregates()

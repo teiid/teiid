@@ -38,7 +38,6 @@ import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.CommandResolver;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.DynamicCommand;
@@ -96,7 +95,7 @@ public class DynamicCommandResolver implements CommandResolver {
         GroupSymbol intoSymbol = dynamicCmd.getIntoGroup();
         if (intoSymbol != null) {
             if (!intoSymbol.isImplicitTempGroupSymbol()) {
-                ResolverVisitorUtil.resolveGroup(intoSymbol, metadata);
+                ResolverUtil.resolveGroup(intoSymbol, metadata);
             } else {
                 List symbols = dynamicCmd.getAsColumns();
                 ResolverUtil.resolveImplicitTempGroup(metadata, intoSymbol, symbols);

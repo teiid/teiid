@@ -139,10 +139,12 @@ public class CapabilitiesUtil {
         if (!caps.supportsCapability(Capability.QUERY_AGGREGATES)) {
             return false;
         }
-        
-        boolean supportsFunctionsInGroupBy = caps.supportsCapability(Capability.QUERY_FUNCTIONS_IN_GROUP_BY);
+        if (groupCols != null && !groupCols.isEmpty()) {
+        	if (!caps.supportsCapability(Capability.QUERY_GROUP_BY)) {
+        		return false;
+        	}
+            boolean supportsFunctionsInGroupBy = caps.supportsCapability(Capability.QUERY_FUNCTIONS_IN_GROUP_BY);
 
-        if(groupCols != null) {
             // Also verify that if there is a function that we can support pushdown of functions in group by
             Iterator colIter = groupCols.iterator();
             while(colIter.hasNext()) {

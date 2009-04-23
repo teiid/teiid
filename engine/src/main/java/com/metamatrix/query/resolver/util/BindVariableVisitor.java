@@ -42,7 +42,6 @@ import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.navigator.DeepPreOrderNavigator;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -155,7 +154,7 @@ public class BindVariableVisitor extends LanguageVisitor {
         ElementSymbol element = (ElementSymbol) expr;
 
         GroupSymbol groupSymbol = new GroupSymbol(metadata.getGroupName(element.getName()));
-        ResolverVisitorUtil.resolveGroup(groupSymbol, metadata);
+        ResolverUtil.resolveGroup(groupSymbol, metadata);
 
         ResolverVisitor.resolveLanguageObject(element, Arrays.asList(groupSymbol), metadata);
 

@@ -33,8 +33,8 @@ import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil.ResolvedLookup;
+import com.metamatrix.query.resolver.util.ResolverUtil;
+import com.metamatrix.query.resolver.util.ResolverUtil.ResolvedLookup;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.Insert;
@@ -90,7 +90,7 @@ public class ModelVisibilityValidationVisitor extends AbstractValidationVisitor 
     public void visit(Function obj) {
     	if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
 			try {
-	    		ResolvedLookup resolvedLookup = ResolverVisitorUtil.resolveLookup(obj, getMetadata());
+	    		ResolverUtil.ResolvedLookup resolvedLookup = ResolverUtil.resolveLookup(obj, getMetadata());
 	    		validateModelVisibility(getMetadata().getModelID(resolvedLookup.getGroup().getMetadataID()), resolvedLookup.getGroup());
 			} catch (QueryResolverException e) {
 				handleException(e, obj);

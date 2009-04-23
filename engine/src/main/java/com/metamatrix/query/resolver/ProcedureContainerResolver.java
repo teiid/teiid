@@ -39,7 +39,6 @@ import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.GroupContext;
@@ -219,7 +218,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
                                                             QueryResolverException {
         // Resolve group so we can tell whether it is an update procedure
         GroupSymbol group = procCommand.getGroup();
-        ResolverVisitorUtil.resolveGroup(group, metadata);
+        ResolverUtil.resolveGroup(group, metadata);
     }
 
 	public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List symbols) {

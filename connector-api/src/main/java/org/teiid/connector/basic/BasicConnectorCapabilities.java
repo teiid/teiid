@@ -430,4 +430,9 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
 	public boolean supportsBulkInsert() {
 		return false;
 	}
+	
+	@Override
+	public boolean supportsGroupBy() {
+		return false;
+	}
 }

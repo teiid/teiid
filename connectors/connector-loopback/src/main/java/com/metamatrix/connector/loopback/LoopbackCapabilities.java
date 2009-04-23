@@ -67,6 +67,11 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
         });
         return functions;
     }
+    
+    @Override
+    public boolean supportsGroupBy() {
+    	return true;
+    }
 
     /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsAggregates()

@@ -42,8 +42,7 @@ import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil.ResolvedLookup;
+import com.metamatrix.query.resolver.util.ResolverUtil.ResolvedLookup;
 import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.Into;
@@ -115,7 +114,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     	if (FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
     			List<Symbol> symbols = new LinkedList<Symbol>();
-				ResolvedLookup lookup = ResolverVisitorUtil.resolveLookup(obj, this.getMetadata());
+				ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(obj, this.getMetadata());
 				symbols.add(lookup.getGroup());
 				symbols.add(lookup.getKeyElement());
 				symbols.add(lookup.getReturnElement());

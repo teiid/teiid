@@ -431,4 +431,23 @@ public class TestAggregatePushdown extends TestCase {
         }); 
     }               
     
+    public void testNoGroupAggregatePushdown() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+              "select count(*) from bqt1.smalla",  //$NON-NLS-1$
+              metadata, null, capFinder,
+              new String[] { 
+                "SELECT count(*) from bqt1.smalla"},  //$NON-NLS-1$
+                true); 
+                  
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
+    
 }

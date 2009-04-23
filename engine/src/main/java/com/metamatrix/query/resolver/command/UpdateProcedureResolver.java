@@ -51,7 +51,6 @@ import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -93,7 +92,7 @@ public class UpdateProcedureResolver implements CommandResolver {
 	        	if(!groupName.equalsIgnoreCase(ProcedureReservedWords.INPUT) &&
 		        	 !groupName.equalsIgnoreCase(ProcedureReservedWords.CHANGING) ) {
 		        	 // set the groupSymbol on the procedure
-		        	 ResolverVisitorUtil.resolveGroup(groupSymbol, metadata);
+		        	 ResolverUtil.resolveGroup(groupSymbol, metadata);
 	        		 procCommand.setVirtualGroup(groupSymbol);
 		        	 virtualGroup = groupSymbol;
                      break;

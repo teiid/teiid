@@ -36,7 +36,6 @@ import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.CommandResolver;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
-import com.metamatrix.query.resolver.util.ResolverVisitorUtil;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Create;
 import com.metamatrix.query.sql.lang.Drop;
@@ -79,12 +78,12 @@ public class TempTableResolver implements CommandResolver {
             //exception at runtime if the user has not dropped the previous table yet
             ResolverUtil.addTempTable(metadata, group, create.getColumns());
             
-            ResolverVisitorUtil.resolveGroup(((Create)command).getTable(), metadata);
+            ResolverUtil.resolveGroup(((Create)command).getTable(), metadata);
             Set groups = new HashSet();
             groups.add(((Create)command).getTable());
             ResolverVisitor.resolveLanguageObject(command, groups, metadata);
         } else if(command.getType() == Command.TYPE_DROP) {
-            ResolverVisitorUtil.resolveGroup(((Drop)command).getTable(), metadata);
+            ResolverUtil.resolveGroup(((Drop)command).getTable(), metadata);
         }
     }
 

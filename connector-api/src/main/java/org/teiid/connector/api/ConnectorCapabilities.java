@@ -395,4 +395,10 @@ public interface ConnectorCapabilities {
      */
     boolean supportsBulkInsert();
     
+    /**
+     * Whether the source supports an explicit GROUP BY clause
+     * @since 6.0
+     */
+    boolean supportsGroupBy();
+    
 }
