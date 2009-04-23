@@ -406,6 +406,8 @@ public class TestXMLConfigurationImportExportUtility extends TestCase {
             	fail("Didnt find 6 deployed services for VM " + vm.getName());
             }
             
+            
+            boolean foundprops = false;
             boolean isenabled = false;
             for (Iterator<DeployedComponent> it=depsvcs.iterator(); it.hasNext();) {
             	DeployedComponent dc = it.next();
@@ -417,9 +419,22 @@ public class TestXMLConfigurationImportExportUtility extends TestCase {
             		} 
             		
             	}
+            	
+            	Properties props = configModel.getConfiguration().getAllPropertiesForComponent(dc.getDeployedComponentDefnID());
+            	
+            	if (dc.getServiceComponentDefnID().getName().equalsIgnoreCase("runtimemetadataservice")) {
+            		String propvalue = props.getProperty("ExceptionOnMaxRows") ;
+            		if (propvalue != null && propvalue.equals("true") ) {
+            			foundprops = true;
+            		}
+            	}
             }
             if (! isenabled) {
             	fail("Did not find the QueryService deployed service that wase enabled");
+            }
+            
+            if (! foundprops) {
+            	fail("Did not find the dependent property from deployed runtimemetadataservice");
             }
             
             String fileToExport = UnitTestUtil.getTestScratchPath() + ("/exported_config.xml");
