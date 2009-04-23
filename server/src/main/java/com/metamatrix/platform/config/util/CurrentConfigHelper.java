@@ -25,6 +25,7 @@
 package com.metamatrix.platform.config.util;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -45,13 +46,17 @@ import com.metamatrix.platform.config.spi.xml.XMLCurrentConfigurationReader;
 public class CurrentConfigHelper {
 
 	public void loadMetaMatrixPropertiesIntoSystem() throws Exception {
-		loadMetaMatrixPropertiesIntoSystem("metamatrix.properties"); //$NON-NLS-1$
+		loadMetaMatrixPropertiesIntoSystem(CurrentConfiguration.BOOTSTRAP_FILE_NAME); //$NON-NLS-1$
 	}
 	
 	public void loadMetaMatrixPropertiesIntoSystem(String filename) throws Exception {
 		Properties bootstrapProps = new Properties();
         InputStream bootstrapPropStream =  this.getClass().getClassLoader().getResourceAsStream(filename);
 
+        if (bootstrapPropStream == null) {
+            bootstrapPropStream = new FileInputStream(new File(filename));
+
+        }
 		bootstrapProps.load(bootstrapPropStream);
        	bootstrapProps.remove(CurrentConfiguration.CONFIGURATION_READER_CLASS_PROPERTY_NAME);
        	
