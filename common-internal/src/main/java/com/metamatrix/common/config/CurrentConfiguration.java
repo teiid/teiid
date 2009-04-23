@@ -74,7 +74,10 @@ import com.metamatrix.core.util.ReflectionHelper;
  * </p>
  */
 public final class CurrentConfiguration {
-	private static final String BOOTSTRAP_FILE_PROPERTY = "teiid.bootstrap.file"; //$NON-NLS-1$
+	/* 
+	 * This property enables the overriding of the default {@link BOOTSTRAP_FILE_NAME}
+	 */
+	public static final String BOOTSTRAP_FILE_PROPERTY_OVERRIDE = "teiid.bootstrap.file"; //$NON-NLS-1$
 	
     public static final String BOOTSTRAP_FILE_NAME = "teiid.properties"; //$NON-NLS-1$
     public static final String CONFIGURATION_READER_CLASS_PROPERTY_NAME = "metamatrix.config.reader"; //$NON-NLS-1$
@@ -331,7 +334,7 @@ public final class CurrentConfiguration {
 			Properties bootstrapProps = new Properties(systemBootStrapProps);
 	        InputStream bootstrapPropStream = null;
 	        
-	        String bootstrapfile = systemBootStrapProps.getProperty(BOOTSTRAP_FILE_PROPERTY, BOOTSTRAP_FILE_NAME);
+	        String bootstrapfile = systemBootStrapProps.getProperty(BOOTSTRAP_FILE_PROPERTY_OVERRIDE, BOOTSTRAP_FILE_NAME);
 	        try {
 	        	bootstrapPropStream = this.getClass().getClassLoader().getResourceAsStream(bootstrapfile);
 	        	if (bootstrapPropStream != null) {
