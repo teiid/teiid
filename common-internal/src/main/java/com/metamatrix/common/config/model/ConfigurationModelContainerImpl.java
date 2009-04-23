@@ -366,21 +366,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
    		return result;
    }
 
-//   public ConfigurationModelContainer copyAs(ConfigurationID configID) throws ConfigurationException {
-//    	BasicConfigurationObjectEditor ceditor = new BasicConfigurationObjectEditor(false);
-//
-//
-//        Configuration newConfig = ceditor.createConfiguration(configuration, configID.getFullName());
-//        ConfigurationModelContainerImpl newConfigModel = new ConfigurationModelContainerImpl(newConfig);
-//
-//		newConfigModel.setComponentTypes(this.compTypes);
-////		newConfigModel.setProductTypes(this.prodTypes.values());
-//
-//        newConfigModel.setResources(this.resources);
-//
-//        return newConfigModel;
-//    }
-
 
    public void setComponentTypes(Map newCompTypes) {
         this.compTypes = Collections.synchronizedMap(new HashMap(newCompTypes.size()));
@@ -390,15 +375,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
    			addComponentType((ComponentType) it.next());
    		}
      }
-
-//   public void setProductTypes(Collection newProdTypes) {
-//        this.prodTypes = Collections.synchronizedMap(new HashMap(newProdTypes.size()));
-//
-//   		Iterator it = newProdTypes.iterator();
-//   		while (it.hasNext()) {
-//   			addProductType((ProductType)it.next());
-//   		}
-//     }
 
 
    public void setResources(Map theResources) {
@@ -429,13 +405,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
     public void addComponentType(ComponentType type) {
 	      	compTypes.put(type.getFullName(), type);
     }
-    
-
-//    public void addProductType(ProductType type) {
-//            prodTypes.put(type.getFullName(), type);
-//    }
-    
-    
     
 
     public void addResource(SharedResource rd) {
@@ -482,16 +451,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         	}
 
         	configuration.addHost(host);
-
-//        } else if (obj instanceof ProductServiceConfig) {
-//            ProductServiceConfig psc = (ProductServiceConfig) obj;
-//
-//
-//        	if (configuration == null) {
-//        		throw new ConfigurationException(ErrorMessageKeys.CONFIG_0001, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_0001));
-//        	}
-//
-//			ConfigurationObjectEditorHelper.addConfigurationComponentDefn(configuration, psc);
 
         } else if (obj instanceof SharedResource) {
 
@@ -547,7 +506,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         }
         // first time thru update the configuration first
         // and load the component types
-//        Collection hold = new ArrayList(objects.size());
+
         Iterator configIt = objects.iterator();
         while (configIt.hasNext()) {
             Object obj = configIt.next();
@@ -559,27 +518,12 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
                
             } 
         }
+        
+        Properties allprops = this.getDefaultPropertyValues(this.configuration.getComponentTypeID());
+        allprops.putAll(this.configuration.getProperties());
+        
+        this.configuration.setProperties(allprops);
             
-//            else if (obj instanceof ComponentType) {
-//            	addComponentType((ComponentType) obj);
-//            } else {
-//            	hold.add(obj);
-//            }
-//
-//
-//        }
-//
-//        // second time thru update all other objects
-//        Iterator iterator = hold.iterator();
-//        while (iterator.hasNext()) {
-//
-//            Object obj = iterator.next();
-//
-//            addObject(obj);
-//
-//        }
-//
-
     }
      
      public void remove(BaseID objID) throws ConfigurationException {
@@ -595,9 +539,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
 
          } else if (objID instanceof HostID) {
              remove((HostID) objID);
-             
-//         } else if (objID instanceof ProductServiceConfigID) {
-//             remove((ProductServiceConfigID) objID);
 
          } else if (objID instanceof SharedResourceID) {
              removeSharedResource((SharedResourceID) objID);
@@ -621,12 +562,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
     	if (compTypes.containsKey(typeID.getFullName())) {
     		compTypes.remove(typeID.getFullName());
     	}
-        
-//        Collection c = getProductTypes();
-//        for (final Iterator i = c.iterator(); i.hasNext();) {
-//            final BasicProductType type = (BasicProductType)i.next();
-//            type.removeServiceTypeID(typeID);            
-//        } // for
+
     }
     
  
@@ -636,16 +572,6 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
     		resources.remove(rdID.getFullName());
     	}
     }
-
-//    private void remove(ComponentTypeID typeID) {
-//    	removeComponentType(typeID);
-//    }
-//
-//
-//    private void remove(SharedResourceID rdID) {
-//    	removeSharedResource(rdID);
-//    }
-
 
     private void remove(ServiceComponentDefnID defnID) throws ConfigurationException {
 
@@ -699,15 +625,13 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
 
         ConfigurationModelContainerImpl newConfig = new ConfigurationModelContainerImpl(config);
 		newConfig.setComponentTypes(this.compTypes);
-//		newConfig.setProductTypes(this.prodTypes.values());
         newConfig.setResources(this.resources);
 
         return newConfig;
     }
     
 	private Configuration delete( ComponentObjectID targetID, Configuration configuration ) throws ConfigurationException {
-        //System.out.println("<!><!><!><!>deleting " + target + ", delete dependencies: " + deleteDependencies);
-
+ 
         BasicConfiguration basicConfig = (BasicConfiguration) configuration;
         basicConfig.removeComponentObject( targetID);
 
