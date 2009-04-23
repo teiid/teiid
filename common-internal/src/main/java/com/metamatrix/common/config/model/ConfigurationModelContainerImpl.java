@@ -521,6 +521,7 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
         
         Properties allprops = this.getDefaultPropertyValues(this.configuration.getComponentTypeID());
         allprops.putAll(this.configuration.getProperties());
+        allprops.putAll(System.getProperties());
         
         this.configuration.setProperties(allprops);
             
