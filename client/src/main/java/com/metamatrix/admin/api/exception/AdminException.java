@@ -40,17 +40,7 @@ import com.metamatrix.core.MetaMatrixCoreException;
  */
 public abstract class AdminException extends MetaMatrixCoreException {
 
-    /**
-     * The error code is initialized to this value.
-     * <p>An error code of NO_ERROR_CODE indicates
-     * no error code has been set.</p>
-     */
-    public static final int NO_ERROR_CODE = 0;
-
-    // An optional error code
-    private int errorCode = NO_ERROR_CODE;
-
-    // List of Admin exceptions in
+   // List of Admin exceptions in
     // case of multiple failure
     private List children;
 
@@ -83,8 +73,7 @@ public abstract class AdminException extends MetaMatrixCoreException {
      * @since 4.3
      */
     AdminException(int code, String msg) {
-        super(msg);
-        this.errorCode = code;
+        super(Integer.toString(code), msg);
     }
     
     AdminException(String msg, Throwable cause) {
@@ -92,29 +81,7 @@ public abstract class AdminException extends MetaMatrixCoreException {
     }
 
     AdminException(int code, String msg, Throwable cause) {
-        super(cause, msg);
-        this.errorCode = code;
-    }
-
-    /**
-     * Get the optional error code. Useful for comparing
-     * to a known value.
-     * @return the error code.
-     * @since 4.3
-     */
-    public int getCode() {
-        return this.errorCode;
-    }
-
-    /**
-     * Check whether an error code has been set on
-     * this exception.
-     * @return <code>true</code> iff the error
-     * code differs from {@link #NO_ERROR_CODE}.
-     * @since 4.3
-     */
-    public boolean hasErrorCode() {
-        return this.errorCode != NO_ERROR_CODE;
+        super(cause, Integer.toString(code),msg);
     }
 
     /**
@@ -152,13 +119,5 @@ public abstract class AdminException extends MetaMatrixCoreException {
             children = new ArrayList();
         }
         children.add(child);
-    }
-
-    /**
-     * @see java.lang.Throwable#getMessage()
-     * @since 4.3
-     */
-    public String getMessage() {
-        return (this.errorCode != NO_ERROR_CODE ? "Error Code[" + this.errorCode + "] " : "") + super.getMessage(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 }

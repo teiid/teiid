@@ -49,7 +49,7 @@ public class XMLHelperUtil {
         Properties props=new Properties();
         
         if (!element.getName().equals(XMLConfig_ElementNames.Header.ELEMENT)) {
-            throw new InvalidConfigurationElementException("This is not the header element: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new InvalidConfigurationElementException("This is not the header element: " + element.getName() + "."); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         List elements = element.getChildren();

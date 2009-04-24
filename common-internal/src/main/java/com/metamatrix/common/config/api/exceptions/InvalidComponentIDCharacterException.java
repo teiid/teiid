@@ -63,8 +63,7 @@ public class InvalidComponentIDCharacterException extends InvalidComponentIDForm
      * @param code    The error code 
      */
     public InvalidComponentIDCharacterException( String code, String message ) {
-        super( message );
-        setCode( code );
+        super( code, message );
     }
     /**
      * Construct an instance with a linked exception, and an error code and

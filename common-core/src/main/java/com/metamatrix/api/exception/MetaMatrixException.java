@@ -43,18 +43,6 @@ import com.metamatrix.core.util.MetaMatrixExceptionUtil;
  * performed by this class.</b></p>
  */
 public class MetaMatrixException extends MetaMatrixCoreException {
-    //############################################################################################################################
-    //# Variables                                                                                                                #
-    //############################################################################################################################
-
-    /** An error code. */
-    private String code;
-
-    private String msg;
-
-    //############################################################################################################################
-    //# Constructors                                                                                                             #
-    //############################################################################################################################
 
     /**
      * No-arg Constructor
@@ -69,7 +57,6 @@ public class MetaMatrixException extends MetaMatrixCoreException {
      */
     public MetaMatrixException(final String message) {
         super(message);
-        setMessage(message);
     }
 
     /**
@@ -78,8 +65,7 @@ public class MetaMatrixException extends MetaMatrixCoreException {
      * @param message The error message
      */
     public MetaMatrixException(final String code, final String message) {
-        this(message);
-        setCode(code);
+        super(code, message);
     }
 
     /**
@@ -100,12 +86,6 @@ public class MetaMatrixException extends MetaMatrixCoreException {
      */
     public MetaMatrixException(final Throwable e, final String message) {
         super(e, message);
-        if (e instanceof MetaMatrixException) {
-            setCode(((MetaMatrixException) e).getCode());
-        } else if (e instanceof MetaMatrixRuntimeException) {
-            setCode(((MetaMatrixRuntimeException) e).getCode());
-        }
-        setMessage(message);
     }
 
     /**
@@ -117,9 +97,7 @@ public class MetaMatrixException extends MetaMatrixCoreException {
      * @param message The error message
      */
     public MetaMatrixException(final Throwable e, final String code, final String message) {
-        this(e, message);
-        // Overwrite code set in other ctor from exception.
-        setCode(code);
+        super(e, code, message);
     }
 
     //############################################################################################################################
@@ -133,15 +111,6 @@ public class MetaMatrixException extends MetaMatrixCoreException {
      */
     public Throwable getChild() {
         return super.getCause();
-    }
-
-    /**
-     * Get the error code.
-     *
-     * @return The error code
-     */
-    public String getCode() {
-        return this.code;
     }
 
     /**
@@ -195,30 +164,6 @@ public class MetaMatrixException extends MetaMatrixCoreException {
         return buf.toString();
     }
 
-    /* (non-Javadoc)
-	 * @see java.lang.Throwable#getMessage()
-	 */
-    public String getMessage() {
-        return this.msg;
-    }
-
-    /**
-     * Set the error code.
-     *
-     * @param code The error code
-     */
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    /**
-     * Just set this exceptions' message.
-     * @param message
-     */
-    private void setMessage(String message) {
-        this.msg = message;
-    }
-
     /**
      * Returns a string representation of this class.
      *
@@ -226,23 +171,6 @@ public class MetaMatrixException extends MetaMatrixCoreException {
      */
     public String toString() {
         return getFullMessage();
-    }
-
-
-    /**
-     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-     */
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        code = (String)in.readObject();
-        msg = (String)in.readObject();
-    }
-
-    /**
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
-    public void writeExternal(ObjectOutput out) throws IOException {
-        out.writeObject(code);
-        out.writeObject(msg);
     }
 
 } // END CLASS

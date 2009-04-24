@@ -47,7 +47,7 @@ public class TestFunctionResolving {
             ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
             fail("excpetion expected"); //$NON-NLS-1$
         } catch (QueryResolverException err) {
-            assertEquals("The conversion from char to date is not allowed.", err.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:ERR.015.008.0037 Message:The conversion from char to date is not allowed.", err.getMessage()); //$NON-NLS-1$
         } 
     }
     
@@ -79,7 +79,7 @@ public class TestFunctionResolving {
         	ResolverVisitor.resolveLanguageObject(function, FakeMetadataFactory.example1Cached());
             fail("excpetion expected"); //$NON-NLS-1$
         } catch (QueryResolverException err) {
-            assertEquals("The function 'LCASE(?)' has more than one possible signature.", err.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:ERR.015.008.0036 Message:The function 'LCASE(?)' has more than one possible signature.", err.getMessage()); //$NON-NLS-1$
         } 
     }
     

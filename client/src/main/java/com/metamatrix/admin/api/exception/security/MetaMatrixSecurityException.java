@@ -51,8 +51,7 @@ public class MetaMatrixSecurityException extends MetaMatrixProcessingException {
      * @param code    The error code 
      */
     public MetaMatrixSecurityException( String code, String message ) {
-        super( message );
-        setCode( code );
+        super( code, message );
     }
     /**
      * Constructs an instance of the exception with the specified detail message

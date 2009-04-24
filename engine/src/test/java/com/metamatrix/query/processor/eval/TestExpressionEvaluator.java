@@ -189,7 +189,7 @@ public class TestExpressionEvaluator extends TestCase {
             fail("Exception expected"); //$NON-NLS-1$
         } catch (MetaMatrixComponentException e){
         	//this should be a componentexception, since it is unexpected
-            assertEquals(e.getMessage(), "Unable to evaluate e2: No value was available"); //$NON-NLS-1$
+            assertEquals(e.getMessage(), "Error Code:ERR.015.006.0033 Message:Unable to evaluate e2: No value was available"); //$NON-NLS-1$
         }
     }
 
@@ -307,7 +307,7 @@ public class TestExpressionEvaluator extends TestCase {
         	helpTestWithValueIterator(expr, values, null);
             fail("Expected ExpressionEvaluationException but got none"); //$NON-NLS-1$
         } catch (ExpressionEvaluationException e) {
-            assertEquals("Unable to evaluate (<undefined>): The command of this scalar subquery returned more than one value: <undefined>", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:ERR.015.006.0058 Message:Unable to evaluate (<undefined>): Error Code:ERR.015.006.0058 Message:The command of this scalar subquery returned more than one value: <undefined>", e.getMessage()); //$NON-NLS-1$
         } 
     }
 

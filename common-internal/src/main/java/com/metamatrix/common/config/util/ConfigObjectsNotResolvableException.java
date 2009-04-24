@@ -30,12 +30,6 @@ import com.metamatrix.api.exception.MetaMatrixException;
 
 public class ConfigObjectsNotResolvableException extends MetaMatrixException{
 
-    private Object notResolvableObject;
-    
-    // =========================================================================
-    //                       C O N S T R U C T O R S
-    // =========================================================================
-
     /**
      * No-arg costructor required by Externalizable semantics
      */
@@ -48,10 +42,8 @@ public class ConfigObjectsNotResolvableException extends MetaMatrixException{
      *
      * @param message The error message
      */
-    public ConfigObjectsNotResolvableException( String message, Object notResolvableObject ) {
+    public ConfigObjectsNotResolvableException( String message) {
         super( message );
-        this.notResolvableObject = notResolvableObject;
-        
     }
 
     /**
@@ -60,11 +52,8 @@ public class ConfigObjectsNotResolvableException extends MetaMatrixException{
      * @param message The error message
      * @param code    The error code 
      */
-    public ConfigObjectsNotResolvableException( String code, String message, Object notResolvableObject ) {
+    public ConfigObjectsNotResolvableException( String code, String message) {
         super( code, message );
-        this.notResolvableObject = notResolvableObject;
-        
-        
     }
 
     /**
@@ -72,10 +61,8 @@ public class ConfigObjectsNotResolvableException extends MetaMatrixException{
      *
      * @param e An exception to chain to this exception
      */
-    public ConfigObjectsNotResolvableException( Throwable e, Object notResolvableObject ) {
+    public ConfigObjectsNotResolvableException( Throwable e) {
         super(e);
-        this.notResolvableObject = notResolvableObject;
-        
     }
 
     /**
@@ -85,10 +72,8 @@ public class ConfigObjectsNotResolvableException extends MetaMatrixException{
      * @param e       An exception to chain to this exception
      * @param message The error message
      */
-    public ConfigObjectsNotResolvableException( Throwable e, String message, Object notResolvableObject ) {
+    public ConfigObjectsNotResolvableException( Throwable e, String message) {
         super(e, message );
-        this.notResolvableObject = notResolvableObject;
-        
     }
 
     /**
@@ -99,33 +84,7 @@ public class ConfigObjectsNotResolvableException extends MetaMatrixException{
      * @param message The error message
      * @param code    The error code 
      */
-    public ConfigObjectsNotResolvableException( Throwable e, String code, String message, Object notResolvableObject ) {
+    public ConfigObjectsNotResolvableException( Throwable e, String code, String message) {
         super(e, code, message );
-        this.notResolvableObject = notResolvableObject;
-        
     }
-    
-    public Object getNotResolvableObject() {
-        return notResolvableObject;
-    }
-    /**
-     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-     */
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        super.readExternal(in);
-        notResolvableObject = in.readObject();
-    }
-
-    /**
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
-    public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
-        try {
-            out.writeObject(notResolvableObject);
-        } catch (Throwable t) {
-            out.writeObject(null);
-        }
-    }
-
 }

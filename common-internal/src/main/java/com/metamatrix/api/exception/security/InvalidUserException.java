@@ -66,8 +66,7 @@ public class InvalidUserException extends InvalidPrincipalException {
      * @param code    The error code
      */
     public InvalidUserException(String code, String message) {
-        super(message);
-        setCode(code);
+        super(code, message);
     }
 
     /**

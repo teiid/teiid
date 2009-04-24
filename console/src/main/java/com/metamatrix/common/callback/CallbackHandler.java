@@ -49,10 +49,9 @@ public interface CallbackHandler {
      * and which contain the information requested to be retrieved or displayed.
      * @param source the object that is considered the source of the callbacks.
      * @throws IOException if an input or output error occurs
-     * @throws UnsupportedCallbackException if the implementation of this method
      * does not support one or more of the Callbacks specified in the callbacks parameter
      */
-    void handle(Callback callback, Object source) throws IOException, UnsupportedCallbackException;
+    void handle(Callback callback, Object source) throws IOException;
 
 }
 

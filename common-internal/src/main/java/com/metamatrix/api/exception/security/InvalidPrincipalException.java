@@ -68,8 +68,7 @@ public class InvalidPrincipalException extends MetaMatrixSecurityException {
      * @param code    The error code
      */
     public InvalidPrincipalException(String code, String message) {
-        super(message);
-        setCode(code);
+        super(code, message);
     }
 
     /**

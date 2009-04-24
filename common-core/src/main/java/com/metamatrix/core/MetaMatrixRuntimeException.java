@@ -24,6 +24,7 @@ package com.metamatrix.core;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.core.util.MetaMatrixExceptionUtil;
@@ -123,10 +124,8 @@ public class MetaMatrixRuntimeException extends RuntimeException {
      * @param message The error message or a resource bundle key
      */
     public MetaMatrixRuntimeException(final Throwable e, final String message) {
-        this(e, 0,message);
-        if (e instanceof MetaMatrixRuntimeException) {
-            setCode(((MetaMatrixRuntimeException)e).getCode());
-        }
+        super(message, e);
+        setCode(e);
     }
 
     /**
@@ -151,7 +150,7 @@ public class MetaMatrixRuntimeException extends RuntimeException {
      * @param message The error message
      */
     public MetaMatrixRuntimeException(final Throwable e, final String code, final String message) {
-        this(e, message);
+        super(message, e);
         // Overwrite code set in other ctor from exception.
         setCode(code);
     }
@@ -202,14 +201,23 @@ public class MetaMatrixRuntimeException extends RuntimeException {
      *
      * @param code The error code 
      */
-    public void setCode( int code ) {
+    private void setCode( int code ) {
         this.code = Integer.toString(code);
     }
     
-    public void setCode( String code ) {
+    private void setCode( String code ) {
         this.code = code;
     }
 
+    private void setCode(Throwable e) {
+        if (e instanceof MetaMatrixCoreException) {
+            this.code = (((MetaMatrixCoreException) e).getCode());
+        } else if (e instanceof MetaMatrixRuntimeException) {
+        	this.code = ((MetaMatrixRuntimeException) e).getCode();
+        } else if (e instanceof SQLException) {
+        	this.code = Integer.toString(((SQLException)e).getErrorCode());
+        }
+    }
 
     /**
      * Returns a string representation of this class.

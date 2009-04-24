@@ -502,7 +502,7 @@ public class TestCriteriaEvaluator extends TestCase {
         try {
         	helpTestCompareSubqueryCriteria(crit, false, values);
         } catch (CriteriaEvaluationException e) {
-        	assertEquals("The subquery of this compare criteria has to be scalar, but returned more than one value: e1 = (<undefined>)", e.getMessage()); //$NON-NLS-1$
+        	assertEquals("Error Code:ERR.015.006.0056 Message:The subquery of this compare criteria has to be scalar, but returned more than one value: e1 = (<undefined>)", e.getMessage()); //$NON-NLS-1$
         }
     }
 

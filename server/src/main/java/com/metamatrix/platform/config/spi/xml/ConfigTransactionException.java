@@ -29,27 +29,13 @@ import java.io.ObjectOutput;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 
 /**
- * Date Oct 10, 2002
- *
- * 
  * TransactionException exception indicates that the request cannot be
  * executed because of an error with the transaction.
  */
 
 public class ConfigTransactionException extends ConfigurationException {
 
-    //the transState indicates the state of the transaction
-    private String transState = ""; //$NON-NLS-1$
-
-    public void setTransactionState(String code) {
-        this.transState = code;
-    }
-    
-    public String getTransactionState() {
-        return this.transState;
-    }
-    
-    /**
+	/**
      * Construct an instance with the message and error code specified.
      *
      * @param message A message describing the exception
@@ -79,22 +65,6 @@ public class ConfigTransactionException extends ConfigurationException {
      */
     public ConfigTransactionException( Exception e, String code, String message ) {
         super( e, code, message );
-    }
-
-    /**
-     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-     */
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        super.readExternal(in);
-        transState = (String)in.readObject();
-    }
-
-    /**
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
-    public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
-        out.writeObject(transState);
     }
 
 } // END CLASS

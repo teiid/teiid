@@ -22,6 +22,13 @@
 
 package com.metamatrix.core;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.sql.SQLException;
+
+import com.metamatrix.api.exception.MetaMatrixException;
+
 
 
 /**
@@ -31,6 +38,8 @@ package com.metamatrix.core;
  */
 public class MetaMatrixCoreException extends Exception {
 	
+	protected String code;
+	
     public MetaMatrixCoreException() {
     }
 
@@ -38,12 +47,44 @@ public class MetaMatrixCoreException extends Exception {
         super(message);
     }
 
+    public MetaMatrixCoreException(String errorCode, String message) {
+        super(message);
+        this.code = errorCode;
+    }
+    
+
     public MetaMatrixCoreException(Throwable e) {
-        this(e, e.getMessage());
+        this(e, e.getMessage());        
     }
 
     public MetaMatrixCoreException(Throwable e, String message) {
         super(message, e);
+        setCode(e);
     }
     
+    public MetaMatrixCoreException(Throwable e, String errorCode, String message) {
+        super(message, e);
+        this.code = errorCode;
+    }
+    
+    public String getCode() {
+        return this.code;
+    }    
+    
+    private void setCode(Throwable e) {
+        if (e instanceof MetaMatrixCoreException) {
+            this.code = (((MetaMatrixCoreException) e).getCode());
+        } else if (e instanceof MetaMatrixRuntimeException) {
+        	this.code = ((MetaMatrixRuntimeException) e).getCode();
+        } else if (e instanceof SQLException) {
+        	this.code = Integer.toString(((SQLException)e).getErrorCode());
+        }
+    }
+    
+	public String getMessage() {
+		if (code == null || code.length() == 0) {
+			return super.getMessage();
+		}
+		return "Error Code:"+code+" Message:"+super.getMessage(); //$NON-NLS-1$ //$NON-NLS-2$
+	}    
 }

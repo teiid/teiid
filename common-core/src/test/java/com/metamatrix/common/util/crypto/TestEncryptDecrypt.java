@@ -174,7 +174,7 @@ public class TestEncryptDecrypt extends TestCase {
             encryptor.encrypt( "" ); //$NON-NLS-1$
             fail("expected exception"); //$NON-NLS-1$
         } catch ( CryptoException e ) {
-            assertEquals("Attempt to encrypt zero-length cleartext.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:ERR.003.030.0073 Message:Attempt to encrypt zero-length cleartext.", e.getMessage()); //$NON-NLS-1$
         } 
     }
 
@@ -191,7 +191,7 @@ public class TestEncryptDecrypt extends TestCase {
             encryptor.encrypt( (String)null );
             fail("expected exception"); //$NON-NLS-1$
         } catch ( CryptoException e ) {
-            assertEquals("Attempt to encrypt null cleartext.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:ERR.003.030.0072 Message:Attempt to encrypt null cleartext.", e.getMessage()); //$NON-NLS-1$
         } 
     }
 

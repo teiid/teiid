@@ -65,8 +65,7 @@ public class InvalidComponentException extends InvalidConfigurationException {
      * @param code    The error code 
      */
     public InvalidComponentException( String code, String message ) {
-        super( message );
-        setCode( code );
+        super( code, message );
     }
     /**
      * Construct an instance with a linked exception, and an error code and

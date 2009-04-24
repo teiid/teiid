@@ -198,7 +198,7 @@ public class TestTransforms extends TestCase {
             transform.transform("1"); //$NON-NLS-1$
             fail("expected exception"); //$NON-NLS-1$
         } catch (TransformationException e) {
-            assertEquals("Invalid conversion from type class java.lang.Object with value '1' to type class java.sql.Time", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:ERR.003.029.0025 Message:Invalid conversion from type class java.lang.Object with value '1' to type class java.sql.Time", e.getMessage()); //$NON-NLS-1$
         }
     }
     

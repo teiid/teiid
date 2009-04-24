@@ -411,7 +411,7 @@ public class TestQueryRewriter extends TestCase {
             QueryRewriter.rewriteCriteria(origCrit, null, null, null);
             fail("Expected failure"); //$NON-NLS-1$
         } catch(QueryValidatorException e) { 
-            assertEquals("Error simplifying criteria: PARSEDATE(pm3.g1.e1, '''') = {d'2003-05-01'}", e.getMessage());     //$NON-NLS-1$
+            assertEquals("Error Code:ERR.015.001.0003 Message:Error simplifying criteria: PARSEDATE(pm3.g1.e1, '''') = {d'2003-05-01'}", e.getMessage());     //$NON-NLS-1$
         }
     }
     
@@ -1516,7 +1516,8 @@ public class TestQueryRewriter extends TestCase {
             QueryRewriter.rewriteCriteria(origCrit, null, null, null);
             fail("Expected QueryValidatorException due to divide by 0"); //$NON-NLS-1$
         } catch(QueryValidatorException e) {
-            assertEquals("Unable to evaluate (5 / 0): Error while evaluating function /", e.getMessage());  //$NON-NLS-1$
+        	// looks like message is being wrapped with another exception with same message
+            assertEquals("Error Code:ERR.015.001.0003 Message:Error Code:ERR.015.001.0003 Message:Unable to evaluate (5 / 0): Error Code:ERR.015.001.0003 Message:Error while evaluating function /", e.getMessage());  //$NON-NLS-1$
         }       
     }
     
@@ -1529,7 +1530,7 @@ public class TestQueryRewriter extends TestCase {
             QueryRewriter.rewriteCriteria(origCrit, null, null, null);
             fail("Expected QueryValidatorException due to invalid string"); //$NON-NLS-1$
         } catch(QueryValidatorException e) {
-            assertEquals("Unable to convert 'x' of type [string] to the expected type [integer].", e.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:ERR.015.009.0004 Message:Unable to convert 'x' of type [string] to the expected type [integer].", e.getMessage()); //$NON-NLS-1$
         }       
     }
     

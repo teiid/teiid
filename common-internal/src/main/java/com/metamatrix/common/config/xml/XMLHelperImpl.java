@@ -548,7 +548,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         Properties props=new Properties();
         
         if (!element.getName().equals(XMLConfig_ElementNames.Header.ELEMENT)) {
-            throw new InvalidConfigurationElementException("This is not the header element: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new InvalidConfigurationElementException("This is not the header element: " + element.getName() + "."); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         List elements = element.getChildren();
@@ -1095,7 +1095,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         Assertion.isNotNull(editor);
 
         if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Host.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0032, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0032, element.getName()), element);
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0032, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0032, element.getName()));
         }
         if (name == null) {
             name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Host.Attributes.NAME);
@@ -1213,7 +1213,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
          Assertion.isNotNull(editor);
 
          if (!element.getName().equals(XMLConfig_ElementNames.Configuration.AuthenticationProviders.Provider.ELEMENT)) {
-             throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0033, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0033, element.getName()), element);
+             throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0033, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0033, element.getName()));
          }
 
          String name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.AuthenticationProviders.Provider.Attributes.NAME);
@@ -1280,7 +1280,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         Assertion.isNotNull(editor);
 
         if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Resources.Resource.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0034, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0034, element.getName()), element);
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0034, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0034, element.getName()));
         }
 
         String name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.Resources.Resource.Attributes.NAME);
@@ -1335,7 +1335,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         Assertion.isNotNull(editor);
 
         if (!element.getName().equals(XMLConfig_ElementNames.ComponentTypes.ComponentType.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0035, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0035, element.getName()), element);
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0035, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0035, element.getName()));
         }
 
         // retreive the attributes of this ComponentType from the JDOM element
@@ -1488,7 +1488,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         Assertion.isNotNull(editor);
 
         if (!element.getName().equals(XMLConfig_ElementNames.Configuration.ELEMENT)) {
-            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0038, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0038, element.getName()), element);
+            	throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0038, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0038, element.getName()));
         }
 
         if (name==null) {
@@ -1572,7 +1572,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         Assertion.isNotNull(editor);
 
         if (!element.getName().equals(XMLConfig_ElementNames.Configuration.ConnectorComponents.ConnectorComponent.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0041, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0041,element.getName()), element);
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0041, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0041,element.getName()));
         }
 
         if (name==null) {
@@ -1646,7 +1646,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         Assertion.isNotNull(configID);
 
         if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Services.Service.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0042, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0042,element.getName()), element);
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0042, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0042,element.getName()));
         }
 
         if (name==null) {
@@ -1847,7 +1847,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         DeployedComponent component;
        
         if (!element.getName().equals(XMLConfig_ElementNames.Configuration.DeployedService.ELEMENT)) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()), element);
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0044, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0044,element.getName()));
         }
                              
         String name = element.getAttributeValue(XMLConfig_ElementNames.Configuration.DeployedService.Attributes.NAME);
@@ -1871,7 +1871,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         }
 
         if (type == null) {
-            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, name} ), element);
+            throw new InvalidConfigurationElementException(ErrorMessageKeys.CONFIG_ERR_0050, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0050, new Object[] {componentTypeIDString, name} ));
         }  
         
         ServiceComponentDefnID svcid = null;
@@ -2099,7 +2099,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         Assertion.isNotNull(configID);
 
         if (!element.getName().equals(XMLConfig_ElementNames.Configuration.Process.ELEMENT)) {
-            throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + "."); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         if (name==null) {
@@ -2138,7 +2138,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
     public PropertyDefinition createPropertyDefinition(Element element) throws InvalidConfigurationElementException{
 
         if (!element.getName().equals(XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.ELEMENT)) {
-            throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + ".", element); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new InvalidConfigurationElementException("A Configuration object cannot be created from a JDOM Element type: " + element.getName() + "."); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         
@@ -2167,7 +2167,7 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         try {
             mult = Multiplicity.getInstance(multiplicityString);
         }catch(MultiplicityExpressionException e) {
-            throw new InvalidConfigurationElementException(e, "The PropertyDefinition object: " + nameString + " could not be created because the multiplicity definition: '" + multiplicityString + " is not a valid multiplicity definition.", element); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            throw new InvalidConfigurationElementException(e, "The PropertyDefinition object: " + nameString + " could not be created because the multiplicity definition: '" + multiplicityString + " is not a valid multiplicity definition."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
 
         

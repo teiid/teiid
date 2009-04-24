@@ -33,9 +33,7 @@ public class JDBCExecutionException extends ConnectorException {
 
 	public JDBCExecutionException(SQLException error,
 			TranslatedCommand... commands) {
-		super(commands == null ? error.getMessage() : JDBCPlugin.Util
-				.getString("JDBCQueryExecution.Error_executing_query__1", //$NON-NLS-1$
+		super(error.getErrorCode(), commands == null ? error.getMessage() : JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", //$NON-NLS-1$
 						error.getMessage(), Arrays.toString(commands)));
 	}
-
 }

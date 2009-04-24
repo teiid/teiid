@@ -64,8 +64,7 @@ public class InvalidSessionException extends SessionException {
      * @param code    The error code 
      */
     public InvalidSessionException( String code, String message ) {
-        super( message );
-        setCode( code );
+        super( code, message );
     }
     /**
      * Construct an instance with a linked exception, and an error code and

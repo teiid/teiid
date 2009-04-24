@@ -895,11 +895,11 @@ public class TestResolver extends TestCase {
     }
 
 	public void testUnknownFunction() {	    
-		helpResolveException("SELECT abc(e1) FROM pm1.g1", "The function 'abc(e1)' is an unknown form.  Check that the function name and number of arguments is correct."); //$NON-NLS-1$ //$NON-NLS-2$
+		helpResolveException("SELECT abc(e1) FROM pm1.g1", "Error Code:ERR.015.008.0039 Message:The function 'abc(e1)' is an unknown form.  Check that the function name and number of arguments is correct."); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void testConversionNotPossible() {	    
-		helpResolveException("SELECT dayofmonth('2002-01-01') FROM pm1.g1", "The function 'dayofmonth('2002-01-01')' is a valid function form, but the arguments do not match a known type signature and cannot be converted using implicit type conversions."); //$NON-NLS-1$ //$NON-NLS-2$
+		helpResolveException("SELECT dayofmonth('2002-01-01') FROM pm1.g1", "Error Code:ERR.015.008.0040 Message:The function 'dayofmonth('2002-01-01')' is a valid function form, but the arguments do not match a known type signature and cannot be converted using implicit type conversions."); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
     public void testResolveParameters() {
@@ -1667,7 +1667,7 @@ public class TestResolver extends TestCase {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 FakeMetadataObject.Props.UPDATE_PROCEDURE, "The expressions in this criteria are being compared but are of differing types (boolean and date) and no implicit conversion is available:  CHANGING.e4 = {d'2000-01-01'}"); //$NON-NLS-1$
+									 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0027 Message:The expressions in this criteria are being compared but are of differing types (boolean and date) and no implicit conversion is available:  CHANGING.e4 = {d'2000-01-01'}"); //$NON-NLS-1$
     }       
     
 	// virtual group elements used in procedure(HAS CRITERIA)
@@ -2268,7 +2268,7 @@ public class TestResolver extends TestCase {
         procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
 
-        helpResolveException(procedure, FakeMetadataFactory.example1Cached(), "Unable to resolve update procedure as the virtual group context is ambiguous."); //$NON-NLS-1$
+        helpResolveException(procedure, FakeMetadataFactory.example1Cached(), "Error Code:ERR.015.008.0012 Message:Unable to resolve update procedure as the virtual group context is ambiguous."); //$NON-NLS-1$
     }
     
     public void testDefect14912_CreateUpdateProcedure57_FunctionWithElementParamInAssignmentStatement() {
@@ -2337,7 +2337,7 @@ public class TestResolver extends TestCase {
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
         QueryMetadataInterface metadata = exampleStoredProcedure(procedure);
-        helpResolveException("EXEC pm1.sq1(1)", metadata, "INSERT statement must have the same number of elements and values specified.  This statement has 0 elements and 0 values."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.sq1(1)", metadata, "Error Code:ERR.015.008.0010 Message:INSERT statement must have the same number of elements and values specified.  This statement has 0 elements and 0 values."); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
  	private QueryMetadataInterface exampleStoredProcedure(String procedure) {
@@ -2522,7 +2522,7 @@ public class TestResolver extends TestCase {
     }   
         
     public void testFailedConversion_defect9725() throws Exception{
-    	helpResolveException("select * from pm3.g1 where pm3.g1.e4 > {b 'true'}", "The expressions in this criteria are being compared but are of differing types (timestamp and boolean) and no implicit conversion is available:  pm3.g1.e4 > TRUE"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpResolveException("select * from pm3.g1 where pm3.g1.e4 > {b 'true'}", "Error Code:ERR.015.008.0027 Message:The expressions in this criteria are being compared but are of differing types (timestamp and boolean) and no implicit conversion is available:  pm3.g1.e4 > TRUE"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /**
@@ -3043,11 +3043,11 @@ public class TestResolver extends TestCase {
      * the group g1 is not known to the order by clause of a union
      */
     public void testUnionOrderByFail() {
-        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY g1.e1", "Element 'g1.e1' in ORDER BY was not found in SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY g1.e1", "Error Code:ERR.015.008.0043 Message:Element 'g1.e1' in ORDER BY was not found in SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
     }      
     
     public void testUnionOrderByFail1() {
-        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY pm1.g1.e1", "Element 'pm1.g1.e1' in ORDER BY was not found in SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY pm1.g1.e1", "Error Code:ERR.015.008.0043 Message:Element 'pm1.g1.e1' in ORDER BY was not found in SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testOrderByPartiallyQualified() {
@@ -3718,7 +3718,7 @@ public class TestResolver extends TestCase {
     }
     
     public void testParameterError() throws Exception {
-        helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "Incorrect number of parameters specified on the stored procedure pm1.sp2 - expected 1 but got 2"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "Error Code:ERR.015.008.0007 Message:Incorrect number of parameters specified on the stored procedure pm1.sp2 - expected 1 but got 2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testUnionOfAliasedLiteralsGetsModified() {
@@ -3845,7 +3845,7 @@ public class TestResolver extends TestCase {
         procedure = procedure + "DECLARE string VARIABLES.X = 1;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
-        helpResolveException(procedure, "Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
+        helpResolveException(procedure, "Error Code:ERR.015.008.0019 Message:Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
     }
     
     public void testCreate() {
@@ -4239,7 +4239,7 @@ public class TestResolver extends TestCase {
     public void testLookupWithoutConstant() throws Exception{
         String sql = "SELECT lookup('pm1.g1', convert('e3', float), 'e2', e2) FROM pm1.g1"; //$NON-NLS-1$
         
-        helpResolveException(sql, metadata, "The first three arguments for the LOOKUP function must be specified as constants."); //$NON-NLS-1$
+        helpResolveException(sql, metadata, "Error Code:ERR.015.008.0063 Message:The first three arguments for the LOOKUP function must be specified as constants."); //$NON-NLS-1$
     }
     
     /**
@@ -4284,19 +4284,19 @@ public class TestResolver extends TestCase {
     public void testUpdateError() {
         String userUpdateStr = "UPDATE vm1.g2 SET e1='x'"; //$NON-NLS-1$
         
-        helpResolveException(userUpdateStr, metadata, "Update is not allowed on the virtual group vm1.g2: no Update procedure was defined."); //$NON-NLS-1$
+        helpResolveException(userUpdateStr, metadata, "Error Code:ERR.015.008.0009 Message:Update is not allowed on the virtual group vm1.g2: no Update procedure was defined."); //$NON-NLS-1$
     }
     
     public void testInsertError() {
         String userUpdateStr = "INSERT into vm1.g2 (e1) values ('x')"; //$NON-NLS-1$
         
-        helpResolveException(userUpdateStr, metadata, "Insert is not allowed on the virtual group vm1.g2: no Insert procedure was defined."); //$NON-NLS-1$
+        helpResolveException(userUpdateStr, metadata, "Error Code:ERR.015.008.0009 Message:Insert is not allowed on the virtual group vm1.g2: no Insert procedure was defined."); //$NON-NLS-1$
     }
     
     public void testDeleteError() {
         String userUpdateStr = "DELETE from vm1.g2 where e1='x'"; //$NON-NLS-1$
         
-        helpResolveException(userUpdateStr, metadata, "Delete is not allowed on the virtual group vm1.g2: no Delete procedure was defined."); //$NON-NLS-1$
+        helpResolveException(userUpdateStr, metadata, "Error Code:ERR.015.008.0009 Message:Delete is not allowed on the virtual group vm1.g2: no Delete procedure was defined."); //$NON-NLS-1$
     }
     
     public void testResolveXMLSelect() {
@@ -4306,13 +4306,13 @@ public class TestResolver extends TestCase {
         procedure = procedure + "select VARIABLES.X from xmltest.doc1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
-        helpResolveException(procedure, "Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
+        helpResolveException(procedure, "Error Code:ERR.015.008.0019 Message:Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
     }
     
     public void testXMLJoinFail() {
         String query = "select * from xmltest.doc1, xmltest.doc1"; //$NON-NLS-1$
          
-        helpResolveException(query, "Only one XML document may be specified in the FROM clause of a query."); //$NON-NLS-1$
+        helpResolveException(query, "Error Code:ERR.015.008.0003 Message:Only one XML document may be specified in the FROM clause of a query."); //$NON-NLS-1$
     }
     
     public void testExecProjectedSymbols() {
@@ -4417,13 +4417,13 @@ public class TestResolver extends TestCase {
     public void testInsertWithoutColumnsFails() {
         String sql = "Insert into pm1.g1 values (1, 2)"; //$NON-NLS-1$
         
-        helpResolveException(sql, "INSERT statement must have the same number of elements and values specified.  This statement has 4 elements and 2 values."); //$NON-NLS-1$
+        helpResolveException(sql, "Error Code:ERR.015.008.0010 Message:INSERT statement must have the same number of elements and values specified.  This statement has 4 elements and 2 values."); //$NON-NLS-1$
     }
     
     public void testInsertWithoutColumnsFails1() {
         String sql = "Insert into pm1.g1 values (1, 2, 3, 4)"; //$NON-NLS-1$
         
-        helpResolveException(sql, "Exception converting value 3 of type class java.lang.Integer to expected type class java.lang.Boolean"); //$NON-NLS-1$
+        helpResolveException(sql, "Error Code:ERR.003.029.0011 Message:Exception converting value 3 of type class java.lang.Integer to expected type class java.lang.Boolean"); //$NON-NLS-1$
     }
     
     public void testInsertWithQueryFails() {
@@ -4472,11 +4472,11 @@ public class TestResolver extends TestCase {
     }
         
     public void testNumberedOrderBy1_4_fails() throws Exception {
-        helpResolveException("SELECT pm1.g1.e1 as a, avg(e2) as a FROM pm1.g1 ORDER BY 1", "Element 'a' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1 as a, avg(e2) as a FROM pm1.g1 ORDER BY 1", "Error Code:ERR.015.008.0042 Message:Element 'a' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testNumberedOrderBy6_fails() throws Exception {
-        helpResolveException("SELECT a.e1, b.e1 FROM pm1.g1 AS a, pm1.g1 AS b ORDER BY 2", "Element 'e1' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT a.e1, b.e1 FROM pm1.g1 AS a, pm1.g1 AS b ORDER BY 2", "Error Code:ERR.015.008.0042 Message:Element 'e1' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     public void testResolveOldProcRelational() {
@@ -4500,7 +4500,7 @@ public class TestResolver extends TestCase {
 	public void testCallableStatementTooManyParameters() throws Exception {
 		String sql = "{call pm4.spTest9(?, ?)}"; //$NON-NLS-1$
 		
-		TestResolver.helpResolveException(sql, FakeMetadataFactory.exampleBQTCached(), "Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
+		TestResolver.helpResolveException(sql, FakeMetadataFactory.exampleBQTCached(), "Error Code:ERR.015.008.0007 Message:Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
 	}	
 	
 	/**
@@ -4535,7 +4535,7 @@ public class TestResolver extends TestCase {
         String userUpdateStr = "UPDATE vm1.g1 SET e1=1"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
+				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
     }
     
     // special variable INPUT compared against invalid type
@@ -4550,7 +4550,7 @@ public class TestResolver extends TestCase {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Cannot set symbol 'pm1.g1.e2' with expected type integer to expression 'INPUT.e1'"); //$NON-NLS-1$
+				 FakeMetadataObject.Props.UPDATE_PROCEDURE, "Error Code:ERR.015.008.0041 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression 'INPUT.e1'"); //$NON-NLS-1$
     }
     
     public void testUpdateSetClauseReferenceType() {
@@ -4566,7 +4566,7 @@ public class TestResolver extends TestCase {
     public void testNoTypeCriteria() {
     	String sql = "select * from pm1.g1 where ? = ?"; //$NON-NLS-1$
     	
-    	helpResolveException(sql, FakeMetadataFactory.example1Cached(), "Expression '? = ?' has a parameter with non-determinable type information.  The use of an explicit convert may be necessary."); //$NON-NLS-1$
+    	helpResolveException(sql, FakeMetadataFactory.example1Cached(), "Error Code:ERR.015.008.0026 Message:Expression '? = ?' has a parameter with non-determinable type information.  The use of an explicit convert may be necessary."); //$NON-NLS-1$
     }
     
     public void testReferenceInSelect() {
@@ -4622,7 +4622,7 @@ public class TestResolver extends TestCase {
     
     // ambiguous, should fail
     public void testOrderBy_J658d() {
-        helpResolveException("SELECT pm1.g1.e1, e2 as x, e3 as x FROM pm1.g1 ORDER BY x, e1 ", "Element 'x' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1, e2 as x, e3 as x FROM pm1.g1 ORDER BY x, e1 ", "Error Code:ERR.015.008.0042 Message:Element 'x' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     public void testOrderBy_J658e() {
         Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, e2 as x, e3 as e2 FROM pm1.g1 ORDER BY x, e2 "); //$NON-NLS-1$

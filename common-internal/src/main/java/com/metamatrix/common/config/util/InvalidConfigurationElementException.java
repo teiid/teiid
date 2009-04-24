@@ -30,12 +30,6 @@ import com.metamatrix.api.exception.MetaMatrixException;
 
 public class InvalidConfigurationElementException extends MetaMatrixException{
 
-    private Object invalidElement;
-    
-    // =========================================================================
-    //                       C O N S T R U C T O R S
-    // =========================================================================
-
     /**
      * No-Arg Constructor
      */
@@ -47,10 +41,8 @@ public class InvalidConfigurationElementException extends MetaMatrixException{
      *
      * @param message The error message
      */
-    public InvalidConfigurationElementException( String message, Object invalidElement ) {
+    public InvalidConfigurationElementException( String message) {
         super( message );
-        this.invalidElement = invalidElement;
-        
     }
 
     /**
@@ -59,11 +51,8 @@ public class InvalidConfigurationElementException extends MetaMatrixException{
      * @param message The error message
      * @param code    The error code 
      */
-    public InvalidConfigurationElementException( String code, String message, Object invalidElement ) {
+    public InvalidConfigurationElementException( String code, String message) {
         super( code, message );
-        this.invalidElement = invalidElement;
-        
-        
     }
 
     /**
@@ -71,10 +60,8 @@ public class InvalidConfigurationElementException extends MetaMatrixException{
      *
      * @param e An exception to chain to this exception
      */
-    public InvalidConfigurationElementException( Throwable e, Object invalidElement  ) {
+    public InvalidConfigurationElementException( Throwable e) {
         super(e);
-        this.invalidElement = invalidElement;
-        
     }
 
     /**
@@ -84,10 +71,8 @@ public class InvalidConfigurationElementException extends MetaMatrixException{
      * @param e       An exception to chain to this exception
      * @param message The error message
      */
-    public InvalidConfigurationElementException( Throwable e, String message, Object invalidElement  ) {
+    public InvalidConfigurationElementException( Throwable e, String message) {
         super(e, message );
-        this.invalidElement = invalidElement;
-        
     }
 
     /**
@@ -98,33 +83,8 @@ public class InvalidConfigurationElementException extends MetaMatrixException{
      * @param message The error message
      * @param code    The error code 
      */
-    public InvalidConfigurationElementException( Throwable e, String code, String message, Object invalidElement  ) {
+    public InvalidConfigurationElementException( Throwable e, String code, String message){
         super(e, code, message );
-        this.invalidElement = invalidElement;
-        
-    }
-    
-    public Object getInvalidElement() {
-        return invalidElement;
-    }
-    
-    /**
-     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-     */
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        super.readExternal(in);
-        invalidElement = in.readObject();
     }
 
-    /**
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
-    public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
-        try {
-            out.writeObject(invalidElement);
-        } catch (Throwable t) {
-            out.writeObject(null);
-        }
-    }
 }

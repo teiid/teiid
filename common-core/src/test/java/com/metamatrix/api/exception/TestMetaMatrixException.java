@@ -74,7 +74,7 @@ public class TestMetaMatrixException extends TestCase {
         final MetaMatrixException err = new MetaMatrixException("Code", "Test"); //$NON-NLS-1$ //$NON-NLS-2$
         assertNull(err.getChild());
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
-        assertEquals("Test", err.getMessage()); //$NON-NLS-1$
+        assertEquals("Error Code:Code Message:Test", err.getMessage()); //$NON-NLS-1$
         
     }
 
@@ -83,7 +83,7 @@ public class TestMetaMatrixException extends TestCase {
         final MetaMatrixException err = new MetaMatrixException(child, "Test"); //$NON-NLS-1$
         assertSame(child, err.getChild());
         assertEquals("propertyValuePhrase", err.getCode()); //$NON-NLS-1$
-        assertEquals("Test", err.getMessage()); //$NON-NLS-1$
+        assertEquals("Error Code:propertyValuePhrase Message:Test", err.getMessage()); //$NON-NLS-1$
         
     }
 
@@ -92,7 +92,7 @@ public class TestMetaMatrixException extends TestCase {
         final MetaMatrixException err = new MetaMatrixException(child, "Code", "Test"); //$NON-NLS-1$ //$NON-NLS-2$
         assertSame(child, err.getChild());
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
-        assertEquals("Test", err.getMessage()); //$NON-NLS-1$
+        assertEquals("Error Code:Code Message:Test", err.getMessage()); //$NON-NLS-1$
         
     }
 }

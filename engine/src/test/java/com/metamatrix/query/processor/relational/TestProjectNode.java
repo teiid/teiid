@@ -246,7 +246,7 @@ public class TestProjectNode extends TestCase {
             Arrays.asList(new Object[] { "1" }),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "2x" }) }; //$NON-NLS-1$
 
-        String expectedMessage = "Unable to evaluate convert(e1, integer): Error while evaluating function convert"; //$NON-NLS-1$
+        String expectedMessage = "ERROR CODE:ERR.015.001.0003 MESSAGE:Unable to evaluate convert(e1, integer): ERROR CODE:ERR.015.001.0003 MESSAGE:Error while evaluating function convert"; //$NON-NLS-1$
 
         helpTestProjectFails(projectElements, data, elements, expectedMessage);        
     }

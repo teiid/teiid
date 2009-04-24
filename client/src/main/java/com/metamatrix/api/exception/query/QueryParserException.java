@@ -32,10 +32,6 @@ import java.io.ObjectOutput;
  */
 public class QueryParserException extends QueryProcessingException {
 
-	// Error location, if known
-	private int line = -1;
-	private int column = -1;
-
     /**
      * No-arg constructor required by Externalizable semantics.
      */
@@ -83,58 +79,4 @@ public class QueryParserException extends QueryProcessingException {
     public QueryParserException( Throwable e, String code, String message ) {
         super( e, code, message );
     }
-	
-	/**
-	 * Set location of error
-	 * @param line Line error occurred on in input
-	 * @param column Column error occurred on in input
-	 */
-	public void setErrorLocation(int line, int column) {
-		this.line = line;
-		this.column = column;
-	}
-	
-	/**
-	 * Determine if location of error in string being parsed is known.  If 
-	 * so, the line and column can be obtained with getLine() and getColumn().
-	 * @return True if location is known
-	 */
-	public boolean isLocationKnown() {
-		return this.line > -1;
-	}	
-	
-	/** 
-	 * Get line error occurred on in string being parsed.
-	 * @return Line error occurred on in input string
-	 */
-	public int getLine() {
-		return this.line;
-	}
-	
-	/**
-	 * Get column error occurred on in string being parsed.
-	 * @return Column error occurred on in input string
-	 */
-	public int getColumn() {
-		return this.column;
-	}		
-	 	
-    /**
-     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-     */
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        super.readExternal(in);
-        line = in.readInt();
-        column = in.readInt();
-    }
-
-    /**
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
-    public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
-        out.writeInt(line);
-        out.writeInt(column);
-    }
-
 }

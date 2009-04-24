@@ -459,7 +459,7 @@ public class TestProcedureProcessor extends TestCase {
 
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 									 
-        helpTestProcessFailure(false, plan, dataMgr, "Error processing the AssignmentStatement in stored procedure language, expected to get a single row of data to be assigned to the variable ROWS_UPDATED but got more."); //$NON-NLS-1$ 
+        helpTestProcessFailure(false, plan, dataMgr, "Error Code:ERR.015.006.0019 Message:Error processing the AssignmentStatement in stored procedure language, expected to get a single row of data to be assigned to the variable ROWS_UPDATED but got more."); //$NON-NLS-1$ 
     }
 
     // error statement

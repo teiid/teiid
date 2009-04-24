@@ -47,6 +47,15 @@ public class ConnectorException extends MetaMatrixCoreException{
     public ConnectorException( String message ) {
         super( message );
     }
+    
+    public ConnectorException( String errorCode, String message ) {
+        super( errorCode, message );
+    }
+    
+    public ConnectorException( int errorCode, String message ) {
+        super( Integer.toString(errorCode), message );
+    }    
+    
 
     /**
      * Construct an instance from a message and an exception to chain to this one.

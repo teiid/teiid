@@ -1295,20 +1295,11 @@ class ConfigurationImportExport implements ConfigurationPropertyNames {
 
 		String msg = CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0018, new Object[]
 				{referencingObject, type, referencedObject} );
-        ConfigObjectsNotResolvableException e = new ConfigObjectsNotResolvableException(ErrorMessageKeys.CONFIG_ERR_0018, msg, referencingObject);
+        ConfigObjectsNotResolvableException e = new ConfigObjectsNotResolvableException(ErrorMessageKeys.CONFIG_ERR_0018, msg);
 
         throw e;
     }
 
-    private void throwObjectsNotResolvable(Object referencingObject, String type) throws ConfigObjectsNotResolvableException{
-		String msg = CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0019, new Object[]
-				{referencingObject, type} );
-
-
-        ConfigObjectsNotResolvableException e = new ConfigObjectsNotResolvableException(ErrorMessageKeys.CONFIG_ERR_0019, msg, referencingObject);
-
-        throw e;
-    }
 
     private void checkConfigurationID(ComponentDefn defn, List configurationIDs) throws ConfigObjectsNotResolvableException {
         if (!configurationIDs.contains(defn.getConfigurationID())) {
@@ -1325,21 +1316,6 @@ class ConfigurationImportExport implements ConfigurationPropertyNames {
         }
     }
     
- 
-
-//    private void checkForComponentTypeID(ComponentTypeID id, List componentTypeIDs) throws ConfigObjectsNotResolvableException{
-//
-//        if (id!=null) {
-//            if (!(componentTypeIDs.contains(id))) {
-//			 		throwObjectsNotResolvable(id, "component"); //$NON-NLS-1$
-//
-////                throwConfigObjectsNotResolvableException(id, id);
-//            }
-//
-//        }
-//
-//    }
-        
 
     protected List[] segregateConfigurationObjects(Collection collection) {
 

@@ -100,20 +100,4 @@ public class PermissionNodeException extends MetaMatrixAdminException {
     public String getMessage() {
         return super.getMessage() + " Resource: " + this.resourceName; //$NON-NLS-1$
     }
-    /**
-     * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
-     */
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        super.readExternal(in);
-        resourceName = (String)in.readObject();
-    }
-
-    /**
-     * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
-     */
-    public void writeExternal(ObjectOutput out) throws IOException {
-        super.writeExternal(out);
-        out.writeObject(resourceName);
-    }
-
 }
