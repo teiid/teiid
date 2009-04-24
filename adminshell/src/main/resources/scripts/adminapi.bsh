@@ -76,6 +76,28 @@ VDB addVDB(String name, String vdbFile, AdminOptions options) {
 }
 
 /**
+ * Import a {@link VDB} file.
+ * <br>A VDB file with internal definitions. This is the default VDB export configuration
+ * begining with MetaMatrix version 4.3.</br>
+ *
+ * @param name
+ *            VDB Name
+ * @param vdbFile
+ *            byte array of the VDB Archive
+ * @param AdminOptions that defines the options on how to import the vdb and its related connector bindings.
+ * See {@link AdminOptions}.
+ * @throws AdminException
+ *             if there's a system error.
+ * @return the {@link VDB} representing the current property values and runtime state.
+ * @since 6.1.0
+ */
+VDB addVDB(String name, byte[] vdb, AdminOptions options) {
+    debug("Adding VDB " + name);
+    checkAdmin();    
+    return currentContext().internalAdmin.addVDB(name, vdb, options);
+}
+
+/**
  * Export VDB to a file.
  * 
  * @param name
