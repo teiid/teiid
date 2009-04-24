@@ -38,7 +38,6 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 public class InsertVisitor extends CriteriaVisitor {
 
-	List<ConnectorException> exceptions = new ArrayList<ConnectorException>();
 	List<MessageElement> elements = new ArrayList<MessageElement>();
 	
 	public InsertVisitor(RuntimeMetadata metadata) {

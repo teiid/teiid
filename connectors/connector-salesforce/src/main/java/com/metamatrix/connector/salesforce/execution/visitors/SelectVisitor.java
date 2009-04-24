@@ -84,13 +84,14 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 					selectSymbolIndexToElement.put(index, element);
 					selectSymbolNameToIndex .put(element.getNameInSource(), index);
 					String nameInSource = element.getNameInSource();
-					if (nameInSource.equalsIgnoreCase("id")) {
-						idIndex = index;
-					}
 					if (null == nameInSource || nameInSource.length() == 0) {
 						exceptions.add(new ConnectorException(
 								"name in source is null or empty for column "
 										+ symbol.toString()));
+						continue;
+					}
+					if (nameInSource.equalsIgnoreCase("id")) {
+						idIndex = index;
 					}
 					if (!firstTime) {
 						selectSymbols.append(", ");

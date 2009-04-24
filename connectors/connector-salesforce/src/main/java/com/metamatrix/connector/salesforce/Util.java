@@ -29,12 +29,6 @@ import org.teiid.connector.api.ConnectorException;
 
 public class Util {
 
-    public static boolean convertStringToBoolean(String value) {
-		Boolean retval = (value == null ? Boolean.FALSE : new Boolean(value
-				.equalsIgnoreCase(Boolean.TRUE.toString())));
-		return retval.booleanValue();
-	}
-    
 	public static String stripQutes(String id) {
 		if((id.startsWith("'") && id.endsWith("'"))) {
 			id = id.substring(1,id.length()-1);

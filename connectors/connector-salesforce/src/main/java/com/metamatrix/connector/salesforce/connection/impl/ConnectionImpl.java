@@ -23,6 +23,8 @@ package com.metamatrix.connector.salesforce.connection.impl;
 
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 
 import javax.xml.rpc.ServiceException;
@@ -40,8 +42,14 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 
 import com.metamatrix.connector.salesforce.execution.DataPayload;
+import com.metamatrix.connector.salesforce.execution.DeletedObject;
+import com.metamatrix.connector.salesforce.execution.DeletedResult;
+import com.metamatrix.connector.salesforce.execution.UpdatedResult;
 import com.sforce.soap.partner.CallOptions;
 import com.sforce.soap.partner.DeleteResult;
+import com.sforce.soap.partner.DeletedRecord;
+import com.sforce.soap.partner.GetDeletedResult;
+import com.sforce.soap.partner.GetUpdatedResult;
 import com.sforce.soap.partner.LoginResult;
 import com.sforce.soap.partner.QueryOptions;
 import com.sforce.soap.partner.QueryResult;
@@ -50,6 +58,7 @@ import com.sforce.soap.partner.SessionHeader;
 import com.sforce.soap.partner.SforceServiceLocator;
 import com.sforce.soap.partner.SoapBindingStub;
 import com.sforce.soap.partner.fault.ApiFault;
+import com.sforce.soap.partner.fault.InvalidSObjectFault;
 import com.sforce.soap.partner.fault.UnexpectedErrorFault;
 import com.sforce.soap.partner.fault.InvalidQueryLocatorFault;
 import com.sforce.soap.partner.sobject.SObject;
@@ -280,4 +289,49 @@ public class ConnectionImpl {
 		return results.length;
 	}
 
+	public UpdatedResult getUpdated(String objectType, Calendar startDate, Calendar endDate) throws ConnectorException {
+		try {
+			GetUpdatedResult updated = binding.getUpdated(objectType, startDate, endDate);
+			UpdatedResult result = new UpdatedResult(); 
+			result.setLatestDateCovered(updated.getLatestDateCovered());
+			result.setIDs(updated.getIds());
+			return result;
+		} catch (InvalidSObjectFault e) {
+			throw new ConnectorException(e.getExceptionMessage());
+		} catch (UnexpectedErrorFault e) {
+			throw new ConnectorException(e.getMessage());
+		} catch (RemoteException e) {
+			throw new ConnectorException(e, e.getMessage());
+		}
+	}
+
+	public DeletedResult getDeleted(String objectName, Calendar startCalendar,
+			Calendar endCalendar) throws ConnectorException {
+		try {
+			GetDeletedResult deleted = binding.getDeleted(objectName, startCalendar, endCalendar);
+			DeletedResult result = new DeletedResult();
+			result.setLatestDateCovered(deleted.getLatestDateCovered());
+			result.setEarliestDateAvailable(deleted.getEarliestDateAvailable());
+			DeletedRecord[] records = deleted.getDeletedRecords();
+			List<DeletedObject> resultRecords = new ArrayList<DeletedObject>();
+			DeletedObject object;
+			if(null !=records) {
+				for (int i = 0; i < records.length; i++) {
+					DeletedRecord record = records[i];
+					object = new DeletedObject();
+					object.setID(record.getId());
+					object.setDeletedDate(record.getDeletedDate());
+					resultRecords.add(object);
+				}
+			}
+			result.setResultRecords(resultRecords);
+			return result;
+		} catch (InvalidSObjectFault e) {
+			throw new ConnectorException(e.getExceptionMessage());
+		} catch (UnexpectedErrorFault e) {
+			throw new ConnectorException(e.getMessage());
+		} catch (RemoteException e) {
+			throw new ConnectorException(e, e.getMessage());
+		}
+	}
 }

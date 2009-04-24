@@ -22,23 +22,29 @@
 package com.metamatrix.connector.salesforce.connection;
 
 import java.net.URL;
+import java.util.Calendar;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ProcedureExecution;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.basic.BasicConnection;
 import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.language.IQueryCommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.connection.impl.ConnectionImpl;
 import com.metamatrix.connector.salesforce.execution.DataPayload;
+import com.metamatrix.connector.salesforce.execution.DeletedResult;
+import com.metamatrix.connector.salesforce.execution.ProcedureExecutionParentImpl;
 import com.metamatrix.connector.salesforce.execution.QueryExecutionImpl;
 import com.metamatrix.connector.salesforce.execution.UpdateExecutionParent;
+import com.metamatrix.connector.salesforce.execution.UpdatedResult;
 import com.sforce.soap.partner.QueryResult;
 
 public class SalesforceConnection extends BasicConnection {
@@ -87,6 +93,13 @@ public class SalesforceConnection extends BasicConnection {
 	}
 	
 	@Override
+	public ProcedureExecution createProcedureExecution(IProcedure command,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
+			throws ConnectorException {
+		return new ProcedureExecutionParentImpl(command, this, metadata, executionContext, connectorEnv);
+	}
+
+	@Override
 	public void close() {
 	}
 
@@ -123,5 +136,15 @@ public class SalesforceConnection extends BasicConnection {
 
 	public int update(List<DataPayload> updateDataList) throws ConnectorException {
 		return connection.update(updateDataList);
+	}
+
+	public UpdatedResult getUpdated(String objectName, Calendar startCalendar,
+			Calendar endCalendar) throws ConnectorException {
+		return connection.getUpdated(objectName, startCalendar, endCalendar);
+	}
+
+	public DeletedResult getDeleted(String objectName, Calendar startCalendar,
+			Calendar endCalendar) throws ConnectorException {
+		return connection.getDeleted(objectName, startCalendar, endCalendar);
 	}
 }

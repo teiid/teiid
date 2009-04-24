@@ -170,7 +170,6 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 	
 	private void appendMultiselectIn(Element column, IInCriteria criteria) throws ConnectorException {
 		StringBuffer result = new StringBuffer();
-		IExpression left = criteria.getLeftExpression();
 		result.append(column.getNameInSource()).append(SPACE);
 		if(criteria.isNegated()) {
 			result.append(EXCLUDES).append(SPACE);
@@ -314,7 +313,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 		table = group.getMetadataObject();
 		String supportsQuery = (String) table.getProperties().get(
 				"Supports Query");
-		if (!Util.convertStringToBoolean(supportsQuery)) {
+		if (!Boolean.valueOf(supportsQuery)) {
 			throw new ConnectorException(
 					table.getNameInSource()
 							+ " "

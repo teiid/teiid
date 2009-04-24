@@ -35,7 +35,6 @@ public class ConnectorState {
 	public static final String PASSWORD = "password";
 	public static final String URL = "URL";
 	
-	ConnectorLogger logger;
 	String username;
 	String password;
 	URL url;
@@ -45,7 +44,6 @@ public class ConnectorState {
 		if (logger == null) {
             throw new ConnectorException("Internal Exception: logger is null");
         }
-		this.logger = logger;
 		
 		String username = props.getProperty(USERNAME);
         if (username != null) {
