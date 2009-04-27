@@ -32,7 +32,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.program.ProgramEnvironment;
+import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 
 /**
@@ -40,7 +40,7 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
  * instruction does not modify the values of any of the variables, hence it's results are not
  * important so they are removed immediately.</p>
  */
-public class ExecSqlInstruction extends CommandInstruction {
+public class ExecSqlInstruction extends ProgramInstruction {
 
     public static final String RS_NAME = "EXECSQL_INSTRUCTION"; //$NON-NLS-1$
 
@@ -68,10 +68,8 @@ public class ExecSqlInstruction extends CommandInstruction {
      * counter is incremented after execution of the plan.</p>
      * @throws BlockedException if this processing the plan throws a currentVarContext
      */
-    public void process(ProgramEnvironment env)
+    public void process(ProcedurePlan procEnv)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
-
-        ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
 
         if(intoGroup != null && intoGroup.isTempGroupSymbol()){
             procEnv.executePlan(commandPlan, intoGroup.getName());

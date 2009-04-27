@@ -22,7 +22,14 @@
 
 package com.metamatrix.query.sql.lang;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.types.DataTypeManager;
@@ -32,6 +39,7 @@ import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 import com.metamatrix.query.sql.visitor.SQLStringVisitor;
 
@@ -126,12 +134,26 @@ public abstract class Command implements LanguageObject {
 	private Option option;
 	
 	private ProcessorPlan plan;
+	
+	private SymbolMap correlatedReferences;
     
 	/**
 	 * Return type of command to make it easier to build switch statements by command type.
 	 * @return Type from TYPE constants
 	 */	
 	public abstract int getType();
+	
+	/**
+	 * Get the correlated references to the containing scope only
+	 * @return
+	 */
+	public SymbolMap getCorrelatedReferences() {
+		return correlatedReferences;
+	}
+	
+	public void setCorrelatedReferences(SymbolMap correlatedReferences) {
+		this.correlatedReferences = correlatedReferences;
+	}
 
     /**
      * Gets the subCommands (both embedded and non-embedded) under this command.  In general the returned list
@@ -222,6 +244,9 @@ public abstract class Command implements LanguageObject {
         
         copy.setIsResolved(this.isResolved());
         copy.plan = this.plan;
+        if (this.correlatedReferences != null) {
+        	copy.correlatedReferences = this.correlatedReferences.clone();
+        }
     }
     
     /**
@@ -323,12 +348,10 @@ public abstract class Command implements LanguageObject {
         return getSubCommandsUpdatingModelCount(this, metadata);
     }
 
-    public static int getSubCommandsUpdatingModelCount(LanguageObject object, QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        List subCommands = CommandCollectorVisitor.getCommands(object);
+    public static int getSubCommandsUpdatingModelCount(Command object, QueryMetadataInterface metadata) throws MetaMatrixComponentException {
+        List<Command> subCommands = CommandCollectorVisitor.getCommands(object);
         int numCommands = subCommands.size();
-        Iterator iter = subCommands.iterator();
-        while(iter.hasNext()) {
-            Command command = (Command)iter.next();
+        for (Command command : subCommands) {
             if (numCommands == 1) {
                 return command.updatingModelCount(metadata);
             }

@@ -23,7 +23,6 @@
 package com.metamatrix.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -39,7 +38,6 @@ import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 
@@ -54,13 +52,11 @@ public final class RuleMergeCriteria implements OptimizerRule {
         throws QueryPlannerException, MetaMatrixComponentException {
 
         // Find strings of criteria and merge them, removing duplicates
-        List criteriaChains = new ArrayList();
+        List<PlanNode> criteriaChains = new ArrayList<PlanNode>();
         findCriteriaChains(plan, criteriaChains);
 
         // Merge chains
-        Iterator chainIter = criteriaChains.iterator();
-        while(chainIter.hasNext()) {
-            PlanNode critNode = (PlanNode) chainIter.next();
+        for (PlanNode critNode : criteriaChains) {
             mergeChain(critNode);
         }
 
@@ -72,7 +68,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
      * @param node Root node to search
      * @param foundNodes Roots of criteria chains
      */
-     void findCriteriaChains(PlanNode root, List foundNodes)
+     void findCriteriaChains(PlanNode root, List<PlanNode> foundNodes)
         throws QueryPlannerException, MetaMatrixComponentException {
 
         PlanNode recurseRoot = root;
@@ -100,7 +96,6 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
         // Remove all of chain except root, collect crit from each
         CompoundCriteria critParts = new CompoundCriteria();
-        SymbolMap correlatedReferences = new SymbolMap();        
         PlanNode current = chainRoot;
         boolean isDependentSet = false;
         while(current.getType() == NodeConstants.Types.SELECT) {
@@ -108,8 +103,6 @@ public final class RuleMergeCriteria implements OptimizerRule {
             
             isDependentSet |= current.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET);
             
-            correlatedReferences.merge((SymbolMap)current.getProperty(NodeConstants.Info.CORRELATED_REFERENCES));
-                        
             // Recurse
             PlanNode last = current;
             current = current.getLastChild();
@@ -129,32 +122,12 @@ public final class RuleMergeCriteria implements OptimizerRule {
         
         // Replace criteria at root with new combined criteria
         chainRoot.setProperty(NodeConstants.Info.SELECT_CRITERIA, combinedCrit);
-        if (!correlatedReferences.asMap().isEmpty()){
-            chainRoot.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, correlatedReferences); 
-        }
         
         // Reset group for node based on combined criteria
         chainRoot.getGroups().clear();
         
         chainRoot.addGroups(GroupsUsedByElementsVisitor.getGroups(combinedCrit));
         chainRoot.addGroups(GroupsUsedByElementsVisitor.getGroups(chainRoot.getCorrelatedReferenceElements()));
-    }
-
-    /**
-     * Add the 'addToProps' List (if not null) to the 'props' List
-     * (if not null).
-     * @param props
-     * @param addToProps
-     * @return 'props' List, or else new List if 'props' was null
-     */
-    private static List addProperties(List props, List addToProps) {
-        if (addToProps != null){
-            if (props == null){
-                props = new ArrayList();
-            }
-            props.addAll(addToProps);
-        }
-        return props;
     }
 
     public String toString() {

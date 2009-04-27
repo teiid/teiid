@@ -48,6 +48,8 @@ public class AbstractValidationVisitor extends LanguageVisitor {
     
     private QueryMetadataInterface metadata;
     
+    protected Command currentCommand;
+    
     public AbstractValidationVisitor() {
         this.report = new ValidatorReport();
     }
@@ -65,7 +67,7 @@ public class AbstractValidationVisitor extends LanguageVisitor {
      * not wipe the report.
      */
     public void reset() {
-        //nothing to do here
+        this.currentCommand = null;
     }
     
     // ######################### Store results info #########################

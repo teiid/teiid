@@ -104,7 +104,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	            
                 boolean moved = false;
                 
-                if((critNode.getGroups().isEmpty() && !FrameUtil.hasSubquery(critNode)) || !atBoundary(critNode, sourceNode)) {
+                if((critNode.getGroups().isEmpty() && critNode.getSubqueryContainers().isEmpty()) || !atBoundary(critNode, sourceNode)) {
                     deadNodes.add(critNode);
                     continue;
                 }
@@ -136,7 +136,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	private PlanNode findOriginatingNode(QueryMetadataInterface metadata,
 			CapabilitiesFinder capFinder, PlanNode critNode)
 			throws MetaMatrixComponentException, QueryMetadataException {
-		if (critNode.getGroups().isEmpty() && FrameUtil.hasSubquery(critNode)) {
+		if (critNode.getGroups().isEmpty()) {
 			Object modelId = RuleRaiseAccess.isEligibleSubquery(critNode, null, metadata, capFinder);
 			if (modelId != null) {
 				for (PlanNode node : NodeEditor.findAllNodes(critNode, NodeConstants.Types.SOURCE)) {
@@ -159,10 +159,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
      * @return
      */
     private boolean handleJoinCriteria(PlanNode joinNode, PlanNode critNode, QueryMetadataInterface metadata) {
-    	//we currently don't allow subqueries in join criteria
-    	if (FrameUtil.hasSubquery(critNode)) {
-    		return false;
-    	}
         JoinType jt = (JoinType)joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         
         if (jt == JoinType.JOIN_CROSS || jt == JoinType.JOIN_INNER) {
@@ -313,7 +309,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             if (child != null && child.getType() == NodeConstants.Types.SET_OP) {
             	//only allow criteria without subqueires - node cloning doesn't allow for the proper creation of 
             	//multiple nodes with the same subqueries
-                if (child == sourceNode.getFirstChild() && !FrameUtil.hasSubquery(critNode)) {
+                if (child == sourceNode.getFirstChild() && critNode.getSubqueryContainers().isEmpty()) {
                     return pushAcrossSetOp(critNode, child);
                 } 
                 //this could be an access node in the middle of the source and set op,
@@ -443,10 +439,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		Criteria copyCrit = (Criteria) crit.clone();
 		copyNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, copyCrit);
 		copyNode.addGroups(critNode.getGroups());
-        SymbolMap correlatedReferences = (SymbolMap)critNode.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);       
-        if(correlatedReferences  != null) {
-            copyNode.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, new SymbolMap(correlatedReferences));
-        }
         if(critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
             copyNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
         }
@@ -534,7 +526,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         	return false; //not convertable
         }
         
-        if (FrameUtil.hasSubquery(critNode) 
+        if (!critNode.getSubqueryContainers().isEmpty() 
         		&& checkConversion(symbolMap, critNode.getCorrelatedReferenceElements()) != null) {
     		return false; //not convertable, or has an aggregate for a correlated reference
         }

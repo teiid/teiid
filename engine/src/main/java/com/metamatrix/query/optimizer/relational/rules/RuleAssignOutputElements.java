@@ -54,7 +54,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -431,8 +430,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 
         // Gather elements from correlated subquery references;
         // currently only for SELECT or PROJECT nodes
-        SymbolMap refs = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-        if (refs != null){
+		for (SymbolMap refs : node.getCorrelatedReferences()) {
         	for (Expression expr : refs.asMap().values()) {
                 AggregateSymbolCollectorVisitor.getAggregates(expr, requiredSymbols, requiredSymbols);
             }

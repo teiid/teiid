@@ -34,7 +34,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.processor.program.Program;
-import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Criteria;
 
@@ -87,12 +86,10 @@ public class IfInstruction extends ProgramInstruction {
      * evaluate to true, this instruction will increment the program counter of the
      * current program.
      * @throws MetaMatrixProcessingException 
-     * @see ProgramInstruction#process(ProgramEnvironment)
+     * @see ProgramInstruction#process(ProcedurePlan)
      */
-    public void process(ProgramEnvironment env)
+    public void process(ProcedurePlan procEnv)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
-
-        ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
 
     	boolean evalValue = procEnv.evaluateCriteria(condition);
 

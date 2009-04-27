@@ -46,7 +46,6 @@ import com.metamatrix.query.processor.proc.ExecDynamicSqlInstruction;
 import com.metamatrix.query.processor.proc.ExecSqlInstruction;
 import com.metamatrix.query.processor.proc.IfInstruction;
 import com.metamatrix.query.processor.proc.LoopInstruction;
-import com.metamatrix.query.processor.proc.ProcedureEnvironment;
 import com.metamatrix.query.processor.proc.ProcedurePlan;
 import com.metamatrix.query.processor.proc.WhileInstruction;
 import com.metamatrix.query.processor.program.Program;
@@ -131,9 +130,7 @@ public final class ProcedurePlanner implements CommandPlanner {
         }
 
         // create plan from program and initialized environment
-        ProcedureEnvironment env = new ProcedureEnvironment();
-        env.getProgramStack().push(programBlock);
-        ProcedurePlan plan = new ProcedurePlan(env);
+        ProcedurePlan plan = new ProcedurePlan(programBlock);
         
         // propagate procedure parameters to the plan to allow runtime type checking
         ProcedureContainer container = (ProcedureContainer)((CreateUpdateProcedureCommand) procCommand).getUserCommand();
@@ -144,9 +141,8 @@ public final class ProcedurePlanner implements CommandPlanner {
             plan.setMetadata(metadata);
         }
         
-        env.initialize(plan);
-        env.setUpdateProcedure(((CreateUpdateProcedureCommand)procCommand).isUpdateProcedure());
-        env.setOutputElements(((CreateUpdateProcedureCommand)procCommand).getProjectedSymbols());
+        plan.setUpdateProcedure(((CreateUpdateProcedureCommand)procCommand).isUpdateProcedure());
+        plan.setOutputElements(((CreateUpdateProcedureCommand)procCommand).getProjectedSymbols());
         
         if(debug) {
             analysisRecord.println("####################################################"); //$NON-NLS-1$

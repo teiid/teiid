@@ -30,9 +30,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.teiid.connector.api.SourceSystemFunctions;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.api.SourceSystemFunctions;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -58,8 +58,6 @@ import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.DependentAccessNode;
-import com.metamatrix.query.processor.relational.DependentProjectNode;
-import com.metamatrix.query.processor.relational.DependentSelectNode;
 import com.metamatrix.query.processor.relational.DupRemoveNode;
 import com.metamatrix.query.processor.relational.GroupingNode;
 import com.metamatrix.query.processor.relational.JoinNode;
@@ -80,6 +78,7 @@ import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
+import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
@@ -91,6 +90,8 @@ import com.metamatrix.query.validator.ValidatorReport;
 public class TestOptimizer extends TestCase {
 
     public interface DependentJoin {}
+    public interface DependentSelectNode {}
+    public interface DependentProjectNode {}
     
     public static final int[] FULL_PUSHDOWN = new int[] {
                                             1,      // Access
@@ -417,8 +418,8 @@ public class TestOptimizer extends TestCase {
      * @param relationalNode
      * @return int[]
      */
-    public static void collectCounts(RelationalNode relationalNode, int[] counts, Class[] types) {
-        Class nodeType = relationalNode.getClass();
+    public static void collectCounts(RelationalNode relationalNode, int[] counts, Class<?>[] types) {
+        Class<?> nodeType = relationalNode.getClass();
         if(nodeType.equals(JoinNode.class)) {
             if (((JoinNode)relationalNode).getJoinStrategy() instanceof NestedLoopJoinStrategy) {
                 updateCounts(NestedLoopJoinStrategy.class, counts, types);
@@ -428,7 +429,19 @@ public class TestOptimizer extends TestCase {
             if (((JoinNode)relationalNode).isDependent()) {
                 updateCounts(DependentJoin.class, counts, types);
             }
-        }else {
+        }else if (nodeType.equals(ProjectNode.class)){
+        	if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(((ProjectNode)relationalNode).getSelectSymbols()).isEmpty()) {
+        		updateCounts(ProjectNode.class, counts, types);
+        	} else {
+        		updateCounts(DependentProjectNode.class, counts, types);
+        	}
+        }else if (nodeType.equals(SelectNode.class)){
+        	if (ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(((SelectNode)relationalNode).getCriteria()).isEmpty()) {
+        		updateCounts(SelectNode.class, counts, types);
+        	} else {
+        		updateCounts(DependentSelectNode.class, counts, types);
+        	}
+        } else {
             updateCounts(nodeType, counts, types);
         }
         
@@ -1862,7 +1875,7 @@ public class TestOptimizer extends TestCase {
         
     public void testPushOuterJoin1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -6585,47 +6598,6 @@ public class TestOptimizer extends TestCase {
         checkSubPlanCount(plan, 0);        
     }
     
-    /*
-     * Expressions containing subqueries cannot be pushed down
-     */
-    public void testCase4306() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        FakeMetadataFacade metadata = example1();
-        
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setFunctionSupport("+", true); //$NON-NLS-1$
-        caps.setFunctionSupport("convert", true); //$NON-NLS-1$
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        ProcessorPlan plan = helpPlan("select pm1.g1.e1, convert((select max(vm1.g1.e1) from vm1.g1), integer) + 1 from pm1.g1", metadata,  //$NON-NLS-1$
-                                      null, capFinder,
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$
-        checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            1,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // Join
-            0,      // MergeJoin
-            0,      // Null
-            0,      // PlanExecution
-            0,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
-          
-        checkSubPlanCount(plan, 1);        
-    }
-    
     public void testCase4312() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
@@ -6818,7 +6790,7 @@ public class TestOptimizer extends TestCase {
      */
     public void testSameConnector() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);

@@ -38,7 +38,6 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
@@ -141,12 +140,13 @@ public class DependentCriteriaProcessor {
     private LinkedList<Integer> restartIndexes = new LinkedList<Integer>();
     private int currentIndex;
     private boolean hasNextCommand;
-    
+    protected SubqueryAwareEvaluator eval;
 
     public DependentCriteriaProcessor(int maxSetSize, RelationalNode dependentNode, Criteria dependentCriteria) throws ExpressionEvaluationException, MetaMatrixComponentException {
         this.maxSetSize = maxSetSize;
         this.dependentNode = dependentNode;
         this.dependentCrit = dependentCriteria;
+        this.eval = new SubqueryAwareEvaluator(Collections.emptyMap(), dependentNode.getDataManager(), dependentNode.getContext(), dependentNode.getBufferManager());
         queryCriteria = Criteria.separateCriteriaByAnd(dependentCrit);
         
         for (int i = 0; i < queryCriteria.size(); i++) {
@@ -162,10 +162,9 @@ public class DependentCriteriaProcessor {
                 }
                 SetState state = new SetState();
                 setStates.put(i, state);
-            	Evaluator evaluator = new Evaluator(Collections.emptyMap(), dependentNode.getDataManager(), dependentNode.getContext());
                 LinkedHashSet<Object> values = new LinkedHashSet<Object>();
                 for (Expression expr : (Collection<Expression>)setCriteria.getValues()) {
-					values.add(evaluator.evaluate(expr, null));
+					values.add(eval.evaluate(expr, null));
 				}
                 state.valueIterator = new CollectionValueIterator(values);
                 sources.add(Arrays.asList(state));
@@ -192,6 +191,9 @@ public class DependentCriteriaProcessor {
             for (TupleState state : dependentState.values()) {
 				state.close();
 			}
+        }
+        if (this.eval != null) {
+        	this.eval.close();
         }
     }
 

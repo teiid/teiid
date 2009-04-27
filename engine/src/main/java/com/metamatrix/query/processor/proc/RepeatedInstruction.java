@@ -28,10 +28,10 @@ import com.metamatrix.query.processor.program.Program;
 
 public interface RepeatedInstruction {
     
-    public boolean testCondition(ProcedureEnvironment procEnv) throws MetaMatrixComponentException, MetaMatrixProcessingException;
+    public boolean testCondition(ProcedurePlan procEnv) throws MetaMatrixComponentException, MetaMatrixProcessingException;
     
     public Program getNestedProgram();
     
-    public void postInstruction(ProcedureEnvironment procEnv) throws MetaMatrixComponentException;
+    public void postInstruction(ProcedurePlan procEnv) throws MetaMatrixComponentException;
 
 }

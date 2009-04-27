@@ -39,24 +39,29 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.Sequencable;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.metadata.FunctionMethod;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.lang.DependentSetCriteria;
 import com.metamatrix.query.sql.lang.ExistsCriteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
+import com.metamatrix.query.sql.lang.SubquerySetCriteria;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -78,8 +83,9 @@ public class Evaluator {
     private final static MatchCriteria.PatternTranslator LIKE_TO_REGEX = new MatchCriteria.PatternTranslator(".*", ".", REGEX_RESERVED, '\\');  //$NON-NLS-1$ //$NON-NLS-2$
 
     private Map elements;
-    private LookupEvaluator dataMgr;
-    private CommandContext context;
+    
+    protected ProcessorDataManager dataMgr;
+    protected CommandContext context;
     
     public static boolean evaluate(Criteria criteria) throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
     	return new Evaluator(Collections.emptyMap(), null, null).evaluate(criteria, Collections.emptyList());
@@ -89,10 +95,14 @@ public class Evaluator {
     	return new Evaluator(Collections.emptyMap(), null, null).evaluate(expression, Collections.emptyList());
     }
     
-    public Evaluator(Map elements, LookupEvaluator dataMgr, CommandContext context) {
+    public Evaluator(Map elements, ProcessorDataManager dataMgr, CommandContext context) {
 		this.context = context;
 		this.dataMgr = dataMgr;
 		this.elements = elements;
+	}
+    
+    public void setContext(CommandContext context) {
+		this.context = context;
 	}
 
 	public boolean evaluate(Criteria criteria, List tuple)
@@ -131,34 +141,21 @@ public class Evaluator {
 		List subCrits = criteria.getCriteria();
 		Iterator subCritIter = subCrits.iterator();
 
-		if(criteria.getOperator() == CompoundCriteria.AND) {
-            Boolean result = Boolean.TRUE;
-			while(subCritIter.hasNext()) {
-				Criteria subCrit = (Criteria) subCritIter.next();
-				Boolean value = evaluateTVL(subCrit, tuple);
-                if (value == null) {
-					result = null;
-				} else if (!value.booleanValue()) {
-                    return Boolean.FALSE;
-                }
-			}
-			return result;
-
-		}
-		// CompoundCriteria.OR
-        Boolean result = Boolean.FALSE;
+		boolean and = criteria.getOperator() == CompoundCriteria.AND;
+        Boolean result = and?Boolean.TRUE:Boolean.FALSE;
 		while(subCritIter.hasNext()) {
 			Criteria subCrit = (Criteria) subCritIter.next();
 			Boolean value = evaluateTVL(subCrit, tuple);
-			if (value == null) {
-                result = null;
-                continue;
-            } 
-            if (value.booleanValue()) {
-                return Boolean.TRUE;
+            if (value == null) {
+				result = null;
+			} else if (!value.booleanValue()) {
+				if (and) {
+					return Boolean.FALSE;
+				}
+            } else if (!and) {
+            	return Boolean.TRUE;
             }
 		}
-        
 		return result;
 	}
 
@@ -295,7 +292,7 @@ public class Evaluator {
 		}
 	}
 
-	public Boolean evaluate(AbstractSetCriteria criteria, List tuple)
+	private Boolean evaluate(AbstractSetCriteria criteria, List tuple)
 		throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
 		// Evaluate expression
@@ -315,9 +312,17 @@ public class Evaluator {
         ValueIterator valueIter = null;
         if (criteria instanceof SetCriteria) {
         	valueIter = new CollectionValueIterator(((SetCriteria)criteria).getValues());
-        } else {
+        } else if (criteria instanceof DependentSetCriteria){
         	ContextReference ref = (ContextReference)criteria;
         	valueIter = getContext(criteria).getValueIterator(ref);
+        } else if (criteria instanceof SubquerySetCriteria) {
+        	try {
+				valueIter = evaluateSubquery((SubquerySetCriteria)criteria, tuple);
+			} catch (MetaMatrixProcessingException e) {
+				throw new CriteriaEvaluationException(e, e.getMessage());
+			}
+        } else {
+        	Assertion.failed("unknown set criteria type"); //$NON-NLS-1$
         }
         while(valueIter.hasNext()) {
             Object possibleValue = valueIter.next();
@@ -362,7 +367,7 @@ public class Evaluator {
 		return (value == null ^ criteria.isNegated());
 	}
 
-    public Boolean evaluate(SubqueryCompareCriteria criteria, List tuple)
+    private Boolean evaluate(SubqueryCompareCriteria criteria, List tuple)
         throws CriteriaEvaluationException, BlockedException, MetaMatrixComponentException {
 
         // Evaluate expression
@@ -388,7 +393,12 @@ public class Evaluator {
             result = Boolean.TRUE;
         }
 
-        ValueIterator valueIter = getContext(criteria).getValueIterator(criteria);
+        ValueIterator valueIter;
+		try {
+			valueIter = evaluateSubquery(criteria, tuple);
+		} catch (MetaMatrixProcessingException e) {
+			throw new CriteriaEvaluationException(e, e.getMessage());
+		}
         while(valueIter.hasNext()) {
             Object value = valueIter.next();
 
@@ -469,9 +479,14 @@ public class Evaluator {
     }
 
     public boolean evaluate(ExistsCriteria criteria, List tuple)
-        throws BlockedException, MetaMatrixComponentException {
+        throws BlockedException, MetaMatrixComponentException, CriteriaEvaluationException {
 
-        ValueIterator valueIter = getContext(criteria).getValueIterator(criteria);
+        ValueIterator valueIter;
+		try {
+			valueIter = evaluateSubquery(criteria, tuple);
+		} catch (MetaMatrixProcessingException e) {
+			throw new CriteriaEvaluationException(e, e.getMessage());
+		}
         if(valueIter.hasNext()) {
             return true;
         }
@@ -617,7 +632,12 @@ public class Evaluator {
 	    throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
 		
 	    Object result = null;
-        ValueIterator valueIter = getContext(scalarSubquery).getValueIterator(scalarSubquery);
+        ValueIterator valueIter;
+		try {
+			valueIter = evaluateSubquery(scalarSubquery, tuple);
+		} catch (MetaMatrixProcessingException e) {
+			throw new ExpressionEvaluationException(e, e.getMessage());
+		}
 	    if(valueIter.hasNext()) {
 	        result = valueIter.next();
 	        if(valueIter.hasNext()) {
@@ -628,12 +648,17 @@ public class Evaluator {
 	    }
 	    return result;
 	}
+	
+	protected ValueIterator evaluateSubquery(SubqueryContainer container, List tuple) 
+	throws MetaMatrixProcessingException, BlockedException, MetaMatrixComponentException {
+		throw new UnsupportedOperationException("Subquery evaluation not possible with a base Evaluator"); //$NON-NLS-1$
+	}
 
 	private CommandContext getContext(LanguageObject expression) throws MetaMatrixComponentException {
 		if (context == null) {
 			throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, expression, "No value was available")); //$NON-NLS-1$
 		}
 		return context;
-	}       
+	}   
 	    
 }

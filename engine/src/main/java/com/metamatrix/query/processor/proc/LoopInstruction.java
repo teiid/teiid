@@ -34,7 +34,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.program.Program;
-import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.VariableContext;
@@ -54,9 +53,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
         this.loopProgram = loopProgram;
     }
 
-    public void process(ProgramEnvironment env) throws MetaMatrixComponentException {
-        ProcedureEnvironment procEnv = (ProcedureEnvironment)env;
-       
+    public void process(ProcedurePlan procEnv) throws MetaMatrixComponentException {
         List currentRow = procEnv.getCurrentRow(rsName); 
         VariableContext varContext = procEnv.getCurrentVariableContext();
         //set results to the variable context(the cursor.element is treated as variable)
@@ -111,7 +108,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     /** 
      * @see com.metamatrix.query.processor.proc.RepeatedInstruction#testCondition(com.metamatrix.query.processor.proc.ProcedureEnvironment)
      */
-    public boolean testCondition(ProcedureEnvironment procEnv) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    public boolean testCondition(ProcedurePlan procEnv) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         if(!procEnv.resultSetExists(rsName)) {
             procEnv.executePlan(plan, rsName);            
         }
@@ -129,7 +126,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     /** 
      * @see com.metamatrix.query.processor.proc.RepeatedInstruction#postInstruction(com.metamatrix.query.processor.proc.ProcedureEnvironment)
      */
-    public void postInstruction(ProcedureEnvironment procEnv) throws MetaMatrixComponentException {
+    public void postInstruction(ProcedurePlan procEnv) throws MetaMatrixComponentException {
         procEnv.removeResults(rsName);
     }
 

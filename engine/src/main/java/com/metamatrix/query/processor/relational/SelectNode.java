@@ -22,17 +22,22 @@
 
 package com.metamatrix.query.processor.relational;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.util.CommandContext;
 
-public class SelectNode extends RelationalNode {
+public class SelectNode extends SubqueryAwareRelationalNode {
 
 	private Criteria criteria;
     
@@ -44,7 +49,6 @@ public class SelectNode extends RelationalNode {
     private boolean blockedOnPrepare = false;
     private TupleBatch blockedBatch = null;
     private int blockedRow = 0;
-    private Evaluator evaluator;
     
 	public SelectNode(int nodeID) {
 		super(nodeID);
@@ -57,7 +61,6 @@ public class SelectNode extends RelationalNode {
         blockedOnPrepare = false;
         blockedBatch = null;
         blockedRow = 0;
-        evaluator = null;
     }
 
 	public void setCriteria(Criteria criteria) { 
@@ -68,18 +71,16 @@ public class SelectNode extends RelationalNode {
 		return this.criteria;
 	}
 	
-	public void open() 
-		throws MetaMatrixComponentException, MetaMatrixProcessingException {
-
-		super.open();
-
+	@Override
+	public void initialize(CommandContext context, BufferManager bufferManager,
+			ProcessorDataManager dataMgr) {
+		super.initialize(context, bufferManager, dataMgr);
         // Create element lookup map for evaluating project expressions
         if(this.elementMap == null) {
             this.elementMap = createLookupMap(this.getChildren()[0].getElements());
         }
-        this.evaluator = new Evaluator(elementMap, getDataManager(), getContext());
 	}
-    
+	
     /**
      * @see com.metamatrix.query.processor.relational.RelationalNode#nextBatchDirect()
      */
@@ -91,7 +92,6 @@ public class SelectNode extends RelationalNode {
             batch = this.getChildren()[0].nextBatch();
         }
                 
-        boolean doPrepareToProcessTuple = !blockedOnCriteria;             
         int row = blockedRow;
         if(! blockedOnCriteria && ! blockedOnPrepare) {
             row = batch.getBeginRow();               
@@ -106,22 +106,9 @@ public class SelectNode extends RelationalNode {
         for(; row <= batch.getEndRow(); row++) {             
             List tuple = batch.getTuple(row);
         
-            if (doPrepareToProcessTuple){
-                try {
-                    // Hook for subclasses
-                    this.prepareToProcessTuple(this.elementMap, tuple);
-                } catch(BlockedException e) {
-                    // Save state and rethrow
-                    blockedOnPrepare = true;
-                    blockedBatch = batch;
-                    blockedRow = row;
-                    throw e;   
-                }
-            }
-                        
             // Evaluate criteria with tuple
             try {
-                if(evaluator.evaluate(this.criteria, tuple)) {
+                if(getEvaluator(this.elementMap).evaluate(this.criteria, tuple)) {
                     addBatchRow( projectTuple(elementMap, tuple, getElements()) );
                 }
             } catch(BlockedException e) {
@@ -140,23 +127,6 @@ public class SelectNode extends RelationalNode {
         return pullBatch();            
 	}
     
-    /**
-     * This method is called by {@link #nextBatch} just after the current
-     * tuple is pulled from the child processor node and just before any
-     * processing is done (in this case, before the criteria is evaluated).
-     * This gives subclasses a chance to do any custom processing - for example,
-     * to examine the current tuple in order to execute correlated subqueries.
-     * @param elementMap Map of ElementSymbol elements to Integer indices into
-     * the currentTuple parameter
-     * @param currentTuple the current tuple about to be processed by
-     * this node
-     * @throws MetaMatrixProcessingException for exception due to user input
-     */
-    protected void prepareToProcessTuple(Map elementMap, List currentTuple)
-    throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
-        //Nothing done here        
-    }
-	
 	protected void getNodeString(StringBuffer str) {
 		super.getNodeString(str);
 		str.append(criteria);
@@ -183,6 +153,11 @@ public class SelectNode extends RelationalNode {
         props.put(PROP_TYPE, "Select"); //$NON-NLS-1$
         props.put(PROP_CRITERIA, this.criteria.toString());        
         return props;
+    }
+    
+    @Override
+    public Collection<? extends LanguageObject> getLanguageObjects() {
+    	return Arrays.asList(this.criteria);
     }
     
 }

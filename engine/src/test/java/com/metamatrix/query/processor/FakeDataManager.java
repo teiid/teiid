@@ -23,13 +23,10 @@
 package com.metamatrix.query.processor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
@@ -353,6 +350,11 @@ public class FakeDataManager implements ProcessorDataManager {
 
     public void setBlockOnce() {
         blockOnce = true;
+    }
+    
+    @Override
+    public void clearCodeTables() {
+    	
     }
 
 }

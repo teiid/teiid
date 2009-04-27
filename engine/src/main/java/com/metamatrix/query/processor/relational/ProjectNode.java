@@ -24,6 +24,7 @@ package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,19 +33,22 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
+import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
-public class ProjectNode extends RelationalNode {
+public class ProjectNode extends SubqueryAwareRelationalNode {
 
 	private List selectSymbols;
 
@@ -55,7 +59,6 @@ public class ProjectNode extends RelationalNode {
     // Saved state when blocked on evaluating a row - must be reset
     private TupleBatch currentBatch;
     private int currentRow;
-    private boolean blockedOnPrepare = false;
 
 	public ProjectNode(int nodeID) {
 		super(nodeID);
@@ -63,13 +66,10 @@ public class ProjectNode extends RelationalNode {
 
     public void reset() {
         super.reset();
-
-        elementMap = null;
         needsProject = true;
 
         currentBatch = null;
         currentRow = 0;
-        blockedOnPrepare = false;
     }
 
     /**
@@ -83,12 +83,11 @@ public class ProjectNode extends RelationalNode {
 	public void setSelectSymbols(List symbols) {
 		this.selectSymbols = symbols;
 	}
-
-	public void open()
-    	throws MetaMatrixComponentException, MetaMatrixProcessingException {
-
-        // Open the child source
-        super.open();
+	
+	@Override
+	public void initialize(CommandContext context, BufferManager bufferManager,
+			ProcessorDataManager dataMgr) {
+		super.initialize(context, bufferManager, dataMgr);
 
         // Do this lazily as the node may be reset and re-used and this info doesn't change
         if(elementMap == null) {
@@ -143,7 +142,7 @@ public class ProjectNode extends RelationalNode {
             }
         }
     }
-
+	
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
 
@@ -155,12 +154,6 @@ public class ProjectNode extends RelationalNode {
 
         TupleBatch batch = this.currentBatch;
         int beginRow = this.currentRow;
-
-        // Call "prepareToProcessTuple" if there is no temporary batch state
-        // (indicating this is the first call to get a next batch) or
-        // if the blockedOnPrepare variable indicates that
-        // "prepareToProcessTuple" threw the BlockedException
-        boolean doPrepareToProcessTuple = (this.currentBatch == null || this.blockedOnPrepare);
 
         if(batch == null) {
             // There was no saved batch, so get a new one
@@ -186,24 +179,10 @@ public class ProjectNode extends RelationalNode {
             // There was a saved batch, but we grabbed the state so it can now be removed
             this.currentBatch = null;
             this.currentRow = 0;
-            this.blockedOnPrepare = false;
         }
 
         for(int row = beginRow; row <= batch.getEndRow(); row++) {
     		List tuple = batch.getTuple(row);
-
-            if (doPrepareToProcessTuple){
-                try {
-                    // Hook for subclasses
-                    this.prepareToProcessTuple(this.elementMap, tuple);
-                } catch(BlockedException e) {
-                    // Expression blocked, so save state and rethrow
-                    this.blockedOnPrepare = true;
-                    this.currentBatch = batch;
-                    this.currentRow = row;
-                    throw e;
-                }
-            }
 
 			List projectedTuple = new ArrayList(selectSymbols.size());
 
@@ -232,23 +211,6 @@ public class ProjectNode extends RelationalNode {
         return pullBatch();
 	}
 
-    /**
-     * This method is called by {@link #nextBatch} just after the current
-     * tuple is pulled from the child processor node and just before any
-     * processing is done (in this case, before the tuple is projected).
-     * This gives subclasses a chance to do any custom processing - for example,
-     * to examine the current tuple in order to execute correlated subqueries.
-     * @param elementMap Map of ElementSymbol elements to Integer indices into
-     * the currentTuple parameter
-     * @param currentTuple the current tuple about to be processed by
-     * this node
-     * @throws MetaMatrixProcessingException for exception due to user input or modeling
-     */
-    protected void prepareToProcessTuple(Map elementMap, List currentTuple)
-    throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
-        //Nothing done here
-    }
-
 	private void updateTuple(SelectSymbol symbol, List values, List tuple)
 		throws BlockedException, MetaMatrixComponentException, ExpressionEvaluationException {
 
@@ -268,7 +230,7 @@ public class ProjectNode extends RelationalNode {
 			tuple.add(values.get(index.intValue()));
         } else if(symbol instanceof ExpressionSymbol) {
             Expression expression = ((ExpressionSymbol)symbol).getExpression();
-            tuple.add(new Evaluator(elementMap, getDataManager(), getContext()).evaluate(expression, values));
+			tuple.add(getEvaluator(this.elementMap).evaluate(expression, values));
         } else {
             Assertion.failed(QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0034, symbol.getClass().getName()));
 		}
@@ -305,5 +267,10 @@ public class ProjectNode extends RelationalNode {
 
         return props;
     }
-
+    
+    @Override
+    public Collection<LanguageObject> getLanguageObjects() {
+    	return this.getSelectSymbols();
+    }
+    
 }

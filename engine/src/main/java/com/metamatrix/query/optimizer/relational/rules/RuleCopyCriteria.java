@@ -346,7 +346,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
         Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         if(node.getGroups().size() == 1 && crit != null) {
             
-            if(!node.hasBooleanProperty(NodeConstants.Info.IS_HAVING) && !FrameUtil.hasSubquery(node)) {
+            if(!node.hasBooleanProperty(NodeConstants.Info.IS_HAVING) && node.getSubqueryContainers().isEmpty()) {
                 if (!node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
                     toCopy.add(crit);
                 }

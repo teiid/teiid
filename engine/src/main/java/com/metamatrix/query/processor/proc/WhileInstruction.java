@@ -31,7 +31,6 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.processor.program.Program;
-import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.lang.Criteria;
 
@@ -49,7 +48,7 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
         this.condition = condition;
     }
 
-    public void process(ProgramEnvironment env) throws MetaMatrixComponentException {
+    public void process(ProcedurePlan env) throws MetaMatrixComponentException {
         //do nothing
     }
     
@@ -88,7 +87,7 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
      * @throws MetaMatrixProcessingException 
      * @see com.metamatrix.query.processor.proc.RepeatedInstruction#testCondition(com.metamatrix.query.processor.proc.ProcedureEnvironment)
      */
-    public boolean testCondition(ProcedureEnvironment procEnv) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    public boolean testCondition(ProcedurePlan procEnv) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         return procEnv.evaluateCriteria(condition);
     }
 
@@ -102,7 +101,7 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
     /** 
      * @see com.metamatrix.query.processor.proc.RepeatedInstruction#postInstruction(com.metamatrix.query.processor.proc.ProcedureEnvironment)
      */
-    public void postInstruction(ProcedureEnvironment procEnv) throws MetaMatrixComponentException {
+    public void postInstruction(ProcedurePlan procEnv) throws MetaMatrixComponentException {
     }
     
 }

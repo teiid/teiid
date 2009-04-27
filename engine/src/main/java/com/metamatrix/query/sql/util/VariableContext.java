@@ -172,4 +172,9 @@ public class VariableContext {
     	return this.variableMap.remove(symbol);
     }
     
+    @Override
+    public String toString() {
+    	return this.variableMap.toString();
+    }
+    
 }

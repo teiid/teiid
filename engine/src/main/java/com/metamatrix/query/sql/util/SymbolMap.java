@@ -47,16 +47,12 @@ public class SymbolMap {
     public SymbolMap() {
 	}
     
-    public SymbolMap(SymbolMap other) {
-    	//todo clone;
-    	this.map.putAll(other.map);
-    }
-    
-    public SymbolMap merge(SymbolMap other) {
-    	if (other != null) {
-    		this.map.putAll(other.map);
-    	}
-    	return this;
+    public SymbolMap clone() {
+    	SymbolMap clonedMap = new SymbolMap();
+    	for (Map.Entry<ElementSymbol, Expression> entry : map.entrySet()) {
+			clonedMap.addMapping((ElementSymbol)entry.getKey().clone(), (Expression)entry.getValue().clone());
+		}
+    	return clonedMap;
     }
     
     /**

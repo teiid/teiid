@@ -23,7 +23,6 @@
 package com.metamatrix.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -66,7 +65,6 @@ import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ExpressionMappingVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
-import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class FrameUtil {
@@ -103,9 +101,9 @@ public class FrameUtil {
             return;
         }
         
-        for (Map.Entry<ElementSymbol, Expression> entry : new HashSet<Map.Entry<ElementSymbol, Expression>>(parentSymbolMap.asMap().entrySet())) {
-            parentSymbolMap.addMapping(entry.getKey(), convertExpression(entry.getValue(), symbolMap));
-        }
+        for (Map.Entry<ElementSymbol, Expression> entry : parentSymbolMap.asUpdatableMap().entrySet()) {
+			entry.setValue(convertExpression(entry.getValue(), symbolMap));
+		}
         
     }
     
@@ -135,18 +133,17 @@ public class FrameUtil {
      */
     private static void convertAccessPatterns(Map symbolMap,
                                               PlanNode node) throws QueryPlannerException {
-        List accessPatterns = (List)node.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
+        List<AccessPattern> accessPatterns = (List<AccessPattern>)node.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
         if (accessPatterns != null) {
-            for (Iterator i = accessPatterns.iterator(); i.hasNext();) {
-                AccessPattern ap = (AccessPattern)i.next();
-                Set newElements = new HashSet();
+        	for (AccessPattern ap : accessPatterns) {
+                Set<ElementSymbol> newElements = new HashSet<ElementSymbol>();
                 for (Iterator elems = ap.getUnsatisfied().iterator(); elems.hasNext();) {
                     ElementSymbol symbol = (ElementSymbol)elems.next();
                     Expression mapped = convertExpression(symbol, symbolMap);
                     newElements.addAll(ElementCollectorVisitor.getElements(mapped, true));
                 }
                 ap.setUnsatisfied(newElements);
-                Set newHistory = new HashSet();
+                Set<ElementSymbol> newHistory = new HashSet<ElementSymbol>();
                 for (Iterator elems = ap.getCurrentElements().iterator(); elems.hasNext();) {
                     ElementSymbol symbol = (ElementSymbol)elems.next();
                     Expression mapped = convertExpression(symbol, symbolMap);
@@ -173,6 +170,18 @@ public class FrameUtil {
 
         int type = node.getType();
 
+        // Convert expressions from correlated subquery references;
+        List<SymbolMap> refMaps = node.getCorrelatedReferences();
+        boolean hasRefs = false;
+        for (SymbolMap refs : refMaps) {
+        	for (Map.Entry<ElementSymbol, Expression> ref : refs.asUpdatableMap().entrySet()) {
+        		hasRefs = true;
+	            Expression expr = ref.getValue();
+	            Expression convertedExpr = convertExpression(expr, symbolMap);
+	            ref.setValue(convertedExpr);
+	        }
+        }
+        
         if(newGroup != null) {
             if (!hasOld) {
                 return;
@@ -182,20 +191,10 @@ public class FrameUtil {
         	groups.clear();
         }
         
-        // Convert expressions from correlated subquery references;
-        // currently only for SELECT or PROJECT nodes
-        SymbolMap refs = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-        if (refs != null){
-            for (Map.Entry<ElementSymbol, Expression> ref : refs.asUpdatableMap().entrySet()) {
-                Expression expr = ref.getValue();
-                Expression convertedExpr = convertExpression(expr, symbolMap);
-                ref.setValue(convertedExpr);
-                if (newGroup == null) {
-                    GroupsUsedByElementsVisitor.getGroups(convertedExpr, groups);
-                }
-            }
+        if (hasRefs) {
+        	groups.addAll(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
         }
-
+        
         if(type == NodeConstants.Types.SELECT) { 
             Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
             crit = convertCriteria(crit, symbolMap);
@@ -346,12 +345,6 @@ public class FrameUtil {
         return map;
     }
     
-    static boolean hasSubquery(PlanNode critNode) {
-        Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-        Collection subCrits = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit);
-        return (subCrits.size() > 0);
-    }
-
     /**
      * Find the SOURCE, SET_OP, JOIN, or NULL node that originates the given groups (typically from a criteria node).
      * In the case of join nodes the best fit will be found rather than just the first

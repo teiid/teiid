@@ -44,15 +44,15 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.DataService;
-import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.util.CommandContext;
 
-public class DataTierManagerImpl implements DataTierManager {
+public class DataTierManagerImpl implements ProcessorDataManager {
 
 	// Resources
 	private DQPCore requestMgr;
@@ -67,9 +67,8 @@ public class DataTierManagerImpl implements DataTierManager {
     private CodeTableCache codeTableCache;
     
     public DataTierManagerImpl(DQPCore requestMgr,
-        DataService dataService, MetadataService metadataService, VDBService vdbService, 
-        BufferService bufferService, int maxCodeTables,
-        int maxCodeTableRecords) {
+        DataService dataService, VDBService vdbService, BufferService bufferService, 
+        int maxCodeTables, int maxCodeTableRecords) {
 
 		this.requestMgr = requestMgr;
         this.dataService = dataService;

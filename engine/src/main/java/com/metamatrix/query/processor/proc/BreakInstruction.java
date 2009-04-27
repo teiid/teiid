@@ -38,7 +38,7 @@ public class BreakInstruction extends ContinueInstruction {
         return "BREAK INSTRUCTION"; //$NON-NLS-1$
     }
 
-    public void process(ProgramEnvironment env) throws MetaMatrixComponentException {
+    public void process(ProcedurePlan env) throws MetaMatrixComponentException {
         super.process(env);
         env.incrementProgramCounter();
     }

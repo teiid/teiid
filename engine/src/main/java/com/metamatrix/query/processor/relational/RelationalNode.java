@@ -23,9 +23,11 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -40,8 +42,12 @@ import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.Describable;
 import com.metamatrix.query.processor.DescribableUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.processor.ProcessorPlan;
+import com.metamatrix.query.sql.LanguageObject;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
+import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -483,9 +489,27 @@ public abstract class RelationalNode implements Cloneable, Describable{
      * @since 4.2
      */
     public List getChildPlans() {
-        return null;
+    	Collection<? extends LanguageObject> objs = getLanguageObjects();
+    	if (objs == null || objs.isEmpty()) {
+    		return null;
+    	}
+    	Collection<SubqueryContainer> containers = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(objs);
+    	if (containers.isEmpty()) {
+    		return null;
+    	}
+    	List<ProcessorPlan> plans = new LinkedList<ProcessorPlan>();
+    	for (SubqueryContainer container : containers) {
+			if (container.getCommand().getProcessorPlan() != null) {
+				plans.add(container.getCommand().getProcessorPlan());
+			}
+		}
+    	return plans;
     }
-
+    
+    public Collection<? extends LanguageObject> getLanguageObjects() {
+    	return null;
+    }
+    
     /*
      * @see com.metamatrix.query.processor.Describable#getDescriptionProperties()
      */

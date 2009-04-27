@@ -84,6 +84,7 @@ import com.metamatrix.dqp.spi.TrackerLogConstants;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.server.serverapi.RequestInfo;
 import com.metamatrix.vdb.runtime.VDBKey;
@@ -130,7 +131,7 @@ public class DQPCore extends Application implements ClientSideDQP {
     // Resources
     private ConnectorCapabilitiesCache connectorCapabilitiesCache = new ConnectorCapabilitiesCache();
     private BufferManager bufferManager;
-    private DataTierManager dataTierMgr;
+    private ProcessorDataManager dataTierMgr;
     private PreparedPlanCache prepPlanCache;
     private TrackingService tracker;
     private TransactionService transactionService;
@@ -539,11 +540,11 @@ public class DQPCore extends Application implements ClientSideDQP {
                     rowCount);
     }
     
-    DataTierManager getDataTierManager() {
+    ProcessorDataManager getDataTierManager() {
     	return this.dataTierMgr;
     }
     
-    public void setDataTierManager(DataTierManager dataTierMgr) {
+    public void setDataTierManager(ProcessorDataManager dataTierMgr) {
     	this.dataTierMgr = dataTierMgr;
     }
 
@@ -634,7 +635,6 @@ public class DQPCore extends Application implements ClientSideDQP {
         
         dataTierMgr = new DataTierManagerImpl(this,
                                             (DataService) env.findService(DQPServiceNames.DATA_SERVICE),
-                                            (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE),
                                             (VDBService) env.findService(DQPServiceNames.VDB_SERVICE),
                                             (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE),
                                             this.maxCodeTables,

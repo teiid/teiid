@@ -29,6 +29,8 @@ import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.mapping.relational.QueryNode;
+import com.metamatrix.query.optimizer.TestOptimizer.DependentProjectNode;
+import com.metamatrix.query.optimizer.TestOptimizer.DependentSelectNode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -37,8 +39,6 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.DependentAccessNode;
-import com.metamatrix.query.processor.relational.DependentProjectNode;
-import com.metamatrix.query.processor.relational.DependentSelectNode;
 import com.metamatrix.query.processor.relational.DupRemoveNode;
 import com.metamatrix.query.processor.relational.GroupingNode;
 import com.metamatrix.query.processor.relational.LimitNode;
@@ -79,7 +79,7 @@ public class TestLimit extends TestCase {
                 0       // UnionAll
             };
     
-    public static final Class[] NODE_TYPES = new Class[] {
+    public static final Class<?>[] NODE_TYPES = new Class[] {
         AccessNode.class,
         DependentAccessNode.class,
         DependentSelectNode.class,

@@ -29,6 +29,7 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.query.processor.Describable;
+import com.metamatrix.query.processor.proc.ProcedurePlan;
 
 /**
  * <p>Abstract superclass of all program instructions.</p>
@@ -52,7 +53,7 @@ public abstract class ProgramInstruction implements Cloneable, Describable {
      * Program#incrementProgramCounter increment} the program counter of the current program, but specialized
      * instructions may add sub programs to the stack or not increment the counter (so that they are executed again.)
      */
-    public abstract void process(ProgramEnvironment env) 
+    public abstract void process(ProcedurePlan env) 
         throws MetaMatrixComponentException, MetaMatrixProcessingException;
         
     /**

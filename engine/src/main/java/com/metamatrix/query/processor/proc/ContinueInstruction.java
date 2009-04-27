@@ -37,7 +37,7 @@ public class ContinueInstruction extends ProgramInstruction {
         return "CONTINUE INSTRUCTION"; //$NON-NLS-1$
     }
 
-    public void process(ProgramEnvironment env) throws MetaMatrixComponentException {
+    public void process(ProcedurePlan env) throws MetaMatrixComponentException {
         Program parentProgram = env.peek();
         
         //find the parent program that contains the loop/while instruction

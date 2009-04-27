@@ -34,11 +34,11 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.program.ProgramEnvironment;
+import com.metamatrix.query.processor.program.ProgramInstruction;
 
 /**
  */
-public class CreateCursorResultSetInstruction extends CommandInstruction {
+public class CreateCursorResultSetInstruction extends ProgramInstruction {
     protected String rsName;
     protected ProcessorPlan plan;
     
@@ -56,10 +56,8 @@ public class CreateCursorResultSetInstruction extends CommandInstruction {
      * @throws BlockedException if this result set is not selecting from
      * only temp groups
      */
-    public void process(ProgramEnvironment env)
+    public void process(ProcedurePlan procEnv)
         throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
-
-        ProcedureEnvironment procEnv = (ProcedureEnvironment)env;
 
         if(procEnv.resultSetExists(rsName)) {
             procEnv.removeResults(rsName);

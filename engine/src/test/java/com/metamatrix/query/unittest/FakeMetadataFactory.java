@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingAttribute;
@@ -1043,7 +1044,7 @@ public class FakeMetadataFactory {
         QueryNode vspqn48 = new QueryNode("vsp48", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; SELECT e1 FROM (EXEC pm1.sq2(pm1.vsp48.in)) as e; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp48 = createVirtualProcedure("pm1.vsp48", pm1, Arrays.asList(new FakeMetadataObject[] { vsp48p1, vsp48p2 }), vspqn48); //$NON-NLS-1$
         
-        FakeMetadataObject vsp49rs = createResultSet("pm1vsp49.rs", pm1, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }); //$NON-NLS-1$ //$NON-NLS-2$ 
+        FakeMetadataObject vsp49rs = createResultSet("pm1vsp49.rs", pm1, new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         FakeMetadataObject vsp49p1 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, vsp49rs);  //$NON-NLS-1$
         QueryNode vspqn49 = new QueryNode("vsp49", "CREATE VIRTUAL PROCEDURE BEGIN DECLARE string x; x = 'b'; EXEC pm1.sq2(x); END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject vsp49 = createVirtualProcedure("pm1.vsp49", pm1, Arrays.asList(new FakeMetadataObject[] { vsp49p1 }), vspqn49); //$NON-NLS-1$

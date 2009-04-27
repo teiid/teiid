@@ -419,12 +419,9 @@ public class TestValidator extends TestCase {
             // Get invalid objects from report
             Collection actualObjs = new ArrayList();
             report.collectInvalidObjects(actualObjs);
-            //System.out.println(report);
-            if(actualObjs.size() == 0) {
-                fail("Expected some failures but got none for procedure = " + procedure); //$NON-NLS-1$
-            }
+            assertTrue("Expected some failures but got none for procedure = " + procedure, !actualObjs.isEmpty()); //$NON-NLS-1$ 
         } catch(MetaMatrixException e) {
-			fail("Exception during validation (" + e.getClass().getName() + "): " + e.getMessage());	         //$NON-NLS-1$ //$NON-NLS-2$
+			throw new RuntimeException(e);
         }
 	}	
     
@@ -1881,50 +1878,7 @@ public class TestValidator extends TestCase {
         store.addObject(virtualResultSet);
         store.addObject(virtualStoredProcedure);
         return new FakeMetadataFacade(store);
-    }   
-    
-    public void testDefect8693() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where e2 = 5;\n"; //$NON-NLS-1$
-        procedure = procedure + "if (5 in (select 5 from pm1.g1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-        procedure = procedure + "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-                                     
-        helpFailProcedure(procedure, userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-    public void testWhileWithSubquery() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "WHILE (5 in (select 5 from pm1.g1))\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n";         //$NON-NLS-1$
-        procedure = procedure + "END"; //$NON-NLS-1$
-
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-                                     
-        helpFailProcedure(procedure, userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
-    
-    public void testDefect18404() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "DECLARE integer var1 = 5 + (select count(e2) from pm1.g1);\n"; //$NON-NLS-1$
-        procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END"; //$NON-NLS-1$
-    
-        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
-    
-        helpFailProcedure(procedure, userUpdateStr, FakeMetadataObject.Props.UPDATE_PROCEDURE);
-    }
+    }       
     
     public void testSelectIntoWithNull() {
         helpValidate("SELECT null, null, null, null INTO pm1.g1 FROM pm1.g2", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$

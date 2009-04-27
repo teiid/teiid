@@ -34,6 +34,7 @@ import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.eval.Evaluator;
@@ -44,6 +45,7 @@ import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
 import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -275,14 +277,16 @@ public class TestExpressionEvaluator extends TestCase {
 			throws BlockedException,
 			MetaMatrixComponentException, ExpressionEvaluationException {
 		final CollectionValueIterator valueIter = new CollectionValueIterator(values);
-        CommandContext cc = new CommandContext() {
+        CommandContext cc = new CommandContext();
+        assertEquals(expected, new Evaluator(Collections.emptyMap(), null, cc) {
         	@Override
-        	public ValueIterator getValueIterator(ContextReference ref)
-        			throws MetaMatrixComponentException {
+        	protected ValueIterator evaluateSubquery(
+        			SubqueryContainer container, List tuple)
+        			throws MetaMatrixProcessingException, BlockedException,
+        			MetaMatrixComponentException {
         		return valueIter;
         	}
-        };
-        assertEquals(expected, new Evaluator(Collections.emptyMap(), null, cc).evaluate(expr, null) );
+        }.evaluate(expr, null) );
 	}
 
     public void testScalarSubquery2() throws Exception{

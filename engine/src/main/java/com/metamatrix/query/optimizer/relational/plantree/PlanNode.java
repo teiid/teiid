@@ -295,31 +295,55 @@ public class PlanNode {
 		node.addLastChild(this);
     }
     
+    public List<SymbolMap> getCorrelatedReferences() {
+    	List<SubqueryContainer> containers = getSubqueryContainers();
+    	if (containers.isEmpty()) {
+    		return Collections.emptyList();
+    	}
+    	ArrayList<SymbolMap> result = new ArrayList<SymbolMap>(containers.size());
+    	for (SubqueryContainer container : containers) {
+    		SymbolMap map = container.getCommand().getCorrelatedReferences();
+			if (map != null) {
+				result.add(map);
+			}
+		}
+    	return result;
+    }
+    
     public Set<ElementSymbol> getCorrelatedReferenceElements() {
-        SymbolMap refs = (SymbolMap) this.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+        List<SymbolMap> maps = getCorrelatedReferences();
         
-        if(refs == null) {
+        if(maps.isEmpty()) {
             return Collections.emptySet();    
         }
-        
-        List<Expression> values = refs.getValues();
-        HashSet<ElementSymbol> result = new HashSet<ElementSymbol>(values.size());
-        for (Expression expr : values) {
-            ElementCollectorVisitor.getElements(expr, result);
+        HashSet<ElementSymbol> result = new HashSet<ElementSymbol>();
+        for (SymbolMap symbolMap : maps) {
+	        List<Expression> values = symbolMap.getValues();
+	        for (Expression expr : values) {
+	            ElementCollectorVisitor.getElements(expr, result);
+	        }
         }
         return result;
     }
     
 	public List<SubqueryContainer> getSubqueryContainers() {
 		Collection<? extends LanguageObject> toSearch = Collections.emptyList();
-		if (this.getType() == NodeConstants.Types.SELECT){
-		    Criteria criteria = (Criteria)this.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-		    toSearch = Arrays.asList(criteria);
-		} 
-		if (this.getType() == NodeConstants.Types.PROJECT) {
-		    toSearch = (Collection)this.getProperty(NodeConstants.Info.PROJECT_COLS);
+		switch (this.getType()) {
+			case NodeConstants.Types.SELECT: {
+				Criteria criteria = (Criteria) this.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+				toSearch = Arrays.asList(criteria);
+				break;
+			}
+			case NodeConstants.Types.PROJECT: {
+				toSearch = (Collection) this.getProperty(NodeConstants.Info.PROJECT_COLS);
+				break;
+			}
+			case NodeConstants.Types.JOIN: {
+				toSearch = (List<Criteria>) this.getProperty(NodeConstants.Info.JOIN_CRITERIA);
+				break;
+			}
 		}
-		return (List<SubqueryContainer>)ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
+		return (List<SubqueryContainer>) ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(toSearch);
 	}
         
 }

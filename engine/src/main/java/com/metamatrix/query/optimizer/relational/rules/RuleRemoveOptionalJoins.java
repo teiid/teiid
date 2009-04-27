@@ -51,7 +51,6 @@ import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
@@ -108,6 +107,7 @@ public class RuleRemoveOptionalJoins implements
         		}
                 List crits = (List)node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
                 ElementCollectorVisitor.getElements(crits, elements);
+                elements.addAll(node.getCorrelatedReferenceElements());
                 break;
         	}
             case NodeConstants.Types.PROJECT:

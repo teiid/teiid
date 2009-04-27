@@ -31,7 +31,6 @@ import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -46,15 +45,12 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
     private List inputReferences;
     private List inputDefaults;
     private Criteria critInProgress;
-    private Evaluator eval;
     
     public DependentProcedureCriteriaProcessor(RelationalNode dependentNode,
                                                Criteria dependentCriteria,
                                                List references,
-                                               List defaults,
-                                               Evaluator eval) throws ExpressionEvaluationException, MetaMatrixComponentException {
+                                               List defaults) throws ExpressionEvaluationException, MetaMatrixComponentException {
         super(1, dependentNode, dependentCriteria);
-        this.eval = eval;
         this.inputDefaults = defaults;
         this.inputReferences = references;
     }

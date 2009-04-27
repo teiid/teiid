@@ -153,7 +153,7 @@ public class RulePlanProcedures implements OptimizerRule {
             
             critNode = currentNode.getParent();
             
-            if (FrameUtil.hasSubquery(currentNode) || !currentNode.getGroups().isEmpty()) {
+            if (!currentNode.getGroups().isEmpty()) {
                 continue;
             }
             

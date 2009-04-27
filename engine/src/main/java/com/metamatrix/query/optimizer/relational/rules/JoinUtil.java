@@ -72,7 +72,7 @@ public class JoinUtil {
      * @return
      */
     static final JoinType optimizeJoinType(PlanNode critNode, PlanNode joinNode, QueryMetadataInterface metadata) {
-        if (critNode.getGroups().isEmpty() || !joinNode.getGroups().containsAll(critNode.getGroups()) || FrameUtil.hasSubquery(critNode)) {
+        if (critNode.getGroups().isEmpty() || !joinNode.getGroups().containsAll(critNode.getGroups())) {
             return null;
         }
 

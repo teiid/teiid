@@ -24,12 +24,28 @@ package com.metamatrix.query.processor;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.query.eval.LookupEvaluator;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.util.CommandContext;
 
-public interface ProcessorDataManager extends LookupEvaluator {
+public interface ProcessorDataManager {
 
 	TupleSource registerRequest(Object processorId, Command command, String modelName, String connectorBindingId, int nodeID)
 		throws MetaMatrixComponentException, MetaMatrixProcessingException;
+	
+    /**
+     * Lookup a value from a cached code table.  If the code table is not loaded, it will be 
+     * loaded on the first query.  Code tables should be cached based on a combination of
+     * the codeTableName, returnElementName, and keyElementName.  If the table is not loaded,
+     * a request will be made and the method should throw a BlockedException.
+     */
+    Object lookupCodeValue(CommandContext context,
+                                           String codeTableName,
+                                           String returnElementName,
+                                           String keyElementName,
+                                           Object keyValue) throws BlockedException,
+                                                           MetaMatrixComponentException, MetaMatrixProcessingException;
+    
+    void clearCodeTables();
 }

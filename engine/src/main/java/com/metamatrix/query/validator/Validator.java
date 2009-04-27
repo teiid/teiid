@@ -56,7 +56,7 @@ public class Validator {
             }
             
             // Recursively validate subcommands
-            Iterator iter = CommandCollectorVisitor.getCommands(object, validateOnlyEmbedded).iterator();
+            Iterator iter = CommandCollectorVisitor.getCommands((Command)object, validateOnlyEmbedded).iterator();
             while(iter.hasNext()) {
                 Command subCommand = (Command) iter.next();
                 validate(subCommand, metadata, visitor, validateOnlyEmbedded);
@@ -103,6 +103,7 @@ public class Validator {
 			LanguageObject obj) {
 		if (obj instanceof Command) {
 			Command command = (Command)obj;
+			visitor.currentCommand = command;
             Map tempMetadata = command.getTemporaryMetadata();
             if(tempMetadata != null && !tempMetadata.isEmpty()) {
             	visitor.setMetadata(new TempMetadataAdapter(metadata, new TempMetadataStore(tempMetadata)));

@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.optimizer.relational;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -50,8 +49,6 @@ import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.DependentAccessNode;
 import com.metamatrix.query.processor.relational.DependentProcedureAccessNode;
 import com.metamatrix.query.processor.relational.DependentProcedureExecutionNode;
-import com.metamatrix.query.processor.relational.DependentProjectNode;
-import com.metamatrix.query.processor.relational.DependentSelectNode;
 import com.metamatrix.query.processor.relational.DupRemoveNode;
 import com.metamatrix.query.processor.relational.GroupingNode;
 import com.metamatrix.query.processor.relational.JoinNode;
@@ -66,7 +63,6 @@ import com.metamatrix.query.processor.relational.RelationalNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.processor.relational.SelectNode;
 import com.metamatrix.query.processor.relational.SortNode;
-import com.metamatrix.query.processor.relational.SubqueryProcessorUtility;
 import com.metamatrix.query.processor.relational.UnionAllNode;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.resolver.util.ResolverUtil;
@@ -76,9 +72,7 @@ import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
-import com.metamatrix.query.sql.symbol.ContextReference;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
@@ -191,16 +185,9 @@ public class PlanToProcessConverter {
                 } else {
                     List symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);
                     
-                    SubqueryProcessorUtility spu = createSubqueryProcessor(node);
-                    if (spu == null) {
-	                    ProjectNode pnode = new ProjectNode(getID());
-	            		processNode = pnode;
-                    } else {
-                        DependentProjectNode pnode = new DependentProjectNode(getID(), spu);
-                        processNode = pnode;
-                    }
-
-                    ((ProjectNode)processNode).setSelectSymbols(symbols);
+                    ProjectNode pnode = new ProjectNode(getID());
+                    pnode.setSelectSymbols(symbols);
+            		processNode = pnode;
                 }
                 break;
 
@@ -323,18 +310,10 @@ public class PlanToProcessConverter {
 			case NodeConstants.Types.SELECT:
 
 				Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-                SubqueryProcessorUtility spu = createSubqueryProcessor(node);
 
-                if (spu == null){
-					// This is a normal select node
-					SelectNode selnode = new SelectNode(getID());
-					selnode.setCriteria(crit);
-					processNode = selnode;
-				} else {
-                    DependentSelectNode selnode = new DependentSelectNode(getID(), spu);
-					selnode.setCriteria(crit);
-					processNode = selnode;
-				}
+				SelectNode selnode = new SelectNode(getID());
+				selnode.setCriteria(crit);
+				processNode = selnode;
                 possiblyDependentObject = crit;
                 
 				break;
@@ -418,21 +397,6 @@ public class PlanToProcessConverter {
 		}
 
 		return processNode;
-	}
-
-	private SubqueryProcessorUtility createSubqueryProcessor(PlanNode node) {
-		List<SubqueryContainer> subqueries = node.getSubqueryContainers();
-		if (subqueries.isEmpty()){
-			return null;
-		}
-	    SymbolMap correlatedReferences = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-	    List<ProcessorPlan> plans = new ArrayList<ProcessorPlan>(subqueries.size());
-	    List<String> contextReferences = new ArrayList<String>(subqueries.size());
-	    for (SubqueryContainer subqueryContainer : subqueries) {
-			plans.add(subqueryContainer.getCommand().getProcessorPlan());
-			contextReferences.add(((ContextReference)subqueryContainer).getContextSymbol());
-		}
-	    return new SubqueryProcessorUtility(plans, contextReferences, correlatedReferences);
 	}
 
     private RelationalNode correctProjectionForTempTable(PlanNode node,

@@ -33,6 +33,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.eval.Evaluator;
@@ -44,8 +45,8 @@ import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ContextReference;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.util.CommandContext;
@@ -101,14 +102,16 @@ public class TestCriteriaEvaluator extends TestCase {
         elementMap.put(e1, new Integer(0));
         
         List tuple = Arrays.asList(new String[]{"a"}); //$NON-NLS-1$
-        CommandContext cc = new CommandContext() {
+        CommandContext cc = new CommandContext();
+        assertEquals(expectedResult, new Evaluator(elementMap, null, cc) {
         	@Override
-        	public ValueIterator getValueIterator(ContextReference ref)
-        			throws MetaMatrixComponentException {
+        	protected ValueIterator evaluateSubquery(
+        			SubqueryContainer container, List tuple)
+        			throws MetaMatrixProcessingException, BlockedException,
+        			MetaMatrixComponentException {
         		return new CollectionValueIterator(values);
         	}
-        };
-        assertEquals(expectedResult, new Evaluator(elementMap, null, cc).evaluate(crit, tuple));
+        }.evaluate(crit, tuple));
     }
 
     private SubqueryCompareCriteria helpGetCompareSubqueryCriteria(int operator, int predicateQuantifier){

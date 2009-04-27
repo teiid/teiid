@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.teiid.dqp.internal.process.DataTierManager;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleSource;
@@ -42,7 +40,7 @@ import com.metamatrix.query.util.CommandContext;
  * @since 4.2
  */
 public class HardcodedDataManager implements
-                                 DataTierManager {
+                                 ProcessorDataManager {
 
     // sql string to data
     private Map data = new HashMap();

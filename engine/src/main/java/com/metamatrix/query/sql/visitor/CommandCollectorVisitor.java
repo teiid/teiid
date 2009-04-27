@@ -33,7 +33,6 @@ import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.ExistsCriteria;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
-import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.lang.SubqueryFromClause;
@@ -42,7 +41,6 @@ import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
 import com.metamatrix.query.sql.proc.CommandStatement;
-import com.metamatrix.query.sql.proc.DeclareStatement;
 import com.metamatrix.query.sql.proc.LoopStatement;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 
@@ -186,15 +184,15 @@ public class CommandCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      * @param elements Collection to collect commands in
      */
-    public static final List<Command> getCommands(LanguageObject obj) {
+    public static final List<Command> getCommands(Command obj) {
         return getCommands(obj, true, true);
     }
 
-    public static final List<Command> getCommands(LanguageObject obj, boolean embeddedOnly) {
+    public static final List<Command> getCommands(Command obj, boolean embeddedOnly) {
         return getCommands(obj, true, !embeddedOnly);
     }
     
-    private static final List<Command> getCommands(LanguageObject obj, boolean embedded, boolean nonEmbedded) {
+    private static final List<Command> getCommands(Command command, boolean embedded, boolean nonEmbedded) {
     	HashSet<Mode> modes = new HashSet<Mode>();
     	if (embedded) {
     		modes.add(Mode.EMBEDDED);
@@ -203,39 +201,23 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     		modes.add(Mode.NON_EMBEDDED);
     	}
         CommandCollectorVisitor visitor = new CommandCollectorVisitor(modes);
-        
-        //we need a special navigator here to prevent subcommands in statements from being picked up
-        //by the wrong parent
+        final boolean visitCommands = command instanceof SetQuery;
         PreOrderNavigator navigator = new PreOrderNavigator(visitor) {
-            public void visit(LoopStatement obj) {
-                preVisitVisitor(obj);
-                visitNode(obj.getBlock());
-            }
-            
-            public void visit(CommandStatement obj) {
-                preVisitVisitor(obj);
-            }
-            
-            public void visit(AssignmentStatement obj) {
-                preVisitVisitor(obj);
-                if (obj.hasExpression()) {
-                    visitNode(obj.getExpression());
-                }
-            }
 
-            public void visit(DeclareStatement obj) {
-            	preVisitVisitor(obj);
-            	if (obj.hasExpression()) {
-            		visitNode(obj.getExpression());
-            	}
-            }
-            
+        	@Override
+        	protected void visitNode(LanguageObject obj) {
+        		if (!visitCommands && obj instanceof Command) {
+    				return;
+        		}
+        		super.visitNode(obj);
+        	}
+        	
         };
-        obj.acceptVisitor(navigator);
+        command.acceptVisitor(navigator);
         return visitor.getCommands();
     }
     
-    public static final List<Command> getNonEmbeddedCommands(LanguageObject obj) {
+    public static final List<Command> getNonEmbeddedCommands(Command obj) {
         return getCommands(obj, false, true);
     }
 

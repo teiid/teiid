@@ -406,6 +406,7 @@ public final class GenerateCanonical {
         }
         // Add groups to crit node
         critNode.addGroups(GroupsUsedByElementsVisitor.getGroups(crit));
+        critNode.addGroups(GroupsUsedByElementsVisitor.getGroups(critNode.getCorrelatedReferenceElements()));
         return critNode;
     }
 

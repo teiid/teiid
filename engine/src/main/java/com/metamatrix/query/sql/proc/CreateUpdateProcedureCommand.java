@@ -25,7 +25,6 @@ package com.metamatrix.query.sql.proc;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -292,16 +291,25 @@ public class CreateUpdateProcedureCommand extends Command {
 	}
     
     public int updatingModelCount(QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        for (final Iterator iterator = block.getStatements().iterator(); iterator.hasNext();) {
-            final Statement statement = (Statement)iterator.next();
-            int count = Command.getSubCommandsUpdatingModelCount(statement, metadata);
-            if (!iterator.hasNext() && statement instanceof CommandStatement) {
-                return count;
+    	List<Command> subCommands = getSubCommands();
+    	if (subCommands.isEmpty()) {
+    		return 0;
+    	}
+    	Command lastCommand = null;
+    	Statement statement = (Statement)block.getStatements().get(block.getStatements().size() - 1);
+    	if (statement instanceof CommandStatement) {
+        	CommandStatement cmdStatement = (CommandStatement)statement;
+        	lastCommand = cmdStatement.getCommand();
+        }
+    	for (Command command : subCommands) {
+            int count = command.updatingModelCount(metadata);
+            if (command == lastCommand) {
+            	return count;
             }
             if (count > 0) {
                 return 2;
             }
-        } 
+        }
         return 0;
     }
 

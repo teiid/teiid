@@ -76,7 +76,6 @@ import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
-import com.metamatrix.query.sql.proc.CommandStatement;
 import com.metamatrix.query.sql.proc.CreateUpdateProcedureCommand;
 import com.metamatrix.query.sql.proc.CriteriaSelector;
 import com.metamatrix.query.sql.proc.DeclareStatement;
@@ -92,7 +91,6 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -112,13 +110,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     // update procedure being validated
     private CreateUpdateProcedureCommand updateProc;
-    // current procedure subCommand being visited that
-    // may contain TranslateCriteria
-    private Command transCommand;
     
     public void reset() {
         super.reset();
-    	this.transCommand =  null;
         this.isXML = false;
         this.updateProc = null;
     }
@@ -335,10 +329,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
 
 		if(obj.hasCommand()) {
-	        // set state command on this may contain translate criteria
-	    	this.transCommand = obj.getCommand();
-
-			Collection projSymbols = transCommand.getProjectedSymbols();
+	        Collection projSymbols = obj.getCommand().getProjectedSymbols();
 
 			//The command execution should result is a value that is assigned to the variable
 			// there cannot be more than one column in its results
@@ -352,16 +343,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 					handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0014), obj);
 				}
 			}
-		} else if (obj.hasExpression()) {
-            if (!CommandCollectorVisitor.getCommands(obj.getExpression()).isEmpty()) {
-                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.assignment_subquery"), obj); //$NON-NLS-1$
-            }
-		}
-    }
-
-    public void visit(CommandStatement obj) {
-        // set state command on this may contain translate criteria
-        this.transCommand = obj.getCommand();
+		} 
     }
 
     public void visit(CreateUpdateProcedureCommand obj) {
@@ -430,10 +412,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     			}
     		}
     	}
-        
-        if (!CommandCollectorVisitor.getCommands(criteria).isEmpty()) {
-            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.if_subquery"), obj); //$NON-NLS-1$
-        }
     }
 
     public void visit(TranslateCriteria obj) {
@@ -504,8 +482,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	 * the translated criteria.
 	 */
     protected void validateTranslateCriteria(TranslateCriteria obj) {
-    	// only possibility, used in If statement which will be invalidated during visitation process
-    	if(this.transCommand == null) {
+    	if(this.currentCommand == null) {
     		return;
     	}
     	Map symbolMap = this.updateProc.getSymbolMap();
@@ -532,7 +509,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
 
     	Collection transleElmnts = ElementCollectorVisitor.getElements(obj, true);
-    	Collection groups = GroupCollectorVisitor.getGroups(this.transCommand, true);
+    	Collection groups = GroupCollectorVisitor.getGroups(this.currentCommand, true);
 		int selectType = obj.getSelector().getSelectorType();
 
 		Iterator critIter = PredicateCollectorVisitor.getPredicates(userCrit).iterator();
@@ -1033,9 +1010,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(DynamicCommand obj) {
         if (obj.getIntoGroup() != null) {
             validateInto(obj, obj.getAsColumns(), obj.getIntoGroup());
-        }
-        if (!CommandCollectorVisitor.getCommands(obj).isEmpty()) {
-            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.assignment_subquery"), obj); //$NON-NLS-1$
         }
         if (obj.getUsing() != null) {
         	validateSetClauseList(obj.getUsing());

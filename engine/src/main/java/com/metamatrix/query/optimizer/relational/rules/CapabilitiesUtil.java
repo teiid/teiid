@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -35,7 +34,6 @@ import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.sql.ReservedWords;
-import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -44,7 +42,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
-import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
 
 /**
  */
@@ -293,40 +290,6 @@ public class CapabilitiesUtil {
         return caps.supportsCapability(Capability.QUERY_ORDERBY);        
     }
 
-    public static boolean supportsJoinExpression(Object modelID, List joinCriteria, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
-    throws QueryMetadataException, MetaMatrixComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        if(! caps.supportsCapability(Capability.FUNCTION)) {
-            return false;
-        }            
-    
-        if(joinCriteria != null && joinCriteria.size() > 0) {
-            Iterator iter = joinCriteria.iterator();
-            while(iter.hasNext()) {
-                Criteria crit = (Criteria) iter.next();
-                Collection functions = FunctionCollectorVisitor.getFunctions(crit, false);
-                
-                Iterator funcIter = functions.iterator();
-                while(funcIter.hasNext()) {
-                    Function function = (Function) funcIter.next();
-                    if(! supportsScalarFunction(modelID, function, metadata, capFinder)) {
-                        return false; 
-                    }
-                }
-            }
-        }
-                
-        // Found nothing unsupported
-        return true;            
-    }
-    
     public static boolean supportsScalarSubquery(Object modelID, ScalarSubquery subquery, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
 

@@ -69,5 +69,10 @@ public class FakeProcessorDataManager implements ProcessorDataManager {
         throws BlockedException, MetaMatrixComponentException {
         return null;
     }
+    
+    @Override
+    public void clearCodeTables() {
+    	
+    }
 
 }

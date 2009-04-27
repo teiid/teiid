@@ -91,4 +91,9 @@ public class TempTableDataManager implements ProcessorDataManager {
         return this.processorDataManager.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, keyValue);
     }
     
+    @Override
+    public void clearCodeTables() {
+    	this.processorDataManager.clearCodeTables();
+    }
+    
 }

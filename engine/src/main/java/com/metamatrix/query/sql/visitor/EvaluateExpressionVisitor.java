@@ -29,7 +29,7 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.query.eval.Evaluator;
-import com.metamatrix.query.eval.LookupEvaluator;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.navigator.DeepPostOrderNavigator;
 import com.metamatrix.query.sql.navigator.PostOrderNavigator;
@@ -51,7 +51,7 @@ import com.metamatrix.query.util.CommandContext;
 public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
 
     private CommandContext context;
-    private LookupEvaluator dataMgr;
+    private ProcessorDataManager dataMgr;
         
     EvaluateExpressionVisitor() {
         super(null);
@@ -106,7 +106,7 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
         return EvaluatableVisitor.isEvaluatable(obj, duringPlanning?EvaluationLevel.PLANNING:EvaluationLevel.PROCESSING);
     }
         
-    public static final void replaceExpressions(LanguageObject obj, boolean deep, LookupEvaluator dataMgr, CommandContext context)
+    public static final void replaceExpressions(LanguageObject obj, boolean deep, ProcessorDataManager dataMgr, CommandContext context)
     throws ExpressionEvaluationException, MetaMatrixComponentException {
         EvaluateExpressionVisitor visitor = new EvaluateExpressionVisitor();
         visitor.setContext(context);

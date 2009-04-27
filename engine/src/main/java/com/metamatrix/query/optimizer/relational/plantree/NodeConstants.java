@@ -127,9 +127,6 @@ public final class NodeConstants {
         // Special constant used in converting plan to process for all nodes
         OUTPUT_COLS,        // List <SingleElementSymbol>
 
-        // Plan node constants, common to any or multiple plan node types
-        CORRELATED_REFERENCES, // SymbolMap
-        
         // Plan Node Cost Estimate Constants
         EST_SET_SIZE,        // Integer represents the estimated set size this node would produce for a sibling node as the indenpendent node in a dependent join scenario
         EST_DEP_CARDINALITY, // Float value that represents the estimated cardinality (amount of rows) produced by this node as the dependent node in a dependent join scenario

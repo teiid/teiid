@@ -35,21 +35,21 @@ import com.metamatrix.query.sql.symbol.*;
  * correspond to correlated subquery references.</p>
  * 
  * <p>The easiest way to use this visitor is to call the static method which creates the 
- * the visitor by passing it the Langiuage Object and the variable context to be looked up.
+ * the visitor by passing it the Language Object and the variable context to be looked up.
  * The public visit() methods should NOT be called directly.</p>
  */
 public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
 
 	// index of the reference on the language object    
-    private Collection groupSymbols;
-    private List references;
+    private Collection<GroupSymbol> groupSymbols;
+    private List<Reference> references;
 
-    public CorrelatedReferenceCollectorVisitor(Collection groupSymbols, List correlatedReferences) {
+    public CorrelatedReferenceCollectorVisitor(Collection<GroupSymbol> groupSymbols, List<Reference> correlatedReferences) {
         this.groupSymbols = groupSymbols;
         this.references = correlatedReferences;
     }
 
-    public List getReferences(){
+    public List<Reference> getReferences(){
         return this.references;
     }
 
@@ -61,13 +61,13 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(Reference obj) {
-        Expression expr = obj.getExpression();
-        if (expr instanceof ElementSymbol){
-            ElementSymbol e = (ElementSymbol)expr;
-            GroupSymbol g = e.getGroupSymbol();
-            if (this.groupSymbols.contains(g) && e.isExternalReference()){
-                this.references.add(obj);
-            }
+        ElementSymbol e = obj.getExpression();
+        if (e == null) {
+        	return;
+        }
+        GroupSymbol g = e.getGroupSymbol();
+        if (this.groupSymbols.contains(g) && e.isExternalReference()){
+            this.references.add(obj);
         }
     }
 
@@ -78,7 +78,7 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
      * that the client (outer query) is interested in references to from the correlated subquery
      * @param correlatedReferences List of References collected
      */
-    public static final void collectReferences(LanguageObject obj, Collection groupSymbols, List correlatedReferences){
+    public static final void collectReferences(LanguageObject obj, Collection<GroupSymbol> groupSymbols, List<Reference> correlatedReferences){
 
         CorrelatedReferenceCollectorVisitor visitor =
             new CorrelatedReferenceCollectorVisitor(groupSymbols, correlatedReferences);

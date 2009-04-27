@@ -60,7 +60,6 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
-import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
@@ -119,6 +118,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
             {         
                 // Check that the PROJECT contains only functions that can be pushed                               
                 List projectCols = (List) parentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+                
+                if(isEligibleSubquery(parentNode, modelID, metadata, capFinder) == null){
+                	return null;
+                }
                                
                 for (int i = 0; i < projectCols.size(); i++) {
                     SingleElementSymbol symbol = (SingleElementSymbol)projectCols.get(i);
@@ -322,10 +325,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
         	return false;
         }
         
-        // Check criteria capabilities of source.  Criteria (even  
-        // multi-group criteria) can possibly be pushed if model can 
-        // support everything in the criteria.
-
         if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, modelID, metadata, capFinder) ) { 
             return false;                        
         } 
@@ -343,7 +342,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * Check whether the subquery in the node is eligible to be pushed.
      */
     static Object isEligibleSubquery(PlanNode critNode, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws MetaMatrixComponentException {
-        List<SubqueryContainer> plans = critNode.getSubqueryContainers();
+    	return isEligibleSubquery(critNode.getSubqueryContainers(), critNodeModelID, metadata, capFinder);
+    }
+    
+    static Object isEligibleSubquery(List<SubqueryContainer> plans, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws MetaMatrixComponentException {
         for (SubqueryContainer subqueryContainer : plans) {
         	ProcessorPlan plan = subqueryContainer.getCommand().getProcessorPlan();
             if(!(plan instanceof RelationalPlan)) {
@@ -384,19 +386,20 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }                
             
             // Check whether source supports correlated subqueries and if not, whether criteria has them
-            SymbolMap refs = (SymbolMap) critNode.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
+            SymbolMap refs = subqueryContainer.getCommand().getCorrelatedReferences();
             try {
                 if(refs != null && !refs.asMap().isEmpty()) {
                     if(! CapabilitiesUtil.supportsCorrelatedSubquery(critNodeModelID, metadata, capFinder)) {
                         return null;
                     }
-                    
+                    //TODO: this check sees as correlated references as coming from the containing scope
+                    //but this is only an issue with deeply nested subqueries
                     if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, critNodeModelID, metadata, capFinder)) {
                         return null;
                     }
                 }
             } catch(QueryMetadataException e) {
-                throw new MetaMatrixComponentException(e, e.getMessage());                  
+                throw new MetaMatrixComponentException(e);                  
             }
         }
 
@@ -426,16 +429,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
             return false;
         }
         
-        if(inSelectClause && !(expr instanceof ElementSymbol)) {
-            if(ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).size() > 0) {
-                // Don't support for now
-                return false;
-
-            } else if(expr instanceof Constant || EvaluateExpressionVisitor.willBecomeConstant(expr)) {
-                if(! CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, capFinder)) {
-                    return false;
-                }
-            }             
+        if(inSelectClause && !(expr instanceof ElementSymbol) && !CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, capFinder) 
+        		&& (expr instanceof Constant || EvaluateExpressionVisitor.willBecomeConstant(expr))) {
+            return false;
         }                
          
         // By default, no reason we can't push
@@ -466,7 +462,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @return The modelID if the raise can proceed and what common model these combined
      * nodes will be sent to
      */
-	Object canRaiseOverJoin(PlanNode joinNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, boolean afterJoinPlanning) 
+	private static Object canRaiseOverJoin(PlanNode joinNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, boolean afterJoinPlanning) 
 		throws QueryMetadataException, MetaMatrixComponentException {
 		
         List crits = (List) joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
@@ -495,7 +491,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     static Object canRaiseOverJoin(List children,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder,
-                                           List crits,
+                                           List<Criteria> crits,
                                            JoinType type) throws QueryMetadataException,
                                                          MetaMatrixComponentException {
         Object modelID = null;
@@ -527,9 +523,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             boolean supportsSelfJoins = CapabilitiesUtil.supportsSelfJoins(accessModelID, metadata, capFinder);
             
             if (!supportsSelfJoins) {
-                Iterator groupIter = childNode.getGroups().iterator();				
-    			while(groupIter.hasNext()) { 
-    			    GroupSymbol groupSymbol = (GroupSymbol) groupIter.next();
+                for (GroupSymbol groupSymbol : childNode.getGroups()) {
     			    Object groupID = groupSymbol.getMetadataID();
     			    if(!groupIDs.add(groupID)) {
     			        // Already seen group - can't raise access over self join
@@ -553,21 +547,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			
 				// Check that model supports join expressions 
 				if(crits != null && !crits.isEmpty()) {
-                    // Check whether has expression
-                    boolean hasExpression = false; 
-					Iterator critIter = crits.iterator();
-					while(critIter.hasNext()) { 
-                            Criteria crit = (Criteria) critIter.next();
-                        if(FunctionCollectorVisitor.getFunctions(crit, false).size() > 0) {
-                            hasExpression = true;
-                            break;
-                        }
+					for (Criteria crit : crits) {
+				        if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder) ) { 
+				            return null;                        
+				        } 
 					}
-                    
-                    // If expression was found and capabilities don't support, abort this join
-                    if(hasExpression && ! CapabilitiesUtil.supportsJoinExpression(accessModelID, crits, metadata, capFinder)) {
-                        return null;
-                    }
+		            if(isEligibleSubquery(ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crits), accessModelID, metadata, capFinder) == null){
+		            	return null;
+		            }
                 }
 				
 				modelID = accessModelID;

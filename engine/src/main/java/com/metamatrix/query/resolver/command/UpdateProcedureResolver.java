@@ -56,6 +56,7 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.DynamicCommand;
 import com.metamatrix.query.sql.lang.GroupContext;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
 import com.metamatrix.query.sql.proc.Block;
 import com.metamatrix.query.sql.proc.CommandStatement;
@@ -70,6 +71,7 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
+import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 import com.metamatrix.query.util.LogConstants;
 
@@ -195,6 +197,9 @@ public class UpdateProcedureResolver implements CommandResolver {
             case Statement.TYPE_IF:
                 IfStatement ifStmt = (IfStatement) statement;
                 Criteria ifCrit = ifStmt.getCondition();
+                for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ifCrit)) {
+                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), expandCommand, analysis);
+                }
                 ResolverVisitor.resolveLanguageObject(ifCrit, null, externalGroups, metadata);
             	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata, expandCommand, isUpdateProcedure, analysis);
                 if(ifStmt.hasElseBlock()) {
@@ -249,6 +254,9 @@ public class UpdateProcedureResolver implements CommandResolver {
 						resolveEmbeddedCommand(metadata, externalGroups, cmd, expandCommand, analysis);
 					} else if (assStmt.hasExpression()) {
                         Expression expr = assStmt.getExpression();
+                        for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
+                        	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), expandCommand, analysis);
+                        }
                         ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
                     }
             	}
@@ -282,6 +290,9 @@ public class UpdateProcedureResolver implements CommandResolver {
             case Statement.TYPE_WHILE:
                 WhileStatement whileStmt = (WhileStatement) statement;
                 Criteria whileCrit = whileStmt.getCondition();
+                for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(whileCrit)) {
+                	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand(), expandCommand, analysis);
+                }
                 ResolverVisitor.resolveLanguageObject(whileCrit, null, externalGroups, metadata);
                 resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata, expandCommand, isUpdateProcedure, analysis);
                 break;

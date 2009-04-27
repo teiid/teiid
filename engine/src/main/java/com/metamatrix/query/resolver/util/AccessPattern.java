@@ -27,49 +27,51 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+
 /**
  * This class represents both virtual and physical access patterns.
  * 
- * If a virtual access pattern is initially unstatisfied, it may be
+ * If a virtual access pattern is initially unsatisfied, it may be
  * transformed by RuleMergeVirtual.  In this case, the history of the
  * access pattern will contain its previous definitions.
  */
-public class AccessPattern implements Comparable, Cloneable {
+public class AccessPattern implements Comparable<AccessPattern>, Cloneable {
     
-    private Set unsatisfied = new HashSet();
-    private LinkedList history = new LinkedList();
+    private Set<ElementSymbol> unsatisfied = new HashSet<ElementSymbol>();
+    private LinkedList<Collection<ElementSymbol>> history = new LinkedList<Collection<ElementSymbol>>();
     
-    public AccessPattern(Collection elements) {
+    public AccessPattern(Collection<ElementSymbol> elements) {
         unsatisfied.addAll(elements);
         history.add(elements);
     }
     
-    public Collection getCurrentElements() {
-        return (Collection)history.getFirst();
+    public Collection<ElementSymbol> getCurrentElements() {
+        return history.getFirst();
     }
     
-    public void addElementHistory(Collection elements) {
+    public void addElementHistory(Collection<ElementSymbol> elements) {
         this.history.addFirst(elements);
     }
 
     /** 
      * @return Returns the history.
      */
-    public LinkedList getHistory() {
+    public LinkedList<Collection<ElementSymbol>> getHistory() {
         return this.history;
     }
         
     /** 
-     * @return Returns the unstaisfied.
+     * @return Returns the unsatisfied.
      */
-    public Set getUnsatisfied() {
+    public Set<ElementSymbol> getUnsatisfied() {
         return this.unsatisfied;
     }
     
     /** 
-     * @param unstaisfied The unstaisfied to set.
+     * @param unstaisfied The unsatisfied to set.
      */
-    public void setUnsatisfied(Set unstaisfied) {
+    public void setUnsatisfied(Set<ElementSymbol> unstaisfied) {
         this.unsatisfied = unstaisfied;
     }
     
@@ -84,13 +86,9 @@ public class AccessPattern implements Comparable, Cloneable {
         sb.append(history);
         return sb.toString();
     }
-
-    /** 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
-    public int compareTo(Object o) {
-        AccessPattern other = (AccessPattern)o;
-        
+    
+    @Override
+    public int compareTo(AccessPattern other) {
         if (this.unsatisfied.size() > other.unsatisfied.size()){
             return 1;
         } else if (this.unsatisfied.size() < other.unsatisfied.size()){

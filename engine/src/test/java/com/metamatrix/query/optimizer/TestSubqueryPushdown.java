@@ -173,7 +173,7 @@ public class TestSubqueryPushdown {
             "(c37s.stringkey = ('1' || (m37s.intkey || '0'))) AND " + //$NON-NLS-1$
             "(m37s.stringkey = m37n.stringkey) ))"; //$NON-NLS-1$
 
-        String sqlOut = "SELECT c37n.intkey FROM bqt1.mediuma AS c37n, bqt1.smallb AS m37n WHERE (c37n.datevalue = (SELECT MAX(c37s.datevalue) FROM bqt1.mediuma AS c37s, bqt1.smallb AS m37s WHERE (c37s.stringkey = ('1' || (m37s.intkey || '0'))) AND (m37s.stringkey LIKE '%0') AND (m37s.stringkey = m37n.stringkey))) AND (c37n.stringkey = ('1' || (m37n.intkey || '0'))) AND (m37n.stringkey LIKE '%0')"; //$NON-NLS-1$
+        String sqlOut = "SELECT g_0.intkey FROM bqt1.mediuma AS g_0, bqt1.smallb AS g_1 WHERE (g_0.stringkey = concat('1', concat(g_1.intkey, '0'))) AND (g_0.datevalue = (SELECT MAX(g_2.datevalue) FROM bqt1.mediuma AS g_2, bqt1.smallb AS g_3 WHERE (g_2.stringkey = concat('1', concat(g_3.intkey, '0'))) AND (g_3.stringkey LIKE '%0') AND (g_3.stringkey = g_1.stringkey))) AND (g_1.stringkey LIKE '%0')"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sqlIn, FakeMetadataFactory.exampleBQTCached(),  
             null, capFinder,
@@ -716,5 +716,32 @@ public class TestSubqueryPushdown {
             new String[] { "SELECT g_0.intkey FROM bqt1.smalla AS g_0 WHERE (g_0.intkey = (SELECT MAX(g_1.intkey) FROM bqt1.smallb AS g_1 WHERE g_1.stringkey = g_0.stringkey)) OR (g_0.intkey = (SELECT MIN(g_2.IntKey) FROM bqt1.smallb AS g_2 WHERE g_2.StringKey = g_0.stringkey))" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
+	
+    /*
+     * Expressions containing subqueries can be pushed down
+     */
+    @Test public void testProjectSubqueryPushdown() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        FakeMetadataFacade metadata = example1();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        caps.setFunctionSupport("convert", true); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1, convert((select max(vm1.g1.e1) from vm1.g1), integer) + 1 from pm1.g1", metadata,  //$NON-NLS-1$
+                                      null, capFinder,
+            new String[] { "SELECT g_0.e1, (convert((SELECT MAX(g_1.e1) FROM pm1.g1 AS g_1), integer) + 1) FROM pm1.g1 AS g_0" }, SHOULD_SUCCEED); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
+          
+        checkSubPlanCount(plan, 0);        
+    }
+
 
 }

@@ -61,6 +61,7 @@ import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
@@ -1925,9 +1926,9 @@ public class TestQueryRewriter extends TestCase {
                 
         Query query = (Query)helpTestRewriteCommand(sql, expected);
         
-        List refs = new LinkedList();
+        List<Reference> refs = new LinkedList<Reference>();
         
-        CorrelatedReferenceCollectorVisitor.collectReferences(query, Arrays.asList(new Object[] {new GroupSymbol("pm1.g1")}), refs);//$NON-NLS-1$
+        CorrelatedReferenceCollectorVisitor.collectReferences(query, Arrays.asList(new GroupSymbol("pm1.g1")), refs);//$NON-NLS-1$
         
         assertEquals(1, refs.size());
     }

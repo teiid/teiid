@@ -68,6 +68,7 @@ import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ExpressionMappingVisitor;
+import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 public final class RuleCollapseSource implements OptimizerRule {
@@ -149,6 +150,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		Query query = new Query();
         Select select = new Select();
         List<SingleElementSymbol> columns = (List<SingleElementSymbol>)node.getProperty(NodeConstants.Info.OUTPUT_COLS);
+        replaceCorrelatedReferences(ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(columns));
         select.addSymbols(columns);
         query.setSelect(select);
 		query.setFrom(new From());
@@ -168,6 +170,7 @@ public final class RuleCollapseSource implements OptimizerRule {
         switch(node.getType()) {
             case NodeConstants.Types.JOIN:
             {
+                replaceCorrelatedReferences(node.getSubqueryContainers());
                 JoinType joinType = (JoinType) node.getProperty(NodeConstants.Info.JOIN_TYPE);
                 List crits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
                 
@@ -245,34 +248,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             case NodeConstants.Types.SELECT:
             {
                 Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);       
-                List<SubqueryContainer> containers = node.getSubqueryContainers();
-                for (SubqueryContainer container : containers) {
-                    RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
-                    if (subqueryPlan == null) {
-                    	continue;
-                    }
-                    AccessNode child = (AccessNode)subqueryPlan.getRootNode();
-                    Command command = child.getCommand();
-                    final SymbolMap map = (SymbolMap)node.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-                    if (map != null) {
-                    	ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
-                    		@Override
-                    		public Expression replaceExpression(
-                    				Expression element) {
-                    			if (element instanceof Reference) {
-                    				Reference ref = (Reference)element;
-                    				Expression replacement = map.getMappedExpression(ref.getExpression());
-                    				if (replacement != null) {
-                    					return replacement;
-                    				}
-                    			}
-                    			return element;
-                    		}
-                    	};
-                    	DeepPostOrderNavigator.doVisit(command, visitor);
-                    }
-                    container.setCommand(command);
-                }
+                replaceCorrelatedReferences(node.getSubqueryContainers());
                 if(!node.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
                     query.setCriteria( CompoundCriteria.combineCriteria(query.getCriteria(), crit) );
                 } else {
@@ -305,6 +281,36 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
         }        
     }
+
+	private void replaceCorrelatedReferences(List<SubqueryContainer> containers) {
+		for (SubqueryContainer container : containers) {
+		    RelationalPlan subqueryPlan = (RelationalPlan)container.getCommand().getProcessorPlan();
+		    if (subqueryPlan == null) {
+		    	continue;
+		    }
+		    AccessNode child = (AccessNode)subqueryPlan.getRootNode();
+		    Command command = child.getCommand();
+		    final SymbolMap map = container.getCommand().getCorrelatedReferences();
+		    if (map != null) {
+		    	ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(null) {
+		    		@Override
+		    		public Expression replaceExpression(
+		    				Expression element) {
+		    			if (element instanceof Reference) {
+		    				Reference ref = (Reference)element;
+		    				Expression replacement = map.getMappedExpression(ref.getExpression());
+		    				if (replacement != null) {
+		    					return replacement;
+		    				}
+		    			}
+		    			return element;
+		    		}
+		    	};
+		    	DeepPostOrderNavigator.doVisit(command, visitor);
+		    }
+		    container.setCommand(command);
+		}
+	}
 
     private void processLimit(PlanNode node,
                               QueryCommand query) {

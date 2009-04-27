@@ -110,6 +110,10 @@ public class TestAccessNode extends TestCase {
             assertEquals(expectedCommand, command.toString());
             return null;
         }
+        @Override
+        public void clearCodeTables() {
+        	
+        }
     }
     
     public void testShouldExecuteUpdate() throws Exception {

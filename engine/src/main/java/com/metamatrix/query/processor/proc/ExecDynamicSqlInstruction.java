@@ -49,7 +49,6 @@ import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.program.Program;
-import com.metamatrix.query.processor.program.ProgramEnvironment;
 import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
@@ -86,17 +85,15 @@ import com.metamatrix.query.util.CommandContext;
  * immediately.
  * </p>
  */
-public class ExecDynamicSqlInstruction extends CommandInstruction {
+public class ExecDynamicSqlInstruction extends ProgramInstruction {
     
     private static class PopCallInstruction extends ProgramInstruction {
 
         /** 
-         * @see com.metamatrix.query.processor.program.ProgramInstruction#process(com.metamatrix.query.processor.program.ProgramEnvironment)
+         * @see com.metamatrix.query.processor.program.ProgramInstruction#process(ProcedurePlan)
          */
-        public void process(ProgramEnvironment env) throws MetaMatrixComponentException,
+        public void process(ProcedurePlan procEnv) throws MetaMatrixComponentException,
                                                    MetaMatrixProcessingException {
-            ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
-            
             procEnv.getContext().popCall();
         }
 
@@ -146,11 +143,9 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 	 * @throws BlockedException
 	 *             if this processing the plan throws a currentVarContext
 	 */
-	public void process(ProgramEnvironment env) throws BlockedException,
+	public void process(ProcedurePlan procEnv) throws BlockedException,
 			MetaMatrixComponentException, MetaMatrixProcessingException {
 
-		ProcedureEnvironment procEnv = (ProcedureEnvironment) env;
-        
 		VariableContext localContext = procEnv.getCurrentVariableContext();
 
 		try {
@@ -240,7 +235,7 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 	 * @throws MetaMatrixComponentException
 	 * @throws MetaMatrixProcessingException 
 	 */
-	private void updateContextWithUsingValues(ProcedureEnvironment procEnv,
+	private void updateContextWithUsingValues(ProcedurePlan procEnv,
 			VariableContext localContext) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		if (dynamicCommand.getUsing() != null
 				&& !dynamicCommand.getUsing().isEmpty()) {
@@ -367,7 +362,7 @@ public class ExecDynamicSqlInstruction extends CommandInstruction {
 	 * @throws MetaMatrixComponentException
 	 * @throws QueryProcessingException
 	 */
-	private void validateDynamicCommand(ProcedureEnvironment procEnv,
+	private void validateDynamicCommand(ProcedurePlan procEnv,
 			Command command) throws MetaMatrixComponentException,
 			QueryProcessingException {
 		// validate project symbols

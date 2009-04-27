@@ -33,7 +33,7 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.program.ProgramEnvironment;
+import com.metamatrix.query.processor.program.ProgramInstruction;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.VariableContext;
@@ -45,7 +45,7 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  * a expression or a command(stored as a processplan). The Processing of the command is
  * expected to result in 1 column, 1 row tuple.</p>
  */
-public abstract class AbstractAssignmentInstruction extends CommandInstruction {
+public abstract class AbstractAssignmentInstruction extends ProgramInstruction {
 
 	// variable whose value is updated in the context
 	private ElementSymbol variable;
@@ -63,11 +63,9 @@ public abstract class AbstractAssignmentInstruction extends CommandInstruction {
      * @throws BlockedException
 	 * @throws MetaMatrixComponentException if error processing command or expression on this instruction
      */
-    public void process(ProgramEnvironment env) throws BlockedException,
+    public void process(ProcedurePlan procEnv) throws BlockedException,
                                                MetaMatrixComponentException, MetaMatrixProcessingException {
 
-        ProcedureEnvironment procEnv = (ProcedureEnvironment)env;
-                
         VariableContext varContext = procEnv.getCurrentVariableContext();
         Object value = null;
         if (this.getExpression() != null || this.getProcessorPlan() != null) {

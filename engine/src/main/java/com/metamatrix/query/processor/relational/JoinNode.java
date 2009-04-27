@@ -23,6 +23,9 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,17 +33,20 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.util.CommandContext;
 
 /** 
  * @since 4.2
  */
-public class JoinNode extends RelationalNode {
+public class JoinNode extends SubqueryAwareRelationalNode {
         
     private enum State { LOAD_LEFT, LOAD_RIGHT, EXECUTE }    
     private State state = State.LOAD_LEFT;
@@ -52,12 +58,10 @@ public class JoinNode extends RelationalNode {
     private JoinType joinType;
     private String dependentValueSource;
    
-    // Set up state - need to be cloned but not reset
     private List leftExpressions;
     private List rightExpressions;
     private Criteria joinCriteria;
     
-    // Cached state - do not need to be cloned or reset
     private Map combinedElementMap;
     
     public JoinNode(int nodeID) {
@@ -94,7 +98,18 @@ public class JoinNode extends RelationalNode {
         this.leftOpened = false;
         this.rightOpened = false;
     }
-
+    
+    @Override
+    public void initialize(CommandContext context, BufferManager bufferManager,
+    		ProcessorDataManager dataMgr) {
+    	super.initialize(context, bufferManager, dataMgr);
+    	
+        // Create element lookup map for evaluating project expressions
+        List combinedElements = new ArrayList(getChildren()[0].getElements());
+        combinedElements.addAll(getChildren()[1].getElements());
+        this.combinedElementMap = createLookupMap(combinedElements);
+    }
+    
     public void open()
         throws MetaMatrixComponentException, MetaMatrixProcessingException {
         
@@ -110,10 +125,6 @@ public class JoinNode extends RelationalNode {
             this.rightOpened = true;
         }
             
-        // Create element lookup map for evaluating project expressions
-        List combinedElements = new ArrayList(getChildren()[0].getElements());
-        combinedElements.addAll(getChildren()[1].getElements());
-        this.combinedElementMap = createLookupMap(combinedElements);
         this.state = State.LOAD_LEFT;
         // Set Up Join Strategy
         this.joinStrategy.initialize(this);
@@ -274,7 +285,7 @@ public class JoinNode extends RelationalNode {
     }
     
     boolean matchesCriteria(List outputTuple) throws BlockedException, MetaMatrixComponentException, CriteriaEvaluationException {
-        return (this.joinCriteria == null || new Evaluator(this.combinedElementMap, this.getDataManager(), this.getContext()).evaluate(this.joinCriteria, outputTuple));
+		return (this.joinCriteria == null || getEvaluator(this.combinedElementMap).evaluate(this.joinCriteria, outputTuple));
     }
 
     public List getLeftExpressions() {
@@ -283,6 +294,14 @@ public class JoinNode extends RelationalNode {
 
     public List getRightExpressions() {
         return this.rightExpressions;
+    }
+    
+    @Override
+    public Collection<? extends LanguageObject> getLanguageObjects() {
+    	if (this.joinCriteria == null) {
+    		return Collections.emptyList();
+    	}
+    	return Arrays.asList(this.joinCriteria);
     }
 
 }

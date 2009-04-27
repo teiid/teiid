@@ -2580,6 +2580,58 @@ public class TestProcedureProcessor extends TestCase {
         List[] expected = new List[] {Arrays.asList(new Object[] {new Integer(3)})};
         helpTestProcess(plan, expected, dataMgr);
     }
+    
+    public void testDefect8693() throws Exception {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1 where e2 = 5;\n"; //$NON-NLS-1$
+        procedure = procedure + "if (5 in (select 5 from pm1.g1))\n"; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "END\n";         //$NON-NLS-1$
+        procedure = procedure + "END"; //$NON-NLS-1$
+
+        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
+        
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+		helpTestProcess(plan, 5, dataMgr);									 
+    }
+    
+    public void testWhileWithSubquery() throws Exception {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1 = 2;\n"; //$NON-NLS-1$
+        procedure = procedure + "WHILE (5 in (select var1 from pm1.g1))\n"; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "END\n";         //$NON-NLS-1$
+        procedure = procedure + "END"; //$NON-NLS-1$
+
+        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
+                                     
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+		helpTestProcess(plan, 0, dataMgr);									 
+    }
+    
+    public void testDefect18404() throws Exception {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1 = 5 + (select count(e2) from pm1.g1);\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED = ROWS_UPDATED + var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "END"; //$NON-NLS-1$
+    
+        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
+    
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleUpdateProc(FakeMetadataObject.Props.UPDATE_PROCEDURE, procedure);
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+		helpTestProcess(plan, 8, dataMgr);									 
+    }
         
     private static final boolean DEBUG = false;
 }

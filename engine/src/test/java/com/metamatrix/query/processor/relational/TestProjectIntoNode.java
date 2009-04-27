@@ -189,6 +189,10 @@ public class TestProjectIntoNode extends TestCase {
             Object val = row.get(0);
             assertEquals(new Integer(value), val);
         }
+        @Override
+        public void clearCodeTables() {
+        	
+        }
     }
     
     private static final class FakeDataTupleSource implements TupleSource {

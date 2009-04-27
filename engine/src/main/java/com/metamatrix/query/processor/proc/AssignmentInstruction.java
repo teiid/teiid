@@ -32,7 +32,7 @@ import com.metamatrix.query.sql.util.VariableContext;
 
 /**
  * <p> This instruction updates the current variable context with a value for the Variable
- * defined using a DeclareInstruction, the vriable value is obtained by either processing
+ * defined using a DeclareInstruction, the variable value is obtained by either processing
  * a expression or a command(stored as a processplan). The Processing of the command is
  * expected to result in 1 column, 1 row tuple.</p>
  */

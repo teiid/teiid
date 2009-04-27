@@ -157,40 +157,41 @@ public class RelationalPlanner implements CommandPlanner {
         return result;
     }
 
-    /**
-     * <p>Find all SELECT or PROJECT type PlanNodes in plan tree,
-     * see if the criteria or projected symbols
-     * of that node have any SubqueryContainers in it.
-     * If so, find the ProcessorPlan from the supplied
-     * map of child plans, and create a new Map of ProcessorPlan to the
-     * SubqueryContainer object, and place that new Map as a property on the
-     * plan node.  The Map will be used later during processing.</p>
-     * @param plan PlanNode
-     */
     private static void connectSubqueryContainers(PlanNode plan) {
-        Set<GroupSymbol> groupSymbols = new HashSet<GroupSymbol>();
-        for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
-            groupSymbols.addAll(source.getGroups());
-        }
+        Set<GroupSymbol> groupSymbols = getGroupSymbols(plan);
 
-        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT)) {
+        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN)) {
             List<SubqueryContainer> subqueryContainers = node.getSubqueryContainers();
             if (subqueryContainers.isEmpty()){
             	continue;
             }
-            ArrayList<Reference> correlatedReferences = new ArrayList<Reference>(); 
-            for (SubqueryContainer container : subqueryContainers) {
-                Command subCommand = container.getCommand();
-                CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, groupSymbols, correlatedReferences);
+            Set<GroupSymbol> localGroupSymbols = groupSymbols;
+            if (node.getType() == NodeConstants.Types.JOIN) {
+            	localGroupSymbols = getGroupSymbols(node);
             }
-            SymbolMap map = new SymbolMap();
-            for (Reference reference : correlatedReferences) {
-				map.addMapping(reference.getExpression(), reference.getExpression());
-			}
-            node.setProperty(NodeConstants.Info.CORRELATED_REFERENCES, map);
+            for (SubqueryContainer container : subqueryContainers) {
+                ArrayList<Reference> correlatedReferences = new ArrayList<Reference>(); 
+                Command subCommand = container.getCommand();
+                CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
+                if (!correlatedReferences.isEmpty()) {
+	                SymbolMap map = new SymbolMap();
+	                for (Reference reference : correlatedReferences) {
+	    				map.addMapping(reference.getExpression(), reference.getExpression());
+	    			}
+	                subCommand.setCorrelatedReferences(map);
+                }
+            }
             node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
         }
     }
+
+	private static Set<GroupSymbol> getGroupSymbols(PlanNode plan) {
+		Set<GroupSymbol> groupSymbols = new HashSet<GroupSymbol>();
+        for (PlanNode source : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
+            groupSymbols.addAll(source.getGroups());
+        }
+		return groupSymbols;
+	}
 
     /**
      * Method connectChildPlans.

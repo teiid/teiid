@@ -108,7 +108,6 @@ public class TestDataTierManager extends TestCase {
         
         dtm = new DataTierManagerImpl(rm,
                                   dataService,
-                                  new MockSingleMetadataService(metadata),
                                   vdbService,
                                   bs,
                                   1000,
