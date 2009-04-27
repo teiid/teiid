@@ -146,11 +146,11 @@ public class MMGetWSDLServlet extends MMGetVDBResourceServlet {
 		serverProperties = new StringBuffer(
 				escapeAttributeEntities(serverProperties.toString()));
 
-		StringBuffer urlPrefix = new StringBuffer();
-		urlPrefix.append(webProtocol)
-				.append("://").append(webServer).append(":").append(webPortInt); //$NON-NLS-1$ //$NON-NLS-2$ 
+		String urlPrefix = new String();
+	
+		urlPrefix = buildUrlPrefix(req);
 
-		String servletPath = urlPrefix + "/" + WSDLServletUtil.SERVLET_PATH; //$NON-NLS-1$ 
+		String servletPath = urlPrefix + WSDLServletUtil.SERVLET_PATH; //$NON-NLS-1$ 
 
 		String result = escapeAttributeEntities(suffix.toString());
 		

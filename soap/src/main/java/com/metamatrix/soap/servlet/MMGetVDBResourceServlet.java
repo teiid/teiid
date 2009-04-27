@@ -214,16 +214,28 @@ public class MMGetVDBResourceServlet extends HttpServlet {
 	 * @param httpTypeString
 	 * @return urlPrefix
 	 */
-	private String buildUrlPrefix(HttpServletRequest req) {
+	protected String buildUrlPrefix(HttpServletRequest req) {
 		StringBuffer urlPrefix = new StringBuffer();
 		if (req.isSecure()){
-        	urlPrefix.append(WSDLServletUtil.HTTPS).append("://").append(req.getServerName()).append(":").append(WSDLServletUtil.getHttpsPort()); //$NON-NLS-1$ //$NON-NLS-2$
+        	urlPrefix.append(WSDLServletUtil.HTTPS).append("://").append(req.getServerName()).append(":").append(WSDLServletUtil.getHttpsPort() + "/"); //$NON-NLS-1$ //$NON-NLS-2$
         }else{
-        	urlPrefix.append(WSDLServletUtil.HTTP).append("://").append(req.getServerName()).append(":").append(WSDLServletUtil.getHttpPort()); //$NON-NLS-1$ //$NON-NLS-2$        	
+        	urlPrefix.append(WSDLServletUtil.HTTP).append("://").append(req.getServerName()).append(":").append(WSDLServletUtil.getHttpPort()  + "/"); //$NON-NLS-1$ //$NON-NLS-2$        	
         }
-		urlPrefix.append(req.getContextPath());
+				
+		urlPrefix.append(getApplicationContext(req.getContextPath()));
+			
         return urlPrefix.toString();        
 	}
+	
+    /**
+     * Returns the application context name value without slashes.
+     * @param context
+     * @return
+     */
+    public String getApplicationContext(String context) {
+    	
+    	return context.replaceAll("/", "");
+    }
              
     /**
      * Get a JDBC connection. Will create a connection. It takes Userid, Password, 
