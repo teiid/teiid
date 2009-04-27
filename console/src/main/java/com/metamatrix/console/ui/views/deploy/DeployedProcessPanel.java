@@ -108,22 +108,8 @@ public final class DeployedProcessPanel
     // CONSTANTS
     ///////////////////////////////////////////////////////////////////////////
 
-    private static final String NO_PSC =
-        DeployPkgUtils.getString("drp.nodeployedpsc"); //$NON-NLS-1$
-
-//    private static /*final*/ String[] SVC_HDRS;
-//    private static final int SVC_COL = 0;
-//    private static final int ENABLED_COL = 1;
-
-    ///////////////////////////////////////////////////////////////////////////
-    // INITIALIZER
-    ///////////////////////////////////////////////////////////////////////////
-
-//    static {
-//        SVC_HDRS = new String[2];
-//        SVC_HDRS[SVC_COL] = DeployPkgUtils.getString("drp.service.hdr"); //$NON-NLS-1$
-//        SVC_HDRS[ENABLED_COL] = DeployPkgUtils.getString("drp.enabled.hdr"); //$NON-NLS-1$
-//    }
+//    private static final String NO_PSC =
+//        DeployPkgUtils.getString("drp.nodeployedpsc"); //$NON-NLS-1$
 
     ///////////////////////////////////////////////////////////////////////////
     // CONTROLS
@@ -602,18 +588,6 @@ public final class DeployedProcessPanel
             initTable();
             // populate PSC column
             prodRowMap.clear();
-//            Collection pscs = getConfigurationManager().getDeployedPscs(process);
-//            if (pscs != null) {
-//                Iterator pscItr = pscs.iterator();
-//                while (pscItr.hasNext()) {
-//                    ProductServiceConfig psc = (ProductServiceConfig)pscItr.next();
-//                    
-//                     ProductType product = BasicProductType.PRODUCT_TYPE;
-//                //    	 getConfigurationManager().getProduct(psc);
-//                    //tblModel.setValueAt(psc, findProductRow(product), PSC_COL);
-//                    prodRowMap.put(product, psc);
-//                }
-//            }
             tblSvcs.sizeColumnsToFitData();
         }
         catch (Exception theException) {
@@ -654,14 +628,6 @@ public final class DeployedProcessPanel
         }
     }
 
-//    public void setMMLEnabled(boolean theEnableFlag) {
-//            pnlProps.setReadOnlyForced(!theEnableFlag);
-//            pnlProps.refreshDisplay();
-//        
-//            if (!theEnableFlag) {
-//                tblPscs.editingStopped(new ChangeEvent(this));
-//            }
-//    }
 
     ///////////////////////////////////////////////////////////////////////////
     // INNER CLASSES
