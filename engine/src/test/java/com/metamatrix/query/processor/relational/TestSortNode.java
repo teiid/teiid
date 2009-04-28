@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,7 +31,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -39,24 +41,17 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.impl.SizeUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.processor.relational.NodeTestUtil.TestableBufferManagerImpl;
+import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.util.CommandContext;
 
-public class TestSortNode extends TestCase {
+public class TestSortNode {
     
     public static final int BATCH_SIZE = 100;
     public static final int INT_BATCH_SIZE = TestSortNode.getIntBatchSize(); //the size of 100 integers    
     
-    /**
-     * Constructor for TestSortNode.
-     * @param arg0
-     */
-    public TestSortNode(String arg0) {
-        super(arg0);
-    }
-    
-    private void helpTestSort(long bytesInMemory, List elements, List[] data, List sortElements, List sortTypes, List[] expected, Set blockOn, boolean removeDups) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    private void helpTestSort(long bytesInMemory, List elements, List[] data, List sortElements, List sortTypes, List[] expected, Set blockOn, Mode mode) throws MetaMatrixComponentException, MetaMatrixProcessingException {
         BufferManager mgr = NodeTestUtil.getTestBufferManager(bytesInMemory);
         TestableBufferManagerImpl impl = (TestableBufferManagerImpl) mgr;
         impl.setBlockOn(blockOn);
@@ -69,14 +64,15 @@ public class TestSortNode extends TestCase {
         dataNode.setElements(elements);
         dataNode.initialize(context, mgr, null);    
         
-        SortNode sortNode = null;
-        if (removeDups) {
-            sortNode = new DupRemoveNode(1);
+        SortNode sortNode = new SortNode(1);
+        if (mode == Mode.DUP_REMOVE) {
+        	sortTypes = Arrays.asList(new Boolean[elements.size()]);
+        	Collections.fill(sortTypes, OrderBy.ASC);
+            sortNode.setSortElements(elements, sortTypes);
         } else {
-            sortNode = new SortNode(1);
+        	sortNode.setSortElements(sortElements, sortTypes);
         }
-        
-        sortNode.setSortElements(sortElements, sortTypes);
+        sortNode.setMode(mode);
         sortNode.setElements(elements);
         sortNode.addChild(dataNode);        
         sortNode.initialize(context, mgr, null);    
@@ -87,26 +83,27 @@ public class TestSortNode extends TestCase {
         while(true) {
             try {
                 TupleBatch batch = sortNode.nextBatch();
-                
-                for(int row = currentRow; row <= batch.getEndRow(); row++) {
-                    assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
+                if (mode != Mode.DUP_REMOVE) {
+	                for(int row = currentRow; row <= batch.getEndRow(); row++) {
+	                    assertEquals("Rows don't match at " + row, expected[row-1], batch.getTuple(row)); //$NON-NLS-1$
+	                }
                 }
-                
+                currentRow += batch.getRowCount();    
                 if(batch.getTerminationFlag()) {
                     break;
                 }
-                currentRow += batch.getRowCount();    
             } catch (BlockedOnMemoryException e) {
                 if (!impl.wasBlocked()) {
                     throw new BlockedOnMemoryException();
                 }
             }
         }
+        assertEquals(expected.length, currentRow - 1);
     }
 
     public static int getIntBatchSize() {
         List[] expected = new List[] { 
-                Arrays.asList(new Object[] { new Integer(0) }), //$NON-NLS-1$ //$NON-NLS-2$
+                Arrays.asList(new Object[] { new Integer(0) }), 
            };     
         
         String[] types = { "integer" };     //$NON-NLS-1$
@@ -118,7 +115,7 @@ public class TestSortNode extends TestCase {
     /*
      * 1 batch all in memory
      */
-    private void helpTestBasicSort(List[] expected, boolean removeDups) throws Exception {
+    private void helpTestBasicSort(List[] expected, Mode mode) throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -157,11 +154,11 @@ public class TestSortNode extends TestCase {
             if (i > 0) {
                 blockedOn.add(new Integer(i));
             }
-            helpTestSort(INT_BATCH_SIZE*2, elements, data, sortElements, sortTypes, expected, blockedOn, removeDups);
+            helpTestSort(INT_BATCH_SIZE*2, elements, data, sortElements, sortTypes, expected, blockedOn, mode);
         }
     }
     
-    private void helpTestBiggerSort(int batches, int inMemoryBatches, boolean removeDups) throws Exception {
+    private void helpTestBiggerSort(int batches, int inMemoryBatches) throws Exception {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 
@@ -193,30 +190,31 @@ public class TestSortNode extends TestCase {
             expected[i].add(unsortedNumbers.get(i));
         }
         
-        /*
-         * the following code will do four tests, blocking in a variety of places
-         */
-        for (int i = 0; i < 3; i++) {
-            Set blockedOn = new HashSet();
-            if (i > 0) {
-                //block on a variety of positions
-                blockedOn.add(new Integer(i));
-                blockedOn.add(new Integer(inMemoryBatches*i));
-                blockedOn.add(new Integer(batches*i));
-                blockedOn.add(new Integer(batches*(i+1)));
-            }
-            //5 batches in memory out of 10 total
-            helpTestSort(INT_BATCH_SIZE * inMemoryBatches, elements, data, sortElements, sortTypes, expected, null, removeDups);
+        
+        for (Mode mode : Mode.values()) {
+	        /*
+	         * the following code will do four tests, blocking in a variety of places
+	         */
+	        for (int i = 0; i < 3; i++) {
+	            Set blockedOn = new HashSet();
+	            if (i > 0) {
+	                //block on a variety of positions
+	                blockedOn.add(new Integer(i));
+	                blockedOn.add(new Integer(inMemoryBatches*i));
+	                blockedOn.add(new Integer(batches*i));
+	                blockedOn.add(new Integer(batches*(i+1)));
+	            }
+	            //5 batches in memory out of 10 total
+	            helpTestSort(INT_BATCH_SIZE * inMemoryBatches, elements, data, sortElements, sortTypes, expected, blockedOn, mode);
+	        }
         }
     }
         
-    public void testNoSort() throws Exception {
-        helpTestBiggerSort(0, 2, false);
-        
-        helpTestBiggerSort(0, 2, true);
+    @Test public void testNoSort() throws Exception {
+        helpTestBiggerSort(0, 2);
     }    
     
-    public void testBasicSort() throws Exception {
+    @Test public void testBasicSort() throws Exception {
         List[] expected = new List[] { 
             Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(0), "3" }),    //$NON-NLS-1$
@@ -240,10 +238,14 @@ public class TestSortNode extends TestCase {
             Arrays.asList(new Object[] { new Integer(10), "4" })                //$NON-NLS-1$
         };
         
-        helpTestBasicSort(expected, false);
+        helpTestBasicSort(expected, Mode.SORT);
     }
     
-    public void testBasicSortRemoveDup() throws Exception {
+    /**
+     * Note the ordering here is not stable
+     * @throws Exception
+     */
+    @Test public void testBasicSortRemoveDup() throws Exception {
         List[] expected = new List[] { 
             Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(0), "3" }),    //$NON-NLS-1$
@@ -266,30 +268,41 @@ public class TestSortNode extends TestCase {
             Arrays.asList(new Object[] { new Integer(10), "9" })                //$NON-NLS-1$
         };
 
-        
-        helpTestBasicSort(expected, true);
-    }    
+        helpTestBasicSort(expected, Mode.DUP_REMOVE);
+    }   
     
-    public void testBiggerSort() throws Exception {
-        helpTestBiggerSort(10, 5, false);
-        
-        helpTestBiggerSort(10, 5, true);
+    @Test public void testBasicSortRemoveDupSort() throws Exception {
+    	List[] expected = new List[] { 
+                Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(0), "3" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(1), "2" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(1), "5" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(2), "1" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(2), "4" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(3), "3" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(3), "6" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(4), "3" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(5), "2" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(5), "5" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(6), "1" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(6), "4" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(7), "3" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(8), "2" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(9), "1" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(9), "5" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(10), "4" }),    //$NON-NLS-1$
+                Arrays.asList(new Object[] { new Integer(10), "9" })                //$NON-NLS-1$
+            };
+
+        helpTestBasicSort(expected, Mode.DUP_REMOVE_SORT);
+    }   
+    
+    @Test public void testBiggerSort() throws Exception {
+        helpTestBiggerSort(10, 5);
     }
  
-    public void testBiggerSortLowMemory() throws Exception {
-        try {
-            helpTestBiggerSort(5, 1, false);
-            fail("Expected exception"); //$NON-NLS-1$
-        } catch (BlockedOnMemoryException e) {
-            //expected
-        } 
-        
-        try {
-            helpTestBiggerSort(5, 1, true);
-            fail("Expected exception"); //$NON-NLS-1$
-        } catch (BlockedOnMemoryException e) {
-            //expected
-        }
+    @Test(expected=BlockedOnMemoryException.class) public void testBiggerSortLowMemory() throws Exception {
+        helpTestBiggerSort(5, 1);
     }       
 
     /**
@@ -297,10 +310,8 @@ public class TestSortNode extends TestCase {
      * 
      * This is also a test of the multi-pass merge
      */
-    public void testBiggerSortLowMemory2() throws Exception {
-        helpTestBiggerSort(5, 2, false);
-        
-        helpTestBiggerSort(5, 2, true);
-    }       
-
+    @Test public void testBiggerSortLowMemory2() throws Exception {
+        helpTestBiggerSort(5, 2);
+    }
+    
 }

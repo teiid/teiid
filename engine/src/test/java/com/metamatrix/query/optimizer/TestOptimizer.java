@@ -58,7 +58,6 @@ import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.DependentAccessNode;
-import com.metamatrix.query.processor.relational.DupRemoveNode;
 import com.metamatrix.query.processor.relational.GroupingNode;
 import com.metamatrix.query.processor.relational.JoinNode;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy;
@@ -72,6 +71,7 @@ import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.processor.relational.SelectNode;
 import com.metamatrix.query.processor.relational.SortNode;
 import com.metamatrix.query.processor.relational.UnionAllNode;
+import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.BindVariableVisitor;
 import com.metamatrix.query.rewriter.QueryRewriter;
@@ -92,6 +92,8 @@ public class TestOptimizer extends TestCase {
     public interface DependentJoin {}
     public interface DependentSelectNode {}
     public interface DependentProjectNode {}
+    public interface DupRemoveNode {}
+    public interface DupRemoveSortNode {}
     
     public static final int[] FULL_PUSHDOWN = new int[] {
                                             1,      // Access
@@ -440,6 +442,19 @@ public class TestOptimizer extends TestCase {
         		updateCounts(SelectNode.class, counts, types);
         	} else {
         		updateCounts(DependentSelectNode.class, counts, types);
+        	}
+        } else if (nodeType.equals(SortNode.class)) {
+        	Mode mode = ((SortNode)relationalNode).getMode();
+        	switch(mode) {
+        	case DUP_REMOVE:
+                updateCounts(DupRemoveNode.class, counts, types);
+        		break;
+        	case DUP_REMOVE_SORT:
+                updateCounts(DupRemoveSortNode.class, counts, types);
+        		break;
+        	case SORT:
+                updateCounts(SortNode.class, counts, types);
+        		break;
         	}
         } else {
             updateCounts(nodeType, counts, types);
@@ -7145,7 +7160,7 @@ public class TestOptimizer extends TestCase {
         // Create query 
         String sql = "select IntKey from bqt1.smalla where stringkey not like '2%'"; //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQT(), null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
                                       new String[] {"SELECT stringkey, IntKey FROM bqt1.smalla"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
         
         checkNodeTypes(plan, new int[] {

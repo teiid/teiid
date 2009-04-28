@@ -29,8 +29,10 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
-import com.metamatrix.common.buffer.*;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
+import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.TupleSource;
+import com.metamatrix.common.buffer.TupleSourceID;
+import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.query.function.aggregate.AggregateFunction;
 import com.metamatrix.query.sql.lang.OrderBy;
@@ -45,7 +47,6 @@ public class DuplicateFilter implements AggregateFunction {
     private AggregateFunction proxy;
     private BufferManager mgr;
     private String groupName;
-    private int batchSize;
 
     // Derived and static - can be reused
     private List elements;
@@ -54,11 +55,9 @@ public class DuplicateFilter implements AggregateFunction {
 
     // Temporary state - should be reset
     private TupleSourceID collectionID = null;
-    private List collectionRows;
-    private int collectionRow = 1;
     private SortUtility sortUtility = null;
     private TupleSourceID sortedID = null;
-
+    private TupleCollector tupleCollector;
 
     /**
      * Constructor for DuplicateFilter.
@@ -69,7 +68,6 @@ public class DuplicateFilter implements AggregateFunction {
         this.proxy = proxy;
         this.mgr = mgr;
         this.groupName = groupName;
-        this.batchSize = batchSize;
     }
 
     /**
@@ -93,8 +91,7 @@ public class DuplicateFilter implements AggregateFunction {
         this.proxy.reset();
 
         this.collectionID = null;
-        this.collectionRows = null;
-        this.collectionRow = 1;
+        this.tupleCollector = null;
         this.sortUtility = null;
         this.sortedID = null;
     }
@@ -108,24 +105,12 @@ public class DuplicateFilter implements AggregateFunction {
         try {
             if(collectionID == null) {
                 collectionID = mgr.createTupleSource(elements, elementTypes, groupName, TupleSourceType.PROCESSOR);
-            }
-
-            if(collectionRows == null) {
-                collectionRows = new ArrayList(batchSize);
+                this.tupleCollector = new TupleCollector(collectionID, mgr);
             }
 
             List row = new ArrayList(1);
             row.add(input);
-            collectionRows.add(row);
-            if(collectionRows.size() == batchSize) {
-                TupleBatch batch = new TupleBatch(collectionRow, collectionRows);
-                mgr.addTupleBatch(collectionID, batch);
-
-                // Reset state for next batch
-                collectionRow = collectionRow + batch.getRowCount();
-                collectionRows = new ArrayList(batchSize);
-            }
-
+            this.tupleCollector.addTuple(row);
         } catch(TupleSourceNotFoundException e) {
             throw new MetaMatrixComponentException(e, e.getMessage());
         }
@@ -140,15 +125,10 @@ public class DuplicateFilter implements AggregateFunction {
 
         try {
             if(collectionID != null) {
-                // First save any hanging collection rows
-                if(collectionRows.size() > 0) {
-                    TupleBatch batch = new TupleBatch(collectionRow, collectionRows);
-                    mgr.addTupleBatch(collectionID, batch);
-                }
-                mgr.setStatus(collectionID, TupleSourceStatus.FULL);
+                this.tupleCollector.close();
 
                 // Sort
-                sortUtility = new SortUtility(collectionID, elements, elements, sortTypes, true, mgr, groupName);
+                sortUtility = new SortUtility(collectionID, elements, sortTypes, true, mgr, groupName);
                 this.sortedID = sortUtility.sort();
 
                 // Add all input to proxy

@@ -470,7 +470,11 @@ public class BufferManagerImpl implements BufferManager {
         if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
             LogManager.logTrace(LogCommonConstants.CTX_BUFFER_MGR, new Object[]{"AddTupleBatch for", tupleSourceID, "with " + tupleBatch.getRowCount() + " rows"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
-
+        
+        if (tupleBatch.getRowCount() == 0 && !tupleBatch.getTerminationFlag()) {
+        	return;
+        }
+        
         // Look up info
         TupleSourceInfo info = getTupleSourceInfo(tupleSourceID, true);
         

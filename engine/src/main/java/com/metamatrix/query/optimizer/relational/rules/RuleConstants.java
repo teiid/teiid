@@ -52,4 +52,5 @@ public final class RuleConstants {
     public static final OptimizerRule PLAN_UNIONS = new RulePlanUnions();
     public static final OptimizerRule PLAN_PROCEDURES = new RulePlanProcedures();
     public static final OptimizerRule CALCULATE_COST = new RuleCalculateCost();
+    public static final OptimizerRule PLAN_SORTS = new RulePlanSorts();
 }

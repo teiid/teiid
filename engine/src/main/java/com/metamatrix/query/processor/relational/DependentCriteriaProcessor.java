@@ -94,8 +94,7 @@ public class DependentCriteriaProcessor {
 					} catch (TupleSourceNotFoundException e) {
 						throw new MetaMatrixComponentException(e);
 					}
-	                this.sortUtility = new SortUtility(originalVs.getTupleSourceID(), ts.getSchema(), sortSymbols, sortDirection, true, dependentNode.getBufferManager(),
-	                                                   dependentNode.getConnectionID());
+	                this.sortUtility = new SortUtility(originalVs.getTupleSourceID(), sortSymbols, sortDirection, true, dependentNode.getBufferManager(), dependentNode.getConnectionID());
             	}
             	dvs = new DependentValueSource(sortUtility.sort(), dependentNode.getBufferManager());
             	for (SetState setState : dependentSetStates) {

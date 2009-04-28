@@ -297,21 +297,22 @@ public class GroupingNode extends RelationalNode {
             this.sourceBatch = null;
         }
 
+    	this.getBufferManager().setStatus(this.collectionID, TupleSourceStatus.FULL);
+
         if(this.sortElements == null || this.rowCount == 0) {
             // No need to sort
-        	this.getBufferManager().setStatus(this.collectionID, TupleSourceStatus.FULL);
             this.sortedID = this.collectionID;
             this.collectionID = null;
             this.phase = GROUP;
         } else {
-            this.sortUtility = new SortUtility(collectionID, collectedExpressions,
-                                                sortElements, sortTypes, false,
-                                                getBufferManager(), getConnectionID());
+            this.sortUtility = new SortUtility(collectionID, sortElements,
+                                                sortTypes, false, getBufferManager(),
+                                                getConnectionID());
             this.phase = SORT;
         }
     }
 
-    private void sortPhase() throws BlockedException, MetaMatrixComponentException {
+    private void sortPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         this.sortedID = this.sortUtility.sort();
         this.phase = GROUP;
     }

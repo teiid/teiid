@@ -30,9 +30,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.BlockedException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.MemoryNotAvailableException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
@@ -40,58 +41,74 @@ import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.TypeRetrievalUtil;
 
 /**
  */
 public class SortUtility {
+	
+	public enum Mode {
+		SORT,
+		DUP_REMOVE,
+		DUP_REMOVE_SORT
+	}
 
+	//constructor state
     private TupleSourceID sourceID;
-    private List sourceElements;
-    private List sortElements;
-    private List sortTypes;
-    private boolean removeDuplicates;
-
-    private BufferManager bufferManager;
+    protected List sortElements;
+    protected List<Boolean> sortTypes;
+    private Mode mode;
+    protected BufferManager bufferManager;
     private String groupName;
+    private boolean useAllColumns;
+    
+    //init state
     private int batchSize;
-    private List schema;
+    protected List schema;
     private String[] schemaTypes;
+    protected int[] sortCols;
+	private Comparator comparator;
 
-    // For collecting tuples to be sorted
+    private TupleSourceID outputID;
+    private boolean doneReading;
     private int sortPhaseRow = 1;
-    private int phase = SORT;
-    private int rowCount;
-    private int[] sortCols;
-    private List activeTupleIDs = new ArrayList();
-    private List workingBatches;
+    private int phase = INITIAL_SORT;
+    protected List<TupleSourceID> activeTupleIDs = new ArrayList<TupleSourceID>();
+    private List<TupleBatch> workingBatches;
     private int[] workingPointers;
+    private int masterSortIndex;
+	private TupleSourceID mergedID;
+	private TupleSourceID tempOutId;
 
     // Phase constants for readability
-    private static final int SORT = 1;
+    private static final int INITIAL_SORT = 1;
     private static final int MERGE = 2;
     private static final int DONE = 3;
-
-    /**
-     * Constructor for SortUtility.
-     */
-    public SortUtility(TupleSourceID sourceID, List sourceElements, List sortElements, List sortTypes, boolean removeDuplicates,
-                        BufferManager bufferMgr, String groupName) {
-
+    
+    public SortUtility(TupleSourceID sourceID, List sortElements, List<Boolean> sortTypes, boolean removeDups, BufferManager bufferMgr,
+            String groupName) {
+    	this(sourceID, sortElements, sortTypes, removeDups?Mode.DUP_REMOVE_SORT:Mode.SORT, bufferMgr, groupName, false);
+    }
+    
+    public SortUtility(TupleSourceID sourceID, List sortElements, List<Boolean> sortTypes, Mode mode, BufferManager bufferMgr,
+                        String groupName, boolean useAllColumns) {
         this.sourceID = sourceID;
-        this.sourceElements = sourceElements;
         this.sortElements = sortElements;
         this.sortTypes = sortTypes;
-        this.removeDuplicates = removeDuplicates;
+        this.mode = mode;
         this.bufferManager = bufferMgr;
         this.groupName = groupName;
+        this.useAllColumns = useAllColumns;
     }
-
-    /**
-     */
+    
+    public boolean isDone() {
+    	return this.doneReading && this.phase == DONE;
+    }
+    
     public TupleSourceID sort()
-        throws BlockedException, MetaMatrixComponentException {
+        throws BlockedOnMemoryException, MetaMatrixComponentException {
 
         try {
             // One time setup
@@ -99,23 +116,25 @@ public class SortUtility {
                 initialize();
             }
             
-            if (rowCount == 0) {
-                TupleSourceID mergedID = bufferManager.createTupleSource(this.schema, this.schemaTypes, this.groupName, TupleSourceType.PROCESSOR);
-                activeTupleIDs.add(mergedID);
-                phase = DONE;
+            if(this.phase == INITIAL_SORT) {
+                initialSort();
             }
             
-            if(this.phase == SORT) {
-                sortPhase();
-            }
-
             if(this.phase == MERGE) {
                 try {
                     mergePhase();
                 } finally {
+                	if (this.mergedID != null) {
+	                	this.bufferManager.removeTupleSource(mergedID);
+	                	this.mergedID = null;
+                	}
+                	if (this.tempOutId != null) {
+	                	this.bufferManager.removeTupleSource(tempOutId);
+	                	this.tempOutId = null;
+                	}
                     if (workingBatches != null) {
                         for (int i = 0; i < workingBatches.size(); i++) {
-                            TupleBatch tupleBatch = (TupleBatch)workingBatches.get(i);
+                            TupleBatch tupleBatch = workingBatches.get(i);
                             if (tupleBatch != null) {
                                 unpinWorkingBatch(i, tupleBatch);
                             }
@@ -124,191 +143,216 @@ public class SortUtility {
                     workingBatches = null;
                 }
             }
-            
-            TupleSourceID result = (TupleSourceID) this.activeTupleIDs.get(0);
-            this.bufferManager.setStatus(result, TupleSourceStatus.FULL);
-            return result;
+            if (this.outputID != null) {
+            	return this.outputID;
+            }
+            return this.activeTupleIDs.get(0);
         } catch(TupleSourceNotFoundException e) {
             throw new MetaMatrixComponentException(e, e.getMessage());
         }
 
     }
 
-    protected void sortPhase() throws BlockedException, TupleSourceNotFoundException, MetaMatrixComponentException {
-        ArrayList pinned = new ArrayList();     // of int[2] representing begin, end
+	private TupleSourceID createTupleSource() throws MetaMatrixComponentException {
+		return bufferManager.createTupleSource(this.schema, this.schemaTypes, this.groupName, TupleSourceType.PROCESSOR);
+	}
 
-        // Loop until all data has been read and sorted
-        while(sortPhaseRow <= this.rowCount) {
-            List workingTuples = new ArrayList();
+    protected void initialSort() throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
+    	while(!doneReading) {
+        	ArrayList<int[]> pinned = new ArrayList<int[]>();     // of int[2] representing begin, end
+            List<List<Object>> workingTuples = new ArrayList<List<Object>>();
+	        // Load data until out of memory
+	        while(!doneReading) {
+	            try {
+	                // Load and pin batch
+	                TupleBatch batch = bufferManager.pinTupleBatch(sourceID, sortPhaseRow, sortPhaseRow + batchSize - 1);
+	
+	                if (batch.getRowCount() == 0) {
+	                	if (bufferManager.getStatus(sourceID) == TupleSourceStatus.FULL) {
+	                		doneReading = true;
+		                }
+	                	break;
+	                }
+                    // Remember pinned rows
+                    pinned.add(new int[] { sortPhaseRow, batch.getEndRow() });
 
-            // Load data until out of memory
-            while(sortPhaseRow <= this.rowCount) {
-                try {
-                    // Load and pin batch
-                    TupleBatch batch = bufferManager.pinTupleBatch(sourceID, sortPhaseRow, sortPhaseRow + batchSize - 1);
-
-                    if(batch.getRowCount() > 0) {
-                        // Remember pinned rows
-                        pinned.add(new int[] { sortPhaseRow, batch.getEndRow() });
-
-                        // Add to previous batches for sorting
-                        workingTuples.addAll(Arrays.asList(batch.getAllTuples()));
-
-                        // Adjust beginning of next batch
-                        sortPhaseRow = batch.getEndRow() + 1;
-                    }
-
-                } catch(MemoryNotAvailableException e) {
-                    break;
-                }
-            }
-
-            // Check for no memory available and block
-            if(workingTuples.isEmpty()) {
-                /* Defect 19087: We couldn't load any batches in memory, and we need to re-enqueue the work,
-                 * so this should be a BlockedOnMemoryException instead of a BlockedException
-                 */
-                throw BlockedOnMemoryException.INSTANCE;
-            }
-
-            // Sort whatever is in memory
-            Comparator comp = new ListNestedSortComparator(sortCols, sortTypes);
-            Collections.sort( workingTuples, comp );
-
-            // Write to temporary tuple source
-            TupleSourceID sortedID = bufferManager.createTupleSource(this.schema, this.schemaTypes, this.groupName, TupleSourceType.PROCESSOR);
-            activeTupleIDs.add(sortedID);
-            int sortedThisPass = workingTuples.size();
-            int writeBegin = 1;
-            while(writeBegin <= sortedThisPass) {
-                int writeEnd = Math.min(sortedThisPass, writeBegin + batchSize - 1);
-
-                TupleBatch writeBatch = new TupleBatch(writeBegin, workingTuples.subList(writeBegin-1, writeEnd));
-                bufferManager.addTupleBatch(sortedID, writeBatch);
-                writeBegin += writeBatch.getRowCount();
-            }
-
-            // Clean up - unpin rows
-            Iterator iter = pinned.iterator();
-            while(iter.hasNext()) {
-                int[] bounds = (int[]) iter.next();
-                bufferManager.unpinTupleBatch(sourceID, bounds[0], bounds[1]);
-            }
-            pinned.clear();
+                    addTuples(workingTuples, batch);
+                    
+                    sortPhaseRow += batch.getRowCount();
+	            } catch(MemoryNotAvailableException e) {
+	                break;
+	            }
+	        }
+	
+	        if(workingTuples.isEmpty()) {
+        		break;
+	        }
+		
+	        TupleSourceID activeID = createTupleSource();
+	        activeTupleIDs.add(activeID);
+	        int sortedThisPass = workingTuples.size();
+	        if (this.mode == Mode.SORT) {
+	        	//perform a stable sort
+	    		Collections.sort(workingTuples, comparator);
+	        }
+	        int writeBegin = 1;
+	        while(writeBegin <= sortedThisPass) {
+	            int writeEnd = Math.min(sortedThisPass, writeBegin + batchSize - 1);
+	
+	            TupleBatch writeBatch = new TupleBatch(writeBegin, workingTuples.subList(writeBegin-1, writeEnd));
+	            bufferManager.addTupleBatch(activeID, writeBatch);
+	            writeBegin += writeBatch.getRowCount();
+	        }
+	
+	        // Clean up - unpin rows
+	        for (int[] bounds : pinned) {
+	            bufferManager.unpinTupleBatch(sourceID, bounds[0], bounds[1]);
+	        }
         }
+
+    	if (!doneReading && (mode != Mode.DUP_REMOVE || this.activeTupleIDs.isEmpty())) {
+    		throw BlockedOnMemoryException.INSTANCE;
+    	}
+    	
+    	if (this.activeTupleIDs.isEmpty()) {
+            activeTupleIDs.add(createTupleSource());
+        }  
 
         // Clean up
         this.phase = MERGE;
     }
 
-    protected void mergePhase() throws BlockedException, TupleSourceNotFoundException, MetaMatrixComponentException {
-        // In the case where there is a single activeTupleID but removeDuplicates == true,
-        // we need to execute this loop exactly once.  We also need to execute any time
-        // the number of active tuple IDs is > 1
+	protected void addTuples(List workingTuples, TupleBatch batch) {
+		if (this.mode == Mode.SORT) {
+			workingTuples.addAll(Arrays.asList(batch.getAllTuples()));
+			return;
+		}
+		for (List<Object> list : batch.getAllTuples()) {
+			int index = Collections.binarySearch(workingTuples, list, comparator);
+			if (index >= 0) {
+				continue;
+			}
+			workingTuples.add(-index - 1, list);
+		}
+	}
+	
+    protected void mergePhase() throws BlockedOnMemoryException, MetaMatrixComponentException, TupleSourceNotFoundException {
+    	TupleCollector outCollector = null;
+    	while(this.activeTupleIDs.size() > 1) {    		
+            // Load and pin batch from sorted sublists while memory available
+            this.workingBatches = new ArrayList<TupleBatch>(activeTupleIDs.size());
+            int sortedIndex = 0;
+            for(; sortedIndex<activeTupleIDs.size(); sortedIndex++) {
+                TupleSourceID activeID = activeTupleIDs.get(sortedIndex);
+                try {
+                    TupleBatch sortedBatch = bufferManager.pinTupleBatch(activeID, 1, this.batchSize);
+                    workingBatches.add(sortedBatch);
+                } catch(MemoryNotAvailableException e) {
+                    break;
+                }
+            }
+            
+            //if we cannot make progress, just block for now
+            if (workingBatches.size() < 2) {
+                throw BlockedOnMemoryException.INSTANCE;
+            }
+            
+            // Initialize pointers into working batches
+            this.workingPointers = new int[workingBatches.size()];
+            Arrays.fill(this.workingPointers, 1);
 
-        if(this.activeTupleIDs.size() > 1 || this.removeDuplicates) {
-            do {
-                // Load and pin batch from sorted sublists while memory available
-                this.workingBatches = new ArrayList(activeTupleIDs.size());
-                int sortedIndex = 0;
-                for(; sortedIndex<activeTupleIDs.size(); sortedIndex++) {
-                    TupleSourceID activeID = (TupleSourceID) activeTupleIDs.get(sortedIndex);
-                    try {
-                        TupleBatch sortedBatch = bufferManager.pinTupleBatch(activeID, 1, this.batchSize);
-                        workingBatches.add(sortedBatch);
-                    } catch(MemoryNotAvailableException e) {
-                        break;
-                    }
-                }
-                
-                //if we cannot make progress, just block for now
-                if (workingBatches.size() < 2 && !(workingBatches.size() == 1 && this.removeDuplicates && activeTupleIDs.size() == 1)) {
-                    throw BlockedOnMemoryException.INSTANCE;
-                }
-                
-                // Initialize pointers into working batches
-                this.workingPointers = new int[workingBatches.size()];
+            mergedID = createTupleSource();
+
+            // Merge from working sorted batches
+            TupleCollector collector = new TupleCollector(mergedID, this.bufferManager);
+            while(true) {
+                // Find least valued row among working batches
+                List<?> currentRow = null;
+                int chosenBatchIndex = -1;
+                TupleBatch chosenBatch = null;
                 for(int i=0; i<workingBatches.size(); i++) {
-                    this.workingPointers[i] = 1;
-                }
-
-                // Initialize merge output
-                TupleSourceID mergedID = bufferManager.createTupleSource(this.schema, this.schemaTypes, this.groupName, TupleSourceType.PROCESSOR);
-                int mergedRowBegin = 1;
-
-                // Merge from working sorted batches
-                List currentRows = new ArrayList(this.batchSize);
-                ListNestedSortComparator comparator = new ListNestedSortComparator(sortCols, sortTypes);
-                while(true) {
-                    // Find least valued row among working batches
-                    List currentRow = null;
-                    int chosenBatchIndex = -1;
-                    TupleBatch chosenBatch = null;
-                    for(int i=0; i<workingBatches.size(); i++) {
-                        TupleBatch batch = (TupleBatch) workingBatches.get(i);
-                        if(batch != null) {
-                            List testRow = batch.getTuple(workingPointers[i]);
-                            if(currentRow == null || comparator.compare(testRow, currentRow) < 0) {
-                                // Found lower row
-                                currentRow = testRow;
-                                chosenBatchIndex = i;
-                                chosenBatch = batch;
-                            }
-                        }
+                    TupleBatch batch = workingBatches.get(i);
+                    if(batch == null) {
+                    	continue;
                     }
-
-                    // Check for termination condition - all batches must have been null
-                    if(currentRow == null) {
-                        break;
+                    List<?> testRow = batch.getTuple(workingPointers[i]);
+                    int compare = -1;
+                    if (currentRow != null) {
+                    	compare = comparator.compare(testRow, currentRow);
                     }
-                    // Output the row and update pointers
-                    currentRows.add(currentRow);
-                    incrementWorkingBatch(chosenBatchIndex, chosenBatch);
-
-                    // Move past this same row on all batches if dup removal is on
-                    if(this.removeDuplicates) {
-                        for(int i=0; i<workingBatches.size(); i++) {
-                            TupleBatch batch = (TupleBatch) workingBatches.get(i);
-                            while(batch != null) {
-                                List testRow = batch.getTuple(workingPointers[i]);
-                                if(comparator.compare(testRow, currentRow) == 0) {
-                                    if(incrementWorkingBatch(i, batch)) {
-                                        batch = (TupleBatch) workingBatches.get(i);
-                                    }
-                                } else {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-
-                    // Check for full batch and store
-                    if(currentRows.size() == this.batchSize) {
-                        bufferManager.addTupleBatch(mergedID, new TupleBatch(mergedRowBegin, currentRows));
-                        mergedRowBegin = mergedRowBegin + this.batchSize;
-                        currentRows = new ArrayList(this.batchSize);
+                    if(compare < 0) {
+                        // Found lower row
+                        currentRow = testRow;
+                        chosenBatchIndex = i;
+                        chosenBatch = batch;
+                    } else if (compare == 0 && this.mode != Mode.SORT) {
+                    	incrementWorkingBatch(i, batch);
                     }
                 }
 
-                // Save any remaining partial batch
-                if(currentRows.size() > 0) {
-                    bufferManager.addTupleBatch(mergedID, new TupleBatch(mergedRowBegin, currentRows));
+                // Check for termination condition - all batches must have been null
+                if(currentRow == null) {
+                    break;
                 }
-                
-                // Remove merged sublists
-                for(int i=0; i<sortedIndex; i++) {
-                    bufferManager.removeTupleSource((TupleSourceID)activeTupleIDs.remove(0));
+                // Output the row and update pointers
+                collector.addTuple(currentRow);
+                if (this.outputID != null && chosenBatchIndex != masterSortIndex && sortedIndex > masterSortIndex) {
+                	if (outCollector == null) {
+                		tempOutId = createTupleSource();
+                    	outCollector = new TupleCollector(tempOutId, this.bufferManager);
+                	}
+                    outCollector.addTuple(currentRow);
                 }
+                incrementWorkingBatch(chosenBatchIndex, chosenBatch);
+            }
 
-                this.activeTupleIDs.add(mergedID);
-                
-            } while(this.activeTupleIDs.size() > 1);
+            // Save without closing
+            collector.saveBatch(false);
+            
+            // Remove merged sublists
+            for(int i=0; i<sortedIndex; i++) {
+            	TupleSourceID id = activeTupleIDs.remove(0);
+            	if (!id.equals(this.outputID)) {
+            		bufferManager.removeTupleSource(id);
+            	}
+            }
+
+            this.activeTupleIDs.add(mergedID);           
+            this.mergedID = null;
+            masterSortIndex = masterSortIndex - sortedIndex + 1;
+            if (masterSortIndex < 0) {
+            	masterSortIndex = this.activeTupleIDs.size() - 1;
+            }
+        } 
+    	
+        if (outCollector != null) {
+        	outCollector.close();
+        	//transfer the new dup removed tuples to the output id
+        	TupleCollector tc = new TupleCollector(outputID, this.bufferManager);
+        	IndexedTupleSource ts = this.bufferManager.getTupleSource(outCollector.getTupleSourceID());
+        	try {
+	        	while (ts.hasNext()) {
+	        		tc.addTuple(ts.nextTuple());
+	        	}
+        	} catch (MetaMatrixProcessingException e) {
+        		throw new MetaMatrixComponentException(e);
+        	}
         }
-
+        
         // Close sorted source (all others have been removed)
-        bufferManager.setStatus((TupleSourceID) activeTupleIDs.get(0), TupleSourceStatus.FULL);
-        this.phase = DONE;
+        if (doneReading) {
+	        bufferManager.setStatus(activeTupleIDs.get(0), TupleSourceStatus.FULL);
+	        if (this.outputID != null) {
+	        	bufferManager.setStatus(outputID, TupleSourceStatus.FULL);
+	        }
+	        this.phase = DONE;
+	        return;
+        }
+    	Assertion.assertTrue(mode == Mode.DUP_REMOVE);
+    	if (this.outputID == null) {
+    		this.outputID = activeTupleIDs.get(0);
+    	}
+    	this.phase = INITIAL_SORT;
     }
 
     /**
@@ -316,7 +360,7 @@ public class SortUtility {
      * for that batchIndex, which we already happen to have.  Return whether the batch
      * was changed or not.  True = changed.
      */
-    private boolean incrementWorkingBatch(int batchIndex, TupleBatch currentBatch) throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
+    private void incrementWorkingBatch(int batchIndex, TupleBatch currentBatch) throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
         workingPointers[batchIndex] += 1;
         if(workingPointers[batchIndex] > currentBatch.getEndRow()) {
             TupleSourceID tsID = unpinWorkingBatch(batchIndex, currentBatch);
@@ -332,22 +376,16 @@ public class SortUtility {
                 } else {
                     workingBatches.set(batchIndex, newBatch);
                 }
-
-                // Return true
-                return true;
-
             } catch(MemoryNotAvailableException e) {
                 throw BlockedOnMemoryException.INSTANCE;
             }
-
         }
-        return false;
     }
     
     private TupleSourceID unpinWorkingBatch(int batchIndex,
                                             TupleBatch currentBatch) throws TupleSourceNotFoundException,
                                                                     MetaMatrixComponentException {
-        TupleSourceID tsID = (TupleSourceID)activeTupleIDs.get(batchIndex);
+        TupleSourceID tsID = activeTupleIDs.get(batchIndex);
         int lastBeginRow = currentBatch.getBeginRow();
         int lastEndRow = currentBatch.getEndRow();
         bufferManager.unpinTupleBatch(tsID, lastBeginRow, lastEndRow);
@@ -358,19 +396,33 @@ public class SortUtility {
         this.schema = this.bufferManager.getTupleSchema(this.sourceID);
         this.schemaTypes = TypeRetrievalUtil.getTypeNames(schema);
         this.batchSize = bufferManager.getProcessorBatchSize();
-        this.rowCount = bufferManager.getRowCount(this.sourceID);
+        
+        if (useAllColumns && mode != Mode.SORT) {
+	        if (this.sortElements != null) {
+	        	this.sortElements = new ArrayList(this.sortElements);
+	        	List toAdd = new ArrayList(schema);
+	        	toAdd.removeAll(this.sortElements);
+	        	this.sortElements.addAll(toAdd);
+	        	this.sortTypes = new ArrayList<Boolean>(this.sortTypes);
+	        	this.sortTypes.addAll(Collections.nCopies(this.sortElements.size() - this.sortTypes.size(), OrderBy.ASC));
+        	} else {
+	    		this.sortElements = this.schema;
+	    		this.sortTypes = Collections.nCopies(this.sortElements.size(), OrderBy.ASC);
+        	}
+        }
         
         int[] cols = new int[sortElements.size()];
 
         Iterator iter = sortElements.iterator();
         
         for (int i = 0; i < cols.length; i++) {
-            SingleElementSymbol elem = (SingleElementSymbol) iter.next();
+            SingleElementSymbol elem = (SingleElementSymbol)iter.next();
             
-            cols[i] = sourceElements.indexOf(elem);
+            cols[i] = schema.indexOf(elem);
             Assertion.assertTrue(cols[i] != -1);
         }
-        
         this.sortCols = cols;
+        this.comparator = new ListNestedSortComparator(sortCols, sortTypes);
     }
+    
 }

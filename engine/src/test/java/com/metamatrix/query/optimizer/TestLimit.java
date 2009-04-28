@@ -31,6 +31,8 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.optimizer.TestOptimizer.DependentProjectNode;
 import com.metamatrix.query.optimizer.TestOptimizer.DependentSelectNode;
+import com.metamatrix.query.optimizer.TestOptimizer.DupRemoveNode;
+import com.metamatrix.query.optimizer.TestOptimizer.DupRemoveSortNode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -39,7 +41,6 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.DependentAccessNode;
-import com.metamatrix.query.processor.relational.DupRemoveNode;
 import com.metamatrix.query.processor.relational.GroupingNode;
 import com.metamatrix.query.processor.relational.LimitNode;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy;
@@ -575,7 +576,7 @@ public class TestLimit extends TestCase {
             0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
-            1,      // DupRemove
+            0,      // DupRemove
             0,      // Grouping
             1,      // Limit
             0,      // NestedLoopJoinStrategy
@@ -584,9 +585,10 @@ public class TestLimit extends TestCase {
             0,      // PlanExecution
             0,      // Project
             0,      // Select
-            1,      // Sort
+            0,      // Sort
             1       // UnionAll
         }, NODE_TYPES);
+        TestOptimizer.checkNodeTypes(plan, new int[] {1}, new Class[]{DupRemoveSortNode.class});
     }
     
     public void testCombinedLimits() throws Exception {

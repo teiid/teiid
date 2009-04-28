@@ -22,12 +22,12 @@
 
 package com.metamatrix.common.buffer;
 
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.MetaMatrixException;
 
 /**
  * Indicates memory was not available for the requested operation.
  */
-public class MemoryNotAvailableException extends MetaMatrixProcessingException {
+public class MemoryNotAvailableException extends MetaMatrixException {
 
     /**
      * No-arg costructor required by Externalizable semantics

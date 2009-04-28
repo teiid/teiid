@@ -23,7 +23,6 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -82,7 +81,7 @@ final class BatchIterator implements
     public List<?> nextTuple() throws MetaMatrixComponentException,
     		MetaMatrixProcessingException {
         if (currentTuple == null && !hasNext()) {
-            throw new NoSuchElementException();
+            return null;
         }
         List result = currentTuple;
         currentTuple = null;
@@ -103,13 +102,17 @@ final class BatchIterator implements
     }
 
     public void setPosition(int position) {
+    	if (position == this.currentRow) {
+    		return;
+    	}
+		if (position < this.currentRow && (this.currentBatch == null || position < this.currentBatch.getBeginRow())) {
+			throw new UnsupportedOperationException("Backwards positioning is not allowed"); //$NON-NLS-1$
+		}
         this.currentRow = position;
+        this.currentTuple = null;
+        if (currentBatch.getEndRow() < currentRow) {
+        	this.currentBatch = null;
+        }
     }
 
-    public int available() {
-        if (currentBatch == null) {
-            return 0;
-        }
-        return currentBatch.getEndRow() - currentRow;
-    }
 }

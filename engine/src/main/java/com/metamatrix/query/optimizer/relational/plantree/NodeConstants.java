@@ -87,8 +87,8 @@ public final class NodeConstants {
         RIGHT_EXPRESSIONS,  // List <SingleElementSymbol> 
         DEPENDENT_VALUE_SOURCE, // String
         NON_EQUI_JOIN_CRITERIA,      // List <CompareCriteria>
-        SORT_LEFT,  // Boolean
-        SORT_RIGHT,     // Boolean
+        SORT_LEFT,  // SortOption
+        SORT_RIGHT,     // SortOption
         REMOVED_JOIN_GROUPS, //Set<GroupSymbol>
         
         IS_OPTIONAL,          // Boolean
@@ -110,7 +110,7 @@ public final class NodeConstants {
         // Sort node properties
         ORDER_TYPES,        // List <Boolean>
         SORT_ORDER,         // List <SingleElementSymbol>
-        SORT_CONTROLLER,         // Boolean
+        IS_DUP_REMOVAL,		// Boolean
 
         // Source node properties
         SYMBOL_MAP,         // SymbolMap

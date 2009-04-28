@@ -49,7 +49,6 @@ import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.DependentAccessNode;
 import com.metamatrix.query.processor.relational.DependentProcedureAccessNode;
 import com.metamatrix.query.processor.relational.DependentProcedureExecutionNode;
-import com.metamatrix.query.processor.relational.DupRemoveNode;
 import com.metamatrix.query.processor.relational.GroupingNode;
 import com.metamatrix.query.processor.relational.JoinNode;
 import com.metamatrix.query.processor.relational.LimitNode;
@@ -65,6 +64,7 @@ import com.metamatrix.query.processor.relational.SelectNode;
 import com.metamatrix.query.processor.relational.SortNode;
 import com.metamatrix.query.processor.relational.UnionAllNode;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
+import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Command;
@@ -201,7 +201,7 @@ public class PlanToProcessConverter {
                 List joinCrits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
                 
                 if(stype.equals(JoinStrategyType.MERGE)) {
-                    MergeJoinStrategy mjStrategy = new MergeJoinStrategy(node.hasBooleanProperty(NodeConstants.Info.SORT_LEFT), node.hasBooleanProperty(NodeConstants.Info.SORT_RIGHT));
+                    MergeJoinStrategy mjStrategy = new MergeJoinStrategy((SortOption)node.getProperty(NodeConstants.Info.SORT_LEFT), (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT), false);
                     jnode.setJoinStrategy(mjStrategy);
                     List leftExpressions = (List) node.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
                     List rightExpressions = (List) node.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
@@ -319,21 +319,21 @@ public class PlanToProcessConverter {
 				break;
 
 			case NodeConstants.Types.SORT:
+			case NodeConstants.Types.DUP_REMOVE:
                 SortNode sortNode = new SortNode(getID());
                 
 				List elements = (List) node.getProperty(NodeConstants.Info.SORT_ORDER);
 				List sortTypes = (List) node.getProperty(NodeConstants.Info.ORDER_TYPES);
 				
 				sortNode.setSortElements(elements, sortTypes);
+				if (node.getType() == NodeConstants.Types.DUP_REMOVE) {
+					sortNode.setMode(Mode.DUP_REMOVE);
+				} else if (node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
+					sortNode.setMode(Mode.DUP_REMOVE_SORT);
+				}
 
 				processNode = sortNode;
 				break;
-
-			case NodeConstants.Types.DUP_REMOVE:
-				processNode = new DupRemoveNode(getID());
-
-				break;
-
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
 				gnode.setGroupingElements( (List) node.getProperty(NodeConstants.Info.GROUP_COLS) );
@@ -362,7 +362,11 @@ public class PlanToProcessConverter {
                     if(useAll) {
                         processNode = unionAllNode;
                     } else {
-                        processNode = new DupRemoveNode(getID());
+                    	SortNode sNode = new SortNode(getID());
+                    	boolean onlyDupRemoval = node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL);
+                    	sNode.setMode(onlyDupRemoval?Mode.DUP_REMOVE:Mode.DUP_REMOVE_SORT);
+                        processNode = sNode;
+                        
                         unionAllNode.setElements( (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS) );
                         processNode.addChild(unionAllNode);
                     }

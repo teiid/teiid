@@ -7660,7 +7660,7 @@ public class TestProcessor extends TestCase {
             0,      // DependentAccess
             0,      // DependentSelect
             0,      // DependentProject
-            1,      // DupRemove
+            0,      // DupRemove
             0,      // Grouping
             0,      // NestedLoopJoinStrategy
             2,      // MergeJoinStrategy

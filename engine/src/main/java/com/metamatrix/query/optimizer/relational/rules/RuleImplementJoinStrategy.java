@@ -42,6 +42,7 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.CommandContext;
@@ -111,7 +112,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             return;
         }
         
-        joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.SORT_LEFT : NodeConstants.Info.SORT_RIGHT, Boolean.TRUE);
+        joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.SORT_LEFT : NodeConstants.Info.SORT_RIGHT, SortOption.SORT);
         
         if (needsCorrection) {
             PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);

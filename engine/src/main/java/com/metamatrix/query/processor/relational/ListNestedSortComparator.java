@@ -24,6 +24,8 @@ package com.metamatrix.query.processor.relational;
 
 import java.util.*;
 
+import com.metamatrix.core.util.Assertion;
+
 /**
  * This class can be used for comparing lists of elements, when the fields to
  * be sorted on and the comparison mechanism are dynamically specified. <p>
@@ -61,7 +63,7 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
     int[] sortParameters;
 
     /**
-     * Indicates whether comparision should be based on ascending or descending
+     * Indicates whether comparison should be based on ascending or descending
      * order.
      */
     boolean ascendingOrder = false;
@@ -146,7 +148,7 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
 			} else if ( param1 instanceof Comparable ) {
                 compare = ((Comparable)param1).compareTo(param2);
             } else {
-                compare = param1.toString().compareTo(param2.toString());
+            	Assertion.failed("Expected comparable types"); //$NON-NLS-1$
             }
             k++;
         }

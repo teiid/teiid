@@ -293,6 +293,8 @@ public class RelationalPlanner implements CommandPlanner {
         RuleStack rules = new RuleStack();
 
         rules.push(RuleConstants.COLLAPSE_SOURCE);
+        
+        rules.push(RuleConstants.PLAN_SORTS);
 
         if(hints.hasJoin) {
             rules.push(RuleConstants.IMPLEMENT_JOIN_STRATEGY);

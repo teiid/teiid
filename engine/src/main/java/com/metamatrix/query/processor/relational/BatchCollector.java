@@ -40,6 +40,7 @@ public class BatchCollector {
     private boolean done = false;
     private TupleSourceID tsID;
     private int rowCount = 0;
+    private boolean collectedAny;
     
     public BatchCollector(RelationalNode sourceNode) throws MetaMatrixComponentException {
         this.sourceNode = sourceNode;
@@ -61,6 +62,7 @@ public class BatchCollector {
             if(batch.getRowCount() > 0) {
                 this.rowCount = batch.getEndRow();
                 sourceNode.getBufferManager().addTupleBatch(tsID, batch);
+                collectedAny = true;
             }
 
             // Check for termination condition - batch ending with null row
@@ -77,6 +79,12 @@ public class BatchCollector {
         return tsID;
     }
     
+    public boolean collectedAny() {
+		boolean result = collectedAny;
+		collectedAny = false;
+		return result;
+	}
+    
     public int getRowCount() {
         return rowCount;
     }
@@ -92,5 +100,9 @@ public class BatchCollector {
     public TupleSourceID getTupleSourceID() {
         return this.tsID;
     }
+    
+    public boolean isDone() {
+		return done;
+	}
 
 }

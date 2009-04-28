@@ -33,7 +33,7 @@ import java.util.List;
 public class NestedLoopJoinStrategy extends MergeJoinStrategy {
 
     public NestedLoopJoinStrategy() {
-        super(false, false);
+        super(SortOption.SKIP_SORT, SortOption.SKIP_SORT, false);
     }
     
     /** 

@@ -29,6 +29,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.OrderBy;
 
@@ -89,11 +90,13 @@ public class MergeJoinStrategy extends JoinStrategy {
     private SortUtility rightSort;
     private SortOption processingSortRight;   
     
-    public MergeJoinStrategy(boolean sortLeft, boolean sortRight) {
-        this(sortLeft?SortOption.SORT:SortOption.SKIP_SORT, sortRight?SortOption.SORT:SortOption.SKIP_SORT, false);
-    }
-    
     public MergeJoinStrategy(SortOption sortLeft, SortOption sortRight, boolean grouping) {
+    	if (sortLeft == null) {
+    		sortLeft = SortOption.SKIP_SORT;
+    	}
+    	if (sortRight == null) {
+    		sortRight = SortOption.SKIP_SORT;
+    	}
         this.sortLeft = sortLeft;
         this.sortRight = sortRight;
         this.grouping = grouping;
@@ -260,12 +263,11 @@ public class MergeJoinStrategy extends JoinStrategy {
                 }
 
                 if (!outerMatched) {
-                    if (matchState == MatchState.MATCH_LEFT) {
-                        if (this.joinNode.getJoinType().isOuter()) {
-                            return outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals());
-                        }
-                    } else if (joinNode.getJoinType() == JoinType.JOIN_FULL_OUTER) {
-                        return outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple());
+                    if (matchState == MatchState.MATCH_RIGHT) {
+                    	return outputTuple(this.leftSource.getOuterVals(), this.rightSource.getCurrentTuple());
+                    }
+                    if (this.joinNode.getJoinType().isOuter()) {
+                        return outputTuple(this.leftSource.getCurrentTuple(), this.rightSource.getOuterVals());
                     }
                 }
             }
@@ -334,12 +336,11 @@ public class MergeJoinStrategy extends JoinStrategy {
                              MetaMatrixProcessingException {
         if (sortLeft != SortOption.SKIP_SORT) { 
             if (this.leftSort == null) {
-                List sourceElements = joinNode.getChildren()[0].getElements();
                 List expressions = this.joinNode.getLeftExpressions();
-                this.leftSort = new SortUtility(this.leftSource.collectTuples(), sourceElements,
-                                                    expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), sortLeft == SortOption.SORT_DISTINCT,
-                                                    this.joinNode.getBufferManager(), this.joinNode.getConnectionID());         
-                this.leftSource.setDistinct(sortLeft == SortOption.SORT_DISTINCT);
+                this.leftSort = new SortUtility(this.leftSource.collectTuples(),
+                                                    expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), sortLeft == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
+                                                    this.joinNode.getBufferManager(), this.joinNode.getConnectionID(), true);         
+                this.leftSource.setDistinct(sortLeft == SortOption.SORT_DISTINCT && expressions.size() == this.leftSource.getOuterVals().size());
             }
             this.leftSource.setTupleSource(leftSort.sort());
         } else if (this.joinNode.isDependent() || JoinType.JOIN_FULL_OUTER.equals(joinNode.getJoinType())) {
@@ -356,19 +357,20 @@ public class MergeJoinStrategy extends JoinStrategy {
         super.loadRight();
         if (processingSortRight != SortOption.SKIP_SORT) { 
             if (this.rightSort == null) {
-                List sourceElements = joinNode.getChildren()[1].getElements();
                 List expressions = this.joinNode.getRightExpressions();
-                this.rightSort = new SortUtility(this.rightSource.getTupleSourceID(), sourceElements,
-                                                    expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortRight == SortOption.SORT_DISTINCT,
-                                                    this.joinNode.getBufferManager(), this.joinNode.getConnectionID());
-                this.rightSource.setDistinct(processingSortRight == SortOption.SORT_DISTINCT);
+                this.rightSort = new SortUtility(this.rightSource.getTupleSourceID(), 
+                                                    expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortRight == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
+                                                    this.joinNode.getBufferManager(), this.joinNode.getConnectionID(), true);
+                this.rightSource.setDistinct(processingSortRight == SortOption.SORT_DISTINCT && expressions.size() == this.rightSource.getOuterVals().size());
             }
             this.rightSource.setTupleSource(rightSort.sort());
         } 
     }
     
     public void setProcessingSortRight(boolean processingSortRight) {
-        this.processingSortRight = processingSortRight?SortOption.SORT:SortOption.SKIP_SORT;
+    	if (processingSortRight && this.processingSortRight == SortOption.SKIP_SORT) {
+    		this.processingSortRight = SortOption.SORT;
+    	}
     }
 
     /**

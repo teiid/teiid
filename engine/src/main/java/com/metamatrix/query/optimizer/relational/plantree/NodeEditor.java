@@ -49,18 +49,18 @@ public final class NodeEditor {
 		}
 	}
 	
-    public static final PlanNode findNodePreOrder(PlanNode root, int type) {
-        return findNodePreOrder(root, type, NodeConstants.Types.NO_TYPE);
+    public static final PlanNode findNodePreOrder(PlanNode root, int types) {
+        return findNodePreOrder(root, types, NodeConstants.Types.NO_TYPE);
     }
 
-	public static final PlanNode findNodePreOrder(PlanNode root, int type, int stopTypes) {
-		if(root.getType() == type) {
+	public static final PlanNode findNodePreOrder(PlanNode root, int types, int stopTypes) {
+		if((types & root.getType()) == root.getType()) {
 			return root;
 		} else if((stopTypes & root.getType()) == root.getType()) {
 		    return null;
 		} else if(root.getChildCount() > 0) {
 		    for (PlanNode child : root.getChildren()) {
-				PlanNode found = findNodePreOrder(child, type, stopTypes);
+				PlanNode found = findNodePreOrder(child, types, stopTypes);
 				if(found != null) {
 					return found;
 				}
