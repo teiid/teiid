@@ -66,7 +66,6 @@ import com.metamatrix.query.processor.relational.UnionAllNode;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
@@ -150,7 +149,6 @@ public class PlanToProcessConverter {
 		throws QueryPlannerException, MetaMatrixComponentException {
 
 		RelationalNode processNode = null;
-        LanguageObject possiblyDependentObject = null;
 
 		switch(node.getType()) {
 			case NodeConstants.Types.PROJECT:
@@ -213,7 +211,6 @@ public class PlanToProcessConverter {
                 } 
                 Criteria joinCrit = Criteria.combineCriteria(joinCrits);
                 jnode.setJoinCriteria(joinCrit);
-                possiblyDependentObject = joinCrit;
                                
                 processNode = jnode;
                 
@@ -230,8 +227,6 @@ public class PlanToProcessConverter {
                     
                     Criteria crit = (Criteria)node.getProperty(NodeConstants.Info.PROCEDURE_CRITERIA);
                     
-                    possiblyDependentObject = crit;
-                    
                     if (crit != null) {
                         List references = (List)node.getProperty(NodeConstants.Info.PROCEDURE_INPUTS);
                         List defaults = (List)node.getProperty(NodeConstants.Info.PROCEDURE_DEFAULTS);
@@ -247,7 +242,6 @@ public class PlanToProcessConverter {
                 } else {
                     AccessNode aNode = null;
                     Command command = (Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
-                    possiblyDependentObject = command;
                     Object modelID = node.getProperty(NodeConstants.Info.MODEL_ID);
                     
                     if(node.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
@@ -287,8 +281,7 @@ public class PlanToProcessConverter {
                         try {
                             if (command instanceof Query) {
                                 processNode = correctProjectionForTempTable(node,
-                                                                            aNode,
-                                                                            possiblyDependentObject);
+                                                                            aNode);
                             }
                         } catch (QueryMetadataException err) {
                             throw new MetaMatrixComponentException(err);
@@ -314,7 +307,6 @@ public class PlanToProcessConverter {
 				SelectNode selnode = new SelectNode(getID());
 				selnode.setCriteria(crit);
 				processNode = selnode;
-                possiblyDependentObject = crit;
                 
 				break;
 
@@ -337,7 +329,7 @@ public class PlanToProcessConverter {
 			case NodeConstants.Types.GROUP:
 				GroupingNode gnode = new GroupingNode(getID());
 				gnode.setGroupingElements( (List) node.getProperty(NodeConstants.Info.GROUP_COLS) );
-
+				gnode.setRemoveDuplicates(node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL));
 				processNode = gnode;
 				break;
 
@@ -397,15 +389,14 @@ public class PlanToProcessConverter {
 		}
 
 		if(processNode != null) {
-			processNode = prepareToAdd(node, processNode, possiblyDependentObject);
+			processNode = prepareToAdd(node, processNode);
 		}
 
 		return processNode;
 	}
 
     private RelationalNode correctProjectionForTempTable(PlanNode node,
-                                                                AccessNode aNode,
-                                                                LanguageObject possiblyDependentObject) throws QueryMetadataException,
+                                                                AccessNode aNode) throws QueryMetadataException,
                                                                                                        MetaMatrixComponentException {
         if (node.getGroups().size() != 1) {
             return aNode;
@@ -425,15 +416,14 @@ public class PlanToProcessConverter {
   
         pnode.setSelectSymbols(projectSymbols);
         //if the following cast fails it means that we have a dependent temp table - that is not yet possible
-        aNode = (AccessNode)prepareToAdd(node, aNode, possiblyDependentObject);
+        aNode = (AccessNode)prepareToAdd(node, aNode);
         node.setProperty(NodeConstants.Info.OUTPUT_COLS, projectSymbols);
         pnode.addChild(aNode);
         return pnode;
     }
 
     private RelationalNode prepareToAdd(PlanNode node,
-                                          RelationalNode processNode,
-                                          LanguageObject possiblyDependentObject) {
+                                          RelationalNode processNode) {
         // Set the output elements from the plan node
         List cols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
 

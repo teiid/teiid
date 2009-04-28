@@ -115,6 +115,8 @@ public class SortNode extends RelationalNode {
     private void collectionPhase() throws BlockedException, TupleSourceNotFoundException, MetaMatrixComponentException, MetaMatrixProcessingException {
 		try {
 			collector.collectTuples();
+		} catch (BlockedOnMemoryException e) {
+			throw e;
 		} catch (BlockedException e) {
 			if (mode != Mode.DUP_REMOVE || !collector.collectedAny()) {
 				throw e;

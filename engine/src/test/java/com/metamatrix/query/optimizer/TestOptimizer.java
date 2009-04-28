@@ -304,7 +304,7 @@ public class TestOptimizer extends TestCase {
 		if (shouldSucceed) {
 			try {
 				//do planning
-				plan = QueryOptimizer.optimizePlan(command, md, null, capFinder, analysisRecord, null);
+				plan = QueryOptimizer.optimizePlan(command, md, null, capFinder, analysisRecord, new CommandContext());
 
 			} catch (Throwable e) {
 				throw new MetaMatrixRuntimeException(e);

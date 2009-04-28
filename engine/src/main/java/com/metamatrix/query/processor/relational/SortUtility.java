@@ -72,6 +72,7 @@ public class SortUtility {
 	private Comparator comparator;
 
     private TupleSourceID outputID;
+	private IndexedTupleSource outTs;
     private boolean doneReading;
     private int sortPhaseRow = 1;
     private int phase = INITIAL_SORT;
@@ -237,7 +238,8 @@ public class SortUtility {
 	}
 	
     protected void mergePhase() throws BlockedOnMemoryException, MetaMatrixComponentException, TupleSourceNotFoundException {
-    	TupleCollector outCollector = null;
+        appendOutput();
+        TupleCollector tempCollector = null;
     	while(this.activeTupleIDs.size() > 1) {    		
             // Load and pin batch from sorted sublists while memory available
             this.workingBatches = new ArrayList<TupleBatch>(activeTupleIDs.size());
@@ -297,11 +299,11 @@ public class SortUtility {
                 // Output the row and update pointers
                 collector.addTuple(currentRow);
                 if (this.outputID != null && chosenBatchIndex != masterSortIndex && sortedIndex > masterSortIndex) {
-                	if (outCollector == null) {
+                	if (tempCollector == null) {
                 		tempOutId = createTupleSource();
-                    	outCollector = new TupleCollector(tempOutId, this.bufferManager);
+                    	tempCollector = new TupleCollector(tempOutId, this.bufferManager);
                 	}
-                    outCollector.addTuple(currentRow);
+                    tempCollector.addTuple(currentRow);
                 }
                 incrementWorkingBatch(chosenBatchIndex, chosenBatch);
             }
@@ -325,19 +327,11 @@ public class SortUtility {
             }
         } 
     	
-        if (outCollector != null) {
-        	outCollector.close();
-        	//transfer the new dup removed tuples to the output id
-        	TupleCollector tc = new TupleCollector(outputID, this.bufferManager);
-        	IndexedTupleSource ts = this.bufferManager.getTupleSource(outCollector.getTupleSourceID());
-        	try {
-	        	while (ts.hasNext()) {
-	        		tc.addTuple(ts.nextTuple());
-	        	}
-        	} catch (MetaMatrixProcessingException e) {
-        		throw new MetaMatrixComponentException(e);
-        	}
-        }
+    	if (tempCollector != null) {
+	    	tempCollector.close();
+	    	this.outTs = this.bufferManager.getTupleSource(tempOutId);
+	        appendOutput();
+    	}
         
         // Close sorted source (all others have been removed)
         if (doneReading) {
@@ -354,6 +348,27 @@ public class SortUtility {
     	}
     	this.phase = INITIAL_SORT;
     }
+
+	private void appendOutput() throws TupleSourceNotFoundException,
+			MetaMatrixComponentException {
+		if (this.outTs != null) {
+			//transfer the new dup removed tuples to the output id
+        	TupleCollector tc = new TupleCollector(outputID, this.bufferManager);
+        	try {
+	        	try {
+		        	while (outTs.hasNext()) {
+		        		tc.addTuple(outTs.nextTuple());
+		        	}
+	        	} catch (MetaMatrixProcessingException e) {
+	        		throw new MetaMatrixComponentException(e);
+	        	}
+			} catch (BlockedOnMemoryException e) {
+				tc.saveBatch(false);
+				throw e;
+			}
+        	outTs = null;
+        }
+	}
 
     /**
      * Increment the working batch at batchIndex.  The currentBatch is the currentBatch

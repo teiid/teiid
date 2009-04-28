@@ -742,7 +742,7 @@ public class TestLimit extends TestCase {
                                         0,      // PlanExecution
                                         1,      // Project
                                         0,      // Select
-                                        1,      // Sort
+                                        0,      // Sort
                                         0       // UnionAll
         }, NODE_TYPES);
         

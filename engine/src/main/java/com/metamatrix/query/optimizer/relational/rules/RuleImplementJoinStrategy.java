@@ -43,6 +43,7 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
+import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.CommandContext;
@@ -66,10 +67,23 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 
         for (PlanNode joinNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS)) {
             JoinStrategyType stype = (JoinStrategyType) joinNode.getProperty(NodeConstants.Info.JOIN_STRATEGY);
-            if (JoinStrategyType.MERGE.equals(stype)) {
-                insertSort(joinNode.getFirstChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder);
-                insertSort(joinNode.getLastChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder);
+            if (!JoinStrategyType.MERGE.equals(stype)) {
+            	continue;
             } 
+/*            if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER) {
+            	//there is a possible optimization at runtime here based upon the cardinality
+            	float leftCost = NewCalculateCostUtil.computeCostForTree(joinNode.getFirstChild(), metadata);
+            	float rightCost = NewCalculateCostUtil.computeCostForTree(joinNode.getLastChild(), metadata);
+            	if (leftCost != NewCalculateCostUtil.UNKNOWN_VALUE && leftCost < context.getProcessorBatchSize() * context.getProcessorBatchSize()
+            			&& rightCost != NewCalculateCostUtil.UNKNOWN_VALUE && rightCost > context.getProcessorBatchSize()) {
+                    joinNode.setProperty(NodeConstants.Info.SORT_LEFT, SortOption.SORT);
+                    joinNode.setProperty(NodeConstants.Info.SORT_RIGHT, SortOption.SORT);
+            		continue;
+            	}
+            }
+*/            
+            insertSort(joinNode.getFirstChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder);
+            insertSort(joinNode.getLastChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder);
         }
         
         return plan;

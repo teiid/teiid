@@ -78,7 +78,7 @@ public class TestOptionalJoins extends TestCase {
     
     public void testOptionalJoinNode3_1() { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g1.e1, pm2.g2.e1 FROM pm1.g1 LEFT OUTER JOIN /* optional */ pm2.g2 on pm1.g1.e1 = pm2.g2.e1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"} ); //$NON-NLS-1$
+            new String[] {"SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0"} ); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

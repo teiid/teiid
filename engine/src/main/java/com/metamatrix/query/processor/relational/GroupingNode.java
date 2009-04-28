@@ -59,6 +59,7 @@ public class GroupingNode extends RelationalNode {
     // Grouping columns set by the planner 
 	private List sortElements;
 	private List sortTypes;
+	private boolean removeDuplicates;
     
     // Collection phase
     private int phase = COLLECTION;
@@ -112,6 +113,10 @@ public class GroupingNode extends RelationalNode {
         lastRow = null;
         currentGroupTuple = null;
     }
+    
+    public void setRemoveDuplicates(boolean removeDuplicates) {
+		this.removeDuplicates = removeDuplicates;
+	}
 
     /**
      * Called by the planner to initialize the grouping node.  Set the list of grouping
@@ -306,7 +311,7 @@ public class GroupingNode extends RelationalNode {
             this.phase = GROUP;
         } else {
             this.sortUtility = new SortUtility(collectionID, sortElements,
-                                                sortTypes, false, getBufferManager(),
+                                                sortTypes, removeDuplicates, getBufferManager(),
                                                 getConnectionID());
             this.phase = SORT;
         }
@@ -446,6 +451,7 @@ public class GroupingNode extends RelationalNode {
 		super.copy(this, clonedNode);
 		clonedNode.sortElements = sortElements;
 		clonedNode.sortTypes = sortTypes;
+		clonedNode.removeDuplicates = removeDuplicates;
 		return clonedNode;
 	}
 
@@ -465,6 +471,8 @@ public class GroupingNode extends RelationalNode {
             }
             props.put(PROP_GROUP_COLS, groupCols);
         }
+        
+        props.put(PROP_REMOVE_DUPS, this.removeDuplicates);
 
         return props;
     }

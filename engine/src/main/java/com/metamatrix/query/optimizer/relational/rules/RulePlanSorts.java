@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
+import java.util.List;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
@@ -34,7 +36,9 @@ import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
+import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.util.CommandContext;
 
@@ -49,11 +53,10 @@ public class RulePlanSorts implements OptimizerRule {
 			AnalysisRecord analysisRecord, CommandContext context)
 			throws QueryPlannerException, QueryMetadataException,
 			MetaMatrixComponentException {
-		optimizeSorts(false, plan);
-		return plan;
+		return optimizeSorts(false, plan, plan);
 	}
 
-	private void optimizeSorts(boolean parentBlocking, PlanNode node) {
+	private PlanNode optimizeSorts(boolean parentBlocking, PlanNode node, PlanNode root) {
 		node = NodeEditor.findNodePreOrder(node, 
 				NodeConstants.Types.SORT 
 				| NodeConstants.Types.DUP_REMOVE 
@@ -61,7 +64,7 @@ public class RulePlanSorts implements OptimizerRule {
 				| NodeConstants.Types.JOIN 
 				| NodeConstants.Types.SET_OP, NodeConstants.Types.ACCESS);
 		if (node == null) {
-			return;
+			return root;
 		}
 		switch (node.getType()) {
 		case NodeConstants.Types.SORT:
@@ -72,6 +75,33 @@ public class RulePlanSorts implements OptimizerRule {
 			if (mergeSortWithDupRemoval(node)) {
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
 			}
+			List orderColumns = (List)node.getProperty(NodeConstants.Info.SORT_ORDER);
+			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP | NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
+			if (possibleSort != null) {
+				NodeConstants.Info expr = Info.GROUP_COLS;
+				if (possibleSort.getType() == NodeConstants.Types.JOIN) {
+					if (possibleSort.getProperty(NodeConstants.Info.JOIN_STRATEGY) != JoinStrategyType.MERGE
+						|| possibleSort.getProperty(NodeConstants.Info.JOIN_TYPE) != JoinType.JOIN_INNER) {
+						break;
+					} 
+					expr = Info.LEFT_EXPRESSIONS;
+				}
+				List exprs = (List)possibleSort.getProperty(expr);
+				if (exprs != null && exprs.containsAll(orderColumns)) {
+					exprs.removeAll(orderColumns);
+					orderColumns.addAll(exprs);
+					possibleSort.setProperty(expr, orderColumns);
+					if (node.getParent() == null) {
+						root = node.getFirstChild();
+						root.removeFromParent();
+						node = root;
+					} else {
+						PlanNode nextNode = node.getFirstChild();
+						NodeEditor.removeChildNode(node.getParent(), node);
+						node = nextNode;
+					}
+				}
+			}
 			break;
 		case NodeConstants.Types.DUP_REMOVE:
 			if (parentBlocking) {
@@ -80,6 +110,12 @@ public class RulePlanSorts implements OptimizerRule {
 			} 
 			break;
 		case NodeConstants.Types.GROUP:
+			if (!node.hasCollectionProperty(NodeConstants.Info.GROUP_COLS)) {
+				break;
+			}
+			if (mergeSortWithDupRemovalAcrossSource(node)) {
+				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
+			}
 			//TODO: check the join interesting order
 			parentBlocking = true;
 			break;
@@ -87,13 +123,20 @@ public class RulePlanSorts implements OptimizerRule {
 			if (node.getProperty(NodeConstants.Info.JOIN_STRATEGY) != JoinStrategyType.MERGE) {
 				break;
 			}
+			/*
+			 *  Look under the left and the right sources for a dup removal operation
+			 *  join
+			 *   [project]
+			 *     source
+			 *       dup remove | union not all
+			 */
 			parentBlocking = true;
 			PlanNode toTest = node.getFirstChild();
-			if (mergeSortWithDupRemovalForJoin(toTest)) {
+			if (mergeSortWithDupRemovalAcrossSource(toTest)) {
 				node.setProperty(NodeConstants.Info.SORT_LEFT, SortOption.SORT_DISTINCT);
 			}
 			toTest = node.getLastChild();
-			if (mergeSortWithDupRemovalForJoin(toTest)) {
+			if (mergeSortWithDupRemovalAcrossSource(toTest)) {
 				node.setProperty(NodeConstants.Info.SORT_RIGHT, SortOption.SORT_DISTINCT);
 			}
 			break;
@@ -107,18 +150,12 @@ public class RulePlanSorts implements OptimizerRule {
 			break;
 		}
 		for (PlanNode child : node.getChildren()) {
-			optimizeSorts(parentBlocking, child);
+			root = optimizeSorts(parentBlocking, child, root);
 		}
+		return root;
 	}
 
-	/**
-	 * Look under the left and the right sources for a dup removal operation
-	 *  join
-	 *   [project]
-	 *     source
-	 *       dup remove | union not all
-	 */
-	private boolean mergeSortWithDupRemovalForJoin(PlanNode toTest) {
+	private boolean mergeSortWithDupRemovalAcrossSource(PlanNode toTest) {
 		PlanNode source = NodeEditor.findNodePreOrder(toTest, NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS | NodeConstants.Types.JOIN);
 		return source != null && mergeSortWithDupRemoval(source);
 	}

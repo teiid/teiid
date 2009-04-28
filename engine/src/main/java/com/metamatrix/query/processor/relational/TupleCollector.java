@@ -35,17 +35,23 @@ import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 public class TupleCollector {
 	
 	private TupleSourceID tsid;
+	private BufferManager bm;
+	private boolean captureBounds;
 	
 	private int batchSize;
 	private ArrayList<List<?>> batch;
 	private int index;
-	private BufferManager bm;
+	private ArrayList<List<?>> bounds;
 
 	public TupleCollector(TupleSourceID tsid, BufferManager bm) throws TupleSourceNotFoundException, MetaMatrixComponentException {
 		this.tsid = tsid;
 		this.batchSize = bm.getProcessorBatchSize();
 		this.bm = bm;
 		this.index = bm.getRowCount(tsid) + 1;
+	}
+	
+	public void setCaptureBounds(boolean captureBounds) {
+		this.captureBounds = captureBounds;
 	}
 	
 	public TupleSourceID getTupleSourceID() {
@@ -70,7 +76,13 @@ public class TupleCollector {
 				return;
 			}
 			toSave = new ArrayList<List<?>>(0);
-		}
+		} /*else if (captureBounds) {
+			if (bounds.isEmpty()) {
+				bounds.add(toSave.get(0));
+			}
+			if (bounds )
+			bounds.add(toSave.get(toSave.size() -1));
+		}*/
 		TupleBatch tb = new TupleBatch(index, toSave);
 		tb.setTerminationFlag(isLast);
 		this.bm.addTupleBatch(tsid, tb);
