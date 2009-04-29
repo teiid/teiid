@@ -119,23 +119,18 @@ public class JDBCTranslator {
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
                                         + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + AND + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE + "=(" //$NON-NLS-1$
+                                        
+                                        + AND + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "=(" //$NON-NLS-1$
                                         + SELECT + MAX + "(" //$NON-NLS-1$
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +")" //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION +")" //$NON-NLS-1$
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + AND
-                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" //$NON-NLS-1$
-                                        + "(" + SELECT + MAX + "(" + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + ")"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                                        + FROM 
-                                        + JDBCNames.VirtualDatabases.TABLE_NAME
-                                        + WHERE
-                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=? " //$NON-NLS-1$ //$NON-NLS-2$
                                         + AND + "(" + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE  //$NON-NLS-1$ //$NON-NLS-2$
                                         + OR + JDBCNames.VirtualDatabases.ColumnName.VDB_STATUS + "=" + VDBStatus.ACTIVE_DEFAULT //$NON-NLS-1$
-                                        +")))"; //$NON-NLS-1$
+                                        +") )"; //$NON-NLS-1$
+                                        
 
     public static final String SELECT_VIRTUAL_DATABASE_ID_LV
                                     = SELECT + JDBCNames.VirtualDatabases.ColumnName.VDB_UID + "," //$NON-NLS-1$
@@ -145,13 +140,13 @@ public class JDBCTranslator {
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
                                         + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + AND + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE + "=(" //$NON-NLS-1$
+                                        + AND + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION + "=(" //$NON-NLS-1$
                                         + SELECT + MAX + "(" //$NON-NLS-1$
-                                        + JDBCNames.VirtualDatabases.ColumnName.VERSION_DATE +")" //$NON-NLS-1$
+                                        + JDBCNames.VirtualDatabases.ColumnName.VDB_VERSION +")" //$NON-NLS-1$
                                         + FROM
                                         + JDBCNames.VirtualDatabases.TABLE_NAME
                                         + WHERE
-                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=?"; //$NON-NLS-1$ //$NON-NLS-2$
+                                        + "{fn ucase(" +JDBCNames.VirtualDatabases.ColumnName.VDB_NM + ")}=? )"; //$NON-NLS-1$ //$NON-NLS-2$
 
     //select objects
     public static final String SELECT_VIRTUAL_DATABASES
