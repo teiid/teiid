@@ -62,6 +62,7 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
+import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
@@ -2102,6 +2103,121 @@ public class TestQueryRewriter extends TestCase {
         	
         }
         
+    }
+
+    /**
+     * Test <code>QueryRewriter</code>'s ability to rewrite a query that 
+     * contains an aggregate function which uses a <code>CASE</code> 
+     * expression which contains <code>BETWEEN</code> criteria as its value.
+     * <p>
+     * An aggregate function list is defined and queries are created that 
+     * use each function from the list.  The list includes:
+     * <p>
+     * "SUM", "MAX", "MIN", "AVG", "COUNT"   
+     * <p>
+     * It is expected that the BETWEEN expression will be rewritten as 
+     * <code>CompoundCriteria</code>.
+     * <p>
+     * <table>
+     * <tr><th align="left" colspan=2>For example:
+     * <tr><td width="10*"><td>SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 
+     * THEN e2 ELSE -1 END) FROM pm1.g1
+     * <tr><th align="left" colspan=2>Is rewritten as:
+     * <tr><td width="10*"><td>SELECT SUM(CASE WHEN (e2 >= 3) AND (e2 <= 5) 
+     * THEN e2 ELSE -1 END) FROM pm1.g1
+     * </table>
+     * 
+     * @see com.metamatrix.query.rewriter.QueryRewriter
+     * @see com.metamatrix.query.sql.lang.BetweenCriteria
+     * @see com.metamatrix.query.sql.lang.CompoundCriteria
+     * @see com.metamatrix.query.sql.symbol.AggregateSymbol
+     * @see com.metamatrix.query.sql.symbol.SearchedCaseExpression
+     */
+    public void testAggregateWithBetweenInCaseInSelect() {
+    	// Define a list of aggregates to test against
+    	List<String> aggregateCommands = Arrays.asList( new String[] { "SUM", "MAX", "MIN", "AVG", "COUNT" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+    	
+    	// Define a query and the expected rewritten query
+    	// ?AGGREGATE? represents the string substitution for an aggregate from aggregateCommands
+    	String sqlBefore = "SELECT ?AGGREGATE?(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
+    	String sqlAfter  = "SELECT ?AGGREGATE?(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
+
+    	// Iterate through the aggregateCommands
+    	for ( String aCmd : aggregateCommands ) {
+    		// Replace ?AGGREGATE? with the command from aggregateCommands
+    		String sql = sqlBefore.replace("?AGGREGATE?", aCmd); //$NON-NLS-1$
+    		String exSql = sqlAfter.replace("?AGGREGATE?", aCmd); //$NON-NLS-1$
+    		// Test QueryRewriter
+        	Command cmd = helpTestRewriteCommand( sql, exSql );
+        	// Check the rewritten command to verify that CompundCriteria replaced BetweenCriteria
+        	CompoundCriteria ccrit = (CompoundCriteria) ((SearchedCaseExpression) ((ExpressionSymbol) cmd.getProjectedSymbols().get(0)).getExpression()).getWhen().get(0);
+        	assertEquals( "e2 >= 3", ccrit.getCriteria(0).toString() ); //$NON-NLS-1$
+        	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
+    	}
+    }
+    
+    /**
+     * Test <code>QueryRewriter</code>'s ability to rewrite a query that 
+     * contains a <code>CASE</code> expression which contains 
+     * <code>BETWEEN</code> criteria in the queries <code>SELECT</code> clause.
+     * <p>
+     * It is expected that the BETWEEN expression will be rewritten as 
+     * <code>CompoundCriteria</code>.
+     * <p>
+     * <table>
+     * <tr><th align="left" colspan=2>For example:
+     * <tr><td width="10*"><td>SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 
+     * ELSE -1 END FROM pm1.g1 
+     * <tr><th align="left" colspan=2>Is rewritten as:
+     * <tr><td width="10*"><td>SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 
+     * ELSE -1 END FROM pm1.g1
+     * </table>
+     * 
+     * @see com.metamatrix.query.rewriter.QueryRewriter
+     * @see com.metamatrix.query.sql.lang.BetweenCriteria
+     * @see com.metamatrix.query.sql.lang.CompoundCriteria
+     * @see com.metamatrix.query.sql.symbol.SearchedCaseExpression
+     */
+    public void testBetweenInCaseInSelect() {
+    	String sqlBefore = "SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
+    	String sqlAfter = "SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
+    	
+    	Command cmd = helpTestRewriteCommand( sqlBefore, sqlAfter );
+    	CompoundCriteria ccrit = (CompoundCriteria) ((SearchedCaseExpression) ((ExpressionSymbol) cmd.getProjectedSymbols().get(0)).getExpression()).getWhen().get(0);
+    	assertEquals( "e2 >= 3", ccrit.getCriteria(0).toString() ); //$NON-NLS-1$
+    	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
+    }
+    
+    /**
+     * Test <code>QueryRewriter</code>'s ability to rewrite a query that 
+     * contains a <code>CASE</code> expression which contains 
+     * <code>BETWEEN</code> criteria in the queries <code>WHERE</code> clause.
+     * <p>
+     * It is expected that the BETWEEN expression will be rewritten as 
+     * <code>CompoundCriteria</code>.
+     * <p>
+     * <table>
+     * <tr><th align="left" colspan=2>For example:
+     * <tr><td width="10*"><td>SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 
+     * BETWEEN 3 AND 5 THEN e2 ELSE -1 END 
+     * <tr><th align="left" colspan=2>Is rewritten as:
+     * <tr><td width="10*"><td>SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN  
+     * (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END
+     * </table>
+     * 
+     * @see com.metamatrix.query.rewriter.QueryRewriter
+     * @see com.metamatrix.query.sql.lang.BetweenCriteria
+     * @see com.metamatrix.query.sql.lang.CompoundCriteria
+     * @see com.metamatrix.query.sql.symbol.SearchedCaseExpression
+     */
+    public void testBetweenInCase() {
+    	String sqlBefore = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
+    	String sqlAfter = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
+    	
+    	Command cmd = helpTestRewriteCommand( sqlBefore, sqlAfter );
+    	CompoundCriteria ccrit = (CompoundCriteria) ((SearchedCaseExpression) ((CompareCriteria) ((Query) cmd).getCriteria()).getRightExpression()).getWhen().get(0);
+    	assertEquals( "e2 >= 3", ccrit.getCriteria(0).toString() ); //$NON-NLS-1$
+    	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
     }
 
 }

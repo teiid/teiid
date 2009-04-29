@@ -256,7 +256,7 @@ public class TestProcessor extends TestCase {
             id = processor.getResultsID();
     		processor.process();
             assertEquals(0, bufferMgr.getPinnedCount());
-            examineResults(expectedResults, bufferMgr, processor.getResultsID());
+            if ( expectedResults != null ) examineResults(expectedResults, bufferMgr, processor.getResultsID());
         } finally {
             bufferMgr.removeTupleSource(id);
         }
@@ -4435,6 +4435,134 @@ public class TestProcessor extends TestCase {
        // Plan query
        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
         
+       // Run query
+       helpProcess(plan, dataManager, expected);
+   }
+
+   /**
+    * Test <code>QueryProcessor</code>'s ability to process a query containing 
+    * a <code>CASE</code> expression in which a <code>BETWEEN</code> 
+    * comparison is used in the queries <code>SELECT</code> statement.
+    * <p>
+    * For example:
+    * <p>
+    * SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1
+    */
+   public void testBetweenInCase() { 
+       // Create query 
+       final String sql = "SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
+        
+       // Create expected results
+       List[] expected = new List[] { 
+               Arrays.asList(new Object[] { new Integer(-1) }),
+               Arrays.asList(new Object[] { new Integer(-1) }),
+               Arrays.asList(new Object[] { new Integer(3) }),
+               Arrays.asList(new Object[] { new Integer(-1) }),
+               Arrays.asList(new Object[] { new Integer(-1) }),
+               Arrays.asList(new Object[] { new Integer(-1) }) 
+       };    
+    
+       // Construct data manager with data
+       FakeDataManager dataManager = new FakeDataManager();
+       sampleData1(dataManager);
+
+       // Plan query
+       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+
+       // Run query
+       helpProcess(plan, dataManager, expected);
+   }
+
+   /**
+    * Test <code>QueryProcessor</code>'s ability to process a query containing 
+    * an aggregate SUM with a <code>CASE</code> expression in which a 
+    * <code>BETWEEN</code> comparison is used in the queries <code>SELECT</code> 
+    * statement.
+    * <p>
+    * For example:
+    * <p>
+    * SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1
+    */
+   public void testBetweenInCaseInSum() { 
+       // Create query 
+       final String sql = "SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
+        
+       // Create expected results
+       List[] expected = new List[] { 
+           Arrays.asList(new Object[] { new Long(-2) })
+       };    
+    
+       // Construct data manager with data
+       FakeDataManager dataManager = new FakeDataManager();
+       sampleData1(dataManager);
+
+       // Plan query
+       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+
+       // Run query
+       helpProcess(plan, dataManager, expected);
+   }
+
+   /**
+    * Test <code>QueryProcessor</code>'s ability to process a query containing 
+    * an aggregate SUM with a <code>CASE</code> expression in which a 
+    * <code>BETWEEN</code> comparison is used in the queries <code>SELECT</code> 
+    * statement and a GROUP BY is specified.
+    * <p>
+    * For example:
+    * <p>
+    * SELECT e1, SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) 
+    * FROM pm1.g1 GROUP BY e1 ORDER BY e1
+    */
+   public void testBetweenInCaseInSumWithGroupBy() { 
+       // Create query 
+       final String sql = "SELECT e1, SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1 GROUP BY e1 ORDER BY e1"; //$NON-NLS-1$
+        
+       // Create expected results
+       List[] expected = new List[] { 
+    	       Arrays.asList(new Object[] { null,  new Long(-1) }),
+    	       Arrays.asList(new Object[] { "a",   new Long(1) }), //$NON-NLS-1$
+    	       Arrays.asList(new Object[] { "b",   new Long(-1) }), //$NON-NLS-1$
+    	       Arrays.asList(new Object[] { "c",   new Long(-1) }) //$NON-NLS-1$
+       };    
+       
+       // Construct data manager with data
+       FakeDataManager dataManager = new FakeDataManager();
+       sampleData1(dataManager);
+
+       // Plan query
+       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+
+       // Run query
+       helpProcess(plan, dataManager, expected);
+   }
+
+   /**
+    * Test <code>QueryProcessor</code>'s ability to process a query containing 
+    * an aggregate COUNT with a <code>CASE</code> expression in which a 
+    * <code>BETWEEN</code> comparison is used in the queries <code>SELECT</code> 
+    * statement.
+    * <p>
+    * For example:
+    * <p>
+    * SELECT COUNT(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 END) FROM pm1.g1
+    */
+   public void testBetweenInCaseInCount() { 
+       // Create query 
+       final String sql = "SELECT COUNT(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 END) FROM pm1.g1"; //$NON-NLS-1$
+        
+       // Create expected results
+       List[] expected = new List[] { 
+           Arrays.asList(new Object[] { new Integer(1) })
+       };    
+    
+       // Construct data manager with data
+       FakeDataManager dataManager = new FakeDataManager();
+       sampleData1(dataManager);
+
+       // Plan query
+       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+
        // Run query
        helpProcess(plan, dataManager, expected);
    }

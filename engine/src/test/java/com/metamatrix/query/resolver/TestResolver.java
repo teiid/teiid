@@ -4656,5 +4656,47 @@ public class TestResolver extends TestCase {
     public void testSecondPassFunctionResolving() {
     	helpResolve("SELECT pm1.g1.e1 FROM pm1.g1 where lower(?) = e1 "); //$NON-NLS-1$
     }
+
+    /**
+     * Test <code>QueryResolver</code>'s ability to resolve a query that 
+     * contains an aggregate <code>SUM</code> which uses a <code>CASE</code> 
+     * expression which contains <code>BETWEEN</code> criteria as its value.
+     * <p>
+     * For example:
+     * <p>
+     * SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1
+     */
+    public void testAggregateWithBetweenInCaseInSelect() {
+    	String sql = "SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
+    	helpResolve(sql);
+    }
     
+    /**
+     * Test <code>QueryResolver</code>'s ability to resolve a query that 
+     * contains a <code>CASE</code> expression which contains 
+     * <code>BETWEEN</code> criteria in the queries <code>SELECT</code> clause.
+     * <p>
+     * For example:
+     * <p>
+     * SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1
+     */
+    public void testBetweenInCaseInSelect() {
+    	String sql = "SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
+    	helpResolve(sql);
+    }
+    
+    /**
+     * Test <code>QueryResolver</code>'s ability to resolve a query that 
+     * contains a <code>CASE</code> expression which contains 
+     * <code>BETWEEN</code> criteria in the queries <code>WHERE</code> clause.
+     * <p>
+     * For example:
+     * <p>
+     * SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END
+     */
+    public void testBetweenInCase() {
+    	String sql = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
+    	helpResolve(sql);
+    }
+
 }

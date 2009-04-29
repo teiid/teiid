@@ -7187,6 +7187,91 @@ public class TestOptimizer extends TestCase {
     	helpPlan(sql, FakeMetadataFactory.exampleBQT(), new String[] {});
     }
     
+    /**
+     * Test <code>QueryOptimizer</code>'s ability to plan a fully-pushed-down 
+     * query containing a <code>BETWEEN</code> comparison in the queries 
+     * <code>WHERE</code> statement.
+     * <p>
+     * For example:
+     * <p>
+     * SELECT * FROM pm1.g1 WHERE e2 BETWEEN 1 AND 2
+     */
+    public void testBetween() { 
+        helpPlan("select * from pm1.g1 where e2 between 1 and 2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+    			new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (e2 >= 1) AND (e2 <= 2)"} ); //$NON-NLS-1$
+    }
+
+    /**
+     * Test <code>QueryOptimizer</code>'s ability to plan a fully-pushed-down 
+     * query containing a <code>CASE</code> expression in which a 
+     * <code>BETWEEN</code> comparison is used in the queries 
+     * <code>SELECT</code> statement.
+     * <p>
+     * For example:
+     * <p>
+     * SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1
+     */
+    public void testBetweenInCase() { 
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        helpPlan("select case when e2 between 3 and 5 then e2 else -1 end from pm1.g1", //$NON-NLS-1$ 
+        		FakeMetadataFactory.example1Cached(), null, capFinder, 
+    			new String[] { "SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END FROM pm1.g1"},  //$NON-NLS-1$
+    			TestOptimizer.SHOULD_SUCCEED);
+    }
+
+    /**
+     * Test <code>QueryOptimizer</code>'s ability to plan a fully-pushed-down 
+     * query containing an aggregate SUM with a <code>CASE</code> expression 
+     * in which a <code>BETWEEN</code> comparison is used in the queries 
+     * <code>SELECT</code> statement.
+     * <p>
+     * For example:
+     * <p>
+     * SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1
+     */
+    public void testBetweenInCaseInSum() { 
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        helpPlan("select sum(case when e2 between 3 and 5 then e2 else -1 end) from pm1.g1", //$NON-NLS-1$ 
+        		FakeMetadataFactory.example1Cached(), null, capFinder, 
+    			new String[] { "SELECT SUM(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1"},  //$NON-NLS-1$
+    			TestOptimizer.SHOULD_SUCCEED);
+    }
+
+    /**
+     * Test <code>QueryOptimizer</code>'s ability to plan a fully-pushed-down 
+     * query containing an aggregate SUM with a <code>CASE</code> expression 
+     * in which a <code>BETWEEN</code> comparison is used in the queries 
+     * <code>SELECT</code> statement and a GROUP BY is specified.
+     * <p>
+     * For example:
+     * <p>
+     * SELECT e1, SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) 
+     * FROM pm1.g1 GROUP BY e1
+     */
+    public void testBetweenInCaseInSumWithGroupBy() { 
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        helpPlan("select sum(case when e2 between 3 and 5 then e2 else -1 end) from pm1.g1 group by e1", //$NON-NLS-1$ 
+        		FakeMetadataFactory.example1Cached(), null, capFinder, 
+    			new String[] { "SELECT SUM(CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END) FROM pm1.g1 GROUP BY e1"},  //$NON-NLS-1$
+    			TestOptimizer.SHOULD_SUCCEED);
+    }
+
 	private static final boolean DEBUG = false;
 
 }
