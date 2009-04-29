@@ -346,17 +346,17 @@ public class UpdateController {
         
         BasicVirtualDatabaseID vdbID = null;
         try {
-            vdbID = (BasicVirtualDatabaseID) this.getReadTransaction().getVirtualDatabaseID(vdbInfo.getName(), null);
-            if (vdbID != null) {
-                vdbVersion = Integer.toString(Integer.parseInt(vdbID.getVersion()) + 1);
-                VirtualDatabase latestVdb = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
-                createdBy = latestVdb.getCreatedBy();
-                creationDate = latestVdb.getCreationDate();
-            }
-
-        } catch (Throwable e4) {
-
+			vdbID = (BasicVirtualDatabaseID) this.getReadTransaction().getVirtualDatabaseID(vdbInfo.getName(), null);
+		} catch (ManagedConnectionException e) {
+			throw new VirtualDatabaseException(e);
+		}
+        if (vdbID != null) {
+            vdbVersion = Integer.toString(Integer.parseInt(vdbID.getVersion()) + 1);
+            VirtualDatabase latestVdb = RuntimeMetadataCatalog.getInstance().getVirtualDatabase(vdbID);
+            createdBy = latestVdb.getCreatedBy();
+            creationDate = latestVdb.getCreationDate();
         }
+
         
         vdbID = new BasicVirtualDatabaseID(vdbInfo.getName(), vdbVersion); 
        
