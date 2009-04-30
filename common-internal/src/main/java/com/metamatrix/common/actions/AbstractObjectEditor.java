@@ -161,41 +161,6 @@ public class AbstractObjectEditor implements ObjectEditor, Serializable {
       }
     }
 
-    protected void createExchangeInt(Object targetId, AttributeDefinition attrDefn, int oldValue, int newValue) {
-            if ( this.createActions ) {
-                ActionDefinition action = new ExchangeInt(targetId,attrDefn,oldValue,newValue );
-                this.getDestination().addAction(action);
-            }
-    }
-
-    protected void createExchangeLong(Object targetId, AttributeDefinition attrDefn, long oldValue, long newValue) {
-        if ( this.createActions ) {
-                ActionDefinition action = new ExchangeLong(targetId, attrDefn,oldValue,newValue );
-                this.getDestination().addAction(action);
-        }
-    }
-
-    protected void createExchangeDouble(Object targetId, AttributeDefinition attrDefn, double oldValue, double newValue) {
-        if ( this.createActions ) {
-                ActionDefinition action = new ExchangeDouble(targetId, attrDefn,oldValue,newValue );
-                this.getDestination().addAction(action);
-        }
-    }
-
-    protected void createExchangeFloat(Object targetId, AttributeDefinition attrDefn, float oldValue, float newValue) {
-        if ( this.createActions ) {
-                ActionDefinition action = new ExchangeFloat(targetId, attrDefn,oldValue,newValue );
-                this.getDestination().addAction(action);
-        }
-    }
-
-   protected void createExchangeShort(Object targetId, AttributeDefinition attrDefn, short oldValue, short newValue) {
-        if ( this.createActions ) {
-                ActionDefinition action = new ExchangeShort(targetId, attrDefn,oldValue,newValue );
-                this.getDestination().addAction(action);
-        }
-    }
-
     protected void createDestroyAction(Object targetId, Object targetObject) {
         if ( this.createActions ) {
             ActionDefinition action = new DestroyObject(targetId,targetObject);

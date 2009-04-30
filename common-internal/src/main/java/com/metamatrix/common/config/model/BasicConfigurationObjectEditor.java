@@ -22,11 +22,47 @@
 
 package com.metamatrix.common.config.model;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.actions.*;
-import com.metamatrix.common.config.api.*;
+import com.metamatrix.common.actions.AbstractObjectEditor;
+import com.metamatrix.common.actions.ActionDefinition;
+import com.metamatrix.common.actions.AddObject;
+import com.metamatrix.common.actions.CreateObject;
+import com.metamatrix.common.actions.DestroyObject;
+import com.metamatrix.common.actions.ExchangeBoolean;
+import com.metamatrix.common.actions.ExchangeObject;
+import com.metamatrix.common.actions.RemoveObject;
+import com.metamatrix.common.config.api.AuthenticationProvider;
+import com.metamatrix.common.config.api.ComponentDefn;
+import com.metamatrix.common.config.api.ComponentObject;
+import com.metamatrix.common.config.api.ComponentObjectID;
+import com.metamatrix.common.config.api.ComponentType;
+import com.metamatrix.common.config.api.ComponentTypeDefn;
+import com.metamatrix.common.config.api.ComponentTypeDefnID;
+import com.metamatrix.common.config.api.ComponentTypeID;
+import com.metamatrix.common.config.api.Configuration;
+import com.metamatrix.common.config.api.ConfigurationID;
+import com.metamatrix.common.config.api.ConfigurationObjectEditor;
+import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.DeployedComponent;
+import com.metamatrix.common.config.api.DeployedComponentID;
+import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.HostID;
+import com.metamatrix.common.config.api.PropDefnAllowedValue;
+import com.metamatrix.common.config.api.PropDefnAllowedValueID;
+import com.metamatrix.common.config.api.ResourceDescriptor;
+import com.metamatrix.common.config.api.RuntimeMetadataServiceComponentType;
+import com.metamatrix.common.config.api.ServiceComponentDefn;
+import com.metamatrix.common.config.api.ServiceComponentDefnID;
+import com.metamatrix.common.config.api.SharedResource;
+import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidComponentException;
 import com.metamatrix.common.log.LogConfiguration;
@@ -39,7 +75,6 @@ import com.metamatrix.common.util.ErrorMessageKeys;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.id.ObjectIDFactory;
 import com.metamatrix.core.id.UUIDFactory;
-import com.metamatrix.core.util.Assertion;
 
 /**
 *   BasicConfigurationObjectEditor provides the update capabiltiy to the implemented versions
@@ -336,38 +371,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
                         Set existing = dg.getKeywords();
                         existing.addAll(keywords);
                         dg.setKeywords(existing);
-                    }
-                }
-*/
-            } else if ( action instanceof ExchangeInt ) {
-//                ExchangeInt anAction = (ExchangeInt) action;
-/*
-                if ( target instanceof BasicDatabase ) {
-                    BasicDatabase db = (BasicDatabase) target;
-                    if (anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.MAXIMUM_RESULTS_SIZE.getCode()) {
-                        db.setMaximumResultsSize(anAction.getPreviousValue());
-                    } else if (anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.MAXIMUM_SET_CRITERIA_SIZE.getCode()) {
-                        db.setMaximumSetCriteriaSize(anAction.getPreviousValue());
-                    }
-                } else if ( target instanceof BasicDataElement ) {
-                    BasicDataElement de = (BasicDataElement) target;
-                    if (anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.MAXIMUM_SCALE.getCode()) {
-                        BasicElementType et = (BasicElementType) de.getElementType();
-                        et.setMaximumScale(anAction.getPreviousValue());
-                    } else if (anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.MINIMUM_SCALE.getCode()) {
-                        BasicElementType et = (BasicElementType) de.getElementType();
-                        et.setMinimumScale(anAction.getPreviousValue());
-                    }
-                }
-*/
-            } else if ( action instanceof ExchangeLong ) {
-//                ExchangeLong anAction = (ExchangeLong) action;
-/*
-                if ( target instanceof BasicDataElement ) {
-                    BasicDataElement de = (BasicDataElement) target;
-                    if (anAction.getAttributeCode().intValue() == ConfigurationModel.Attribute.COLUMN_SIZE.getCode()) {
-                        BasicElementType et = (BasicElementType) de.getElementType();
-                        et.setColumnSize(anAction.getPreviousValue());
                     }
                 }
 */
