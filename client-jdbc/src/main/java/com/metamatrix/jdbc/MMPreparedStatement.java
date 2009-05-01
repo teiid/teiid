@@ -95,7 +95,7 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
     private Calendar serverCalendar;
 
     /**
-     * Factory Constuctor 
+     * Factory Constructor 
      * @param connection
      * @param sql
      * @param resultSetType
@@ -136,6 +136,18 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
 		}
     	batchParameterList.add(getParameterValues());
 		clearParameters();
+    }
+
+    /**
+     * Makes the set of commands in the current batch empty.
+     *
+     * @throws SQLException if a database access error occurs or the
+     * driver does not support batch statements
+     */
+    public void clearBatch() throws SQLException {
+    	if (batchParameterList != null ) {
+    		batchParameterList.clear();
+    	}
     }
 
     /**
@@ -545,11 +557,12 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
             parameterMap = new TreeMap<Integer, Object>();
         }
         
+        Object val = null;
         if (serverCalendar != null && value instanceof java.util.Date) {
-            value = TimestampWithTimezone.create((java.util.Date)value, getDefaultCalendar().getTimeZone(), serverCalendar, value.getClass());
-        }
+            val = TimestampWithTimezone.create((java.util.Date)value, getDefaultCalendar().getTimeZone(), serverCalendar, value.getClass());
+        } else val = value;
 
-        parameterMap.put(new Integer(parameterIndex), value);
+        parameterMap.put(new Integer(parameterIndex), val);
     }
 
     /**
@@ -645,18 +658,18 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
         setObject(parameterIndex, x);
     }
 
-    List getParameterValuesList() {
+    List<List<Object>> getParameterValuesList() {
     	if(batchParameterList == null || batchParameterList.isEmpty()){
-    		return Collections.EMPTY_LIST;
+    		return Collections.emptyList();
     	}
-    	return new ArrayList(batchParameterList);
+    	return new ArrayList<List<Object>>(batchParameterList);
     }
     
-    List getParameterValues() {
+    List<Object> getParameterValues() {
         if(parameterMap == null || parameterMap.isEmpty()){
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
-        return new ArrayList(parameterMap.values());
+        return new ArrayList<Object>(parameterMap.values());
     }
 
 	/* (non-Javadoc)
