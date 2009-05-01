@@ -59,6 +59,7 @@ public class DB2Capabilities extends JDBCCapabilities {
         supportedFunctions.add("FLOOR"); //$NON-NLS-1$
         supportedFunctions.add("LOG"); //$NON-NLS-1$
         supportedFunctions.add("LOG10"); //$NON-NLS-1$
+        supportedFunctions.add("MOD"); //$NON-NLS-1$
         supportedFunctions.add("POWER"); //$NON-NLS-1$
         supportedFunctions.add("RADIANS"); //$NON-NLS-1$
         supportedFunctions.add("SIGN"); //$NON-NLS-1$
