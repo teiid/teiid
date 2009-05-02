@@ -156,11 +156,12 @@ public class ServiceData extends ComponentData {
         if ( obj instanceof ServiceData ) {
 
             ServiceData that = (ServiceData) obj;
-            return (this.serviceID.getHostName().equals(that.getServiceID().getHostName()) && 
-            		this.serviceID.getProcessName().equals(that.serviceID.getProcessName()) && 
-            		this.getComponentDefnID().equals(that.getComponentDefnID()));
-//eployedComponent.equals(that.getDeployedComponent());
-//            return defnID.equals(that.getComponentDefnID());
+            
+            if (this.getComponentDefnID().equals(that.getComponentDefnID())) {
+	            if (this.serviceID != null && that.serviceID != null) {
+	                return (this.serviceID.equals(that.getServiceID()));
+	            }
+            }
         }
 
         // Otherwise not comparable ...
