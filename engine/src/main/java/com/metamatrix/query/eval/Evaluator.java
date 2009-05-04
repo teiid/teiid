@@ -24,6 +24,7 @@ package com.metamatrix.query.eval;
 
 import java.sql.SQLException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -74,6 +75,7 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.ValueIterator;
+import com.metamatrix.query.sql.util.ValueIteratorSource;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -314,7 +316,19 @@ public class Evaluator {
         	valueIter = new CollectionValueIterator(((SetCriteria)criteria).getValues());
         } else if (criteria instanceof DependentSetCriteria){
         	ContextReference ref = (ContextReference)criteria;
-        	valueIter = getContext(criteria).getValueIterator(ref);
+        	ValueIteratorSource vis = (ValueIteratorSource)getContext(criteria).getVariableContext().getGlobalValue(ref.getContextSymbol());
+        	HashSet<Object> values;
+			try {
+				values = vis.getCachedSet(ref.getValueExpression());
+			} catch (MetaMatrixProcessingException e) {
+				throw new CriteriaEvaluationException(e, e.getMessage());
+			}
+        	if (values != null) {
+        		return values.contains(leftValue);
+        	}
+        	//there are too many values to justify a linear search or holding
+        	//them in memory
+        	return true;
         } else if (criteria instanceof SubquerySetCriteria) {
         	try {
 				valueIter = evaluateSubquery((SubquerySetCriteria)criteria, tuple);

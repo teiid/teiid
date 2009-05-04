@@ -30,6 +30,8 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
+import com.metamatrix.query.util.TypeRetrievalUtil;
 
 class SourceState {
 
@@ -63,6 +65,10 @@ class SourceState {
         return indecies;
     }
     
+    TupleSourceID createSourceTupleSource() throws MetaMatrixComponentException {
+    	return this.source.getBufferManager().createTupleSource(source.getElements(), TypeRetrievalUtil.getTypeNames(source.getElements()), source.getConnectionID(), TupleSourceType.PROCESSOR);
+    }
+    
     public List saveNext() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         this.currentTuple = this.getIterator().nextTuple();
         return currentTuple;
@@ -84,6 +90,10 @@ class SourceState {
             this.source.getBufferManager().removeTupleSource(tsID);
             this.tsID = null;
         }
+    }
+    
+    public int getRowCount() {
+    	return this.collector.getRowCount();
     }
 
     /**
@@ -151,8 +161,8 @@ class SourceState {
         return this.distinct;
     }
 
-    public void setDistinct(boolean distinct) {
-        this.distinct = distinct;
+    public void markDistinct(boolean distinct) {
+        this.distinct |= distinct;
     }
 
 }

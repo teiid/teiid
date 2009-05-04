@@ -32,13 +32,12 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
-import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
+import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
-import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.util.CommandContext;
 
@@ -76,21 +75,13 @@ public class RulePlanSorts implements OptimizerRule {
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
 			}
 			List orderColumns = (List)node.getProperty(NodeConstants.Info.SORT_ORDER);
-			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP | NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
+			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
 			if (possibleSort != null) {
-				NodeConstants.Info expr = Info.GROUP_COLS;
-				if (possibleSort.getType() == NodeConstants.Types.JOIN) {
-					if (possibleSort.getProperty(NodeConstants.Info.JOIN_STRATEGY) != JoinStrategyType.MERGE
-						|| possibleSort.getProperty(NodeConstants.Info.JOIN_TYPE) != JoinType.JOIN_INNER) {
-						break;
-					} 
-					expr = Info.LEFT_EXPRESSIONS;
-				}
-				List exprs = (List)possibleSort.getProperty(expr);
+				List exprs = (List)possibleSort.getProperty(Info.GROUP_COLS);
 				if (exprs != null && exprs.containsAll(orderColumns)) {
 					exprs.removeAll(orderColumns);
 					orderColumns.addAll(exprs);
-					possibleSort.setProperty(expr, orderColumns);
+					possibleSort.setProperty(Info.GROUP_COLS, orderColumns);
 					if (node.getParent() == null) {
 						root = node.getFirstChild();
 						root.removeFromParent();
@@ -101,7 +92,56 @@ public class RulePlanSorts implements OptimizerRule {
 						node = nextNode;
 					}
 				}
+				break;
+			} 
+/*			possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
+			if (possibleSort == null) {
+				break;
 			}
+			boolean left = false;
+			if (possibleSort.getType() == NodeConstants.Types.JOIN) {
+				if (possibleSort.getProperty(NodeConstants.Info.JOIN_STRATEGY) != JoinStrategyType.MERGE
+					|| possibleSort.getProperty(NodeConstants.Info.JOIN_TYPE) != JoinType.JOIN_INNER) {
+					break;
+				} 
+				if (FrameUtil.findJoinSourceNode(possibleSort.getFirstChild()).getGroups().containsAll(node.getGroups()) 
+						&& possibleSort.getProperty(NodeConstants.Info.SORT_LEFT) == SortOption.SORT) {
+					left = true;
+				} else if (!FrameUtil.findJoinSourceNode(possibleSort.getLastChild()).getGroups().containsAll(node.getGroups()) 
+						|| possibleSort.getProperty(NodeConstants.Info.SORT_RIGHT) != SortOption.SORT) {
+					break;
+				}
+			}
+			List exprs = (List)possibleSort.getProperty(left?Info.LEFT_EXPRESSIONS:Info.RIGHT_EXPRESSIONS);
+			if (exprs != null && exprs.containsAll(orderColumns)) {
+				List<Integer> indexes = new ArrayList<Integer>(orderColumns.size());
+				for (Expression expr : (List<Expression>)orderColumns) {
+					indexes.add(0, exprs.indexOf(expr));
+				}
+				exprs.removeAll(orderColumns);
+				List newExprs = new ArrayList(orderColumns);
+				newExprs.addAll(exprs);
+				possibleSort.setProperty(left?Info.LEFT_EXPRESSIONS:Info.RIGHT_EXPRESSIONS, newExprs);
+				if (node.getParent() == null) {
+					root = node.getFirstChild();
+					root.removeFromParent();
+					node = root;
+				} else {
+					PlanNode nextNode = node.getFirstChild();
+					NodeEditor.removeChildNode(node.getParent(), node);
+					node = nextNode;
+				}
+				exprs = (List)possibleSort.getProperty(left?Info.RIGHT_EXPRESSIONS:Info.LEFT_EXPRESSIONS);
+				List toRemove = new ArrayList();
+				for (Integer index : indexes) {
+					Object o = exprs.get(index);
+					exprs.add(0, o);
+					toRemove.add(o);
+				}
+				exprs.subList(indexes.size(), exprs.size()).removeAll(toRemove);
+				possibleSort.setProperty(left?NodeConstants.Info.SORT_LEFT:NodeConstants.Info.SORT_RIGHT, SortOption.SORT_REQUIRED);
+			}
+*/
 			break;
 		case NodeConstants.Types.DUP_REMOVE:
 			if (parentBlocking) {
@@ -120,7 +160,7 @@ public class RulePlanSorts implements OptimizerRule {
 			parentBlocking = true;
 			break;
 		case NodeConstants.Types.JOIN:
-			if (node.getProperty(NodeConstants.Info.JOIN_STRATEGY) != JoinStrategyType.MERGE) {
+			if (node.getProperty(NodeConstants.Info.JOIN_STRATEGY) == JoinStrategyType.NESTED_LOOP) {
 				break;
 			}
 			/*
@@ -134,10 +174,16 @@ public class RulePlanSorts implements OptimizerRule {
 			PlanNode toTest = node.getFirstChild();
 			if (mergeSortWithDupRemovalAcrossSource(toTest)) {
 				node.setProperty(NodeConstants.Info.SORT_LEFT, SortOption.SORT_DISTINCT);
+				if (node.getProperty(NodeConstants.Info.SORT_RIGHT) != SortOption.SORT) {
+					node.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
+				}
 			}
 			toTest = node.getLastChild();
 			if (mergeSortWithDupRemovalAcrossSource(toTest)) {
 				node.setProperty(NodeConstants.Info.SORT_RIGHT, SortOption.SORT_DISTINCT);
+				if (node.getProperty(NodeConstants.Info.SORT_LEFT) != SortOption.SORT) {
+					node.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
+				}
 			}
 			break;
 		case NodeConstants.Types.SET_OP:

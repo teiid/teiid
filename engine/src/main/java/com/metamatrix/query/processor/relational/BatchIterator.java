@@ -114,5 +114,10 @@ final class BatchIterator implements
         	this.currentBatch = null;
         }
     }
+    
+    @Override
+    public TupleBatch getBatch() throws MetaMatrixComponentException {
+		return currentBatch;
+    }
 
 }

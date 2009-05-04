@@ -28,6 +28,7 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
+import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.lang.JoinType;
@@ -46,7 +47,7 @@ import com.metamatrix.query.sql.lang.OrderBy;
  * 
  */
 public class MergeJoinStrategy extends JoinStrategy {
-
+	
     private enum MergeState {
         SCAN, MATCH, DONE
     }
@@ -76,32 +77,33 @@ public class MergeJoinStrategy extends JoinStrategy {
     
     //planning time information
     public enum SortOption {
-        SKIP_SORT, SORT, SORT_DISTINCT
+        ALREADY_SORTED, SORT, SORT_DISTINCT, PARTITION
     }
     
-    private SortOption sortLeft;
-    private SortOption sortRight;
+    protected SortOption sortLeft;
+    protected SortOption sortRight;
         
     /** false if three-level comparison, true if grouping comparison (null == null) */
     private boolean grouping;
-
+    
     //load time state
     private SortUtility leftSort;
     private SortUtility rightSort;
-    private SortOption processingSortRight;   
+    protected SortOption processingSortLeft;
+    protected SortOption processingSortRight;   
     
     public MergeJoinStrategy(SortOption sortLeft, SortOption sortRight, boolean grouping) {
     	if (sortLeft == null) {
-    		sortLeft = SortOption.SKIP_SORT;
+    		sortLeft = SortOption.ALREADY_SORTED;
     	}
     	if (sortRight == null) {
-    		sortRight = SortOption.SKIP_SORT;
+    		sortRight = SortOption.ALREADY_SORTED;
     	}
         this.sortLeft = sortLeft;
         this.sortRight = sortRight;
         this.grouping = grouping;
     }
-
+    
     /**
      * @see com.metamatrix.query.processor.relational.JoinStrategy#clone()
      */
@@ -125,6 +127,7 @@ public class MergeJoinStrategy extends JoinStrategy {
         this.rightScanState = ScanState.READ;
         this.outerMatched = false;
         this.processingSortRight = this.sortRight;
+        this.processingSortLeft = this.sortLeft;
     }
 
     /**
@@ -139,10 +142,10 @@ public class MergeJoinStrategy extends JoinStrategy {
         this.leftSort = null;
         this.rightSort = null;
     }
-
+    
+    @Override
     protected List nextTuple() throws MetaMatrixComponentException,
-                              CriteriaEvaluationException,
-                              MetaMatrixProcessingException {
+    		CriteriaEvaluationException, MetaMatrixProcessingException {
         while (this.mergeState != MergeState.DONE) {
             
             while (this.mergeState == MergeState.SCAN) {
@@ -334,43 +337,57 @@ public class MergeJoinStrategy extends JoinStrategy {
     @Override
     protected void loadLeft() throws MetaMatrixComponentException,
                              MetaMatrixProcessingException {
-        if (sortLeft != SortOption.SKIP_SORT) { 
+    	if (sortLeft == SortOption.ALREADY_SORTED && !this.joinNode.isDependent() && !JoinType.JOIN_FULL_OUTER.equals(joinNode.getJoinType())) {
+    		return; // don't buffer
+    	}
+        super.loadLeft(); 
+    }
+    
+    @Override
+    protected void postLoadLeft() throws MetaMatrixComponentException,
+    		MetaMatrixProcessingException {
+        if (this.processingSortLeft == SortOption.SORT || this.processingSortLeft == SortOption.SORT_DISTINCT) {
             if (this.leftSort == null) {
-                List expressions = this.joinNode.getLeftExpressions();
-                this.leftSort = new SortUtility(this.leftSource.collectTuples(),
-                                                    expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), sortLeft == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
+            	List expressions = this.joinNode.getLeftExpressions();
+                this.leftSort = new SortUtility(this.leftSource.getTupleSourceID(),
+                                                    expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortLeft == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
                                                     this.joinNode.getBufferManager(), this.joinNode.getConnectionID(), true);         
-                this.leftSource.setDistinct(sortLeft == SortOption.SORT_DISTINCT && expressions.size() == this.leftSource.getOuterVals().size());
+                this.leftSource.markDistinct(processingSortLeft == SortOption.SORT_DISTINCT && expressions.size() == this.leftSource.getOuterVals().size());
             }
             this.leftSource.setTupleSource(leftSort.sort());
-        } else if (this.joinNode.isDependent() || JoinType.JOIN_FULL_OUTER.equals(joinNode.getJoinType())) {
-            super.loadLeft(); //buffer only for dependent and full outer joins
-        }
+            this.leftSource.markDistinct(leftSort.isDistinct());
+        }        
     }
-    
-    /** 
-     * @see com.metamatrix.query.processor.relational.JoinStrategy#loadRight()
-     */
+        
     @Override
-    protected void loadRight() throws MetaMatrixComponentException,
-                              MetaMatrixProcessingException {
-        super.loadRight();
-        if (processingSortRight != SortOption.SKIP_SORT) { 
-            if (this.rightSort == null) {
-                List expressions = this.joinNode.getRightExpressions();
-                this.rightSort = new SortUtility(this.rightSource.getTupleSourceID(), 
-                                                    expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortRight == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
-                                                    this.joinNode.getBufferManager(), this.joinNode.getConnectionID(), true);
-                this.rightSource.setDistinct(processingSortRight == SortOption.SORT_DISTINCT && expressions.size() == this.rightSource.getOuterVals().size());
-            }
-            this.rightSource.setTupleSource(rightSort.sort());
-        } 
+    protected void postLoadRight() throws MetaMatrixComponentException,
+    		MetaMatrixProcessingException {
+    	sortRight();
     }
-    
+
+	protected void sortRight() throws MetaMatrixComponentException,
+			TupleSourceNotFoundException, BlockedOnMemoryException {
+		if (this.processingSortRight == SortOption.SORT || this.processingSortRight == SortOption.SORT_DISTINCT) {
+    		if (this.rightSort == null) {
+    		    List expressions = this.joinNode.getRightExpressions();
+    		    this.rightSort = new SortUtility(this.rightSource.getTupleSourceID(), 
+    		                                        expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), processingSortRight == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT,
+    		                                        this.joinNode.getBufferManager(), this.joinNode.getConnectionID(), true);
+    		    this.rightSource.markDistinct(processingSortRight == SortOption.SORT_DISTINCT && expressions.size() == this.rightSource.getOuterVals().size());
+    		}
+    		this.rightSource.setTupleSource(rightSort.sort());
+            this.rightSource.markDistinct(rightSort.isDistinct());
+        }
+	}
+        
     public void setProcessingSortRight(boolean processingSortRight) {
-    	if (processingSortRight && this.processingSortRight == SortOption.SKIP_SORT) {
+    	if (processingSortRight && this.processingSortRight == SortOption.ALREADY_SORTED) {
     		this.processingSortRight = SortOption.SORT;
     	}
+    }
+    
+    public String getName() {
+    	return "MERGE JOIN"; //$NON-NLS-1$
     }
 
     /**
@@ -378,7 +395,10 @@ public class MergeJoinStrategy extends JoinStrategy {
      */
     @Override
     public String toString() {
-        return "MERGE JOIN"; //$NON-NLS-1$
-    }
+		StringBuffer sb = new StringBuffer();
+		return sb
+				.append(getName())
+				.append(" (").append(sortLeft).append("/").append(sortRight).append(")").toString(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	}
 
 }

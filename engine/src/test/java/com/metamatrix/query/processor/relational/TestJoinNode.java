@@ -22,13 +22,16 @@
 
 package com.metamatrix.query.processor.relational;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -39,6 +42,7 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.processor.FakeDataManager;
+import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -47,39 +51,33 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.util.CommandContext;
 
-public class TestJoinNode extends TestCase {
+public class TestJoinNode {
     private static final int NO_CRITERIA = 0;
     private static final int EQUAL_CRITERIA = 1;
     private static final int FUNCTION_CRITERIA = 2;
     
     private int criteriaType = EQUAL_CRITERIA;
     
-    private JoinType joinType;
+    protected JoinType joinType;
     
-    private List[] leftTuples = createTuples1();
-    private List[] rightTuples = createTuples2();
+    protected List[] leftTuples;
+    protected List[] rightTuples;
     
-    private List[] expected;
+    protected List[] expected;
     private List[] expectedReversed;
     
-    private boolean expectSwap = false;
-    private boolean expectSwapReversed = false;
-    
-    private JoinNode join;
-    private JoinStrategy joinStrategy;
+    protected JoinNode join;
+    protected JoinStrategy joinStrategy;
     private RelationalNode leftNode;
     private RelationalNode rightNode;
-
+    
     private FakeDataManager dataMgr;
 
-    public TestJoinNode(String testName) {
-        super(testName);
+    @Before public void setup() {
+    	leftTuples = createTuples1();
+    	rightTuples = createTuples2();
     }
-    
-    protected int getProcessorBatchSize() {
-        return 100;
-    }
-    
+
     protected List[] createTuples1() {
         return new List[] { 
             Arrays.asList(new Object[] { new Integer(5) }),    
@@ -166,7 +164,7 @@ public class TestJoinNode extends TestCase {
         return createTuples(startingValue, count, true);
     }
     
-    private void helpCreateJoin() {
+    protected void helpCreateJoin() {
         ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         
@@ -189,7 +187,7 @@ public class TestJoinNode extends TestCase {
         
         join = new JoinNode(3);
         joinStrategy = new NestedLoopJoinStrategy();
-        join.setJoinStrategy(joinStrategy);
+    	join.setJoinStrategy(joinStrategy);
         join.setElements(joinElements);
         join.setJoinType(joinType);
         
@@ -198,7 +196,9 @@ public class TestJoinNode extends TestCase {
                 break;
 
             case EQUAL_CRITERIA :
-                join.setJoinCriteria(new CompareCriteria(es1, CompareCriteria.EQ, es2));
+                join.setJoinExpressions(Arrays.asList(es1), Arrays.asList(es2));
+                joinStrategy = new MergeJoinStrategy(SortOption.SORT, SortOption.SORT, false);
+                join.setJoinStrategy(joinStrategy);
                 break;
 
             case FUNCTION_CRITERIA :
@@ -213,20 +213,22 @@ public class TestJoinNode extends TestCase {
     }
         
     public void helpTestJoin() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        helpTestJoinDirect(expected, expectSwap);
-        helpTestJoinReversed();
-    }
-
-    private void helpTestJoinReversed() throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        List[] temp = leftTuples;
-        leftTuples = rightTuples;
-        rightTuples = temp;
-        helpTestJoinDirect(expectedReversed, expectSwapReversed);        
+    	for (int batchSize : new int[] {1, 10, leftTuples.length, 100}) {
+	        helpCreateJoin();                
+	        helpTestJoinDirect(expected, batchSize);
+	        List[] temp = leftTuples;
+	        leftTuples = rightTuples;
+	        rightTuples = temp;
+	        helpCreateJoin();                
+	        helpTestJoinDirect(expectedReversed, batchSize);
+	        temp = leftTuples;
+	        leftTuples = rightTuples;
+	        rightTuples = temp;
+    	}
     }
     
-    public void helpTestJoinDirect(List[] expectedResults, boolean swapExpected) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        helpCreateJoin();                
-        BufferManager mgr = NodeTestUtil.getTestBufferManager(1, getProcessorBatchSize());
+    public void helpTestJoinDirect(List[] expectedResults, int batchSize) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        BufferManager mgr = NodeTestUtil.getTestBufferManager(1, batchSize);
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         
         join.addChild(leftNode);
@@ -244,23 +246,21 @@ public class TestJoinNode extends TestCase {
                 TupleBatch batch = join.nextBatch();
                 for(int row = currentRow; row <= batch.getEndRow(); row++) {
                     List tuple = batch.getTuple(row);
-                    //System.out.println(tuple);
                     assertEquals("Rows don't match at " + row, expectedResults[row-1], tuple); //$NON-NLS-1$
                 }
-                
+                currentRow += batch.getRowCount();    
                 if(batch.getTerminationFlag()) {
                     break;
                 }
-                currentRow += batch.getRowCount();    
             } catch(BlockedException e) {
                 // ignore and retry
             }
         }
-        
+        assertEquals(expectedResults.length, currentRow - 1);
         join.close(); 
     }
     
-    public void testNoRows() throws Exception {
+    @Test public void testNoRows() throws Exception {
         leftTuples = new List[0];
         rightTuples = new List[0];
         joinType = JoinType.JOIN_INNER;
@@ -269,105 +269,64 @@ public class TestJoinNode extends TestCase {
         helpTestJoin();        
     }
 
-    public void testInnerJoin() throws Exception {
+    @Test public void testInnerJoin() throws Exception {
         joinType = JoinType.JOIN_INNER;
         expected = new List[] {
+        	Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),    
             Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
             Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-            Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) })            
         };
-        expectedReversed = new List[] {
-            Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),    
-            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),            
-            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-            Arrays.asList(new Object[] { new Integer(4), new Integer(4) })    
-        };
+        expectedReversed = expected;
         helpTestJoin();        
     }
 
-//    public void testRightOuterJoin() {
-//        joinType = JoinType.JOIN_RIGHT_OUTER;
-//        expected = new List[] {
-//            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-//            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-//            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-//            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-//            Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),    
-//            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-//            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),            
-//            Arrays.asList(new Object[] { null, null }),    
-//            Arrays.asList(new Object[] { null, new Integer(7) }),    
-//            Arrays.asList(new Object[] { null, new Integer(7) }),    
-//            Arrays.asList(new Object[] { null, new Integer(6) })            
-//        };
-//        expectedReversed = new List[] {
-//            Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),    
-//            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-//            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),            
-//            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-//            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-//            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-//            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),   
-//            Arrays.asList(new Object[] { null, new Integer(5) }),    
-//            Arrays.asList(new Object[] { null, new Integer(3) }),
-//            Arrays.asList(new Object[] { null, new Integer(10) }),            
-//            Arrays.asList(new Object[] { null, new Integer(11) }),    
-//            Arrays.asList(new Object[] { null, new Integer(11) })           
-//        };
-//        helpTestJoin();        
-//    }
-
-    public void testLeftOuterJoin() throws Exception {
+    @Test public void testLeftOuterJoin() throws Exception {
         joinType = JoinType.JOIN_LEFT_OUTER;
         expected = new List[] {
-            Arrays.asList(new Object[] { new Integer(5), null }),    
-            Arrays.asList(new Object[] { new Integer(3), null }),    
-            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
             Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),    
+            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
+            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
+            Arrays.asList(new Object[] { new Integer(3), null }),    
+            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
+            Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),            
+            Arrays.asList(new Object[] { new Integer(5), null }),    
             Arrays.asList(new Object[] { new Integer(10), null }),            
             Arrays.asList(new Object[] { new Integer(11), null }),    
             Arrays.asList(new Object[] { new Integer(11), null })            
         };
         expectedReversed = new List[] {
+        	Arrays.asList(new Object[] { null, null }),    
             Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),    
+            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
+            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),            
-            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
-            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
             Arrays.asList(new Object[] { new Integer(4), new Integer(4) }),    
-            Arrays.asList(new Object[] { null, null }),    
+            Arrays.asList(new Object[] { new Integer(6), null }),
             Arrays.asList(new Object[] { new Integer(7), null }),    
-            Arrays.asList(new Object[] { new Integer(7), null }),    
-            Arrays.asList(new Object[] { new Integer(6), null })            
+            Arrays.asList(new Object[] { new Integer(7), null })    
         };
         helpTestJoin();        
     }    
 
-    public void testLeftOuterJoinWithSwap() throws Exception {
-        int outerSize = getProcessorBatchSize() + 1;
+    @Test public void testLeftOuterJoinWithSwap() throws Exception {
+        int outerSize = 11;
         leftTuples = createTuples(1,outerSize);
         rightTuples = createTuples(201,outerSize+1);
         joinType = JoinType.JOIN_LEFT_OUTER;
-        expectSwap = true;
         expected = createResults(1, outerSize);
         expectedReversed = createResults(201, outerSize+1);
         helpTestJoin(); 
     }    
 
-    public void testCrossJoin() throws Exception {
+    @Test public void testCrossJoin() throws Exception {
         joinType = JoinType.JOIN_CROSS;
         criteriaType = NO_CRITERIA;
         expected = new List[] {
@@ -548,7 +507,7 @@ public class TestJoinNode extends TestCase {
         helpTestJoin();
     }
     
-    public void testInnerJoinWithLookupFunction() throws Exception {
+    @Test public void testInnerJoinWithLookupFunction() throws Exception {
         criteriaType = FUNCTION_CRITERIA;
         joinType = JoinType.JOIN_INNER;
         expected = new List[] {
@@ -565,9 +524,7 @@ public class TestJoinNode extends TestCase {
             Arrays.asList(new Object[] { new Integer(4), new Integer(5) }),    
             Arrays.asList(new Object[] { new Integer(2), new Integer(3) }),    
             Arrays.asList(new Object[] { new Integer(2), new Integer(3) }),    
-            Arrays.asList(new Object[] { new Integer(4), new Integer(5) }),    
-            Arrays.asList(new Object[] { new Integer(10), new Integer(7) }),    
-            Arrays.asList(new Object[] { new Integer(10), new Integer(7) })            
+            Arrays.asList(new Object[] { new Integer(4), new Integer(5) })    
                 };
 
         dataMgr = new FakeDataManager();
@@ -585,34 +542,179 @@ public class TestJoinNode extends TestCase {
         helpTestJoin();        
     }    
     
-    public void testFullOuterJoin() throws Exception {
+    @Test public void testFullOuterJoin() throws Exception {
         this.joinType = JoinType.JOIN_FULL_OUTER;
         this.leftTuples = createTuples3();
         this.rightTuples = createTuples4();
         expected = new List[] {
            Arrays.asList(new Object[] { null, null }),  
            Arrays.asList(new Object[] { null, null }),  
-           Arrays.asList(new Object[] { new Integer(10), new Integer(10) }),    
-           Arrays.asList(new Object[] { new Integer(10), new Integer(10) }),    
-           Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
-           Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
-           Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
            Arrays.asList(new Object[] { null, null }), 
+           Arrays.asList(new Object[] { null, null }),
+           Arrays.asList(new Object[] { null, null }),
+           Arrays.asList(new Object[] { null, null }),
            Arrays.asList(new Object[] { new Integer(1), new Integer(1) }), 
            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
            Arrays.asList(new Object[] { new Integer(3), null }),
+           Arrays.asList(new Object[] { null, new Integer(4) }),
+           Arrays.asList(new Object[] { null, new Integer(4) }),
            Arrays.asList(new Object[] { new Integer(5), new Integer(5) }),
-           Arrays.asList(new Object[] { new Integer(15), null }),
-           Arrays.asList(new Object[] { null, new Integer(4) }),
-           Arrays.asList(new Object[] { null, new Integer(4) }),
-           Arrays.asList(new Object[] { null, null }),
-           Arrays.asList(new Object[] { null, new Integer(7) }),
            Arrays.asList(new Object[] { null, new Integer(6) }),
-           Arrays.asList(new Object[] { null, null }),
-           Arrays.asList(new Object[] { null, null })
+           Arrays.asList(new Object[] { null, new Integer(7) }),
+           Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
+           Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
+           Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
+           Arrays.asList(new Object[] { new Integer(10), new Integer(10) }),    
+           Arrays.asList(new Object[] { new Integer(10), new Integer(10) }),    
+           Arrays.asList(new Object[] { new Integer(15), null })
         };
-        
-        helpTestJoinDirect(expected, false);
+        expectedReversed = new List[] {
+            Arrays.asList(new Object[] { null, null }),  
+            Arrays.asList(new Object[] { null, null }),  
+            Arrays.asList(new Object[] { null, null }), 
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { null, null }),
+            Arrays.asList(new Object[] { new Integer(1), new Integer(1) }), 
+            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
+            Arrays.asList(new Object[] { null, 3 }),
+            Arrays.asList(new Object[] { 4, null }),
+            Arrays.asList(new Object[] { 4, null }),
+            Arrays.asList(new Object[] { new Integer(5), new Integer(5) }),
+            Arrays.asList(new Object[] { 6, null }),
+            Arrays.asList(new Object[] { 7, null }),
+            Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
+            Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
+            Arrays.asList(new Object[] { new Integer(9), new Integer(9) }),
+            Arrays.asList(new Object[] { new Integer(10), new Integer(10) }),    
+            Arrays.asList(new Object[] { new Integer(10), new Integer(10) }),    
+            Arrays.asList(new Object[] { null, 15 })
+        };
+        helpTestJoin();
     }
+    
+    @Test public void testMergeJoinOptimization() throws Exception {
+        this.joinType = JoinType.JOIN_INNER;
+        int rows = 100;
+        List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            Integer value = new Integer((i*17) % 47);
+            data[i].add(value);
+        }
+        this.leftTuples = data;
+        this.rightTuples = createTuples2();
+        expected = new List[] {
+           Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] { 1, 1 }),  
+           Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] { 1, 1 }),
+           Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 4, 4 }),
+        };
+        helpCreateJoin();               
+        this.joinStrategy = new PartitionedSortJoin(SortOption.SORT, SortOption.SORT);
+        this.join.setJoinStrategy(joinStrategy);
+        helpTestJoinDirect(expected, 100);
+    }
+    
+    @Test public void testMergeJoinOptimizationNoRows() throws Exception {
+        this.joinType = JoinType.JOIN_INNER;
+        this.leftTuples = createTuples1();
+        this.rightTuples = new List[] {};
+        expected = new List[] {};
+        helpCreateJoin();               
+        this.joinStrategy = new PartitionedSortJoin(SortOption.SORT, SortOption.SORT);
+        this.join.setJoinStrategy(joinStrategy);
+        helpTestJoinDirect(expected, 100);
+    }
+    
+    @Test public void testMergeJoinOptimizationWithDistinct() throws Exception {
+        this.joinType = JoinType.JOIN_INNER;
+        int rows = 50;
+        List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            Integer value = new Integer((i*17) % 47);
+            data[i].add(value);
+        }
+        this.leftTuples = data;
+        this.rightTuples = new List[] {
+            Arrays.asList(4),
+            Arrays.asList(7),
+            Arrays.asList(2),
+            Arrays.asList(6),
+            Arrays.asList(1),  
+            Arrays.asList(8),
+        };
+        expected = new List[] {
+           Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 8, 8 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] { 1, 1 })
+        };
+        helpCreateJoin();               
+        this.joinStrategy = new PartitionedSortJoin(SortOption.SORT, SortOption.SORT);
+        this.join.setJoinStrategy(joinStrategy);
+        this.join.setRightDistinct(true);
+        helpTestJoinDirect(expected, 100);
+    }
+    
+    @Test public void testMergeJoinOptimizationWithMultiplePartitions() throws Exception {
+        this.joinType = JoinType.JOIN_INNER;
+        int rows = 30;
+        List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            Integer value = new Integer(i % 17);
+            data[i].add(value);
+        }
+        this.rightTuples = data;
+        this.leftTuples = new List[] {
+            Arrays.asList(4),
+            Arrays.asList(7),
+            Arrays.asList(2),
+            Arrays.asList(6),
+            Arrays.asList(6),
+            Arrays.asList(1),  
+            Arrays.asList(8),
+        };
+        expected = new List[] {
+           Arrays.asList(new Object[] { 1, 1 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+           Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] { 1, 1 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+           Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 8, 8 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 8, 8 }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] { 6, 6 }),           
+        };
+        helpCreateJoin();               
+        this.joinStrategy = new PartitionedSortJoin(SortOption.SORT, SortOption.SORT);
+        this.join.setJoinStrategy(joinStrategy);
+        helpTestJoinDirect(expected, 4);
+    }
+
 }

@@ -41,10 +41,10 @@ import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
@@ -61,6 +61,7 @@ import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
@@ -786,7 +787,7 @@ public class NewCalculateCostUtil {
         return cost;
     }
     
-    static boolean usesKey(Collection allElements, QueryMetadataInterface metadata)
+    static boolean usesKey(Collection<SingleElementSymbol> allElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, MetaMatrixComponentException {
     
         if(allElements == null || allElements.size() == 0) { 
@@ -797,7 +798,11 @@ public class NewCalculateCostUtil {
         Map groupMap = new HashMap();
         Iterator elementIter = allElements.iterator();
         while(elementIter.hasNext()) { 
-            ElementSymbol element = (ElementSymbol) elementIter.next();
+        	SingleElementSymbol ses = (SingleElementSymbol) elementIter.next();
+        	if (!(ses instanceof ElementSymbol)) {
+        		continue;
+        	}
+        	ElementSymbol element = (ElementSymbol)ses;
             GroupSymbol group = element.getGroupSymbol();
             List elements = (List) groupMap.get(group);
             if(elements == null) { 

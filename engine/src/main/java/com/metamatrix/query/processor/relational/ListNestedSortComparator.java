@@ -22,7 +22,7 @@
 
 package com.metamatrix.query.processor.relational;
 
-import java.util.*;
+import java.util.List;
 
 import com.metamatrix.core.util.Assertion;
 
@@ -60,18 +60,21 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
     /**
      * Specifies which fields to sort on.
      */
-    int[] sortParameters;
+    private int[] sortParameters;
 
     /**
      * Indicates whether comparison should be based on ascending or descending
      * order.
      */
-    boolean ascendingOrder = false;
+    private boolean ascendingOrder = false;
 
     /**
      * List of booleans indicating the order in which each column should be sorted
      */
-    List orderTypes = null;
+    private List orderTypes = null;
+    
+    private boolean isDistinct = true;
+    private int distinctIndex;
 
     /**
      * Constructs an instance of this class given the indicies of the parameters
@@ -101,7 +104,14 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
         this.sortParameters = sortParameters;
         this.orderTypes = orderTypes;
     }
-
+    
+    public boolean isDistinct() {
+		return isDistinct;
+	}
+    
+    public void setDistinctIndex(int distinctIndex) {
+		this.distinctIndex = distinctIndex;
+	}
 
     /**
      * Compares its two arguments for order.  Returns a negative integer,
@@ -119,20 +129,13 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
      * @param o2 The second object being compared
      */
     public int compare( Object o1, Object o2 ) {
-        // Cast input objects to Lists...
         List list1 = (List)o1;
         List list2 = (List)o2;
 
         int compare = 0;
-        int k = 0;
-        while ( k < sortParameters.length && compare == 0 ) {
+        for (int k = 0; k < sortParameters.length; k++) {
             Object param1 = list1.get(sortParameters[k]);
             Object param2 = list2.get(sortParameters[k]);
-            // if orderTypes is not set
-            if(orderTypes != null) {
-                // getting ordertype for each column
-                ascendingOrder = ((Boolean)orderTypes.get(k)).booleanValue();
-            }
 
             if( param1 == null ) {
 				if(param2 == null ) {
@@ -150,11 +153,15 @@ public class ListNestedSortComparator implements java.util.Comparator, java.io.S
             } else {
             	Assertion.failed("Expected comparable types"); //$NON-NLS-1$
             }
-            k++;
+            if (compare != 0) {
+            	boolean asc = orderTypes != null?((Boolean)orderTypes.get(k)).booleanValue():this.ascendingOrder;
+                return asc ? compare : -compare;
+            } else if (k == distinctIndex) {
+        		isDistinct = false;
+        	}
         }
-        return ascendingOrder ? compare : -compare;
+    	return 0;
     }
     
 } // END CLASS    
-
 

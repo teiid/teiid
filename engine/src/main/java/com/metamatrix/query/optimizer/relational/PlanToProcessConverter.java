@@ -40,7 +40,6 @@ import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
-import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.optimizer.relational.rules.CapabilitiesUtil;
@@ -55,6 +54,7 @@ import com.metamatrix.query.processor.relational.LimitNode;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy;
 import com.metamatrix.query.processor.relational.NestedLoopJoinStrategy;
 import com.metamatrix.query.processor.relational.NullNode;
+import com.metamatrix.query.processor.relational.PartitionedSortJoin;
 import com.metamatrix.query.processor.relational.PlanExecutionNode;
 import com.metamatrix.query.processor.relational.ProjectIntoNode;
 import com.metamatrix.query.processor.relational.ProjectNode;
@@ -63,6 +63,7 @@ import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.processor.relational.SelectNode;
 import com.metamatrix.query.processor.relational.SortNode;
 import com.metamatrix.query.processor.relational.UnionAllNode;
+import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.resolver.util.ResolverUtil;
@@ -195,11 +196,18 @@ public class PlanToProcessConverter {
 
                 JoinNode jnode = new JoinNode(getID());
                 jnode.setJoinType(jtype);
-                
+                jnode.setLeftDistinct(node.hasBooleanProperty(NodeConstants.Info.IS_LEFT_DISTINCT));
+                jnode.setRightDistinct(node.hasBooleanProperty(NodeConstants.Info.IS_RIGHT_DISTINCT));
                 List joinCrits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-                
-                if(stype.equals(JoinStrategyType.MERGE)) {
-                    MergeJoinStrategy mjStrategy = new MergeJoinStrategy((SortOption)node.getProperty(NodeConstants.Info.SORT_LEFT), (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT), false);
+                String depValueSource = (String) node.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE);
+                SortOption leftSort = (SortOption)node.getProperty(NodeConstants.Info.SORT_LEFT);
+                if(stype.equals(JoinStrategyType.MERGE) || stype.equals(JoinStrategyType.PARTITIONED_SORT)) {
+                	MergeJoinStrategy mjStrategy = null;
+                	if (stype.equals(JoinStrategyType.PARTITIONED_SORT)) { 
+                		mjStrategy = new PartitionedSortJoin(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT));
+                	} else {
+                		mjStrategy = new MergeJoinStrategy(leftSort, (SortOption)node.getProperty(NodeConstants.Info.SORT_RIGHT), false);
+                	}
                     jnode.setJoinStrategy(mjStrategy);
                     List leftExpressions = (List) node.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
                     List rightExpressions = (List) node.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
@@ -214,7 +222,6 @@ public class PlanToProcessConverter {
                                
                 processNode = jnode;
                 
-                String depValueSource = (String) node.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE);
                 jnode.setDependentValueSource(depValueSource);
                 
 				break;

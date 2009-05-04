@@ -95,10 +95,6 @@ import com.metamatrix.query.validator.ValidatorReport;
 
 public class TestProcessor extends TestCase {
 
-    private TimestampUtil tsUtil = new TimestampUtil();
-	
-	// ################################## FRAMEWORK ################################
-	
 	public TestProcessor(String name) { 
 		super(name);
 	}	
@@ -4615,7 +4611,7 @@ public class TestProcessor extends TestCase {
         
        // Create expected results
        List[] expected = new List[] { 
-           Arrays.asList(new Object[] { new Integer(1), Boolean.TRUE, new Double(2.0), tsUtil.createDate(103, 10, 4)  })
+           Arrays.asList(new Object[] { new Integer(1), Boolean.TRUE, new Double(2.0), TimestampUtil.createDate(103, 10, 4)  })
        };    
     
        // Construct data manager with data

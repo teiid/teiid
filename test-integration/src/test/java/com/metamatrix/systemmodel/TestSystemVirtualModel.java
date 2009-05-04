@@ -272,14 +272,14 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.STATUS	STATUS_ID	PK_STATUS	Primary	STATUS	STATUS	null	mmuuid:25a8a740-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_ID	PK_SUPPLIER	Primary	SUPPLIER	SUPPLIER	null	mmuuid:375c8380-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_STATUS	FK_SPLIER_STATS	Foreign	SUPPLIER	SUPPLIER	mmuuid:25a8a740-73ff-1edc-a81c-ecf397b10590	mmuuid:5ac43c00-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PART_ID	PK_SUPPLIER_PARTS	Primary	SUPPLIER_PARTS	SUPPLIER_PARTS	null	mmuuid:455e5440-73ff-1edc-a81c-ecf397b10590	2", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PART_ID	FK_SPLIER_PRTS_PRTS	Foreign	SUPPLIER_PARTS	SUPPLIER_PARTS	mmuuid:07db4240-73ff-1edc-a81c-ecf397b10590	mmuuid:66ddc4c0-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_ID	PK_SUPPLIER_PARTS	Primary	SUPPLIER_PARTS	SUPPLIER_PARTS	null	mmuuid:455e5440-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
+				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PART_ID	PK_SUPPLIER_PARTS	Primary	SUPPLIER_PARTS	SUPPLIER_PARTS	null	mmuuid:455e5440-73ff-1edc-a81c-ecf397b10590	2", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_ID	FK_SPLY_PRTS_SPLY	Foreign	SUPPLIER_PARTS	SUPPLIER_PARTS	mmuuid:375c8380-73ff-1edc-a81c-ecf397b10590	mmuuid:66ddc4c1-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
+				"PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_ID	PK_SUPPLIER_PARTS	Primary	SUPPLIER_PARTS	SUPPLIER_PARTS	null	mmuuid:455e5440-73ff-1edc-a81c-ecf397b10590	1", //$NON-NLS-1$
 
 		};
 		executeAndAssertResults(
-				"select* from System.KeyElements order by GroupFullName, Name", //$NON-NLS-1$
+				"select* from System.KeyElements order by GroupFullName, Name, KeyName", //$NON-NLS-1$
 				expected);
 	}
 
@@ -1001,18 +1001,18 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	@Test public void testOASTATISTICS() {
 		String[] expected = {
 				"TABLE_QUALIFIER[string]	TABLE_OWNER[string]	TABLE_NAME[string]	NON_UNIQUE[short]	INDEX_QUALIFIER[string]	INDEX_NAME[string]	OA_TYPE[short]	SEQ_IN_INDEX[short]	COLUMN_NAME[string]	OA_COLLATION[string]	OA_CARDINALITY[string]	OA_PAGES[string]	FILTER_CONDITIONS[string]", //$NON-NLS-1$
+				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	PARTS	0		PK_PARTS	3	1	PART_ID	null	null	null", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SHIP_VIA	0		PK_SHIP_VIA	3	1	SHIPPER_ID	null	null	null	", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	STATUS	0		PK_STATUS	3	1	STATUS_ID	null	null	null	", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER	0		PK_SUPPLIER	3	1	SUPPLIER_ID	null	null	null	", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER	1		FK_SPLIER_STATS	3	1	SUPPLIER_STATUS	null	null	null	", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER_PARTS	0		PK_SUPPLIER_PARTS	3	1	SUPPLIER_ID	null	null	null	", //$NON-NLS-1$
+				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER	0		PK_SUPPLIER	3	1	SUPPLIER_ID	null	null	null	", //$NON-NLS-1$
+				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER_PARTS	1		FK_SPLIER_PRTS_PRTS	3	1	PART_ID	null	null	null	", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER_PARTS	1		FK_SPLY_PRTS_SPLY	3	1	SUPPLIER_ID	null	null	null	", //$NON-NLS-1$
 				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER_PARTS	0		PK_SUPPLIER_PARTS	3	2	PART_ID	null	null	null	", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER_PARTS	1		FK_SPLIER_PRTS_PRTS	3	1	PART_ID	null	null	null	", //$NON-NLS-1$
-				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	PARTS	0		PK_PARTS	3	1	PART_ID	null	null	null", //$NON-NLS-1$
+				"PartsSupplier	PartsSupplier/PARTSSUPPLIER	SUPPLIER_PARTS	0		PK_SUPPLIER_PARTS	3	1	SUPPLIER_ID	null	null	null	", //$NON-NLS-1$
 
 		};
-		executeAndAssertResults("select* FROM System.ODBC.OA_STATISTICS", //$NON-NLS-1$
+		executeAndAssertResults("select* FROM System.ODBC.OA_STATISTICS order by TABLE_NAME, INDEX_NAME, COLUMN_NAME", //$NON-NLS-1$
 				expected);
 
 	}
@@ -1025,16 +1025,16 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				"		SHIP_VIA	SHIPPER_ID			null	null	1	null	null	null	PK_SHIP_VIA", //$NON-NLS-1$
 				"		STATUS	STATUS_ID			SUPPLIER	SUPPLIER_STATUS	1	null	null	FK_SPLIER_STATS	PK_STATUS", //$NON-NLS-1$
 				"		SUPPLIER	SUPPLIER_ID			SUPPLIER_PARTS	SUPPLIER_ID	1	null	null	FK_SPLY_PRTS_SPLY	PK_SUPPLIER", //$NON-NLS-1$
-				"		SUPPLIER_PARTS	SUPPLIER_ID			null	null	1	null	null	null	PK_SUPPLIER_PARTS", //$NON-NLS-1$
-				"		SUPPLIER_PARTS	PART_ID			null	null	2	null	null	null	PK_SUPPLIER_PARTS", //$NON-NLS-1$
 				"		SUPPLIER	SUPPLIER_STATUS			null	null	1	null	null	null	FK_SPLIER_STATS", //$NON-NLS-1$
+				"		SUPPLIER_PARTS	PART_ID			null	null	2	null	null	null	PK_SUPPLIER_PARTS", //$NON-NLS-1$
+				"		SUPPLIER_PARTS	SUPPLIER_ID			null	null	1	null	null	null	PK_SUPPLIER_PARTS", //$NON-NLS-1$
 				"		SUPPLIER_PARTS	PART_ID			null	null	1	null	null	null	FK_SPLIER_PRTS_PRTS", //$NON-NLS-1$
 				"		SUPPLIER_PARTS	SUPPLIER_ID			null	null	1	null	null	null	FK_SPLY_PRTS_SPLY", //$NON-NLS-1$
 
 		};
 
 		executeAndAssertResults(
-				"select '' AS PKTABLE_QUALIFIER, '' AS PKTABLE_OWNER, PK.GroupName AS PKTABLE_NAME, PK.Name AS PKCOLUMN_NAME, '' AS FKTABLE_QUALIFIER, '' AS FKTABLE_OWNER, FK.GroupName AS FKTABLE_NAME, FK.Name AS FKCOLUMN_NAME, convert(PK.Position, short) AS KEY_SEQ, convert(null, short) AS UPDATE_RULE, convert(null, short) AS DELETE_RULE, FK.KeyName AS FK_NAME, PK.KeyName AS PK_NAME FROM System.KeyElements AS PK LEFT OUTER JOIN System.KeyElements AS FK ON FK.RefKeyUID = PK.UID", //$NON-NLS-1$
+				"select '' AS PKTABLE_QUALIFIER, '' AS PKTABLE_OWNER, PK.GroupName AS PKTABLE_NAME, PK.Name AS PKCOLUMN_NAME, '' AS FKTABLE_QUALIFIER, '' AS FKTABLE_OWNER, FK.GroupName AS FKTABLE_NAME, FK.Name AS FKCOLUMN_NAME, convert(PK.Position, short) AS KEY_SEQ, convert(null, short) AS UPDATE_RULE, convert(null, short) AS DELETE_RULE, FK.KeyName AS FK_NAME, PK.KeyName AS PK_NAME FROM System.KeyElements AS PK LEFT OUTER JOIN System.KeyElements AS FK ON FK.RefKeyUID = PK.UID order by PKTABLE_NAME", //$NON-NLS-1$
 				expected);
 	}
 
@@ -1063,11 +1063,12 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	@Test public void testReferenceKeyColumns() {
 		String[] expected = {
 				"PKTABLE_CAT[string]	PKTABLE_SCHEM[string]	PKTABLE_NAME[string]	PKCOLUMN_NAME[string]	FKTABLE_CAT[string]	FKTABLE_SCHEM[string]	FKTABLE_NAME[string]	FKCOLUMN_NAME[string]	KEY_SEQ[short]	UPDATE_RULE[integer]	DELETE_RULE[integer]	FK_NAME[string]	PK_NAME[string]	DEFERRABILITY[integer]", //$NON-NLS-1$
+				"null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.PARTS	PART_ID	null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PART_ID	1	3	3	FK_SPLIER_PRTS_PRTS	PK_PARTS	5",  //$NON-NLS-1$
 				"null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.STATUS	STATUS_ID	null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_STATUS	1	3	3	FK_SPLIER_STATS	PK_STATUS	5", //$NON-NLS-1$
-				"null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_ID	null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_ID	1	3	3	FK_SPLY_PRTS_SPLY	PK_SUPPLIER	5", //$NON-NLS-1$
-				"null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.PARTS	PART_ID	null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	PART_ID	1	3	3	FK_SPLIER_PRTS_PRTS	PK_PARTS	5", }; //$NON-NLS-1$
+				"null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER	SUPPLIER_ID	null	PartsSupplier	PartsSupplier.PARTSSUPPLIER.SUPPLIER_PARTS	SUPPLIER_ID	1	3	3	FK_SPLY_PRTS_SPLY	PK_SUPPLIER	5" //$NON-NLS-1$
+		};
 
-		executeAndAssertResults("select* FROM System.JDBC.ReferenceKeyColumns", //$NON-NLS-1$
+		executeAndAssertResults("select* FROM System.JDBC.ReferenceKeyColumns order by PKTABLE_NAME", //$NON-NLS-1$
 				expected);
 	}
 	

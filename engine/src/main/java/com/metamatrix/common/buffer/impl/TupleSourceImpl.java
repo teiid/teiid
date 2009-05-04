@@ -132,11 +132,11 @@ class TupleSourceImpl implements IndexedTupleSource {
     }
     
     // Retrieves the necessary batch based on the currentRow
-    private TupleBatch getBatch()
+    public TupleBatch getBatch()
     throws MetaMatrixComponentException{
         TupleBatch batch = getCurrentBatch();
         if (batch != null) {
-            if (currentRow < batch.getEndRow() && currentRow > batch.getBeginRow()) {
+            if (currentRow <= batch.getEndRow() && currentRow >= batch.getBeginRow()) {
                 return batch;
             }
             unpinCurrentBatch();

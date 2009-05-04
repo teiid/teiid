@@ -448,13 +448,4 @@ public class CommandContext implements Cloneable {
 		return value;
 	}
 	
-	public ValueIterator getValueIterator(ContextReference ref)
-			throws MetaMatrixComponentException {
-		if (variableContext == null) {
-			throw new MetaMatrixComponentException(ErrorMessageKeys.PROCESSOR_0033, QueryPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0033, ref.getContextSymbol(), "No value was available")); //$NON-NLS-1$
-		}
-		ValueIteratorSource dvs = (ValueIteratorSource) this.variableContext.getGlobalValue(ref.getContextSymbol());
-		return dvs.getValueIterator(ref.getValueExpression());
-	}
-
 }

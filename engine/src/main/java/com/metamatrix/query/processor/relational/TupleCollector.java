@@ -36,12 +36,10 @@ public class TupleCollector {
 	
 	private TupleSourceID tsid;
 	private BufferManager bm;
-	private boolean captureBounds;
 	
 	private int batchSize;
 	private ArrayList<List<?>> batch;
 	private int index;
-	private ArrayList<List<?>> bounds;
 
 	public TupleCollector(TupleSourceID tsid, BufferManager bm) throws TupleSourceNotFoundException, MetaMatrixComponentException {
 		this.tsid = tsid;
@@ -50,12 +48,33 @@ public class TupleCollector {
 		this.index = bm.getRowCount(tsid) + 1;
 	}
 	
-	public void setCaptureBounds(boolean captureBounds) {
-		this.captureBounds = captureBounds;
+	public TupleCollector(BufferManager bm) {
+		this.batchSize = bm.getProcessorBatchSize();
+		this.bm = bm;
+		this.index = 1;
+	}
+	
+	public void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
+	}
+	
+	public void setTupleSourceID(TupleSourceID tsid) {
+		this.tsid = tsid;
+	}
+	
+	public boolean isEmpty() {
+		return this.batch == null || this.batch.isEmpty();
 	}
 	
 	public TupleSourceID getTupleSourceID() {
 		return tsid;
+	}
+	
+	public ArrayList<List<?>> getBatch() {
+		if (batch == null) {
+			batch = new ArrayList<List<?>>(batchSize/4);
+		}
+		return batch;
 	}
 	
 	public void addTuple(List<?> tuple) throws TupleSourceNotFoundException, MetaMatrixComponentException {
@@ -64,34 +83,29 @@ public class TupleCollector {
 		}
 		batch.add(tuple);
 		if (batch.size() == batchSize) {
-			saveBatch(false);
+			saveBatch();
 		}
 	}
 
-	public void saveBatch(boolean isLast) throws TupleSourceNotFoundException,
+	public void saveBatch() throws TupleSourceNotFoundException,
 			MetaMatrixComponentException {
-		ArrayList<List<?>> toSave = batch;
-		if (toSave == null || toSave.isEmpty()) {
-			if (!isLast) {
-				return;
-			}
-			toSave = new ArrayList<List<?>>(0);
-		} /*else if (captureBounds) {
-			if (bounds.isEmpty()) {
-				bounds.add(toSave.get(0));
-			}
-			if (bounds )
-			bounds.add(toSave.get(toSave.size() -1));
-		}*/
-		TupleBatch tb = new TupleBatch(index, toSave);
-		tb.setTerminationFlag(isLast);
-		this.bm.addTupleBatch(tsid, tb);
-		this.index += toSave.size();
-		batch = null;
+		if (batch == null || batch.isEmpty()) {
+			return;
+		}
+		int batchIndex = 0;
+		while(batchIndex < batch.size()) {
+            int writeEnd = Math.min(batch.size(), batchIndex + batchSize);
+
+            TupleBatch writeBatch = new TupleBatch(index, batch.subList(batchIndex, writeEnd));
+            bm.addTupleBatch(tsid, writeBatch);
+            index += writeBatch.getRowCount();
+            batchIndex += writeBatch.getRowCount();
+        }
+        batch = null;
 	}
 	
 	public void close() throws TupleSourceNotFoundException, MetaMatrixComponentException {
-		saveBatch(true);
+		saveBatch();
 		this.bm.setStatus(this.tsid, TupleSourceStatus.FULL);
 	}
 	

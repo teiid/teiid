@@ -57,15 +57,23 @@ public abstract class JoinStrategy {
                             throws MetaMatrixComponentException {
         this.joinNode = joinNode;
         this.leftSource = new SourceState(joinNode.getChildren()[0], joinNode.getLeftExpressions());
+        this.leftSource.markDistinct(this.joinNode.isLeftDistinct());
         this.rightSource = new SourceState(joinNode.getChildren()[1], joinNode.getRightExpressions());
+        this.rightSource.markDistinct(this.joinNode.isRightDistinct());
     }
             
     protected void loadLeft() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         this.leftSource.collectTuples();
     }
     
+    protected void postLoadLeft() throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    }
+    
     protected void loadRight() throws MetaMatrixComponentException, MetaMatrixProcessingException {
         this.rightSource.collectTuples();
+    }
+    
+    protected void postLoadRight() throws MetaMatrixComponentException, MetaMatrixProcessingException {
     }
         
     /**

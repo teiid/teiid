@@ -60,9 +60,11 @@ import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.DependentAccessNode;
 import com.metamatrix.query.processor.relational.GroupingNode;
 import com.metamatrix.query.processor.relational.JoinNode;
+import com.metamatrix.query.processor.relational.JoinStrategy;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy;
 import com.metamatrix.query.processor.relational.NestedLoopJoinStrategy;
 import com.metamatrix.query.processor.relational.NullNode;
+import com.metamatrix.query.processor.relational.PartitionedSortJoin;
 import com.metamatrix.query.processor.relational.PlanExecutionNode;
 import com.metamatrix.query.processor.relational.ProjectIntoNode;
 import com.metamatrix.query.processor.relational.ProjectNode;
@@ -423,11 +425,15 @@ public class TestOptimizer extends TestCase {
     public static void collectCounts(RelationalNode relationalNode, int[] counts, Class<?>[] types) {
         Class<?> nodeType = relationalNode.getClass();
         if(nodeType.equals(JoinNode.class)) {
-            if (((JoinNode)relationalNode).getJoinStrategy() instanceof NestedLoopJoinStrategy) {
+        	JoinStrategy strategy = ((JoinNode)relationalNode).getJoinStrategy();
+            if (strategy instanceof NestedLoopJoinStrategy) {
                 updateCounts(NestedLoopJoinStrategy.class, counts, types);
-            }else {
+            } else if (strategy instanceof MergeJoinStrategy) {
                 updateCounts(MergeJoinStrategy.class, counts, types);
-            }
+                if (strategy instanceof PartitionedSortJoin) {
+                    updateCounts(PartitionedSortJoin.class, counts, types);
+                } 
+            } 
             if (((JoinNode)relationalNode).isDependent()) {
                 updateCounts(DependentJoin.class, counts, types);
             }

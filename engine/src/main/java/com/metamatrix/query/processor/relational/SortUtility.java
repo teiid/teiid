@@ -25,7 +25,6 @@ package com.metamatrix.query.processor.relational;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -69,7 +68,7 @@ public class SortUtility {
     protected List schema;
     private String[] schemaTypes;
     protected int[] sortCols;
-	private Comparator comparator;
+	private ListNestedSortComparator comparator;
 
     private TupleSourceID outputID;
 	private IndexedTupleSource outTs;
@@ -78,7 +77,6 @@ public class SortUtility {
     private int phase = INITIAL_SORT;
     protected List<TupleSourceID> activeTupleIDs = new ArrayList<TupleSourceID>();
     private List<TupleBatch> workingBatches;
-    private int[] workingPointers;
     private int masterSortIndex;
 	private TupleSourceID mergedID;
 	private TupleSourceID tempOutId;
@@ -260,8 +258,8 @@ public class SortUtility {
             }
             
             // Initialize pointers into working batches
-            this.workingPointers = new int[workingBatches.size()];
-            Arrays.fill(this.workingPointers, 1);
+            int[] workingPointers = new int[workingBatches.size()];
+            Arrays.fill(workingPointers, 1);
 
             mergedID = createTupleSource();
 
@@ -288,7 +286,7 @@ public class SortUtility {
                         chosenBatchIndex = i;
                         chosenBatch = batch;
                     } else if (compare == 0 && this.mode != Mode.SORT) {
-                    	incrementWorkingBatch(i, batch);
+                    	incrementWorkingBatch(i, workingPointers, batch);
                     }
                 }
 
@@ -305,11 +303,11 @@ public class SortUtility {
                 	}
                     tempCollector.addTuple(currentRow);
                 }
-                incrementWorkingBatch(chosenBatchIndex, chosenBatch);
+                incrementWorkingBatch(chosenBatchIndex, workingPointers, chosenBatch);
             }
 
             // Save without closing
-            collector.saveBatch(false);
+            collector.saveBatch();
             
             // Remove merged sublists
             for(int i=0; i<sortedIndex; i++) {
@@ -363,7 +361,7 @@ public class SortUtility {
 	        		throw new MetaMatrixComponentException(e);
 	        	}
 			} catch (BlockedOnMemoryException e) {
-				tc.saveBatch(false);
+				tc.saveBatch();
 				throw e;
 			}
         	outTs = null;
@@ -375,7 +373,7 @@ public class SortUtility {
      * for that batchIndex, which we already happen to have.  Return whether the batch
      * was changed or not.  True = changed.
      */
-    private void incrementWorkingBatch(int batchIndex, TupleBatch currentBatch) throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
+    private void incrementWorkingBatch(int batchIndex, int[] workingPointers, TupleBatch currentBatch) throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
         workingPointers[batchIndex] += 1;
         if(workingPointers[batchIndex] > currentBatch.getEndRow()) {
             TupleSourceID tsID = unpinWorkingBatch(batchIndex, currentBatch);
@@ -411,7 +409,7 @@ public class SortUtility {
         this.schema = this.bufferManager.getTupleSchema(this.sourceID);
         this.schemaTypes = TypeRetrievalUtil.getTypeNames(schema);
         this.batchSize = bufferManager.getProcessorBatchSize();
-        
+        int distinctIndex = sortElements != null? sortElements.size() - 1:0;
         if (useAllColumns && mode != Mode.SORT) {
 	        if (this.sortElements != null) {
 	        	this.sortElements = new ArrayList(this.sortElements);
@@ -438,6 +436,11 @@ public class SortUtility {
         }
         this.sortCols = cols;
         this.comparator = new ListNestedSortComparator(sortCols, sortTypes);
+        this.comparator.setDistinctIndex(distinctIndex);
+    }
+    
+    public boolean isDistinct() {
+    	return this.comparator.isDistinct();
     }
     
 }

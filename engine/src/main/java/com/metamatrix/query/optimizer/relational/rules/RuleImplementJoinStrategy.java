@@ -37,11 +37,11 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
-import com.metamatrix.query.optimizer.relational.plantree.JoinStrategyType;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.OrderBy;
@@ -70,20 +70,31 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             if (!JoinStrategyType.MERGE.equals(stype)) {
             	continue;
             } 
-/*            if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER) {
-            	//there is a possible optimization at runtime here based upon the cardinality
+            
+            /**
+             * Don't push sorts for unbalanced inner joins, we prefer to use partitioning 
+             */
+            boolean pushLeft = true;
+            boolean pushRight = true;
+            if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && context != null) {
             	float leftCost = NewCalculateCostUtil.computeCostForTree(joinNode.getFirstChild(), metadata);
             	float rightCost = NewCalculateCostUtil.computeCostForTree(joinNode.getLastChild(), metadata);
-            	if (leftCost != NewCalculateCostUtil.UNKNOWN_VALUE && leftCost < context.getProcessorBatchSize() * context.getProcessorBatchSize()
-            			&& rightCost != NewCalculateCostUtil.UNKNOWN_VALUE && rightCost > context.getProcessorBatchSize()) {
-                    joinNode.setProperty(NodeConstants.Info.SORT_LEFT, SortOption.SORT);
-                    joinNode.setProperty(NodeConstants.Info.SORT_RIGHT, SortOption.SORT);
-            		continue;
+            	boolean leftSmall = leftCost < context.getProcessorBatchSize() / 4;
+            	boolean rightSmall = rightCost < context.getProcessorBatchSize() / 4;
+            	boolean leftLarge = leftCost > context.getProcessorBatchSize();
+            	boolean rightLarge = rightCost > context.getProcessorBatchSize();
+            	if (leftLarge || rightLarge) {
+	                pushLeft = leftCost == NewCalculateCostUtil.UNKNOWN_VALUE || leftSmall || rightLarge;
+	                pushRight = rightCost == NewCalculateCostUtil.UNKNOWN_VALUE || rightSmall || leftLarge || joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null;
             	}
-            }
-*/            
-            insertSort(joinNode.getFirstChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder);
-            insertSort(joinNode.getLastChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder);
+            }            
+
+            boolean pushedLeft = insertSort(joinNode.getFirstChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder, pushLeft);	
+            insertSort(joinNode.getLastChild(), (List<SingleElementSymbol>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS), joinNode, metadata, capabilitiesFinder, pushRight);
+        	
+        	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && (!pushRight || !pushedLeft)) {
+        		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.PARTITIONED_SORT);
+        	}
         }
         
         return plan;
@@ -98,7 +109,8 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
      * @throws MetaMatrixComponentException 
      * @throws QueryMetadataException 
      */
-    private static void insertSort(PlanNode childNode, List<SingleElementSymbol> expressions, PlanNode jnode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, MetaMatrixComponentException {
+    private static boolean insertSort(PlanNode childNode, List<SingleElementSymbol> expressions, PlanNode jnode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
+    		boolean attemptPush) throws QueryMetadataException, MetaMatrixComponentException {
         Set<SingleElementSymbol> orderSymbols = new LinkedHashSet<SingleElementSymbol>(expressions); 
 
         PlanNode sourceNode = FrameUtil.findJoinSourceNode(childNode);
@@ -116,14 +128,19 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         
         PlanNode sortNode = createSortNode(orderSymbols, outputSymbols, directions);
         
-        if (sourceNode.getType() == NodeConstants.Types.ACCESS 
-                        && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode)) {
-            sourceNode.getFirstChild().addAsParent(sortNode);
-            
-            if (needsCorrection) {
-                correctOutputElements(joinNode, outputSymbols, sortNode);
-            }
-            return;
+        if (sourceNode.getType() == NodeConstants.Types.ACCESS) {
+        	if (NodeEditor.findAllNodes(sourceNode, NodeConstants.Types.SOURCE).size() == 1 
+        			&& NewCalculateCostUtil.usesKey(expressions, metadata)) {
+                joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
+        	}
+	        if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode)) {
+	            sourceNode.getFirstChild().addAsParent(sortNode);
+	            
+	            if (needsCorrection) {
+	                correctOutputElements(joinNode, outputSymbols, sortNode);
+	            }
+	            return true;
+	        }
         }
         
         joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.SORT_LEFT : NodeConstants.Info.SORT_RIGHT, SortOption.SORT);
@@ -134,6 +151,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             childNode.addAsParent(projectNode);
             correctOutputElements(joinNode, outputSymbols, projectNode);
         }        
+        return false;
     }
 
     private static PlanNode createSortNode(Collection orderSymbols,

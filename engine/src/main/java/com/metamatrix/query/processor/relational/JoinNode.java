@@ -47,8 +47,14 @@ import com.metamatrix.query.util.CommandContext;
  * @since 4.2
  */
 public class JoinNode extends SubqueryAwareRelationalNode {
+	
+	public enum JoinStrategyType {    
+	    MERGE,
+	    PARTITIONED_SORT,
+	    NESTED_LOOP
+	}
         
-    private enum State { LOAD_LEFT, LOAD_RIGHT, EXECUTE }    
+    private enum State { LOAD_LEFT, LOAD_RIGHT, POST_LOAD_LEFT, POST_LOAD_RIGHT, EXECUTE }    
     private State state = State.LOAD_LEFT;
     
     private boolean leftOpened;
@@ -60,6 +66,8 @@ public class JoinNode extends SubqueryAwareRelationalNode {
    
     private List leftExpressions;
     private List rightExpressions;
+    private boolean leftDistinct;
+    private boolean rightDistinct;
     private Criteria joinCriteria;
     
     private Map combinedElementMap;
@@ -84,6 +92,22 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         this.leftExpressions = leftExpressions;
         this.rightExpressions = rightExpressions;
     }
+    
+    public boolean isLeftDistinct() {
+		return leftDistinct;
+	}
+    
+    public void setLeftDistinct(boolean leftDistinct) {
+		this.leftDistinct = leftDistinct;
+	}
+    
+    public boolean isRightDistinct() {
+		return rightDistinct;
+	}
+    
+    public void setRightDistinct(boolean rightDistinct) {
+		this.rightDistinct = rightDistinct;
+	}
     
     public void setJoinCriteria(Criteria joinCriteria) {
         this.joinCriteria = joinCriteria;
@@ -147,6 +171,8 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         
         clonedNode.rightExpressions = rightExpressions;
         clonedNode.dependentValueSource = this.dependentValueSource;
+        clonedNode.rightDistinct = rightDistinct;
+        clonedNode.leftDistinct = leftDistinct;
         
         return clonedNode;
     }
@@ -172,8 +198,17 @@ public class JoinNode extends SubqueryAwareRelationalNode {
                 this.rightOpened = true;
             }
             this.joinStrategy.loadRight();
-            state = State.EXECUTE;
+            state = State.POST_LOAD_LEFT;
         }
+        if (state == State.POST_LOAD_LEFT) {
+        	this.joinStrategy.postLoadLeft();
+        	state = State.POST_LOAD_RIGHT;
+        }
+        if (state == State.POST_LOAD_RIGHT) {
+        	this.joinStrategy.postLoadRight();
+        	state = State.EXECUTE;
+        }
+        
         while(true) {
             if(super.isBatchFull()) {
                 return super.pullBatch();
@@ -270,6 +305,9 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         } catch (TupleSourceNotFoundException err) {
             //ignore
         }        
+        if (this.isDependent()) {
+        	this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, null);
+        }
     }
 
     public JoinType getJoinType() {

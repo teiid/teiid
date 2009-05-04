@@ -56,4 +56,7 @@ public interface IndexedTupleSource extends TupleSource {
 	 * @return
 	 */
 	int getCurrentIndex();
+	
+	TupleBatch getBatch()
+    throws MetaMatrixComponentException;
 }

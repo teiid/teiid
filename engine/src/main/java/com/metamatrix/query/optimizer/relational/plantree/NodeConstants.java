@@ -90,8 +90,9 @@ public final class NodeConstants {
         SORT_LEFT,  // SortOption
         SORT_RIGHT,     // SortOption
         REMOVED_JOIN_GROUPS, //Set<GroupSymbol>
-        
         IS_OPTIONAL,          // Boolean
+        IS_LEFT_DISTINCT, 	// Boolean
+        IS_RIGHT_DISTINCT, 	// Boolean
 
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>

@@ -47,6 +47,7 @@ import com.metamatrix.query.function.aggregate.Max;
 import com.metamatrix.query.function.aggregate.Min;
 import com.metamatrix.query.function.aggregate.NullFilter;
 import com.metamatrix.query.function.aggregate.Sum;
+import com.metamatrix.query.processor.relational.SortUtility.Mode;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -311,8 +312,8 @@ public class GroupingNode extends RelationalNode {
             this.phase = GROUP;
         } else {
             this.sortUtility = new SortUtility(collectionID, sortElements,
-                                                sortTypes, removeDuplicates, getBufferManager(),
-                                                getConnectionID());
+                                                sortTypes, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
+                                                getConnectionID(), removeDuplicates);
             this.phase = SORT;
         }
     }
