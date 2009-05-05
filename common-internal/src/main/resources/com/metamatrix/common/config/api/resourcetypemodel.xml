@@ -42,7 +42,7 @@
 			<PropertyDefinition Name="metamatrix.xatxnmgr.txnstatus_port" DisplayName="Recovery Port" ShortDescription="Transaction Recovery Port (0-any available port)" DefaultValue="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false"/>
 		</ComponentType>
 		<ComponentType Name="JGroups" ComponentTypeCode="4" Deployable="false" Deprecated="false" Monitorable="false">
-			<PropertyDefinition Name="cluster.protocol" DisplayName="Cluster Protocol Type" ShortDescription="Type of protocol to be used (Unicast or Multicast)" DefaultValue="UNICAST-TCP" Multiplicity="1" PropertyType="String" IsConstrainedToAllowedValues="true" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true">
+			<PropertyDefinition Name="cluster.protocol" DisplayName="Cluster Protocol Type" ShortDescription="Type of protocol to be used (Unicast or Multicast)" DefaultValue="UNICAST-TCP" Multiplicity="1" PropertyType="String" IsConstrainedToAllowedValues="true" ValueDelimiter="," IsExpert="false" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="true">
                 <AllowedValue>MULTICAST</AllowedValue>
                 <AllowedValue>UNICAST_TCP</AllowedValue>
                 <AllowedValue>UNICAST_UDP</AllowedValue>
