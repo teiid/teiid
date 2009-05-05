@@ -41,7 +41,7 @@
                         <configuration>
                             <fileSeparator>:</fileSeparator>
                             <pathSeparator>;</pathSeparator>
-                            <prefix>extension</prefix>
+                            <prefix>extensionjar</prefix>
                             <excludeTransitive>false</excludeTransitive>
                             <includeScope>runtime</includeScope>
                             <excludeTypes>pom</excludeTypes>
