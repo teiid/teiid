@@ -126,107 +126,12 @@ public class TestXMLConfigImportExport extends BaseTest {
       	pc.close();
     }
 
-    	
-    
-    /**
-     * This test the Console process for importing a new binding
-    
-	public void testImportConnector() throws Exception {
-    	printMsg("Starting testImportConnector"); //$NON-NLS-1$
-
-      	// file should not have the example connector in it
-//      		initializeConfig(CONFIG_WITH_CONNECTOR_FILE);
-      		initializeConfig(CONFIG_FILE);
-            this.initTransactions(new Properties());
-            
-    	
-    		helperImportConnectorType();
-    		helperImportConnectorBinding(CDK_FILE);
-    	
-    	printMsg("Completed testImportConnector"); //$NON-NLS-1$
-    	
-	}
-	 */
-//	public void testImportJDBCConnector() {
-//    	printMsg("Starting testImportJDBCConnector"); //$NON-NLS-1$
-//
-//      try {
-//      	// file should not have the example connector in it
-//       		initializeConfig(CONFIG_FILE);
-//    	
-//    		helperImportConnectorBinding(JDBC_FILE);
-//      } catch (Exception e) {
-// //     		e.printStackTrace();
-//      	
-//    		fail(e.getMessage());
-//   	  }
-//    	
-//    	printMsg("Completed testImportJDBCConnector"); //$NON-NLS-1$
-//    	
-//	}
-	
-	
-	private void helperImportConnectorType() throws Exception {    	
-    	printMsg("Starting helperImportConnectorType"); //$NON-NLS-1$
-    	
-//    	   	initializeConfig(CONFIG_FILE);
-
-                    
- //     		XMLConfigurationConnector writer = (XMLConfigurationConnector) factory.createTransaction(conn, false);
-
-	     	File cdkFile = new File(getPath(), CDK_FILE);
-	      		          
-	    	
-	    	InputStream inputStream = readFile(cdkFile.getPath());
-	    	
-	   	
-	    	XMLConfigurationImportExportUtility io = new XMLConfigurationImportExportUtility();
-	    
-	        
-	     //   ConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(true);
-	                     
-	        ComponentType type = io.importComponentType(inputStream, getEditor(), null);
-	         
-				
-//			editor.getDestination().popActions();						
-	
-//	    	editor.createComponentType(type);
-            
-            commit();
-	    	  
-			
-//			List actions = editor.getDestination().popActions();
-//				
-//			printMsg("Executing # of Actions: " + actions.size()); //$NON-NLS-1$
-//			
-//			try {
-//				writer.executeActions(actions, PRINCIPAL);
-//			
-//
-//				writer.commit();
-//			} catch (Exception e) {
-//				writer.rollback();
-//				throw e;	
-//			}
-			
-			ComponentType newType = getWriter().getComponentType((ComponentTypeID) type.getID());
-			if (newType == null) {
-				fail("Import of connector type " + type.getID() + " was not successfull."); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-			HelperTestConfiguration.validateComponentType(newType);
-
-    	printMsg("Completed helperImportConnectorType"); //$NON-NLS-1$
- 
-    }
-    
    	/**
 	 * This test the import operation that the console will be doing
 	 * when importing a new configuration
 	 */
 	private void helperImportConnectorBinding(String file) throws Exception {    	
     	printMsg("Starting helperImportConnectorBinding");    	 //$NON-NLS-1$
-                    
-//      		XMLConfigurationConnector writer = (XMLConfigurationConnector) factory.createTransaction(conn, false);
 
 	     	File connFile = new File(getPath(), file);
 	      		          
@@ -244,55 +149,20 @@ public class TestXMLConfigImportExport extends BaseTest {
             if (defn == null) {
                 fail("No connector binding was imported"); //$NON-NLS-1$
             }
-		        
-//		   	ConfigurationObjectEditor reditor = new BasicConfigurationObjectEditor(true);
 
-	        ConfigurationModelContainer config = getWriter().getConfigurationModel(Configuration.NEXT_STARTUP);
+	        ConfigurationModelContainer config = getWriter().getConfigurationModel();
 
-	        
-            
-	        
-	        
 	        ConnectorBinding newdefn = getEditor().createConnectorComponent(Configuration.NEXT_STARTUP_ID, defn, defn.getFullName(), defn.getRoutingUUID());
-//	        reditor.setEnabled(newdefn, true);
             
             commit();
             
- //           ProductServiceConfig psc = com.metamatrix.common.config.util.ConfigUtil.getFirstDeployedConnectorProductTypePSC(config);
-            
-//           ProductServiceConfigID pscID = null;
-
-//            ComponentDefn defn = null;
-//            if (psc != null) {
-//                pscID = (ProductServiceConfigID)psc.getID();
-//                
-//            } else {
-//                psc = helperTestAddPSC("TestPSC_" + String.valueOf( (new Date()).getTime()), (ServiceComponentDefnID) newdefn.getID(),  Configuration.NEXT_STARTUP_ID ); //$NON-NLS-1$
-//                pscID = (ProductServiceConfigID)psc.getID();
-//                
-//            }
-	        // add to the psc, but does not deploy
- //           psc = getEditor().addServiceComponentDefn(psc, (ServiceComponentDefnID) newdefn.getID());
             VMComponentDefn vmdefn = (VMComponentDefn) config.getConfiguration().getVMComponentDefns().iterator().next();
 			// deploys the binding if the psc is deployed
             getEditor().deployServiceDefn(config.getConfiguration(), newdefn, (VMComponentDefnID) vmdefn.getID());
 	         				
             commit();
-//			List actions = reditor.getDestination().popActions();						
-//	
-//				
-//			printMsg("Executing # of Actions: " + actions.size() + " for # of Connector: " + newdefn.getFullName()); //$NON-NLS-1$ //$NON-NLS-2$
-//
-//			try {
-//				writer.executeActions(actions, PRINCIPAL);
-//			
-//				writer.commit();
-//			} catch (Exception e) {
-//				writer.rollback();
-//				throw e;	
-//			}
 			
-			ConnectorBinding newDefn = (ConnectorBinding) getWriter().getComponentDefinition((ComponentDefnID) defn.getID(), Configuration.NEXT_STARTUP_ID);	
+			ConnectorBinding newDefn = (ConnectorBinding) getWriter().getConfigurationModel().getConfiguration().getComponentDefn((ComponentDefnID)defn.getID());	
 			if (newDefn == null) {
 				fail("Import of connector binding was not successfull, no obect found when reading."); //$NON-NLS-1$
 			}
@@ -302,100 +172,6 @@ public class TestXMLConfigImportExport extends BaseTest {
     	printMsg("Completed helperImportConnectorBinding"); //$NON-NLS-1$
  
     }
-    
-    
-//    
-//    private ProductServiceConfig helperTestAddPSC(String pscName, ServiceComponentDefnID id, ConfigurationID configID) {
-//        printMsg("Starting helperTestAddPSC");       //$NON-NLS-1$
-//        ProductServiceConfig newDefn = null;            
-//      try {
-//        
-//            
-//            Configuration config = this.getConfigModel().getConfiguration();
-//            
-//            Collection types = this.getConfigModel().getProductTypes();
-//                    
-//            ConnectorBinding defn =  config.getConnectorBinding(id)  ; 
-//            
-//            newDefn = addPSC(pscName, defn, config, types, getEditor());
-//                        
-//
-//            printMsg("helperTestAddPSC actions committed"); //$NON-NLS-1$
-//        
-//            
-//            HelperTestConfiguration.validateComponentDefn(newDefn);
-//            
-////          ConfigurationPrinter.printComponentObject(h, false, System.out);
-//                    
-//          
-// 
-//      } catch (Exception e) {
-//        e.printStackTrace();
-//            fail(e.getMessage());
-//        }
-//        printMsg("Completed helperTestAddPSC"); //$NON-NLS-1$
-//        return newDefn;
-//    }
-    
-    
-//    private ProductServiceConfig addPSC(String name, ServiceComponentDefn svc, Configuration config, Collection types, BasicConfigurationObjectEditor editor) throws Exception {
-//
-//        ProductType connType = BasicProductType.PRODUCT_TYPE;
-//    
-//
-//            printMsg("addPSC found product type " + connType.getFullName()); //$NON-NLS-1$
-//
-//            ProductServiceConfig newPSC = getEditor().createProductServiceConfig((ConfigurationID) config.getID(), (ProductTypeID) connType.getID(), name);
-//            
-//            if (newPSC == null) {
-//                throw new ConfigurationException("AddPSC Error - editor is unable to create new PSC " + name + " of type " + connType.getFullName()); //$NON-NLS-1$ //$NON-NLS-2$
-//            }
-//            
-//            newPSC = (ProductServiceConfig) getEditor().setLastChangedHistory(newPSC, PRINCIPAL, DateUtil.getCurrentDateAsString());
-//            newPSC = (ProductServiceConfig) getEditor().setCreationChangedHistory(newPSC, PRINCIPAL, DateUtil.getCurrentDateAsString());
-//                            
-//            printMsg("addPSC created new PSC " + newPSC.getFullName()); //$NON-NLS-1$
-//
-//            this.getEditor().addServiceComponentDefn(config, newPSC,  (ServiceComponentDefnID) svc.getID());
-//            printMsg("addPSC add service to PSC "); //$NON-NLS-1$
-//            
-//            commit();
-//            
-//            ProductServiceConfig psc = CurrentConfiguration.getInstance().getConfiguration().getPSC((ProductServiceConfigID) newPSC.getID());
-//            assertNotNull(psc);
-//                
-//            return newPSC;
-//    }
-    
- 
-//    public ProductType findProductType(String name, Collection types) {
-//        ProductType connType = null;
-//       for (Iterator it=types.iterator(); it.hasNext(); ) {
-//           connType = (ProductType) it.next();
-//           if (connType.getFullName().equals(name)) {
-//               return connType;
-//           }
-//
-//           connType = null;    
-//       }
-//
-//       return connType;
-//    }
-    
-    
-    
-//    private boolean compare(String fileName1, ConfigurationID id1, String fileName2, ConfigurationID id2, String logFile) throws Exception {
-//    	
-//    	ConfigurationModelContainer model1 = TestFilePersistence.readModel(fileName1, id1);
-//    	
-//    	ConfigurationModelContainer model2 = TestFilePersistence.readModel(fileName2, id2);
-//    	
-//   	
-//    	boolean isEqual = TestFilePersistence.compareModels(model1, model2, logFile);
-//    	
-//    	return isEqual;
-//    		
-//    }
     
      private InputStream readFile(String fileName) throws ConfigurationException {
         InputStream inputStream = null;
@@ -414,20 +190,6 @@ public class TestXMLConfigImportExport extends BaseTest {
         }                               
     }
     
-//    private void designateNextStartupConfiguration(Collection configObjects,
-//                                                    ConfigurationObjectEditor editor) throws Exception{
-//        Iterator iterator = configObjects.iterator();
-//        while (iterator.hasNext()) {
-//            Object obj = iterator.next();
-//            if (obj instanceof Configuration) {
-//                Configuration config = (Configuration)obj;
-//                ConfigurationID configID = (ConfigurationID)config.getID();
-//                editor.setNextStartupConfiguration(configID);
-//            }
-//        }
-//    }
-    
-
 }
 
 

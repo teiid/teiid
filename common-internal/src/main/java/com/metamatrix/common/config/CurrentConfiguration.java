@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.config;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -81,11 +82,13 @@ public final class CurrentConfiguration {
 	
     public static final String BOOTSTRAP_FILE_NAME = "teiid.properties"; //$NON-NLS-1$
     public static final String CONFIGURATION_READER_CLASS_PROPERTY_NAME = "metamatrix.config.reader"; //$NON-NLS-1$
-    public static final String CLUSTER_NAME = "metamatrix.cluster.name"; //$NON-NLS-1$
+    public static final String CLUSTER_NAME = "cluster.name"; //$NON-NLS-1$
     public static final String CONFIGURATION_NAME= "configuration.name"; //$NON-NLS-1$
+    public static final String CLUSTER_MEMBERS = "cluster.unicast.members"; //$NON-NLS-1$
     
 	private CurrentConfigurationReader reader;
     private Properties bootstrapProperties;
+    private Properties modifyableBootstrapProperties;
     private Properties systemBootstrapProperties;
 	private String bindAddress;
 	private InetAddress hostAddress;
@@ -137,6 +140,17 @@ public final class CurrentConfiguration {
     	} catch (UnknownHostException e) {
     		throw new RuntimeException(e);
     	}
+    	
+    	// these properties will be used to identify the server in TCP based cluster setup.
+    	String unicastMembers = bootstrapProperties.getProperty(CLUSTER_MEMBERS);
+    	if (unicastMembers == null) {
+    		unicastMembers = this.configurationName+"|"+this.hostAddress.getCanonicalHostName(); //$NON-NLS-1$
+    	}
+    	else {
+    		unicastMembers = unicastMembers+","+this.configurationName+"|"+this.hostAddress.getCanonicalHostName(); //$NON-NLS-1$  //$NON-NLS-2$
+    	}
+    	
+    	modifyableBootstrapProperties.setProperty(CLUSTER_MEMBERS, unicastMembers);
     }
     
     public boolean isAvailable() {
@@ -350,6 +364,7 @@ public final class CurrentConfiguration {
 		        } catch (IOException e ) {
 		        }
 	        }
+	        modifyableBootstrapProperties = bootstrapProps;
 			bootstrapProperties = new UnmodifiableProperties(bootstrapProps);
 		}
 		return bootstrapProperties;

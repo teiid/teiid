@@ -36,6 +36,7 @@ public interface VMComponentDefnType extends ServiceComponentType {
     /**
      * @see SocketVMController
      */
+    public static final String CLUSTER_PORT = "vm.unicast.port"; //$NON-NLS-1$
     public static final String SERVER_PORT = com.metamatrix.admin.api.objects.ProcessObject.SERVER_PORT;
     public static final String MAX_THREADS = com.metamatrix.admin.api.objects.ProcessObject.MAX_THREADS;
     public static final String TIMETOLIVE = com.metamatrix.admin.api.objects.ProcessObject.TIMETOLIVE;

@@ -467,11 +467,7 @@ public class RuntimeStateAdminAPIHelper {
         // Config svc proxy
         ConfigurationServiceInterface configAdmin = PlatformProxyHelper.getConfigurationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
         // First set the log config in the database
-        try {
-            configAdmin.executeTransaction(actions, principalName);
-        } catch (ModificationException e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.ADMIN_0084, PlatformPlugin.Util.getString(ErrorMessageKeys.ADMIN_0084, config.getID()));
-        }
+        configAdmin.executeTransaction(actions, principalName);
 
         // Then, if the operational (current) config is effected, set logging config for
         // LogManager in each VM.

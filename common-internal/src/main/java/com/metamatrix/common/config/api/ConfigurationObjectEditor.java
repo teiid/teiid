@@ -606,24 +606,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
     ComponentTypeDefn setPropertyDefinition(ComponentTypeDefn t, PropertyDefinition defn);
 
 
-    /**
-     * Call to set the specified configuration as the next startup configuration,
-     * to use after a system reboot.
-     * @param configurationID for the <code>Configuration</code> to use on the next system reboot.
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     * @deprecated as of v 2.0 beta 1, use {@link #setNextStartupConfiguration}
-     */
-    void setBootStrapConfiguration(ConfigurationID configurationID) throws ConfigurationException;
-
-
-    /**
-     * Sets the system next startup configuration
-     * @param configurationID for the <code>Configuration</code> to use on the next system reboot.
-     * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
-     */
-    void setNextStartupConfiguration(ConfigurationID configurationID) throws ConfigurationException;
-
-
     // ----------------------------------------------------------------------------------
     //                  D E L E T E    M E T H O D S
     // ----------------------------------------------------------------------------------

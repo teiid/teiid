@@ -447,8 +447,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 			throw new AdminComponentException(e);
 		} catch (ConfigurationException e) {
 			throw new AdminComponentException(e);
-		} catch (ModificationException e) {
-			throw new AdminComponentException(e);
 		}
             
     }
@@ -633,8 +631,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 		} catch (ConfigurationException e) {
 			throw new AdminComponentException(e);
 		} catch (ServiceException e) {
-			throw new AdminComponentException(e);
-		} catch (ModificationException e) {
 			throw new AdminComponentException(e);
 		}
     }
@@ -1049,8 +1045,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         } catch(ConfigObjectsNotResolvableException e) {
         	throw new AdminComponentException(e);
         } catch(InvalidConfigurationElementException e) {
-        	throw new AdminComponentException(e);
-        } catch(ModificationException e) {
         	throw new AdminComponentException(e);
         } catch (ConfigurationException e) {  
         	throw new AdminComponentException(e); 
@@ -1522,8 +1516,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                     }
 				} catch (ConfigurationException e) {
 					throw new AdminComponentException(e);
-				} catch (ModificationException e) {
-					throw new AdminComponentException(e);
 				} catch (ServiceException e) {
 					throw new AdminComponentException(e);
 				}
@@ -1550,8 +1542,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 					throw new AdminComponentException(e);
 				} catch (MetaMatrixProcessingException e) {
 					throw new AdminProcessingException(e);
-				} catch (ModificationException e) {
-					throw new AdminComponentException(e);
 				}
                     
                 break;
@@ -1574,8 +1564,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 				} catch (ConfigurationException e) {
 					throw new AdminComponentException(e);
 				} catch (ServiceException e) {
-					throw new AdminComponentException(e);
-				} catch (ModificationException e) {
 					throw new AdminComponentException(e);
 				}
                 break;
@@ -1855,8 +1843,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 				getConfigurationServiceProxy().delete(service, false, getUserName());
 			} catch (ConfigurationException e) {
 				throw new AdminComponentException(e);
-			} catch (ModificationException e) {
-				throw new AdminComponentException(e);
 			} catch (ServiceException e) {
 				throw new AdminComponentException(e);
 			}
@@ -1870,8 +1856,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         	try {
 				getConfigurationServiceProxy().delete(cb, false, getUserName());
 			} catch (ConfigurationException e) {
-				throw new AdminComponentException(e);
-			} catch (ModificationException e) {
 				throw new AdminComponentException(e);
 			} catch (ServiceException e) {
 				throw new AdminComponentException(e);
@@ -1893,8 +1877,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 	        try {
 				getConfigurationServiceProxy().delete(ct, getUserName());
 			} catch (ConfigurationException e) {
-				throw new AdminComponentException(e);
-			} catch (ModificationException e) {
 				throw new AdminComponentException(e);
 			} catch (ServiceException e) {
 				throw new AdminComponentException(e);
@@ -1940,8 +1922,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 			    getConfigurationServiceProxy().delete(host, false, getUserName());
 			}
 		} catch (ConfigurationException e) {
-			throw new AdminComponentException(e);
-		} catch (ModificationException e) {
 			throw new AdminComponentException(e);
 		} catch (ServiceException e) {
 			throw new AdminComponentException(e);
@@ -2018,8 +1998,6 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 		} catch (ServiceException e) {
 			throw new AdminComponentException(e);
 		} catch (MetaMatrixProcessingException e) {
-			throw new AdminComponentException(e);
-		} catch (ModificationException e) {
 			throw new AdminComponentException(e);
 		}
     }

@@ -22,6 +22,8 @@
 
 package com.metamatrix.server;
 
+import java.util.Properties;
+
 import org.jboss.cache.Cache;
 import org.jgroups.mux.Multiplexer;
 
@@ -81,7 +83,8 @@ class HostControllerGuiceModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
 		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+"_hc.log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		bindConstant().annotatedWith(Names.named(Configuration.LOGDIR)).to(host.getLogDirectory());
-				
+		bindConstant().annotatedWith(Names.named(Configuration.UNICAST_PORT)).to(5555);
+		
 		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		
 		bind(Multiplexer.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
@@ -92,5 +95,4 @@ class HostControllerGuiceModule extends AbstractModule {
 		bind(MessageBus.class).to(JGroupsMessageBus.class).in(Scopes.SINGLETON); // VM Message bus is in common-internal
 		bind(HostMonitor.class).in(Scopes.SINGLETON);		
 	}
-
 }

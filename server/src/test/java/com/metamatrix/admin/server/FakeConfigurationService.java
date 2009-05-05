@@ -440,8 +440,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#executeTransaction(com.metamatrix.common.actions.ActionDefinition, java.lang.String)
      */
     public Set executeTransaction(ActionDefinition action,
-                                  String principalName) throws ModificationException,
-                                                       ConfigurationException {
+                                  String principalName) throws ConfigurationException {
         return null;
     }
 
@@ -449,8 +448,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#executeTransaction(java.util.List, java.lang.String)
      */
     public Set executeTransaction(List actions,
-                                  String principalName) throws ModificationException,
-                                                       ConfigurationException {
+                                  String principalName) throws ConfigurationException {
         if (actions != null) {
             for (Iterator it=actions.iterator(); it.hasNext();) {
                 Object o = it.next();
@@ -564,8 +562,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public Object modify(ComponentObject theObject,
                          Properties theProperties,
-                         String principalName) throws ConfigurationException,
-                                              ModificationException {
+                         String principalName) throws ConfigurationException{
         return null;
     }
 
@@ -638,16 +635,14 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public void delete(ComponentObject theObject,
                        boolean theDeleteDependenciesFlag,
-                       String principalName) throws ConfigurationException,
-                                            ModificationException {
+                       String principalName) throws ConfigurationException {
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#delete(com.metamatrix.common.config.api.ComponentType, java.lang.String)
      */
     public void delete(ComponentType componentType,
-                       String principalName) throws ConfigurationException,
-                                            ModificationException{
+                       String principalName) throws ConfigurationException{
     }
 
     
@@ -656,7 +651,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     @Override
 	public DeployedComponent deployService(VMComponentDefnID theProcessID,
 			String serviceName, String principalName)
-			throws ConfigurationException, ModificationException {
+			throws ConfigurationException{
 		// TODO Auto-generated method stub
 		return null;
 	}

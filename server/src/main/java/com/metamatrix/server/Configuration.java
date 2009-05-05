@@ -29,5 +29,5 @@ public interface Configuration {
 	final String CLUSTERNAME = "ClusterName"; //$NON-NLS-1$
 	final String LOGFILE = "LogFile"; //$NON-NLS-1$
 	final String LOGDIR = "LogDir"; //$NON-NLS-1$
-
+	final String UNICAST_PORT = "UnicastPort"; //$NON-NLS-1$
 }

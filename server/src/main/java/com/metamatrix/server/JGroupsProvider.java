@@ -23,7 +23,9 @@
 package com.metamatrix.server;
 
 import java.lang.management.ManagementFactory;
+import java.util.Collection;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
@@ -35,10 +37,16 @@ import org.jgroups.ChannelException;
 import org.jgroups.JChannel;
 import org.jgroups.mux.Multiplexer;
 
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.ResourceNames;
+import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.HostID;
+import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
@@ -51,19 +59,10 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 @Singleton
 public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 
-	// Default Multicast Property values
-	private static final String DEFAULT_UDP_MCAST_SUPPORTED = "true"; //$NON-NLS-1$
+	public static final String TCP = "tcp"; //$NON-NLS-1$
 	private static final String DEFAULT_UDP_MCAST_ADDR_PREFIX = "224."; //$NON-NLS-1$
-	private static final String DEFAULT_UDP_MCAST_PORT = "5555"; //$NON-NLS-1$
 	private static final String ALL_INTERFACES_ADDR = "0.0.0.0"; //$NON-NLS-1$
 
-	// Default Gossip Server Property values
-	private static final String DEFAULT_PING_GOSSIP_HOST = "localhost"; //$NON-NLS-1$
-	private static final String DEFAULT_PING_GOSSIP_PORT = "5555"; //$NON-NLS-1$
-	private static final String DEFAULT_PING_GOSSIP_REFRESH = "15000"; //$NON-NLS-1$
-	private static final String DEFAULT_PING_TIMEOUT = "2000"; //$NON-NLS-1$
-	private static final String DEFAULT_PING_NUM_INITIAL_MEMBERS = "3"; //$NON-NLS-1$
-    
     private static final String DEFAULT_JGROUPS_OTHER_SETTINGS =            
                     "MERGE2(min_interval=5000;max_interval=10000):" + //$NON-NLS-1$
                     "FD_SOCK:" +                                      //$NON-NLS-1$
@@ -78,18 +77,25 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
     
     private static final String ENCRYPT_ALL = ":ENCRYPT(key_store_name=teiid.keystore;store_password=changeit;alias=cluster_key)"; //$NON-NLS-1$
     private static final String ENCRYPT_ALL_KEY = "metamatrix.encryption.internal.secure.sockets"; //$NON-NLS-1$
+
+    public enum Protocol { UNICAST_TCP, UNICAST_UDP, MULTICAST}
     
-    private static final String UDP_MCAST_SUPPORTED_PROPERTY = "udp.multicast_supported"; //$NON-NLS-1$
-	private static final String UDP_MCAST_MESSAGEBUS_PORT_PROPERTY = "udp.mcast_messagebus_port"; //$NON-NLS-1$
-	private static final String UDP_MCAST_ADDR_PROPERTY = "udp.mcast_addr"; //$NON-NLS-1$
-	private static final String PING_GOSSIP_HOST_PROPERTY = "ping.gossip_host"; //$NON-NLS-1$
-	private static final String PING_GOSSIP_PORT_PROPERTY = "ping.gossip_port"; //$NON-NLS-1$
-	private static final String PING_GOSSIP_REFRESH_PROPERTY = "ping.gossip_refresh"; //$NON-NLS-1$
-	private static final String PING_GOSSIP_TIMEOUT_PROPERTY = "ping.gossip_timout"; //$NON-NLS-1$
-	private static final String PING_GOSSIP_NUM_INITIAL_MEMBERS_PROPERTY = "ping.gossip_initialmembers"; //$NON-NLS-1$
+    public static final String CLUSTER_PROTOCOL = "cluster.protocol"; //$NON-NLS-1$
+	private static final String CLUSTER_MULTICAST_PORT = "cluster.port"; //$NON-NLS-1$
+	private static final String CLUSTER_MULTICAST_ADDRESS = "cluster.multicast.address"; //$NON-NLS-1$
+	private static final String CLUSTER_PING = "cluster.unicast.ping"; //$NON-NLS-1$
+	private static final String CLUSTER_TIMEOUT = "cluster.unicast.timout"; //$NON-NLS-1$
 	private static final String JGROUPS_OTHER_SETTINGS_PROPERTY = "jgroups.other.channel.settings"; //$NON-NLS-1$
 	private static final String BIND_ADDRESS_PROPERTY = "jgroups.bind.address"; //$NON-NLS-1$
     
+	
+	private int unicastPort;
+	
+	@Inject
+	public JGroupsProvider(@Named(Configuration.UNICAST_PORT) int port) {
+		this.unicastPort = port;
+	}
+	
     /**
 	 * Helper method to create a JChannel.
 	 * Properties needed to create the JChannel are read from current configuration.
@@ -130,51 +136,53 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 			Properties configProps = CurrentConfiguration.getInstance().getResourceProperties(ResourceNames.JGROUPS);
 			boolean useEncrypt = PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), ENCRYPT_ALL_KEY, false);
 			
-			String udpMulticastSupported =  configProps.getProperty(UDP_MCAST_SUPPORTED_PROPERTY, DEFAULT_UDP_MCAST_SUPPORTED);
-
-			String udpMulticastPort = configProps.getProperty(UDP_MCAST_MESSAGEBUS_PORT_PROPERTY, DEFAULT_UDP_MCAST_PORT);
-			String pingGossipHost         = configProps.getProperty(PING_GOSSIP_HOST_PROPERTY, DEFAULT_PING_GOSSIP_HOST);
-			String pingGossipPort         = configProps.getProperty(PING_GOSSIP_PORT_PROPERTY, DEFAULT_PING_GOSSIP_PORT);
-			String pingGossipRerefresh      = configProps.getProperty(PING_GOSSIP_REFRESH_PROPERTY, DEFAULT_PING_GOSSIP_REFRESH);
-			String pingTimeout             = configProps.getProperty(PING_GOSSIP_TIMEOUT_PROPERTY, DEFAULT_PING_TIMEOUT);
-			String pingInitialMemberCount = configProps.getProperty(PING_GOSSIP_NUM_INITIAL_MEMBERS_PROPERTY, DEFAULT_PING_NUM_INITIAL_MEMBERS);
+			  
+			Protocol protocol =  Protocol.valueOf(configProps.getProperty(CLUSTER_PROTOCOL, Protocol.UNICAST_TCP.toString()));
+			boolean useMulticast = (protocol == Protocol.MULTICAST);
+				
+			String multicastPort = configProps.getProperty(CLUSTER_MULTICAST_PORT, "5555"); //$NON-NLS-1$
+			String pingGossipRerefresh = configProps.getProperty(CLUSTER_PING, "10000"); //$NON-NLS-1$ 10 secs
+			String pingTimeout = configProps.getProperty(CLUSTER_TIMEOUT, "2000"); //$NON-NLS-1$ 2 secs
 			String otherSettings = configProps.getProperty(JGROUPS_OTHER_SETTINGS_PROPERTY, DEFAULT_JGROUPS_OTHER_SETTINGS);
-
+			String unicastMembers =  CurrentConfiguration.getInstance().getProperties().getProperty(CurrentConfiguration.CLUSTER_MEMBERS);
+			
 			String bindAddress = getBindAddress();
 			boolean multicastOnAllInterfaces = bindAddress.equalsIgnoreCase(ALL_INTERFACES_ADDR);
-
-		    String udpMulticastAddress = configProps.getProperty(UDP_MCAST_ADDR_PROPERTY);
-		    if (udpMulticastAddress == null || udpMulticastAddress.length() == 0) {
-		    	String currentAddr = CurrentConfiguration.getInstance().getBindAddress();
-		    	if (currentAddr.indexOf('.') != -1) {
-		    		String lastNode = currentAddr.substring(currentAddr.indexOf('.')+1);
-		    		udpMulticastAddress = DEFAULT_UDP_MCAST_ADDR_PREFIX + lastNode;
-		    	}
-		    	else {
-		    		throw new ConfigurationException("Failed to set default multicast address"); //$NON-NLS-1$
-		    	}
-		    }
+		    String clusterAddress = configProps.getProperty(CLUSTER_MULTICAST_ADDRESS);
 		
-			if (udpMulticastSupported.equalsIgnoreCase("true")) { //$NON-NLS-1$
+			if (useMulticast) {
 	            if (multicastOnAllInterfaces) {
 	                properties = 
-	                    "UDP(mcast_addr="+udpMulticastAddress+";mcast_port="+udpMulticastPort+";ip_ttl=32;receive_on_all_interfaces=" + udpMulticastSupported.toString() + ";" + //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	                    "UDP(mcast_addr="+clusterAddress+";mcast_port="+multicastPort+";ip_ttl=32;receive_on_all_interfaces=true;" + //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
 	                    "mcast_send_buf_size=150000;mcast_recv_buf_size=80000):" + //$NON-NLS-1$
-	                    "PING(timeout="+pingTimeout+";num_initial_members="+pingInitialMemberCount+"):";//$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
-	                
-	                
+	                    "PING(timeout="+pingTimeout+";):";//$NON-NLS-1$ //$NON-NLS-2$
+	                LogManager.logInfo(LogCommonConstants.CTX_MESSAGE_BUS, "JGroups using multicast on all available interfaces"); //$NON-NLS-1$
 	            } else {
+	            	clusterAddress = getMulticastAddress(clusterAddress, bindAddress);
 	    			properties = 
-	    				"UDP(mcast_addr="+udpMulticastAddress+";mcast_port="+udpMulticastPort+";ip_ttl=32;bind_addr="+bindAddress+";"+   //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	    				"UDP(mcast_addr="+clusterAddress+";mcast_port="+multicastPort+";ip_ttl=32;bind_addr="+bindAddress+";"+   //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	    				"mcast_send_buf_size=150000;mcast_recv_buf_size=80000):" + //$NON-NLS-1$
-	    				"PING(timeout="+pingTimeout+";num_initial_members="+pingInitialMemberCount+"):";//$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
+	    				"PING(timeout="+pingTimeout+";):";//$NON-NLS-1$ //$NON-NLS-2$
+	    			LogManager.logInfo(LogCommonConstants.CTX_MESSAGE_BUS, "JGroups using multicast with address "+clusterAddress+ " and port "+ multicastPort); //$NON-NLS-1$ //$NON-NLS-2$
 	            }
 			} else {
-				properties = 
-					"UDP(ip_mcast=false;mcast_addr="+udpMulticastAddress+";mcast_port="+udpMulticastPort+";bind_addr="+bindAddress+"):" + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-					"PING(gossip_host="+pingGossipHost+";gossip_port="+pingGossipPort+";gossip_refresh="+pingGossipRerefresh+";" + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-					"timeout="+pingTimeout+";num_initial_members="+pingInitialMemberCount+"):";  //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
+				if (protocol == Protocol.UNICAST_UDP) { 
+					clusterAddress = getMulticastAddress(clusterAddress, bindAddress);
+					properties = 
+						"UDP(ip_mcast=false;mcast_addr="+clusterAddress+";mcast_port="+multicastPort+";bind_addr="+bindAddress+"):" + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+						"PING(gossip_host="+getGossipHost(unicastMembers)+";gossip_port="+getGossipPort(unicastMembers)+";gossip_refresh="+pingGossipRerefresh+";" + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+						"timeout="+pingTimeout+";):";  //$NON-NLS-1$ //$NON-NLS-2$
+					LogManager.logInfo(LogCommonConstants.CTX_MESSAGE_BUS, "JGroups using Unicast with UDP with gossip host"+getGossipHost(unicastMembers)+ " and port "+ getGossipPort(unicastMembers)); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				else {
+					String resolvedClusterMemebers = resolveClusterMembers(unicastMembers);				
+					properties = "TCP(start_port="+this.unicastPort+";port_range=0;bind_addr="+bindAddress+";loopback=true;skip_suspected_members=true;discard_incompatible_packets=true;sock_conn_timeout=3000;use_concurrent_stack=true;):" + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+								 "TCPPING(initial_hosts="+resolvedClusterMemebers+";port_range=1;timeout="+pingTimeout+"):" +//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+								 "pbcast.FLUSH(timeout=60000)"; //$NON-NLS-1$
+					LogManager.logInfo(LogCommonConstants.CTX_MESSAGE_BUS, "JGroups using Unicast with TCP with initial members configured as "+ resolvedClusterMemebers + " with local process port "+this.unicastPort); //$NON-NLS-1$ //$NON-NLS-2$
+				}
 			}
+			
 			properties += otherSettings;
 			if (useEncrypt) {
 				properties += ENCRYPT_ALL;
@@ -187,11 +195,7 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
 	}
     
     private final String getBindAddress() {
-        // check for command line system property being set from vm.starter.command for jgroup
-        String bindAddress = System.getProperty(JGroupsProvider.BIND_ADDRESS_PROPERTY);
-        if (bindAddress == null)  { 
-            bindAddress = CurrentConfiguration.getInstance().getBindAddress();
-        }
+    	String bindAddress = CurrentConfiguration.getInstance().getBindAddress();
             
         if (bindAddress == null) {
             LogManager.logWarning(LogCommonConstants.CTX_MESSAGE_BUS,"WARNING: Unable to set " + JGroupsProvider.BIND_ADDRESS_PROPERTY + ", will set to 127.0.0.1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -199,4 +203,71 @@ public class JGroupsProvider implements Provider<org.jgroups.mux.Multiplexer> {
         }
         return bindAddress;
     }
+    
+    private String getMulticastAddress(String clusterAddress, String bindAddress){
+    	if (clusterAddress == null || clusterAddress.length() == 0) {
+	    	if (bindAddress.indexOf('.') != -1) {
+	    		String lastNode = bindAddress.substring(bindAddress.indexOf('.')+1);
+	    		return  DEFAULT_UDP_MCAST_ADDR_PREFIX + lastNode;
+	    	}
+	    }   
+    	return clusterAddress;
+    }
+    
+    private String getGossipHost(String clusterMembers) {
+    	StringTokenizer st = new StringTokenizer(clusterMembers, ","); //$NON-NLS-1$
+    	// the string must be in the format "hostA[port]"
+    	String hostPort = st.nextToken();
+    	int idx = hostPort.indexOf('[');
+    	if (idx == -1) {
+    		throw new MetaMatrixRuntimeException("Gossip Router information is not specified correctly. This must property must be in the form 'gossipHost[port]'"); //$NON-NLS-1$
+    	}
+    	return hostPort.substring(0, idx);
+    }
+    
+    private String getGossipPort(String clusterMembers) {
+    	StringTokenizer st = new StringTokenizer(clusterMembers, ","); //$NON-NLS-1$
+    	// the string must be in the format "hostA[port]"
+    	String hostPort = st.nextToken();
+    	return hostPort.substring(hostPort.indexOf('[')+1, hostPort.lastIndexOf(']'));
+    }    
+	
+	String resolveClusterMembers(String members) {
+		try {
+			com.metamatrix.common.config.api.Configuration config = CurrentConfiguration.getInstance().getConfiguration();
+			if (members != null && members.trim().length() > 0) {
+				StringBuilder sb = new StringBuilder();
+				StringTokenizer st = new StringTokenizer(members.trim(), ","); //$NON-NLS-1$
+				
+				while(st.hasMoreTokens()) {
+					String member = st.nextToken();
+					int idx = member.indexOf('|');
+					if (idx != -1) {
+						String hostConfigName = member.substring(0, idx);
+						String hostAddr = member.substring(idx+1);
+						
+						Host host = config.getHost(hostConfigName);
+						if (host != null) {
+							Collection<VMComponentDefn> allProcesses = config.getVMsForHost((HostID)host.getID());
+							for (VMComponentDefn process:allProcesses) {
+								String strPort = process.getProperty(VMComponentDefnType.CLUSTER_PORT);
+								if (strPort != null && strPort.length() > 0) {
+									sb.append(hostAddr).append("[").append(Integer.parseInt(strPort)).append("],"); //$NON-NLS-1$ //$NON-NLS-2$
+									// this for host controller; will be removed when the hostcontroller is no longer 
+									// be a member.
+									sb.append(hostAddr).append("[").append(5556).append("],"); //$NON-NLS-1$ //$NON-NLS-2$
+								}
+							}
+						}
+					}
+				}
+				return sb.toString();
+			}
+		} catch (ConfigurationException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}  catch (NumberFormatException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+		return ""; //$NON-NLS-1$
+	}    
 }

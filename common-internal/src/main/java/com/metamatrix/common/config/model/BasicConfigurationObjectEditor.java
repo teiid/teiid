@@ -2219,21 +2219,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
     }
 
     /**
-     * Sets the system next startup configuration
-     * @deprecated as of v 2.0 beta 1, use {@link #setNextStartupConfiguration}
-     */
-    public void setBootStrapConfiguration(ConfigurationID configurationID) throws ConfigurationException {
-        this.createExchangeAction(configurationID, ConfigurationModel.Attribute.NEXT_STARTUP_CONFIGURATION, configurationID, configurationID);
-    }
-
-    /**
-     * Sets the system next startup configuration
-     */
-    public void setNextStartupConfiguration(ConfigurationID configurationID) throws ConfigurationException {
-        this.createExchangeAction(configurationID, ConfigurationModel.Attribute.NEXT_STARTUP_CONFIGURATION, configurationID, configurationID);
-    }
-
-    /**
      * Set the list of <code>ComponentTypeDefn</code>s for a local ComponentType
      * object.  This method will not generate actions because the definitions
      * should have been created using the

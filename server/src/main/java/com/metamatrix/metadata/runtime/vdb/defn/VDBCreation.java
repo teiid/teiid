@@ -115,15 +115,11 @@ public class VDBCreation  {
         
         Set addedTypes = new HashSet(connectorTypes.size());
 
-        ConfigurationModelContainer cmc =null; 
-        
         Map reMapBinding = new HashMap(connectorBindings.size());
         XMLConfigurationConnector writer = getWriter();
         BasicConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(true);
 
-        if (cmc == null) {
-            cmc = CurrentConfiguration.getInstance().getConfigurationModel(); 
-        }   
+        ConfigurationModelContainer cmc = CurrentConfiguration.getInstance().getConfigurationModel(); 
         
         for (Iterator it= connectorBindings.values().iterator(); it.hasNext(); ) {
             ConnectorBinding cb = (ConnectorBinding) it.next();

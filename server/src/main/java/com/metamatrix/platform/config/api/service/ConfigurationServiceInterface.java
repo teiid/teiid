@@ -29,7 +29,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.common.actions.ActionDefinition;
-import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentObject;
@@ -114,7 +113,7 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      *            if the name of the configuration model to obtain
      * @return ConfigurationModelContainer
      */
-    ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException, ConfigurationException;
+    ConfigurationModelContainer getConfigurationModel(String configName) throws ConfigurationException;
 
     /**
      * <p>
@@ -282,15 +281,13 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @param principalName
      *            of the person executing the transaction
      * @return the set of objects that were affected by this transaction.
-     * @throws ModificationException
-     *             if the target of the action is invalid, or if the target object is not a supported class of targets.
      * @throws IllegalArgumentException
      *             if the action is null or if the result specification is invalid
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
     Set executeTransaction(ActionDefinition action, String principalName ) 
-    	throws ModificationException, ConfigurationException;
+    	throws ConfigurationException;
 
     /**
      * Execute a list of actions, and optionally return the set of objects or object IDs that were affected/modified by the
@@ -301,15 +298,13 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @param principalName
      *            of the person executing the transaction
      * @return the set of objects that were affected by this transaction.
-     * @throws ModificationException
-     *             if the target of any of the actions is invalid, or if the target object is not a supported class of targets.
      * @throws IllegalArgumentException
      *             if the action is null or if the result specification is invalid
      * @throws ConfigurationException
      *             if an error occurred within or during communication with the Configuration Service.
      */
     Set executeTransaction(List actions, String principalName) 
-    	throws ModificationException, ConfigurationException;
+    	throws ConfigurationException;
 
 
     /**
@@ -401,13 +396,12 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @param theProperties
      * @param principalName
      * @return
-     * @throws ModificationException
      * @throws Exception
      * @since 4.3
      */
     public Object modify(ComponentObject theObject,
                          Properties theProperties,
-                         String principalName) throws ConfigurationException, ModificationException;
+                         String principalName) throws ConfigurationException;
     
     
     /**
@@ -453,11 +447,10 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @param principalName
      *            User Name of user who is making the change
      * @throws ConfigurationException
-     * @throws ModificationException
      * @since 4.3
      */
     public void delete(ComponentObject theObject, boolean theDeleteDependenciesFlag,String principalName) 
-    	throws ConfigurationException, ModificationException; 
+    	throws ConfigurationException; 
     
     /**
      * Delete a Component Type
@@ -465,11 +458,10 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @param componentType Component Type Object being deleted
      * @param principalName User Name who is making the change
      * @throws ConfigurationException
-     * @throws ModificationException
      * @since 4.3
      */
     public void delete(ComponentType componentType, String principalName) 
-    	throws ConfigurationException,ModificationException;
+    	throws ConfigurationException;
     
     
     /**
@@ -483,13 +475,12 @@ public interface ConfigurationServiceInterface extends ServiceInterface {
      * @return DeployedComponent of the ServiceComponentDefns that was deployed
      * 
      * @throws ConfigurationException
-     * @throws ModificationException
      * @since 6.1
      */
     
     public DeployedComponent deployService(VMComponentDefnID theProcessID,
                                 String serviceName,
-                                String principalName) throws ConfigurationException,ModificationException;
+                                String principalName) throws ConfigurationException;
 
     
     

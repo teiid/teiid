@@ -22,10 +22,7 @@
 
 package com.metamatrix.platform.config.spi.xml;
 
-import java.util.Collection;
 import java.util.EventObject;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.common.config.CurrentConfiguration;
@@ -35,6 +32,7 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.exceptions.ConfigurationConnectionException;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
+import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
 import com.metamatrix.common.config.util.ConfigObjectsNotResolvableException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
@@ -64,7 +62,7 @@ public class XMLConfigurationMgr {
     private PersistentConnectionFactory connFactory;
     private MessageBus messageBus;
 
-    private Map<String, ConfigurationModelContainer> configs = new HashMap<String, ConfigurationModelContainer>();
+    private ConfigurationModelContainerImpl readOnlyConfig;
     private ConfigurationModelContainerAdapter adapter =  new ConfigurationModelContainerAdapter();
     
     private XMLConfigurationMgr(Properties properties) throws ConfigurationException  {
@@ -112,55 +110,40 @@ public class XMLConfigurationMgr {
     }
     
     public XMLConfigurationConnector getTransaction(String principal) throws ConfigurationException {
-    	XMLConfigurationConnector transaction =  new XMLConfigurationConnector(this, principal);
-		ConfigurationID configID = XMLConfigurationMgr.getDesignatedConfigurationID(Configuration.NEXT_STARTUP);
-        ConfigurationModelContainer transconfig = getConfigurationModelForTransaction(configID);
-		transaction.addObjects(configID.getFullName(), transconfig);
-        return transaction;
+    	return new XMLConfigurationConnector(this, getConfigurationModelForTransaction(Configuration.NEXT_STARTUP_ID), principal);
     }
 
     /**
      * Returns the configuration for the specified configID.
      * {@see Configuration}.
      */
-    public synchronized ConfigurationModelContainer getConfigurationModel(ConfigurationID configID) throws ConfigurationException {
-        ConfigurationModelContainer cmc = configs.get(configID.getFullName());
+    public synchronized ConfigurationModelContainerImpl getConfigurationModel(ConfigurationID configID) throws ConfigurationException {
 
-        if (cmc == null) {
-            cmc = readModel(configID);
+        if (this.readOnlyConfig == null) {
+        	PersistentConnection pc = getConnection(true);
 
-            if (cmc == null) {
-                throw new ConfigurationException(ConfigMessages.CONFIG_0114,
-                                                 ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0114, configID));
+        	try {
+        		this.readOnlyConfig = (ConfigurationModelContainerImpl)pc.read(configID);
+        	} finally {
+        		pc.close();
+        	}
+        	
+            if (this.readOnlyConfig == null) {
+                throw new ConfigurationException(ConfigMessages.CONFIG_0114,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0114, configID));
             }
 
-            configs.put(cmc.getConfigurationID().getFullName(), cmc);
         }
-        return cmc;
+        return this.readOnlyConfig;
 
     } 
-
-    private ConfigurationModelContainer readModel(ConfigurationID configID) throws ConfigurationException {
-    	PersistentConnection pc = getConnection(true);
-    	try {
-    		return pc.read(configID);
-    	} finally {
-    		pc.close();
-    	}
-    }
 
 	/**
 	 * This method is only used by the XMLConfigurationWriter so that is may obtain
 	 * a model specifically for transaction purposes.
 	 */
-    private ConfigurationModelContainer getConfigurationModelForTransaction(ConfigurationID configID) throws ConfigurationException {
+    private ConfigurationModelContainerImpl getConfigurationModelForTransaction(ConfigurationID configID) throws ConfigurationException {
         ConfigurationModelContainer cmc = getConfigurationModel(configID);
-        
-        if (cmc == null) {
-            throw new ConfigurationException(ConfigMessages.CONFIG_0114, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0114, configID));                    
-        }
-        
-        return (ConfigurationModelContainer)cmc.clone();
+        return (ConfigurationModelContainerImpl)cmc.clone();
     }
 
     /**
@@ -168,61 +151,41 @@ public class XMLConfigurationMgr {
      * @param transaction is the transaction that contains the object model that changed
      * @throws ConfigurationException if a problem occurs setting the configuration.
      */
-    synchronized void applyTransaction(Collection<ConfigurationModelContainer> models, String principal) throws ConfigTransactionException {
-
-		if (models == null || models.isEmpty()) {
-              throw new ConfigTransactionException(ConfigMessages.CONFIG_0119, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0119));
-		}
+    synchronized void applyTransaction(ConfigurationModelContainerImpl cmc, String principal) throws ConfigurationException {
 
 		PersistentConnection pc = null;
 		boolean success = false;
 		try {
-			for (ConfigurationModelContainer config : models) {
-				try {
-					
-					//validate the model before saving
-		             adapter.validateModel(config);
-
-					if (pc == null) {
-						pc = getConnection(false);
-					}
-
-			        pc.write(config, principal);
-					configs.put(config.getConfigurationID().getFullName(), config);
-				} catch (ConfigurationException ce) {
-					throw new ConfigTransactionException(ce, ConfigMessages.CONFIG_0120, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, config.getConfigurationID()));
-				} catch (ConfigObjectsNotResolvableException e) {
-					throw new ConfigTransactionException(e, ConfigMessages.CONFIG_0120, ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, config.getConfigurationID()));
-				} 
-			}
-			try {
-				pc.commit();
-			} catch (ConfigurationException e) {
-				throw new ConfigTransactionException(e, e.getMessage());
-			}
+			// validate the model before saving
+			adapter.validateModel(cmc);
+			
+			cmc = (ConfigurationModelContainerImpl)cmc.clone();
+			pc = getConnection(false);
+			pc.write(cmc, principal);
+						
+			pc.commit();
 			success = true;
+			this.readOnlyConfig = cmc;
+		} catch (ConfigObjectsNotResolvableException e) {
+			throw new ConfigurationException(e, ConfigMessages.CONFIG_0120,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, cmc.getConfigurationID()));
 		} finally {
 			try {
 				if (!success && pc != null) {
-					try {
-						pc.rollback();
-					} catch (ConfigurationException e) {
-						throw new ConfigTransactionException(e, e.getMessage());
-					}
-				} 
+					pc.rollback();
+				}
 			} finally {
 				pc.close();
 			}
 		}
 
-		if (messageBus != null){
-        	try {
-				messageBus.processEvent(new ConfigurationChangeEvent(XMLConfigurationMgr.class.getName(), ConfigurationChangeEvent.CONFIG_REFRESH));
+		if (messageBus != null) {
+			try {
+				messageBus.processEvent(new ConfigurationChangeEvent(XMLConfigurationMgr.class.getName(),ConfigurationChangeEvent.CONFIG_REFRESH));
 			} catch (MessagingException e) {
-				LogManager.logWarning(LogCommonConstants.CTX_CONFIG, e, "Exception sending refresh event"); //$NON-NLS-1$
+				LogManager.logWarning(LogCommonConstants.CTX_CONFIG, e,"Exception sending refresh event"); //$NON-NLS-1$
 			}
 		}
-    }
+	}
 
     /**
      * This method should connect to the persitent storage.
@@ -233,7 +196,7 @@ public class XMLConfigurationMgr {
     }
 
     private synchronized void clearCache() {
-    	configs.clear();
+    	this.readOnlyConfig = null;
     }
 
 	/**

@@ -22,6 +22,10 @@
 
 package com.metamatrix.server;
 
+import java.util.Collection;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
 import org.jboss.cache.Cache;
 import org.jgroups.mux.Multiplexer;
 import org.teiid.dqp.internal.cache.DQPContextCache;
@@ -34,11 +38,15 @@ import com.metamatrix.cache.jboss.JBossCacheFactory;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
+import com.metamatrix.common.config.api.HostID;
+import com.metamatrix.common.config.api.VMComponentDefn;
+import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.jgroups.JGroupsMessageBus;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
@@ -49,7 +57,7 @@ import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.platform.vm.controller.ServerEvents;
 
 class ServerGuiceModule extends AbstractModule {
-
+	
 	Host host;
 	String processName;
 
@@ -74,7 +82,8 @@ class ServerGuiceModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named(Configuration.CLUSTERNAME)).to(systemName);
 		bindConstant().annotatedWith(Names.named(Configuration.LOGFILE)).to(StringUtil.replaceAll(host.getFullName(), ".", "_")+"_"+this.processName+".log"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		bindConstant().annotatedWith(Names.named(Configuration.LOGDIR)).to(host.getLogDirectory());
-				
+		bindConstant().annotatedWith(Names.named(Configuration.UNICAST_PORT)).to(getUnicastClusterPort());
+		
 		Names.bindProperties(binder(), CurrentConfiguration.getInstance().getProperties());
 		
 		bind(Multiplexer.class).toProvider(JGroupsProvider.class).in(Scopes.SINGLETON);
@@ -100,5 +109,20 @@ class ServerGuiceModule extends AbstractModule {
 		binder().requestStaticInjection(LogManager.class);
 		
 	}
-
+	
+	int getUnicastClusterPort() {
+		try {
+			com.metamatrix.common.config.api.Configuration config = CurrentConfiguration.getInstance().getConfiguration();
+			VMComponentDefn process = config.getVMForHost(this.host.getFullName(), this.processName);
+			String strPort = process.getProperties().getProperty(VMComponentDefnType.CLUSTER_PORT);
+			if (strPort != null && strPort.length() > 0) {
+				return Integer.parseInt(strPort);
+			}
+		} catch (ConfigurationException e) {
+			throw new MetaMatrixRuntimeException(e);
+		} catch (NumberFormatException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+		return 5555;
+	}
 }

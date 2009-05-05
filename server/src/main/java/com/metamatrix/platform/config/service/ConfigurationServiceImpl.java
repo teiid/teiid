@@ -39,7 +39,6 @@ import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.actions.ActionDefinition;
-import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentObject;
@@ -62,15 +61,18 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.ComponentCryptoUtil;
+import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
-import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.platform.PlatformPlugin;
+import com.metamatrix.platform.config.ConfigMessages;
+import com.metamatrix.platform.config.ConfigPlugin;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnector;
 import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
+import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.util.ErrorMessageKeys;
@@ -103,7 +105,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * Perform initialization and commence processing. This method is called only once.
      */
     protected void initService(Properties env) throws Exception {
-        I18nLogManager.logInfo(CONTEXT, LogMessageKeys.CONFIG_0002, new Object[] { getInstanceName()});
+        LogManager.logInfo(CONTEXT, ServicePlugin.Util.getString(LogMessageKeys.CONFIG_0002, new Object[] { getInstanceName()}));
     }
 
     /**
@@ -143,7 +145,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public ConfigurationID getCurrentConfigurationID() throws ConfigurationException {
-        return this.getDesignatedConfigurationID(Configuration.NEXT_STARTUP);
+        return Configuration.NEXT_STARTUP_ID;
     }
 
     /**
@@ -153,7 +155,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public ConfigurationID getNextStartupConfigurationID() throws ConfigurationException {
-        return this.getDesignatedConfigurationID(Configuration.NEXT_STARTUP);
+        return Configuration.NEXT_STARTUP_ID;
     }
 
     /**
@@ -163,7 +165,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public Configuration getCurrentConfiguration() throws ConfigurationException {
-        return this.getDesignatedConfiguration(Configuration.NEXT_STARTUP);
+        return this.getDesignatedConfiguration();
     }
 
     /**
@@ -173,58 +175,17 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public Configuration getNextStartupConfiguration() throws ConfigurationException{
-        return this.getDesignatedConfiguration(Configuration.NEXT_STARTUP);
+        return this.getDesignatedConfiguration();
     }
 
-    private Configuration getDesignatedConfiguration(String designation) throws ConfigurationException {
-        // Look in the cache ...
-        Configuration config = null;
-
-        XMLConfigurationConnector transaction = null;
-            transaction = getConnection(null);
-            config = transaction.getDesignatedConfiguration(designation);
-
-            if (config != null) {
-                LogManager.logDetail(CONTEXT, "Found " + designation + " configuration " + config.getName()); //$NON-NLS-1$ //$NON-NLS-2$
-            } else {
-                throw new ConfigurationException("No " + designation + " configuration was found"); //$NON-NLS-1$ //$NON-NLS-2$
-            }
-
-        return config;
+    private Configuration getDesignatedConfiguration() throws ConfigurationException {
+        XMLConfigurationConnector transaction = getConnection(null);
+        return transaction.getConfigurationModel().getConfiguration();
     }
 
-    private ConfigurationID getDesignatedConfigurationID(String designation) throws ConfigurationException {
-        ConfigurationID configID = null;
-        XMLConfigurationConnector transaction = null;
-            transaction = getConnection(null);
-            configID = transaction.getDesignatedConfigurationID(designation);
-
-            if (configID != null) {
-                LogManager.logTrace(CONTEXT, "Found " + designation + " configuration id " + configID); //$NON-NLS-1$ //$NON-NLS-2$
-            } else {
-                throw new ConfigurationException(ErrorMessageKeys.CONFIG_0042, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0042));
-            }
-        return configID;
-    }
-
-    public ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException, ConfigurationException {
-        // Look in the cache ...
-        ConfigurationModelContainer config = null;
-
-        XMLConfigurationConnector transaction = null;
-        try {
-            transaction = getConnection(null);
-            config = transaction.getConfigurationModel(configName);
-
-            if (config == null) {
-                LogManager.logTrace(CONTEXT, "No configuration model found"); //$NON-NLS-1$
-            }
-
-        }catch ( Exception e ) {
-        	throw new ConfigurationException(e,ErrorMessageKeys.CONFIG_0043, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0043));
-        }
-        return config;
-
+    public ConfigurationModelContainer getConfigurationModel(String configName) throws ConfigurationException {
+    	XMLConfigurationConnector transaction = getConnection(null);
+        return transaction.getConfigurationModel();
 	}
 
     /**
@@ -276,18 +237,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException {
-        if ( configID == null) {
-            throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "configID")); //$NON-NLS-1$
-        }
-
-        // Look in the cache ...
-        Collection result = null;
-
-        XMLConfigurationConnector transaction = null;
-            transaction = getConnection(null);
-            result = transaction.getAllObjectsForConfigurationModel(configID);
-
-			return result;
+		return getReadOnlyConfigurationModel().getAllObjects();
     }
 
     public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException {
@@ -295,80 +245,71 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "id")); //$NON-NLS-1$
         }
 
-        ComponentType type = null;
-        XMLConfigurationConnector transaction = null;
-            transaction = getConnection(null);
-            type = transaction.getComponentType(id);
-
-            if (type != null) {
-                LogManager.logDetail(CONTEXT, "Found component type " + id); //$NON-NLS-1$
-            } else {
-                LogManager.logDetail(CONTEXT, "No component type found for " + id); //$NON-NLS-1$
-            }
-        return type;
-
+		ComponentType type = getReadOnlyConfigurationModel().getComponentType(id.getFullName());
+		if (type != null) {
+			LogManager.logDetail(CONTEXT, "Found component type " + id); //$NON-NLS-1$
+		} else {
+			LogManager.logDetail(CONTEXT, "No component type found for " + id); //$NON-NLS-1$
+		}
+		return type;
     }
 
     public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-        XMLConfigurationConnector transaction = null;
-        Collection result = new LinkedList();
-            transaction = getConnection(null);
-            result = transaction.getAllComponentTypes(includeDeprecated);
+		XMLConfigurationConnector transaction = getConnection(null);
+		Map types = transaction.getConfigurationModel().getComponentTypes();
+		Collection result = new LinkedList(types.values());
 
-            if (result != null && result.size() > 0) {
-               LogManager.logDetail(CONTEXT, "Found all component types"); //$NON-NLS-1$
+		if (result.size() > 0) {
+			LogManager.logDetail(CONTEXT, "Found all component types"); //$NON-NLS-1$
 
-            } else {
-               throw new ConfigurationException(ErrorMessageKeys.CONFIG_0049, PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0049));
-            }
-        return result;
+		} else {
+			throw new ConfigurationException(ErrorMessageKeys.CONFIG_0049,PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0049));
+		}
+		return result;
 
     }
 
     public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException {
-        XMLConfigurationConnector transaction = null;
-        Collection result=null;
-            transaction = getConnection(null);
-            result = transaction.getComponentTypeDefinitions(componentTypeID);
+        Collection result = getComponentTypeDefinitions(getReadOnlyConfigurationModel(), componentTypeID);
 
-            if (result != null && result.size() > 0) {
-                LogManager.logDetail(CONTEXT, new Object[] {"Found component type definitions for ", componentTypeID} ); //$NON-NLS-1$
+        if (result != null && result.size() > 0) {
+            LogManager.logDetail(CONTEXT, new Object[] {"Found component type definitions for ", componentTypeID} ); //$NON-NLS-1$
 
-            } else {
-                LogManager.logTrace(CONTEXT, new Object[] {"Couldn't find component type definitions for ", componentTypeID} ); //$NON-NLS-1$
-            }
+        } else {
+            LogManager.logTrace(CONTEXT, new Object[] {"Couldn't find component type definitions for ", componentTypeID} ); //$NON-NLS-1$
+        }
 
         if (result == null) {
             result = new ArrayList(1);
         }
-
         return result;
-
     }
 
+    public Collection getComponentTypeDefinitions(ConfigurationModelContainer config, ComponentTypeID componentTypeID) {
+        ComponentType t = config.getComponentType(componentTypeID.getFullName());
+        if (t!= null) {
+            return t.getComponentTypeDefinitions();
+        }
+        return Collections.EMPTY_LIST;
+    }    
 
     private Collection getDependentComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException {
-        XMLConfigurationConnector transaction = getConnection(null);
-        Collection defns = getDependentComponentTypeDefinitions(transaction, componentTypeID);
+        Collection defns = getDependentComponentTypeDefinitions(getReadOnlyConfigurationModel(), componentTypeID);
         return defns;
     }
 
-    private Collection getDependentComponentTypeDefinitions(XMLConfigurationConnector transaction, ComponentTypeID componentTypeID) throws ConfigurationException {
+    private Collection getDependentComponentTypeDefinitions(ConfigurationModelContainer config, ComponentTypeID componentTypeID) throws ConfigurationException {
 
-        Collection result=null;
+        Collection types = new ArrayList(config.getComponentTypes().values());
 
-        Collection types = transaction.getAllComponentTypes(false);
-
-        result = getSuperComponentTypeDefinitions(null, null, types, componentTypeID, transaction);
+        Collection result= getSuperComponentTypeDefinitions(null, null, types, componentTypeID, config);
 
         if (result != null && result.size() > 0) {
             LogManager.logDetail(CONTEXT, new Object[] {"Found dependent component type definitions for ", componentTypeID} ); //$NON-NLS-1$
         } else {
             result = new ArrayList(1);
         }
-
         return result;
-
     }
 
     /**
@@ -391,7 +332,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defns,
                                                 Collection componentTypes,
                                                 ComponentTypeID componentTypeID,
-                                                XMLConfigurationConnector transaction) throws ConfigurationException {
+                                                ConfigurationModelContainer config) throws ConfigurationException {
         if (defnMap == null) {
             defnMap = new HashMap();
         }
@@ -415,13 +356,10 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             return defns;
         }
 
-        Collection superDefns = transaction.getComponentTypeDefinitions(type.getSuperComponentTypeID());
-        // add the defns not already defined to the map
-//            BaseID id;
+        Collection superDefns = getComponentTypeDefinitions(config, type.getSuperComponentTypeID());
         ComponentTypeDefn sDefn;
         if (superDefns != null && superDefns.size() > 0) {
             Iterator it = superDefns.iterator();
-//                ComponentTypeDefn cdefn = null;
             while (it.hasNext()) {
                 sDefn = (ComponentTypeDefn) it.next();
                 //this map has been changed to be keyed
@@ -434,7 +372,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             }
         }
 
-        return getSuperComponentTypeDefinitions(defnMap, defns, componentTypes, type.getSuperComponentTypeID(), transaction);
+        return getSuperComponentTypeDefinitions(defnMap, defns, componentTypes, type.getSuperComponentTypeID(), config);
     }
 
     public Collection getAllComponentTypeDefinitions(ComponentTypeID typeID)  throws ConfigurationException {
@@ -499,16 +437,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
 
     public Collection getHosts() throws ConfigurationException {
-        Collection hosts = null;
-        XMLConfigurationConnector transaction = null;
-                transaction = getConnection(null);
-                hosts = transaction.getHosts();
-
-        if (hosts == null) {
-            hosts = Collections.EMPTY_LIST;
-        }
-
-        return hosts;
+		Collection hosts = getReadOnlyConfigurationModel().getConfiguration().getHosts();
+		if (hosts == null) {
+			hosts = Collections.EMPTY_LIST;
+		}
+		return hosts;
     }
 
 
@@ -520,16 +453,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return ComponentDefn
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
-    public ComponentDefn getComponentDefn(ConfigurationID configurationID, ComponentDefnID componentDefnID)
-    throws ConfigurationException{
-        XMLConfigurationConnector transaction = null;
-        ComponentDefn defn = null;
-                transaction = getConnection(null);
-
-                defn = transaction.getComponentDefinition(componentDefnID, configurationID);
-
-        return defn;
-
+    public ComponentDefn getComponentDefn(ConfigurationID configurationID, ComponentDefnID componentDefnID) throws ConfigurationException{
+    	if (componentDefnID == null) {
+            throw new ConfigurationException(ConfigMessages.CONFIG_0045,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0045,"ComponentDefnID")); //$NON-NLS-1$
+        }
+        return getReadOnlyConfigurationModel().getConfiguration().getComponentDefn(componentDefnID);
     }
 
   /**
@@ -541,12 +469,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws InvalidSessionException if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
      */
-    public Collection getResources()
-    throws ConfigurationException{
-        XMLConfigurationConnector transaction = null;
-                transaction = getConnection(null);
-
-                return transaction.getResources();
+    public Collection getResources() throws ConfigurationException{
+        return getReadOnlyConfigurationModel().getResources();
     }
 
     /**
@@ -558,9 +482,9 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws MetaMatrixComponentException if an error occurred in communicating with a component.
      */
     public void saveResources(Collection resourceDescriptors, String principalName)
-    throws ConfigurationException {
-        XMLConfigurationConnector transaction = null;
-        transaction = this.getConnection(principalName);
+    	throws ConfigurationException {
+        
+    	XMLConfigurationConnector transaction = this.getConnection(principalName);
 
         transaction.saveResources(resourceDescriptors, principalName);
 
@@ -578,15 +502,13 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * the repository.
      * @param principalName of the person executing the transaction
      * @return the set of objects that were affected by this transaction.
-     * @throws ModificationException if the target of the action is invalid, or
-     * if the target object is not a supported class of targets.
      * @throws IllegalArgumentException if the action is null
      * or if the result specification is invalid
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
      */
     public Set executeTransaction(ActionDefinition action, String principalName) 
-    	throws ModificationException, ConfigurationException{
+    	throws ConfigurationException{
         if ( action == null ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "action")); //$NON-NLS-1$
         }
@@ -602,14 +524,12 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * the repository.
      * @param principalName of the person executing the transaction
      * @return the set of objects that were affected by this transaction.
-     * @throws ModificationException if the target of any of the actions is invalid, or
-     * if the target object is not a supported class of targets.
      * @throws IllegalArgumentException if the action is null
      * or if the result specification is invalid
      * @throws ConfigurationException if an error occurred within or during
      * communication with the Configuration Service.
      */
-     public Set executeTransaction(List actions, String principalName) throws ModificationException, ConfigurationException {
+     public Set executeTransaction(List actions, String principalName) throws ConfigurationException {
         if ( actions == null ) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.CONFIG_0045, "actions")); //$NON-NLS-1$
         }
@@ -619,23 +539,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             return result;
         }
 
-        XMLConfigurationConnector transaction = null;
-
-
-        // Iterate through the actions, and apply all as a single transaction
-        try {
-            transaction = this.getConnection(principalName);
-            result = transaction.executeActions(actions);
-            transaction.commit();                   // commit the transaction
-        } catch ( ConfigurationException e ) {
-            throw e;
-        } catch ( Exception e ) {
-            throw new ConfigurationException(e);
-        }
+        XMLConfigurationConnector transaction = this.getConnection(principalName);
+        result = transaction.executeActions(actions);
+        transaction.commit();                   // commit the transaction
         return result;
     }
-
-
 
     protected void addProperty(Properties source, String sourceName, Properties props, String propName) {
         String value = source.getProperty(sourceName);
@@ -654,15 +562,17 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     protected XMLConfigurationConnector getConnection(String principal) throws ConfigurationException {
     	return XMLConfigurationMgr.getInstance().getTransaction(principal==null?this.getInstanceName():principal);
     }
+    
+    private ConfigurationModelContainerImpl getReadOnlyConfigurationModel() throws ConfigurationException {
+    	return XMLConfigurationMgr.getInstance().getConfigurationModel(Configuration.NEXT_STARTUP_ID);
+    }    
 
     /**
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#addHost(java.lang.String,
      *      java.util.Properties)
      * @since 4.3
      */
-    public Host addHost(String hostName,
-                        String principalName,
-                        Properties properties) throws ConfigurationException {
+    public Host addHost(String hostName, String principalName, Properties properties) throws ConfigurationException {
         com.metamatrix.common.config.api.Host host = null;
 
         ConfigurationObjectEditor editor = null;
@@ -677,16 +587,12 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
             
             host = editor.createHost(hostName);
-            host = (com.metamatrix.common.config.api.Host)editor
-                                                                .modifyProperties(host, allProps, ConfigurationObjectEditor.SET);
+            host = (com.metamatrix.common.config.api.Host)editor.modifyProperties(host, allProps, ConfigurationObjectEditor.SET);
 
             executeTransaction(editor.getDestination().popActions(), principalName); 
 
         } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
+            clearActions(editor);
             //final Object[] params = new Object[] {this.getClass().getName(), theException.getMessage()};
             final Object[] params = new Object[] {
                 hostName
@@ -746,10 +652,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             }
 
         } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
+            clearActions(editor);
             final Object[] params = new Object[] {
                 processName, hostName
             };
@@ -781,9 +684,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             executeTransaction(editor.getDestination().popActions(), principalName);
 
         } catch (Exception theException) {
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
+            clearActions(editor);
             final Object[] params = new Object[] {
                 propertyName, theException.getMessage()
             };
@@ -819,9 +720,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             executeTransaction(editor.getDestination().popActions(), principalName);
 
         } catch (Exception theException) {
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
+            clearActions(editor);
             final Object[] params = new Object[] {
                 theException.getMessage(), properties
             };
@@ -858,20 +757,15 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             editor = createEditor();
             config = getNextStartupConfiguration();
 
-            /* ServiceComponentDefn scd = */
-//            editor.createServiceComponentDefn((ConfigurationID)config.getID(),
-//                                              (ComponentTypeID)ctConnector.getID(),
-//                                              connectorBindingName);
-
             binding = createConnectorBinding(ctConnector, editor, connectorBindingName);
             binding = (ConnectorBinding)editor.modifyProperties(binding, properties, ConfigurationObjectEditor.SET);
 
  
             if (vmName != null) {
-            	if (vmName.equalsIgnoreCase("all")) {
+            	if (vmName.equalsIgnoreCase("all")) { //$NON-NLS-1$
             		Collection<VMComponentDefn> vms = config.getVMComponentDefns();
             		for (Iterator<VMComponentDefn> it=vms.iterator(); it.hasNext();) {
-            			 VMComponentDefn vm = (VMComponentDefn) it.next();
+            			 VMComponentDefn vm = it.next();
             			 
             			 DeployedComponent dc = this.deployeServiceDefnToVM( (VMComponentDefnID)vm.getID(), connectorBindingName, editor, principalName);
             		}
@@ -879,41 +773,24 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             	} else {
             		// TODO:  the method from serveradminapi passes in "ALL" and its not currently
             		// called from anywhere else
-            		
             	}
             	
             }
-//            if (pscName != null && !pscName.equals("")) { //$NON-NLS-1$
-//                ProductServiceConfig psc = this.getPSCByName(config, pscName);
-//                ServiceComponentDefnID bindingID = (ServiceComponentDefnID)binding.getID();
-//                editor.addServiceComponentDefn(psc, bindingID);
-//
-//                editor.deployServiceDefn(config, binding, (ProductServiceConfigID)psc.getID());
-//            }
-
             executeTransaction(editor.getDestination().popActions(), principalName);
 
         } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
+            clearActions(editor);
             final Object[] params = new Object[] {
                 this.getClass().getName(), theException.getMessage()
             };
 
-            throw new ConfigurationException(theException,
-                                             PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_creating_Connector_Binding", params)); //$NON-NLS-1$
+            throw new ConfigurationException(theException,PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_creating_Connector_Binding", params)); //$NON-NLS-1$
 
         }
         return binding;
     }
 
-    private ComponentType getComponentType(String connectorName,
-                                           boolean deprecated) throws InvalidSessionException,
-                                                              AuthorizationException,
-                                                              ConfigurationException,
-                                                              MetaMatrixComponentException {
+    private ComponentType getComponentType(String connectorName, boolean deprecated) throws ConfigurationException {
         Collection arylConnectors = getAllComponentTypes(deprecated);
         Iterator itConnectors = arylConnectors.iterator();
         while (itConnectors.hasNext()) {
@@ -925,47 +802,26 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         return null;
     }
 
-//    private ProductServiceConfig getPSCByName(Configuration config,
-//                                              String pscName) throws InvalidArgumentException {
-//        ProductServiceConfig result = null;
-//        if (config != null) {
-//            ProductServiceConfigID pscID = new ProductServiceConfigID(((ConfigurationID)config.getID()), pscName);
-//            result = config.getPSC(pscID);
-//        }
-//        return result;
-//    }
-
-    private ConnectorBinding createConnectorBinding(ComponentType ctConnector,
-                                                    ConfigurationObjectEditor coe,
-                                                    String sConnBindName) throws Exception {
-        ConnectorBinding connectorBinding = coe.createConnectorComponent(Configuration.NEXT_STARTUP_ID, (ComponentTypeID)ctConnector.getID(),
-                                                                         sConnBindName,
-                                                                         null);
+    private ConnectorBinding createConnectorBinding(ComponentType ctConnector, ConfigurationObjectEditor coe, String sConnBindName)  {
+        ConnectorBinding connectorBinding = coe.createConnectorComponent(Configuration.NEXT_STARTUP_ID, (ComponentTypeID)ctConnector.getID(),sConnBindName,null);
         return connectorBinding;
     }
     
     
-    public Object modify(ComponentObject theObject,
-                         Properties theProperties,
-                         String principalName) throws ModificationException, ConfigurationException{
+    public Object modify(ComponentObject theObject,Properties theProperties, String principalName) throws ConfigurationException{
         ConfigurationObjectEditor editor = null;
         try {
             editor = createEditor();
             Object obj = editor.modifyProperties(theObject, theProperties, ConfigurationObjectEditor.SET);
             executeTransaction(editor.getDestination().popActions(), principalName);
             return obj;
-        } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            throw new ConfigurationException(theException);
+        } catch (ConfigurationException e) {
+            clearActions(editor);
+            throw e;
         }
     }
     
-    public ComponentType importConnectorType(InputStream inputStream,
-                                             String name,
-                                             String principalName) throws ConfigurationException {
+    public ComponentType importConnectorType(InputStream inputStream, String name, String principalName) throws ConfigurationException {
         ComponentType newType = null;
         ConfigurationObjectEditor editor = createEditor();
 
@@ -976,14 +832,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             executeTransaction(editor.getDestination().popActions(), principalName);
 
         } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            final Object[] params = new Object[] {
-                name, theException.getMessage()
-            };
-            final String msg = PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_importing_connector_type", params); //$NON-NLS-1$
+            clearActions(editor);
+            final String msg = PlatformPlugin.Util.getString("ConfigurationServiceImpl.Error_importing_connector_type", new Object[] {name, theException.getMessage()}); //$NON-NLS-1$
             throw new ConfigurationException(theException, msg); 
 
         }
@@ -1025,20 +875,14 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             		for (Iterator<VMComponentDefn> it=vms.iterator(); it.hasNext();) {
             			VMComponentDefn vm = it.next();
             			 editor.deployServiceDefn(config, newBinding, (VMComponentDefnID) vm.getID() );
-	
             		}
             	}
-                
-               
             }            
             
             executeTransaction(editor.getDestination().popActions(), principalName);
 
         } catch (Exception theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
+            clearActions(editor);
             final Object[] params = new Object[] {
                 name, theException.getMessage()
             };
@@ -1047,18 +891,15 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
         }
         return newBinding;
-               
-        
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#delete(com.metamatrix.common.config.api.ComponentObject, boolean)
      * @since 4.3
      */
-    public void delete(ComponentObject theObject,
-                       boolean theDeleteDependenciesFlag,
-                       String principalName) throws ConfigurationException,
-                                                         ModificationException {
+    public void delete(ComponentObject theObject, boolean theDeleteDependenciesFlag, String principalName)
+    	throws ConfigurationException {
+    	
         ConfigurationObjectEditor editor = null;
 
         try {
@@ -1072,47 +913,37 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             if (editor.getDestination().getActionCount() != 0) {
                 executeTransaction(editor.getDestination().popActions(),principalName);
             }
-        } catch (ConfigurationException theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            throw theException;
-        } catch (ServiceException err) {
-//          rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            throw err;
-        } catch (ModificationException mex) {
-//          rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
-            throw mex;
-        }
+        } catch (ConfigurationException e) {
+            clearActions(editor);
+            throw e;
+        } catch (ServiceException e) {
+        	clearActions(editor);
+            throw e;
+        } 
     }
+
+	private void clearActions(ConfigurationObjectEditor editor) {
+		if (editor != null) {
+		    editor.getDestination().popActions();
+		}
+	}
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#delete(com.metamatrix.common.config.api.ComponentType, java.lang.String)
      * @since 4.3
      */
-    public void delete(ComponentType componentType,
-                       String principalName) throws ConfigurationException,
-                                            ModificationException {
+    public void delete(ComponentType componentType, String principalName) 
+    	throws ConfigurationException {
         
         ConfigurationObjectEditor editor = null;
-        try {
-            editor = createEditor();
-            editor.delete(componentType);
-            executeTransaction(editor.getDestination().popActions(),principalName);
-        } catch (ConfigurationException theException) {
-                // rollback
-                if (editor != null) {
-                    editor.getDestination().popActions();
-                }
-                throw theException;
-            }
+		try {
+			editor = createEditor();
+			editor.delete(componentType);
+			executeTransaction(editor.getDestination().popActions(),principalName);
+		} catch (ConfigurationException e) {
+			clearActions(editor);
+			throw e;
+		}
     }
     
     /**
@@ -1127,13 +958,10 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @return DeployedComponent of the ServiceComponentDefns that was deployed
      * 
      * @throws ConfigurationException
-     * @throws ModificationException
      * @since 6.1
      */
     
-    public DeployedComponent deployService(VMComponentDefnID theProcessID,
-            String serviceName,
-            String principalName) throws ConfigurationException,ModificationException {
+    public DeployedComponent deployService(VMComponentDefnID theProcessID, String serviceName, String principalName) throws ConfigurationException {
 
         DeployedComponent deployComponent = null;
 
@@ -1144,10 +972,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             deployComponent = deployeServiceDefnToVM(theProcessID, serviceName, editor, principalName);
             executeTransaction(editor.getDestination().popActions(), principalName);
         } catch (ConfigurationException theException) {
-            // rollback
-            if (editor != null) {
-                editor.getDestination().popActions();
-            }
+            clearActions(editor);
             throw theException;
         }
         return deployComponent;
@@ -1156,7 +981,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     private DeployedComponent deployeServiceDefnToVM(VMComponentDefnID theProcessID,
             String serviceName,
             ConfigurationObjectEditor editor,
-            String principalName) throws ConfigurationException,ModificationException {
+            String principalName) throws ConfigurationException {
     
         DeployedComponent deployComponent = null;
 
