@@ -24,17 +24,17 @@ package com.metamatrix.connector.jdbc.oracle.spatial;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
-
+import org.teiid.connector.language.ILiteral;
+import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
 
 public class RelateFunctionModifier extends OracleSpatialFunctionModifier {
 
     /**
      * Implement this method to modify the function before it gets translated
      */
-    public IExpression modify(IFunction function) {
+    public IExpression modify( IFunction function ) {
         function.setName("SDO_RELATE"); //$NON-NLS-1$
         return function;
     }
@@ -44,12 +44,12 @@ public class RelateFunctionModifier extends OracleSpatialFunctionModifier {
      * parameters are a Literal String, then we need to put the literal itself in the SQL to be passed to Oracle, without the tick
      * marks
      */
-    public List translate(IFunction function) {
+    public List translate( IFunction function ) {
         List objs = new ArrayList();
         objs.add("SDO_RELATE"); // recast name from sdoRelate to SDO_RELATE //$NON-NLS-1$
         objs.add("("); //$NON-NLS-1$
         List<IExpression> params = function.getParameters();
-        //if it doesn't have 3 parms, it is not a version of SDO_RELATE which
+        // if it doesn't have 3 parms, it is not a version of SDO_RELATE which
         // we are prepared to translate
         if (params.size() == 3) {
             addParamWithConversion(objs, params.get(0));
@@ -57,7 +57,22 @@ public class RelateFunctionModifier extends OracleSpatialFunctionModifier {
 
             addParamWithConversion(objs, params.get(1));
             objs.add(", "); //$NON-NLS-1$
-            addParamWithConversion(objs, params.get(2));
+            IExpression expression = params.get(2);
+            if ((expression instanceof ILiteral) && (((ILiteral)expression).getType() == String.class)) {
+                String value = ((String)((ILiteral)expression).getValue());
+                if (value.indexOf("'") == -1) { //$NON-NLS-1$
+                    value = "'" + value + "'"; //$NON-NLS-1$//$NON-NLS-2$
+                } else {
+                    if (value.indexOf("'") != 0) { //$NON-NLS-1$
+                        value = "'" + value; //$NON-NLS-1$
+                    }
+                    if (value.lastIndexOf("'") != value.length() - 1) { //$NON-NLS-1$
+                        value = value + "'"; //$NON-NLS-1$
+                    }
+                }
+                expression = new LiteralImpl(value, String.class);
+            }
+            addParamWithConversion(objs, expression);
         } else {
             return super.translate(function);
         }
