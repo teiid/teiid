@@ -27,7 +27,6 @@ import java.util.List;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILiteral;
-import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
 
 public class RelateFunctionModifier extends OracleSpatialFunctionModifier {
 
@@ -59,7 +58,8 @@ public class RelateFunctionModifier extends OracleSpatialFunctionModifier {
             objs.add(", "); //$NON-NLS-1$
             IExpression expression = params.get(2);
             if ((expression instanceof ILiteral) && (((ILiteral)expression).getType() == String.class)) {
-                String value = ((String)((ILiteral)expression).getValue());
+                ILiteral literal = (ILiteral)expression;
+                String value = (String)literal.getValue();
                 if (value.indexOf("'") == -1) { //$NON-NLS-1$
                     value = "'" + value + "'"; //$NON-NLS-1$//$NON-NLS-2$
                 } else {
@@ -70,7 +70,8 @@ public class RelateFunctionModifier extends OracleSpatialFunctionModifier {
                         value = value + "'"; //$NON-NLS-1$
                     }
                 }
-                expression = new LiteralImpl(value, String.class);
+                literal.setType(String.class);
+                literal.setValue(value);
             }
             addParamWithConversion(objs, expression);
         } else {
@@ -80,5 +81,4 @@ public class RelateFunctionModifier extends OracleSpatialFunctionModifier {
 
         return objs;
     }
-
 }
