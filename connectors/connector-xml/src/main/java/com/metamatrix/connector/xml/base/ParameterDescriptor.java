@@ -20,15 +20,13 @@
  * 02110-1301 USA.
  */
 
-
 package com.metamatrix.connector.xml.base;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.metadata.runtime.Element;
 
-
 public abstract class ParameterDescriptor {
-    
+
     private String m_xPath;
     private boolean m_param;
     private boolean m_responseId;
@@ -36,124 +34,123 @@ public abstract class ParameterDescriptor {
     private String m_columnName;
     private int m_columnNumber = -1;
     private Element m_element;
-    
+
     public static final String PARM_INPUT_COLUMN_PROPERTY_NAME = "IsInputParameter"; //$NON-NLS-1$
     public static final String ROLE_COLUMN_PROPERTY_NAME = "Role"; //$NON-NLS-1$
-    public static final String ROLE_COLUMN_PROPERTY_NAME_RESPONSE_IN = "Response In"; //$NON-NLS-1$
-    public static final String ROLE_COLUMN_PROPERTY_NAME_RESPONSE_OUT = "Response Out"; //$NON-NLS-1$
+    public static final String ROLE_COLUMN_PROPERTY_NAME_RESPONSE_IN = "ResponseIn"; //$NON-NLS-1$
+    public static final String ROLE_COLUMN_PROPERTY_NAME_RESPONSE_OUT = "ResponseOut"; //$NON-NLS-1$
     public static final String ROLE_COLUMN_PROPERTY_NAME_LOCATION = "Location"; //$NON-NLS-1$
     public static final String ROLE_COLUMN_PROPERTY_NAME_DATA = "Data"; //$NON-NLS-1$
 
-    public ParameterDescriptor(Element element) throws ConnectorException {
-        setElement(element); 
+    public ParameterDescriptor( Element element ) throws ConnectorException {
+        setElement(element);
         setIsParameter(testForParam(m_element));
         testRole();
-        if(getElement().getNameInSource() != null) {
-        	setColumnName(getElement().getNameInSource());
+        if (getElement().getNameInSource() != null) {
+            setColumnName(getElement().getNameInSource());
         } else {
-        	setColumnName(getElement().getName().trim());
+            setColumnName(getElement().getName().trim());
         }
-       	String nis = getElement().getNameInSource();
-      	if (nis != null) {
-      		nis = nis.trim();
-       	}
-       	setXPath(nis);
+        String nis = getElement().getNameInSource();
+        if (nis != null) {
+            nis = nis.trim();
+        }
+        setXPath(nis);
     }
-    
+
     protected ParameterDescriptor() {
         setIsParameter(false);
         setIsResponseId(false);
         setIsLocation(false);
         setColumnName(null);
-        setXPath(null);        
+        setXPath(null);
     }
-    
-    public final void setXPath(String xPath) {
+
+    public final void setXPath( String xPath ) {
         m_xPath = xPath;
     }
-    
+
     public String getXPath() {
         return m_xPath;
     }
-           
-    public final void setIsParameter(boolean param) {
+
+    public final void setIsParameter( boolean param ) {
         m_param = param;
     }
-    
-    public final void setIsResponseId(boolean responseId) {
+
+    public final void setIsResponseId( boolean responseId ) {
         m_responseId = responseId;
     }
-    
-    public final void setIsLocation(boolean location) {
+
+    public final void setIsLocation( boolean location ) {
         m_location = location;
     }
-    
+
     public final boolean isParameter() {
         return m_param;
     }
+
     public final boolean isResponseId() {
         return m_responseId;
     }
+
     public final boolean isLocation() {
         return m_location;
     }
-	public final void setColumnName(String columnName) {
-		m_columnName = columnName;
-	}
-    
-	public final String getColumnName() {
-		return m_columnName;
-	}
-    
-	public final void setColumnNumber(int columnNumber) {
-		m_columnNumber = columnNumber;
-	}
-    
-	public final int getColumnNumber() {
-		return m_columnNumber;
-	}
-    
-    protected void setElement(Element elem) {
-     m_element = elem;   
+
+    public final void setColumnName( String columnName ) {
+        m_columnName = columnName;
     }
-    
+
+    public final String getColumnName() {
+        return m_columnName;
+    }
+
+    public final void setColumnNumber( int columnNumber ) {
+        m_columnNumber = columnNumber;
+    }
+
+    public final int getColumnNumber() {
+        return m_columnNumber;
+    }
+
+    protected void setElement( Element elem ) {
+        m_element = elem;
+    }
+
     protected Element getElement() {
-     return m_element;   
+        return m_element;
     }
-    
-    protected static boolean testForParam(Element element) throws ConnectorException {
+
+    protected static boolean testForParam( Element element ) throws ConnectorException {
         boolean param = false;
-        param = Boolean.valueOf(element.getProperties().getProperty(PARM_INPUT_COLUMN_PROPERTY_NAME)).booleanValue();       
+        param = Boolean.valueOf(element.getProperties().getProperty(PARM_INPUT_COLUMN_PROPERTY_NAME)).booleanValue();
         return param;
     }
-    
+
     public String getRole() throws ConnectorException {
-    	return m_element.getProperties().getProperty(ROLE_COLUMN_PROPERTY_NAME);
+        return m_element.getProperties().getProperty(ROLE_COLUMN_PROPERTY_NAME);
     }
-    
-    protected void testRole() throws ConnectorException
-    {
+
+    protected void testRole() throws ConnectorException {
         String role = getRole();
-        if(role == null) {
-        	setIsResponseId(false);
-	        setIsLocation(false);
+        if (role == null) {
+            setIsResponseId(false);
+            setIsLocation(false);
         } else {
-	        if (role.equalsIgnoreCase(ROLE_COLUMN_PROPERTY_NAME_RESPONSE_IN)) {
-	            setIsResponseId(true);
-	            setIsLocation(false);
-	        }
-	        else if (role.equalsIgnoreCase(ROLE_COLUMN_PROPERTY_NAME_RESPONSE_OUT)) {
-	            setIsResponseId(true);
-	            setIsLocation(false);
-	        }
-	        else if (role.equalsIgnoreCase(ROLE_COLUMN_PROPERTY_NAME_LOCATION)) {
-	            setIsResponseId(false);
-	            setIsLocation(true);
-	        }
-	        else { //if (role.equalsIgnoreCase(ROLE_COLUMN_PROPERTY_NAME_DATA))
-	            setIsResponseId(false);
-	            setIsLocation(false);
-	        }
+            if (role.equalsIgnoreCase(ROLE_COLUMN_PROPERTY_NAME_RESPONSE_IN)) {
+                setIsResponseId(true);
+                setIsLocation(false);
+            } else if (role.equalsIgnoreCase(ROLE_COLUMN_PROPERTY_NAME_RESPONSE_OUT)) {
+                setIsResponseId(true);
+                setIsLocation(false);
+            } else if (role.equalsIgnoreCase(ROLE_COLUMN_PROPERTY_NAME_LOCATION)) {
+                setIsResponseId(false);
+                setIsLocation(true);
+            } else { // if (role.equalsIgnoreCase(ROLE_COLUMN_PROPERTY_NAME_DATA))
+                setIsResponseId(false);
+                setIsLocation(false);
+            }
         }
     }
 }
