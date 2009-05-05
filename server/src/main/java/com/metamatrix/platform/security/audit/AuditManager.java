@@ -126,7 +126,16 @@ public final class AuditManager {
     private List auditDestinations = new ArrayList();
 	private WorkerPool workerPool;
 
-    public AuditManager() {
+	private static AuditManager INSTANCE;
+	
+	public static synchronized AuditManager getInstance() {
+		if (INSTANCE == null) {
+			INSTANCE = new AuditManager();
+		}
+		return INSTANCE;
+	}
+	
+    AuditManager() {
     	
     	// Log the beginning of the initialization
         LogManager.logInfo(LogSecurityConstants.CTX_AUDIT, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUDIT_0001));

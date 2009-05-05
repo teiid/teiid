@@ -96,6 +96,8 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.platform.config.ConfigMessages;
 import com.metamatrix.platform.config.ConfigPlugin;
+import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
+import com.metamatrix.platform.security.audit.AuditManager;
 
 
 public class XMLActionUpdateStrategy  {
@@ -1563,7 +1565,7 @@ public class XMLActionUpdateStrategy  {
             }
 
  //           if (ResourceModel.doesResourceRequireEncryption(sr.getName())) {
-                updateProperties(sr, props, ConfigurationObjectEditor.ADD, type, m, transaction.getLockAcquiredBy());
+                updateProperties(sr, props, null, ConfigurationObjectEditor.ADD, type, m, transaction.getLockAcquiredBy());
 //             } else {
 //                 
 //                ConfigurationObjectEditorHelper.modifyProperties(sr, resource.getProperties(), ConfigurationObjectEditorHelper.ADD);
@@ -1698,7 +1700,7 @@ public class XMLActionUpdateStrategy  {
     	
         Properties props = bco.getEditableProperties();
 
-        updateProperties(object, props, ConfigurationObjectEditor.SET, type, config, principal);
+        updateProperties(object, props, null, ConfigurationObjectEditor.SET, type, config, principal);
 
    }
 
@@ -1740,11 +1742,13 @@ public class XMLActionUpdateStrategy  {
         if (args[0] instanceof Properties) {
 
             Properties props = null;
+            Properties oldProps = null;
             if (operation == ConfigurationObjectEditor.ADD) {
                 props = (Properties) args[0];
             } else if (operation == ConfigurationObjectEditor.SET) {
                 // 0 arg is the old value
                 // 1 arg is the new value
+            	oldProps = (Properties)args[0];
                 props = (Properties) args[1];
             } else if (operation == ConfigurationObjectEditor.REMOVE) {
                 props = (Properties) args[0];
@@ -1752,23 +1756,24 @@ public class XMLActionUpdateStrategy  {
 
 // 		System.out.println("STRATEGY: Process Property Changes 2" );
 
-            updateProperties(object, props, operation, type, config, principal);
+            updateProperties(object, props, oldProps,operation, type, config, principal);
 
         } else {
             propName = (String) args[0];
-
+            String oldValue = ""; //$NON-NLS-1$
             propValue = ""; //$NON-NLS-1$
 
             if (operation == ConfigurationObjectEditor.ADD) {
                 propValue = (String) args[1];
             } else if (operation == ConfigurationObjectEditor.SET) {
+            	oldValue = (String) args[1];
                 propValue = (String) args[2];
             } else if (operation == ConfigurationObjectEditor.REMOVE) {
                 propValue = ""; //$NON-NLS-1$
             }
 //		System.out.println("STRATEGY: Process Property Changes 3" );
 
-            updateProperty(object, propName, propValue, operation, type, config, principal);
+            updateProperty(object, propName, propValue, oldValue, operation, type, config, principal);
             // Must encrypt connection passwords here
             // "targetObj instanceof ServiceComponentDefnID" indicates it's a connector binding
         }
@@ -1777,6 +1782,7 @@ public class XMLActionUpdateStrategy  {
 
     private void updateProperties(ComponentObject object,
     									Properties props,
+    									Properties oldValues,
     									int operation,
     									ComponentType type,
     									ConfigurationModelContainerImpl config,
@@ -1810,6 +1816,17 @@ public class XMLActionUpdateStrategy  {
                 passwordProps.setProperty(propName, propValue);
 
             }
+            switch (operation) {
+            case ConfigurationObjectEditor.ADD:
+            	AuditManager.getInstance().record(ConfigurationServiceInterface.NAME, "adding properties " + passwordProps, principal, object.getName()); //$NON-NLS-1$
+            	break;
+            case ConfigurationObjectEditor.SET:
+            	AuditManager.getInstance().record(ConfigurationServiceInterface.NAME, "setting properties " + passwordProps + " previous values " + oldValues, principal, object.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+            	break;
+            case ConfigurationObjectEditor.REMOVE:
+            	AuditManager.getInstance().record(ConfigurationServiceInterface.NAME, "removing properties " + passwordProps, principal, object.getName()); //$NON-NLS-1$
+            	break;
+            }
 
 			modifyProperties(object, passwordProps, operation);
 
@@ -1818,6 +1835,7 @@ public class XMLActionUpdateStrategy  {
     private void updateProperty(ComponentObject object,
     									String propName,
     									String propValue,
+    									String oldValue,
     									int operation,
     									ComponentType type,
     									ConfigurationModelContainerImpl config,
@@ -1836,13 +1854,13 @@ public class XMLActionUpdateStrategy  {
             }
 
             if (operation == ConfigurationObjectEditor.ADD) {
-            	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "adding", propName, "with value", propValue); //$NON-NLS-1$ //$NON-NLS-2$
-                BasicComponentObject target = (BasicComponentObject) object;
+            	AuditManager.getInstance().record(ConfigurationServiceInterface.NAME, "adding " + propName + " with value " + propValue, principal, object.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+            	BasicComponentObject target = (BasicComponentObject) object;
 
                 target.addProperty(propName, propValue);
 
             } else if (operation == ConfigurationObjectEditor.SET) {
-            	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "setting", propName, "to value", propValue); //$NON-NLS-1$ //$NON-NLS-2$
+            	AuditManager.getInstance().record(ConfigurationServiceInterface.NAME, "setting " + propName + " to value " + propValue + " previous value was " + oldValue, principal, object.getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
                 BasicComponentObject target = (BasicComponentObject) object;
 
@@ -1851,7 +1869,7 @@ public class XMLActionUpdateStrategy  {
                 target.addProperty(propName, propValue);
 
             } else if (operation == ConfigurationObjectEditor.REMOVE) {
-            	LogManager.logDetail(LogCommonConstants.CTX_CONFIG, "removing", propName); //$NON-NLS-1$
+            	AuditManager.getInstance().record(ConfigurationServiceInterface.NAME, "removing " + propName, principal, object.getName()); //$NON-NLS-1$
                 BasicComponentObject target = (BasicComponentObject) object;
 
                 target.removeProperty(propName);

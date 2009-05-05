@@ -129,7 +129,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     protected void initService(Properties env) {
 
         try {
-        	this.auditManager = new AuditManager();
+        	this.auditManager = AuditManager.getInstance();
         	
             membershipServiceProxy = PlatformProxyHelper.getMembershipServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL);
 
