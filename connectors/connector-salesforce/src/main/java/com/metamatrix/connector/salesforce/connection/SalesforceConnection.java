@@ -103,13 +103,13 @@ public class SalesforceConnection extends BasicConnection {
 	public void close() {
 	}
 
-	public QueryResult query(String queryString, int maxBatchSize) throws ConnectorException {
+	public QueryResult query(String queryString, int maxBatchSize, Boolean queryAll) throws ConnectorException {
 		if(maxBatchSize > 2000) {
 			maxBatchSize = 2000;
 			connectorEnv.getLogger().logInfo(
 					Messages.getString("SalesforceQueryExecutionImpl.reduced.batch.size"));
 		}
-		return connection.query(queryString, maxBatchSize);
+		return connection.query(queryString, maxBatchSize, queryAll);
 	}
 
 	public QueryResult queryMore(String queryLocator) throws ConnectorException {

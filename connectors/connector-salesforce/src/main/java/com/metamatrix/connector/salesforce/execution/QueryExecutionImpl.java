@@ -113,7 +113,7 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 		connectorEnv.getLogger().logInfo(
 				getLogPreamble() + "Executing Query: " + finalQuery);
 		
-		results = connection.query(finalQuery, this.context.getBatchSize());
+		results = connection.query(finalQuery, this.context.getBatchSize(), visitor.getQueryAll());
 	}
 	
 	@Override

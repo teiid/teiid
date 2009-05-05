@@ -123,7 +123,7 @@ public class UpdateExecutionParent extends BasicExecution implements UpdateExecu
 	
 		} else if (visitor.hasCriteria()) {
 			String query = visitor.getQuery();
-			QueryResult results = getConnection().query(query, context.getBatchSize());
+			QueryResult results = getConnection().query(query, context.getBatchSize(), Boolean.FALSE);
 			if (null != results && results.getSize() > 0) {
 				ArrayList<String> idList = new ArrayList<String>(results
 						.getRecords().length);

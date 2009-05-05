@@ -192,4 +192,9 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		return idIndex;
 	}
 
+
+	public Boolean getQueryAll() {
+		return queryAll;
+	}
+
 }

@@ -175,14 +175,18 @@ public class ConnectionImpl {
 		return result;
 	}
 
-	public QueryResult query(String queryString, int batchSize) throws ConnectorException {
+	public QueryResult query(String queryString, int batchSize, Boolean queryAll) throws ConnectorException {
 		QueryResult qr = null;
 		QueryOptions qo = new QueryOptions();
 		qo.setBatchSize(batchSize);
 		binding.setHeader(new SforceServiceLocator().getServiceName()
 				.getNamespaceURI(), "QueryOptions", qo);
 		try {
-			qr = binding.query(queryString);
+			if(queryAll) {
+				qr = binding.queryAll(queryString);
+			} else {
+				qr = binding.query(queryString);
+			}
 		} catch (ApiFault ex) {
 			throw new ConnectorException(ex.getExceptionMessage());
 		} catch (RemoteException ex) {
