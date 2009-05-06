@@ -23,7 +23,6 @@
 package com.metamatrix.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -172,10 +171,10 @@ public final class RuleCollapseSource implements OptimizerRule {
             {
                 replaceCorrelatedReferences(node.getSubqueryContainers());
                 JoinType joinType = (JoinType) node.getProperty(NodeConstants.Info.JOIN_TYPE);
-                List crits = (List) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
+                List<Criteria> crits = (List<Criteria>) node.getProperty(NodeConstants.Info.JOIN_CRITERIA);
                 
                 if (crits == null || crits.isEmpty()) {
-                    crits = new ArrayList();
+                    crits = new ArrayList<Criteria>();
                 }
                 
                 PlanNode left = node.getFirstChild();
@@ -184,23 +183,18 @@ public final class RuleCollapseSource implements OptimizerRule {
                 /* special handling is needed to determine criteria placement.
                  * 
                  * if the join is a left outer join, criteria from the right side will be added to the on clause
-                 * if the join is a right outer join, criteria from the left side will be added to the on clause
                  */
                 Criteria savedCriteria = null;
                 buildQuery(accessRoot, left, query, metadata, capFinder);
                 if (joinType == JoinType.JOIN_LEFT_OUTER) {
                     savedCriteria = query.getCriteria();
                     query.setCriteria(null);
-                } else if (joinType == JoinType.JOIN_RIGHT_OUTER || joinType == JoinType.JOIN_CROSS || joinType == JoinType.JOIN_INNER) {
-                    moveWhereClauseIntoOnClause(query, crits);
-                }
+                } 
                 buildQuery(accessRoot, right, query, metadata, capFinder);
                 if (joinType == JoinType.JOIN_LEFT_OUTER) {
                     moveWhereClauseIntoOnClause(query, crits);
                     query.setCriteria(savedCriteria);
-                } else if (joinType == JoinType.JOIN_CROSS || joinType == JoinType.JOIN_INNER) {
-                    moveWhereClauseIntoOnClause(query, crits);
-                }
+                } 
                 
                 // Get last two clauses added to the FROM and combine them into a JoinPredicate
                 From from = query.getFrom();
@@ -397,15 +391,15 @@ public final class RuleCollapseSource implements OptimizerRule {
         } else {
             JoinPredicate jp = (JoinPredicate) clause;
             
-            // Add criteria to query
-            Criteria crit = query.getCriteria();
-            List crits = jp.getJoinCriteria();
-            if(crits != null && crits.size() > 0) {              
-                Iterator critIter = crits.iterator();
-                while(critIter.hasNext()) {
-                    crit = CompoundCriteria.combineCriteria(crit, (Criteria) critIter.next());                              
-                }
-                query.setCriteria(crit);
+            List<Criteria> crits = jp.getJoinCriteria();
+            if(crits != null && crits.size() > 0) {
+            	Criteria joinCrit = null;
+            	if (crits.size() > 1) {
+            		joinCrit = new CompoundCriteria(crits);
+            	} else {
+            		joinCrit = crits.get(0);
+            	}
+                query.setCriteria(CompoundCriteria.combineCriteria(joinCrit, query.getCriteria()));
             }
             
             // Recurse through tree

@@ -50,25 +50,10 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
         return false;
     }
 
-    /** 
-     * @see org.teiid.connector.api.ConnectorCapabilities#supportsSelectLiterals()
-     * @since 4.2
-     */
-    public boolean supportsSelectLiterals() {
-        return false;
-    }
-
     /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAliasedGroup()
      */
     public boolean supportsAliasedGroup() {
-        return false;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsJoins()
-     */
-    public boolean supportsJoins() {
         return false;
     }
 
@@ -94,13 +79,6 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCriteria()
-     */
-    public boolean supportsCriteria() {
-        return false;
-    }
-
-    /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsBetweenCriteria()
      */
     public boolean supportsBetweenCriteria() {
@@ -108,51 +86,9 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteria()
-     */
-    public boolean supportsCompareCriteria() {
-        return false;
-    }
-
-    /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaEquals()
      */
     public boolean supportsCompareCriteriaEquals() {
-        return false;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaNotEquals()
-     */
-    public boolean supportsCompareCriteriaNotEquals() {
-        return false;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaLessThan()
-     */
-    public boolean supportsCompareCriteriaLessThan() {
-        return false;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaLessThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaLessThanOrEqual() {
-        return false;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaGreaterThan()
-     */
-    public boolean supportsCompareCriteriaGreaterThan() {
-        return false;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaGreaterThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaGreaterThanOrEqual() {
         return false;
     }
 
@@ -192,13 +128,6 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAndCriteria()
-     */
-    public boolean supportsAndCriteria() {
-        return false;
-    }
-
-    /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsOrCriteria()
      */
     public boolean supportsOrCriteria() {
@@ -220,13 +149,6 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsQuantifiedCompareCriteria()
-     */
-    public boolean supportsQuantifiedCompareCriteria() {
-        return false;
-    }
-
-    /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
      */
     public boolean supportsQuantifiedCompareCriteriaSome() {
@@ -244,13 +166,6 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsOrderBy()
      */
     public boolean supportsOrderBy() {
-        return false;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregates()
-     */
-    public boolean supportsAggregates() {
         return false;
     }
 
@@ -331,19 +246,12 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsScalarFunctions()
-     */
-    public boolean supportsScalarFunctions() {
-        return false;
-    }
-
     /**
      * Return null to indicate no functions are supported.
      * @return null 
      * @see org.teiid.connector.api.ConnectorCapabilities#getSupportedFunctions()
      */
-    public List getSupportedFunctions() {
+    public List<String> getSupportedFunctions() {
         return null;
     }
 
@@ -435,4 +343,30 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
 	public boolean supportsGroupBy() {
 		return false;
 	}
+
+	@Override
+	public boolean supportsHaving() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsInnerJoins() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsSelectExpression() {
+		return false;
+	}
+	
+	@Override
+	public SupportedJoinCriteria getSupportedJoinCriteria() {
+		return SupportedJoinCriteria.ANY;
+	}
+	
+	@Override
+	public boolean supportsCompareCriteriaOrdered() {
+		return false;
+	}
+	
 }

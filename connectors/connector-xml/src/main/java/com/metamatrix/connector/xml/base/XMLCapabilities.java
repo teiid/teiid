@@ -45,26 +45,11 @@ public class XMLCapabilities extends BasicConnectorCapabilities {
     }
 
    
-    public final boolean supportsCompareCriteria() {
-        return true;
-    }
-
-    
     public final boolean supportsCompareCriteriaEquals() {
         return true;
     }
 
    
-    public final boolean supportsCriteria() {
-        return true;
-    }
-
-   
-    public final boolean supportsAndCriteria() {
-        return true;
-    }
-
-
     public final boolean supportsInCriteria() {
         return true;
     }

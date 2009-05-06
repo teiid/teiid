@@ -49,6 +49,7 @@ import com.metamatrix.query.resolver.util.AccessPattern;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -117,8 +118,11 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     }
                     case NodeConstants.Types.JOIN:
                     {
-                        moved = handleJoinCriteria(sourceNode, critNode, metadata);
-                        break;
+        				//pushing below a join is not necessary under an access node
+        				if (NodeEditor.findParent(critNode, NodeConstants.Types.ACCESS) == null) {
+                            moved = handleJoinCriteria(sourceNode, critNode, metadata);
+                            break;
+        				}
                     }
                 }
                 
@@ -137,7 +141,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 			CapabilitiesFinder capFinder, PlanNode critNode)
 			throws MetaMatrixComponentException, QueryMetadataException {
 		if (critNode.getGroups().isEmpty()) {
-			Object modelId = RuleRaiseAccess.isEligibleSubquery(critNode, null, metadata, capFinder);
+			Object modelId = getSubqueryModelId(metadata, capFinder, critNode);
 			if (modelId != null) {
 				for (PlanNode node : NodeEditor.findAllNodes(critNode, NodeConstants.Types.SOURCE)) {
 		            GroupSymbol group = node.getGroups().iterator().next();
@@ -149,6 +153,24 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 			}
 		} 
 		return FrameUtil.findOriginatingNode(critNode, critNode.getGroups());
+	}
+
+	private Object getSubqueryModelId(QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, PlanNode critNode)
+			throws MetaMatrixComponentException, QueryMetadataException {
+		Object modelId = null;
+		for (SubqueryContainer subqueryContainer : critNode.getSubqueryContainers()) {
+			Object validId = CriteriaCapabilityValidatorVisitor.validateSubqueryPushdown(subqueryContainer, null, metadata, capFinder);
+			if (validId == null) {
+				return null;
+			}
+			if (modelId == null) {
+				modelId = validId;
+			} else if (!CapabilitiesUtil.isSameConnector(modelId, validId, metadata, capFinder)) {
+				return null;
+			}
+		}
+		return modelId;
 	}
     
     /**
@@ -267,6 +289,11 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0020, currentNode.getGroups()));
 				}
 			} else if(currentNode.getType() == NodeConstants.Types.JOIN) {
+				//pushing below a join is not necessary under an access node
+				if (NodeEditor.findParent(currentNode, NodeConstants.Types.ACCESS) != null) {
+					return currentNode;
+				}
+				
                 // Check whether this criteria is on the inner side of an outer join.  
                 // If so, can't push past the join
                 JoinType jt = JoinUtil.getJoinTypePreventingCriteriaOptimization(currentNode, critNode);

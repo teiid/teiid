@@ -128,18 +128,23 @@ public abstract class Criteria implements LanguageObject {
 	public static Criteria combineCriteria(Criteria primaryCrit, Criteria additionalCrit, boolean disjunctively) {
 		if(primaryCrit == null) {
 			return additionalCrit;
-		} else if(additionalCrit == null) { 
+		}
+		if(additionalCrit == null) { 
 			return primaryCrit;
-		} else if((primaryCrit instanceof CompoundCriteria) && ((CompoundCriteria)primaryCrit).getOperator() == (disjunctively?CompoundCriteria.OR:CompoundCriteria.AND)) {
-			((CompoundCriteria)primaryCrit).addCriteria(additionalCrit);
-			return primaryCrit;
+		}
+		CompoundCriteria compCrit = new CompoundCriteria();
+		compCrit.setOperator((disjunctively?CompoundCriteria.OR:CompoundCriteria.AND));
+		if ((primaryCrit instanceof CompoundCriteria) && ((CompoundCriteria)primaryCrit).getOperator() == (disjunctively?CompoundCriteria.OR:CompoundCriteria.AND)) {
+			compCrit.getCriteria().addAll(((CompoundCriteria)primaryCrit).getCriteria());
 		} else {
-			CompoundCriteria compCrit = new CompoundCriteria();
-			compCrit.setOperator((disjunctively?CompoundCriteria.OR:CompoundCriteria.AND));
 			compCrit.addCriteria(primaryCrit);
+		}
+		if ((additionalCrit instanceof CompoundCriteria) && ((CompoundCriteria)additionalCrit).getOperator() == (disjunctively?CompoundCriteria.OR:CompoundCriteria.AND)) {
+			compCrit.getCriteria().addAll(((CompoundCriteria)additionalCrit).getCriteria());
+		} else {
 			compCrit.addCriteria(additionalCrit);
-			return compCrit;
-		}				
+		}
+		return compCrit;
 	}
     
     public static Criteria toDisjunctiveNormalForm(Criteria input) {

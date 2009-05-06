@@ -559,7 +559,8 @@ public class FakeMetadataFacade extends BasicQueryMetadata {
 
     public Properties getExtensionProperties(Object metadataID)
         throws MetaMatrixComponentException, QueryMetadataException {
-        return null;
+    	ArgCheck.isInstanceOf(FakeMetadataObject.class, metadataID);
+        return ((FakeMetadataObject)metadataID).getExtensionProps();
     }
 
     public int getElementLength(Object elementID) throws MetaMatrixComponentException, QueryMetadataException {

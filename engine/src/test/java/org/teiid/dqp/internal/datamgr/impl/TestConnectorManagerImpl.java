@@ -102,7 +102,7 @@ public final class TestConnectorManagerImpl {
     	AtomicRequestMessage request = TestConnectorWorkItem.createNewAtomicRequestMessage(1, 1);
     	
     	SourceCapabilities caps = cm.getCapabilities(request.getRequestID(), null, Mockito.mock(DQPWorkContext.class));
-    	assertFalse(caps.supportsCapability(Capability.QUERY_WHERE_EXISTS));
+    	assertFalse(caps.supportsCapability(Capability.CRITERIA_EXISTS));
     	assertFalse(caps.supportsCapability(Capability.QUERY_EXCEPT));
 
     	
@@ -113,7 +113,7 @@ public final class TestConnectorManagerImpl {
     	startConnectorManager(cmnew, props);
 
     	SourceCapabilities capsnew = cmnew.getCapabilities(request.getRequestID(), null, Mockito.mock(DQPWorkContext.class));
-    	assertTrue(capsnew.supportsCapability(Capability.QUERY_WHERE_EXISTS));
+    	assertTrue(capsnew.supportsCapability(Capability.CRITERIA_EXISTS));
     	assertTrue(capsnew.supportsCapability(Capability.QUERY_EXCEPT));
     }
 

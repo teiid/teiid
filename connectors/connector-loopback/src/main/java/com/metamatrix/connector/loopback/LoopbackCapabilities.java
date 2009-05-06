@@ -42,13 +42,6 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsExecutionMode(int)
-     */
-    public boolean supportsExecutionMode(int executionMode) {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#getSupportedFunctions()
      */
     public List getSupportedFunctions() {
@@ -71,13 +64,6 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
     @Override
     public boolean supportsGroupBy() {
     	return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsAggregates()
-     */
-    public boolean supportsAggregates() {
-        return true;
     }
 
     /* 
@@ -137,13 +123,6 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsAndCriteria()
-     */
-    public boolean supportsAndCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsBetweenCriteria()
      */
     public boolean supportsBetweenCriteria() {
@@ -158,13 +137,6 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteria()
-     */
-    public boolean supportsCompareCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaEquals()
      */
     public boolean supportsCompareCriteriaEquals() {
@@ -172,51 +144,9 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaGreaterThan()
-     */
-    public boolean supportsCompareCriteriaGreaterThan() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaGreaterThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaGreaterThanOrEqual() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaLessThan()
-     */
-    public boolean supportsCompareCriteriaLessThan() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaLessThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaLessThanOrEqual() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaNotEquals()
-     */
-    public boolean supportsCompareCriteriaNotEquals() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsCorrelatedSubqueries()
      */
     public boolean supportsCorrelatedSubqueries() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCriteria()
-     */
-    public boolean supportsCriteria() {
         return true;
     }
 
@@ -252,13 +182,6 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
      * @see com.metamatrix.data.ConnectorCapabilities#supportsIsNullCriteria()
      */
     public boolean supportsIsNullCriteria() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsJoins()
-     */
-    public boolean supportsJoins() {
         return true;
     }
 
@@ -305,30 +228,9 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsQuantifiedCompareCriteria()
-     */
-    public boolean supportsQuantifiedCompareCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsQuantifiedCompareCriteriaAll()
      */
     public boolean supportsQuantifiedCompareCriteriaAll() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsQuantifiedCompareCriteriaAny()
-     */
-    public boolean supportsQuantifiedCompareCriteriaAny() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsScalarFunctions()
-     */
-    public boolean supportsScalarFunctions() {
         return true;
     }
 
@@ -364,10 +266,6 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
         return true;
     }
         
-    public boolean supportsOrderByInInlineViews() {
-        return true;
-    }
-
     public boolean supportsQuantifiedCompareCriteriaSome() {
         return true;
     }
@@ -377,10 +275,10 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
     }
     
     @Override
-    public boolean supportsSelectLiterals() {
+    public boolean supportsSelectExpression() {
     	return true;
     }
-    
+        
     @Override
     public boolean supportsSetQueryOrderBy() {
     	return true;
@@ -390,4 +288,30 @@ public class LoopbackCapabilities extends BasicConnectorCapabilities {
     public boolean supportsUnions() {
     	return true;
     }
+    
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsInnerJoins() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsExcept() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsHaving() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsIntersect() {
+    	return true;
+    }
+    
 }

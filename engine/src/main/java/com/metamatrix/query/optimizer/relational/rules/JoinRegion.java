@@ -40,7 +40,6 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.relational.GenerateCanonical;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
-import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.resolver.util.AccessPattern;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -50,6 +49,7 @@ import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
+import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 
 /**
  *  A join region is a set of cross and inner joins whose ordering is completely interchangable.
@@ -81,10 +81,8 @@ class JoinRegion {
     
     private List unsatisfiedAccessPatterns = new LinkedList();
     
-    private Map dependentCriteriaElements;
+    private Map<ElementSymbol, Set<Collection<GroupSymbol>>> dependentCriteriaElements;
     private Map critieriaToSourceMap;
-    
-    private Set<GroupSymbol> removedJoinGroups;
     
     public PlanNode getJoinRoot() {
         return joinRoot;
@@ -102,7 +100,7 @@ class JoinRegion {
         return dependentJoinSourceNodes;
     }
     
-    public List getCriteriaNodes() {
+    public List<PlanNode> getCriteriaNodes() {
         return criteriaNodes;
     }
     
@@ -110,7 +108,7 @@ class JoinRegion {
         return dependentCritieraNodes;
     }
     
-    public Map getDependentCriteriaElements() {
+    public Map<ElementSymbol, Set<Collection<GroupSymbol>>> getDependentCriteriaElements() {
         return this.dependentCriteriaElements;
     }
 
@@ -156,17 +154,6 @@ class JoinRegion {
             Criteria crit = (Criteria)i.next();
             criteriaNodes.add(GenerateCanonical.createSelectNode(crit, false));
         }
-    }
-    
-    public void addRemovedJoinGroups(PlanNode joinNode) {
-    	Set<GroupSymbol> groups = (Set<GroupSymbol>) joinNode.getProperty(Info.REMOVED_JOIN_GROUPS);
-    	if (groups == null) {
-    		return;
-    	}
-    	if (this.removedJoinGroups == null) {
-    		this.removedJoinGroups = new HashSet<GroupSymbol>();
-    	}
-    	this.removedJoinGroups.addAll(groups);
     }
     
     /**
@@ -428,39 +415,49 @@ class JoinRegion {
             }
         }
         
-        dependentCriteriaElements = new HashMap();
+        dependentCriteriaElements = new HashMap<ElementSymbol, Set<Collection<GroupSymbol>>>();
         
         for (Iterator i = dependentCritieraNodes.iterator(); i.hasNext();) {
             PlanNode critNode = (PlanNode)i.next();
             Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-            Collection[] groups = RuleChooseDependent.isEqualityCriteria(crit);
-            if (groups != null) {
-                CompareCriteria compareCriteria = (CompareCriteria)crit;
-                //this may be a proper dependent join criteria
-                Collection[] critElements = new Collection[2];
-                critElements[0] = ElementCollectorVisitor.getElements(compareCriteria.getLeftExpression(), true);
-                critElements[1] = ElementCollectorVisitor.getElements(compareCriteria.getRightExpression(), true);
-                for (int expr = 0; expr < critElements.length; expr++) {
-                    //simplifying assumption that there will be a single element on the dependent side
-                    if (critElements[expr].size() != 1) {
-                        continue;
-                    }
-                    ElementSymbol elem = (ElementSymbol)critElements[expr].iterator().next();
-                    if (!dependentGroupToSourceMap.containsKey(elem.getGroupSymbol())) {
-                        continue;
-                    }
-                    //this is also a simplifying assumption.  don't consider criteria that can't be pushed
-                    if (containsFunctionsThatCannotBePushed(expr==0?compareCriteria.getRightExpression():compareCriteria.getLeftExpression())) {
-                        continue;
-                    }
-                    Set independentGroups = (HashSet)dependentCriteriaElements.get(elem);
-                    if (independentGroups == null) {
-                        independentGroups = new HashSet();
-                        dependentCriteriaElements.put(elem, independentGroups);
-                    }
-                    //set the other side as independent elements
-                    independentGroups.add(groups[(expr+1)%2]);
+            if(!(crit instanceof CompareCriteria)) {
+                continue;
+            }
+            CompareCriteria compCrit = (CompareCriteria) crit;                
+            if(compCrit.getOperator() != CompareCriteria.EQ) {
+                continue;
+            }
+            CompareCriteria compareCriteria = (CompareCriteria)crit;
+            //this may be a proper dependent join criteria
+            Collection<ElementSymbol>[] critElements = new Collection[2];
+            critElements[0] = ElementCollectorVisitor.getElements(compareCriteria.getLeftExpression(), true);
+            if (critElements[0].isEmpty()) {
+            	continue;
+            }
+            critElements[1] = ElementCollectorVisitor.getElements(compareCriteria.getRightExpression(), true);
+            if (critElements[1].isEmpty()) {
+            	continue;
+            }
+            for (int expr = 0; expr < critElements.length; expr++) {
+                //simplifying assumption that there will be a single element on the dependent side
+                if (critElements[expr].size() != 1) {
+                    continue;
                 }
+                ElementSymbol elem = critElements[expr].iterator().next();
+                if (!dependentGroupToSourceMap.containsKey(elem.getGroupSymbol())) {
+                    continue;
+                }
+                //this is also a simplifying assumption.  don't consider criteria that can't be pushed
+                if (containsFunctionsThatCannotBePushed(expr==0?compareCriteria.getRightExpression():compareCriteria.getLeftExpression())) {
+                    continue;
+                }
+                Set<Collection<GroupSymbol>> independentGroups = dependentCriteriaElements.get(elem);
+                if (independentGroups == null) {
+                    independentGroups = new HashSet<Collection<GroupSymbol>>();
+                    dependentCriteriaElements.put(elem, independentGroups);
+                }
+                //set the other side as independent elements
+                independentGroups.add(GroupsUsedByElementsVisitor.getGroups(critElements[(expr+1)%2]));
             }
         }
     }
@@ -515,8 +512,4 @@ class JoinRegion {
         }
     }
 
-	public Set<GroupSymbol> getRemovedJoinGroups() {
-		return removedJoinGroups;
-	}
-    
 }

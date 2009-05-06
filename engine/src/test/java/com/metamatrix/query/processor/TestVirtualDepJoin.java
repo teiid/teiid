@@ -248,8 +248,8 @@ public class TestVirtualDepJoin extends TestCase {
         Command command = TestProcessor.helpParse(sql);   
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, false);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, setPushdown);    
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, setPushdown);    
         finder.addCapabilities("US", caps); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps);//$NON-NLS-1$
@@ -315,7 +315,7 @@ public class TestVirtualDepJoin extends TestCase {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps1 = TestOptimizer.getTypicalCapabilities();
         BasicSourceCapabilities caps2 = TestOptimizer.getTypicalCapabilities();
-        caps2.setCapabilitySupport(Capability.QUERY_WHERE_IN, false);    
+        caps2.setCapabilitySupport(Capability.CRITERIA_IN, false);    
         finder.addCapabilities("US", caps1); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps2);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps1);//$NON-NLS-1$
@@ -530,7 +530,7 @@ public class TestVirtualDepJoin extends TestCase {
         Command command = TestProcessor.helpParse(sql);   
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, pushCriteria);    
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, pushCriteria);    
         finder.addCapabilities("US", caps); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$
         finder.addCapabilities("CustomerMaster", caps);//$NON-NLS-1$

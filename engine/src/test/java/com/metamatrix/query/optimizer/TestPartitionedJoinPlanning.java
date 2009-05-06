@@ -44,10 +44,7 @@ public class TestPartitionedJoinPlanning {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$

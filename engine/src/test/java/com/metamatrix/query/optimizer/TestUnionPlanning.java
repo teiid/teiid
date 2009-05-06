@@ -36,7 +36,7 @@ public class TestUnionPlanning extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
@@ -68,7 +68,7 @@ public class TestUnionPlanning extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
@@ -97,7 +97,7 @@ public class TestUnionPlanning extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         BasicSourceCapabilities caps1 = TestOptimizer.getTypicalCapabilities();
@@ -128,7 +128,7 @@ public class TestUnionPlanning extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         BasicSourceCapabilities caps1 = TestOptimizer.getTypicalCapabilities();

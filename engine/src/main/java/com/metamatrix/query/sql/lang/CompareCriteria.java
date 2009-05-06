@@ -44,6 +44,7 @@ public class CompareCriteria extends AbstractCompareCriteria {
 
 	/** The right-hand expression. */
 	private Expression rightExpression;
+	private boolean isOptional;
     
     /**
      * Constructs a default instance of this class.
@@ -94,6 +95,24 @@ public class CompareCriteria extends AbstractCompareCriteria {
         setOperator(operator);
         setRightExpression(rightExpression);
     }
+    
+    /**
+     * Set during planning to indicate that this criteria is no longer needed
+     * to correctly process a join
+     * @param isOptional
+     */
+    public void setOptional(boolean isOptional) {
+		this.isOptional = isOptional;
+	}
+    
+    /**
+     * Returns true if the compare criteria is used as join criteria, but not needed
+     * during processing.
+     * @return
+     */
+    public boolean isOptional() {
+		return isOptional;
+	}
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
@@ -148,7 +167,9 @@ public class CompareCriteria extends AbstractCompareCriteria {
 	        rightCopy = (Expression) getRightExpression().clone();
 	    }	
 	    
-		return new CompareCriteria(leftCopy, getOperator(), rightCopy);  
+		CompareCriteria result = new CompareCriteria(leftCopy, getOperator(), rightCopy);
+		result.isOptional = isOptional;
+		return result;
 	}
 	
 }  // END CLASS

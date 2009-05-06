@@ -22,7 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
 
 import org.teiid.connector.api.ConnectorCapabilities;
 
@@ -46,37 +47,27 @@ public class CapabilitiesConverter {
     public static BasicSourceCapabilities convertCapabilities(ConnectorCapabilities srcCaps, String connectorID, boolean isXa) {
         BasicSourceCapabilities tgtCaps = new BasicSourceCapabilities();
         
+        tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, srcCaps.supportsSelectExpression());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, srcCaps.supportsSelectDistinct());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, srcCaps.supportsSelectLiterals());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, srcCaps.supportsAliasedGroup());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, srcCaps.supportsJoins());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, srcCaps.supportsInnerJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, srcCaps.supportsSelfJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, srcCaps.supportsOuterJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, srcCaps.supportsFullOuterJoins());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, srcCaps.supportsInlineViews());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE, srcCaps.supportsCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_BETWEEN, srcCaps.supportsBetweenCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, srcCaps.supportsCompareCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, srcCaps.supportsCompareCriteriaEquals());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_NE, srcCaps.supportsCompareCriteriaNotEquals());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_LT, srcCaps.supportsCompareCriteriaLessThan());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_LE, srcCaps.supportsCompareCriteriaLessThanOrEqual());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, srcCaps.supportsCompareCriteriaGreaterThan());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GE, srcCaps.supportsCompareCriteriaGreaterThanOrEqual());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_LIKE, srcCaps.supportsLikeCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_LIKE_ESCAPE, srcCaps.supportsLikeCriteriaEscapeCharacter());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_IN, srcCaps.supportsInCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, srcCaps.supportsInCriteriaSubquery());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_ISNULL, srcCaps.supportsIsNullCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_AND, srcCaps.supportsAndCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_OR, srcCaps.supportsOrCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_NOT, srcCaps.supportsNotCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_EXISTS, srcCaps.supportsExistsCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, srcCaps.supportsQuantifiedCompareCriteria());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, srcCaps.supportsQuantifiedCompareCriteriaSome());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_ALL, srcCaps.supportsQuantifiedCompareCriteriaAll());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, srcCaps.supportsCompareCriteriaEquals());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, srcCaps.supportsCompareCriteriaOrdered());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, srcCaps.supportsLikeCriteria());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, srcCaps.supportsLikeCriteriaEscapeCharacter());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_IN, srcCaps.supportsInCriteria());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, srcCaps.supportsInCriteriaSubquery());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, srcCaps.supportsIsNullCriteria());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_OR, srcCaps.supportsOrCriteria());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_NOT, srcCaps.supportsNotCriteria());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_EXISTS, srcCaps.supportsExistsCriteria());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, srcCaps.supportsQuantifiedCompareCriteriaSome());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, srcCaps.supportsQuantifiedCompareCriteriaAll());
         tgtCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, srcCaps.supportsOrderBy());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES, srcCaps.supportsAggregates());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, srcCaps.supportsAggregatesSum());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, srcCaps.supportsAggregatesAvg());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, srcCaps.supportsAggregatesMin());
@@ -94,14 +85,14 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, srcCaps.supportsSetQueryOrderBy());
         tgtCaps.setCapabilitySupport(Capability.BULK_INSERT , srcCaps.supportsBulkInsert());
         tgtCaps.setCapabilitySupport(Capability.BATCHED_UPDATES, srcCaps.supportsBatchedUpdates());
-        tgtCaps.setCapabilitySupport(Capability.FUNCTION, srcCaps.supportsScalarFunctions());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, srcCaps.supportsFunctionsInGroupBy());
         tgtCaps.setCapabilitySupport(Capability.ROW_LIMIT, srcCaps.supportsRowLimit());
         tgtCaps.setCapabilitySupport(Capability.ROW_OFFSET, srcCaps.supportsRowOffset());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, srcCaps.useAnsiJoin());
         tgtCaps.setCapabilitySupport(Capability.REQUIRES_CRITERIA, srcCaps.requiresCriteria());
         tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY, srcCaps.supportsGroupBy());
-
+        tgtCaps.setCapabilitySupport(Capability.QUERY_HAVING, srcCaps.supportsHaving());
+        
         List functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {
             Iterator iter = functions.iterator();
@@ -115,6 +106,7 @@ public class CapabilitiesConverter {
         tgtCaps.setSourceProperty(Capability.CONNECTOR_ID, connectorID);
         tgtCaps.setSourceProperty(Capability.MAX_QUERY_FROM_GROUPS, new Integer(srcCaps.getMaxFromGroups()));
         tgtCaps.setSourceProperty(Capability.TRANSACTIONS_XA, isXa);
+        tgtCaps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, srcCaps.getSupportedJoinCriteria());
         return tgtCaps;
     }
 

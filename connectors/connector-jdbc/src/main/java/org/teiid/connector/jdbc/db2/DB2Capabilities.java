@@ -114,10 +114,6 @@ public class DB2Capabilities extends JDBCCapabilities {
         return true;
     }
     
-    public boolean supportsOrderByInInlineViews() {
-        return true;
-    }
-
     /** 
      * @see org.teiid.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0

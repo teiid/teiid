@@ -698,9 +698,7 @@ public class TestLimit extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         // pm3 model supports order by
         capFinder.addCapabilities("pm3", caps); //$NON-NLS-1$
 
@@ -850,11 +848,10 @@ public class TestLimit extends TestCase {
         String sql = "select a from (SELECT MAX(e2) as a FROM pm1.g1 GROUP BY e2 LIMIT 1) x where a = 0"; //$NON-NLS-1$
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_HAVING, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         

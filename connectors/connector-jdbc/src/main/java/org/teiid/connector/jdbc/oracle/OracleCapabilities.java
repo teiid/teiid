@@ -115,10 +115,6 @@ public class OracleCapabilities extends JDBCCapabilities {
         return true;
     }
 
-    public boolean supportsOrderByInInlineViews() {
-        return true;
-    }
-
     /** 
      * @see org.teiid.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0

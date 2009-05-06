@@ -43,7 +43,7 @@ public class TestSubqueryPushdown {
 	    FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
 	    BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 	    caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-	    caps.setCapabilitySupport(Capability.QUERY_WHERE_EXISTS, true);
+	    caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
 	    capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 	    
 	    FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -83,7 +83,7 @@ public class TestSubqueryPushdown {
 	    FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
 	    BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 	    caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-	    caps.setCapabilitySupport(Capability.QUERY_WHERE_EXISTS, true);
+	    caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
 	    capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 	    
 	    FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -115,14 +115,11 @@ public class TestSubqueryPushdown {
 	@Test public void testPushCorrelatedSubquery1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_ALL, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -139,24 +136,19 @@ public class TestSubqueryPushdown {
     @Test public void testPushCorrelatedSubquery2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_LIKE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_ALL, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -184,24 +176,19 @@ public class TestSubqueryPushdown {
     @Test public void testPushCorrelatedSubquery3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_LIKE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_ALL, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("||", true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -230,9 +217,7 @@ public class TestSubqueryPushdown {
     public void DEFER_testPushSubqueryInSelectClause1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
@@ -395,7 +380,7 @@ public class TestSubqueryPushdown {
     @Test public void testNoPushSubqueryInWhereClause1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -427,7 +412,7 @@ public class TestSubqueryPushdown {
     @Test public void testNoPushSubqueryInWhereClause2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", getTypicalCapabilities()); //$NON-NLS-1$
 
@@ -459,9 +444,8 @@ public class TestSubqueryPushdown {
     public void defer_testNoPushSubqueryInWhereClause3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
@@ -493,9 +477,8 @@ public class TestSubqueryPushdown {
     @Test public void testNoPushSubqueryInWhereClause4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
@@ -526,9 +509,8 @@ public class TestSubqueryPushdown {
     @Test public void testNoPushSubqueryInWhereClause5() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
@@ -559,9 +541,8 @@ public class TestSubqueryPushdown {
     @Test public void testNoPushSubqueryInWhereClause6() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
@@ -593,10 +574,8 @@ public class TestSubqueryPushdown {
     @Test public void testNoPushSubqueryInWhereClause7() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setFunctionSupport("ltrim", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
@@ -631,9 +610,8 @@ public class TestSubqueryPushdown {
     @Test public void testNoPushSubqueryInWhereClause8() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
@@ -664,9 +642,8 @@ public class TestSubqueryPushdown {
     @Test public void testNoPushSubqueryInWhereClause9() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -694,15 +671,12 @@ public class TestSubqueryPushdown {
 	@Test public void testPushMultipleCorrelatedSubquery1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_OR, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_ALL, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_OR, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -725,12 +699,10 @@ public class TestSubqueryPushdown {
         FakeMetadataFacade metadata = example1();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$

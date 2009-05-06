@@ -22,17 +22,19 @@
 
 package com.metamatrix.query.optimizer;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.connector.api.SourceSystemFunctions;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryParserException;
 import com.metamatrix.api.exception.query.QueryResolverException;
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -49,17 +51,12 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.unittest.FakeMetadataStore;
 
-
-public class TestJoinOptimization extends TestCase {
+public class TestJoinOptimization {
     
-    public TestJoinOptimization(String name) {
-        super(name);
-    }
-
     /**
      * Single group criteria should get pushed and be eligible for copy criteria
      */
-    public void testInnerJoinPushAndCopyNonJoinCriteria() {
+    @Test public void testInnerJoinPushAndCopyNonJoinCriteria() {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla inner join bqt2.smalla on (bqt1.smalla.intkey = bqt2.smalla.intkey and bqt2.smalla.intkey = 1)"; //$NON-NLS-1$
         
         // Plan query
@@ -86,7 +83,7 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Single group criteria should get pushed when it is on the inner side
      */
-    public void testOuterJoinPushNonJoinCriteria() {
+    @Test public void testOuterJoinPushNonJoinCriteria() {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (bqt1.smalla.intkey = bqt2.smalla.intkey and bqt2.smalla.stringkey = 1)"; //$NON-NLS-1$
         
         // Plan query
@@ -113,7 +110,7 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Single group criteria should not be pushed when it is on the outer side 
      */
-    public void testOuterJoinPushNonJoinCriteriaA() {
+    @Test public void testOuterJoinPushNonJoinCriteriaA() {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (bqt1.smalla.intkey = bqt2.smalla.intkey and bqt1.smalla.stringkey = 1)"; //$NON-NLS-1$
         
         // Plan query
@@ -137,7 +134,7 @@ public class TestJoinOptimization extends TestCase {
         });
     }
     
-    public void testOuterJoinPushNonJoinCriteria_Case5547() {
+    @Test public void testOuterJoinPushNonJoinCriteria_Case5547() {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (1=1) option debug"; //$NON-NLS-1$
         String BQT1 = "BQT1";   //$NON-NLS-1$
         String BQT2 = "BQT2";   //$NON-NLS-1$
@@ -182,7 +179,7 @@ public class TestJoinOptimization extends TestCase {
      * Single group criteria should not be pushed when it is used in a full outer join
      * Note that the join has also degraded into a cross join rather than an outer join
      */
-    public void testFullOuterJoinPushNonJoinCriteria() {
+    @Test public void testFullOuterJoinPushNonJoinCriteria() {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla full outer join bqt2.smalla on (bqt1.smalla.intkey = bqt2.smalla.intkey and bqt1.smalla.stringkey = 1 and bqt2.smalla.stringkey = 1)"; //$NON-NLS-1$
         
         // Plan query
@@ -210,7 +207,7 @@ public class TestJoinOptimization extends TestCase {
      * Copy criteria should still work here even though the join criteria has an implicit type conversion because
      * the equality operation on the select criteria can be used. 
      */
-    public void testCopyCriteriaWithFunction1() {
+    @Test public void testCopyCriteriaWithFunction1() {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla, bqt2.smalla where bqt1.smalla.stringkey = bqt2.smalla.intkey and bqt2.smalla.intkey = 1"; //$NON-NLS-1$
         
         // Plan query
@@ -237,7 +234,7 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Copy criteria should not work here as the join criteria has an implicit convert and the where criteria is a non-equality predicate
      */
-    public void testCopyCriteriaWithFunction2() {
+    @Test public void testCopyCriteriaWithFunction2() {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla, bqt2.smalla where bqt1.smalla.stringkey = bqt2.smalla.intkey and bqt2.smalla.intkey <> 1"; //$NON-NLS-1$
         
         // Plan query
@@ -264,7 +261,7 @@ public class TestJoinOptimization extends TestCase {
     /**
      * The intkey criteria should not be copied above to bqt1.smalla since the criteria is comming from the inner side in the join below 
      */
-    public void testInvalidCopyCriteria() {
+    @Test public void testInvalidCopyCriteria() {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla inner join (select bqt3.smalla.intkey from bqt2.smalla left outer join bqt3.smalla on bqt2.smalla.intkey = bqt3.smalla.intkey and bqt3.smalla.intkey = 1) foo on bqt1.smalla.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
@@ -291,11 +288,11 @@ public class TestJoinOptimization extends TestCase {
     /*
      * Note that the criteria does not get copied to the outer side.
      */
-    public void testCopyCriteriaFromInnerSide() {
+    @Test public void testCopyCriteriaFromInnerSide() throws Exception {
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join (select bqt3.smalla.intkey from bqt3.smalla where bqt3.smalla.intkey = 1) foo on bqt1.smalla.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT bqt1.smalla.intkey FROM bqt1.smalla", "SELECT BQT3.SmallA.IntKey FROM bqt3.smalla WHERE bqt3.smalla.intkey = 1"}); //$NON-NLS-1$ //$NON-NLS-2$ 
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey FROM bqt3.smalla AS g_0 WHERE g_0.intkey = 1", "SELECT g_0.intkey FROM bqt1.smalla AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -318,7 +315,7 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Check to ensure that the full outer join does not get merged since the where criteria cannot be moved
      */
-    public void testFullOuterJoinPreservation() {
+    @Test public void testFullOuterJoinPreservation() {
         String sql = "select bqt2.mediumb.intkey from bqt2.mediumb full outer join (select bqt2.smallb.intkey from bqt2.smalla left outer join bqt2.smallb on bqt2.smalla.intkey = bqt2.smallb.intkey where bqt2.smalla.stringkey = 1) foo on bqt2.mediumb.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
@@ -346,11 +343,11 @@ public class TestJoinOptimization extends TestCase {
     /** 
      * Same as above but with a 0 group criteria
      */
-    public void testFullOuterJoinPreservation1() {
+    @Test public void testFullOuterJoinPreservation1() {
         String sql = "select bqt2.mediumb.intkey from bqt2.mediumb full outer join (select bqt2.smallb.intkey from bqt2.smalla inner join bqt2.smallb on bqt2.smalla.intkey = bqt2.smallb.intkey where ? = 1) foo on bqt2.mediumb.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey AS c_0 FROM bqt2.mediumb AS g_0 ORDER BY c_0", "SELECT g_1.intkey FROM bqt2.smalla AS g_0, bqt2.smallb AS g_1 WHERE (? = 1) AND (g_0.intkey = g_1.intkey)"}); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey AS c_0 FROM bqt2.mediumb AS g_0 ORDER BY c_0", "SELECT g_1.intkey FROM bqt2.smalla AS g_0, bqt2.smallb AS g_1 WHERE (g_0.intkey = g_1.intkey) AND (? = 1)"}); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -373,11 +370,11 @@ public class TestJoinOptimization extends TestCase {
     /** 
      * Same as above but with a left outer join
      */
-    public void testOuterJoinPreservation() {
+    @Test public void testOuterJoinPreservation() {
         String sql = "select bqt2.mediumb.intkey from bqt2.mediumb left outer join (select bqt2.smallb.intkey from bqt2.smalla inner join bqt2.smallb on bqt2.smalla.intkey = bqt2.smallb.intkey where ? = 1) foo on bqt2.mediumb.intkey = foo.intkey"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey AS c_0 FROM bqt2.mediumb AS g_0 ORDER BY c_0", "SELECT g_1.intkey FROM bqt2.smalla AS g_0, bqt2.smallb AS g_1 WHERE (? = 1) AND (g_0.intkey = g_1.intkey)"}); //$NON-NLS-1$ //$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.intkey AS c_0 FROM bqt2.mediumb AS g_0 ORDER BY c_0", "SELECT g_1.intkey FROM bqt2.smalla AS g_0, bqt2.smallb AS g_1 WHERE (g_0.intkey = g_1.intkey) AND (? = 1)"}); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -397,7 +394,7 @@ public class TestJoinOptimization extends TestCase {
         });        
     }
     
-    public void testCopyCriteriaCreatesFalseCriteria() {
+    @Test public void testCopyCriteriaCreatesFalseCriteria() {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla, bqt2.smalla where bqt1.smalla.stringkey = bqt2.smalla.intkey and bqt2.smalla.intkey = 1 and bqt1.smalla.stringkey = '2'"; //$NON-NLS-1$
 
         // Plan query
@@ -406,7 +403,7 @@ public class TestJoinOptimization extends TestCase {
         TestOptimizer.checkNodeTypes(plan, TestRuleRaiseNull.FULLY_NULL);        
     }
     
-    public void testPushNonJoinCriteriaWithFalse() {
+    @Test public void testPushNonJoinCriteriaWithFalse() {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (bqt1.smalla.stringkey = bqt2.smalla.intkey and bqt2.smalla.intkey = null)"; //$NON-NLS-1$
 
         // Plan query
@@ -430,20 +427,18 @@ public class TestJoinOptimization extends TestCase {
         });        
     }
     
-    public void testPushMultiGroupJoinCriteria() {
+    @Test public void testPushMultiGroupJoinCriteria() throws Exception {
         String sql = "select bqt1.smalla.intkey, bqt1.smallb.intkey from bqt1.smalla right outer join (bqt1.smallb cross join (bqt1.mediuma cross join bqt1.mediumb)) on bqt1.smalla.stringkey = bqt1.smallb.stringkey" //$NON-NLS-1$ 
             +" where bqt1.smallb.intkey + bqt1.mediuma.intkey + bqt1.mediumb.intkey = 1"; //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                                    new String[] {"SELECT g_3.intkey, g_0.intkey FROM (bqt1.smallb AS g_0 INNER JOIN (bqt1.mediuma AS g_1 CROSS JOIN bqt1.mediumb AS g_2) ON ((g_0.intkey + g_1.intkey) + g_2.intkey) = 1) LEFT OUTER JOIN bqt1.smalla AS g_3 ON g_3.stringkey = g_0.stringkey"}, true); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[] {"SELECT g_3.intkey, g_0.intkey FROM ((bqt1.smallb AS g_0 CROSS JOIN bqt1.mediuma AS g_1) INNER JOIN bqt1.mediumb AS g_2 ON ((g_0.intkey + g_1.intkey) + g_2.intkey) = 1) LEFT OUTER JOIN bqt1.smalla AS g_3 ON g_3.stringkey = g_0.stringkey"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
     }
@@ -451,20 +446,18 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Since the multigroup criteria spans the inner side, it should not be pushed. 
      */
-    public void testPushMultiGroupJoinCriteria1() {
+    @Test public void testPushMultiGroupJoinCriteria1() {
         String sql = "select bqt1.smalla.intkey, bqt1.smallb.intkey from bqt1.smalla right outer join (bqt1.smallb cross join (bqt1.mediuma cross join bqt1.mediumb)) on bqt1.smalla.stringkey = bqt1.smallb.stringkey" //$NON-NLS-1$ 
             +" where bqt1.smalla.intkey + bqt1.mediuma.intkey + bqt1.mediumb.intkey is null"; //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                                    new String[] {"SELECT g_3.intkey, g_0.intkey FROM (bqt1.smallb AS g_0 CROSS JOIN (bqt1.mediuma AS g_1 CROSS JOIN bqt1.mediumb AS g_2)) LEFT OUTER JOIN bqt1.smalla AS g_3 ON g_3.stringkey = g_0.stringkey WHERE ((g_3.intkey + g_1.intkey) + g_2.intkey) IS NULL"}, true); //$NON-NLS-1$
+                                                    new String[] {"SELECT g_3.intkey, g_0.intkey FROM ((bqt1.smallb AS g_0 CROSS JOIN bqt1.mediuma AS g_1) CROSS JOIN bqt1.mediumb AS g_2) LEFT OUTER JOIN bqt1.smalla AS g_3 ON g_3.stringkey = g_0.stringkey WHERE ((g_3.intkey + g_1.intkey) + g_2.intkey) IS NULL"}, true); //$NON-NLS-1$
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
     }
@@ -472,20 +465,18 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Since the multigroup criteria is not null dependent, it should get pushed. 
      */
-    public void testPushMultiGroupJoinCriteria2() {
+    @Test public void testPushMultiGroupJoinCriteria2() {
         String sql = "select bqt1.smalla.intkey, bqt1.smallb.intkey from bqt1.smalla right outer join (bqt1.smallb cross join (bqt1.mediuma cross join bqt1.mediumb)) on bqt1.smalla.stringkey = bqt1.smallb.stringkey" //$NON-NLS-1$ 
             +" where bqt1.smalla.intkey + bqt1.mediuma.intkey + bqt1.mediumb.intkey = 1"; //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                                    new String[] {"SELECT bqt1.smalla.intkey, bqt1.smallb.intkey FROM bqt1.mediuma, bqt1.smallb, bqt1.mediumb, bqt1.smalla WHERE (((bqt1.smalla.intkey + bqt1.mediuma.intkey) + bqt1.mediumb.intkey) = 1) AND (bqt1.smalla.stringkey = bqt1.smallb.stringkey)"}, true); //$NON-NLS-1$ 
+                                                    new String[] {"SELECT g_3.intkey, g_2.intkey FROM bqt1.mediuma AS g_0, bqt1.mediumb AS g_1, bqt1.smallb AS g_2, bqt1.smalla AS g_3 WHERE (g_3.stringkey = g_2.stringkey) AND (((g_3.intkey + g_0.intkey) + g_1.intkey) = 1)"}, true); //$NON-NLS-1$ 
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
     }
@@ -494,14 +485,13 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Having criteria should not be considered as regular criteria (unless it contains no aggregate expressions). 
      */
-    public void testHavingCriteriaNotUsedAsJoinCriteria() {
+    @Test public void testHavingCriteriaNotUsedAsJoinCriteria() {
         String sql = "select bqt1.smalla.intkey, max(bqt1.smallb.intkey) from bqt1.smalla, bqt1.smallb where bqt1.smalla.intkey = bqt1.smallb.intnum group by bqt1.smallb.intkey, bqt1.smalla.intkey having max(bqt1.smallb.intkey) = bqt1.smalla.intkey"; //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_HAVING, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
@@ -515,12 +505,12 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Ensure that subqueries not initially pushable to the source still get replaced
      */
-    public void testSubqueryReplacement() {
+    @Test public void testSubqueryReplacement() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
@@ -534,7 +524,7 @@ public class TestJoinOptimization extends TestCase {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
     }
     
-    public void testRulePushNonJoinCriteriaPreservesOuterJoin() throws Exception {
+    @Test public void testRulePushNonJoinCriteriaPreservesOuterJoin() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select b.intkey from (select intkey from bqt1.smalla) a left outer join (select intkey from bqt1.smallb) b on (1 = 1)"; //$NON-NLS-1$
         
@@ -544,7 +534,7 @@ public class TestJoinOptimization extends TestCase {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
-    public void testOuterToInnerJoinConversion() {
+    @Test public void testOuterToInnerJoinConversion() {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla left outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smallb.intnum = 1"; //$NON-NLS-1$
         
@@ -552,21 +542,21 @@ public class TestJoinOptimization extends TestCase {
     }
     
     //same as above, but with a right outer join
-    public void testOuterToInnerJoinConversion1() {
+    @Test public void testOuterToInnerJoinConversion1() {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla right outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smalla.intnum = 1"; //$NON-NLS-1$
         
         TestOptimizer.helpPlan(sql, metadata, new String[]{"SELECT bqt1.smalla.intkey FROM bqt1.smallb, bqt1.smalla WHERE (bqt1.smalla.intkey = bqt1.smallb.intkey) AND (bqt1.smalla.intnum = 1)"}); //$NON-NLS-1$
     }
     
-    public void testOuterToInnerJoinConversion2() {
+    @Test public void testOuterToInnerJoinConversion2() {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla full outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smallb.intnum = 1"; //$NON-NLS-1$
         
         TestOptimizer.helpPlan(sql, metadata, new String[]{"SELECT bqt1.smalla.intkey FROM bqt1.smallb LEFT OUTER JOIN bqt1.smalla ON bqt1.smalla.intkey = bqt1.smallb.intkey WHERE bqt1.smallb.intnum = 1"}); //$NON-NLS-1$
     }    
     
-    public void testOuterToInnerJoinConversion3() {
+    @Test public void testOuterToInnerJoinConversion3() {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla full outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smalla.intnum = 1"; //$NON-NLS-1$
         
@@ -576,7 +566,7 @@ public class TestJoinOptimization extends TestCase {
     /**
      * non-depenent criteria on each side of a full outer creates an inner join  
      */
-    public void testOuterToInnerJoinConversion4() {
+    @Test public void testOuterToInnerJoinConversion4() {
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
         String sql = "select bqt1.smalla.intkey from bqt1.smalla full outer join bqt1.smallb on (bqt1.smalla.intkey = bqt1.smallb.intkey) where bqt1.smalla.intnum = bqt1.smallb.intnum"; //$NON-NLS-1$
         
@@ -586,10 +576,10 @@ public class TestJoinOptimization extends TestCase {
     /**
      * Since concat2 is null dependent the join will not be changed 
      */
-    public void testOuterToInnerJoinConversionNullDependent() {
+    @Test public void testOuterToInnerJoinConversionNullDependent() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
@@ -602,10 +592,11 @@ public class TestJoinOptimization extends TestCase {
         TestOptimizer.helpPlan(sql, metadata, null, capFinder, new String[]{"SELECT bqt1.smallb.intnum, bqt1.smalla.intkey FROM bqt1.smalla LEFT OUTER JOIN bqt1.smallb ON bqt1.smalla.intkey = bqt1.smallb.intkey"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     }
     
-    public void testInlineViewToHaving() {
+    @Test public void testInlineViewToHaving() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_HAVING, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
@@ -642,7 +633,7 @@ public class TestJoinOptimization extends TestCase {
      * 
      * This tests now passes with RulePlanJoins
      */
-    public void testPathologicalAccessPatternCaseCase2976Defect19018() throws Exception{
+    @Test public void testPathologicalAccessPatternCaseCase2976Defect19018() throws Exception{
         FakeMetadataFacade metadata = FakeMetadataFactory.example2();
         
         // add single access pattern to pm1.g4 containing elements e1, e2, and e3
@@ -681,54 +672,25 @@ public class TestJoinOptimization extends TestCase {
                                         0       // UnionAll
                                     });          
     }       
-
-    public void testHavingCriteriaPushDown() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-        
-        ProcessorPlan plan = TestOptimizer.helpPlan("select X.e1 FROM vm1.g1 X group by X.e1 having X.e1 = 1 and sum(X.e2) = 2", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 = '1'"}, true); //$NON-NLS-1$
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            1,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            1,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
-    }
     
     /**
      * non-null dependent criteria should get pushed down
      */
-    public void testPushMultiGroupCriteriaOuterJoin() { 
+    @Test public void testPushMultiGroupCriteriaOuterJoin() { 
         String sql = "select m.intkey, m.intnum, s.intkey, s.intnum from BQT2.mediuma m left outer join BQT2.smalla s on m.intkey = s.intkey where not (m.intkey + s.intnum = 26)"; //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_NOT, true);        //TODO is this being enforced?!
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_NOT, true); 
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
@@ -775,60 +737,60 @@ public class TestJoinOptimization extends TestCase {
         assertEquals(dependent, JoinUtil.isNullDependent(FakeMetadataFactory.example1Cached(), innerGroups, expr));
     }
     
-    public void testNullDependentVisitor() throws Exception {
+    @Test public void testNullDependentVisitor() throws Exception {
         helpTestNullDependentVisitor("nvl(pm1.g1.e1, 1) = 1", true); //$NON-NLS-1$
     }
     
-    public void testNullDependentVisitor1() throws Exception {
+    @Test public void testNullDependentVisitor1() throws Exception {
         helpTestNullDependentVisitor("ifnull(pm1.g1.e1, 1) = 1", true); //$NON-NLS-1$
     }
 
-    public void testNullDependentVisitor2() throws Exception {
+    @Test public void testNullDependentVisitor2() throws Exception {
         helpTestNullDependentVisitor("rand(pm1.g1.e2) = 1", true); //$NON-NLS-1$
     }
 
-    public void testNullDependentVisitor3() throws Exception {
+    @Test public void testNullDependentVisitor3() throws Exception {
         helpTestNullDependentVisitor("concat2(pm1.g1.e1, pm1.g1.e2) = '1'", false); //$NON-NLS-1$
     }
     
-    public void testNullDependentVisitor4() throws Exception {
+    @Test public void testNullDependentVisitor4() throws Exception {
         helpTestNullDependentVisitor("nvl(pm1.g2.e1, 1) = 1", true); //$NON-NLS-1$
     }
     
-    public void testNullDependentVisitor5() throws Exception {
+    @Test public void testNullDependentVisitor5() throws Exception {
         helpTestNullDependentVisitor("pm1.g1.e1 is null", true); //$NON-NLS-1$
     }    
     
-    public void testNullDependentVisitor6() throws Exception {
+    @Test public void testNullDependentVisitor6() throws Exception {
         helpTestNullDependentVisitor("pm1.g1.e1 is not null", false); //$NON-NLS-1$
     }    
 
-    public void testNullDependentVisitor7() throws Exception {
+    @Test public void testNullDependentVisitor7() throws Exception {
         helpTestNullDependentVisitor("pm1.g2.e1 is not null", true); //$NON-NLS-1$
     }
     
     //this is an important test, the or causes this criteria to be null dependent
-    public void testNullDependentVisitor8() throws Exception {
+    @Test public void testNullDependentVisitor8() throws Exception {
         helpTestNullDependentVisitor("pm1.g1.e1 = 1 or pm1.g2.e1 = 1", true); //$NON-NLS-1$
     }
     
-    public void testNullDependentVisitor9() throws Exception {
+    @Test public void testNullDependentVisitor9() throws Exception {
         helpTestNullDependentVisitor("pm1.g1.e1 = 1 or pm1.g1.e2 = 2", false); //$NON-NLS-1$
     }
     
-    public void testNullDependentVisitor10() throws Exception {
+    @Test public void testNullDependentVisitor10() throws Exception {
         helpTestNullDependentVisitor("pm1.g1.e1 in (1, pm1.g2.e1)", false); //$NON-NLS-1$
     }
     
-    public void testNullDependentVisitor11() throws Exception {
+    @Test public void testNullDependentVisitor11() throws Exception {
         helpTestNullDependentVisitor("pm1.g2.e1 in (1, pm1.g1.e1)", true); //$NON-NLS-1$
     }
     
-    public void testIsNullDependent() throws Exception {
+    @Test public void testIsNullDependent() throws Exception {
         helpTestNullDependent("pm1.g1.e2 + 1", false); //$NON-NLS-1$
     }
     
-    public void testIsNullDependent1() throws Exception {
+    @Test public void testIsNullDependent1() throws Exception {
         helpTestNullDependent("pm1.g2.e2 + 1", true); //$NON-NLS-1$
     }
 
@@ -836,17 +798,14 @@ public class TestJoinOptimization extends TestCase {
      *  The criteria will still get pushed to appropriate location, and
      *  the other side of the join will be removed
      */
-    public void testCriteriaPushedWithUnionJoin() throws Exception {
+    @Test public void testCriteriaPushedWithUnionJoin() throws Exception {
         String sql = "select * from pm1.g1 union join pm1.g2 where g1.e1 = 1"; //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),
@@ -877,20 +836,17 @@ public class TestJoinOptimization extends TestCase {
     /**
      * union joins allow RuleRemoveVirtual to still take effect 
      */
-    public void testCriteriaPushedWithUnionJoin1() throws Exception {
+    @Test public void testCriteriaPushedWithUnionJoin1() throws Exception {
         String sql = "select vm1.g1.e1 from vm1.g1 union join vm1.g2 where g2.e1 = 1"; //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -898,8 +854,8 @@ public class TestJoinOptimization extends TestCase {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
                                       null, capFinder, 
                                       new String[] { 
-                                          "SELECT g1__1.e1 FROM pm1.g1 AS g1__1, pm1.g2 WHERE (g1__1.e1 = '1') AND (pm1.g2.e1 = '1')" }, //$NON-NLS-1$ 
-                                          TestOptimizer.SHOULD_SUCCEED);  
+                                          "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = '1') AND (g_1.e1 = '1')" }, //$NON-NLS-1$ 
+                                          ComparisonMode.EXACT_COMMAND_STRING);  
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
                                         1,      // Access
@@ -923,22 +879,19 @@ public class TestJoinOptimization extends TestCase {
     /**
      * null-dependent expressions should prevent merging of virtual layers
      */
-    public void testNullDependentPreventsMerge() throws Exception { 
+    @Test public void testNullDependentPreventsMerge() throws Exception { 
         String sql = "select x from pm1.g1 left outer join (select nvl(e2, 1) x from pm1.g2) y on e2 = x"; //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);        
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
-        caps.setFunctionSupport(SourceSystemFunctions.IFNULL, true); //$NON-NLS-1$
+        caps.setFunctionSupport(SourceSystemFunctions.IFNULL, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -957,13 +910,13 @@ public class TestJoinOptimization extends TestCase {
      * RuleCopyCriteria will remove the first join criteria and the source doesn't support the * function.  However we still
      * want the join to be pushed since it originally contained proper criteria.
      */
-    public void testCopyCriteriaJoinPushed() throws Exception {
-    	String sql = "select pm1.g1.e1 from pm1.g1, pm1.g2 where pm1.g1.e1 = pm1.g2.e1 and pm1.g1.e1 = 5 and pm1.g1.e2 * 5 = pm1.g2.e2";
+    @Test public void testCopyCriteriaJoinPushed() throws Exception {
+    	String sql = "select pm1.g1.e1 from pm1.g1, pm1.g2 where pm1.g1.e1 = pm1.g2.e1 and pm1.g1.e1 = 5 and pm1.g1.e2 * 5 = pm1.g2.e2"; //$NON-NLS-1$
     	
     	FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
     	
     	ProcessorPlan plan = TestOptimizer.helpPlan(sql,metadata, 
-    			new String[] { "SELECT g_0.e2, g_1.e2, g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = '5') AND (g_1.e1 = '5')" }); //$NON-NLS-1$
+    			new String[] { "SELECT g_0.e2, g_1.e2, g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = '5') AND (g_1.e1 = '5')" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     	
     	TestOptimizer.checkNodeTypes(plan, new int[] {
                 1,      // Access

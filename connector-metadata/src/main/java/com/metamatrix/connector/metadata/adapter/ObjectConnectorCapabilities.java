@@ -44,20 +44,6 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAndCriteria()
-     */
-    public boolean supportsAndCriteria() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteria()
-     */
-    public boolean supportsCompareCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaEquals()
      */
     public boolean supportsCompareCriteriaEquals() {
@@ -69,21 +55,6 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
      * @since 4.3
      */
     public boolean supportsLikeCriteria() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCriteria()
-     */
-    public boolean supportsCriteria() {
-        return true;
-    }
-
-    /** 
-     * @see org.teiid.connector.basic.BasicConnectorCapabilities#supportsScalarFunctions()
-     * @since 4.3
-     */
-    public boolean supportsScalarFunctions() {
         return true;
     }
 

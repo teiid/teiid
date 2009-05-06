@@ -59,8 +59,10 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     public void setCapabilitySupport(Capability capability, boolean supports) {
     	if (supports && capability == Capability.QUERY_AGGREGATES) {
     		capabilityMap.put(Capability.QUERY_GROUP_BY, true);
+    		capabilityMap.put(Capability.QUERY_HAVING, true);
+    	} else {
+    		capabilityMap.put(capability, supports);
     	}
-        capabilityMap.put(capability, supports);
     } 
 
     public void setFunctionSupport(String function, boolean supports) {        

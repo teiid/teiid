@@ -25,10 +25,13 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICompoundCriteria;
+import org.teiid.connector.language.ICriteria;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
@@ -36,6 +39,7 @@ import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.ILikeCriteria;
 import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.INotCriteria;
 import org.teiid.connector.language.ICompareCriteria.Operator;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.Group;
@@ -98,7 +102,6 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
 
     @Override
     public void visit( ILikeCriteria criteria ) {
-        super.visit(criteria);
         try {
             if (isIdColumn(criteria.getLeftExpression())) {
                 ConnectorException e = new ConnectorException(Messages.getString("CriteriaVisitor.LIKE.not.supported.on.Id"));
@@ -112,14 +115,58 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         } catch (ConnectorException e) {
             exceptions.add(e);
         }
+        boolean negated = criteria.isNegated();
+        criteria.setNegated(false);
         criteriaList.add(criteria.toString());
+        if (negated) {
+        	addNot();
+        	criteria.setNegated(true);
+        }
         // don't check if it's ID, Id LIKE '123%' still requires a query
         setHasCriteria(true, false);
     }
+    
+    @Override
+    public void visit(ICompoundCriteria obj) {
+    	List<List<String>> savedCriteria = new LinkedList<List<String>>();
+    	for (ICriteria crit : obj.getCriteria()) {
+        	super.visitNode(crit);
+        	if (!this.criteriaList.isEmpty()) {
+        		savedCriteria.add(this.criteriaList);
+        	}
+        	this.criteriaList = new LinkedList<String>();
+		}
+    	if (savedCriteria.size() == 1) {
+    		this.criteriaList = savedCriteria.get(0);
+    	} else if (savedCriteria.size() > 1){
+    		for (Iterator<List<String>> listIter = savedCriteria.iterator(); listIter.hasNext();) {
+    			this.criteriaList.add(OPEN);
+    			this.criteriaList.addAll(listIter.next());
+    			this.criteriaList.add(CLOSE);
+    			if (listIter.hasNext()) {
+    				this.criteriaList.add(SPACE);
+    				this.criteriaList.add(obj.getOperator().toString());
+    				this.criteriaList.add(SPACE);
+    			}
+			}
+    	}
+    }
+    
+    @Override
+    public void visit(INotCriteria obj) {
+    	super.visit(obj);
+    	addNot();
+    }
+
+	private void addNot() {
+		if (!criteriaList.isEmpty()) {
+    		criteriaList.add(0, "NOT ("); //$NON-NLS-1$
+    		criteriaList.add(CLOSE);
+    	}
+	}
 
     @Override
     public void visit( IInCriteria criteria ) {
-        super.visit(criteria);
         try {
             IExpression lExpr = criteria.getLeftExpression();
             String columnName = lExpr.toString();
@@ -129,7 +176,7 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
                     && (column.getNativeType().equals("multipicklist") || column.getNativeType().equals("restrictedmultiselectpicklist"))) {
                     appendMultiselectIn(column, criteria);
                 } else {
-                    appendCriteria(criteriaList, criteria);
+                    appendCriteria(criteria);
                 }
             }
             setHasCriteria(true, isIdColumn(criteria.getLeftExpression()));
@@ -139,7 +186,6 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     }
 
     public void parseFunction( IFunction func ) {
-        super.visit(func);
         String functionName = func.getName();
         try {
             if (functionName.equalsIgnoreCase("includes")) {
@@ -264,12 +310,14 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
         }
     }
 
-    private void appendCriteria( List criteriaList,
-                                 IInCriteria criteria ) throws ConnectorException {
+    private void appendCriteria( IInCriteria criteria ) throws ConnectorException {
         StringBuffer queryString = new StringBuffer();
         queryString.append(' ');
         queryString.append(getValue(criteria.getLeftExpression()));
         queryString.append(' ');
+        if (criteria.isNegated()) {
+            queryString.append("NOT ");
+        }
         queryString.append("IN");
         queryString.append('(');
         Element column = ((IElement)criteria.getLeftExpression()).getMetadataObject();
@@ -382,4 +430,14 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
     public String getTableName() throws ConnectorException {
         return table.getNameInSource();
     }
+    
+    protected void addCriteriaString(StringBuffer result) {
+    	if(hasCriteria()) {
+			result.append(WHERE).append(SPACE);
+			for (String string : criteriaList) {
+				result.append(string);
+			}
+			result.append(SPACE);
+		}
+	}
 }

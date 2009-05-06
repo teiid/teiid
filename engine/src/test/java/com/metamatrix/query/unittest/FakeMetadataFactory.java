@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.mapping.xml.MappingAttribute;
@@ -1738,6 +1737,7 @@ public class FakeMetadataFactory {
 		FakeMetadataObject pm3g2 = createPhysicalGroup("pm3.g2", pm3); //$NON-NLS-1$
 		FakeMetadataObject pm3g3 = createPhysicalGroup("pm3.g3", pm3); //$NON-NLS-1$
         FakeMetadataObject pm4g1 = createPhysicalGroup("pm4.g1", pm4); //$NON-NLS-1$
+        FakeMetadataObject pm4g2 = createPhysicalGroup("pm4.g2", pm4); //$NON-NLS-1$
 		// Add group cardinality metadata
 		pm1g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10));
 		pm1g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(10));
@@ -1780,23 +1780,16 @@ public class FakeMetadataFactory {
         List pm4g1e = createElements(pm4g1, 
             new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
+        List pm4g2e = createElements(pm4g2, 
+                new String[] { "e1", "e2", "e3", "e4" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.DOUBLE });
 
 		// Add key metadata
-		List keyElements = new ArrayList(1);
-		keyElements.add(pm1g1e.iterator().next());       
-		FakeMetadataObject pm1g1key1 = createKey("pm1.g1.key1", pm1g1, keyElements); //e1 //$NON-NLS-1$
-		keyElements = new ArrayList(1);
-		keyElements.add(pm3g1e.iterator().next());       
-		FakeMetadataObject pm3g1key1 = createKey("pm3.g1.key1", pm3g1, keyElements); //e1 //$NON-NLS-1$
-		keyElements = new ArrayList(1);
-		keyElements.add(pm3g3e.iterator().next());       
-		FakeMetadataObject pm3g3key1 = createKey("pm3.g3.key1", pm3g3, keyElements); //e1 //$NON-NLS-1$
-        keyElements = new ArrayList(1);
-        Iterator i = pm4g1e.iterator();
-        keyElements.add(i.next());       
-        keyElements.add(i.next());       
-        FakeMetadataObject pm4g1key1 = createKey("pm4.g1.key1", pm4g1, keyElements); //e1, e2 //$NON-NLS-1$
-		
+		FakeMetadataObject pm1g1key1 = createKey("pm1.g1.key1", pm1g1, pm1g1e.subList(0, 1)); //e1 //$NON-NLS-1$
+		FakeMetadataObject pm3g1key1 = createKey("pm3.g1.key1", pm3g1, pm3g1e.subList(0, 1)); //e1 //$NON-NLS-1$
+		FakeMetadataObject pm3g3key1 = createKey("pm3.g3.key1", pm3g3, pm3g3e.subList(0, 1)); //e1 //$NON-NLS-1$
+        FakeMetadataObject pm4g1key1 = createKey("pm4.g1.key1", pm4g1, pm4g1e.subList(0, 2)); //e1, e2 //$NON-NLS-1$
+        FakeMetadataObject pm4g2key1 = createForeignKey("pm4.g2.fk", pm4g2, pm4g2e.subList(0, 2), pm4g1key1); //$NON-NLS-1$
 		// Add access pattern metadata
 		// Create access patterns - pm1
 		List elements = new ArrayList(1);
@@ -1876,7 +1869,10 @@ public class FakeMetadataFactory {
         store.addObject(pm4g1);
         store.addObjects(pm4g1e);
         store.addObject(pm4g1key1);
-
+        store.addObject(pm4g2);
+        store.addObjects(pm4g2e);
+        store.addObject(pm4g2key1);
+        
         store.addObject(vm1);
 		store.addObject(vm1g1);
 		store.addObjects(vm1g1e);
@@ -4125,29 +4121,9 @@ public class FakeMetadataFactory {
      * @param index Column index in group
      * @return FakeMetadataObject Metadata object for element
      */
-    public static FakeMetadataObject createElement(String name, FakeMetadataObject group, String type, int index) { 
-		FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.ELEMENT);
-		obj.putProperty(FakeMetadataObject.Props.MODEL, group.getProperty(FakeMetadataObject.Props.MODEL));
-		obj.putProperty(FakeMetadataObject.Props.GROUP, group);
-		obj.putProperty(FakeMetadataObject.Props.TYPE, type);
-		
-		obj.putProperty(FakeMetadataObject.Props.SELECT, Boolean.TRUE);	
-		if(type.equals(DataTypeManager.DefaultDataTypes.STRING)) { 	
-			obj.putProperty(FakeMetadataObject.Props.SEARCHABLE_LIKE, Boolean.TRUE);		
-		} else {
-			obj.putProperty(FakeMetadataObject.Props.SEARCHABLE_LIKE, Boolean.FALSE);
-		}	
-		obj.putProperty(FakeMetadataObject.Props.SEARCHABLE_COMPARE, Boolean.TRUE);		
-		obj.putProperty(FakeMetadataObject.Props.NULL, Boolean.TRUE);
-		obj.putProperty(FakeMetadataObject.Props.AUTO_INCREMENT, Boolean.FALSE);
-        obj.putProperty(FakeMetadataObject.Props.CASE_SENSITIVE, Boolean.FALSE);
-		obj.putProperty(FakeMetadataObject.Props.DEFAULT_VALUE, null);
-        obj.putProperty(FakeMetadataObject.Props.INDEX, new Integer(index));
-        obj.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.TRUE);
-        obj.putProperty(FakeMetadataObject.Props.LENGTH, "100"); //$NON-NLS-1$
-        obj.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, (name.lastIndexOf(".") == -1)? name : name.substring(name.lastIndexOf(".") + 1) );  //$NON-NLS-1$ //$NON-NLS-2$
-		return obj;	
-	}
+    public static FakeMetadataObject createElement(String name, FakeMetadataObject group, String type, int index) {
+    	return createElement(name, group, type, index, true);
+    }
 
     public static FakeMetadataObject createElement(String name, FakeMetadataObject group, String type, int index, boolean flag) { 
         FakeMetadataObject obj = new FakeMetadataObject(name, FakeMetadataObject.ELEMENT);
@@ -4169,11 +4145,11 @@ public class FakeMetadataFactory {
         obj.putProperty(FakeMetadataObject.Props.UPDATE, Boolean.TRUE);
         obj.putProperty(FakeMetadataObject.Props.LENGTH, "100"); //$NON-NLS-1$
         
-        int indexOfDot = name.indexOf("."); //$NON-NLS-1$
+        int indexOfDot = name.lastIndexOf("."); //$NON-NLS-1$
         if (flag) {
             name = name.substring(indexOfDot+1);
         } else {
-            name = "" + index; //$NON-NLS-1$
+            name = String.valueOf(index);
         }
         
         obj.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, name);

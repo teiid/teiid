@@ -10062,10 +10062,7 @@ public class TestXMLProcessor extends TestCase {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         CapabilitiesFinder capFinder = new SimpleCapabilitiesFinder(caps); 
         

@@ -190,19 +190,16 @@ public class TestPreparedStatement extends TestCase{
         //Create plan
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_NOT, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", false); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$

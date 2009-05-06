@@ -146,7 +146,7 @@ public class TestRuleRaiseNull extends TestCase {
     public void testRaiseNullWithOuterJoin1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         String sql = "select smallb.intkey, smalla.intkey from bqt1.smalla left outer join bqt1.smallb on (1 = 2)"; //$NON-NLS-1$
@@ -272,7 +272,7 @@ public class TestRuleRaiseNull extends TestCase {
     public void testRaiseNullWithOuterJoinAndHaving() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         String sql = "select smallb.intkey, smalla.intkey from bqt1.smalla left outer join bqt1.smallb on (1 = 2) group by smalla.intkey, smallb.intkey having max(smallb.intkey) = 1"; //$NON-NLS-1$

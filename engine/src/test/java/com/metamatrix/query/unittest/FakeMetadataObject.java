@@ -22,8 +22,10 @@
 
 package com.metamatrix.query.unittest;
 
-import java.util.*;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 public class FakeMetadataObject implements Comparable, Serializable {
 
@@ -46,6 +48,7 @@ public class FakeMetadataObject implements Comparable, Serializable {
 	private String type;
 	private Object defaultValue;	
 	private Map props = new HashMap();
+	private Properties extensionProps;
 	
 	public FakeMetadataObject(String name, String type) { 
 		this.name = name;
@@ -133,6 +136,16 @@ public class FakeMetadataObject implements Comparable, Serializable {
         }
     }
     
+    public void setExtensionProp(String name, String value) {
+		if (this.extensionProps == null) {
+			this.extensionProps = new Properties();
+		}
+		this.extensionProps.setProperty(name, value);
+	}
+    
+    public Properties getExtensionProps() {
+		return extensionProps;
+	}
 	
 	public String toString() { 
 		return getType() + "(" + getName() + ")"; //$NON-NLS-1$ //$NON-NLS-2$

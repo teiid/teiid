@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.language.IAggregate;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFrom;
@@ -76,7 +77,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 			boolean firstTime = true;
 			int index = 0;
 			while (symbolIter.hasNext()) {
-				ISelectSymbol symbol = (ISelectSymbol) symbolIter.next();
+				ISelectSymbol symbol = symbolIter.next();
 				// get the name in source
 				IExpression expression = symbol.getExpression();
 				if (expression instanceof IElement) {
@@ -99,6 +100,8 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 						firstTime = false;
 					}
 					selectSymbols.append(nameInSource);
+				} else if (expression instanceof IAggregate) {
+					selectSymbols.append("count()"); //$NON-NLS-1$
 				}
 				++index;
 			}
@@ -147,20 +150,7 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		result.append(selectSymbols).append(SPACE);
 		result.append(FROM).append(SPACE);
 		result.append(table.getNameInSource()).append(SPACE);
-		if(hasCriteria()) {
-			result.append(WHERE).append(SPACE);
-			boolean first = true;
-			Iterator<String> iter = criteriaList.iterator();
-			while(iter.hasNext()) {
-				String criterion = iter.next();
-				if(first) {
-					result.append(criterion).append(SPACE);
-					first = false;
-				} else {
-					result.append("AND").append(SPACE).append(criterion).append(SPACE);;
-				}
-			}
-		}
+		addCriteriaString(result);
 		//result.append(orderByClause).append(SPACE);
 		result.append(limitClause);
 		Util.validateQueryLength(result);

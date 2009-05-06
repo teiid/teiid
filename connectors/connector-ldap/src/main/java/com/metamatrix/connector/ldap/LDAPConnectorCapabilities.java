@@ -33,39 +33,7 @@ public class LDAPConnectorCapabilities extends BasicConnectorCapabilities {
 		this.maxInCriteriaSize = maxInCriteriaSize;
 	}
 	
-    public boolean supportsAndCriteria() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteria() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteriaEquals() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteriaGreaterThan() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteriaGreaterThanOrEqual() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteriaLessThan() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteriaLessThanOrEqual() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteriaNotEquals() {
-		return true;
-	}
-
-	public boolean supportsCriteria() {
+    public boolean supportsCompareCriteriaEquals() {
 		return true;
 	}
 
@@ -98,6 +66,16 @@ public class LDAPConnectorCapabilities extends BasicConnectorCapabilities {
 		// to set the count limit, as well as an offset, so setCountLimit::searchControls
 		// won't do it alone.
 		return false;
+	}
+	
+	@Override
+	public boolean supportsCompareCriteriaOrdered() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsNotCriteria() {
+		return true;
 	}
 
 }

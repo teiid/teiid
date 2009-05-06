@@ -298,7 +298,7 @@ public class TestStoredProcedurePlanning extends TestCase {
     
     public void testStoredQuery22() {
         ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from (EXEC pm1.sq1()) as x where e1='a' union (select e1 from vm1.g2 where e1='b')", new TempMetadataAdapter(FakeMetadataFactory.example1Cached(), new TempMetadataStore()), //$NON-NLS-1$
-            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'a'", "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = 'b') AND (g_1.e1 = 'b')" }); //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'a'", "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = 'b') AND (g_1.e1 = 'b')" }); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

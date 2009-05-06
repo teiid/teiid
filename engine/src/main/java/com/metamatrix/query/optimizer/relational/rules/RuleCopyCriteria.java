@@ -43,14 +43,12 @@ import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
-import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.LogConstants;
@@ -82,11 +80,9 @@ public final class RuleCopyCriteria implements OptimizerRule {
 		throws QueryPlannerException, MetaMatrixComponentException {
 
         //do an initial check to see if an execution will be necessary
-	    List critNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT);
-        Iterator i = critNodes.iterator();
+	    List<PlanNode> critNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT);
         boolean shouldRun = false;
-        while (i.hasNext()) {
-            PlanNode critNode = (PlanNode)i.next();
+        for (PlanNode critNode : critNodes) {
             if (!critNode.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
                 shouldRun = true;
                 break;
@@ -104,10 +100,8 @@ public final class RuleCopyCriteria implements OptimizerRule {
         }
         
         //mark the old criteria nodes as copied.  this will prevent RulePushSelectCriteria from considering them again
-        i = critNodes.iterator();
-        while (i.hasNext()) {
-            PlanNode critNode = (PlanNode)i.next();
-            critNode.setProperty(NodeConstants.Info.IS_COPIED, Boolean.TRUE);
+        for (PlanNode critNode : critNodes) {
+        	critNode.setProperty(NodeConstants.Info.IS_COPIED, Boolean.TRUE);
         }
         		
 		return plan;	
@@ -224,12 +218,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 
                 srcToTgt = buildElementMap(allCriteria);
                             
-                Set<GroupSymbol> joinGroups = (Set<GroupSymbol>) node.getProperty(Info.REMOVED_JOIN_GROUPS);
-                if (joinGroups == null) {
-                	joinGroups = new HashSet<GroupSymbol>();
-                	node.setProperty(Info.REMOVED_JOIN_GROUPS, joinGroups);
-                }
-                changedTree = createCriteriaFromJoinCriteria(changedTree, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, joinGroups);
+                changedTree = createCriteriaFromJoinCriteria(changedTree, joinCrits, combinedCriteria, srcToTgt, newJoinCrits);
                 
                 joinCrits.addAll(newJoinCrits);
             }
@@ -292,8 +281,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                                    List joinCrits,
                                                    Set combinedCriteria,
                                                    Map srcToTgt,
-                                                   List newJoinCrits,
-                                                   Set<GroupSymbol> joinGroups) {
+                                                   List newJoinCrits) {
         if (srcToTgt.size() == 0) {
             return changedTree;
         }
@@ -302,9 +290,16 @@ public final class RuleCopyCriteria implements OptimizerRule {
             Criteria crit = (Criteria)i.next();
             
             if (copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, true)) {
+            	changedTree = true;
+            	if (crit instanceof CompareCriteria) {
+            		CompareCriteria cc = (CompareCriteria)crit;
+            		if (cc.getLeftExpression() instanceof ElementSymbol && cc.getRightExpression() instanceof ElementSymbol) {
+            			//don't remove theta criteria, just mark it as optional
+            			cc.setOptional(true);
+            			continue;
+            		}
+            	}
                 i.remove();
-                joinGroups.addAll(GroupsUsedByElementsVisitor.getGroups(crit));
-                changedTree = true;
             }
         }
         return changedTree;

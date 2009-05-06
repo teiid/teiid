@@ -46,12 +46,10 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Create capabilities
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -72,12 +70,10 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Create capabilities
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -125,13 +121,10 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Create capabilities
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
 
         // Plan query
@@ -166,11 +159,9 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Create capabilities
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -233,12 +224,9 @@ public class TestExpressionsInGroupBy extends TestCase {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
@@ -278,12 +266,9 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_CASE, false);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -326,12 +311,9 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_CASE, false);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -371,12 +353,9 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_CASE, false);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -441,7 +420,7 @@ public class TestExpressionsInGroupBy extends TestCase {
     public void testDontPushGroupByUnsupportedFunction() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
          
         ProcessorPlan plan = TestOptimizer.helpPlan(

@@ -104,7 +104,7 @@ public class TestValidator extends TestCase {
         return externalMetadata;
     }
 
-    public FakeMetadataFacade exampleMetadata() {
+    public static FakeMetadataFacade exampleMetadata() {
         // Create metadata objects        
         FakeMetadataObject modelObj = FakeMetadataFactory.createPhysicalModel("test"); //$NON-NLS-1$
         FakeMetadataObject vModelObj2 = FakeMetadataFactory.createVirtualModel("vTest");  //$NON-NLS-1$

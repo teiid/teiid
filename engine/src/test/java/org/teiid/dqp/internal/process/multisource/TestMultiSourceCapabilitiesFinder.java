@@ -58,16 +58,14 @@ public class TestMultiSourceCapabilitiesFinder extends TestCase {
         assertEquals(true, singleCaps.supportsCapability(Capability.QUERY_UNION));
         assertEquals(true, singleCaps.supportsCapability(Capability.QUERY_ORDERBY));
         assertEquals(true, singleCaps.supportsCapability(Capability.QUERY_SELECT_DISTINCT));
-        assertEquals(true, singleCaps.supportsCapability(Capability.QUERY_AGGREGATES));
-        assertEquals(true, singleCaps.supportsCapability(Capability.QUERY_WHERE_COMPARE));
+        assertEquals(true, singleCaps.supportsCapability(Capability.QUERY_AGGREGATES_AVG));
 
         // Test the multi model to show that it IS affected
         SourceCapabilities multiCaps = finder.findCapabilities(MULTI_MODEL);
         assertEquals(false, multiCaps.supportsCapability(Capability.QUERY_UNION));
         assertEquals(false, multiCaps.supportsCapability(Capability.QUERY_ORDERBY));
         assertEquals(false, multiCaps.supportsCapability(Capability.QUERY_SELECT_DISTINCT));
-        assertEquals(false, multiCaps.supportsCapability(Capability.QUERY_AGGREGATES));
-        assertEquals(true, multiCaps.supportsCapability(Capability.QUERY_WHERE_COMPARE));
+        assertEquals(false, multiCaps.supportsCapability(Capability.QUERY_AGGREGATES_AVG));
 
     }
 }

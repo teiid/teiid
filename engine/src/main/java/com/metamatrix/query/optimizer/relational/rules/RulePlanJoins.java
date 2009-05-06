@@ -25,7 +25,6 @@ package com.metamatrix.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,6 +32,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.teiid.connector.api.ConnectorCapabilities.SupportedJoinCriteria;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -49,9 +50,9 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.resolver.util.AccessPattern;
+import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -104,14 +105,14 @@ public class RulePlanJoins implements OptimizerRule {
         
             
         
-        List joinRegions = new ArrayList();
+        List<JoinRegion> joinRegions = new LinkedList<JoinRegion>();
 
         findJoinRegions(plan, null, joinRegions);
         
         //dependency phase
         
-        for (Iterator joinRegionIter = joinRegions.iterator(); joinRegionIter.hasNext();) {
-            JoinRegion joinRegion = (JoinRegion)joinRegionIter.next();
+        for (Iterator<JoinRegion> joinRegionIter = joinRegions.iterator(); joinRegionIter.hasNext();) {
+            JoinRegion joinRegion = joinRegionIter.next();
             
             //skip regions that have nothing to plan
             if (joinRegion.getJoinSourceNodes().size() + joinRegion.getDependentJoinSourceNodes().size() < 2) {
@@ -135,15 +136,12 @@ public class RulePlanJoins implements OptimizerRule {
         }
         
         //optimization phase
-        
-        for (Iterator joinRegionIter = joinRegions.iterator(); joinRegionIter.hasNext();) {
-            JoinRegion joinRegion = (JoinRegion)joinRegionIter.next();
-                        
+        for (JoinRegion joinRegion : joinRegions) {
             groupJoinsForPushing(metadata, capabilitiesFinder, joinRegion, context);
         }
         
-        for (Iterator joinRegionIter = joinRegions.iterator(); joinRegionIter.hasNext();) {
-            JoinRegion joinRegion = (JoinRegion)joinRegionIter.next();
+        for (Iterator<JoinRegion> joinRegionIter = joinRegions.iterator(); joinRegionIter.hasNext();) {
+            JoinRegion joinRegion = joinRegionIter.next();
             
             //move the dependent nodes back into all joinSources
             joinRegion.getJoinSourceNodes().putAll(joinRegion.getDependentJoinSourceNodes());
@@ -216,24 +214,24 @@ public class RulePlanJoins implements OptimizerRule {
                     
                     PlanNode accessNode2 = (PlanNode)accessNodes.get(k);
                     
-                    List criteriaNodes = joinRegion.getCriteriaNodes();
+                    List<PlanNode> criteriaNodes = joinRegion.getCriteriaNodes();
                     
-                    List joinCriteriaNodes = new LinkedList();
+                    List<PlanNode> joinCriteriaNodes = new LinkedList<PlanNode>();
                     
                     /* hasJoinCriteria will be true if
                      *  1. there is criteria between accessNode1 and accessNode2 exclusively
                      *  2. there is criteria between some other source (not the same logical connector) and accessNode1 or accessNode2
                      *  
                      *  Ideally we should be a little smarter in case 2 
-                     *    - pushing down a same source cross join can be done if we known that a dependent join will be performed 
+                     *    - pushing down a same source cross join can be done if we know that a dependent join will be performed 
                      */
                     boolean hasJoinCriteria = false; 
-                    
-                    for (Iterator critIter = criteriaNodes.iterator(); critIter.hasNext();) {
-                        PlanNode critNode = (PlanNode)critIter.next();
-                        
+                    LinkedList<Criteria> joinCriteria = new LinkedList<Criteria>();
+                    Object modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode1, metadata);
+                    SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(modelId, metadata, capFinder);
+                    for (PlanNode critNode : criteriaNodes) {
                         Set sources = (Set)joinRegion.getCritieriaToSourceMap().get(critNode);
-                        
+
                         if (sources == null) {
                             continue;
                         }
@@ -241,13 +239,13 @@ public class RulePlanJoins implements OptimizerRule {
                         if (sources.contains(accessNode1)) {
                             if (sources.contains(accessNode2) && sources.size() == 2) {
                                 hasJoinCriteria = true;
-                                if (RuleRaiseAccess.canRaiseOverSelect(accessNode2, metadata, capFinder, critNode)) {
-                                    joinCriteriaNodes.add(critNode);
-                                }                                
-                            } else {
-                                if (!accessNodes.containsAll(sources)) {
-                                    hasJoinCriteria = true;
+                                Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+								if (RuleRaiseAccess.isSupportedJoinCriteria(sjc, crit, modelId, metadata, capFinder)) {
+	                                joinCriteriaNodes.add(critNode);
+	                                joinCriteria.add(crit);
                                 }
+                            } else if (!accessNodes.containsAll(sources)) {
+                                hasJoinCriteria = true;
                             }
                         } else if (sources.contains(accessNode2) && !accessNodes.containsAll(sources)) {
                             hasJoinCriteria = true;
@@ -258,16 +256,18 @@ public class RulePlanJoins implements OptimizerRule {
                      * If we failed to find direct criteria, but still have non-pushable or criteria to
                      * other groups we'll use additional checks
                      */
-                    if (hasJoinCriteria && joinCriteriaNodes.isEmpty() && !canPushCrossJoin(joinRegion, metadata, context, accessNode1, accessNode2)) {
+                    if ((!hasJoinCriteria || (hasJoinCriteria && joinCriteriaNodes.isEmpty())) && !canPushCrossJoin(metadata, context, accessNode1, accessNode2)) {
                     	continue;
-                    }
+                    }                    
                     
                     List toTest = new ArrayList(2);
                     toTest.add(accessNode1);
                     toTest.add(accessNode2);
                     
+                    JoinType joinType = joinCriteria.isEmpty()?JoinType.JOIN_CROSS:JoinType.JOIN_INNER;
+                    
                     //try to push to the source
-                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, Collections.EMPTY_LIST, JoinType.JOIN_CROSS) == null) {
+                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType) == null) {
                         continue;
                     }
                     
@@ -287,16 +287,14 @@ public class RulePlanJoins implements OptimizerRule {
                     joinNode.getGroups().addAll(accessNode2.getGroups());
                     joinNode.addFirstChild(accessNode2);
                     joinNode.addLastChild(accessNode1);
+                    joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, joinType);
+                    joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
 
-                    //raise access and place criteria
                     PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, entry.getKey(), false);
                     for (Iterator joinCriteriaIter = joinCriteriaNodes.iterator(); joinCriteriaIter.hasNext();) {
                         PlanNode critNode = (PlanNode)joinCriteriaIter.next();
                         critNode.removeFromParent();
                         critNode.removeAllChildren();
-                        critNode.setProperty(NodeConstants.Info.IS_COPIED, Boolean.FALSE);
-                        critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.FALSE);
-                        newAccess.getFirstChild().addAsParent(critNode);
                     }
                                     
                     //update with the new source
@@ -323,17 +321,9 @@ public class RulePlanJoins implements OptimizerRule {
         }
     }
 
-	private boolean canPushCrossJoin(JoinRegion joinRegion, QueryMetadataInterface metadata,
-			CommandContext context, PlanNode accessNode1, PlanNode accessNode2)
+	private boolean canPushCrossJoin(QueryMetadataInterface metadata, CommandContext context,
+			PlanNode accessNode1, PlanNode accessNode2)
 			throws QueryMetadataException, MetaMatrixComponentException {
-    	/*
-    	 * Check for the possibility that the join criteria was removed by rule copy criteria
-    	 */
-    	Set<GroupSymbol> removedGroups = joinRegion.getRemovedJoinGroups();
-    	if (removedGroups != null && !Collections.disjoint(removedGroups, accessNode1.getGroups()) && !Collections.disjoint(removedGroups, accessNode2.getGroups())) {
-			return true;
-    	}
-
 		float cost1 = NewCalculateCostUtil.computeCostForTree(accessNode1, metadata);
 		float cost2 = NewCalculateCostUtil.computeCostForTree(accessNode2, metadata);
 		float acceptableCost = context == null? 45.0f : (float)Math.sqrt(context.getProcessorBatchSize());
@@ -361,7 +351,7 @@ public class RulePlanJoins implements OptimizerRule {
             }
             Object accessModelID = RuleRaiseAccess.getModelIDFromAccess(node, metadata);
             
-            if (accessModelID == null || !CapabilitiesUtil.supportsJoins(accessModelID, metadata, capFinder)) {
+            if (accessModelID == null || !CapabilitiesUtil.supportsJoin(accessModelID, JoinType.JOIN_INNER, metadata, capFinder)) {
                 continue;
             }
             
@@ -461,13 +451,13 @@ public class RulePlanJoins implements OptimizerRule {
     /**
      * Finds all regions of inner and cross joins
      * 
-     * Join regions have boundries at source nodes, outer joins, and unsatisfied dependencies
+     * Join regions have boundaries at source nodes, outer joins, and unsatisfied dependencies
      *  
      * @param root
      * @param currentRegion
      * @param joinRegions
      */
-    static void findJoinRegions(PlanNode root, JoinRegion currentRegion, List joinRegions) {
+    static void findJoinRegions(PlanNode root, JoinRegion currentRegion, List<JoinRegion> joinRegions) {
         switch (root.getType()) {
             case NodeConstants.Types.JOIN:
             {
@@ -485,10 +475,8 @@ public class RulePlanJoins implements OptimizerRule {
                     currentRegion.addParentCriteria(root);
                     currentRegion.addJoinCriteriaList((List)root.getProperty(NodeConstants.Info.JOIN_CRITERIA));
                 }
-                currentRegion.addRemovedJoinGroups(root);
                 
-                for (Iterator i = root.getChildren().iterator(); i.hasNext();) {
-                    PlanNode child = (PlanNode)i.next();
+                for (PlanNode child : root.getChildren()) {
                     findJoinRegions(child, treatJoinAsSource?null:currentRegion, joinRegions);
                 }
                                 
@@ -514,8 +502,7 @@ public class RulePlanJoins implements OptimizerRule {
         if (root.getChildCount() == 0) {
             return;
         }
-        for (Iterator i = root.getChildren().iterator(); i.hasNext();) {
-            PlanNode child = (PlanNode)i.next();
+        for (PlanNode child : root.getChildren()) {
             findJoinRegions(child, root.getChildCount()==1?currentRegion:null, joinRegions);
         }
     }

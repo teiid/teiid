@@ -30,9 +30,9 @@ public interface SourceCapabilities {
          */
         QUERY_SELECT_DISTINCT,
         /**
-         * Support indicates connector can accept queries with literals in the SELECT
+         * Support indicates connector can accept queries non-elements in the SELECT
          */
-        QUERY_SELECT_LITERALS,
+        QUERY_SELECT_EXPRESSION,
         /**
          * Support indicates connector can accept joins where groups have aliases (required for QUERY_FROM_JOIN_SELFJOIN)
          * 
@@ -44,11 +44,15 @@ public interface SourceCapabilities {
          */
         MAX_QUERY_FROM_GROUPS,
         /**
-         * Support indicates connector can accept joins
+         * @since 6.1.0
+         */
+        JOIN_CRITERIA_ALLOWED,
+        /**
+         * Support indicates connector can accept inner joins
          * 
          * @since 3.1 SP2
          */
-        QUERY_FROM_JOIN,
+        QUERY_FROM_JOIN_INNER,
         /**
          * Indicates that the source prefers ANSI style joins
          * 
@@ -74,143 +78,84 @@ public interface SourceCapabilities {
          */
         QUERY_FROM_INLINE_VIEWS,
         /**
-         * Support indicates connector can push down an ORDER BY in inline views
-         * 
-         * @since 5.0 SP1
-         */
-        QUERY_FROM_INLINE_VIEWS_ORDER_BY,
-        /**
          * Support indicates connector can accept full outer joins
          * 
          * @since 3.1 SP2
          */
         QUERY_FROM_JOIN_OUTER_FULL,
         /**
-         * Support indicates connector can accept a WHERE criteria on queries
-         * 
-         * @since 3.1 SP2
-         */
-        QUERY_WHERE,
-        /**
          * Support indicates connector accepts criteria of form (element BETWEEN constant AND constant)
          * 
          * @since 4.0
          */
-        QUERY_WHERE_BETWEEN,
+        CRITERIA_BETWEEN,
         /**
          * Support indicates connector accepts criteria of form (element operator constant)
          * 
          * @since 3.1 SP2
          */
-        QUERY_WHERE_COMPARE,
-        /**
-         * Support indicates connector accepts criteria of form (element,
-         * 
-         * @since 3.1 SP2
-         */
-        QUERY_WHERE_COMPARE_EQ,
-        /**
-         * Support indicates connector accepts criteria of form (element <> constant)
-         * 
-         * @since 3.1 SP2
-         */
-        QUERY_WHERE_COMPARE_NE,
-        /**
-         * Support indicates connector accepts criteria of form (element < constant)
-         * 
-         * @since 3.1 SP2
-         */
-        QUERY_WHERE_COMPARE_LT,
-        /**
-         * Support indicates connector accepts criteria of form (element <= constant)
-         * 
-         * @since 3.1 SP2
-         */
-        QUERY_WHERE_COMPARE_LE,
-        /**
-         * Support indicates connector accepts criteria of form (element > constant)
-         * 
-         * @since 3.1 SP2
-         */
-        QUERY_WHERE_COMPARE_GT,
-        /**
-         * Support indicates connector accepts criteria of form (element >= constant)
-         * 
-         * @since 3.1 SP2
-         */
-        QUERY_WHERE_COMPARE_GE,
+        CRITERIA_COMPARE_EQ,
+        CRITERIA_COMPARE_ORDERED,
         /**
          * Support indicates connector accepts criteria of form (element LIKE constant)
          * 
          * @since 3.1 SP2
          */
-        QUERY_WHERE_LIKE,
+        CRITERIA_LIKE,
         /**
          * Support indicates connector accepts criteria of form (element LIKE constant ESCAPE char) - CURRENTLY NOT USED
          * 
          * @since 3.1 SP2
          */
-        QUERY_WHERE_LIKE_ESCAPE,
+        CRITERIA_LIKE_ESCAPE,
         /**
          * Support indicates connector accepts criteria of form (element IN set)
          * 
          * @since 3.1 SP2
          */
-        QUERY_WHERE_IN,
+        CRITERIA_IN,
         /**
          * Support indicates connector accepts IN criteria with a subquery on the right side
          * 
          * @since 4.0
          */
-        QUERY_WHERE_IN_SUBQUERY,
+        CRITERIA_IN_SUBQUERY,
         /**
          * Support indicates connector accepts criteria of form (element IS NULL)
          * 
          * @since 3.1 SP2
          */
-        QUERY_WHERE_ISNULL,
-        /**
-         * Support indicates connector accepts logical criteria connected by AND
-         * 
-         * @since 3.1 SP2
-         */
-        QUERY_WHERE_AND,
+        CRITERIA_ISNULL,
         /**
          * Support indicates connector accepts logical criteria connected by OR
          * 
          * @since 3.1 SP2
          */
-        QUERY_WHERE_OR,
+        CRITERIA_OR,
         /**
          * Support indicates connector accepts logical criteria NOT
          * 
          * @since 3.1 SP2
          */
-        QUERY_WHERE_NOT,
+        CRITERIA_NOT,
         /**
          * Support indicates connector accepts the EXISTS criteria
          * 
          * @since 4.0
          */
-        QUERY_WHERE_EXISTS,
-        /**
-         * Support indicates connector accepts quantified subquery comparison criteria
-         * 
-         * @since 4.0
-         */
-        QUERY_WHERE_QUANTIFIED_COMPARISON,
+        CRITERIA_EXISTS,
         /**
          * Support indicates connector accepts the quantified comparison criteria that use SOME
          * 
          * @since 4.0
          */
-        QUERY_WHERE_QUANTIFIED_SOME,
+        CRITERIA_QUANTIFIED_SOME,
         /**
          * Support indicates connector accepts the quantified comparison criteria that use ALL
          * 
          * @since 4.0
          */
-        QUERY_WHERE_QUANTIFIED_ALL,
+        CRITERIA_QUANTIFIED_ALL,
         /**
          * Support indicates connector accepts ORDER BY clause
          * 
@@ -218,11 +163,18 @@ public interface SourceCapabilities {
          */
         QUERY_ORDERBY,
         /**
-         * Support indicates connector accepts GROUP BY and HAVING clauses
-         * 
-         * @since 3.1 SP2
+         * Composite support for group by and having - not
+         * used by the connector layer
          */
         QUERY_AGGREGATES,
+        /**
+         * @since 6.1.0 indicates support for GROUP BY
+         */
+        QUERY_GROUP_BY,
+        /**
+         * @since 6.1.0 indicates support for HAVING
+         */
+        QUERY_HAVING,
         /**
          * Support indicates connector can accept the SUM aggregate function
          * 
@@ -345,12 +297,6 @@ public interface SourceCapabilities {
          */
         ROW_OFFSET,
         /**
-         * Support indicates connector allows functions in expressions
-         * 
-         * @since 3.1 SP2
-         */
-        FUNCTION,
-        /**
          * The Maximum number of values allowed in an IN criteria (Integer)
          * 
          * @since 4.4
@@ -374,10 +320,6 @@ public interface SourceCapabilities {
          * @since 6.0.0 indicates support for where all
          */
         REQUIRES_CRITERIA,
-        /**
-         * @since 6.1.0 indicates support for GROUP BY
-         */
-        QUERY_GROUP_BY
     }
 
     public enum Scope {

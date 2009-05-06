@@ -57,23 +57,9 @@ public class YahooCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteria()
-     */
-    public boolean supportsCompareCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaEquals()
      */
     public boolean supportsCompareCriteriaEquals() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCriteria()
-     */
-    public boolean supportsCriteria() {
         return true;
     }
 

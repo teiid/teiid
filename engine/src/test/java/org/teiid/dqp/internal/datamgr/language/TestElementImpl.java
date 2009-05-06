@@ -22,17 +22,15 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IGroup;
 import org.teiid.connector.metadata.runtime.Element;
-import org.teiid.dqp.internal.datamgr.language.ElementImpl;
-import org.teiid.dqp.internal.datamgr.language.GroupImpl;
-import org.teiid.dqp.internal.datamgr.metadata.TestMetadataFactory;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 
 public class TestElementImpl extends TestCase {
@@ -96,8 +94,8 @@ public class TestElementImpl extends TestCase {
     }
 
     public void testGetMetadataID() throws Exception {
-        FakeMetadataObject group = TestMetadataFactory.createGroup("pm1.g1", null); //$NON-NLS-1$
-        FakeMetadataObject metadataID = TestMetadataFactory.createElement("e", group, DataTypeManager.DefaultDataTypes.STRING, 0); //$NON-NLS-1$
+        FakeMetadataObject group = FakeMetadataFactory.createPhysicalGroup("pm1.g1", FakeMetadataFactory.createPhysicalModel("pm1.g1")); //$NON-NLS-1$ //$NON-NLS-2$
+        FakeMetadataObject metadataID = FakeMetadataFactory.createElement("e", group, DataTypeManager.DefaultDataTypes.STRING, 0); //$NON-NLS-1$
         assertNotNull(example("pm1.g1", "e", metadataID).getMetadataObject()); //$NON-NLS-1$ //$NON-NLS-2$
     }
 

@@ -45,31 +45,11 @@ public class SalesforceCapabilities extends BasicConnectorCapabilities {
     }
 
    
-    @Override
-	public boolean supportsScalarFunctions() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteria() {
-        return true;
-    }
-
-    
-    public boolean supportsCompareCriteriaEquals() {
+	public boolean supportsCompareCriteriaEquals() {
         return true;
     }
 
    
-    public boolean supportsCriteria() {
-        return true;
-    }
-
-   
-    public boolean supportsAndCriteria() {
-        return true;
-    }
-
-
     public boolean supportsInCriteria() {
         return true;
     }
@@ -89,23 +69,24 @@ public class SalesforceCapabilities extends BasicConnectorCapabilities {
 		return false;
 	}
 
-	public boolean supportsCompareCriteriaGreaterThan() {
+	@Override
+	public boolean supportsAggregatesCountStar() {
 		return true;
 	}
 
-	public boolean supportsCompareCriteriaGreaterThanOrEqual() {
+	@Override
+	public boolean supportsNotCriteria() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsOrCriteria() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsCompareCriteriaOrdered() {
 		return true;
 	}
 
-	public boolean supportsCompareCriteriaLessThan() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteriaLessThanOrEqual() {
-		return true;
-	}
-
-	public boolean supportsCompareCriteriaNotEquals() {
-		return true;
-	}
 }

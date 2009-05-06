@@ -130,36 +130,20 @@ public class TestOptimizer extends TestCase {
     public static BasicSourceCapabilities getTypicalCapabilities() {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);    
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);    
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);    
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true); 
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_BETWEEN, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_NE, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_LT, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_LE, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GE, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_LIKE, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_LIKE_ESCAPE, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, false);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_ISNULL, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_OR, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_NOT, true);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_EXISTS, false);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, false);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, false);    
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_ALL, false);    
+        caps.setCapabilitySupport(Capability.CRITERIA_BETWEEN, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_OR, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);    
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, false);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, false);    
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         
         // set typical max set size
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
@@ -169,7 +153,7 @@ public class TestOptimizer extends TestCase {
     public static CapabilitiesFinder getGenericFinder(boolean supportsJoins) {
     	final BasicSourceCapabilities caps = getTypicalCapabilities();
     	if (!supportsJoins) {
-	    	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, false);
+	    	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
 		    caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
     	}
         CapabilitiesFinder finder = new CapabilitiesFinder() {
@@ -492,8 +476,8 @@ public class TestOptimizer extends TestCase {
     public static void checkSubPlanCount(ProcessorPlan plan, int expectedCount) {
         assertEquals("Checking plan count", expectedCount, plan.getChildPlans().size()); //$NON-NLS-1$        
     }
-   
-	public static FakeMetadataFacade example1() { 
+
+	public static FakeMetadataFacade example1() {
 		// Create models
 		FakeMetadataObject pm1 = FakeMetadataFactory.createPhysicalModel("pm1"); //$NON-NLS-1$
         FakeMetadataObject pm2 = FakeMetadataFactory.createPhysicalModel("pm2"); //$NON-NLS-1$
@@ -810,9 +794,9 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN); 
 	}
 
-	public void testPhysicalVirtualJoinWithCriteria() { 
+	public void testPhysicalVirtualJoinWithCriteria() throws Exception { 
 		ProcessorPlan plan = helpPlan("SELECT vm1.g2.e1 from vm1.g2, pm1.g3 where vm1.g2.e1=pm1.g3.e1 and vm1.g2.e2 > 0", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-			new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_2.e1) AND (g_0.e1 = g_1.e1) AND (g_0.e2 > 0)" } ); //$NON-NLS-1$
+			new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = g_2.e1) AND (g_0.e2 > 0)" }, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
 	}
     
@@ -1840,7 +1824,7 @@ public class TestOptimizer extends TestCase {
     public void testPushSelfJoin1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -1861,7 +1845,7 @@ public class TestOptimizer extends TestCase {
     public void testPushSelfJoin2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -1897,7 +1881,7 @@ public class TestOptimizer extends TestCase {
     public void testPushOuterJoin1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -1917,8 +1901,7 @@ public class TestOptimizer extends TestCase {
     public void testPushOuterJoin2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -1953,10 +1936,9 @@ public class TestOptimizer extends TestCase {
     public void testPushOuterJoin3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -2091,9 +2073,7 @@ public class TestOptimizer extends TestCase {
     public void testPushHaving1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2225,9 +2205,7 @@ public class TestOptimizer extends TestCase {
     public void testPushAggregate4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -2249,9 +2227,7 @@ public class TestOptimizer extends TestCase {
     public void testPushAggregate5() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
@@ -2358,13 +2334,10 @@ public class TestOptimizer extends TestCase {
     public void testPushAggregate8() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
@@ -2388,11 +2361,11 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);                                                                  
     }
     
-    public void testQueryManyJoin() { 
+    public void testQueryManyJoin() throws Exception { 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = helpPlan("SELECT pm1.g1.e1 FROM pm1.g1 JOIN ((pm1.g2 JOIN pm1.g3 ON pm1.g2.e1=pm1.g3.e1) JOIN pm1.g4 ON pm1.g3.e1=pm1.g4.e1) ON pm1.g1.e1=pm1.g4.e1",  //$NON-NLS-1$
             metadata,
-            new String[] { "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2, pm1.g3, pm1.g4 WHERE (pm1.g1.e1 = pm1.g4.e1) AND (pm1.g3.e1 = pm1.g4.e1) AND (pm1.g2.e1 = pm1.g3.e1)"} ); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2, pm1.g4 AS g_3 WHERE (g_1.e1 = g_2.e1) AND (g_2.e1 = g_3.e1) AND (g_0.e1 = g_3.e1)"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
@@ -2407,10 +2380,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInCriteria1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -2430,10 +2400,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelect1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2454,10 +2421,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelect2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2478,10 +2442,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelect3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport(SourceSystemFunctions.LCASE, false); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2517,10 +2478,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelect4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2541,10 +2499,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelect5() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2565,7 +2520,6 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelect6_defect_10081() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("upper", true); //$NON-NLS-1$
         caps.setFunctionSupport("lower", false); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2601,10 +2555,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelectWithOrderBy1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
@@ -2627,10 +2578,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelectWithOrderBy1a() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
@@ -2653,10 +2601,7 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInSelectWithOrderBy2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport(SourceSystemFunctions.LCASE, true); //$NON-NLS-1$
@@ -2678,11 +2623,8 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInJoin1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2703,11 +2645,8 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInJoin2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2744,11 +2683,8 @@ public class TestOptimizer extends TestCase {
     public void testPushFunctionInJoin3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setFunctionSupport(SourceSystemFunctions.UCASE, true); //$NON-NLS-1$
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -2785,11 +2721,8 @@ public class TestOptimizer extends TestCase {
     public void testUnionOverFunctions() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -2903,8 +2836,8 @@ public class TestOptimizer extends TestCase {
     public void testCrossJoinNoElementCriteriaOptimization4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = helpPlan("select Y.e1, Y.e2 FROM vm1.g1 X, vm1.g1 Y where {b'true'} in (select e3 FROM vm1.g1)", example1(), null, capFinder,  //$NON-NLS-1$
@@ -2943,7 +2876,7 @@ public class TestOptimizer extends TestCase {
     public void testCopyCriteriaWithOuterJoin2_defect10050(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 left outer join pm2.g2 on pm2.g1.e1=pm2.g2.e1 and pm2.g1.e2=pm2.g2.e2 where pm2.g1.e1 = 'a' and pm2.g1.e2 = 1", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g1 LEFT OUTER JOIN pm2.g2 ON pm2.g2.e2 = 1 AND pm2.g2.e1 = 'a' WHERE (pm2.g1.e1 = 'a') AND (pm2.g1.e2 = 1)" }); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.e1 = g_1.e1 AND g_0.e2 = g_1.e2 AND g_1.e2 = 1 AND g_1.e1 = 'a' WHERE (g_0.e1 = 'a') AND (g_0.e2 = 1)" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
 
@@ -2954,7 +2887,7 @@ public class TestOptimizer extends TestCase {
         
         ProcessorPlan plan = helpPlan(
             "select pm2.g1.e1, pm2.g2.e1, pm2.g3.e1 from ( (pm2.g1 right outer join pm2.g2 on pm2.g1.e1=pm2.g2.e1) right outer join pm2.g3 on pm2.g2.e1=pm2.g3.e1) where pm2.g3.e1 = 'a'", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm2.g1.e1, pm2.g2.e1, pm2.g3.e1 FROM pm2.g3 LEFT OUTER JOIN (pm2.g2 LEFT OUTER JOIN pm2.g1 ON pm2.g1.e1 = 'a') ON pm2.g2.e1 = 'a' WHERE pm2.g3.e1 = 'a'" }); //$NON-NLS-1$
+            new String[] { "SELECT g_2.e1, g_1.e1, g_0.e1 FROM pm2.g3 AS g_0 LEFT OUTER JOIN (pm2.g2 AS g_1 LEFT OUTER JOIN pm2.g1 AS g_2 ON g_2.e1 = g_1.e1 AND g_2.e1 = 'a') ON g_1.e1 = g_0.e1 AND g_1.e1 = 'a' WHERE g_0.e1 = 'a'" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     } 
     
@@ -2988,14 +2921,14 @@ public class TestOptimizer extends TestCase {
     public void testCleanCriteria2(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2 where pm2.g1.e1=pm2.g2.e1 and pm2.g1.e1 = 'a'", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g1, pm2.g2 WHERE (pm2.g1.e1 = 'a') AND (pm2.g2.e1 = 'a')" }); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = 'a') AND (g_1.e1 = 'a')" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
 
     public void testCleanCriteria3(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 inner join pm2.g2 on pm2.g1.e1=pm2.g2.e1 where pm2.g1.e1 = 'a'", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g1, pm2.g2 WHERE (pm2.g1.e1 = 'a') AND (pm2.g2.e1 = 'a')" }); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = 'a') AND (g_1.e1 = 'a')" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
     
@@ -3003,7 +2936,7 @@ public class TestOptimizer extends TestCase {
     public void testPushSubqueryInWhereClause1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select e1 FROM pm1.g2)", example1(),  //$NON-NLS-1$
@@ -3015,7 +2948,7 @@ public class TestOptimizer extends TestCase {
     public void testPushSubqueryInWhereClause2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -3032,10 +2965,8 @@ public class TestOptimizer extends TestCase {
     public void testPushSubqueryInWhereClause3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setFunctionSupport("ltrim", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
@@ -3052,10 +2983,8 @@ public class TestOptimizer extends TestCase {
     public void testPushSubqueryInWhereClause4() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setFunctionSupport("ltrim", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
@@ -3074,13 +3003,11 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -3099,14 +3026,11 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -3127,16 +3051,12 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -3157,10 +3077,7 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -3197,10 +3114,7 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -3239,10 +3153,7 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -3276,15 +3187,11 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
@@ -3321,14 +3228,10 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
 
@@ -3366,12 +3269,9 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -3413,12 +3313,9 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -3458,10 +3355,7 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -3502,8 +3396,7 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1));
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -3537,12 +3430,9 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -3599,11 +3489,8 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, false);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, false);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -3751,18 +3638,16 @@ public class TestOptimizer extends TestCase {
         });                                    
     }   
 
-    public void testDefect12298(){      
+    public void testDefect12298() throws Exception {      
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_NE, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
         capFinder.addCapabilities("SystemPhysical", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(
@@ -3771,9 +3656,9 @@ public class TestOptimizer extends TestCase {
             FakeMetadataFactory.exampleSystemPhysical(), 
             null, capFinder,
             new String[] { 
-                            "SELECT RT_VIRTUAL_DBS__1.VDB_NM, RT_GRPS__1.PATH_1, RT_ELMNTS__1.ELMNT_NM, RT_GRPS.PATH_1, RT_ELMNTS.ELMNT_NM, RT_KY_IDX_ELMNTS.POSITION, RT_KY_IDXES.KEY_NM, RT_KY_IDXES__1.KEY_NM FROM ((((SystemPhysical.RT_KY_IDXES AS RT_KY_IDXES__1 INNER JOIN ((SystemPhysical.RT_GRPS AS RT_GRPS__1 INNER JOIN ((SystemPhysical.RT_VIRTUAL_DBS AS RT_VIRTUAL_DBS__1 INNER JOIN SystemPhysical.RT_VDB_MDLS AS RT_VDB_MDLS__1 ON RT_VIRTUAL_DBS__1.VDB_UID = RT_VDB_MDLS__1.VDB_UID AND RT_VDB_MDLS__1.VISIBILITY = 0) INNER JOIN SystemPhysical.RT_MDLS AS RT_MDLS__1 ON RT_VDB_MDLS__1.MDL_UID = RT_MDLS__1.MDL_UID) ON RT_GRPS__1.MDL_UID = RT_MDLS__1.MDL_UID AND RT_GRPS__1.TABLE_TYPE <> 5) INNER JOIN SystemPhysical.RT_TABLE_TYPES AS RT_TABLE_TYPES__1 ON RT_GRPS__1.TABLE_TYPE = RT_TABLE_TYPES__1.TABLE_TYPE_CODE AND RT_TABLE_TYPES__1.TABLE_TYPE_CODE <> 5) ON RT_KY_IDXES__1.GRP_UID = RT_GRPS__1.GRP_UID) INNER JOIN SystemPhysical.RT_KEY_TYPES AS RT_KEY_TYPES__1 ON RT_KY_IDXES__1.KEY_TYPE = RT_KEY_TYPES__1.KEY_TYPE_CODE AND RT_KEY_TYPES__1.KEY_TYPE_NM = 'Primary') LEFT OUTER JOIN SystemPhysical.RT_KY_IDX_ELMNTS AS RT_KY_IDX_ELMNTS__1 ON RT_KY_IDX_ELMNTS__1.KEY_UID = RT_KY_IDXES__1.KEY_UID) INNER JOIN SystemPhysical.RT_ELMNTS AS RT_ELMNTS__1 ON RT_KY_IDX_ELMNTS__1.ELMNT_UID = RT_ELMNTS__1.ELMNT_UID) INNER JOIN ((((SystemPhysical.RT_KY_IDXES AS RT_KY_IDXES INNER JOIN ((SystemPhysical.RT_GRPS AS RT_GRPS INNER JOIN ((SystemPhysical.RT_VIRTUAL_DBS AS RT_VIRTUAL_DBS INNER JOIN SystemPhysical.RT_VDB_MDLS AS RT_VDB_MDLS ON RT_VIRTUAL_DBS.VDB_UID = RT_VDB_MDLS.VDB_UID AND RT_VDB_MDLS.VISIBILITY = 0) INNER JOIN SystemPhysical.RT_MDLS AS RT_MDLS ON RT_VDB_MDLS.MDL_UID = RT_MDLS.MDL_UID) ON RT_GRPS.MDL_UID = RT_MDLS.MDL_UID AND RT_GRPS.TABLE_TYPE <> 5 AND RT_GRPS.PATH_1 = 'PartsOracle.SUPPLIER_PARTS') INNER JOIN SystemPhysical.RT_TABLE_TYPES AS RT_TABLE_TYPES ON RT_GRPS.TABLE_TYPE = RT_TABLE_TYPES.TABLE_TYPE_CODE AND RT_TABLE_TYPES.TABLE_TYPE_CODE <> 5) ON RT_KY_IDXES.GRP_UID = RT_GRPS.GRP_UID) INNER JOIN SystemPhysical.RT_KEY_TYPES AS RT_KEY_TYPES ON RT_KY_IDXES.KEY_TYPE = RT_KEY_TYPES.KEY_TYPE_CODE AND RT_KEY_TYPES.KEY_TYPE_NM = 'Foreign') LEFT OUTER JOIN SystemPhysical.RT_KY_IDX_ELMNTS AS RT_KY_IDX_ELMNTS ON RT_KY_IDX_ELMNTS.KEY_UID = RT_KY_IDXES.KEY_UID) INNER JOIN SystemPhysical.RT_ELMNTS AS RT_ELMNTS ON RT_KY_IDX_ELMNTS.ELMNT_UID = RT_ELMNTS.ELMNT_UID) ON RT_KY_IDXES__1.KEY_UID = RT_KY_IDXES.REF_KEY_UID AND RT_KY_IDX_ELMNTS__1.POSITION = RT_KY_IDX_ELMNTS.POSITION" //$NON-NLS-1$
+                            "SELECT g_2.VDB_NM, g_1.PATH_1, g_8.ELMNT_NM, g_10.PATH_1, g_17.ELMNT_NM, g_16.POSITION, g_9.KEY_NM, g_0.KEY_NM FROM ((((SystemPhysical.RT_KY_IDXES AS g_0 INNER JOIN ((SystemPhysical.RT_GRPS AS g_1 INNER JOIN ((SystemPhysical.RT_VIRTUAL_DBS AS g_2 INNER JOIN SystemPhysical.RT_VDB_MDLS AS g_3 ON g_2.VDB_UID = g_3.VDB_UID) INNER JOIN SystemPhysical.RT_MDLS AS g_4 ON g_3.MDL_UID = g_4.MDL_UID) ON g_1.MDL_UID = g_4.MDL_UID) INNER JOIN SystemPhysical.RT_TABLE_TYPES AS g_5 ON g_1.TABLE_TYPE = g_5.TABLE_TYPE_CODE) ON g_0.GRP_UID = g_1.GRP_UID) INNER JOIN SystemPhysical.RT_KEY_TYPES AS g_6 ON g_0.KEY_TYPE = g_6.KEY_TYPE_CODE) LEFT OUTER JOIN SystemPhysical.RT_KY_IDX_ELMNTS AS g_7 ON g_7.KEY_UID = g_0.KEY_UID) INNER JOIN SystemPhysical.RT_ELMNTS AS g_8 ON g_7.ELMNT_UID = g_8.ELMNT_UID) INNER JOIN ((((SystemPhysical.RT_KY_IDXES AS g_9 INNER JOIN ((SystemPhysical.RT_GRPS AS g_10 INNER JOIN ((SystemPhysical.RT_VIRTUAL_DBS AS g_11 INNER JOIN SystemPhysical.RT_VDB_MDLS AS g_12 ON g_11.VDB_UID = g_12.VDB_UID) INNER JOIN SystemPhysical.RT_MDLS AS g_13 ON g_12.MDL_UID = g_13.MDL_UID) ON g_10.MDL_UID = g_13.MDL_UID) INNER JOIN SystemPhysical.RT_TABLE_TYPES AS g_14 ON g_10.TABLE_TYPE = g_14.TABLE_TYPE_CODE) ON g_9.GRP_UID = g_10.GRP_UID) INNER JOIN SystemPhysical.RT_KEY_TYPES AS g_15 ON g_9.KEY_TYPE = g_15.KEY_TYPE_CODE) LEFT OUTER JOIN SystemPhysical.RT_KY_IDX_ELMNTS AS g_16 ON g_16.KEY_UID = g_9.KEY_UID) INNER JOIN SystemPhysical.RT_ELMNTS AS g_17 ON g_16.ELMNT_UID = g_17.ELMNT_UID) ON g_0.KEY_UID = g_9.REF_KEY_UID AND g_7.POSITION = g_16.POSITION WHERE (g_1.TABLE_TYPE <> 5) AND (g_3.VISIBILITY = 0) AND (g_5.TABLE_TYPE_CODE <> 5) AND (g_6.KEY_TYPE_NM = 'Primary') AND (g_10.TABLE_TYPE <> 5) AND (g_10.PATH_1 = 'PartsOracle.SUPPLIER_PARTS') AND (g_12.VISIBILITY = 0) AND (g_14.TABLE_TYPE_CODE <> 5) AND (g_15.KEY_TYPE_NM = 'Foreign')" //$NON-NLS-1$
                       },
-                      SHOULD_SUCCEED);
+                      ComparisonMode.EXACT_COMMAND_STRING);
                   checkNodeTypes(plan, new int[] {
                       1,      // Access
                       0,      // DependentAccess
@@ -3903,7 +3788,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, hasUnionCapability);
         caps.setCapabilitySupport((Capability.QUERY_ORDERBY), hasUnionOrderByCapability);
         caps.setCapabilitySupport((Capability.QUERY_SET_ORDER_BY), hasUnionOrderByCapability);
@@ -4001,7 +3886,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4031,7 +3916,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4061,7 +3946,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4091,7 +3976,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4108,7 +3993,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4141,7 +4026,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4158,7 +4043,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4190,10 +4075,9 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -4209,11 +4093,10 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -4229,7 +4112,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
@@ -4250,10 +4133,9 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -4284,10 +4166,9 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, false);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -4303,10 +4184,9 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -4322,7 +4202,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
         capFinder.addCapabilities("pm3", caps); //$NON-NLS-1$
@@ -4339,7 +4219,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4373,10 +4253,10 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan("SELECT * FROM (SELECT intkey, 5 FROM BQT1.SmallA UNION ALL SELECT intnum, 10 FROM bqt1.smalla) AS x",  //$NON-NLS-1$
@@ -4391,9 +4271,7 @@ public class TestOptimizer extends TestCase {
     public void testPushCaseInSelect() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -4414,11 +4292,8 @@ public class TestOptimizer extends TestCase {
     public void testCantPushCaseInSelectWithFunction() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_CASE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -4452,9 +4327,7 @@ public class TestOptimizer extends TestCase {
     public void testPushSearchedCaseInSelect() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -4474,11 +4347,8 @@ public class TestOptimizer extends TestCase {
     public void testCantPushSearchedCaseInSelectWithFunction() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Add join capability to pm1
@@ -4514,11 +4384,9 @@ public class TestOptimizer extends TestCase {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
         caps.setFunctionSupport("xyz", true);         //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -4562,13 +4430,10 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -4608,13 +4473,10 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4655,13 +4517,10 @@ public class TestOptimizer extends TestCase {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -4697,23 +4556,21 @@ public class TestOptimizer extends TestCase {
         });
     }    
     
-    public void testCase2125() {
+    public void testCase2125() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, false);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);        
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);        
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);        
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -4726,8 +4583,8 @@ public class TestOptimizer extends TestCase {
         ProcessorPlan plan = helpPlan(sql,  
                                       FakeMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT P.longnum, O.datevalue, OD.IntKEy, P.IntKEy, O.IntKey FROM bqt1.smalla AS OD, bqt1.smallb AS P, bqt1.mediuma AS O WHERE (O.IntKey = OD.IntKey) AND (OD.StringKey = P.StringKey) AND (OD.IntNum > (SELECT SUM(IntNum) FROM bqt1.smalla))"}, //$NON-NLS-1$ 
-                                      SHOULD_SUCCEED );
+                                      new String[] {"SELECT g_1.longnum, g_2.datevalue, g_0.IntKEy, g_1.IntKEy, g_2.IntKey FROM bqt1.smalla AS g_0, bqt1.smallb AS g_1, bqt1.mediuma AS g_2 WHERE (g_0.StringKey = g_1.StringKey) AND (g_2.IntKey = g_0.IntKey) AND (g_0.IntNum > (SELECT SUM(g_3.IntNum) FROM bqt1.smalla AS g_3))"}, //$NON-NLS-1$ 
+                                      ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
                                         1,      // Access
@@ -4754,8 +4611,8 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -4793,8 +4650,8 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -4832,8 +4689,8 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
@@ -4872,12 +4729,10 @@ public class TestOptimizer extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql,  
@@ -4892,10 +4747,8 @@ public class TestOptimizer extends TestCase {
     public void testUpdateWithElement() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         String sql = "UPDATE BQT1.SmallA SET IntKey = IntKey + 1"; //$NON-NLS-1$
@@ -4912,12 +4765,10 @@ public class TestOptimizer extends TestCase {
     public void testCase2187() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
@@ -4941,7 +4792,7 @@ public class TestOptimizer extends TestCase {
     public void testBusObjQuestion1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
@@ -4988,7 +4839,7 @@ public class TestOptimizer extends TestCase {
     public void testBusObjQuestion2() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
@@ -5036,7 +4887,7 @@ public class TestOptimizer extends TestCase {
     public void testBusObjQuestion2Hint() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
@@ -5084,7 +4935,7 @@ public class TestOptimizer extends TestCase {
     public void testBusObjQuestion2HintVariation() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
@@ -5106,7 +4957,7 @@ public class TestOptimizer extends TestCase {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.MONTH AS c_0, g_1.REGION AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.MONTH IN (<dependent values>)) AND (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) GROUP BY g_0.MONTH, g_1.REGION ORDER BY c_0", //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_0.MONTH AS c_0, g_1.REGION AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) AND (g_0.MONTH IN (<dependent values>)) GROUP BY g_0.MONTH, g_1.REGION ORDER BY c_0", //$NON-NLS-1$ 
                                                     "SELECT g_0.MONTH AS c_0, g_0.YEAR AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.YEAR = '1999' ORDER BY c_0"},  //$NON-NLS-1$
                                                     ComparisonMode.EXACT_COMMAND_STRING );
 
@@ -5131,7 +4982,7 @@ public class TestOptimizer extends TestCase {
     public void testBusObjQuestion3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);    
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
@@ -5182,8 +5033,8 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -5203,10 +5054,8 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql,  
@@ -5270,7 +5119,6 @@ public class TestOptimizer extends TestCase {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -5352,14 +5200,11 @@ public class TestOptimizer extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, false);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -5396,16 +5241,13 @@ public class TestOptimizer extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
         caps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -5434,7 +5276,7 @@ public class TestOptimizer extends TestCase {
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589a ON MediumA.IntKey = SmallA_2589a.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.IntKey = BQT1.SmallB.IntKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.IntKey = BQT1.SmallB.IntKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10'"; //$NON-NLS-1$
         helpTestCase2589(sql, expected);
     }    
 
@@ -5442,7 +5284,7 @@ public class TestOptimizer extends TestCase {
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10'"; //$NON-NLS-1$
         helpTestCase2589(sql, expected);
     }     
     
@@ -5451,7 +5293,7 @@ public class TestOptimizer extends TestCase {
                      "VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey " + //$NON-NLS-1$
                      "WHERE BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB INNER JOIN (BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey) ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB INNER JOIN (BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
         helpTestCase2589(sql, expected);
     }    
 
@@ -5460,7 +5302,7 @@ public class TestOptimizer extends TestCase {
                      "(BQT1.MediumA LEFT OUTER JOIN VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey) " + //$NON-NLS-1$
                      "ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB INNER JOIN (BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey) ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB INNER JOIN (BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
         helpTestCase2589(sql, expected);
     }     
     
@@ -5469,7 +5311,7 @@ public class TestOptimizer extends TestCase {
                      "(BQT1.MediumA LEFT OUTER JOIN VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey) " +  //$NON-NLS-1$
                      "ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB LEFT OUTER JOIN (BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey) ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB LEFT OUTER JOIN (BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
         helpTestCase2589(sql, expected);
     }     
     
@@ -5478,7 +5320,7 @@ public class TestOptimizer extends TestCase {
                      "(BQT1.MediumA INNER JOIN VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey) " + //$NON-NLS-1$
                      "ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB LEFT OUTER JOIN (BQT1.MediumA INNER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey) ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey";//$NON-NLS-1$";
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumB LEFT OUTER JOIN (BQT1.MediumA INNER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey) ON BQT1.MediumB.IntKey = BQT1.MediumA.IntKey AND BQT1.SmallA.StringNum = '10'";//$NON-NLS-1$";
         helpTestCase2589(sql, expected);
     }    
 
@@ -5507,7 +5349,7 @@ public class TestOptimizer extends TestCase {
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN VQT.SmallA_2589d " + //$NON-NLS-1$ 
                      "ON MediumA.IntKey = SmallA_2589d.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10' AND BQT1.SmallA.IntNum = 10) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey"; //$NON-NLS-1$ 
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10' AND BQT1.SmallA.IntNum = 10"; //$NON-NLS-1$ 
         helpTestCase2589(sql, expected);
     }
     
@@ -5530,7 +5372,7 @@ public class TestOptimizer extends TestCase {
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA INNER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589b ON MediumA.IntKey = SmallA_2589b.IntKey"; //$NON-NLS-1$
 
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA, BQT1.SmallA, BQT1.SmallB WHERE (BQT1.MediumA.IntKey = BQT1.SmallA.IntKey) AND (BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) AND (BQT1.SmallA.StringNum = '10')"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA, BQT1.SmallA, BQT1.SmallB WHERE (BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) AND (BQT1.MediumA.IntKey = BQT1.SmallA.IntKey) AND (BQT1.SmallA.StringNum = '10')"; //$NON-NLS-1$
         
         
         helpTestCase2589(sql, expected);
@@ -5598,7 +5440,7 @@ public class TestOptimizer extends TestCase {
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589g ON MediumA.IntKey = SmallA_2589g.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10'"; //$NON-NLS-1$
         helpTestCase2589(sql, expected);
     }     
 
@@ -5610,7 +5452,7 @@ public class TestOptimizer extends TestCase {
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589h ON MediumA.IntKey = SmallA_2589h.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10'"; //$NON-NLS-1$
         helpTestCase2589(sql, expected);
     }       
 
@@ -5622,7 +5464,7 @@ public class TestOptimizer extends TestCase {
         String sql = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN " + //$NON-NLS-1$
                      "VQT.SmallA_2589i ON MediumA.IntKey = SmallA_2589i.IntKey"; //$NON-NLS-1$
         
-        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey AND BQT1.SmallA.StringNum = '10' AND BQT1.SmallB.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey"; //$NON-NLS-1$
+        String expected = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.StringKey = BQT1.SmallB.StringKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10' AND BQT1.SmallB.StringNum = '10'"; //$NON-NLS-1$
         helpTestCase2589(sql, expected);
     }      
 
@@ -5684,14 +5526,11 @@ public class TestOptimizer extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, false);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -5738,14 +5577,11 @@ public class TestOptimizer extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, false);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -5800,14 +5636,11 @@ public class TestOptimizer extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -5909,21 +5742,18 @@ public class TestOptimizer extends TestCase {
         
         String expected[] = new String[] {
             "SELECT BQT2.SmallA.IntKey FROM BQT2.SmallA", //$NON-NLS-1$
-            "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.IntKey = BQT1.SmallB.IntKey AND BQT1.SmallA.StringNum = '10') ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey" //$NON-NLS-1$                                          
+            "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA LEFT OUTER JOIN (BQT1.SmallA INNER JOIN BQT1.SmallB ON BQT1.SmallA.IntKey = BQT1.SmallB.IntKey) ON BQT1.MediumA.IntKey = BQT1.SmallA.IntKey AND BQT1.SmallA.StringNum = '10'" //$NON-NLS-1$                                          
         };
         
         
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, false);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -5978,12 +5808,10 @@ public class TestOptimizer extends TestCase {
     public void testOrderByDuplicates() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
@@ -6008,18 +5836,15 @@ public class TestOptimizer extends TestCase {
     public void testCase2507() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("||", true); //$NON-NLS-1$
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -6040,18 +5865,15 @@ public class TestOptimizer extends TestCase {
     public void testCase2507A() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
@@ -6071,18 +5893,15 @@ public class TestOptimizer extends TestCase {
     public void testCase2507B() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
@@ -6099,15 +5918,17 @@ public class TestOptimizer extends TestCase {
         checkNodeTypes(plan, FULL_PUSHDOWN);
     }
         
-    public void testPushCrossJoins() {
+    /**
+     * RulePlanJoins does not initially allow the cross join push.
+     * The subsequent RuleRaiseAccess does since we believe it was the intent of the user
+     */
+    public void testPushCrossJoins() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
@@ -6122,8 +5943,8 @@ public class TestOptimizer extends TestCase {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT b1.intkey FROM (bqt1.SmallA AS a1 CROSS JOIN (bqt1.smalla AS a2 CROSS JOIN bqt1.mediuma AS b1)) LEFT OUTER JOIN bqt1.mediumb AS b2 ON b1.intkey = b2.intkey"},  //$NON-NLS-1$
-                                      SHOULD_SUCCEED );
+                                      new String[] {"SELECT g_2.intkey FROM ((bqt1.SmallA AS g_0 CROSS JOIN bqt1.smalla AS g_1) CROSS JOIN bqt1.mediuma AS g_2) LEFT OUTER JOIN bqt1.mediumb AS g_3 ON g_2.intkey = g_3.intkey"},  //$NON-NLS-1$
+                                      ComparisonMode.EXACT_COMMAND_STRING );
         
         checkNodeTypes(plan, FULL_PUSHDOWN);        
     }
@@ -6131,18 +5952,15 @@ public class TestOptimizer extends TestCase {
     public void testCase3023() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
@@ -6163,9 +5981,8 @@ public class TestOptimizer extends TestCase {
         FakeMetadataFacade metadata = example1();
 
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -6183,19 +6000,19 @@ public class TestOptimizer extends TestCase {
      * of a virtual table containing a join in it's transformation.  All virtual 
      * models use the same physical model pm1.
      */
-    public void testCase3778() {
+    public void testCase3778() throws Exception {
     	
     	FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
                 
         ProcessorPlan plan = helpPlan(
         		"select a.e1, b.e1 from vm2.g1 a, vm2.g1 b where a.e1 = b.e1 and a.e2 in (select e2 from vm1.g1)",  //$NON-NLS-1$
-        		metadata, null, capFinder, new String[] {"SELECT g_1.e1, g_3.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g1 AS g_2, pm1.g2 AS g_3 WHERE (g_1.e1 = g_3.e1) AND (g_0.e2 = g_1.e2) AND (g_1.e2 IN (SELECT g_4.e2 FROM pm1.g1 AS g_4)) AND (g_2.e2 = g_3.e2)"}, true); //$NON-NLS-1$
+        		metadata, null, capFinder, new String[] {"SELECT g_1.e1, g_3.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g1 AS g_2, pm1.g2 AS g_3 WHERE (g_2.e2 = g_3.e2) AND (g_0.e2 = g_1.e2) AND (g_1.e1 = g_3.e1) AND (g_1.e2 IN (SELECT g_4.e2 FROM pm1.g1 AS g_4))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN);    
         
@@ -6208,14 +6025,11 @@ public class TestOptimizer extends TestCase {
     public void testCase3832() throws Exception { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = new BasicSourceCapabilities(); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);         
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true); 
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true); 
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true); 
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);         
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true); 
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true); 
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);   
-        caps.setCapabilitySupport(Capability.FUNCTION, true); 
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$ 
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$ 
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$ 
@@ -6241,11 +6055,8 @@ public class TestOptimizer extends TestCase {
     public void testDefect21972() { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = new BasicSourceCapabilities(); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true); 
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$ 
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$ 
          
@@ -6264,13 +6075,11 @@ public class TestOptimizer extends TestCase {
     public void testExpressionSymbolPreservation() throws Exception { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
         BasicSourceCapabilities caps = new BasicSourceCapabilities(); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true); 
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true); 
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true); 
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true); 
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true); 
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true); 
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true); 
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true); 
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true); 
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$ 
          
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached(); 
@@ -6355,7 +6164,6 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         String sql = "select convert(e2+1,string) from pm1.g1 union all select e1 from pm1.g2";//$NON-NLS-1$
@@ -6422,13 +6230,13 @@ public class TestOptimizer extends TestCase {
      * Test of RuleCopyCriteria.  Criteria should NOT be copied across a join if the join has any other operator
      * other than an equality operator, but if the single group criteria is equality, then we can copy into a join criteria   
      */
-    public void testCase4265() {
+    public void testCase4265() throws Exception {
         String sql = "SELECT X.intkey, Y.intkey FROM BQT1.SmallA X, BQT1.SmallA Y WHERE X.IntKey <> Y.IntKey and Y.IntKey = 1"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
-                                          "SELECT X.intkey FROM BQT1.SmallA AS X WHERE X.IntKey <> 1",  //$NON-NLS-1$ 
-                                          "SELECT Y.intkey FROM BQT1.SmallA AS Y WHERE Y.IntKey = 1" }); //$NON-NLS-1$ 
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey <> 1",  //$NON-NLS-1$ 
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
                                         2,      // Access
@@ -6453,13 +6261,12 @@ public class TestOptimizer extends TestCase {
      * Test of RuleCopyCriteria.  Criteria should be copied across a join only for an equality operator in
      * the join criteria.
      */
-    public void testCase4265ControlTest() {
+    public void testCase4265ControlTest() throws Exception {
         String sql = "SELECT X.intkey, Y.intkey FROM BQT1.SmallA X, BQT1.SmallA Y WHERE X.IntKey = Y.IntKey and Y.IntKey = 1"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
-                                          "SELECT X.intkey FROM BQT1.SmallA AS X WHERE X.IntKey = 1",  //$NON-NLS-1$ 
-                                          "SELECT Y.intkey FROM BQT1.SmallA AS Y WHERE Y.IntKey = 1" }); //$NON-NLS-1$ 
+                                          "SELECT g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
                                         2,      // Access
@@ -6543,8 +6350,8 @@ public class TestOptimizer extends TestCase {
         FakeMetadataFacade metadata = example1();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
@@ -6564,7 +6371,6 @@ public class TestOptimizer extends TestCase {
         FakeMetadataFacade metadata = example1();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -6601,7 +6407,6 @@ public class TestOptimizer extends TestCase {
         FakeMetadataFacade metadata = example1();
         
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -6613,7 +6418,7 @@ public class TestOptimizer extends TestCase {
         
         ProcessorPlan plan = helpPlan("select * from (select v1.e1, v2.e1 as e1_1, v1.e2, v2.e2 as e2_2 from (select * from vm1.g7 where vm1.g7.e2 = 1) v1 left outer join (select * from vm1.g7 where vm1.g7.e2 = 1) v2 on v1.e2 = v2.e2) as v3 where v3.e2 = 1", metadata,  //$NON-NLS-1$
                                       null, capFinder,
-            new String[] { "SELECT CASE WHEN g_0.e1 = 'S' THEN 'Pay' WHEN g_0.e1 = 'P' THEN 'Rec' ELSE g_0.e1 END, CASE WHEN g_1.e1 = 'S' THEN 'Pay' WHEN g_1.e1 = 'P' THEN 'Rec' ELSE g_1.e1 END, g_0.e2, g_1.e2 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g1 AS g_1 ON g_1.e2 = 1 WHERE g_0.e2 = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[] { "SELECT CASE WHEN g_0.e1 = 'S' THEN 'Pay' WHEN g_0.e1 = 'P' THEN 'Rec' ELSE g_0.e1 END, CASE WHEN g_1.e1 = 'S' THEN 'Pay' WHEN g_1.e1 = 'P' THEN 'Rec' ELSE g_1.e1 END, g_0.e2, g_1.e2 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g1 AS g_1 ON g_0.e2 = g_1.e2 AND g_1.e2 = 1 WHERE g_0.e2 = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
           
         checkSubPlanCount(plan, 0);        
@@ -6622,9 +6427,7 @@ public class TestOptimizer extends TestCase {
     public void testCase4312() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
@@ -6645,14 +6448,11 @@ public class TestOptimizer extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -6673,18 +6473,15 @@ public class TestOptimizer extends TestCase {
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_GT, true);        
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);        
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);  
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -6742,11 +6539,8 @@ public class TestOptimizer extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("concat", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -6768,14 +6562,11 @@ public class TestOptimizer extends TestCase {
     public void testDefect23614() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_COMPARISON, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_ALL, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_QUANTIFIED_SOME, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_IN_SUBQUERY, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_ALL, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_QUANTIFIED_SOME, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -6812,8 +6603,7 @@ public class TestOptimizer extends TestCase {
     public void testSameConnector() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
@@ -6850,7 +6640,7 @@ public class TestOptimizer extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
@@ -6902,7 +6692,7 @@ public class TestOptimizer extends TestCase {
     public void testCase5067() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -6920,10 +6710,7 @@ public class TestOptimizer extends TestCase {
     public void testDontPushConvertObject() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
@@ -6958,10 +6745,7 @@ public class TestOptimizer extends TestCase {
     public void testDontPushConvertClobToString() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_COMPARE_EQ, true);
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("LOB", caps); //$NON-NLS-1$
 
@@ -7011,12 +6795,10 @@ public class TestOptimizer extends TestCase {
     public void testCorrelatedSubqueryOverJoin() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_EXISTS, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_AND, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7075,7 +6857,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
@@ -7159,8 +6941,8 @@ public class TestOptimizer extends TestCase {
     public void testCase6597() { 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_LIKE, true);
-        caps.setCapabilitySupport(Capability.QUERY_WHERE_NOT, false);
+        caps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_NOT, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
 
         // Create query 

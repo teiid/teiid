@@ -176,8 +176,8 @@ public class TestCriteria extends TestCase {
     	CompoundCriteria compCrit2 = new CompoundCriteria();
     	compCrit2.setOperator(CompoundCriteria.AND);
     	compCrit2.addCriteria(crit3);
-    	compCrit2.addCriteria(compCrit);
-
+    	compCrit2.addCriteria(crit1);
+    	compCrit2.addCriteria(crit2);
     	helpTestCombineCriteria(crit3, compCrit, compCrit2);
     }
     

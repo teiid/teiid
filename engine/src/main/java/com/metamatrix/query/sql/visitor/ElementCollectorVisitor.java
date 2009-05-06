@@ -117,7 +117,7 @@ public class ElementCollectorVisitor extends LanguageVisitor {
         PreOrderNavigator.doVisit(obj, visitor);
     }
     
-    public static final void getElements(Collection<LanguageObject> objs, Collection<ElementSymbol> elements) {
+    public static final void getElements(Collection<? extends LanguageObject> objs, Collection<ElementSymbol> elements) {
     	if(objs == null) {
     		return;
     	}

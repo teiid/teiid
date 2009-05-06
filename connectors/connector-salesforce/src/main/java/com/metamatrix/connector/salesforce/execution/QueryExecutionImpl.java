@@ -24,6 +24,7 @@ package com.metamatrix.connector.salesforce.execution;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.basic.BasicExecution;
+import org.teiid.connector.language.IAggregate;
 import org.teiid.connector.language.IQueryCommand;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
@@ -119,6 +121,11 @@ public class QueryExecutionImpl extends BasicExecution implements ResultSetExecu
 	@Override
 	public List next() throws ConnectorException, DataNotAvailableException {
 		while (results != null) {
+			if (query.getProjectedQuery().getSelect().getSelectSymbols().get(0).getExpression() instanceof IAggregate) {
+				List<?> result = Arrays.asList(results.getSize());
+				results = null;
+				return result;
+			}
 			if (i < results.getSize()) {
 				SObject sObject = results.getRecords(i++);
 				org.apache.axis.message.MessageElement[] fields = sObject.get_any();

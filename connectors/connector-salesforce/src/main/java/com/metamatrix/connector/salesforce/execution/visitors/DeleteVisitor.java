@@ -59,18 +59,7 @@ public class DeleteVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		result.append("Id").append(SPACE);
 		result.append(FROM).append(SPACE);
 		result.append(table.getNameInSource()).append(SPACE);
-		result.append(WHERE).append(SPACE);
-		boolean first = true;
-		Iterator<String> iter = criteriaList.iterator();
-		while(iter.hasNext()) {
-			String criterion = (String) iter.next();
-			if(first) {
-				result.append(criterion).append(SPACE);
-				first = false;
-			} else {
-				result.append("AND").append(SPACE).append(criterion).append(SPACE);;
-			}
-		}
+		addCriteriaString(result);
 		return result.toString();
 	}
 }

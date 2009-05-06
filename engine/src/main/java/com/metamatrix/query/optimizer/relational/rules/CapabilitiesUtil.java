@@ -22,8 +22,12 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+
+import org.teiid.connector.api.ConnectorCapabilities.SupportedJoinCriteria;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -33,6 +37,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
+import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
@@ -41,7 +46,7 @@ import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
-import com.metamatrix.query.sql.symbol.ScalarSubquery;
+import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 
 /**
  */
@@ -55,28 +60,7 @@ public class CapabilitiesUtil {
     
     static boolean supportsInlineView(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
         throws QueryMetadataException, MetaMatrixComponentException {
-            
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-        
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-        
-        return caps.supportsCapability(Capability.QUERY_FROM_INLINE_VIEWS);
-    }
-    
-    public static boolean supportsJoins(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
-    throws QueryMetadataException, MetaMatrixComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_FROM_JOIN);
+        return supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder);
     }
 
     public static boolean supportsSelfJoins(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
@@ -95,18 +79,10 @@ public class CapabilitiesUtil {
 
     public static boolean supportsGroupAliases(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
         throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-  
-        return caps.supportsCapability(Capability.QUERY_FROM_GROUP_ALIAS);
+        return supports(Capability.QUERY_FROM_GROUP_ALIAS, modelID, metadata, capFinder);
     }
         
-    public static boolean supportsOuterJoin(Object modelID, JoinType joinType, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsJoin(Object modelID, JoinType joinType, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
         
         if (metadata.isVirtualModel(modelID)){
@@ -116,6 +92,10 @@ public class CapabilitiesUtil {
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
+        if (!joinType.isOuter()) {
+        	return caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER);
+        }
+        
         if(! caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER)) {
             return false;
         }
@@ -133,9 +113,6 @@ public class CapabilitiesUtil {
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
         
-        if (!caps.supportsCapability(Capability.QUERY_AGGREGATES)) {
-            return false;
-        }
         if (groupCols != null && !groupCols.isEmpty()) {
         	if (!caps.supportsCapability(Capability.QUERY_GROUP_BY)) {
         		return false;
@@ -166,11 +143,6 @@ public class CapabilitiesUtil {
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
-        // Check for basic aggregate function support
-        if(! caps.supportsCapability(Capability.QUERY_AGGREGATES)) {
-            return false;
-        }
-                              
         // Check particular function
         String func = aggregate.getAggregateFunction();
         if(func.equals(ReservedWords.COUNT)) {
@@ -202,10 +174,8 @@ public class CapabilitiesUtil {
         }
         
         // Check DISTINCT if necessary
-        if(aggregate.isDistinct()) {
-            if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_DISTINCT)) {
-                return false;
-            }                
+        if(aggregate.isDistinct() && ! caps.supportsCapability(Capability.QUERY_AGGREGATES_DISTINCT)) {
+            return false;
         }
         
         // Passed all the checks!
@@ -224,10 +194,6 @@ public class CapabilitiesUtil {
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
-        if(! caps.supportsCapability(Capability.FUNCTION)) {
-            return false;
-        }
-        
         if (!caps.supportsFunction(function.getName().toLowerCase())) {
             return false;
         }
@@ -253,68 +219,18 @@ public class CapabilitiesUtil {
 
     public static boolean supportsSelectDistinct(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_SELECT_DISTINCT);
+    	return supports(Capability.QUERY_SELECT_DISTINCT, modelID, metadata, capFinder);
     }
 
     public static boolean supportsSelectLiterals(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_SELECT_LITERALS);
+    	return supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
     }
 
     public static boolean supportsOrderBy(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_ORDERBY);        
+    	return supports(Capability.QUERY_ORDERBY, modelID, metadata, capFinder);   
     }
-
-    public static boolean supportsScalarSubquery(Object modelID, ScalarSubquery subquery, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
-    throws QueryMetadataException, MetaMatrixComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_SUBQUERIES_SCALAR);
-    }
-    
-    public static boolean supportsCorrelatedSubquery(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
-    throws QueryMetadataException, MetaMatrixComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_SUBQUERIES_CORRELATED);
-    }       
 
     public static boolean supportsSetOp(Object modelID, Operation setOp, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
@@ -340,41 +256,17 @@ public class CapabilitiesUtil {
 
     public static boolean supportsSetQueryOrderBy(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_SET_ORDER_BY);
+    	return supports(Capability.QUERY_SET_ORDER_BY, modelID, metadata, capFinder);
     }
 
     public static boolean supportsCaseExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_CASE);
+    	return supports(Capability.QUERY_CASE, modelID, metadata, capFinder);
     }
 
     public static boolean supportsSearchedCaseExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
-
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.QUERY_SEARCHED_CASE);
+    	return supports(Capability.QUERY_SEARCHED_CASE, modelID, metadata, capFinder);
     }
 
     public static int getMaxInCriteriaSize(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
@@ -421,31 +313,26 @@ public class CapabilitiesUtil {
         return value;
     }
 
+    public static SupportedJoinCriteria getSupportedJoinCriteria(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, MetaMatrixComponentException {
+        if (metadata.isVirtualModel(modelID)){
+            return SupportedJoinCriteria.ANY;
+        }
+        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
+        SupportedJoinCriteria crits = (SupportedJoinCriteria)caps.getSourceProperty(Capability.JOIN_CRITERIA_ALLOWED);
+        if (crits == null) {
+        	return SupportedJoinCriteria.ANY;
+        }
+        return crits;
+    }
     
     public static boolean supportsRowLimit(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.ROW_LIMIT);
+        return supports(Capability.ROW_LIMIT, modelID, metadata, capFinder);
     }
 
     public static boolean supportsRowOffset(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.ROW_OFFSET);
+        return supports(Capability.ROW_OFFSET, modelID, metadata, capFinder);
     }
     
     public static boolean isSameConnector(Object modelID, Object modelID1, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
@@ -478,28 +365,39 @@ public class CapabilitiesUtil {
 
     public static boolean requiresCriteria(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, MetaMatrixComponentException {
-		
-        if (metadata.isVirtualModel(modelID)){
-            return false;
-        }
-
-        // Find capabilities
-        SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
-
-        return caps.supportsCapability(Capability.REQUIRES_CRITERIA);
+        return supports(Capability.REQUIRES_CRITERIA, modelID, metadata, capFinder);
 	}
     
     public static boolean useAnsiJoin(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
     throws QueryMetadataException, MetaMatrixComponentException {
-		
-        if (metadata.isVirtualModel(modelID)){
+        return supports(Capability.QUERY_FROM_ANSI_JOIN, modelID, metadata, capFinder);
+	}
+    
+    public static boolean supports(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+    throws QueryMetadataException, MetaMatrixComponentException {
+    	if (metadata.isVirtualModel(modelID)){
             return false;
         }
 
         // Find capabilities
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
-        return caps.supportsCapability(Capability.QUERY_FROM_ANSI_JOIN);
-	}
+        return caps.supportsCapability(cap);
+    }
 
+	/**
+	 * Validate that the elements are searchable and can be used in a criteria against this source.
+	 * TODO: this check is too general and not type based
+	 */
+	static boolean checkElementsAreSearchable(List<? extends LanguageObject> objs, QueryMetadataInterface metadata, int searchableType) 
+	throws QueryMetadataException, MetaMatrixComponentException {
+	    Collection<ElementSymbol> elements = new ArrayList<ElementSymbol>();
+	    ElementCollectorVisitor.getElements(objs, elements);
+	    for (ElementSymbol elementSymbol : elements) {
+	        if (!metadata.elementSupports(elementSymbol.getMetadataID(), searchableType)) {
+	        	return false;
+	        }                
+	    }
+	    return true;
+	}
 }

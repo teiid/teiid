@@ -50,24 +50,12 @@ public class TestXMLCapabilities extends TestCase {
         assertEquals(Integer.MAX_VALUE, m_caps.getMaxInCriteriaSize());
     }
     
-    public void testSupportsCriteria() {
-        assertTrue(m_caps.supportsCriteria());
-    }
-
-    public void testSupportsCompareCriteria() {
-    	assertTrue(m_caps.supportsCompareCriteria());
-    }
-
     public void testSupportsCompareCriteriaEquals() {
     	assertTrue(m_caps.supportsCompareCriteriaEquals());
     }
 
     public void testSupportsInCriteria() {
     	assertTrue(m_caps.supportsInCriteria());
-    }
-
-    public void testSupportsAndCriteria() {
-    	assertTrue(m_caps.supportsAndCriteria());
     }
 
     public void testXMLCapabilities() {
@@ -86,16 +74,12 @@ public class TestXMLCapabilities extends TestCase {
         assertFalse(m_caps.supportsSelectDistinct());
     }
 
-    public void testSupportsSelectLiterals() {
-    	assertFalse(m_caps.supportsSelectLiterals());
-    }
-
     public void testSupportsAliasedGroup() {
         assertFalse(m_caps.supportsAliasedGroup());
     }
 
     public void testSupportsJoins() {
-       assertFalse(m_caps.supportsJoins());
+       assertFalse(m_caps.supportsInnerJoins());
     }
 
     public void testSupportsSelfJoins() {
@@ -112,26 +96,6 @@ public class TestXMLCapabilities extends TestCase {
 
     public void testSupportsBetweenCriteria() {
        assertFalse(m_caps.supportsBetweenCriteria());
-    }
-
-    public void testSupportsCompareCriteriaNotEquals() {
-        assertFalse(m_caps.supportsCompareCriteriaNotEquals());
-    }
-
-    public void testSupportsCompareCriteriaLessThan() {
-      assertFalse(m_caps.supportsCompareCriteriaLessThan());
-    }
-
-    public void testSupportsCompareCriteriaLessThanOrEqual() {
-        assertFalse(m_caps.supportsCompareCriteriaLessThanOrEqual());
-    }
-
-    public void testSupportsCompareCriteriaGreaterThan() {
-        assertFalse(m_caps.supportsCompareCriteriaGreaterThan());
-    }
-
-    public void testSupportsCompareCriteriaGreaterThanOrEqual() {
-        assertFalse(m_caps.supportsCompareCriteriaGreaterThanOrEqual());
     }
 
     public void testSupportsLikeCriteria() {
@@ -162,10 +126,6 @@ public class TestXMLCapabilities extends TestCase {
         assertFalse(m_caps.supportsExistsCriteria());
     }
 
-    public void testSupportsQuantifiedCompareCriteria() {
-        assertFalse(m_caps.supportsQuantifiedCompareCriteria());
-    }
-
     public void testSupportsQuantifiedCompareCriteriaSome() {
     	assertFalse(m_caps.supportsQuantifiedCompareCriteriaSome());
     }
@@ -176,10 +136,6 @@ public class TestXMLCapabilities extends TestCase {
 
     public void testSupportsOrderBy() {
     	assertFalse(m_caps.supportsOrderBy());
-    }
-
-    public void testSupportsAggregates() {
-    	assertFalse(m_caps.supportsAggregates());
     }
 
     public void testSupportsAggregatesSum() {
@@ -224,10 +180,6 @@ public class TestXMLCapabilities extends TestCase {
 
     public void testSupportsSearchedCaseExpressions() {
         assertFalse(m_caps.supportsSearchedCaseExpressions());
-    }
-
-    public void testSupportsScalarFunctions() {
-        assertFalse(m_caps.supportsScalarFunctions());
     }
 
     public void testSupportsInlineViews() {

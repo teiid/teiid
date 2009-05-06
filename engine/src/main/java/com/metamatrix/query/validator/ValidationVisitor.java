@@ -41,7 +41,6 @@ import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.resolver.util.ResolverUtil.ResolvedLookup;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.ProcedureReservedWords;

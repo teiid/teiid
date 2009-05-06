@@ -32,6 +32,7 @@ import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.processor.HardcodedDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -75,7 +76,7 @@ public class TestTPCR extends BaseQueryTest {
                          Arrays.asList(new Object[] { new Double(3459808.0), new BigDecimal("405838.6989"), TimestampUtil.createDate(95, 2, 4), new Double(0.0) }), //$NON-NLS-1$
                          Arrays.asList(new Object[] { new Double(492164.0), new BigDecimal("390324.0610"), TimestampUtil.createDate(95, 1, 19), new Double(0.0) }) }; //$NON-NLS-1$
 
-        dataMgr.addData("SELECT g_2.l_orderkey AS c_0, SUM((g_2.l_extendedprice * (1 - g_2.l_discount))) AS c_1, g_1.o_orderdate AS c_2, g_1.o_shippriority AS c_3 FROM TPCR_Oracle_9i.CUSTOMER AS g_0, TPCR_Oracle_9i.ORDERS AS g_1, TPCR_Oracle_9i.LINEITEM AS g_2 WHERE (g_2.l_orderkey = g_1.o_orderkey) AND (g_2.l_shipdate > {ts'1995-03-15 00:00:00.0'}) AND (g_0.c_custkey = g_1.o_custkey) AND (g_0.c_mktsegment = 'BUILDING') AND (g_1.o_orderdate < {d'1995-03-15'}) GROUP BY g_2.l_orderkey, g_1.o_orderdate, g_1.o_shippriority ORDER BY c_1 DESC, c_2", //$NON-NLS-1$
+        dataMgr.addData("SELECT g_2.l_orderkey AS c_0, SUM((g_2.l_extendedprice * (1 - g_2.l_discount))) AS c_1, g_1.o_orderdate AS c_2, g_1.o_shippriority AS c_3 FROM TPCR_Oracle_9i.CUSTOMER AS g_0, TPCR_Oracle_9i.ORDERS AS g_1, TPCR_Oracle_9i.LINEITEM AS g_2 WHERE (g_0.c_custkey = g_1.o_custkey) AND (g_2.l_orderkey = g_1.o_orderkey) AND (g_0.c_mktsegment = 'BUILDING') AND (g_1.o_orderdate < {d'1995-03-15'}) AND (g_2.l_shipdate > {ts'1995-03-15 00:00:00.0'}) GROUP BY g_2.l_orderkey, g_1.o_orderdate, g_1.o_shippriority ORDER BY c_1 DESC, c_2", //$NON-NLS-1$
                         expected);
 
         doProcess(plan, dataMgr, expected, DEBUG);
@@ -212,7 +213,7 @@ public class TestTPCR extends BaseQueryTest {
 
         ProcessorPlan plan = TestOptimizer.helpPlan("select S_ACCTBAL, S_NAME, N_NAME, P_PARTKEY, P_MFGR, S_ADDRESS, S_PHONE, S_COMMENT from (SELECT SUPPLIER.S_ACCTBAL, SUPPLIER.S_NAME, NATION.N_NAME, PART.P_PARTKEY, PART.P_MFGR, SUPPLIER.S_ADDRESS, SUPPLIER.S_PHONE, SUPPLIER.S_COMMENT FROM PART, SUPPLIER, PARTSUPP, NATION, REGION WHERE (PART.P_PARTKEY = PS_PARTKEY) AND (S_SUPPKEY = PS_SUPPKEY) AND (P_SIZE = 15) AND (P_TYPE LIKE '%BRASS') AND (S_NATIONKEY = N_NATIONKEY) AND (N_REGIONKEY = R_REGIONKEY) AND (R_NAME = 'EUROPE') AND (PS_SUPPLYCOST = (SELECT MIN(PS_SUPPLYCOST) FROM PARTSUPP, SUPPLIER, NATION, REGION WHERE (PART.P_PARTKEY = PS_PARTKEY) AND (S_SUPPKEY = PS_SUPPKEY) AND (S_NATIONKEY = N_NATIONKEY) AND (N_REGIONKEY = R_REGIONKEY) AND (R_NAME = 'EUROPE'))) ORDER BY SUPPLIER.S_ACCTBAL DESC, NATION.N_NAME, SUPPLIER.S_NAME, PART.P_PARTKEY) as x", //$NON-NLS-1$
         		METADATA, null, finder,
-        		new String[] {"SELECT g_1.S_ACCTBAL, g_1.S_NAME, g_3.N_NAME, g_0.P_PARTKEY, g_0.P_MFGR, g_1.S_ADDRESS, g_1.S_PHONE, g_1.S_COMMENT FROM TPCR_Oracle_9i.PART AS g_0, TPCR_Oracle_9i.SUPPLIER AS g_1, TPCR_Oracle_9i.PARTSUPP AS g_2, TPCR_Oracle_9i.NATION AS g_3, TPCR_Oracle_9i.REGION AS g_4 WHERE (g_0.P_PARTKEY = g_2.PS_PARTKEY) AND (g_2.PS_SUPPLYCOST = (SELECT MIN(g_5.PS_SUPPLYCOST) FROM TPCR_Oracle_9i.PARTSUPP AS g_5, TPCR_Oracle_9i.SUPPLIER AS g_6, TPCR_Oracle_9i.NATION AS g_7, TPCR_Oracle_9i.REGION AS g_8 WHERE (g_7.N_REGIONKEY = g_8.R_REGIONKEY) AND (g_8.R_NAME = 'EUROPE') AND (g_6.S_NATIONKEY = g_7.N_NATIONKEY) AND (g_6.S_SUPPKEY = g_5.PS_SUPPKEY) AND (g_5.PS_PARTKEY = g_0.P_PARTKEY))) AND (g_0.P_SIZE = 15.0) AND (g_0.P_TYPE LIKE '%BRASS') AND (g_1.S_NATIONKEY = g_3.N_NATIONKEY) AND (g_1.S_SUPPKEY = g_2.PS_SUPPKEY) AND (g_3.N_REGIONKEY = g_4.R_REGIONKEY) AND (g_4.R_NAME = 'EUROPE')"}, true); //$NON-NLS-1$
+        		new String[] {"SELECT g_1.S_ACCTBAL, g_1.S_NAME, g_3.N_NAME, g_0.P_PARTKEY, g_0.P_MFGR, g_1.S_ADDRESS, g_1.S_PHONE, g_1.S_COMMENT FROM TPCR_Oracle_9i.PART AS g_0, TPCR_Oracle_9i.SUPPLIER AS g_1, TPCR_Oracle_9i.PARTSUPP AS g_2, TPCR_Oracle_9i.NATION AS g_3, TPCR_Oracle_9i.REGION AS g_4 WHERE (g_3.N_REGIONKEY = g_4.R_REGIONKEY) AND (g_1.S_NATIONKEY = g_3.N_NATIONKEY) AND (g_1.S_SUPPKEY = g_2.PS_SUPPKEY) AND (g_0.P_PARTKEY = g_2.PS_PARTKEY) AND (g_2.PS_SUPPLYCOST = (SELECT MIN(g_5.PS_SUPPLYCOST) FROM TPCR_Oracle_9i.PARTSUPP AS g_5, TPCR_Oracle_9i.SUPPLIER AS g_6, TPCR_Oracle_9i.NATION AS g_7, TPCR_Oracle_9i.REGION AS g_8 WHERE (g_6.S_SUPPKEY = g_5.PS_SUPPKEY) AND (g_6.S_NATIONKEY = g_7.N_NATIONKEY) AND (g_7.N_REGIONKEY = g_8.R_REGIONKEY) AND (g_5.PS_PARTKEY = g_0.P_PARTKEY) AND (g_8.R_NAME = 'EUROPE'))) AND (g_0.P_SIZE = 15.0) AND (g_0.P_TYPE LIKE '%BRASS') AND (g_4.R_NAME = 'EUROPE')"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
  

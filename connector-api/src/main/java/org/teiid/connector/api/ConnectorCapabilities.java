@@ -33,7 +33,27 @@ import org.teiid.connector.language.IBulkInsert;
  * supports.    
  */
 public interface ConnectorCapabilities {
-
+	
+	public enum SupportedJoinCriteria {
+		/**
+		 * Indicates that any supported criteria is allowed.
+		 */
+		ANY, 
+		/**
+		 * Indicates that any simple comparison of elements is allowed. 
+		 */
+		THETA,
+		/**
+		 * Indicates that only equality predicates of elements are allowed.
+		 */
+		EQUI,
+		/**
+		 * Indicates that only equality predicates between
+		 * exactly one primary and foreign key is allowed per join.
+		 */
+		KEY
+	}
+	
     /** 
      * Support indicates connector can accept queries with SELECT DISTINCT
      * @since 3.1 SP2 
@@ -41,22 +61,31 @@ public interface ConnectorCapabilities {
     boolean supportsSelectDistinct();
 
     /** 
-     * Support indicates connector can accept literals in the SELECT clause 
-     * @since 4.1.2
+     * Support indicates connector can accept expressions other than element
+     * symbols in the SELECT clause.  Specific supports for the expression
+     * type are still checked.
+     * @since 6.1.0
      */
-    boolean supportsSelectLiterals();
+    boolean supportsSelectExpression();
 
     /**
      * Support indicates connector can accept groups with aliases  
      * @since 3.1 SP2
      */
     boolean supportsAliasedGroup();
+
+    /** 
+     * Get the supported join criteria. A null return value will be treated
+     * as {@link SupportedJoinCriteria#ANY}  
+     * @since 6.1.0
+     */
+    SupportedJoinCriteria getSupportedJoinCriteria();
     
     /** 
-     * Support indicates connector can accept joins
-     * @since 3.1 SP2 
+     * Support indicates connector can accept inner or cross joins
+     * @since 6.1.0
      */
-    boolean supportsJoins();
+    boolean supportsInnerJoins();
     
     /** 
      * Support indicates connector can accept self-joins where a 
@@ -67,7 +96,7 @@ public interface ConnectorCapabilities {
     boolean supportsSelfJoins();
     
     /** 
-     * Support indicates connector can accept right or left outer joins 
+     * Support indicates connector can accept left outer joins 
      * @since 3.1 SP2
      */
     boolean supportsOuterJoins();
@@ -86,23 +115,12 @@ public interface ConnectorCapabilities {
     boolean supportsInlineViews();
 
     /** 
-     * Support indicates connector can accept a WHERE criteria on queries
-     * @since 3.1 SP2 
-     */
-    boolean supportsCriteria();
-
-    /** 
-     * Support indicates connector accepts criteria of form (element BETWEEN constant AND constant) 
+     * Support indicates connector accepts criteria of form (element BETWEEN constant AND constant)
+     * <br>NOT CURRENTLY USED - between is rewritten as compound compare criteria
      * @since 4.0
      */
     boolean supportsBetweenCriteria();
     
-    /** 
-     * Support indicates connector accepts criteria of form (element operator constant) 
-     * @since 3.1 SP2
-     */
-    boolean supportsCompareCriteria();
-
     /** 
      * Support indicates connector accepts criteria of form (element = constant) 
      * @since 3.1 SP2
@@ -110,43 +128,21 @@ public interface ConnectorCapabilities {
     boolean supportsCompareCriteriaEquals();
 
     /** 
-     * Support indicates connector accepts criteria of form (element &lt;&gt; constant) 
+     * Support indicates connector accepts criteria of form (element &lt;=|&gt;= constant)
+     * <br>The query engine will may pushdown queries containing &lt; or &gt; if NOT is also
+     * supported.  
      * @since 3.1 SP2
      */
-    boolean supportsCompareCriteriaNotEquals();
-
-    /** 
-     * Support indicates connector accepts criteria of form (element &lt; constant) 
-     * @since 3.1 SP2
-     */
-    boolean supportsCompareCriteriaLessThan();
-
-    /** 
-     * Support indicates connector accepts criteria of form (element &lt;= constant) 
-     * @since 3.1 SP2
-     */
-    boolean supportsCompareCriteriaLessThanOrEqual();
-
-    /** 
-     * Support indicates connector accepts criteria of form (element &gt; constant) 
-     * @since 3.1 SP2
-     */
-    boolean supportsCompareCriteriaGreaterThan();
-
-    /** 
-     * Support indicates connector accepts criteria of form (element &gt;= constant) 
-     * @since 3.1 SP2
-     */
-    boolean supportsCompareCriteriaGreaterThanOrEqual();
+    boolean supportsCompareCriteriaOrdered();
 
     /** 
      * Support indicates connector accepts criteria of form (element LIKE constant) 
      * @since 3.1 SP2
      */
     boolean supportsLikeCriteria();
-    
+        
     /** 
-     * Support indicates connector accepts criteria of form (element LIKE constant ESCAPE char) - CURRENTLY NOT USED 
+     * Support indicates connector accepts criteria of form (element LIKE constant ESCAPE char)
      * @since 3.1 SP2
      */
     boolean supportsLikeCriteriaEscapeCharacter();
@@ -170,12 +166,6 @@ public interface ConnectorCapabilities {
     boolean supportsIsNullCriteria();
 
     /** 
-     * Support indicates connector accepts logical criteria connected by AND 
-     * @since 3.1 SP2
-     */
-    boolean supportsAndCriteria();
-
-    /** 
      * Support indicates connector accepts logical criteria connected by OR 
      * @since 3.1 SP2
      */
@@ -192,12 +182,6 @@ public interface ConnectorCapabilities {
      * @since 4.0
      */
     boolean supportsExistsCriteria();
-
-    /** 
-     * Support indicates connector accepts quantified subquery comparison criteria
-     * @since 4.0
-     */
-    boolean supportsQuantifiedCompareCriteria();
 
     /** 
      * Support indicates connector accepts the quantified comparison criteria that 
@@ -219,14 +203,19 @@ public interface ConnectorCapabilities {
      * @since 3.1 SP2
      */
     boolean supportsOrderBy();
-
-    /** 
-     * Support indicates connector accepts GROUP BY and HAVING clauses as well as 
-     * aggregate functions in the SELECT clause. 
-     * @since 3.1 SP2
+    
+    /**
+     * Whether the source supports an explicit GROUP BY clause
+     * @since 6.1
      */
-    boolean supportsAggregates();
+    boolean supportsGroupBy();
 
+    /**
+     * Whether the source supports the HAVING clause
+     * @since 6.1
+     */
+    boolean supportsHaving();
+    
     /** 
      * Support indicates connector can accept the SUM aggregate function 
      * @since 3.1 SP2
@@ -277,7 +266,7 @@ public interface ConnectorCapabilities {
     boolean supportsScalarSubqueries();
 
     /** 
-     * Support indicates connector can accept correalted subqueries wherever subqueries
+     * Support indicates connector can accept correlated subqueries wherever subqueries
      * are accepted 
      * @since 4.0
      */
@@ -286,6 +275,7 @@ public interface ConnectorCapabilities {
     /**
      * Support indicates connector can accept queries with non-searched
      * CASE <expression> WHEN <expression> ... END
+     * <br>NOT CURRENTLY USED - case is pushed down as searched case
      * @since 4.0
      */
     boolean supportsCaseExpressions();
@@ -296,12 +286,6 @@ public interface ConnectorCapabilities {
      */
     boolean supportsSearchedCaseExpressions();
    
-    /**
-     * Support indicates that the connector supports scalar functions.
-     * @since 3.1 SP3
-     */ 
-    boolean supportsScalarFunctions();
-
     /**
      * Support indicates that the connector supports the UNION of two queries. 
      * @since 4.2
@@ -344,9 +328,7 @@ public interface ConnectorCapabilities {
      * <p>Support indicates that the connector supports functions in GROUP BY, such as:
      *  <code>SELECT dayofmonth(theDate), COUNT(*) FROM table GROUP BY dayofmonth(theDate)</code></p>
      *  
-     * <p>This capability requires both {@link #supportsAggregates()} and 
-     * {@link #supportsScalarFunctions()} to be true as well to take effective.</p>
-     * 
+     * <br>NOT CURRENTLY USED - group by expressions create an inline view for pushdown
      * @since 5.0
      */
     boolean supportsFunctionsInGroupBy();
@@ -394,11 +376,5 @@ public interface ConnectorCapabilities {
      * @since 6.0
      */
     boolean supportsBulkInsert();
-    
-    /**
-     * Whether the source supports an explicit GROUP BY clause
-     * @since 6.0
-     */
-    boolean supportsGroupBy();
-    
+        
 }

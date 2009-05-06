@@ -120,6 +120,10 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
                 continue;
             }
             
+            if (crit.isOptional()) {
+            	continue;
+            }
+            
             Expression leftExpr = crit.getLeftExpression();
             Expression rightExpr = crit.getRightExpression();
                         
@@ -145,7 +149,12 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
             //make use of the one side criteria
             joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);
             joinNode.setProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA, nonEquiJoinCriteria);   
-        }        
+        } else if (nonEquiJoinCriteria.isEmpty()) {
+        	joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, nonEquiJoinCriteria);
+        	if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER) {
+        		joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
+        	}
+        }
     }
     
     private static AtomicInteger EXPRESSION_INDEX = new AtomicInteger(0);

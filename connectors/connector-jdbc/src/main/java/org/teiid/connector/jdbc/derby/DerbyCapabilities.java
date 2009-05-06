@@ -152,15 +152,6 @@ public class DerbyCapabilities extends JDBCCapabilities {
         return true;
     }
     
-    /**
-     * UNION is supported, but not UNIONs with a final ORDER BY. 
-     * @see org.teiid.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
-     * @since 5.0
-     */
-    public boolean supportsUnionOrderBy() {
-        return false;
-    }
-    
     @Override
     public boolean supportsSetQueryOrderBy() {
     	return false;

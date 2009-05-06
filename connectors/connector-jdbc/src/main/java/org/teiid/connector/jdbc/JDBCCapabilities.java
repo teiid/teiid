@@ -66,13 +66,6 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsAggregates()
-     */
-    public boolean supportsAggregates() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsAggregatesAvg()
      */
     public boolean supportsAggregatesAvg() {
@@ -129,13 +122,6 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsAndCriteria()
-     */
-    public boolean supportsAndCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsBetweenCriteria()
      */
     public boolean supportsBetweenCriteria() {
@@ -150,13 +136,6 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteria()
-     */
-    public boolean supportsCompareCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaEquals()
      */
     public boolean supportsCompareCriteriaEquals() {
@@ -164,51 +143,9 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaGreaterThan()
-     */
-    public boolean supportsCompareCriteriaGreaterThan() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaGreaterThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaGreaterThanOrEqual() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaLessThan()
-     */
-    public boolean supportsCompareCriteriaLessThan() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaLessThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaLessThanOrEqual() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaNotEquals()
-     */
-    public boolean supportsCompareCriteriaNotEquals() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsCorrelatedSubqueries()
      */
     public boolean supportsCorrelatedSubqueries() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCriteria()
-     */
-    public boolean supportsCriteria() {
         return true;
     }
 
@@ -244,13 +181,6 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
      * @see com.metamatrix.data.ConnectorCapabilities#supportsIsNullCriteria()
      */
     public boolean supportsIsNullCriteria() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsJoins()
-     */
-    public boolean supportsJoins() {
         return true;
     }
 
@@ -297,23 +227,9 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsQuantifiedCompareCriteria()
-     */
-    public boolean supportsQuantifiedCompareCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsQuantifiedCompareCriteriaAll()
      */
     public boolean supportsQuantifiedCompareCriteriaAll() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsScalarFunctions()
-     */
-    public boolean supportsScalarFunctions() {
         return true;
     }
 
@@ -335,13 +251,6 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
      * @see com.metamatrix.data.ConnectorCapabilities#supportsSelectDistinct()
      */
     public boolean supportsSelectDistinct() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsSelectLiterals()
-     */
-    public boolean supportsSelectLiterals() {
         return true;
     }
 
@@ -388,6 +297,31 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     
     @Override
     public boolean supportsBatchedUpdates() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+    	return true;
+    }
+    
+    @Override
+    public SupportedJoinCriteria getSupportedJoinCriteria() {
+    	return SupportedJoinCriteria.ANY;
+    }
+    
+    @Override
+    public boolean supportsHaving() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsInnerJoins() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsSelectExpression() {
     	return true;
     }
 

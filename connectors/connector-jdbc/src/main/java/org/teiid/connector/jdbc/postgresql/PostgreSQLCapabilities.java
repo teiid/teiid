@@ -248,10 +248,6 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
         return true;
     }
 
-    public boolean supportsOrderByInInlineViews() {
-        return true;
-    }
-
     public boolean supportsRowLimit() {
         return true;
     }

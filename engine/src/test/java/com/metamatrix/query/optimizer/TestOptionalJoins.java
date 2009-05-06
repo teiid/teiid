@@ -24,6 +24,7 @@ package com.metamatrix.query.optimizer;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
@@ -277,9 +278,9 @@ public class TestOptionalJoins extends TestCase {
         TestOptimizer.checkSubPlanCount(plan, 0);
     }
     
-    public void testOptionalJoinWithIntersection() { 
+    public void testOptionalJoinWithIntersection() throws Exception { 
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT pm1.g3.e1 FROM pm1.g3 inner join (select pm1.g1.e2 as y from /* optional */ pm1.g1 inner join pm1.g2 on pm1.g1.e1 = pm1.g2.e1) AS x on pm1.g3.e2=x.y", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] {"SELECT g_0.e1 FROM pm1.g3 AS g_0, pm1.g1 AS g_1, pm1.g2 AS g_2 WHERE (g_0.e2 = g_1.e2) AND (g_1.e1 = g_2.e1)"} ); //$NON-NLS-1$ 
+            new String[] {"SELECT g_0.e1 FROM pm1.g3 AS g_0, pm1.g1 AS g_1, pm1.g2 AS g_2 WHERE (g_1.e1 = g_2.e1) AND (g_0.e2 = g_1.e2)"}, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ 
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);    
     }

@@ -24,8 +24,6 @@ package org.teiid.connector.jdbc;
 
 import java.util.List;
 
-import org.teiid.connector.api.ConnectorCapabilities;
-
 
 /**
  * This is a "simple" capabilities class that allows criteria but no 
@@ -33,7 +31,7 @@ import org.teiid.connector.api.ConnectorCapabilities;
  * This capabilities class may come in handy for testing and for 
  * sources that support JDBC but don't support extended JDBC capabilities.  
  */
-public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCapabilities {
+public class SimpleCapabilities extends JDBCCapabilities {
 
     public SimpleCapabilities() {
         // Max acceptable by all BQT dbs (Sybase=250, Oracle=1000)
@@ -41,65 +39,9 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     }
     
     /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAndCriteria()
-     */
-    public boolean supportsAndCriteria() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteria()
-     */
-    public boolean supportsCompareCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaEquals()
      */
     public boolean supportsCompareCriteriaEquals() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaGreaterThan()
-     */
-    public boolean supportsCompareCriteriaGreaterThan() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaGreaterThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaGreaterThanOrEqual() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaLessThan()
-     */
-    public boolean supportsCompareCriteriaLessThan() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaLessThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaLessThanOrEqual() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCompareCriteriaNotEquals()
-     */
-    public boolean supportsCompareCriteriaNotEquals() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsCriteria()
-     */
-    public boolean supportsCriteria() {
         return true;
     }
 
@@ -114,13 +56,6 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsIsNullCriteria()
      */
     public boolean supportsIsNullCriteria() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsJoins()
-     */
-    public boolean supportsJoins() {
         return true;
     }
 
@@ -150,14 +85,6 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
      */
     public boolean supportsSelectDistinct() {
         return true;
-    }
-
-    /** 
-     * @see org.teiid.connector.api.ConnectorCapabilities#supportsSelectLiterals()
-     * @since 4.2
-     */
-    public boolean supportsSelectLiterals() {
-        return false;
     }
 
     /* 
@@ -218,13 +145,6 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
     }
 
     /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsQuantifiedCompareCriteria()
-     */
-    public boolean supportsQuantifiedCompareCriteria() {
-        return false;
-    }
-
-    /* 
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsQuantifiedCompareCriteriaSome()
      */
     public boolean supportsQuantifiedCompareCriteriaSome() {
@@ -242,13 +162,6 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
      * @see com.metamatrix.data.api.ConnectorCapabilities#supportsOrderBy()
      */
     public boolean supportsOrderBy() {
-        return false;
-    }
-
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsAggregates()
-     */
-    public boolean supportsAggregates() {
         return false;
     }
 
@@ -329,13 +242,6 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
         return false;
     }
 
-    /* 
-     * @see com.metamatrix.data.api.ConnectorCapabilities#supportsScalarFunctions()
-     */
-    public boolean supportsScalarFunctions() {
-        return false;
-    }
-
     /**
      * Return null to indicate no functions are supported.
      * @return null 
@@ -349,18 +255,6 @@ public class SimpleCapabilities extends JDBCCapabilities implements ConnectorCap
         return false;
     }       
 
-    public boolean supportsOrderByInInlineViews() {
-        return false;
-    }
-
-    /** 
-     * @see org.teiid.connector.api.ConnectorCapabilities#supportsUnionOrderBy()
-     * @since 4.2
-     */
-    public boolean supportsUnionOrderBy() {
-        return false;
-    }
-    
     /** 
      * @see org.teiid.connector.api.ConnectorCapabilities#supportsUnions()
      * @since 4.2

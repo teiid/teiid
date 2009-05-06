@@ -22,8 +22,9 @@
 
 package com.metamatrix.query.optimizer;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -31,7 +32,7 @@ import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
-public class TestAggregatePushdown extends TestCase {
+public class TestAggregatePushdown {
     
     private FakeCapabilitiesFinder getAggregatesFinder() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -45,7 +46,7 @@ public class TestAggregatePushdown extends TestCase {
         return capFinder;
     }
 
-    public void testCase6327() {
+    @Test public void testCase6327() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -85,7 +86,7 @@ public class TestAggregatePushdown extends TestCase {
      * 
      * Note also that this test shows that the max aggregate is not placed on the bqt2 query since it would be on one of the group by expressions
      */
-    public void testAggregateOfJoinExpression() throws Exception {
+    @Test public void testAggregateOfJoinExpression() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -124,7 +125,7 @@ public class TestAggregatePushdown extends TestCase {
      * Note that even though this grouping is join invariant, we still do not remove the top level group by
      * since we are not checking the uniqueness of the x side join expressions 
      */
-    public void testInvariantAggregate() throws Exception {
+    @Test public void testInvariantAggregate() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -158,7 +159,7 @@ public class TestAggregatePushdown extends TestCase {
     /**
      * Test of an aggregate nested in an expression symbol
      */
-    public void testCase6211() throws Exception {
+    @Test public void testCase6211() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -195,7 +196,7 @@ public class TestAggregatePushdown extends TestCase {
     /**
      * Note that until we can test the other side cardinality, we cannot fully push the group node
      */ 
-    public void testAggregatePushdown1() throws Exception {        
+    @Test public void testAggregatePushdown1() throws Exception {        
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleAggregatesCached();
         String sql = "SELECT o_dealerid, o_productid, sum(o_amount) FROM m1.order, m1.dealer, m2.product " +  //$NON-NLS-1$
             "WHERE o_dealerid=d_dealerid AND o_productid=p_productid AND d_state = 'CA' AND p_divid = 100 " +  //$NON-NLS-1$
@@ -204,7 +205,7 @@ public class TestAggregatePushdown extends TestCase {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
                                       metadata,
                                       null, getAggregatesFinder(),
-                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid AS c_0, g_0.o_dealerid AS c_1, SUM(g_0.o_amount) AS c_2 FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_productid IN (<dependent values>)) AND (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') GROUP BY g_0.o_productid, g_0.o_dealerid ORDER BY c_0"},  //$NON-NLS-1$ //$NON-NLS-2$
+                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid AS c_0, g_0.o_dealerid AS c_1, SUM(g_0.o_amount) AS c_2 FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') AND (g_0.o_productid IN (<dependent values>)) GROUP BY g_0.o_productid, g_0.o_dealerid ORDER BY c_0"},  //$NON-NLS-1$ //$NON-NLS-2$
                                                     TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -225,7 +226,7 @@ public class TestAggregatePushdown extends TestCase {
                                     });        
     }
 
-    public void testAggregatePushdown2() throws Exception {        
+    @Test public void testAggregatePushdown2() throws Exception {        
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleAggregatesCached();
         String sql = "SELECT o_dealerid, o_productid, sum(o_amount) FROM m1.order, m1.dealer, m2.product " +  //$NON-NLS-1$
             "WHERE o_dealerid=d_dealerid AND o_productid=p_productid AND d_state = 'CA' AND p_divid = 100 " +  //$NON-NLS-1$
@@ -234,7 +235,7 @@ public class TestAggregatePushdown extends TestCase {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
                                       metadata,
                                       null, getAggregatesFinder(),
-                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid AS c_0, g_0.o_dealerid AS c_1, MAX(g_0.o_amount) AS c_2, SUM(g_0.o_amount) AS c_3 FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_productid IN (<dependent values>)) AND (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') GROUP BY g_0.o_productid, g_0.o_dealerid ORDER BY c_0"},  //$NON-NLS-1$ //$NON-NLS-2$
+                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid AS c_0, g_0.o_dealerid AS c_1, MAX(g_0.o_amount) AS c_2, SUM(g_0.o_amount) AS c_3 FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') AND (g_0.o_productid IN (<dependent values>)) GROUP BY g_0.o_productid, g_0.o_dealerid ORDER BY c_0"},  //$NON-NLS-1$ //$NON-NLS-2$
                                                     TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -258,7 +259,7 @@ public class TestAggregatePushdown extends TestCase {
     /**
      * Average requires the creation of staged sum and count aggregates
      */
-    public void testAvgAggregate() throws Exception {
+    @Test public void testAvgAggregate() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -290,7 +291,7 @@ public class TestAggregatePushdown extends TestCase {
         }); 
     }
     
-    public void testCountAggregate() throws Exception {
+    @Test public void testCountAggregate() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -322,7 +323,7 @@ public class TestAggregatePushdown extends TestCase {
         }); 
     }
     
-    public void testOuterJoinPreventsPushdown() throws Exception {
+    @Test public void testOuterJoinPreventsPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -358,7 +359,7 @@ public class TestAggregatePushdown extends TestCase {
      * Test to ensure count(*) isn't mistakenly pushed to either side, but that
      * grouping can still be.
      */
-    public void testCase5724() {
+    @Test public void testCase5724() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -394,7 +395,7 @@ public class TestAggregatePushdown extends TestCase {
         });                                    
     }
 
-    public void testCase6210() throws Exception {
+    @Test public void testCase6210() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -431,10 +432,11 @@ public class TestAggregatePushdown extends TestCase {
         }); 
     }               
     
-    public void testNoGroupAggregatePushdown() {
+    @Test public void testNoGroupAggregatePushdown() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, false);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -448,6 +450,66 @@ public class TestAggregatePushdown extends TestCase {
                 true); 
                   
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
+    }
+    
+    @Test public void testNoHavingAggregate() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+              "select stringkey, max(intkey) from bqt1.smalla group by stringkey having count(intkey) = 1",  //$NON-NLS-1$
+              metadata, null, capFinder,
+              new String[] { 
+                "SELECT COUNT(g_0.intkey), g_0.stringkey, MAX(g_0.intkey) FROM bqt1.smalla AS g_0 GROUP BY g_0.stringkey"},  //$NON-NLS-1$
+                ComparisonMode.EXACT_COMMAND_STRING); 
+                  
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                1,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });                                    
+    }
+    
+    @Test public void testHavingCriteriaPushDown() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select X.e1 FROM vm1.g1 X group by X.e1 having X.e1 = 1 and sum(X.e2) = 2", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 = '1'"}, true); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            1,      // Select
+            0,      // Sort
+            0       // UnionAll
+        }); 
     }
     
 }

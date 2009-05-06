@@ -23,7 +23,6 @@
 package com.metamatrix.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,13 +42,10 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
-import com.metamatrix.query.sql.lang.CompareCriteria;
-import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.DependentSetCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.util.SymbolMap;
-import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.LogConstants;
 
@@ -228,32 +224,6 @@ public final class RuleChooseDependent implements OptimizerRule {
         }
 
         return true;        
-    }
-
-    /** 
-     * @param foundEquality
-     * @param theCrit
-     * @return
-     */
-    static Collection[] isEqualityCriteria(Criteria theCrit) {
-        if(!(theCrit instanceof CompareCriteria)) {
-            return null;
-        }
-        CompareCriteria compCrit = (CompareCriteria) theCrit;                
-        if(compCrit.getOperator() != CompareCriteria.EQ) {
-            return null;
-        }
-        Collection groups[] = new Collection[2];
-        groups[0] = GroupsUsedByElementsVisitor.getGroups(compCrit.getLeftExpression());
-        groups[1] = GroupsUsedByElementsVisitor.getGroups(compCrit.getRightExpression());
-
-        Collection allGroups = GroupsUsedByElementsVisitor.getGroups(compCrit);
-        
-        if(groups[0].size() > 0 && groups[0].size() + groups[1].size() == allGroups.size()) {
-            return groups;
-        }
-        
-        return null;
     }
     
     PlanNode chooseDepWithoutCosting(PlanNode rootNode1, PlanNode rootNode2)  {

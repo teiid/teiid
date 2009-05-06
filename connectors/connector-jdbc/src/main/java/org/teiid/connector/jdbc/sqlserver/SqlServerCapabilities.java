@@ -118,10 +118,6 @@ public class SqlServerCapabilities extends JDBCCapabilities {
         return true;
     }
 
-    public boolean supportsOrderByInInlineViews() {
-        return false;
-    }
-
     /** 
      * @see org.teiid.connector.api.ConnectorCapabilities#supportsFunctionsInGroupBy()
      * @since 5.0

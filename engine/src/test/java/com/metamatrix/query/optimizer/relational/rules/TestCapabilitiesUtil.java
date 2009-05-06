@@ -28,17 +28,13 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
-import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.ReservedWords;
-import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -47,7 +43,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
-import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
@@ -117,7 +112,7 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        boolean actual = CapabilitiesUtil.supportsOuterJoin(modelID, joinType, metadata, finder);
+        boolean actual = CapabilitiesUtil.supportsJoin(modelID, joinType, metadata, finder);
         assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
     }
     
@@ -162,23 +157,7 @@ public class TestCapabilitiesUtil extends TestCase {
     public void testSupportsAggregates1() throws Exception {        
         helpTestSupportsAggregates(true, true, null); 
     }
-    
-    // Test where capabilities don't support aggregates
-    public void testSupportsAggregates2() throws Exception {        
-        helpTestSupportsAggregates(false, true, null); 
-    }
-
-    // Test where no capabilities exist
-    public void testSupportsAggregates3() throws Exception {        
-        // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         
-        // Test capabilities util
-        boolean actual = CapabilitiesUtil.supportsAggregates(null, modelID, metadata, new DefaultCapabilitiesFinder());
-        assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-    }
-    
     /**
      * Supports functions in group by is misleading.  It should actually
      * be called supports expression in group by.  Thus the example below
@@ -405,7 +384,6 @@ public class TestCapabilitiesUtil extends TestCase {
     // Test where capabilities don't support scalar functions
     public void testSupportsScalar1() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.FUNCTION, false);
 
         Function func = new Function("+", new Expression[] { new ElementSymbol("x"), new ElementSymbol("y") }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         helpTestSupportsScalar(caps, func, false);        
@@ -414,7 +392,6 @@ public class TestCapabilitiesUtil extends TestCase {
     // Test where capabilities doesn't support function
     public void testSupportsScalar3() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("now", false); //$NON-NLS-1$
 
         Function func = new Function("NOW", new Expression[] { }); //$NON-NLS-1$
@@ -424,7 +401,6 @@ public class TestCapabilitiesUtil extends TestCase {
     // Test where capabilities do support function
     public void testSupportsScalar4() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
         caps.setFunctionSupport("now", true); //$NON-NLS-1$
 
         Function func = new Function("NOW", new Expression[] { }); //$NON-NLS-1$
@@ -434,7 +410,6 @@ public class TestCapabilitiesUtil extends TestCase {
     // Test where function is unknown
     public void testSupportsScalar5() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.FUNCTION, true);
 
         Function func = new Function("sasquatch", new Expression[] { }); //$NON-NLS-1$
         helpTestSupportsScalar(caps, func, false);        
@@ -502,57 +477,6 @@ public class TestCapabilitiesUtil extends TestCase {
         assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
     }    
     
-    public void helpTestSupportsScalarSubquery(boolean supportsScalarSubquery, ScalarSubquery subquery, FakeMetadataFacade metadata, boolean expectedValue) throws QueryMetadataException, MetaMatrixComponentException {
-        // Set up metadata
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-
-        // Set up capabilities
-        FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities sourceCaps = new BasicSourceCapabilities();
-        sourceCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, supportsScalarSubquery); 
-        finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
-
-        // Test capabilities util
-        boolean actual = CapabilitiesUtil.supportsScalarSubquery(modelID, subquery, metadata, finder);
-        assertEquals("Got wrong answer for supports", expectedValue, actual); //$NON-NLS-1$
-    }
-    
-    private ScalarSubquery exampleSubquery1(FakeMetadataFacade metadata) {
-        try {
-            QueryParser parser = new QueryParser();
-            Command command = parser.parseCommand("SELECT e1 FROM pm1.g1");         //$NON-NLS-1$
-            QueryResolver.resolveCommand(command, metadata);
-            ScalarSubquery ss = new ScalarSubquery(command);
-            return ss;
-        } catch(MetaMatrixException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-            return null;
-        }
-    }
-
-    public void testSupportsScalarSubquery1() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        ScalarSubquery ss = exampleSubquery1(metadata);
-        helpTestSupportsScalarSubquery(false, ss, metadata, false);
-    }
-
-    public void testSupportsScalarSubquery2() throws Exception {
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        ScalarSubquery ss = exampleSubquery1(metadata);
-        helpTestSupportsScalarSubquery(true, ss, metadata, true);
-    }
-
-    public void testSupportsScalarSubquery3() throws Exception {        
-        // Set up metadata
-        FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
-        FakeMetadataObject modelID = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
-        
-        // Test capabilities util
-        boolean actual = CapabilitiesUtil.supportsScalarSubquery(modelID, exampleSubquery1(metadata), metadata, new DefaultCapabilitiesFinder());
-        assertEquals("Got wrong answer for supports", false, actual); //$NON-NLS-1$
-    }
-
     public void helpTestSupportsUnion(boolean supports) throws QueryMetadataException, MetaMatrixComponentException {        
         // Set up metadata
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -585,7 +509,7 @@ public class TestCapabilitiesUtil extends TestCase {
         // Set up capabilities
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities sourceCaps = new BasicSourceCapabilities();
-        sourceCaps.setCapabilitySupport(Capability.QUERY_SELECT_LITERALS, supports); 
+        sourceCaps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, supports); 
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util

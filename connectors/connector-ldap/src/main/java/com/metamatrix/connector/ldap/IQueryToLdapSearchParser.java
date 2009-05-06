@@ -29,8 +29,6 @@
  * This class should remove all the MMX-specific stuff, and turn it into something any
  * LDAP implementation can understand.
  *
- * TODO: Escape all special characters according to http://www.ietf.org/rfc/rfc2254.txt.
- *
  */
 
 package com.metamatrix.connector.ldap;
@@ -66,6 +64,7 @@ import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.ILikeCriteria;
 import org.teiid.connector.language.ILimit;
 import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.INotCriteria;
 import org.teiid.connector.language.IOrderBy;
 import org.teiid.connector.language.IOrderByItem;
 import org.teiid.connector.language.IQuery;
@@ -463,6 +462,7 @@ public class IQueryToLdapSearchParser {
 		if(criteria == null) {
 			filterList.add("(objectClass=*)"); //$NON-NLS-1$
 		}
+		boolean isNegated = false;
 		// Recursive case: compound criteria
 		if(criteria instanceof ICompoundCriteria) {
 			logger.logTrace("Parsing compound criteria."); //$NON-NLS-1$
@@ -485,6 +485,8 @@ public class IQueryToLdapSearchParser {
 			logger.logTrace("Parsing compare criteria."); //$NON-NLS-1$
 			ICompareCriteria.Operator op = ((ICompareCriteria) criteria).getOperator();
 			
+			isNegated = op == Operator.NE || op == Operator.GT || op == Operator.LT;
+			
 			IExpression lhs = ((ICompareCriteria) criteria).getLeftExpression();
 			IExpression rhs = ((ICompareCriteria) criteria).getRightExpression();
 		
@@ -503,6 +505,7 @@ public class IQueryToLdapSearchParser {
 		// Base case
 		} else if(criteria instanceof ILikeCriteria) {
 			logger.logTrace("Parsing LIKE criteria."); //$NON-NLS-1$
+			isNegated = ((ILikeCriteria) criteria).isNegated();
 			// Convert LIKE to Equals, where any "%" symbol is replaced with "*".
 			ICompareCriteria.Operator op = Operator.EQ;
 			IExpression lhs = ((ILikeCriteria) criteria).getLeftExpression();
@@ -516,10 +519,21 @@ public class IQueryToLdapSearchParser {
 		// Base case
 		} else if(criteria instanceof IInCriteria) {
 			logger.logTrace("Parsing IN criteria."); //$NON-NLS-1$
+			isNegated = ((IInCriteria) criteria).isNegated();
 			IExpression lhs = ((IInCriteria)criteria).getLeftExpression();
 			List rhsList = ((IInCriteria)criteria).getRightExpressions();
 			// Recursively add each IN expression to the filter list.
 			processInCriteriaList(filterList, rhsList, lhs);
+		} else if (criteria instanceof INotCriteria) {
+			logger.logTrace("Parsing NOT criteria."); //$NON-NLS-1$
+			isNegated = true;
+			filterList = getSearchFilterFromWhereClause(((INotCriteria)criteria).getCriteria(), filterList);
+		}
+		
+		if (isNegated) {
+			filterList.add(0, "("); //$NON-NLS-1$
+			filterList.add(1, "!"); //$NON-NLS-1$
+			filterList.add(")"); //$NON-NLS-1$
 		}
 		
 		return filterList;
@@ -554,10 +568,6 @@ public class IQueryToLdapSearchParser {
 		// Push the comparison statement into the list, e.g.:
 		// (sn=Mike)
 		// !(empNum>=100)
-		if(op == Operator.NE || op == Operator.GT || op == Operator.LT) {
-			filterList.add("("); //$NON-NLS-1$
-			filterList.add("!"); //$NON-NLS-1$
-		}
 		filterList.add("("); //$NON-NLS-1$
 		filterList.add(lhs);
 
@@ -581,9 +591,6 @@ public class IQueryToLdapSearchParser {
 		}
 		filterList.add(rhs);
 		filterList.add(")"); //$NON-NLS-1$
-		if(op == Operator.NE || op == Operator.GT || op == Operator.LT) {
-			filterList.add(")"); //$NON-NLS-1$
-		}
 	}
 	
 	/** 

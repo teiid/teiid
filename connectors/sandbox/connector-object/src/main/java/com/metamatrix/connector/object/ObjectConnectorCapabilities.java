@@ -29,65 +29,9 @@ import org.teiid.connector.basic.BasicConnectorCapabilities;
 public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
 
     /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsAndCriteria()
-     */
-    public boolean supportsAndCriteria() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteria()
-     */
-    public boolean supportsCompareCriteria() {
-        return true;
-    }
-
-    /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaEquals()
      */
     public boolean supportsCompareCriteriaEquals() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaGreaterThan()
-     */
-    public boolean supportsCompareCriteriaGreaterThan() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaGreaterThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaGreaterThanOrEqual() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaLessThan()
-     */
-    public boolean supportsCompareCriteriaLessThan() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaLessThanOrEqual()
-     */
-    public boolean supportsCompareCriteriaLessThanOrEqual() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCompareCriteriaNotEquals()
-     */
-    public boolean supportsCompareCriteriaNotEquals() {
-        return true;
-    }
-
-    /* 
-     * @see com.metamatrix.data.ConnectorCapabilities#supportsCriteria()
-     */
-    public boolean supportsCriteria() {
         return true;
     }
 
@@ -124,6 +68,11 @@ public class ObjectConnectorCapabilities extends BasicConnectorCapabilities {
      */
     public boolean supportsOrCriteria() {
         return true;
+    }
+    
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+    	return true;
     }
 
 }

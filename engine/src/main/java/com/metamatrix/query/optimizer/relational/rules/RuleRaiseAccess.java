@@ -25,32 +25,28 @@ package com.metamatrix.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import org.teiid.connector.api.ConnectorCapabilities.SupportedJoinCriteria;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.query.analysis.AnalysisRecord;
-import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
+import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
-import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.relational.AccessNode;
-import com.metamatrix.query.processor.relational.RelationalNode;
-import com.metamatrix.query.processor.relational.RelationalPlan;
-import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -60,8 +56,6 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
-import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
-import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 public final class RuleRaiseAccess implements OptimizerRule {
@@ -107,7 +101,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         switch(parentNode.getType()) {
             case NodeConstants.Types.JOIN:
             {
-                modelID = canRaiseOverJoin(parentNode, metadata, capFinder, afterJoinPlanning);
+                modelID = canRaiseOverJoin(modelID, parentNode, metadata, capFinder, afterJoinPlanning);
                 if(modelID != null) {
                     raiseAccessOverJoin(parentNode, modelID, true);                    
                     return rootNode;
@@ -119,10 +113,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 // Check that the PROJECT contains only functions that can be pushed                               
                 List projectCols = (List) parentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
                 
-                if(isEligibleSubquery(parentNode, modelID, metadata, capFinder) == null){
-                	return null;
-                }
-                               
                 for (int i = 0; i < projectCols.size(); i++) {
                     SingleElementSymbol symbol = (SingleElementSymbol)projectCols.get(i);
                     if(! canPushSymbol(symbol, true, modelID, metadata, capFinder)) {
@@ -135,10 +125,15 @@ public final class RuleRaiseAccess implements OptimizerRule {
             case NodeConstants.Types.DUP_REMOVE:
             {     
                 // If model supports the support constant parameter, then move access node
-                if(CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, capFinder)) {
-                    return performRaise(rootNode, accessNode, parentNode);
+                if(!CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, capFinder)) {
+                	return null;
                 }
-                return null;
+                
+                if (!CapabilitiesUtil.checkElementsAreSearchable((List)NodeEditor.findNodePreOrder(parentNode, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+                	return null;
+                }
+                
+                return performRaise(rootNode, accessNode, parentNode);
             }
             case NodeConstants.Types.SORT:
             {         
@@ -245,7 +240,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 }
             }
         }
-        return true;
+        return CapabilitiesUtil.checkElementsAreSearchable(groupCols, metadata, SupportConstants.Element.SEARCHABLE_COMPARE);
     }
     
     static boolean canRaiseOverSort(PlanNode accessNode,
@@ -279,11 +274,12 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }
         }
         
-        // If model supports the support constant parameter, then move access node
-        if(CapabilitiesUtil.supportsOrderBy(modelID, metadata, capFinder)) {
-            return true;
+        if (!CapabilitiesUtil.checkElementsAreSearchable(sortCols, metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+        	return false;
         }
-        return false;
+        
+        // If model supports the support constant parameter, then move access node
+        return CapabilitiesUtil.supportsOrderBy(modelID, metadata, capFinder);
     }
 
     /** 
@@ -313,6 +309,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
             return false;
         } 
         
+        if (parentNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING) && !CapabilitiesUtil.supports(Capability.QUERY_HAVING, modelID, metadata, capFinder)) {
+        	return false;
+        }
+        
         //don't push criteria into an invalid location above an ordered limit - shouldn't happen 
         PlanNode limitNode = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.TUPLE_LIMIT, NodeConstants.Types.SOURCE);
         if (limitNode != null && NodeEditor.findNodePreOrder(limitNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE) != null) {
@@ -321,10 +321,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
         
         Criteria crit = (Criteria) parentNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         
-        if(isEligibleSubquery(parentNode, modelID, metadata, capFinder) == null){
-        	return false;
-        }
-        
         if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, modelID, metadata, capFinder) ) { 
             return false;                        
         } 
@@ -332,81 +328,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
         if (accessNode.getFirstChild() != null && accessNode.getFirstChild().getType() == NodeConstants.Types.SET_OP) {
             return false; //inconsistent select position - RulePushSelectCriteria is too greedy
         }
-        
-        //TODO: check for "and" support
-        
+                
         return true;
     }  
-    
-    /**
-     * Check whether the subquery in the node is eligible to be pushed.
-     */
-    static Object isEligibleSubquery(PlanNode critNode, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws MetaMatrixComponentException {
-    	return isEligibleSubquery(critNode.getSubqueryContainers(), critNodeModelID, metadata, capFinder);
-    }
-    
-    static Object isEligibleSubquery(List<SubqueryContainer> plans, Object critNodeModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws MetaMatrixComponentException {
-        for (SubqueryContainer subqueryContainer : plans) {
-        	ProcessorPlan plan = subqueryContainer.getCommand().getProcessorPlan();
-            if(!(plan instanceof RelationalPlan)) {
-                return null;
-            }
             
-            RelationalPlan rplan = (RelationalPlan) plan;
-            
-            // Check that the plan is just an access node                
-            RelationalNode accessNode = rplan.getRootNode();
-            if(accessNode == null || ! (accessNode instanceof AccessNode) || accessNode.getChildren()[0] != null) {
-                return null;
-            }
-            
-            // Check that command in access node is a query
-            Command command = ((AccessNode)accessNode).getCommand();
-            if(command == null || !(command instanceof Query) || ((Query)command).getIsXML()) {
-                return null;
-            }
-            
-            // Check that query in access node is for the same model as current node
-            try {                
-                Collection subQueryGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false);
-                if(subQueryGroups.size() == 0) {
-                    // No FROM?
-                    return null;
-                }
-                GroupSymbol subQueryGroup = (GroupSymbol)subQueryGroups.iterator().next();
-
-                Object modelID = metadata.getModelID(subQueryGroup.getMetadataID());
-                if (critNodeModelID == null) {
-                	critNodeModelID = modelID;
-                } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder)) {
-                    return null;
-                }
-            } catch(QueryMetadataException e) {
-                throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("RulePushSelectCriteria.Error_getting_modelID")); //$NON-NLS-1$
-            }                
-            
-            // Check whether source supports correlated subqueries and if not, whether criteria has them
-            SymbolMap refs = subqueryContainer.getCommand().getCorrelatedReferences();
-            try {
-                if(refs != null && !refs.asMap().isEmpty()) {
-                    if(! CapabilitiesUtil.supportsCorrelatedSubquery(critNodeModelID, metadata, capFinder)) {
-                        return null;
-                    }
-                    //TODO: this check sees as correlated references as coming from the containing scope
-                    //but this is only an issue with deeply nested subqueries
-                    if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(command, critNodeModelID, metadata, capFinder)) {
-                        return null;
-                    }
-                }
-            } catch(QueryMetadataException e) {
-                throw new MetaMatrixComponentException(e);                  
-            }
-        }
-
-        // Found no reason why this node is not eligible
-        return critNodeModelID;
-    }
-        
     /**
      *  
      * @param symbol Symbol to check
@@ -429,9 +354,11 @@ public final class RuleRaiseAccess implements OptimizerRule {
             return false;
         }
         
-        if(inSelectClause && !(expr instanceof ElementSymbol) && !CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, capFinder) 
+        if(inSelectClause && !(expr instanceof ElementSymbol)) {
+			if (!CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, capFinder) 
         		&& (expr instanceof Constant || EvaluateExpressionVisitor.willBecomeConstant(expr))) {
-            return false;
+        		return false;
+        	}
         }                
          
         // By default, no reason we can't push
@@ -462,7 +389,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @return The modelID if the raise can proceed and what common model these combined
      * nodes will be sent to
      */
-	private static Object canRaiseOverJoin(PlanNode joinNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, boolean afterJoinPlanning) 
+	private static Object canRaiseOverJoin(Object modelId, PlanNode joinNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, boolean afterJoinPlanning) 
 		throws QueryMetadataException, MetaMatrixComponentException {
 		
         List crits = (List) joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
@@ -485,28 +412,41 @@ public final class RuleRaiseAccess implements OptimizerRule {
             return null;
         }
         
+        //if I'm on the inner side of an outer join, then and we have a criteria restriction, then I can't be pushed
+		if (type.isOuter() && CapabilitiesUtil.getSupportedJoinCriteria(modelId, metadata, capFinder) != SupportedJoinCriteria.ANY) {
+			PlanNode critNode = NodeEditor.findNodePreOrder(joinNode.getLastChild(), NodeConstants.Types.SELECT, NodeConstants.Types.SOURCE);
+			if (critNode != null) {
+				return null;
+			}
+			if (type == JoinType.JOIN_FULL_OUTER) {
+				critNode = NodeEditor.findNodePreOrder(joinNode.getFirstChild(), NodeConstants.Types.SELECT, NodeConstants.Types.SOURCE);
+				if (critNode != null) {
+					return null;
+				}	
+			}
+		}
+        
         return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type);		
 	}
 
-    static Object canRaiseOverJoin(List children,
+    static Object canRaiseOverJoin(List<PlanNode> children,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder,
                                            List<Criteria> crits,
                                            JoinType type) throws QueryMetadataException,
                                                          MetaMatrixComponentException {
-        Object modelID = null;
-        Set groupIDs = new HashSet();
+        //we only want to consider binary joins
+        if (children.size() != 2) {
+        	return null;
+        }
+
+    	Object modelID = null;
+        Set<Object> groupIDs = new HashSet<Object>();
         int groupCount = 0;
         
-        // Walk through each of the join node children - all of them should be access nodes
-        // if the raise can occur.
-		Iterator childIter = children.iterator();
-		while(childIter.hasNext()) {
-			PlanNode childNode = (PlanNode) childIter.next();
-            
-			if(childNode.getType() != NodeConstants.Types.ACCESS) {
-                // If one of the children is not an access node (or, in a rare case, a join node), 
-                // then we can't raise the access nodes
+		for (PlanNode childNode : children) {
+			if(childNode.getType() != NodeConstants.Types.ACCESS 
+					|| childNode.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS)) {
                 return null;
             }
 			Object accessModelID = getModelIDFromAccess(childNode, metadata);
@@ -531,30 +471,67 @@ public final class RuleRaiseAccess implements OptimizerRule {
     			    }
     			}
             }
-            								
+            			
+            //check the join criteria now that we know the model
 			if(modelID == null) {
                 
-				// Check that model supports join
-                if(!CapabilitiesUtil.supportsJoins(accessModelID, metadata, capFinder)) {
-                	return null;
-                }
-				// Check that if join is outer, model supports it
-				
-                if(type.isOuter() && !CapabilitiesUtil.supportsOuterJoin(accessModelID, type, metadata, capFinder)) {
-				   //join is outer and model does not support
+        		if (!CapabilitiesUtil.supportsJoin(accessModelID, type, metadata, capFinder)) {
 				   return null;
-				}
-			
-				// Check that model supports join expressions 
+        		}
+        		SupportedJoinCriteria sjc = CapabilitiesUtil.getSupportedJoinCriteria(accessModelID, metadata, capFinder);
+				
+        		/*
+        		 * Key joins must be left linear
+        		 */
+        		if (sjc == SupportedJoinCriteria.KEY && children.get(1).getGroups().size() != 1) {
+        			return null;
+        		}
+        		
 				if(crits != null && !crits.isEmpty()) {
+					List<Object> leftIds = null;
+					List<Object> rightIds = null;
+					GroupSymbol leftGroup = null;
 					for (Criteria crit : crits) {
-				        if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder) ) { 
-				            return null;                        
-				        } 
+				        if (!isSupportedJoinCriteria(sjc, crit, accessModelID, metadata, capFinder)) {
+				        	return null;
+				        }
+			        	if (sjc != SupportedJoinCriteria.KEY) {
+			        		continue;
+			        	}
+			        	//key join
+			        	//TODO: this would be much simpler if we could rely on rulechoosejoinstrategy running first
+			        	if (leftIds == null) {
+			        		leftIds = new ArrayList<Object>();
+			        		rightIds = new ArrayList<Object>();
+			        	}
+			        	ElementSymbol leftSymbol = (ElementSymbol)((CompareCriteria)crit).getLeftExpression();
+			        	ElementSymbol rightSymbol = (ElementSymbol)((CompareCriteria)crit).getRightExpression();
+			        	if ((children.get(0).getGroups().contains(leftSymbol.getGroupSymbol()) && children.get(1).getGroups().contains(rightSymbol.getGroupSymbol()))
+			        			|| (children.get(1).getGroups().contains(leftSymbol.getGroupSymbol()) && children.get(0).getGroups().contains(rightSymbol.getGroupSymbol()))) {
+			        		boolean left = children.get(0).getGroups().contains(leftSymbol.getGroupSymbol());
+			        		if (leftGroup == null) {
+			        			leftGroup = left?leftSymbol.getGroupSymbol():rightSymbol.getGroupSymbol();
+			        		} else if (!leftGroup.equals(left?leftSymbol.getGroupSymbol():rightSymbol.getGroupSymbol())) {
+			        			return null;
+			        		}
+			        		if (left) {
+				        		leftIds.add(leftSymbol.getMetadataID());
+				        		rightIds.add(rightSymbol.getMetadataID());
+			        		} else {
+			        			rightIds.add(leftSymbol.getMetadataID());
+				        		leftIds.add(rightSymbol.getMetadataID());
+			        		}
+			        	} else {
+			        		return null;
+			        	}
 					}
-		            if(isEligibleSubquery(ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crits), accessModelID, metadata, capFinder) == null){
-		            	return null;
-		            }
+					if (leftIds != null &&
+							!matchesForeignKey(metadata, leftIds, rightIds,	leftGroup) 
+							&& !matchesForeignKey(metadata, rightIds, leftIds, children.get(1).getGroups().iterator().next())) {
+						return null;
+					}
+                } else if (sjc != SupportedJoinCriteria.ANY) {
+                	return null; //cross join not supported
                 }
 				
 				modelID = accessModelID;
@@ -562,13 +539,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			} else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder)) { 
 				return null;							
 			}
-            
-            if (childNode.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS)) {
-                return null;
-            }
-            
-            //check the group count
-            
 		} // end walking through join node's children
 
 		int maxGroups = CapabilitiesUtil.getMaxFromGroups(modelID, metadata, capFinder);
@@ -579,7 +549,60 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		
 		return modelID;
     }
- 
+    
+    /**
+     * Checks criteria one predicate at a time.  Only tests up to the equi restriction.
+     */
+    static boolean isSupportedJoinCriteria(SupportedJoinCriteria sjc, Criteria crit, Object accessModelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    throws QueryMetadataException, MetaMatrixComponentException {
+    	if(!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(crit, accessModelID, metadata, capFinder) ) { 
+            return false;                        
+        } 
+        if (sjc == SupportedJoinCriteria.ANY) {
+        	return true;
+        }
+        //theta join must be between elements with a compare predicate
+    	if (!(crit instanceof CompareCriteria)) {
+    		return false;
+    	}
+    	CompareCriteria cc = (CompareCriteria)crit;
+    	if (!(cc.getLeftExpression() instanceof ElementSymbol)) {
+    		return false;
+    	}
+    	if (!(cc.getRightExpression() instanceof ElementSymbol)) {
+    		return false;
+    	}
+    	if (sjc == SupportedJoinCriteria.THETA) {
+    		return true;
+    	}
+    	//equi must use the equality operator
+    	if (cc.getOperator() != CompareCriteria.EQ) {
+    		return false;
+    	}
+		return true;
+    }
+
+    /**
+     * TODO: gracefully handle too much criteria
+     */
+	private static boolean matchesForeignKey(QueryMetadataInterface metadata,
+			List<Object> leftIds, List<Object> rightIds, GroupSymbol leftGroup)
+			throws MetaMatrixComponentException, QueryMetadataException {
+		Collection fks = metadata.getForeignKeysInGroup(leftGroup.getMetadataID());
+		for (Object fk : fks) {
+			List fkColumns = metadata.getElementIDsInKey(fk);
+			if (!leftIds.containsAll(fkColumns) || leftIds.size() != fkColumns.size()) {
+				continue;
+			}
+			Object pk = metadata.getPrimaryKeyIDForForeignKeyID(fk);
+			List pkColumns = metadata.getElementIDsInKey(pk);
+			if (rightIds.containsAll(pkColumns) && rightIds.size() == pkColumns.size()) {
+				return true;
+			}
+		}
+		return false;
+	}
+    
     static PlanNode raiseAccessOverJoin(PlanNode joinNode, Object modelID, boolean insert) {
 		PlanNode leftAccess = joinNode.getFirstChild();
 		PlanNode rightAccess = joinNode.getLastChild();
@@ -676,6 +699,11 @@ public final class RuleRaiseAccess implements OptimizerRule {
             } else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder)) {
                 return false;
             }      
+            if (!setOpNode.hasBooleanProperty(NodeConstants.Info.USE_ALL) 
+            		&&  !CapabilitiesUtil.checkElementsAreSearchable((List)NodeEditor.findNodePreOrder(childNode, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+            	return false;
+            }
+
         }
         return true;
     }
