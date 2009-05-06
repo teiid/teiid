@@ -911,11 +911,9 @@ public final class ConfigurationManager
 //    }
 
     private void fireConfigurationChange(ConfigurationChangeEvent theEvent) {
-        LogManager.logDetail(LogContexts.PSCDEPLOY,
-                            "ConfigurationChangeEvent=" + theEvent.paramString()); //$NON-NLS-1$
+        LogManager.logDetail(LogContexts.PSCDEPLOY, "ConfigurationChangeEvent=" + theEvent.paramString()); //$NON-NLS-1$
         for (int size=listeners.size(), i=0; i<size; i++) {
-            ConfigurationChangeListener l =
-                (ConfigurationChangeListener)listeners.get(i);
+            ConfigurationChangeListener l = (ConfigurationChangeListener)listeners.get(i);
             l.configurationChanged(theEvent);
         }
     }
@@ -1176,22 +1174,15 @@ public final class ConfigurationManager
         return host;
     }
 
-    public Collection getHostProcesses(
-        Host theHost,
-        ConfigurationID theConfigId)
-        throws ExternalException {
+    public Collection getHostProcesses(Host theHost,ConfigurationID theConfigId) throws ExternalException {
 
         try {
             Collection result = null; // VMComponentDefn
             Collection ids = null;
             Configuration config = getConfig(theConfigId);
             if (config == null) {
-                LogManager.logCritical(
-                    LogContexts.PSCDEPLOY,
-                    "ConfigurationManager.getHostProcesses:" + //$NON-NLS-1$
-                        "Configuration " + config + " not found."); //$NON-NLS-1$ //$NON-NLS-2$
+                LogManager.logCritical(LogContexts.PSCDEPLOY,"ConfigurationManager.getHostProcesses: Configuration " + config + " not found."); //$NON-NLS-1$ //$NON-NLS-2$
                 result = Collections.EMPTY_LIST;
-                
             } 
                 
 //
@@ -1235,17 +1226,11 @@ public final class ConfigurationManager
 //                                VMComponentDefnID processId =
 //                                    deployedComp.getVMComponentDefnID();
                                 VMComponentDefn process = (VMComponentDefn) itr.next();
-//                                    config.getComponentDefn(processId);
+//                              config.getComponentDefn(processId);
                                 result.add(process);
                                 ids.add(process.getID());
                                 
-                                    fireConfigurationChange(
-                                        new ConfigurationChangeEvent(
-                                            ConfigurationChangeEvent.NEW,
-                                            process,
-                                            config,
-                                            new Object[] {theHost,
-                                                          config}));
+                                fireConfigurationChange(new ConfigurationChangeEvent(ConfigurationChangeEvent.NEW,process,config,new Object[] {theHost,config}));
     
                                     // call this to cache the pscs
  //                                   getDeployedPscs(process);
@@ -1721,6 +1706,11 @@ public final class ConfigurationManager
         }
     }
     
+    private void addConfig(ConfigurationModelContainer theConfig) {
+        config = theConfig;
+        fireConfigurationChange(new ConfigurationChangeEvent(ConfigurationChangeEvent.NEW,theConfig.getConfiguration(),theConfig.getConfiguration(), null));
+    }
+    
     public void refresh(){
         super.refresh();
         this.setRefreshNeeded();
@@ -1728,57 +1718,70 @@ public final class ConfigurationManager
             refreshImpl();
             refreshConfigs();
         } catch (ExternalException e) {
-            LogManager.logCritical(
-                LogContexts.CONFIG,
-                "ConfigurationManager.refreshConfigs:" + //$NON-NLS-1$
-                    "Error refreshing configuration."); //$NON-NLS-1$
-            
+            LogManager.logCritical(LogContexts.CONFIG, "ConfigurationManager.refreshConfigs: Error refreshing configuration."); //$NON-NLS-1$
         }
     }    
 
-    private void refreshConfigs()
-        throws ExternalException {
+    private void refreshConfigs() throws ExternalException {
         	
-			fireConfigurationChange(
-				new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_START,
-			this));         	
-
+		fireConfigurationChange(new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_START,this));         	
  
         try {
             ConfigurationModelContainer nextStartUp = getAPI().getConfigurationModel(Configuration.NEXT_STARTUP);
             if (nextStartUp == null) {
-                LogManager.logCritical(
-                    LogContexts.CONFIG,
-                    "ConfigurationManager.refreshConfigs:" + //$NON-NLS-1$
-                        "Next Startup Configuration is null."); //$NON-NLS-1$
+                LogManager.logCritical(LogContexts.CONFIG,"ConfigurationManager.refreshConfigs:Next Startup Configuration is null."); //$NON-NLS-1$
             } else {
-                config = nextStartUp;
+                addConfig(nextStartUp);
             }
 
-			fireConfigurationChange(
-				new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_END,
-											 this));   
+			fireConfigurationChange(new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_END,this));   
             
             refreshNeeded = false;            
         } catch (Exception theException) {
-            throw new ExternalException(
-                formatErrorMsg("refreshConfigs", theException), //$NON-NLS-1$
-                theException);
+            throw new ExternalException(formatErrorMsg("refreshConfigs", theException), theException); //$NON-NLS-1$
         }
     }
+    
+    private void refreshDeployedHosts() throws ExternalException {
+		Iterator itr = config.getHosts().iterator();
+		while (itr.hasNext()) {
+			Host host = (Host) itr.next();
+			getHostProcesses(host, config.getConfigurationID());
+		}
+	}
+
+	private void refreshHosts()
+	    throws ExternalException {
+	
+	    try {
+	        Collection hostCollection = getConfigModel(Configuration.NEXT_STARTUP_ID).getHosts();
+	        if ((hostCollection == null) || (hostCollection.isEmpty()))  {
+	            LogManager.logCritical(LogContexts.CONFIG,"ConfigurationManager.refreshHosts: No hosts found or is null."); //$NON-NLS-1$
+	        } else {
+	            Iterator itr = hostCollection.iterator();
+	            while (itr.hasNext()) {
+	                Host host = (Host)itr.next();
+	                LogManager.logDetail(LogContexts.CONFIG,"ConfigurationManager.refreshHosts: Adding Host:" + host); //$NON-NLS-1$
+	                notifyHostChangeToConfigs(host, ConfigurationChangeEvent.NEW);
+	            }
+	        }
+	    } catch (Exception theException) {
+	        throw new ExternalException(
+	            formatErrorMsg("refreshHosts", theException), //$NON-NLS-1$
+	            theException);
+	    }
+	}    
 
     public void refreshImpl()
         throws ExternalException {
 
-        fireConfigurationChange(
-            new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_START,
-                                         this));
+        fireConfigurationChange(new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_START,this));
+        
         refreshConfigs();
-//        refreshHosts();
- //       refreshDeployedHosts();
-         fireConfigurationChange(
-            new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_END,
-                                         this));
+        refreshHosts();
+        refreshDeployedHosts();
+        
+        fireConfigurationChange(new ConfigurationChangeEvent(ConfigurationChangeEvent.REFRESH_END,this));
         refreshNeeded = false;
     }
 

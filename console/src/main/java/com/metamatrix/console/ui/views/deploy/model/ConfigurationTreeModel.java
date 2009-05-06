@@ -142,12 +142,7 @@ public final class ConfigurationTreeModel
 
         // notify tree model listeners
         if (fireevent) {
-	        ConfigurationTreeModelEvent event =
-	            new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,
-	                                            configNode,
-	                                            configNode,
-	                                            null);
-	        fireConfigurationChange(event);
+	        fireConfigurationChange(new ConfigurationTreeModelEvent(ConfigurationTreeModelEvent.NEW,configNode,configNode,null));
         }
     }
 
@@ -178,8 +173,10 @@ public final class ConfigurationTreeModel
     private void addDeloyedHost(Host theHost, Configuration theConfig, boolean fireevent) {
 
         DefaultTreeNode configNode = getUserObjectNode(theConfig);
-        DefaultTreeNode hostNode =
-            createHostNode(theHost, theConfig, configNode);
+        DefaultTreeNode hostNode = createHostNode(theHost, theConfig, configNode);
+        if (configNode == null) {
+        	configNode = hostNode;
+        }
         HashMap map = (HashMap)hostConfigMap.get(theHost.getID());
         if (map == null) {
             // has not been deployed
@@ -361,22 +358,15 @@ public final class ConfigurationTreeModel
      * @param theUserObject the user object of the new node
      * @param theParent the parent node of the new node
      */
-    private SortableChildrenNode createNode(
-        Object theUserObject,
-        DefaultTreeNode theParent) {
-
+    private SortableChildrenNode createNode(Object theUserObject, DefaultTreeNode theParent) {
         SortableChildrenNode child = new SortableChildrenNode(theUserObject);
-        theParent.addChild(child);
+    	theParent.addChild(child);
         objNodeMap.put(theUserObject, child);
         fireNodeAddedEvent(this, child);
         return child;
     }
 
-    private SortableChildrenNode createHostNode(
-        Host theHost,
-        Configuration theConfig,
-        DefaultTreeNode theParent) {
-
+    private SortableChildrenNode createHostNode(Host theHost, Configuration theConfig, DefaultTreeNode theParent) {
         HostWrapper wrap = new HostWrapper(theHost, theConfig);
         return createNode(wrap, theParent);
     }
@@ -445,12 +435,9 @@ public final class ConfigurationTreeModel
      * @param theEvent the event being sent to the listeners
      */
     private void fireConfigurationChange(ConfigurationTreeModelEvent theEvent) {
-        LogManager.logDetail(
-            LogContexts.PSCDEPLOY,
-            "ConfigurationTreeModelEvent=" + theEvent.paramString()); //$NON-NLS-1$
+        LogManager.logDetail(LogContexts.PSCDEPLOY,"ConfigurationTreeModelEvent=" + theEvent.paramString()); //$NON-NLS-1$
         for (int size=listeners.size(), i=0; i<size; i++) {
-            ConfigurationTreeModelListener l =
-                (ConfigurationTreeModelListener)listeners.get(i);
+            ConfigurationTreeModelListener l = (ConfigurationTreeModelListener)listeners.get(i);
             l.treeNodesChanged(theEvent);
         }
     }

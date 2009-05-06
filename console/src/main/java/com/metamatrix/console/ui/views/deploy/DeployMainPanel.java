@@ -444,7 +444,7 @@ public final class DeployMainPanel
         pnlTreeOps.add(pnlTreeOpsSizer);
 
         getConfigurationManager().addConfigurationChangeListener(treeModel);
-        getConfigurationManager().refreshImpl();
+        //getConfigurationManager().refresh();
         setInitialTreeState(true);
         treeModel.addConfigurationTreeModelListener(this);
     }
@@ -1024,13 +1024,12 @@ public final class DeployMainPanel
             // if new host event, only select if the currently selected
             // node has the same configuration. this is because when
             // a host is created, events fire to add into all configurations.
-            if (theEvent.isHostChange()) {
+            if (theEvent.isHostChange() && pnlDetail != null) {
                 Configuration config = theEvent.getConfiguration();
                 if (config.getID().equals(pnlDetail.getConfigId())) {
                     selectNode(theEvent.getSourceNode());
                 }
-            } else if (!(pnlDetail instanceof DeployedProcessPanel) &&
-                     !theEvent.isServiceDefinitionChange()) {
+            } else if (!(pnlDetail instanceof DeployedProcessPanel) && !theEvent.isServiceDefinitionChange()) {
                 // if a new object is created, don't select it if
                 // current detail panel is the DeployedProcessPane.
                 // focus should stay on the panel, not the new one.
