@@ -27,16 +27,22 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import com.metamatrix.common.config.api.ComponentType;
+import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.BasicComponentType;
 import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
+import com.metamatrix.common.object.PropertyDefinition;
 
 /**
  * This class loades the server configuration file <code>ServerConfig.xml</code>
@@ -78,7 +84,7 @@ public class ServerConfigFileReader {
             for (Iterator i = componentTypes.iterator(); i.hasNext();) {
                 ComponentType type = (ComponentType)i.next();
                 if (type.getComponentTypeCode() == ComponentType.CONNECTOR_COMPONENT_TYPE_CODE) {
-                    connectorTypes.put(type.getName(), type);
+                    connectorTypes.put(type.getName(), resolvePropertyDefns(type, this.configuration));
                 }
             }
 
@@ -134,4 +140,23 @@ public class ServerConfigFileReader {
     public Map getConnectorTypes() {
         return connectorTypes;
     }
+    
+    public static ComponentType resolvePropertyDefns(ComponentType type, ConfigurationModelContainer configuration) {
+    	BasicComponentType baseType = (BasicComponentType)type;
+    	Collection c = configuration.getAllComponentTypeDefinitions((ComponentTypeID)baseType.getID());
+
+    	// if the type is found in the configuration.xml, then add its prop-definitions; else look for parent
+    	if (c == null || c.isEmpty()) {
+    		// this means user has added a new connector type
+    		c = configuration.getAllComponentTypeDefinitions(type.getSuperComponentTypeID());
+    	}
+    		
+		if (c != null && !c.isEmpty()) {
+			Set<PropertyDefinition> defns = new HashSet<PropertyDefinition>();
+			defns.addAll(c);
+			defns.addAll(type.getComponentTypeDefinitions());
+			baseType.setComponentTypeDefinitions(defns);
+		}
+		return baseType;
+	}    
 }
