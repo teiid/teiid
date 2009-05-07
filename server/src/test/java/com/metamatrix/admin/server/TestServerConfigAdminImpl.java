@@ -31,6 +31,8 @@ import junit.framework.TestCase;
 
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
+import com.metamatrix.admin.api.objects.AdminOptions;
+import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.Host;
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -144,6 +146,20 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
         char[] data = ObjectConverterUtil.convertFileToCharArray(file, null);
         admin.addConnectorType(name, data);
     }
+    
+    public void testAddConnectorBindingUsingNameInCDK() throws Exception {
+         String cdkFileName = "GateaConnector.cdk"; //$NON-NLS-1$
+        
+        final String datapath = UnitTestUtil.getTestDataPath(); 
+        final String fullpathName = datapath + File.separator + "config" + File.separator + cdkFileName; 
+        
+        File file = new File(fullpathName);
+        
+        char[] data = ObjectConverterUtil.convertFileToCharArray(file, null);
+        ConnectorBinding cb = admin.addConnectorBinding("", data, new AdminOptions(AdminOptions.OnConflict.OVERWRITE));
+        assertNotNull(cb);
+
+    }  
     
     public void testAddHost() throws Exception {
         String hostIdentifier = BOGUS_HOST; 

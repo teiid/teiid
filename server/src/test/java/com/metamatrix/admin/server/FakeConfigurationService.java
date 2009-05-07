@@ -78,6 +78,7 @@ import com.metamatrix.platform.service.api.ServiceID;
 public class FakeConfigurationService implements ConfigurationServiceInterface {
 
     private String CONFIG_FILE_PATH = null;
+    private ConnectorBinding cb = null;
     private ConfigurationModelContainerImpl config;
 
     public FakeConfigurationService() {
@@ -554,7 +555,12 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
                                                    String vmName,
                                                    String principalName,
                                                    Properties properties) throws ConfigurationException {
-        return null;
+    	
+    	BasicConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(false);
+    	ComponentTypeID id = new ComponentTypeID(connectorType);
+    	
+    	this.cb = editor.createConnectorComponent(Configuration.NEXT_STARTUP_ID, id, connectorBindingName, null);
+        return cb;
     }
 
     /** 
