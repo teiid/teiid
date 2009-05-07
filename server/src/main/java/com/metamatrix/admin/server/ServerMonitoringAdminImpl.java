@@ -22,7 +22,7 @@
 
 package com.metamatrix.admin.server;
 
-import static org.teiid.dqp.internal.process.Util.*;
+import static org.teiid.dqp.internal.process.Util.convertStats;
 
 import java.io.File;
 import java.io.IOException;
@@ -149,6 +149,9 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			Map runtimeMap = new HashMap();
 			for (Iterator iter = components.iterator(); iter.hasNext();) {
 			    BasicDeployedComponent component = (BasicDeployedComponent)iter.next();
+			    if (!component.isDeployedConnector()) {
+			    	continue;
+			    }
 			    String bindingName = component.getName();
 
 			    String[] identifierParts = new String[] {
@@ -172,8 +175,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        binding.setLastUpdated(configBinding.getLastChangedDate());
 			        binding.setLastUpdatedBy(configBinding.getLastChangedBy());
 
-			        String key = binding.getIdentifier().toUpperCase();
-			        runtimeMap.put(key, binding);
+			        runtimeMap.put(component.getFullName(), binding);
 			        results.add(binding);
 			    }
 
@@ -191,25 +193,28 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        String name = serviceBinding.getDeployedName();
 			        
 			        MMConnectorBinding binding;
-			        String[] identifierParts = new String[] {serviceBinding.getHostName(), serviceBinding.getProcessName(), name};
-			        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
-			        if (runtimeMap.containsKey(key)) {
+			        if (runtimeMap.containsKey(deployedComponent.getFullName())) {
 			            //reuse MMConnectorBinding from config
-			            binding = (MMConnectorBinding) runtimeMap.get(key);
-			        } else {
-			            //not in config - create new MMConnectorBinding
-			            binding = new MMConnectorBinding(identifierParts);
-			            binding.setDeployed(false);
-			            binding.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
-			        }
-			            
-			        if (identifierMatches(identifier, identifierParts)) {
+			            binding = (MMConnectorBinding) runtimeMap.get(deployedComponent.getFullName());
 			            binding.setConnectorTypeName(deployedComponent.getComponentTypeID().getFullName());
 			            binding.setDescription(deployedComponent.getDescription());
 			            binding.setState(serviceBinding.getCurrentState());
 			            binding.setStateChangedTime(serviceBinding.getStateChangeTime());
 			            binding.setRegistered(true);
 			            binding.setServiceID(serviceBinding.getServiceID().getID());
+
+			        } else {
+					    String[] identifierParts = new String[] {
+						        deployedComponent.getHostID().getName(), 
+						        deployedComponent.getVMComponentDefnID().getName(), 
+						        deployedComponent.getName()
+						    };
+				        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
+
+			            //not in config - create new MMConnectorBinding
+			            binding = new MMConnectorBinding(identifierParts);
+			            binding.setDeployed(false);
+			            binding.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
 			            
 			            results.add(binding);
 			        }
