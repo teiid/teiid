@@ -50,6 +50,11 @@ public interface ConnectionSource {
      * This is a property key that is used for the password used to connect to an MM Server.
      */
     public static final String PASSWORD = "Password"; //$NON-NLS-1$
+    
+    /**
+     * This is a property key that is used for the driver class used to connect to an MM Server.
+     */
+    public static final String DRIVER_CLASS = "DriverClass"; //$NON-NLS-1$
 
     public Connection getConnection(Properties connectionProperties) throws SQLException;
 }

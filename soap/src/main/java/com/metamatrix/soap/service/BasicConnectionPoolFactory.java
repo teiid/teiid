@@ -22,6 +22,8 @@
 
 package com.metamatrix.soap.service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -41,6 +43,7 @@ public class BasicConnectionPoolFactory implements
      * This is the set of default properties that are used to drive the way that the pools produced by this factory behaves.
      */
     private static final Properties defaultProperties = new Properties();
+    public static final String MMPOOL_PROPERTIES_FILENAME = "/teiidpool.properties";  //$NON-NLS-1$
 
     static {
         /*
@@ -54,6 +57,9 @@ public class BasicConnectionPoolFactory implements
         defaultProperties.setProperty(MIN_EVICTABLE_IDLE_TIME_MILLIS_KEY, String.valueOf(MIN_EVICTABLE_IDLE_TIME_MILLIS_DEFAULT));
         defaultProperties.setProperty(TIME_BETWEEN_EVICTION_THREAD_RUNS_KEY,
                                       String.valueOf(TIME_BETWEEN_EVICTION_THREAD_RUNS_DEFAULT));
+        defaultProperties.setProperty(TIME_BETWEEN_EVICTION_THREAD_RUNS_KEY,
+                String.valueOf(TIME_BETWEEN_EVICTION_THREAD_RUNS_DEFAULT));
+        defaultProperties.setProperty(ConnectionSource.DRIVER_CLASS, "com.metamatrix.jdbc.MMDriver"); //$NON-NLS-1$
     }
 
     /**
@@ -65,26 +71,52 @@ public class BasicConnectionPoolFactory implements
             return null;
         }
         Properties p = new Properties(poolProperties);
-        p.setProperty(JDBCUtil.DRIVER, "com.metamatrix.jdbc.MMDriver");
-        p.setProperty(JDBCUtil.USERNAME, poolProperties.getProperty(ConnectionSource.USERNAME));
-        p.setProperty(JDBCUtil.PASSWORD, poolProperties.getProperty(ConnectionSource.PASSWORD));
+        /* 1. 'mergedProperties' will contain the available properties, constructed in the correct sequence
+         *    so that propery values that should override other values, will override them.
+         * 2. 'mergedProperties' must be recreated from scratch every time 'createConnectionPool' is called.
+         */
+        Properties mergedProperties = createMergedProperties( poolProperties );
+
+        p.setProperty(JDBCUtil.DRIVER, mergedProperties.getProperty(ConnectionSource.DRIVER_CLASS));
+        p.setProperty(JDBCUtil.USERNAME, mergedProperties.getProperty(ConnectionSource.USERNAME));
+        p.setProperty(JDBCUtil.PASSWORD, mergedProperties.getProperty(ConnectionSource.PASSWORD));
         p.setProperty(JDBCUtil.DATABASE, poolProperties.getProperty(ConnectionSource.SERVER_URL));
-        p.setProperty(SimplePooledConnectionSource.MAXIMUM_RESOURCE_POOL_SIZE, getProperty(MAX_ACTIVE_CONNECTIONS_PROPERTY_KEY));
-        p.setProperty(SimplePooledConnectionSource.WAIT_TIME_FOR_RESOURCE, getProperty(MAX_WAIT_PROPERTY_KEY));
+        p.setProperty(SimplePooledConnectionSource.MAXIMUM_RESOURCE_POOL_SIZE, mergedProperties.getProperty(MAX_ACTIVE_CONNECTIONS_PROPERTY_KEY));
+        p.setProperty(SimplePooledConnectionSource.WAIT_TIME_FOR_RESOURCE, mergedProperties.getProperty(MAX_WAIT_PROPERTY_KEY));
         return new SimplePooledConnectionSource(p);
     }
 
-    /**
-     * This method will get a property value from the JVM System properties with the default value from the default properties
-     * class level instance being the default value.
-     * 
-     * @param propKey
-     *            The key for the property to get
-     * @return the value of the property for the passed in key
-     * @since 4.3
-     */
-    protected String getProperty(final String propKey) {
-        return System.getProperty(propKey, defaultProperties.getProperty(propKey));
+    protected static Properties createMergedProperties( Properties poolProperties ) {
+
+        // 1. start with the default properties
+        Properties mergedProperties = new Properties( defaultProperties );
+        
+        // 2. add properties from mmpool.properties        
+        mergedProperties.putAll( getMMPoolProperties() );
+
+        // 3. add System.properties
+        mergedProperties.putAll(System.getProperties());
+        
+        // 4. add specific poolProperties
+        mergedProperties.putAll( poolProperties );
+        
+        return mergedProperties;
+    }
+    
+    protected static Properties getMMPoolProperties() {
+        Properties p = new Properties();
+
+        InputStream is = BasicConnectionPoolFactory.class.getClassLoader().getResourceAsStream( MMPOOL_PROPERTIES_FILENAME ); //$NON-NLS-1$
+        
+        if ( is != null ) {
+            try {
+                 p.load( is );
+            } catch( IOException ioe ) {
+                return new Properties();
+            }
+        }
+        
+        return p;
     }
 
 }
