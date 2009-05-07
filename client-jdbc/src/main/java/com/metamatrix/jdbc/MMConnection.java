@@ -910,7 +910,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         }
 	}
 	
-	abstract BaseDriver getBaseDriver();
+	public abstract BaseDriver getBaseDriver();
 	
 	abstract boolean isSameProcess(MMConnection conn) throws CommunicationException;
     
