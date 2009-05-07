@@ -35,13 +35,12 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
+import com.metamatrix.platform.security.audit.AuditManager;
 
 /**
  * Call authorization service to make sure the current admin user has the
@@ -95,13 +94,7 @@ public class AdminAuthorizationInterceptor implements InvocationHandler {
         }
 
         boolean authorized = false;
-        boolean msgWillBeRecorded = LogManager.isMessageToBeRecorded(PlatformAdminConstants.CTX_AUDIT_ADMIN, MessageLevel.INFO);
-        Object[] msgParts = null;
-        if (msgWillBeRecorded) {
-        	msgParts = buildAuditMessage(adminToken, Arrays.toString(allowed.value()), method);
-        	LogManager.logInfo(PlatformAdminConstants.CTX_AUDIT_ADMIN,
-                                   CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_Audit_request", msgParts)); //$NON-NLS-1$
-        }
+        AuditManager.getInstance().record(PlatformAdminConstants.CTX_ADMIN_API, Arrays.toString(allowed.value())+"-request", adminToken.getUsername(), method.getName()); //$NON-NLS-1$
 
         for (int i = 0; i < allowed.value().length; i++) {
         	String requiredRoleName = allowed.value()[i];
@@ -112,16 +105,12 @@ public class AdminAuthorizationInterceptor implements InvocationHandler {
 	            
             if (authAdmin.isCallerInRole(adminToken, requiredRoleName)) {
             	authorized = true;
-                if (msgWillBeRecorded) {
-                	LogManager.logInfo(PlatformAdminConstants.CTX_AUDIT_ADMIN, CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_granted", msgParts)); //$NON-NLS-1$
-                }
             	break;
             }
         }
         if (!authorized) {
-        	if (msgParts == null) {
-        		msgParts = buildAuditMessage(adminToken, Arrays.toString(allowed.value()), method);
-        	}
+        	AuditManager.getInstance().record(PlatformAdminConstants.CTX_ADMIN_API, Arrays.toString(allowed.value())+"-denied", adminToken.getUsername(), method.getName()); //$NON-NLS-1$
+        	Object[] msgParts = buildAuditMessage(adminToken, Arrays.toString(allowed.value()), method); 
             String errMsg = CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_not_authorized", msgParts); //$NON-NLS-1$
             throw ExceptionUtil.convertException(method, new AuthorizationException(errMsg));
         }
