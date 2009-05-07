@@ -39,7 +39,7 @@
         </ComponentType>
     </ComponentTypes>
     <ConnectorBindings>
-        <Connector Name="GateaConnectorBinding" ComponentType="GateaConnectorType" QueuedService="false" IsEnabled="true">
+        <Connector Name="connectorBinding2" ComponentType="GateaConnectorType" QueuedService="false" IsEnabled="true">
             <Properties>
                 <Property Name="GateaHost">nydb01</Property>
                 <Property Name="TranslatorClass">com.metamatrix.connector.gatea.GateaConnectorTranslator</Property>
