@@ -71,14 +71,13 @@ public class FileCommandLogger implements CommandLoggerSPI {
     public void initialize(Properties props) {
         this.filename = props.getProperty(LOG_FILE_NAME_PROPERTY);
         if (this.filename == null) {
-            System.out.println("FileCommandLogger could not find log filename property"); //$NON-NLS-1$
-        } else {
-            boolean append = true;
-            try {
-                this.logWriter = new BufferedWriter( new FileWriter(this.filename, append));
-            } catch (IOException e) {
-                System.out.println("FileCommandLogger could not write to log file " + this.filename + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-            }
+            throw new RuntimeException("FileCommandLogger could not find log filename property"); //$NON-NLS-1$
+        }
+        boolean append = true;
+        try {
+            this.logWriter = new BufferedWriter( new FileWriter(this.filename, append));
+        } catch (IOException e) {
+            throw new RuntimeException("FileCommandLogger could not write to log file " + this.filename, e); //$NON-NLS-1$
         }
     }
     
@@ -101,7 +100,7 @@ public class FileCommandLogger implements CommandLoggerSPI {
             this.logWriter.newLine();
             this.logWriter.flush();
         } catch (IOException e) {
-            System.out.println("FileCommandLogger could not write to log file " + this.filename + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new RuntimeException("FileCommandLogger could not write to log file " + this.filename, e); //$NON-NLS-1$
         } 
     }
     

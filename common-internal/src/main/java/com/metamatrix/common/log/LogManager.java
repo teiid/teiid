@@ -35,7 +35,7 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.core.log.NullLogWriter;
+import com.metamatrix.core.log.JavaLogWriter;
 
 
 /**
@@ -90,10 +90,10 @@ import com.metamatrix.core.log.NullLogWriter;
 public final class LogManager {
 
     @Inject
-    static LogConfiguration configuration = new BasicLogConfiguration(); // either injected or manually set using the set methods
+    static LogConfiguration configuration = new BasicLogConfiguration(MessageLevel.WARNING); // either injected or manually set using the set methods
     
     @Inject
-    static LogListener logListener = new NullLogWriter(); // either injected or manually set using the set methods
+    static LogListener logListener = new JavaLogWriter(); // either injected or manually set using the set methods
 
 
     /**
@@ -341,7 +341,7 @@ public final class LogManager {
     		logListener = listener;
     	}
     	else {
-    		logListener = new NullLogWriter();
+    		logListener = new JavaLogWriter();
     	}
     }
     	

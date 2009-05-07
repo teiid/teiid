@@ -22,15 +22,37 @@
 
 package com.metamatrix.core.log;
 
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** 
- * NullLogWriter to write no where..
+ * Write to Java logging
  */
-public class NullLogWriter implements LogListener {
+public class JavaLogWriter implements LogListener {
 
     public void logMessage(LogMessage msg) {
-        // I was designed to be slacker.. cool.
+    	Logger logger = Logger.getLogger("org.teiid." + msg.getContext()); //$NON-NLS-1$
+    	Level level = convertLevel(msg.getLevel());
+    	if (logger.isLoggable(level)) {
+            logger.log(level, msg.getText(), msg.getException());
+    	}
+    }
+    
+    public Level convertLevel(int level) {
+    	switch (level) {
+    	case MessageLevel.CRITICAL:
+    	case MessageLevel.ERROR:
+    		return Level.SEVERE;
+    	case MessageLevel.WARNING:
+    		return Level.WARNING;
+    	case MessageLevel.INFO:
+    		return Level.FINE;
+    	case MessageLevel.DETAIL:
+    		return Level.FINER;
+    	case MessageLevel.TRACE:
+    		return Level.FINEST;
+    	}
+    	return Level.ALL;
     }
 
     public void shutdown() {

@@ -28,6 +28,7 @@ import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.config.BasicLogConfiguration;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
@@ -40,7 +41,7 @@ class LogConfigurationProvider implements Provider<LogConfiguration> {
 	@Override
 	public LogConfiguration get() {
         String logLevel = configSource.getProperties().getProperty(DQPEmbeddedProperties.DQP_LOGLEVEL);
-        int level = 0;
+        int level = MessageLevel.WARNING;
         if(logLevel != null && logLevel.trim().length() > 0) {
             try {
                 level = Integer.parseInt(logLevel);                        

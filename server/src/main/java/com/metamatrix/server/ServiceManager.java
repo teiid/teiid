@@ -709,7 +709,7 @@ public class ServiceManager {
         if (vm != null) {
             try {
                 System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0023));
-                vm.dumpThreads();
+                System.out.println(vm.dumpThreads());
                 System.out.println(PlatformPlugin.Util.getString(LogMessageKeys.SERVICE_0024, processName));
             } catch (Exception e) {
                 System.out.println(PlatformPlugin.Util.getString(ErrorMessageKeys.SERVICE_0031, processName));

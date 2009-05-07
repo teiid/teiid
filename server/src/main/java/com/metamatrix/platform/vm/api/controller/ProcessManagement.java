@@ -107,7 +107,7 @@ public interface ProcessManagement {
     /**
      * dumps stack trace to log file.
      */
-    void dumpThreads();
+    String dumpThreads();
 
     /**
      * Export the server logs to a byte[].  The bytes contain the contents of a .zip file containing the logs. 

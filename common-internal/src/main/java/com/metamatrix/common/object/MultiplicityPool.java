@@ -61,11 +61,6 @@ public class MultiplicityPool {
         if ( result == null ) {
             result = Multiplicity.getInstance(multiplicityValue,isOrdered,isUnique);
             INSTANCES.put(key,result);
-//            System.out.println("Adding Multiplicity: \"" + result + "\"");
-//            LogManager.logInfo("MultiplicityPool","Adding Multiplicity: \"" + result + "\"");
-//        } else {
-//            System.out.println("Found Multiplicity: \"" + result + "\"");
-//            LogManager.logInfo("MultiplicityPool","Found Multiplicity : \"" + result + "\"");
         }
         return result;
     }

@@ -105,11 +105,11 @@ public class ClassLoaderUtil {
             }
             return result;
         } catch (ClassNotFoundException e) {
-            throw new NestedException(e);
+            throw new RuntimeException(e);
         } catch (InstantiationException e) {
-            throw new NestedException(e);
+            throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
-            throw new NestedException(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -131,7 +131,7 @@ public class ClassLoaderUtil {
             try {
                 urls.add( new File(path).toURL() );
             } catch (MalformedURLException e) {
-                throw new NestedException(e);
+                throw new RuntimeException(e);
             }
         }
         return (URL[]) urls.toArray( new URL[] {} );
@@ -159,7 +159,7 @@ public class ClassLoaderUtil {
                 }
             }
         } catch (IOException e) {
-            throw new NestedException(e);
+            throw new RuntimeException(e);
         }
     }
     
@@ -182,13 +182,13 @@ public class ClassLoaderUtil {
                 stream.println(location + "\t" + clazz.getName()); //$NON-NLS-1$
             }
         } catch (SecurityException e) {
-            throw new NestedException(e);
+            throw new RuntimeException(e);
         } catch (IllegalArgumentException e) {
-            throw new NestedException(e);
+            throw new RuntimeException(e);
         } catch (NoSuchFieldException e) {
-            throw new NestedException(e);
+            throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
-            throw new NestedException(e);
+            throw new RuntimeException(e);
         }
     }
     

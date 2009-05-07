@@ -39,6 +39,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -313,8 +315,8 @@ public final class ZipFileUtil {
         } finally {
             cleanup(out);
             cleanup(fos);
-            if (tmpFile != null && tmpFile.exists()) {
-                System.out.println(tmpFile.delete());
+            if (tmpFile != null && tmpFile.exists() && !tmpFile.delete()) {
+            	Logger.getLogger("org.teiid.common-core").log(Level.INFO, "Could not delete temp file " + tmpFile.getAbsolutePath()); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
     }

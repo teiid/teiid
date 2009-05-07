@@ -115,9 +115,8 @@ public class LogMessage implements Serializable{
 
         if (text == null) {
         	return "NULL"; //$NON-NLS-1$
-        } else {
-        	return text.toString();
-        }			
+        } 
+        return text.toString();
 	}
     
     /** 

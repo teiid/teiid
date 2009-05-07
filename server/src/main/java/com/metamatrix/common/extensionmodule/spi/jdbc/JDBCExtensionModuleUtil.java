@@ -93,7 +93,6 @@ public final class JDBCExtensionModuleUtil {
             byte[] data = JDBCExtensionModuleReader.getSource(sourceName, connection);
 
             if (data == null) {
-                System.out.println(CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0068, sourceName));
                 throw new ExtensionModuleNotFoundException(ErrorMessageKeys.EXTENSION_0069, CommonPlugin.Util.getString(ErrorMessageKeys.EXTENSION_0069, sourceName));
 
             }

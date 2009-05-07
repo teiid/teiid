@@ -151,8 +151,7 @@ public class VDBConfigurationReader {
                 }
                 return vdb;
             } catch (Exception e) {
-                DQPEmbeddedPlugin.logWarning(e, "VDBReader.Archive_not_Found", new Object[] {vdbURL}); //$NON-NLS-1$
-                throw new MetaMatrixComponentException(e);
+                throw new MetaMatrixComponentException(e, DQPEmbeddedPlugin.Util.getString("VDBReader.Archive_not_Found", vdbURL)); //$NON-NLS-1$
             }
         }
         throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("VDBReader.Invalid_location", vdbURL)); //$NON-NLS-1$        

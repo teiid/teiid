@@ -154,7 +154,6 @@ public class SingleFileAuditDestination extends AbstractAuditDestination {
     	    fileWriter.flush();
     	} catch(IOException e) {
             LogManager.logError(LogSecurityConstants.CTX_AUDIT, e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0024, e.getMessage()));
-    	    System.out.println(this.getFormat().formatMessage(message));
     	}
 	}
 

@@ -24,8 +24,6 @@ package com.metamatrix.core.id;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.core.util.Stopwatch;
-
 /**
  * TestUUIDFactoryWithoutCreation
  */
@@ -61,9 +59,7 @@ public class TestUUIDFactoryWithoutCreation extends TestCase {
     // =========================================================================
 
     public void testFactoryCreationTimeWithMultipleParses() {
-        final Stopwatch sw = new Stopwatch();
-        sw.start();
-
+    	long start = System.currentTimeMillis();
         // Create the factory ...
         final UUIDFactory myFactory = new UUIDFactory();
 
@@ -73,11 +69,7 @@ public class TestUUIDFactoryWithoutCreation extends TestCase {
         helpTestStringToObject(myFactory,STRINGIFIED_ID_3);
         helpTestStringToObject(myFactory,STRINGIFIED_ID_4);
 
-        sw.stop();
-        if ( sw.getTotalDuration() > 500 ) {
-            fail("Startup and one stringToObject took longer " + sw + //$NON-NLS-1$
-                              " (test fails if above 500ms)"); //$NON-NLS-1$
-        }
+        assertTrue(System.currentTimeMillis() - start < 500 );
     }
 
 }

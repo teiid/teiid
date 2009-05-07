@@ -544,25 +544,27 @@ public abstract class ProcessController implements ProcessManagement {
      * Prints thread information to a log file.
      * Does not include the stacktrace - that is not available in 1.4.
      */
-    public void dumpThreads() {
+    public String dumpThreads() {
 
         ThreadGroup root, tg;
         root = Thread.currentThread().getThreadGroup();
         while ((tg = root.getParent()) != null) {
             root = tg;
         }
-        listThreads(root, 0);
+        StringBuffer sb = new StringBuffer();
+        listThreads(root, 0, sb);
+        return sb.toString();
     }
 
     /**
      * Print information about the specified thread group.
      */
-    private void listThreads(ThreadGroup tg, int indent) {
+    private void listThreads(ThreadGroup tg, int indent, StringBuffer sb) {
 
         for (int i = 0; i < indent; i++) {
-            System.out.print("    "); //$NON-NLS-1$
+            sb.append("    "); //$NON-NLS-1$
         }
-        System.out.println(tg);
+        sb.append(tg).append("\n"); //$NON-NLS-1$
         indent++;
 
         //Recursively print information threads in this group
@@ -572,9 +574,9 @@ public abstract class ProcessController implements ProcessManagement {
         for (int i = 0; i < cnt; i++) {
             if (threads[i] != null) {
                 for (int j = 0; j < indent; j++) {
-                    System.out.print("    "); //$NON-NLS-1$
+                	sb.append("    "); //$NON-NLS-1$
                 }
-                System.out.println(threads[i]);
+                sb.append(threads[i]).append("\n"); //$NON-NLS-1$
             }
         }
 
@@ -583,7 +585,7 @@ public abstract class ProcessController implements ProcessManagement {
         ThreadGroup[] groups = new ThreadGroup[cnt];
         tg.enumerate(groups);
         for (int i = 0; i < cnt; i++) {
-            listThreads(groups[i], indent);
+            listThreads(groups[i], indent, sb);
         }
     }
 

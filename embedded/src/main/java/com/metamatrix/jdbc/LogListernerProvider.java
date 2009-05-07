@@ -33,16 +33,13 @@ import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.FileLimitSizeLogWriter;
+import com.metamatrix.core.log.JavaLogWriter;
 import com.metamatrix.core.log.LogListener;
-import com.metamatrix.core.log.NullLogWriter;
-import com.metamatrix.core.log.SystemLogWriter;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.internal.core.log.PlatformLog;
 
 @Singleton
 class LogListernerProvider implements Provider<LogListener> {
-	private static final String STDOUT = "STDOUT"; //$NON-NLS-1$
-	
 	@Inject
 	DQPConfigSource configSource;
 	
@@ -57,30 +54,21 @@ class LogListernerProvider implements Provider<LogListener> {
         	String dqpURLString = dqpURL.toString(); 
         	dqpURL = URLHelper.buildURL(dqpURLString);
         	if (logFile != null) {
-	            if (logFile.equalsIgnoreCase(STDOUT)) {
-                    PlatformLog log = new PlatformLog();
-                    log.addListener(new SystemLogWriter());
-                    return log;
-	            }
-	            else {
-	                String modifiedLogFileName = logFile;                    
-	                int dotIndex = logFile.lastIndexOf('.');
-	                if (dotIndex != -1) {
-	                    modifiedLogFileName = logFile.substring(0,dotIndex)+"_"+instanceId+"."+logFile.substring(dotIndex+1); //$NON-NLS-1$ //$NON-NLS-2$
-	                }
-	                else {
-	                    modifiedLogFileName = logFile+"_"+instanceId; //$NON-NLS-1$
-	                }
-	                URL logURL = URLHelper.buildURL(dqpURL, modifiedLogFileName);
-                    File file = new File(logURL.getPath());
-                    PlatformLog log = new PlatformLog();
-                    log.addListener(new FileLimitSizeLogWriter(file, false));
-                    return log;
-	            }
+                String modifiedLogFileName = logFile;                    
+                int dotIndex = logFile.lastIndexOf('.');
+                if (dotIndex != -1) {
+                    modifiedLogFileName = logFile.substring(0,dotIndex)+"_"+instanceId+"."+logFile.substring(dotIndex+1); //$NON-NLS-1$ //$NON-NLS-2$
+                }
+                else {
+                    modifiedLogFileName = logFile+"_"+instanceId; //$NON-NLS-1$
+                }
+                URL logURL = URLHelper.buildURL(dqpURL, modifiedLogFileName);
+                File file = new File(logURL.getPath());
+                PlatformLog log = new PlatformLog();
+                log.addListener(new FileLimitSizeLogWriter(file, false));
+                return log;
         	}
-        	else {
-        		return new NullLogWriter();
-        	}
+    		return new JavaLogWriter();
         } catch (MalformedURLException e) {
         	throw new MetaMatrixRuntimeException(e);
         }

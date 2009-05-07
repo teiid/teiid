@@ -24,7 +24,6 @@ package com.metamatrix.server.admin.apiimpl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -419,27 +418,6 @@ public class RuntimeMetadataHelper {
             throw new MetaMatrixComponentException(e, ErrorMessageKeys.admin_0055,msg);
         }
         return permissionNode;
-    }
-
-
-    public static void printTree(Map tree) {
-        List keys = new ArrayList(tree.keySet());
-        Collections.sort(keys);
-        Iterator itr = keys.iterator();
-        int i = 0;
-        while (itr.hasNext()) {
-            PermissionDataNodeImpl parent = (PermissionDataNodeImpl) itr.next();
-            System.out.println("\n (" + (++i) + ")  Parent: <" + parent + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            Iterator children = ((List) tree.get(parent)).iterator();
-            if (!children.hasNext()) {
-                System.out.println("        No Children - LEAF"); //$NON-NLS-1$
-                continue;
-            }
-            while (children.hasNext()) {
-                PermissionDataNodeImpl child = (PermissionDataNodeImpl) children.next();
-                System.out.println("        Child: " + child); //$NON-NLS-1$
-            }
-        }
     }
     
     public static VirtualDatabaseID getVDBID(String vdbName, String vdbVersion) 
