@@ -94,7 +94,7 @@ public class MMServerConnection extends MMConnection {
     /** 
      * @see com.metamatrix.jdbc.MMConnection#getDatabaseName()
      */
-    String getDatabaseName() {
+    public String getDatabaseName() {
         return SERVER_NAME;
     }
 
@@ -113,7 +113,7 @@ public class MMServerConnection extends MMConnection {
 	}
 
 	@Override
-	boolean isSameProcess(MMConnection conn) throws CommunicationException {
+	public boolean isSameProcess(MMConnection conn) throws CommunicationException {
 		if (conn instanceof MMServerConnection
 				&& this.serverConn instanceof SocketServerConnection
 				&& conn.serverConn instanceof SocketServerConnection) {

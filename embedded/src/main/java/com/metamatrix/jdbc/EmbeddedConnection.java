@@ -114,7 +114,7 @@ public class EmbeddedConnection extends MMConnection {
      * @see com.metamatrix.jdbc.MMConnection#getDatabaseName()
      */
     @Override
-    String getDatabaseName() {
+    public String getDatabaseName() {
         return SERVER_NAME;
     }
 
@@ -124,7 +124,7 @@ public class EmbeddedConnection extends MMConnection {
 	}
 
 	@Override
-	boolean isSameProcess(MMConnection conn) {
+	public boolean isSameProcess(MMConnection conn) {
 		return (conn instanceof EmbeddedConnection);
 	}
 
