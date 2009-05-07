@@ -42,8 +42,8 @@ import org.apache.axis2.engine.Handler;
 import org.apache.axis2.handlers.AbstractHandler;
 import org.apache.axis2.transport.http.HTTPConstants;
 
-import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.soap.exceptions.SOAPProcessingException;
+import com.metamatrix.soap.util.WSDLServletUtil;
 import com.metamatrix.soap.util.WebServiceUtil;
 
 /**

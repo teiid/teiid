@@ -20,10 +20,12 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.util;
+package com.metamatrix.soap.util;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.metamatrix.soap.util.WSDLServletUtil;
 
 import junit.framework.TestCase;
 

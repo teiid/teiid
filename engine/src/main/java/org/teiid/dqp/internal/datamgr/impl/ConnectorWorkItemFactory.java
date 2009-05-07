@@ -112,7 +112,7 @@ public class ConnectorWorkItemFactory {
 		public void receiveResults(AtomicResultsMessage results) {
 			boolean isFinal = results.getFinalRow() >= 0;
 			if (results.isRequestClosed()) {
-				rsCache.removeTempResults(cacheID);
+				rsCache.removeTempResults(cacheID, requestId);
 			} else {
 				CacheResults cr = new CacheResults(results.getResults(), firstRow, isFinal);
 				firstRow += results.getResults().length;
@@ -123,7 +123,7 @@ public class ConnectorWorkItemFactory {
 
 		@Override
 		public void exceptionOccurred(Throwable e) {
-			rsCache.removeTempResults(cacheID);
+			rsCache.removeTempResults(cacheID, requestId);
 			actual.exceptionOccurred(e);
 		}
 

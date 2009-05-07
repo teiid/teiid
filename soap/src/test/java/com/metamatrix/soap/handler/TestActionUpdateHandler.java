@@ -29,7 +29,7 @@ import junit.framework.TestCase;
 
 import org.apache.axis2.context.MessageContext;
 
-import com.metamatrix.common.util.WSDLServletUtil;
+import com.metamatrix.soap.util.WSDLServletUtil;
 
 public class TestActionUpdateHandler extends TestCase{
 	

@@ -387,6 +387,11 @@ public class TestStringUtil extends TestCase {
     	assertEquals("vdb", StringUtil.getLastToken("/foo/bar.vdb", "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
+    public enum Test {
+    	HELLO,
+    	WORLD
+    }
+    
     public void testValueOf() {
     	assertEquals(Integer.valueOf(21), StringUtil.valueOf("21", Integer.class)); //$NON-NLS-1$
     	assertEquals(Boolean.valueOf(true), StringUtil.valueOf("true", Boolean.class)); //$NON-NLS-1$    	
@@ -405,6 +410,6 @@ public class TestStringUtil extends TestCase {
     	assertEquals(3, m.size());
     	assertEquals(m.get("foo"), "bar"); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals(m.get("x"), ""); //$NON-NLS-1$ //$NON-NLS-2$
-    	
+    	assertEquals(Test.HELLO, StringUtil.valueOf("HELLO", Test.class)); //$NON-NLS-1$ 
     }
 }

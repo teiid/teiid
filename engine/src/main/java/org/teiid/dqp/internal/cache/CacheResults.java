@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.cache;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -38,15 +39,11 @@ public class CacheResults {
 	private Map paramValues;
 	
 	private boolean isFinal;
-	private int firstRow;
+	private int firstRow = 1;
     //size of this results in memory
 	private long size= -1;
 	private int finalRow = -1;
 		
-	//hold temp results
-	private CursorReceiverWindowBuffer tempResults;
-	private Object requestID;
-
 	public CacheResults(List[] results, int firstRow, boolean isFinal){
 		this(results, null, firstRow, isFinal);
 	}
@@ -125,67 +122,27 @@ public class CacheResults {
 		
     //add the results to the existing one, this is used
     //when building the batched results
-	boolean addResults(CacheResults cacheResults, Object requestID){
-		int firstRow = cacheResults.getFirstRow() - 1;
-		boolean isFinal = cacheResults.isFinal();
-		List[] results = cacheResults.getResults();
+	boolean addResults(CacheResults cacheResults){
+		if (this.firstRow + results.length != cacheResults.getFirstRow()) {
+			throw new MetaMatrixRuntimeException(DQPPlugin.Util.getString("ResultSetCache.1"));//$NON-NLS-1$
+		}
 		this.size += cacheResults.size;
-		if(this.requestID == null){
-			//first batch
-			if(firstRow != 0){
-				//the previous batch has been removed
-				return false;
-			}
-			
-			if(isFinal){
-				this.results = results;
-				this.command = cacheResults.getCommand();
-				this.analysisRecord = cacheResults.getAnalysisRecord();
-				this.firstRow = 1;
-				this.isFinal = true;
-				this.finalRow = this.results.length;
-				return true;
-			}
-			
-			//first time adding the results
-			this.requestID = requestID;
-			this.tempResults = new CursorReceiverWindowBuffer();
+		List[] batchResults = cacheResults.getResults();
+		if (results == null) {
+			this.results = batchResults;
+		} else if (batchResults.length > 0){
+			this.results = Arrays.copyOf(this.results, this.results.length + batchResults.length);
+			System.arraycopy(batchResults, 0, this.results, this.results.length - batchResults.length, batchResults.length);
 		}
-        
-		//check whether it is from same command
-		if(!requestID.equals(this.requestID)){
-			//could happen to connector
-			return true;
-		}
-		if(results != null && results.length > 0){
-			tempResults.add(new int[]{firstRow, firstRow + results.length - 1}, results);
-		}
-		if(isFinal){
-			if(!tempResults.getContents().isContiguous()){
-				//should not come here
-				throw new MetaMatrixRuntimeException(DQPPlugin.Util.getString("ResultSetCache.1"));//$NON-NLS-1$
-			}
 			
-			this.results = tempResults.getAllRows();
+		if(cacheResults.isFinal()){
 			this.command = cacheResults.getCommand();
 			this.analysisRecord = cacheResults.getAnalysisRecord();
-			this.paramValues = cacheResults.getParamValues();
 			this.firstRow = 1;
 			this.isFinal = true;
 			this.finalRow = this.results.length;
-			
-			//cleanup temp data
-			this.tempResults = null;
-			this.requestID = null;
 		}
 		return true;
 	}
 	
-	//whether we have got all the batches (including the chunks if it is lob)
-	boolean hasAllResults(){
-		if(!this.isFinal){
-			return false;
-		}
-		return true;
-	}
 }

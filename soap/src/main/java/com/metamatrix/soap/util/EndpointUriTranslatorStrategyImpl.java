@@ -30,7 +30,6 @@ import javax.xml.soap.SOAPException;
 
 import org.apache.axis2.context.MessageContext;
 
-import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.soap.exceptions.SOAPProcessingException;
 import com.metamatrix.soap.handler.ActionUpdateHandler;
 import com.metamatrix.soap.service.DataServiceInfo;

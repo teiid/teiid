@@ -33,11 +33,39 @@ import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.Cache.Type;
 import com.metamatrix.cache.CacheConfiguration.Policy;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.util.HashCodeUtil;
 
 /**
  * Used to cache ResultSet based on the exact match of sql string.
  */
 public class ResultSetCache {
+	
+	static class TempKey {
+		CacheID cacheID;
+		Object requestID;
+
+		public TempKey(CacheID cacheID, Object requestID) {
+			this.cacheID = cacheID;
+			this.requestID = requestID;
+		}
+		@Override
+		public int hashCode() {
+			return HashCodeUtil.hashCode(cacheID.hashCode(), requestID.hashCode());
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof TempKey)) {
+				return false;
+			}
+			TempKey other = (TempKey) obj;
+			return (cacheID.equals(other.cacheID) && requestID.equals(other.requestID));
+		}
+	}
+	
 	//configurable parameters
 	public static final String RS_CACHE_MAX_SIZE = "maxSize"; //$NON-NLS-1$
 	public static final String RS_CACHE_MAX_AGE = "maxAge"; //$NON-NLS-1$
@@ -49,7 +77,7 @@ public class ResultSetCache {
 
 	private Cache<CacheID, CacheResults> cache; 
 	private String scope;
-	private Map<CacheID, CacheResults> tempBatchResults = new HashMap<CacheID, CacheResults>();
+	private Map<TempKey, CacheResults> tempBatchResults = new HashMap<TempKey, CacheResults>();
 	private int maxSize = 50 * 1024 * 1024; //bytes
 	private int maxAge = 60 * 60; // seconds
 	private int maxEntries = 20 * 1024; 
@@ -127,30 +155,30 @@ public class ResultSetCache {
 		
 		long currentCacheSize = getCacheSize();
 		
+		TempKey key = new TempKey(cacheID, requestID);
 		//do not cache if it is over cache limit
 		if(isOverCacheLimit(currentCacheSize, cacheResults.getSize())){
-			removeTempResults(cacheID);
+			removeTempResults(key);
 			return false;
 		}
 	
 		synchronized(tempBatchResults){
-			CacheResults savedResults = tempBatchResults.get(cacheID);
+			CacheResults savedResults = tempBatchResults.get(key);
 			if(savedResults == null){
-				savedResults = new CacheResults(null, cacheResults.getElements(), 1, false); 
-				tempBatchResults.put(cacheID, savedResults);
-			}
-			if(!savedResults.addResults(cacheResults, requestID)){
-				removeTempResults(cacheID);
+				savedResults = cacheResults; 
+				tempBatchResults.put(key, cacheResults);
+			} else if(!savedResults.addResults(cacheResults)){
+				removeTempResults(key);
 				return false;
 			}
 			
 			//do not cache if it is over cache limit
 			if(isOverCacheLimit(currentCacheSize, savedResults.getSize())){
-				removeTempResults(cacheID);
+				removeTempResults(key);
 				return false;
 			}
 		
-			if(savedResults.hasAllResults()){
+			if(savedResults.isFinal()){
 				tempBatchResults.remove(cacheID);
 				cacheID.setMemorySize(savedResults.getSize());
 				cache.put(cacheID, savedResults);
@@ -169,8 +197,12 @@ public class ResultSetCache {
 		}
 		return false;
 	}
+	
+	public void removeTempResults(CacheID cacheID, Object requestID){
+		removeTempResults(new TempKey(cacheID, requestID));
+	}
 
-	public void removeTempResults(CacheID cacheID){
+	public void removeTempResults(TempKey cacheID){
 		synchronized(tempBatchResults){
 			tempBatchResults.remove(cacheID);
 		}

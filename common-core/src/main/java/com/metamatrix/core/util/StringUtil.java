@@ -984,7 +984,7 @@ public final class StringUtil {
      * @return
      */
     @SuppressWarnings("unchecked")
-	public static <T> T valueOf(String value, Class<T> type){
+	public static <T> T valueOf(String value, Class type){
     	
     	if(type == String.class) {
     		return (T) value;
@@ -1013,6 +1013,10 @@ public final class StringUtil {
     	else if (type == Void.class) {
     		return null;
     	}
+    	else if (type.isEnum()) {
+    		return (T)Enum.valueOf(type, value);
+    	}
+    	
     	else if (type.isAssignableFrom(Map.class)) {
     		List<String> l = Arrays.asList(value.split(",")); //$NON-NLS-1$
     		Map m = new HashMap<String, String>();

@@ -22,26 +22,21 @@
 
 package org.teiid.dqp.internal.cache;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.teiid.dqp.internal.cache.CacheID;
-import org.teiid.dqp.internal.cache.CacheResults;
-import org.teiid.dqp.internal.cache.ResultSetCache;
-
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.cache.FakeCache.FakeCacheFactory;
 import com.metamatrix.common.buffer.impl.SizeUtility;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 
-public class TestResultSetCache extends TestCase{
-
-    public TestResultSetCache(final String name) {
-        super(name);
-    }
+public class TestResultSetCache {
     
-    public void testSetAndGetResultsForSession() throws Exception{
+    @Test public void testSetAndGetResultsForSession() throws Exception{
     	Properties props = new Properties();
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
@@ -53,11 +48,11 @@ public class TestResultSetCache extends TestCase{
     	CacheID id2 = new CacheID("12346", "select * from table2");  //$NON-NLS-1$//$NON-NLS-2$
     	List[] result2 = new List[]{new ArrayList()};
     	cache.setResults(id2, new CacheResults(result2, 1, true), "req2" );  //$NON-NLS-1$
-    	assertEquals(cache.getResults(id1, new int[]{1, 500}).getResults(), result1); 
-    	assertEquals(cache.getResults(id2, new int[]{1, 500}).getResults(), result2); 
+    	assertEquals(result1, cache.getResults(id1, new int[]{1, 500}).getResults()); 
+    	assertEquals(result2, cache.getResults(id2, new int[]{1, 500}).getResults()); 
     }
     
-    public void testSetAndGetResultsForVDB() throws Exception{
+    @Test public void testSetAndGetResultsForVDB() throws Exception{
     	Properties props = new Properties();
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
@@ -73,7 +68,7 @@ public class TestResultSetCache extends TestCase{
     	assertEquals(cache.getResults(id2, new int[]{1, 500}).getResults(), result2); 
     }
     
-//    public void testRemoveConnection() throws Exception{
+//    @Test public void testRemoveConnection() throws Exception{
 //    	Properties props = new Properties();
 //    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
 //    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
@@ -89,7 +84,7 @@ public class TestResultSetCache extends TestCase{
 //    	assertNull(cache.getResults(id1, new int[]{0, 500})); //$NON-NLS-1$
 //    }
 //    
-//    public void testRemoveVDB() throws Exception{
+//    @Test public void testRemoveVDB() throws Exception{
 //    	Properties props = new Properties();
 //    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
 //    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
@@ -105,7 +100,7 @@ public class TestResultSetCache extends TestCase{
 //    	assertNull(cache.getResults(id1, new int[]{0, 500})); //$NON-NLS-1$
 //    }
     
-    public void testClearAllCache() throws Exception{
+    @Test public void testClearAllCache() throws Exception{
     	Properties props = new Properties();
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
@@ -121,7 +116,7 @@ public class TestResultSetCache extends TestCase{
     	assertNull(cache.getResults(id1, new int[]{1, 500})); 
     }
     
-    public void testSetAndGetResultsForSession1() throws Exception{
+    @Test public void testSetAndGetResultsForSession1() throws Exception{
     	Properties props = new Properties();
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
@@ -142,7 +137,7 @@ public class TestResultSetCache extends TestCase{
     	assertEquals(cache.getResults(id1, new int[]{1, 2}).getResults()[0], row1);
     }
     
-    public void testSetAndGetResultsForSession2() throws Exception{
+    @Test public void testSetAndGetResultsForSession2() throws Exception{
     	Properties props = new Properties();
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
@@ -167,7 +162,7 @@ public class TestResultSetCache extends TestCase{
     	assertEquals(cache.getResults(id1, new int[]{1, 2}).getResults()[0], row1);
     }
     
-    public void testMaxSize() throws Exception{
+    @Test public void testMaxSize() throws Exception{
     	Properties props = new Properties();
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "1"); //$NON-NLS-1$
@@ -206,7 +201,7 @@ public class TestResultSetCache extends TestCase{
     }
     
     
-    public void testComputeSize() throws Exception{
+    @Test public void testComputeSize() throws Exception{
     	int cnt = 1000000;
     	List[] results = new List[cnt];
 		List row = new ArrayList();
@@ -229,24 +224,7 @@ public class TestResultSetCache extends TestCase{
     	assertEquals(size, result.getSize());
     }
     
-    public void testSetDifferentReqID() throws Exception{
-    	Properties props = new Properties();
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
-    	props.setProperty(ResultSetCache.RS_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_CONN);
-    	ResultSetCache cache = new ResultSetCache(props, new FakeCacheFactory());
-    	CacheID id1 = new CacheID("vdb1", "select * from table1");  //$NON-NLS-1$//$NON-NLS-2$
-    	CacheResults result1 = createResults(1000, 1, 100, false);
-    	CacheResults result2 = createResults(3000, 101, 250, false);
-    	CacheResults result3 = createResults(2000, 101, 200, true);
-    	cache.setResults(id1, result1 , "req1");  //$NON-NLS-1$
-        cache.setResults(id1, result2, "req2" );  //$NON-NLS-1$
-       	cache.setResults(id1, result3, "req1" );  //$NON-NLS-1$
-       	assertEquals(cache.getResults(id1, new int[]{1, 500}).getFinalRow(), 300);
-       	assertEquals(cache.getResults(id1, new int[]{1, 500}).getResults().length, 300);
-    }
-    
-    public void testBatchNotContiguous() throws Exception{
+    @Test(expected=MetaMatrixRuntimeException.class) public void testBatchNotContiguous() throws Exception{
     	Properties props = new Properties();
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, "0"); //$NON-NLS-1$
     	props.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, "0"); //$NON-NLS-1$
@@ -256,12 +234,7 @@ public class TestResultSetCache extends TestCase{
     	CacheResults result1 = createResults(1000, 1, 100, false);
     	CacheResults result3 = createResults(2000, 102, 200, true);
     	cache.setResults(id1, result1 , "req1");  //$NON-NLS-1$
-       	try{
-       		cache.setResults(id1, result3, "req1" );  //$NON-NLS-1$
-       		fail("Expect an exception but did not get."); //$NON-NLS-1$
-       	}catch(Exception e){
-       		//expect an exception
-       	}
+   		cache.setResults(id1, result3, "req1" );  //$NON-NLS-1$
     }
     
 }

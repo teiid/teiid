@@ -222,7 +222,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         	LogManager.logDetail(LogConstants.CTX_DQP, e, "############# PW EXITING on", requestID, "- error occurred ###########"); //$NON-NLS-1$ //$NON-NLS-2$
             //if there is a cache, remove temp results if there is any
             if(this.rsCache != null){
-            	rsCache.removeTempResults(cid);
+            	rsCache.removeTempResults(cid, requestID);
             }
             
             if (!isCanceled()) {
