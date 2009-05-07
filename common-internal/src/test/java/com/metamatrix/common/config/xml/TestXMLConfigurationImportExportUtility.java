@@ -51,6 +51,7 @@ import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
 import com.metamatrix.common.config.util.ConfigurationImportExportUtility;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.core.util.FileUtils;
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 
 
@@ -380,6 +381,13 @@ public class TestXMLConfigurationImportExportUtility extends TestCase {
 	       if (cb == null) {
 	    	   fail("didnt import binding");
 	       }
+	       
+	       InputStream is = ObjectConverterUtil.convertToInputStream(new File(filename));
+	        
+	        XMLConfigurationImportExportUtility ciu = new XMLConfigurationImportExportUtility();
+	       
+	        ConnectorBinding cb2 = ciu.importConnectorBinding(is, new BasicConfigurationObjectEditor(false), "");
+
     }   
     
     public void testImportExportConfig() throws Exception {
