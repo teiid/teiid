@@ -217,6 +217,9 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /**
+     * @param connectorBindingName, is nullable, indicates the name to assign to the importing {@link ConnectorBinding}.  
+     * 	If it is null, then the name defined in the xmlFile will be used.
+     * @param xmlFile is an xml formatted file that defines the connector binding 
      * @see com.metamatrix.admin.api.server.ServerConfigAdmin#addConnectorBinding(java.lang.String, char[], AdminOptions)
      * @since 4.3
      */
@@ -224,71 +227,45 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                     char[] xmlFile, AdminOptions options) throws AdminException {
         com.metamatrix.admin.api.objects.ConnectorBinding newBinding = null;
 
-        if (connectorBindingName == null) {
-            throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Connector_Binding_can_not_be_null")); //$NON-NLS-1$
-        }
         if (xmlFile == null) {
             throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.CDK_File_Name_can_not_be_null")); //$NON-NLS-1$
         }
-
-        // Check if binding allready exists and look at admin options
-        Collection existingBindings = 
-            parent.getConnectorBindings(AdminObject.WILDCARD + AdminObject.DELIMITER + connectorBindingName);
-        Collection newBindingNames = new ArrayList(1);
-        newBindingNames.add(connectorBindingName);
-        Collection updateBindingNames = getBindingNamesToUpdate(existingBindings, newBindingNames, options);
-
-        if ( updateBindingNames.size() > 0 && updateBindingNames.iterator().next().equals(connectorBindingName) ) {
-            // Add the new binding
-            InputStream is = ObjectConverterUtil.convertToInputStream(xmlFile);
-            
-            XMLConfigurationImportExportUtility ciu = new XMLConfigurationImportExportUtility();
-            ConnectorBinding binding = null;
-            try {
-                binding = ciu.importConnectorBinding(is, new BasicConfigurationObjectEditor(false), connectorBindingName);
-                is.close();
-            } catch (ConfigObjectsNotResolvableException e) {
-            	throw new AdminComponentException(e);
-            } catch (InvalidConfigurationElementException e) {
-            	throw new AdminComponentException(e);
-            } catch (IOException e) {
-            	throw new AdminComponentException(e);
-            }
-            // Check that binding password is decryptable
-            AdminStatus status = checkDecryption(binding);
-            if ( status.getCode() == AdminStatus.CODE_DECRYPTION_FAILED && 
-                            ! options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
-                throw new AdminProcessingException(status.getCode(), status.getMessage());
-            }
-            
-            try {
-                is = ObjectConverterUtil.convertToInputStream(xmlFile);
-                // pass "ALL" to deploy newly created binding to all vms
-                binding = getConfigurationServiceProxy().importConnectorBinding(is, connectorBindingName, "ALL", getUserName());
-                if (binding == null) {
-                    throwProcessingException("ServerConfigAdminImpl.Connector_Type_was_null", new Object[] {connectorBindingName}); //$NON-NLS-1$
-                }
-            } catch (ConfigurationException e) {
-            	throw new AdminComponentException(e);
-            } catch (ServiceException e) {
-            	throw new AdminComponentException(e);
-            }
         
-            //return the new binding
-            Collection newBindings = 
-                parent.getConnectorBindings(AdminObject.WILDCARD + AdminObject.DELIMITER + connectorBindingName);
-            newBinding = (com.metamatrix.admin.api.objects.ConnectorBinding) newBindings.iterator().next();
-        } else {
-            // We didn't add the new connector binding. Return the existing.
-            if (existingBindings != null && existingBindings.size() > 0) {
-                // Only expecting one existing binding
-                newBinding = (com.metamatrix.admin.api.objects.ConnectorBinding) existingBindings.iterator().next();
-            }
+        // first, read the xmlfile to determine the defined connnector binding name
+        // because majority of the time, the file will determine the name
+        InputStream is = ObjectConverterUtil.convertToInputStream(xmlFile);
+        
+        XMLConfigurationImportExportUtility ciu = new XMLConfigurationImportExportUtility();
+        ConnectorBinding binding = null;
+        try {
+            binding = ciu.importConnectorBinding(is, new BasicConfigurationObjectEditor(false), connectorBindingName);
+        } catch (ConfigObjectsNotResolvableException e) {
+        	throw new AdminComponentException(e);
+        } catch (InvalidConfigurationElementException e) {
+        	throw new AdminComponentException(e);
+        } catch (IOException e) {
+        	throw new AdminComponentException(e);
+        } finally {
+        	if (is != null) {
+        		try {
+					is.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        	}
         }
-        return newBinding;
+
+        // reassign the name in cases where null was passed in
+        connectorBindingName = binding.getName();
+        
+        return this.addConnectorBinding(connectorBindingName, binding.getComponentTypeID().getFullName(), binding.getProperties(), options);
+
     }
     
     /**
+     * @param name, is nullable, indicates the name to assign to the connector type
+     * 		If name is null, then the name defined in the cdkFile will be used.
      * @throws MetaMatrixComponentException
      * @throws MetaMatrixProcessingException
      * @see com.metamatrix.admin.api.server.ServerConfigAdmin#addConnectorType(java.lang.String, char[])
@@ -298,15 +275,39 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                  char[] cdkFile) throws AdminException {
         ComponentType connectorType = null;
 
-        if (name == null) {
-            throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Connector_Type_can_not_be_null")); //$NON-NLS-1$
-        }
         if (cdkFile == null) {
             throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.CDK_File_Name_can_not_be_null")); //$NON-NLS-1$
         }
-        try {
-            InputStream is = ObjectConverterUtil.convertToInputStream(cdkFile);
 
+        InputStream is = null;
+        if (name == null || name.trim().length() == 0) {
+            is = ObjectConverterUtil.convertToInputStream(cdkFile);
+            
+            XMLConfigurationImportExportUtility ciu = new XMLConfigurationImportExportUtility();
+            try {
+            	connectorType = ciu.importComponentType(is, new BasicConfigurationObjectEditor(false), name);
+                // reassign name in case it was passed in
+                name = connectorType.getFullName();
+            } catch (InvalidConfigurationElementException e) {
+            	throw new AdminComponentException(e);
+            } catch (IOException e) {
+            	throw new AdminComponentException(e);
+            } finally {
+            	if (is != null) {
+            		try {
+    					is.close();
+    				} catch (IOException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}
+            	}
+            }
+        }
+            
+
+       try {           
+            is = ObjectConverterUtil.convertToInputStream(cdkFile);
+        
             connectorType = getConfigurationServiceProxy().importConnectorType(is, name, getUserName());
             if (connectorType == null) {
                 throwProcessingException("ServerConfigAdminImpl.Connector_Type_was_null", new Object[] {name}); //$NON-NLS-1$
@@ -315,7 +316,17 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         	throw new AdminComponentException(e);
         } catch (ServiceException e) {
         	throw new AdminComponentException(e);
-        } 
+        } finally {
+            	if (is != null) {
+            		try {
+    					is.close();
+    				} catch (IOException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}
+            	}
+            }
+
     }
 
     /** 
@@ -636,6 +647,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /**
+     * @param name, is nullable, indicates the name to assign to the vdb
+     * 		If name is null, then use the name defined in the vdbFile.
      * @see com.metamatrix.admin.api.server.ServerConfigAdmin#addVDB(java.lang.String, java.lang.String, byte[], char[])
      * @since 4.3
      */
@@ -643,7 +656,9 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         VDBArchive vdb = null;
         try {
 			vdb = new VDBArchive(new ByteArrayInputStream(vdbFile));
-			vdb.setName(name);
+			if (name != null) {
+				vdb.setName(name);
+			}
 		} catch (IOException e) {
 			throw new AdminComponentException(e);
 		}

@@ -204,19 +204,32 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			            binding.setServiceID(serviceBinding.getServiceID().getID());
 
 			        } else {
+			        	
 					    String[] identifierParts = new String[] {
 						        deployedComponent.getHostID().getName(), 
 						        deployedComponent.getVMComponentDefnID().getName(), 
 						        deployedComponent.getName()
 						    };
-				        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
+				            
+				        if (identifierMatches(identifier, identifierParts)) {
+				        	
+				            //not in config - create new MMConnectorBinding
+				            binding = new MMConnectorBinding(identifierParts);
+				            binding.setDeployed(false);
+				            binding.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
 
-			            //not in config - create new MMConnectorBinding
-			            binding = new MMConnectorBinding(identifierParts);
-			            binding.setDeployed(false);
-			            binding.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
-			            
-			            results.add(binding);
+	
+				            binding.setConnectorTypeName(deployedComponent.getComponentTypeID().getFullName());
+				            binding.setDescription(deployedComponent.getDescription());
+				            binding.setState(serviceBinding.getCurrentState());
+				            binding.setStateChangedTime(serviceBinding.getStateChangeTime());
+				            binding.setRegistered(true);
+				            binding.setServiceID(serviceBinding.getServiceID().getID());
+				            
+				            results.add(binding);
+			        	
+				        }
+			        	
 			        }
 			    }
 			}
