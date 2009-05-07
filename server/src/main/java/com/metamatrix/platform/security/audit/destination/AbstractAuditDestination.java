@@ -56,7 +56,8 @@ public abstract class AbstractAuditDestination implements AuditDestination {
         }
         try {
             LogManager.logTrace(LogSecurityConstants.CTX_AUDIT, new Object[]{"Initializing audit message format class \"",formatterClassName,"\""}); //$NON-NLS-1$ //$NON-NLS-2$
-            Class formatterClass = Class.forName(formatterClassName);
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            Class formatterClass = classLoader.loadClass(formatterClassName);
             formatter = (AuditMessageFormat) formatterClass.newInstance();
         } catch ( ClassNotFoundException e ) {
             throw new AuditDestinationInitFailedException(e, ErrorMessageKeys.SEC_AUDIT_0016, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUDIT_0016, formatterClassName));
