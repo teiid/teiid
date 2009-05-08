@@ -175,6 +175,33 @@ ConnectorBinding addConnectorBinding(String name, String xmlFile, int option){
     return currentContext().internalAdmin.addConnectorBinding(name, readTextFile(xmlFile), new AdminOptions(option));
 }
 
+
+/**
+ * Import a {@link ConnectorBinding} into the Configuration.
+ *
+ * @param name
+ *            is the Connector Binding name that will be added to Configuration
+ * @param binding
+ *            byte array of the connector binding xml file
+ * @param AdminOptions that defines the options on how to import theconnector binding.
+ * There are choices about what to do when a connector binding with the given identifier 
+ @ already exists in the system. 
+ * See the interface {@link AdminOptions.OnConflict} for details.
+ * <p>
+ * Another option is to ignore a binding connection password decrypt error, when adding a connector
+ * binding whose password was encrypted with a different keystore, so that the new password property
+ * can be set after the connector binding has been added.</p>
+ * @throws AdminException
+ *             if there's a system error.
+ * @return the {@link ConnectorBinding} representing the current property values and runtime state.
+ * @since 4.3
+ */
+ConnectorBinding addConnectorBinding(String name, String xmlFile, AdminOptions options){
+    debug("Adding Connector Binding " + name + " from a byte array");
+    checkAdmin();    
+    return currentContext().internalAdmin.addConnectorBinding(name, readTextFile(xmlFile), options);
+}
+
 /**
  * Deploy a {@link ConnectorBinding} to Configuration
  *

@@ -1,6 +1,7 @@
 import java.io.*;
 import com.metamatrix.admin.api.core.*;
 import com.metamatrix.admin.api.objects.*;
+import com.metamatrix.core.util.*;
 
 debug=false;
 
@@ -12,13 +13,14 @@ getBshPrompt() {
 }
 
 byte[] readBinaryFile(String fileName) {
+    InputStream is = null;
     
     if(fileName == null) {
         throw new IOException("fileName is null");
     }
     try {
         //try to load file from the classpath
-        InputStream is = Object.class.getResourceAsStream("/"+fileName);
+        is = Object.class.getResourceAsStream("/"+fileName);
          
         byte[] result;
         if (is == null) {
@@ -26,38 +28,50 @@ byte[] readBinaryFile(String fileName) {
             is = new FileInputStream(new File(fileName));
         }
     
-        //convert to bytes
-        result = convertToByteArray(is);
-        is.close();    
-        return result;
-    }catch(e) {
-        e.printStackTrace(); 
+
+    }catch(Exception e) {
+         if (is == null) {
+         	try {
+            //load from "hardcoded" path        
+            	is = new FileInputStream(new File(fileName));
+            }catch(Exception e2) {
+                
+       			 e.printStackTrace(); 
+        		 return null;
+            }
+         } 
+
     }
-    return null;
+    
+	//convert to bytes
+        result = convertToByteArray(is);
+        try {
+        	is.close();
+        }catch(Exception e3) {
+        }    
+        return result;
 }
 
 char[] readTextFile(String fileName) {
     if(fileName == null) {
         throw new IOException("fileName is null");
     }
-    
+    char[] result = null;
+
     try {
-        //try to load file from the classpath
-        InputStream is = Object.class.getResourceAsStream("/"+fileName);
-        
-        char[] result;
-        if (is == null) {
-            //load from "hardcoded" path
-            is = new FileInputStream(new File(fileName));
-        }
-        
-        //   convert to bytes
-        result = convertToCharArray(is);
-        is.close();    
-        return result;
+      File file = new File(fileName);
+ 
+    // changed to use the ObectConverterUtil, instead of the
+    // convertToCharArray() method because it doesn't completely
+    // convert the file, the XML reader throws a malform exception
+    // the test case for ServerAdminImpl also the ObjectConverterUtil
+    // that's why this was changed to use it
+      result = ObjectConverterUtil.convertFileToCharArray(file, null);
+    
     }catch(e) {
         e.printStackTrace();
-    }
+    } 
+    return result;
 }
 
 byte[] convertToByteArray(InputStream in) throws IOException {
