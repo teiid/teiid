@@ -22,6 +22,8 @@
 
 package com.metamatrix.soap.service;
 
+import java.util.Properties;
+
 import junit.framework.TestCase;
 
 
@@ -30,7 +32,6 @@ import junit.framework.TestCase;
  */
 public class TestBasicConnectionPoolFactory extends TestCase {
     
-    private static final BasicConnectionPoolFactory factory = new BasicConnectionPoolFactory();
     
     private static final String TEST_PROPERTY_VALUE = "test"; //$NON-NLS-1$
 
@@ -39,11 +40,11 @@ public class TestBasicConnectionPoolFactory extends TestCase {
      */
     public void testGetPropertyWSystemPropertySet() {
         System.setProperty(ConnectionPoolFactory.INITIAL_POOL_SIZE_PROPERTY_KEY, TEST_PROPERTY_VALUE);
-        assertEquals(TEST_PROPERTY_VALUE, factory.getProperty(ConnectionPoolFactory.INITIAL_POOL_SIZE_PROPERTY_KEY));
+        assertEquals(TEST_PROPERTY_VALUE, BasicConnectionPoolFactory.createMergedProperties(new Properties()).getProperty(ConnectionPoolFactory.INITIAL_POOL_SIZE_PROPERTY_KEY));
     }
     
     public void testGetPropertyRetreiveDefault() {
-        assertEquals(String.valueOf(BasicConnectionPoolFactory.MAX_ACTIVE_CONNECTIONS_DEFAULT), factory.getProperty(ConnectionPoolFactory.MAX_ACTIVE_CONNECTIONS_PROPERTY_KEY));
+        assertEquals(String.valueOf(BasicConnectionPoolFactory.MAX_ACTIVE_CONNECTIONS_DEFAULT), BasicConnectionPoolFactory.createMergedProperties(new Properties()).getProperty(ConnectionPoolFactory.MAX_ACTIVE_CONNECTIONS_PROPERTY_KEY));
     }
 
 }
