@@ -902,6 +902,10 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         if(udfFile != null && exists(udfFile)) {
             List<URL> urls = getCommonExtensionClasspath();            
             try {
+            	
+            	// un-register the old UDF model, if there is one.
+            	unloadUDF();
+
             	if (urls == null || urls.isEmpty()) {
             		this.udfSource = new UDFSource(udfFile);
             	}
