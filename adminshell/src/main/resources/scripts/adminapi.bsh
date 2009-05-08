@@ -280,7 +280,7 @@ void exportConnectorBinding(String bindingName, String fileName){
     debug("Exporting Connector Binding " + bindingName + " to file " + fileName);
     checkAdmin();
     contents = currentContext().internalAdmin.exportConnectorBinding(bindingName);
-    if (contents) {
+    if (contents != null) {
     	ObjectConverterUtil.write(contents, fileName);	
     }
     else {
