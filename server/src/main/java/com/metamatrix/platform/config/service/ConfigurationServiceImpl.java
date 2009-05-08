@@ -165,7 +165,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public Configuration getCurrentConfiguration() throws ConfigurationException {
-        return this.getDesignatedConfiguration();
+        return getReadOnlyConfigurationModel().getConfiguration();
     }
 
     /**
@@ -175,17 +175,11 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
      * @throws ConfigurationException if an error occurred within or during communication with the Configuration Service.
      */
     public Configuration getNextStartupConfiguration() throws ConfigurationException{
-        return this.getDesignatedConfiguration();
-    }
-
-    private Configuration getDesignatedConfiguration() throws ConfigurationException {
-        XMLConfigurationConnector transaction = getConnection(null);
-        return transaction.getConfigurationModel().getConfiguration();
+        return getReadOnlyConfigurationModel().getConfiguration();
     }
 
     public ConfigurationModelContainer getConfigurationModel(String configName) throws ConfigurationException {
-    	XMLConfigurationConnector transaction = getConnection(null);
-        return transaction.getConfigurationModel();
+         return getReadOnlyConfigurationModel();
 	}
 
     /**
@@ -255,8 +249,8 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
     }
 
     public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException {
-		XMLConfigurationConnector transaction = getConnection(null);
-		Map types = transaction.getConfigurationModel().getComponentTypes();
+//		XMLConfigurationConnector transaction = getConnection(null);
+		Map types = getReadOnlyConfigurationModel().getComponentTypes();
 		Collection result = new LinkedList(types.values());
 
 		if (result.size() > 0) {
@@ -637,7 +631,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
             Properties defaultProps = config.getDefaultPropertyValues(VMComponentDefn.VM_COMPONENT_TYPE_ID);
 
             // create defn first
-            processDefn = editor.createVMComponentDefn(config.getConfiguration(),
+            processDefn = editor.createVMComponentDefn((ConfigurationID) config.getConfiguration().getID(),
                                                        (HostID)host.getID(),
                                                        VMComponentDefn.VM_COMPONENT_TYPE_ID,
                                                        processName);
