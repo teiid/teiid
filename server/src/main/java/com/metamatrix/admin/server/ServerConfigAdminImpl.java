@@ -1087,8 +1087,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 
         char[] results = null;
 
-        List selectedBindings = new ArrayList();
-        List selectedTypes = new ArrayList();
+        List<ConnectorBinding> selectedBindings = new ArrayList<ConnectorBinding>();
+        List<ComponentType> selectedTypes = new ArrayList<ComponentType>();
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         OutputStream os = new BufferedOutputStream(baos);
@@ -1096,24 +1096,22 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         XMLConfigurationImportExportUtility util = new XMLConfigurationImportExportUtility();
         try {
             // get config data from ConfigurationService
-            Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
-            ConfigurationModelContainer container = getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
+             ConfigurationModelContainer config = getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
 
-            Collection components = config.getDeployedComponents();
+            Collection<ConnectorBinding> components = config.getConfiguration().getConnectorBindings();
 
-            for (Iterator iter = components.iterator(); iter.hasNext();) {
-                BasicDeployedComponent component = (BasicDeployedComponent)iter.next();
+            for (Iterator<ConnectorBinding> iter = components.iterator(); iter.hasNext();) {
+                ConnectorBinding binding = iter.next();
 
-                String bindingName = component.getName();
+                String bindingName = binding.getName();
 
                 String[] identifierParts = new String[] {
-                    component.getHostID().getName(), component.getVMComponentDefnID().getName(), bindingName
+                     bindingName
                 };
 
-                ConnectorBinding binding = config.getConnectorBinding(bindingName);
-                if (binding != null && identifierMatches(connectorBindingIdentifier, identifierParts)) {
+                if (identifierMatches(connectorBindingIdentifier, identifierParts)) {
                     selectedBindings.add(binding);
-                    ComponentType ct = container.getComponentType(binding.getComponentTypeID().getFullName());
+                    ComponentType ct = config.getComponentType(binding.getComponentTypeID().getFullName());
                     selectedTypes.add(ct);
                 }
             }
