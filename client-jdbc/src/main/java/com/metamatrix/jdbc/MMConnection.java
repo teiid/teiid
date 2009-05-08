@@ -1015,7 +1015,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
 	}
 
 	public void setTransactionIsolation(int level) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		
 	}
 
 	public void setTypeMap(Map<String, Class<?>> map) throws SQLException {
