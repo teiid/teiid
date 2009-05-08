@@ -762,19 +762,20 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
 
  
             if (vmName != null) {
-            	if (vmName.equalsIgnoreCase("all")) { //$NON-NLS-1$
+            	// for now, deploy the binding to all vms
+ //           	if (vmName.equalsIgnoreCase("all")) { //$NON-NLS-1$
             		Collection<VMComponentDefn> vms = config.getVMComponentDefns();
             		for (Iterator<VMComponentDefn> it=vms.iterator(); it.hasNext();) {
             			 VMComponentDefn vm = it.next();
             			 
-            			 DeployedComponent dc = this.deployeServiceDefnToVM( (VMComponentDefnID)vm.getID(), connectorBindingName, editor, principalName);
+            			 DeployedComponent dc = editor.deployServiceDefn(config, binding,  (VMComponentDefnID)vm.getID());
             		}
             		
-            	} else {
-            		// TODO:  the method from serveradminapi passes in "ALL" and its not currently
-            		// called from anywhere else
-            	}
-            	
+//            	} else {
+//            		// TODO:  the method from serveradminapi passes in "ALL" and its not currently
+//            		// called from anywhere else
+//            	}
+//            	
             }
             executeTransaction(editor.getDestination().popActions(), principalName);
 
@@ -968,8 +969,13 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         ConfigurationObjectEditor editor = null;
         try {
             editor = createEditor();
+            Configuration config = getNextStartupConfiguration();
+            ServiceComponentDefn scd = config.getServiceComponentDefn(serviceName);
+ 
             
-            deployComponent = deployeServiceDefnToVM(theProcessID, serviceName, editor, principalName);
+            deployComponent = editor.deployServiceDefn(config, scd,  theProcessID);
+
+            
             executeTransaction(editor.getDestination().popActions(), principalName);
         } catch (ConfigurationException theException) {
             clearActions(editor);
@@ -978,19 +984,7 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         return deployComponent;
     }
     
-    private DeployedComponent deployeServiceDefnToVM(VMComponentDefnID theProcessID,
-            String serviceName,
-            ConfigurationObjectEditor editor,
-            String principalName) throws ConfigurationException {
-    
-        DeployedComponent deployComponent = null;
 
-            Configuration config = getNextStartupConfiguration();
-            ServiceComponentDefn scd = config.getServiceComponentDefn(serviceName);
-            deployComponent = editor.deployServiceDefn(config, scd,  theProcessID);
- 
-        return deployComponent;
-    }
     /**
      * Check whether the encrypted properties for the specified ComponentDefns can be decrypted.
      * @param defns List<ComponentDefn>
