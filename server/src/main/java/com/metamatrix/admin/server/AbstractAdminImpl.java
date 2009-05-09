@@ -360,16 +360,16 @@ public class AbstractAdminImpl {
         return results;
     }
     
-    protected String getConnectorBindingNameFromUUID(String uuid) throws ConfigurationException {
-        Configuration config;
-        config = getConfigurationServiceProxy().getCurrentConfiguration();
-        ConnectorBinding cb = config.getConnectorBindingByRoutingID(uuid);
-        if (cb != null) {
-            return cb.getName();
-        } 
-        
-        return null;
-    }
+//    protected String getConnectorBindingNameFromUUID(String uuid) throws ConfigurationException {
+//        Configuration config;
+//        config = getConfigurationServiceProxy().getCurrentConfiguration();
+//        ConnectorBinding cb = config.getConnectorBindingByRoutingID(uuid);
+//        if (cb != null) {
+//            return cb.getName();
+//        } 
+//        
+//        return null;
+//    }
     
     protected List getConnectorBindingNamesFromUUIDs(List uuids, ConfigurationModelContainer configModel) {
         List results = new ArrayList(uuids.size());
@@ -386,11 +386,11 @@ public class AbstractAdminImpl {
     }    
     
     
-    protected List getConnectorBindingNamesFromUUIDs(List uuids) throws ConfigurationException, ServiceException {
-        ConfigurationModelContainer cmc = getConfigurationModel();
-        
-        return getConnectorBindingNamesFromUUIDs(uuids, cmc);
-    }
+//    protected List getConnectorBindingNamesFromUUIDs(List uuids) throws ConfigurationException, ServiceException {
+//        ConfigurationModelContainer cmc = getConfigurationModel();
+//        
+//        return getConnectorBindingNamesFromUUIDs(uuids, cmc);
+//    }
     
     protected Map getConnectorBindingNamesMapFromUUIDs(Collection uuids) throws ConfigurationException {
         Configuration config;

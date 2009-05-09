@@ -816,6 +816,9 @@ public class ConfigurationServiceImpl extends AbstractService implements Configu
         }
     }
     
+    /**
+     * the name is nullable, if not specified, then the name in the inputStream (connector type file) will be used
+     */
     public ComponentType importConnectorType(InputStream inputStream, String name, String principalName) throws ConfigurationException {
         ComponentType newType = null;
         ConfigurationObjectEditor editor = createEditor();

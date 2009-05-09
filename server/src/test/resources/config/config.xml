@@ -81,7 +81,9 @@
                     <DeployedService Name="ConfigurationService" ComponentType="ConfigurationService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
                      <DeployedService Name="QueryService" ComponentType="QueryService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
                     <DeployedService Name="RuntimeMetadataService" ComponentType="RuntimeMetadataService" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
-             </Process>
+                    <DeployedService Name="My Connector" ComponentType="JDBC Connector" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
+                   <DeployedService Name="Test Connector" ComponentType="JDBC Connector" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup" />
+            </Process>
         </Host>
     </Configuration>
     <Services>
@@ -164,6 +166,16 @@
 				<Property Name="IsXA">true</Property>
             </Properties>
         </Connector>
+        <Connector Name="My Connector" ComponentType="JDBC Connector" LastChangedBy="ImportConfiguration" LastChangedDate="2005-03-09T06:28:34.422-06:00" CreatedBy="ImportConfiguration" CreationDate="2005-03-09T06:28:34.422-06:00" QueuedService="false">
+            <Properties>
+                <Property Name="Password">abc</Property>
+                <Property Name="User">theuser</Property>
+                <Property Name="URL">jdbc:mmx://server:port</Property>
+                <Property Name="Driver">driver.class</Property>
+				<Property Name="IsXA">true</Property>
+            </Properties>
+        </Connector>
+
     </ConnectorBindings>
       <AuthenticationProviders>
         <Provider Name="testFileDomainProvider" ComponentType="File Membership Domain Provider" LastChangedBy="metamatrixadmin" LastChangedDate="2007-05-24T12:52:48.088-06:00" CreatedBy="metamatrixadmin" CreationDate="2007-05-24T12:52:48.088-06:00">

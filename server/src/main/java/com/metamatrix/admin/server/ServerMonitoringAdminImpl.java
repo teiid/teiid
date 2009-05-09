@@ -47,6 +47,7 @@ import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.Model;
 import com.metamatrix.admin.api.objects.Resource;
+import com.metamatrix.admin.api.objects.Service;
 import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.api.objects.Transaction;
@@ -62,6 +63,7 @@ import com.metamatrix.admin.objects.MMProcess;
 import com.metamatrix.admin.objects.MMQueueWorkerPool;
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMResource;
+import com.metamatrix.admin.objects.MMService;
 import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -164,11 +166,12 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        MMConnectorBinding binding = new MMConnectorBinding(identifierParts);
 			        binding.setConnectorTypeName(configBinding.getComponentTypeID().getFullName());
 			        binding.setRoutingUUID(configBinding.getRoutingUUID());
-			        binding.setEnabled(configBinding.isEnabled());
+			        binding.setEnabled(component.isEnabled()); // use the deployed component setting for being enabled.
 			        binding.setDeployed(true);
 			        binding.setRegistered(false);
 			        binding.setState(MMConnectorBinding.STATE_NOT_REGISTERED);
 			        binding.setProperties(configBinding.getProperties());
+			        binding.setDescription(component.getDescription());
 			        
 			        binding.setCreated(configBinding.getCreatedDate());
 			        binding.setCreatedBy(configBinding.getCreatedBy());
@@ -196,8 +199,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        if (runtimeMap.containsKey(deployedComponent.getFullName())) {
 			            //reuse MMConnectorBinding from config
 			            binding = (MMConnectorBinding) runtimeMap.get(deployedComponent.getFullName());
-			            binding.setConnectorTypeName(deployedComponent.getComponentTypeID().getFullName());
-			            binding.setDescription(deployedComponent.getDescription());
 			            binding.setState(serviceBinding.getCurrentState());
 			            binding.setStateChangedTime(serviceBinding.getStateChangeTime());
 			            binding.setRegistered(true);
@@ -707,6 +708,123 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		}
        return results;
     }
+   
+   /**
+    * Get monitoring information about services.
+    * @see com.metamatrix.admin.api.server.ServerMonitoringAdmin#getServicess(java.lang.String)
+    * @param identifier Fully-qualified identifier of a host, process, or service
+    * to get information for.  For example, "hostname", or "hostname.processname", or "
+    * "hostname.processname.servicename". 
+    * <p>If identifier is "*", this method returns information about all services in the system.
+    * @return a <code>Collection</code> of <code>com.metamatrix.admin.api.Service</code>
+    * @since 4.3
+    */
+   public Collection getServices(String identifier) throws AdminException  {
+       
+       if (identifier == null) {
+           throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
+       }
+       
+       HashSet results = new HashSet();
+       try {
+			//get config data from ConfigurationService
+			Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
+			Collection components = config.getDeployedComponents();
+			
+			//convert config data to MMService objects, put in a hashmap by identifier
+			Map runtimeMap = new HashMap();
+			for (Iterator iter = components.iterator(); iter.hasNext();) {
+			    BasicDeployedComponent component = (BasicDeployedComponent)iter.next();
+			    if (component.isDeployedConnector()) {
+			    	continue;
+			    }
+			    String serviceName = component.getName();
+
+			    String[] identifierParts = new String[] {
+			        component.getHostID().getName(), component.getVMComponentDefnID().getName(), serviceName
+			    };
+
+			    ServiceComponentDefn service = config.getServiceComponentDefn(serviceName);
+			    if (service != null && identifierMatches(identifier, identifierParts)) {
+
+			    	MMService mmservice = new MMService(identifierParts);
+			        mmservice.setComponentTypeName(service.getComponentTypeID().getFullName());
+			        mmservice.setEnabled(component.isEnabled());
+			        mmservice.setDeployed(true);
+			        mmservice.setRegistered(false);
+			        mmservice.setState(Service.STATE_NOT_REGISTERED);
+			        mmservice.setProperties(service.getProperties());
+			        mmservice.setDescription(component.getDescription());
+			        
+			        mmservice.setCreated(service.getCreatedDate());
+			        mmservice.setCreatedBy(service.getCreatedBy());
+			        mmservice.setLastUpdated(service.getLastChangedDate());
+			        mmservice.setLastUpdatedBy(service.getLastChangedBy());
+
+			        runtimeMap.put(component.getFullName(), mmservice);
+			        results.add(mmservice);
+			    }
+
+			}
+			
+			// get runtime data from RuntimeStateAdminAPIHelper
+			Collection serviceBindings = this.registry.getServiceBindings(null, null);
+			
+			//convert runtime data into MMConnectorBinding objects
+			for (Iterator iter = serviceBindings.iterator(); iter.hasNext();) {
+			    ServiceRegistryBinding serviceBinding = (ServiceRegistryBinding) iter.next();
+			    DeployedComponent deployedComponent = serviceBinding.getDeployedComponent();
+
+			    if (deployedComponent!= null && ! deployedComponent.isDeployedConnector()) {
+			        String name = serviceBinding.getDeployedName();
+			        
+			        MMService mmservice;
+			        if (runtimeMap.containsKey(deployedComponent.getFullName())) {
+			            //reuse MMService from config
+			            mmservice = (MMService) runtimeMap.get(deployedComponent.getFullName());			            
+			            mmservice.setState(serviceBinding.getCurrentState());
+			            mmservice.setStateChangedTime(serviceBinding.getStateChangeTime());
+			            mmservice.setRegistered(true);
+			            mmservice.setServiceID(serviceBinding.getServiceID().getID());
+
+			        } else {
+			        	
+					    String[] identifierParts = new String[] {
+						        deployedComponent.getHostID().getName(), 
+						        deployedComponent.getVMComponentDefnID().getName(), 
+						        deployedComponent.getName()
+						    };
+				            
+				        if (identifierMatches(identifier, identifierParts)) {
+				        	
+				            //not in config - create new MMConnectorBinding
+				            mmservice = new MMService(identifierParts);
+				            mmservice.setDeployed(false);
+				            mmservice.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
+
+	
+				            mmservice.setComponentTypeName(deployedComponent.getComponentTypeID().getFullName());
+				            mmservice.setDescription(deployedComponent.getDescription());
+				            mmservice.setState(serviceBinding.getCurrentState());
+				            mmservice.setStateChangedTime(serviceBinding.getStateChangeTime());
+				            mmservice.setRegistered(true);
+				            mmservice.setServiceID(serviceBinding.getServiceID().getID());
+				            
+				            results.add(mmservice);
+			        	
+				        }
+			        	
+			        }
+			    }
+			}
+		} catch (ServiceException e) {
+			throw new AdminComponentException(e);
+		} catch (ConfigurationException e) {
+			throw new AdminComponentException(e);
+		}
+       return results;
+   }
+   
 
    /**
     * Get monitoring information about worker queues for DQPs or connector bindings.

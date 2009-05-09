@@ -44,8 +44,10 @@ import com.metamatrix.admin.objects.MMProcess;
 import com.metamatrix.admin.objects.MMQueueWorkerPool;
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMResource;
+import com.metamatrix.admin.objects.MMService;
 import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSystem;
+import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.FakeRegistryUtil;
@@ -146,9 +148,52 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         
         results = admin.getConnectorBindings(HOST_2_2_2_2_WILDCARD);  
         assertEquals(1, results.size());
-
         
     }
+    
+    /**
+     * Tests <code>ServerMonitoringImpl.getServices()</code>.
+     * 
+     * Fake data is set up in FakeConfiguration.getDeployedComponents(), FakeConfiguration.getServices(),
+     * FakeRuntimeStateAdminAPIHelper.getService(), 
+     * Expects service1 to be deployed, but not running. 
+     * Expects service2 to be deployed and running. 
+     * Expects service3 to be running, but not deployed. 
+     * @since 6.1
+     */
+    public void testGetServices() throws AdminException {
+    	
+        try {
+			ServiceRegistryBinding binding = admin.registry.getServiceBinding("3.3.3.3","3", new ServiceID(3, "3.3.3.3", "3")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			binding.updateState(ConnectorBinding.STATE_CLOSED);
+		} catch (ResourceNotBoundException e1) {
+		}
+
+		
+        Collection<MMService> results = admin.getServices(AdminObject.WILDCARD);  
+        assertEquals(3, results.size());
+        
+        for (Iterator iter = results.iterator(); iter.hasNext(); ) {
+            
+        	MMService svc = (MMService) iter.next();
+
+            if (HOST_2_2_2_2_PROCESS2_DQP2.equals(svc.getIdentifier())){ 
+            
+                assertEquals(true, svc.isRegistered());
+             } else if (_3_3_3_3_PROCESS3_DQP3.equals(svc.getIdentifier())) { 
+                
+                  assertEquals(true, svc.isRegistered());
+            }
+        }            
+        
+        results = admin.getServices(HOST_2_2_2_2_PROCESS2_DQP2);  
+        assertEquals(1, results.size());
+        
+        results = admin.getServices(_3_3_3_3_PROCESS3_DQP3);  
+        assertEquals(1, results.size());
+        
+    }
+
     
     
     

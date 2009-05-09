@@ -53,6 +53,7 @@ import com.metamatrix.common.config.model.BasicComponentObject;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
+import com.metamatrix.common.config.model.BasicServiceComponentDefn;
 import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.config.model.ConfigurationVisitor;
 import com.metamatrix.common.log.LogConfiguration;
@@ -68,6 +69,9 @@ public class FakeConfiguration implements Configuration {
     
     /**List<DeployedComponent**/
     public List deployedComponents;
+    public List services;
+    public Map serviceMap;
+    public List connectorbindings;
     protected Map hosts ;
     
 
@@ -125,6 +129,9 @@ public class FakeConfiguration implements Configuration {
     public void initDeployedComponents() {
         deployedComponents = new ArrayList();
         hosts = new HashMap();
+        serviceMap = new HashMap();
+        this.connectorbindings = new ArrayList();
+        this.services = new ArrayList();
         
         //Connector Bindings
         ConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(false);
@@ -140,7 +147,10 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID1 = new DeployedComponentID("connectorBinding1", Configuration.NEXT_STARTUP_ID, (HostID) h.getID(),  //$NON-NLS-1$
                                                                            processID1); 
         ConnectorBindingID connectorBindingID1 = new ConnectorBindingID(Configuration.NEXT_STARTUP_ID, "connectorBinding1"); //$NON-NLS-1$
-         BasicDeployedComponent deployedComponent1 = new BasicDeployedComponent(deployedComponentID1, Configuration.NEXT_STARTUP_ID, 
+        BasicConnectorBinding cb = new BasicConnectorBinding(Configuration.NEXT_STARTUP_ID, connectorBindingID1, ConnectorBindingType.CONNECTOR_TYPE_ID);
+        
+        this.connectorbindings.add(cb);
+        BasicDeployedComponent deployedComponent1 = new BasicDeployedComponent(deployedComponentID1, Configuration.NEXT_STARTUP_ID, 
                                                                                (HostID) h.getID(), processID1, 
                                                                           connectorBindingID1, 
                                                                           ConnectorBindingType.CONNECTOR_TYPE_ID);
@@ -159,6 +169,11 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID2 = new DeployedComponentID("connectorBinding2", Configuration.NEXT_STARTUP_ID, (HostID) h2.getID(),  //$NON-NLS-1$
                                                                            processID2); 
         ConnectorBindingID connectorBindingID2 = new ConnectorBindingID(Configuration.NEXT_STARTUP_ID, "connectorBinding2"); //$NON-NLS-1$
+        BasicConnectorBinding cb2 = new BasicConnectorBinding(Configuration.NEXT_STARTUP_ID, connectorBindingID2, ConnectorBindingType.CONNECTOR_TYPE_ID);
+        
+        this.connectorbindings.add(cb2);
+
+        
         BasicDeployedComponent deployedComponent2 = new BasicDeployedComponent(deployedComponentID2, Configuration.NEXT_STARTUP_ID, 
                                                                                (HostID) h2.getID(), processID2, 
                                                                           connectorBindingID2, 
@@ -179,6 +194,11 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID3 = new DeployedComponentID("connectorBinding3", Configuration.NEXT_STARTUP_ID, (HostID) h3.getID(),  //$NON-NLS-1$
                                                                            processID3); 
         ConnectorBindingID connectorBindingID3 = new ConnectorBindingID(Configuration.NEXT_STARTUP_ID, "connectorBinding3"); //$NON-NLS-1$
+        BasicConnectorBinding cb3 = new BasicConnectorBinding(Configuration.NEXT_STARTUP_ID, connectorBindingID3, ConnectorBindingType.CONNECTOR_TYPE_ID);
+        
+        this.connectorbindings.add(cb3);
+
+        
         BasicDeployedComponent  deployedComponent3 = new BasicDeployedComponent(deployedComponentID3, Configuration.NEXT_STARTUP_ID, 
                                                                                 (HostID) h3.getID(), processID3, 
                                                                           connectorBindingID3, 
@@ -192,6 +212,12 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID1A = new DeployedComponentID("dqp1", Configuration.NEXT_STARTUP_ID, (HostID) h.getID(),  //$NON-NLS-1$
                                                                            processID1); 
         ServiceComponentDefnID defnID1A = new ServiceComponentDefnID(Configuration.NEXT_STARTUP_ID, "dqp1"); //$NON-NLS-1$
+        BasicServiceComponentDefn sdfn = new BasicServiceComponentDefn(Configuration.NEXT_STARTUP_ID, defnID1A, new ComponentTypeID("QueryService"));
+                
+                this.services.add(sdfn);
+                serviceMap.put(defnID1A.getFullName(), sdfn);
+       		
+        
         BasicDeployedComponent deployedComponent1A = new BasicDeployedComponent(deployedComponentID1A, Configuration.NEXT_STARTUP_ID, 
                                                                                 (HostID) h.getID(), processID1, 
                                                                           defnID1A, 
@@ -203,6 +229,12 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID2A = new DeployedComponentID("dqp2", Configuration.NEXT_STARTUP_ID, (HostID) h2.getID(),  //$NON-NLS-1$
                                                                            processID2); 
         ServiceComponentDefnID defnID2A = new ServiceComponentDefnID(Configuration.NEXT_STARTUP_ID, "dqp2"); //$NON-NLS-1$
+        BasicServiceComponentDefn sdfn2 = new BasicServiceComponentDefn(Configuration.NEXT_STARTUP_ID, defnID2A, new ComponentTypeID("QueryService"));
+        
+        this.services.add(sdfn2);
+        serviceMap.put(defnID2A.getFullName(), sdfn2);
+
+        
         BasicDeployedComponent deployedComponent2A = new BasicDeployedComponent(deployedComponentID2A, Configuration.NEXT_STARTUP_ID, 
                                                                                 (HostID) h2.getID(), processID2, 
                                                                           defnID2A, 
@@ -214,6 +246,11 @@ public class FakeConfiguration implements Configuration {
         DeployedComponentID deployedComponentID3A = new DeployedComponentID("dqp3", Configuration.NEXT_STARTUP_ID, (HostID) h3.getID(),  //$NON-NLS-1$
                                                                            processID3); 
         ServiceComponentDefnID defnID3A = new ServiceComponentDefnID(Configuration.NEXT_STARTUP_ID, "dqp3"); //$NON-NLS-1$
+       BasicServiceComponentDefn sdfn3 = new BasicServiceComponentDefn(Configuration.NEXT_STARTUP_ID, defnID3A, new ComponentTypeID("QueryService"));
+        
+        this.services.add(sdfn3);
+        serviceMap.put(defnID3A.getFullName(), sdfn3);    
+        
         BasicDeployedComponent  deployedComponent3A = new BasicDeployedComponent(deployedComponentID3A, Configuration.NEXT_STARTUP_ID, 
                                                                                  (HostID) h3.getID(), processID3, 
                                                                           defnID3A, 
@@ -324,7 +361,10 @@ public class FakeConfiguration implements Configuration {
     }
 
     public Collection getConnectorBindings() {
-        return null;
+       List results = new ArrayList();
+        
+       results.addAll(this.connectorbindings);
+       return results;
     }
 
     /**
@@ -398,15 +438,19 @@ public class FakeConfiguration implements Configuration {
     }
 
     public ServiceComponentDefn getServiceComponentDefn(ComponentDefnID defnID) {
-        return null;
+        return (ServiceComponentDefn) serviceMap.get(defnID.getFullName());
     }
 
     public ServiceComponentDefn getServiceComponentDefn(String name) {
-        return null;
+    	 return (ServiceComponentDefn) serviceMap.get(name);
     }
 
     public Collection getServiceComponentDefns() {
-        return null;
+        List results = new ArrayList();
+        
+        results.addAll(this.services);
+        return results;
+
     }
 
     public VMComponentDefn getVMComponentDefn(ComponentDefnID componentID) {

@@ -345,7 +345,35 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
         if(admin.getConfigurationModel().getConfiguration().getAuthenticationProvider(name) == null) {
             fail("AuthenticationProvider ["+name+"] was not found to be added"); //$NON-NLS-1$ //$NON-NLS-2$
         }
-    }    
+    } 
+    
+    public void testGetConnectorBindings() throws Exception {
+    	Collection<ConnectorBinding> bindings = admin.getConnectorBindingsToConfigure("*");
+        assertEquals(2, bindings.size());
+        
+       	bindings = admin.getConnectorBindingsToConfigure("My Connector");
+        assertEquals(1, bindings.size());
+        
+       	bindings = admin.getConnectorBindingsToConfigure("My*");
+        assertEquals(1, bindings.size());
+
+
+
+    }
+    
+    public void testGetServices() throws Exception {
+    	Collection<ConnectorBinding> bindings = admin.getServicesToConfigure("*");
+        assertEquals(7, bindings.size());
+        
+       	bindings = admin.getServicesToConfigure("QueryService");
+        assertEquals(1, bindings.size());
+        
+       	bindings = admin.getServicesToConfigure("Query*");
+        assertEquals(1, bindings.size());
+
+
+
+    }
     
 }
     

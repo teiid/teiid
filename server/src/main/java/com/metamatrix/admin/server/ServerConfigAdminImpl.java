@@ -59,6 +59,7 @@ import com.metamatrix.admin.objects.MMAdminStatus;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMLogConfiguration;
 import com.metamatrix.admin.objects.MMScriptsContainer;
+import com.metamatrix.admin.objects.MMService;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.AuthorizationException;
@@ -2014,6 +2015,104 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 			throw new AdminComponentException(e);
 		}
     }
+    
+    
+    @Override
+	public Collection getConnectorBindingsToConfigure(String resourceIdentfier)
+			throws AdminException {
+        if (resourceIdentfier == null) {
+            throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
+        }
+        
+        HashSet results = new HashSet();
+        try {
+            ConfigurationModelContainer config = getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
+
+            Collection<ConnectorBinding> components = config.getConfiguration().getConnectorBindings();
+
+            for (Iterator<ConnectorBinding> iter = components.iterator(); iter.hasNext();) {
+                ConnectorBinding cb = iter.next();
+
+                String bindingName = cb.getName();
+
+                String[] identifierParts = new String[] {
+                     bindingName
+                };
+
+                if (identifierMatches(resourceIdentfier, identifierParts)) {
+			        MMConnectorBinding binding = new MMConnectorBinding(identifierParts);
+			        binding.setConnectorTypeName(cb.getComponentTypeID().getFullName());
+			        binding.setRoutingUUID(cb.getRoutingUUID());
+			        binding.setEnabled(cb.isEnabled());
+			        binding.setDeployed(false);
+			        binding.setRegistered(false);
+			        binding.setState(MMConnectorBinding.STATE_NOT_REGISTERED);
+			        binding.setProperties(cb.getProperties());
+			        
+			        binding.setCreated(cb.getCreatedDate());
+			        binding.setCreatedBy(cb.getCreatedBy());
+			        binding.setLastUpdated(cb.getLastChangedDate());
+			        binding.setLastUpdatedBy(cb.getLastChangedBy());
+			        results.add(binding);
+                }
+            }
+         } catch(ConfigurationException e) {
+        	throw new AdminComponentException(e); 
+        } catch (ServiceException e) {
+        	throw new AdminComponentException(e);
+        } 
+
+        return results;
+	}
+
+	@Override
+	public Collection getServicesToConfigure(String resourceIdentfier)
+			throws AdminException {
+	       if (resourceIdentfier == null) {
+	            throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
+	        }
+	        
+	        HashSet results = new HashSet();
+	        try {
+	            ConfigurationModelContainer config = getConfigurationServiceProxy().getConfigurationModel(Configuration.NEXT_STARTUP);
+
+	            Collection<ServiceComponentDefn> components = config.getConfiguration().getServiceComponentDefns();
+
+	            for (Iterator<ServiceComponentDefn> iter = components.iterator(); iter.hasNext();) {
+	            	ServiceComponentDefn svc = iter.next();
+
+	                String svcName = svc.getName();
+
+	                String[] identifierParts = new String[] {
+	                     svcName
+	                };
+
+	                if (identifierMatches(resourceIdentfier, identifierParts)) {
+				        MMService service = new MMService(identifierParts);
+				        service.setComponentTypeName(svc.getComponentTypeID().getFullName());
+				        service.setEnabled(svc.isEnabled());
+				        service.setDeployed(false);
+				        service.setRegistered(false);
+				        service.setState(MMConnectorBinding.STATE_NOT_REGISTERED);
+				        service.setProperties(svc.getProperties());
+				        
+				        service.setCreated(svc.getCreatedDate());
+				        service.setCreatedBy(svc.getCreatedBy());
+				        service.setLastUpdated(svc.getLastChangedDate());
+				        service.setLastUpdatedBy(svc.getLastChangedBy());
+				        results.add(svc);
+	                }
+	            }
+	         } catch(ConfigurationException e) {
+	        	throw new AdminComponentException(e); 
+	        } catch (ServiceException e) {
+	        	throw new AdminComponentException(e);
+	        } 
+
+	        return results;
+
+	}
+
 
     protected ServiceComponentDefn getServiceByName(String serviceName) throws ConfigurationException,
                                                                        InvalidSessionException,
