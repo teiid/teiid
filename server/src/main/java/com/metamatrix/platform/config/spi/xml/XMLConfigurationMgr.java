@@ -169,12 +169,14 @@ public class XMLConfigurationMgr {
 		} catch (ConfigObjectsNotResolvableException e) {
 			throw new ConfigurationException(e, ConfigMessages.CONFIG_0120,ConfigPlugin.Util.getString(ConfigMessages.CONFIG_0120, cmc.getConfigurationID()));
 		} finally {
-			try {
-				if (!success && pc != null) {
-					pc.rollback();
+			if (pc != null) {
+				try {
+					if (!success && pc != null) {
+						pc.rollback();
+					}
+				} finally {
+					pc.close();
 				}
-			} finally {
-				pc.close();
 			}
 		}
 
