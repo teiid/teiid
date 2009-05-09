@@ -63,6 +63,22 @@ public interface ServerMonitoringAdmin extends CoreMonitoringAdmin {
      */
     @RolesAllowed(value=AdminRoles.RoleName.ANONYMOUS)
     Collection getProcesses(String processIdentifier) throws AdminException;
+    
+    
+    /**
+     * Get the Services that correspond to the specified identifer pattern.
+     * These services represent what is defined for a given {@link Host} | {@link Process};
+     *
+     * @param resourceIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.objects.Service Service}
+     * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#WILDCARD WILDCARD}"
+     * if all Services are desired.
+     * @return Collection of {@link com.metamatrix.admin.api.objects.Service Service}
+     * @throws AdminException if there's a system error.
+     * @since 6.1
+     */
+
+    Collection getServices(String identifier) throws AdminException ;
+
 
     /**
      * Get the Resources that correspond to the specified identifer pattern.

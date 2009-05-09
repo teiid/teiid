@@ -22,6 +22,7 @@
 
 package com.metamatrix.admin.api.server;
 
+import java.util.Collection;
 import java.util.Properties;
 
 import com.metamatrix.admin.RolesAllowed;
@@ -271,5 +272,45 @@ public interface ServerConfigAdmin extends
      * @since 6.0.0
      */
     byte[] getClusterKey() throws AdminException;
+    
+    
+    /**
+     * Get the Services that correspond to the specified identifier pattern.  
+     * These services represent the unique instance to be configured and instantiated
+     * when the server starts up.   To monitor the current state of a running service,
+     * call {@link ServerMonitoringAdmin#getServices(String)} 
+     *
+     * @param resourceIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.objects.Service Service}
+     * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#WILDCARD WILDCARD}"
+     * if all Services are desired.
+     * 
+     * NOTE: The {@link Service Service} is used for both monitoring and configuration.   For a Service returned as part of configuration,
+     * the State will not be applicable.   To find the state of a current running instance, call {@link ServerMonitoringAdmin#getServices(String)} 
+     * 
+     * @return Collection of {@link com.metamatrix.admin.api.objects.Service Service}
+     * @throws AdminException if there's a system error.
+     * @since 6.1
+     */   
+    Collection getServicesToConfigure(String resourceIdentfier) throws AdminException;
+    
+    /**
+     * Get the ConnectorBindings that correspond to the specified identifir pattern.
+     * These connectorbindings represent the unique instance to be configured and instantiated
+     * when the server starts up.   To monitor the current state of a running connectorbinding,
+     * call {@link ServerMonitoringAdmin#getConnectorBindings(String)} 
+     *
+     * @param resourceIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.objects.ConnectorBinding ConnectorBinding}
+     * in the system or "{@link com.metamatrix.admin.api.objects.AdminObject#WILDCARD WILDCARD}"
+     * if all Services are desired.
+     * 
+     * NOTE: The {@link ConnectorBinding ConnectorBinding} is used for both monitoring and configuration.   For a Service returned as part of configuration,
+     * the State will not be applicable.   To find the state of a current running instance, call {@link ServerMonitoringAdmin#getConnectorBinding(String)} 
+     * 
+     * @return Collection of {@link com.metamatrix.admin.api.objects.ConnectorBinding ConnectorBinding}
+     * @throws AdminException if there's a system error.
+     * @since 6.1
+     */   
+    Collection getConnectorBindingsToConfigure(String resourceIdentfier) throws AdminException;
+
 
 }
