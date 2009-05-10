@@ -34,6 +34,7 @@ import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.objects.AdminOptions;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.Host;
+import com.metamatrix.admin.api.objects.Service;
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.metadata.runtime.api.Model;
@@ -362,8 +363,10 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     }
     
     public void testGetServices() throws Exception {
-    	Collection<ConnectorBinding> bindings = admin.getServicesToConfigure("*");
+    	Collection<Service> bindings = admin.getServicesToConfigure("*");
         assertEquals(7, bindings.size());
+        
+        Service svc = (Service) bindings.iterator().next();
         
        	bindings = admin.getServicesToConfigure("QueryService");
         assertEquals(1, bindings.size());

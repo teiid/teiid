@@ -2100,7 +2100,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 				        service.setCreatedBy(svc.getCreatedBy());
 				        service.setLastUpdated(svc.getLastChangedDate());
 				        service.setLastUpdatedBy(svc.getLastChangedBy());
-				        results.add(svc);
+				        results.add(service);
 	                }
 	            }
 	         } catch(ConfigurationException e) {
