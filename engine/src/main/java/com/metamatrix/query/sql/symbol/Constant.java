@@ -148,7 +148,8 @@ public class Constant implements Expression {
         if(other.isNull() || this.isNull()) {
 			return false;
 		}
-		return other.getValue().equals(this.getValue());
+        
+        return multiValued == other.multiValued && other.getValue().equals(this.getValue());
 	}
 
 	/**

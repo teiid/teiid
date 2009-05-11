@@ -22,7 +22,9 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -199,7 +201,7 @@ public final class RulePlaceAccess implements
         //the expressions in the map will all be element symbols
         Map<ElementSymbol, Expression> replacementSymbols = FrameUtil.buildSymbolMap(group, newGroup, metadata);
 
-        FrameUtil.convertFrame(sourceNode, group, newGroup, replacementSymbols, metadata);
+        FrameUtil.convertFrame(sourceNode, group, new HashSet<GroupSymbol>(Arrays.asList(newGroup)), replacementSymbols, metadata);
 
         // correct the lower symbol map
         if (childProjects != null) {

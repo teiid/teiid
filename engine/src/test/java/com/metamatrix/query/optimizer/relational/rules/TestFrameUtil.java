@@ -22,24 +22,33 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.junit.Test;
+
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
+import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
+import com.metamatrix.query.sql.lang.IsNullCriteria;
 import com.metamatrix.query.sql.lang.JoinType;
+import com.metamatrix.query.sql.symbol.Constant;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.util.SymbolMap;
 
-import junit.framework.TestCase;
-
-public class TestFrameUtil extends TestCase {
+public class TestFrameUtil {
     
     static GroupSymbol getGroup(int id) {
         return new GroupSymbol(String.valueOf(id));
     }
     
-    public void testFindJoinSourceNode() {
+    @Test public void testFindJoinSourceNode() {
         PlanNode root = getExamplePlan();
         
         PlanNode joinSource = FrameUtil.findJoinSourceNode(root);
@@ -47,7 +56,7 @@ public class TestFrameUtil extends TestCase {
         assertSame(root, joinSource);
     }
     
-    public void testFindJoinSourceNode1() {
+    @Test public void testFindJoinSourceNode1() {
         PlanNode root = getExamplePlan();
         
         PlanNode joinSource = FrameUtil.findJoinSourceNode(root.getLastChild());
@@ -55,10 +64,10 @@ public class TestFrameUtil extends TestCase {
         assertEquals(NodeConstants.Types.JOIN, joinSource.getType());
     }
     
-    public void testFindSourceNode() {
+    @Test public void testFindSourceNode() {
         PlanNode root = getExamplePlan();
                 
-        Set groups = new HashSet();
+        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         
         groups.add(getGroup(1));
         
@@ -70,10 +79,10 @@ public class TestFrameUtil extends TestCase {
     /**
      * Access nodes are not eligible originating nodes
      */
-    public void testFindSourceNodeWithAccessSource() {
+    @Test public void testFindSourceNodeWithAccessSource() {
         PlanNode root = getExamplePlan();
                 
-        Set groups = new HashSet();
+        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         
         groups.add(getGroup(2));
         
@@ -82,10 +91,10 @@ public class TestFrameUtil extends TestCase {
         assertEquals(NodeConstants.Types.JOIN, originatingNode.getType());
     }
 
-    public void testFindSourceNode2() {
+    @Test public void testFindSourceNode2() {
         PlanNode root = getExamplePlan();
                 
-        Set groups = new HashSet();
+        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         
         groups.add(getGroup(3));
         
@@ -94,16 +103,76 @@ public class TestFrameUtil extends TestCase {
         assertEquals(NodeConstants.Types.SOURCE, originatingNode.getType());
     }
     
-    public void testNonExistentSource() {
+    @Test public void testNonExistentSource() {
         PlanNode root = getExamplePlan();
         
-        Set groups = new HashSet();
+        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         
         groups.add(getGroup(4));
         
         PlanNode originatingNode = FrameUtil.findOriginatingNode(root, groups);
         
         assertNull(originatingNode);
+    }
+    
+    @Test public void testJoinGroups() throws Exception {
+    	PlanNode joinNode = getExamplePlan();
+    	PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+    	ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
+    	e1.setGroupSymbol(getGroup(3));
+    	projectNode.setProperty(Info.PROJECT_COLS, Arrays.asList(e1));
+    	projectNode.addFirstChild(joinNode);
+    	projectNode.addGroup(getGroup(3));
+    	PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
+    	sourceNode.addFirstChild(projectNode);
+    	GroupSymbol four = getGroup(4);
+    	sourceNode.addGroup(four);
+    	ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
+    	e2.setGroupSymbol(four);
+    	SymbolMap sm = SymbolMap.createSymbolMap(Arrays.asList(e2), Arrays.asList(e1));
+    	sourceNode.setProperty(Info.SYMBOL_MAP, sm);
+    	PlanNode projectNode1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+    	projectNode1.addFirstChild(sourceNode);
+    	projectNode1.addGroup(four);
+    	projectNode1.setProperty(Info.PROJECT_COLS, Arrays.asList(e2));
+    	
+    	//removing source node 3 completely
+    	SymbolMap replacement = SymbolMap.createSymbolMap(Arrays.asList(e1), Arrays.asList(new Constant(null)));
+    	FrameUtil.convertFrame(NodeEditor.findNodePreOrder(joinNode, NodeConstants.Types.SOURCE), getGroup(3), null, replacement.asMap(), null);
+    	assertEquals(2, joinNode.getGroups().size()); //even though this is a cross join it should still retain its groups
+    	assertEquals(0, NodeEditor.findNodePreOrder(joinNode, NodeConstants.Types.SELECT).getGroups().size());
+    	assertEquals(1, projectNode1.getGroups().size());
+    	assertEquals(0, projectNode.getGroups().size());
+    }
+    
+    @Test public void testJoinGroups1() throws Exception {
+    	PlanNode joinNode = getExamplePlan();
+    	PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+    	ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
+    	e1.setGroupSymbol(getGroup(3));
+    	projectNode.setProperty(Info.PROJECT_COLS, Arrays.asList(e1));
+    	projectNode.addFirstChild(joinNode);
+    	projectNode.addGroup(getGroup(3));
+    	PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
+    	sourceNode.addFirstChild(projectNode);
+    	GroupSymbol four = getGroup(4);
+    	sourceNode.addGroup(four);
+    	ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
+    	e2.setGroupSymbol(four);
+    	SymbolMap sm = SymbolMap.createSymbolMap(Arrays.asList(e2), Arrays.asList(e1));
+    	sourceNode.setProperty(Info.SYMBOL_MAP, sm);
+    	PlanNode projectNode1 = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
+    	projectNode1.addFirstChild(sourceNode);
+    	projectNode1.addGroup(four);
+    	projectNode1.setProperty(Info.PROJECT_COLS, Arrays.asList(e2));
+    	
+    	//replace source 3 with groups 5, 6
+    	SymbolMap replacement = SymbolMap.createSymbolMap(Arrays.asList(e1), Arrays.asList(new Constant(null)));
+    	FrameUtil.convertFrame(NodeEditor.findNodePreOrder(joinNode, NodeConstants.Types.SOURCE), getGroup(3), new HashSet<GroupSymbol>(Arrays.asList(getGroup(5), getGroup(6))), replacement.asMap(), null);
+    	assertEquals(4, joinNode.getGroups().size()); //even though this is a cross join it should still retain its groups
+    	assertEquals(0, NodeEditor.findNodePreOrder(joinNode, NodeConstants.Types.SELECT).getGroups().size());
+    	assertEquals(1, projectNode1.getGroups().size());
+    	assertEquals(0, projectNode.getGroups().size());
     }
 
     /**
@@ -129,7 +198,7 @@ public class TestFrameUtil extends TestCase {
         joinNode.addFirstChild(nullNode);
         
         PlanNode childCriteria = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-
+        childCriteria.setProperty(Info.SELECT_CRITERIA, new IsNullCriteria(new Constant(1)));
         childCriteria.addGroup(getGroup(2));
         joinNode.addLastChild(childCriteria);
         

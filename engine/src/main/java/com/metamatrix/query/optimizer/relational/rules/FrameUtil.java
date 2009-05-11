@@ -69,17 +69,17 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class FrameUtil {
 
-    static void convertFrame(PlanNode startNode, GroupSymbol oldGroup, GroupSymbol newGroup, Map symbolMap, QueryMetadataInterface metadata) 
+    static void convertFrame(PlanNode startNode, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata) 
         throws QueryPlannerException {
 
         PlanNode current = startNode;
         
-        PlanNode endNode = NodeEditor.findParent(startNode.getParent(), NodeConstants.Types.SOURCE);
+        PlanNode endNode = NodeEditor.findParent(startNode.getType()==NodeConstants.Types.SOURCE?startNode.getParent():startNode, NodeConstants.Types.SOURCE);
         
         while(current != endNode) { 
             
-            // Make translations as defined in vnode in each current node
-            convertNode(current, oldGroup, newGroup, symbolMap);
+            // Make translations as defined in node in each current node
+            convertNode(current, oldGroup, newGroups, symbolMap);
             
             PlanNode parent = current.getParent(); 
             
@@ -160,7 +160,7 @@ public class FrameUtil {
     // symbols.  In that case, some additional work can be done because we can assume 
     // that an oldElement isn't being replaced by an expression using elements from 
     // multiple new groups.  
-    static void convertNode(PlanNode node, GroupSymbol oldGroup, GroupSymbol newGroup, Map symbolMap)
+    static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap)
         throws QueryPlannerException {
 
         // Update groups for current node   
@@ -182,12 +182,18 @@ public class FrameUtil {
 	        }
         }
         
-        if(newGroup != null) {
+        boolean singleMapping = newGroups != null && newGroups.size() == 1;
+        
+        if(singleMapping) {
             if (!hasOld) {
                 return;
             }
-            groups.add(newGroup);
-        } else if (type != NodeConstants.Types.SOURCE && type != NodeConstants.Types.ACCESS) {
+            groups.addAll(newGroups);
+        } else if ((type & (NodeConstants.Types.ACCESS | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE)) == type) {
+        	if (newGroups != null) {
+        		groups.addAll(newGroups);
+        	}
+        } else {
         	groups.clear();
         }
         
@@ -200,7 +206,7 @@ public class FrameUtil {
             crit = convertCriteria(crit, symbolMap);
             node.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
             
-            if (newGroup == null) {
+            if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(crit, groups);
             }
                             
@@ -209,7 +215,7 @@ public class FrameUtil {
             Select select = new Select(projectedSymbols);
             ExpressionMappingVisitor.mapExpressions(select, symbolMap);
             node.setProperty(NodeConstants.Info.PROJECT_COLS, select.getSymbols());
-            if (newGroup == null) {
+            if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(select, groups);
             }
         } else if(type == NodeConstants.Types.JOIN) { 
@@ -225,9 +231,6 @@ public class FrameUtil {
             		joinCrits.add(crit);
             		node.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCrits);
             	}
-                if (newGroup == null) {
-                    GroupsUsedByElementsVisitor.getGroups(crit, groups);
-                }
             }
             
             convertAccessPatterns(symbolMap, node);
@@ -237,7 +240,7 @@ public class FrameUtil {
             OrderBy orderBy = new OrderBy(sortCols);
             ExpressionMappingVisitor.mapExpressions(orderBy, symbolMap);
             node.setProperty(NodeConstants.Info.SORT_ORDER, orderBy.getVariables());
-            if (newGroup == null) {
+            if (!singleMapping) {
                 GroupsUsedByElementsVisitor.getGroups(orderBy, groups);
             }
         } else if(type == NodeConstants.Types.GROUP) {  
@@ -246,7 +249,7 @@ public class FrameUtil {
                 GroupBy groupBy= new GroupBy(groupCols);
                 ExpressionMappingVisitor.mapExpressions(groupBy, symbolMap);
                 node.setProperty(NodeConstants.Info.GROUP_COLS, groupBy.getSymbols());
-                if (newGroup == null) {
+                if (!singleMapping) {
                     GroupsUsedByElementsVisitor.getGroups(groupCols, groups);
                 }
             }               
