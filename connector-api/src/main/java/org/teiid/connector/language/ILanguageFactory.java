@@ -106,7 +106,7 @@ public interface ILanguageFactory {
      * @param type Data type returned
      * @return New IFunction
      */
-    IFunction createFunction(String functionName, IExpression[] args, Class type);
+    IFunction createFunction(String functionName, IExpression[] args, Class<?> type);
     
     /**
      * Create new function
@@ -115,7 +115,7 @@ public interface ILanguageFactory {
      * @param type Data type returned
      * @return New IFunction
      */
-    IFunction createFunction(String functionName, List<? extends IExpression> args, Class type);
+    IFunction createFunction(String functionName, List<? extends IExpression> args, Class<?> type);
 
     /**
      * Create new group.
@@ -157,16 +157,14 @@ public interface ILanguageFactory {
      * @param values List of IExpression (usually ILiteral)
      * @return New IInsert
      */
-    IInsert createInsert(IGroup group, List<IElement> columns, List<? extends IExpression> values);
+    IInsert createInsert(IGroup group, List<IElement> columns, IInsertValueSource valueSource);
  
     /**
-     * Create new bulk insert command
-     * @param group Insert group
-     * @param columns List of IElement being inserted into
-     * @param List of Lists containing the actual values
-     * @return New IBulkInsert
+     * Create a new value source for an insert command
+     * @param values
+     * @return
      */
-    IBulkInsert createBulkInsert(IGroup group, List<? extends IElement> columns, List<List<Object>> rows);
+    IInsertExpressionValueSource createInsertExpressionValueSource(List<IExpression> values);
     
     /**
      * Create new IS NULL criteria

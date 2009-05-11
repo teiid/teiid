@@ -37,5 +37,10 @@ public class AccessCapabilities extends JDBCCapabilities{
     public boolean supportsRowLimit() {
         return true;
     }
+    
+    @Override
+    public boolean supportsInsertWithQueryExpression() {
+    	return false;
+    }
 
 }

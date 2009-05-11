@@ -34,10 +34,7 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
  */
 public class TeradataCapabilities extends JDBCCapabilities {
 
-    public static final int TERADATA_MAX_SET_SIZE = 1000;
-
     public TeradataCapabilities() {
-        this.setMaxInCriteriaSize(TERADATA_MAX_SET_SIZE);
     }
     
     /* 

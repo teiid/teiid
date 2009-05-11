@@ -60,7 +60,6 @@ public abstract class LanguageVisitor {
     public void visit(Insert obj) {
         visit((ProcedureContainer)obj);
     }
-    public void visit(BulkInsert obj) {}
     public void visit(IsNullCriteria obj) {}
     public void visit(JoinPredicate obj) {}
     public void visit(JoinType obj) {}

@@ -36,14 +36,6 @@ public class JDBCPropertyNames {
     public static final String TRIM_STRINGS = "TrimStrings"; //$NON-NLS-1$
 
     /**
-    * This is the property name of the ConnectorService property that defines
-    * the size of a SetCriteria (IN criteria) before the criteria is broken into 
-    * multiple queries and the results are aggregated.  0 indicates that set 
-    * criteria should never be broken.  The default value should be 0.
-    */
-    public static final String SET_CRITERIA_BATCH_SIZE = "SetCriteriaBatchSize"; //$NON-NLS-1$
-
-    /**
      * This is the property name used to set the transaction isolation level on
      * a connector's data source.  The value string must be the the same as one of the
      * names of the values of the transaction isolation levels defined in

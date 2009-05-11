@@ -26,19 +26,20 @@ import java.util.List;
 
 import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertValueSource;
 import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 
 public class InsertImpl extends BaseLanguageObject implements IInsert {
     
-    private IGroup group = null;
-    private List elements = null;
-    private List values = null;
+    private IGroup group;
+    private List elements;
+    private IInsertValueSource valueSource;
   
-    public InsertImpl(IGroup group, List elements, List values) {
+    public InsertImpl(IGroup group, List elements, IInsertValueSource valueSource) {
         this.group = group;
         this.elements = elements;
-        this.values = values;
+        this.valueSource = valueSource;
     }
     /**
      * @see org.teiid.connector.language.IInsert#getGroup()
@@ -55,10 +56,10 @@ public class InsertImpl extends BaseLanguageObject implements IInsert {
     }
 
     /**
-     * @see org.teiid.connector.language.IInsert#getValues()
+     * @see org.teiid.connector.language.IInsert#getValueSource()
      */
-    public List getValues() {
-        return values;
+    public IInsertValueSource getValueSource() {
+        return valueSource;
     }
 
     /**
@@ -79,11 +80,10 @@ public class InsertImpl extends BaseLanguageObject implements IInsert {
     public void setElements(List elements) {
         this.elements = elements;
     }
-    /* 
-     * @see com.metamatrix.data.language.IInsert#setValues(java.util.List)
-     */
-    public void setValues(List values) {
-        this.values = values;
+    
+    @Override
+    public void setValueSource(IInsertValueSource values) {
+    	this.valueSource = values;
     }
 
 }

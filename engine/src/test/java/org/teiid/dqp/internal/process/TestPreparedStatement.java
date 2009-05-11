@@ -79,10 +79,6 @@ public class TestPreparedStatement extends TestCase{
 		super(name);
 	}	        	    
 	
-	static void helpTestProcessing(String preparedSql, List values, List[] expected, QueryMetadataInterface metadata, boolean callableStatement) throws Exception {
-        helpTestProcessing(preparedSql, values, expected, (ProcessorDataManager)null, metadata, callableStatement);
-	}
-	
     static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement) throws Exception { 
     	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false);
     }
@@ -126,7 +122,7 @@ public class TestPreparedStatement extends TestCase{
         PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, SESSION_ID, callableStatement, false);
 
         // Run query
-        TestProcessor.helpProcess(plan.processPlan, plan.context, dManager, expected);
+        TestProcessor.doProcess(plan.processPlan, dataManager, expected, plan.context);
         
         //test cached plan
     	plan = TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, SESSION_ID, callableStatement, false);
@@ -135,7 +131,7 @@ public class TestPreparedStatement extends TestCase{
         assertEquals("should reuse the plan", exHitCount, pPlanCache.hitCount); //$NON-NLS-1$
                 
         // Run query again
-        TestProcessor.helpProcess(plan.processPlan, plan.context, dManager, expected);
+        TestProcessor.doProcess(plan.processPlan, dataManager, expected, plan.context);
         
         //get the plan again with a new connection
         assertNotNull(TestPreparedStatement.helpGetProcessorPlan(preparedSql, values, cFinder, metadata, pPlanCache, 7, callableStatement, false));
@@ -162,8 +158,9 @@ public class TestPreparedStatement extends TestCase{
     
 		List values = new ArrayList();
 		values.add(new Short((short)0));
-        
-		helpTestProcessing(preparedSql, values, expected, FakeMetadataFactory.example1Cached(), false);
+		FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false);
 	}
     
     public void testSessionSpecificFunction() throws Exception { 

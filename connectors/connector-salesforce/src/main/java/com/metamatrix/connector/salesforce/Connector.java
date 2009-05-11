@@ -119,15 +119,6 @@ public class Connector extends org.teiid.connector.basic.BasicConnector {
 		} catch (Exception e) {
 			throw new ConnectorException(e, "Unable to load Capabilities Class");
 		}
-		try {
-			String inLimitString = env.getProperties().getProperty("InLimit", Integer.toString(-1));
-			int inLimit = inLimitString == null ? -1 : Integer.decode(inLimitString).intValue();
-			salesforceCapabilites.setMaxInCriteriaSize(inLimit);
-		} catch (NumberFormatException e) {
-			throw new ConnectorException(Messages.getString("SalesforceConnection.bad.IN.value"));
-		}
-
-		
 		logger.logTrace("Return SalesforceSourceConnection.initialize()");
 	}
 

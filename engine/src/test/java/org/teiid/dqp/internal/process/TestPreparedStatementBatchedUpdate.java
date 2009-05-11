@@ -22,19 +22,23 @@
 
 package org.teiid.dqp.internal.process;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.dqp.internal.process.TestPreparedStatement.TestablePreparedPlanCache;
 
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.processor.FakeDataManager;
+import com.metamatrix.query.processor.HardcodedDataManager;
 import com.metamatrix.query.processor.TestProcessor;
+import com.metamatrix.query.sql.lang.Update;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 /**
@@ -42,11 +46,7 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
  * plans that contain batched updates.
  *
  */
-public class TestPreparedStatementBatchedUpdate extends TestCase {
-
-	public TestPreparedStatementBatchedUpdate(String name) {
-		super(name);
-	}
+public class TestPreparedStatementBatchedUpdate {
 
     /**
      * Test prepared statements that use batched updates using the same prepared
@@ -80,7 +80,7 @@ public class TestPreparedStatementBatchedUpdate extends TestCase {
      * 
      * @throws Exception
      */
-    public void testPlanCache_VarNumCmds() throws Exception {
+    @Test public void testPlanCache_VarNumCmds() throws Exception {
         // Create query 
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
@@ -152,10 +152,10 @@ public class TestPreparedStatementBatchedUpdate extends TestCase {
      * 
      * @throws Exception
      */
-    public void testProcessor_VarNumCmds() throws Exception {
+    @Test public void testProcessor_VarNumCmds() throws Exception {
         // Create query 
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
-        
+        int executionsPerTest = 2;
 		// Create a testable prepared plan cache
 		TestablePreparedPlanCache prepPlanCache = new TestablePreparedPlanCache();
 		
@@ -167,11 +167,10 @@ public class TestPreparedStatementBatchedUpdate extends TestCase {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.BATCHED_UPDATES, true);
-        caps.setCapabilitySupport(Capability.PREPARED_BATCH_UPDATE, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         // Something to hold our final query list
-        List<String> finalQueryList = new ArrayList<String>(42);
+        List<String> finalQueryList = new ArrayList<String>(13);
         
 		// Create expected results
         // first command should result in 2 rows affected
@@ -187,7 +186,7 @@ public class TestPreparedStatementBatchedUpdate extends TestCase {
     	values.add(new ArrayList<Object>(Arrays.asList(new Object[] { null, Boolean.FALSE, new Integer(1) })));
     	
     	// Add our expected queries to the final query list
-    	for ( int i = 0; i < 6; i++ ) {
+    	for ( int i = 0; i < executionsPerTest; i++ ) {
     		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'a', e3 = FALSE WHERE pm1.g1.e2 = 0")); //$NON-NLS-1$
     		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = null, e3 = FALSE WHERE pm1.g1.e2 = 1")); //$NON-NLS-1$
     	}
@@ -207,7 +206,7 @@ public class TestPreparedStatementBatchedUpdate extends TestCase {
 		values.add(new ArrayList<Object>(Arrays.asList(new Object[] { "a",  Boolean.FALSE, new Integer(0) })));  //$NON-NLS-1$
     	
     	// Add our expected queries to the final query list
-    	for (int i = 0; i < 6; i++) {
+    	for (int i = 0; i < executionsPerTest; i++) {
     		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'a', e3 = FALSE WHERE pm1.g1.e2 = 0")); //$NON-NLS-1$
     	}
     	
@@ -235,7 +234,7 @@ public class TestPreparedStatementBatchedUpdate extends TestCase {
 		values.add(new ArrayList<Object>(Arrays.asList(new Object[] { "b",  Boolean.TRUE, new Integer(5)} )));  //$NON-NLS-1$
 
     	// Add our expected queries to the final query list
-    	for (int i = 0; i < 6; i++) {
+    	for (int i = 0; i < executionsPerTest; i++) {
     		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'a', e3 = FALSE WHERE pm1.g1.e2 = 0")); //$NON-NLS-1$
     		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = null, e3 = FALSE WHERE pm1.g1.e2 = 1")); //$NON-NLS-1$
     		finalQueryList.add(new String("UPDATE pm1.g1 SET e1 = 'c', e3 = TRUE WHERE pm1.g1.e2 = 4")); //$NON-NLS-1$
@@ -245,8 +244,38 @@ public class TestPreparedStatementBatchedUpdate extends TestCase {
     	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, true);
 
     	// Verify all the queries that were run
-    	assertNotNull(dataManager);
     	assertEquals("Unexpected queries executed -", finalQueryList, dataManager.getQueries()); //$NON-NLS-1$
     }
-
+    
+    @Test public void testBatchedUpdatePushdown() throws Exception {
+        // Create query 
+		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
+        
+		// Create a testable prepared plan cache
+		TestablePreparedPlanCache prepPlanCache = new TestablePreparedPlanCache();
+		
+		// Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("UPDATE pm1.g1 SET e1 = ?, e3 = ? WHERE pm1.g1.e2 = ?", new List[] {Arrays.asList(4)}); //$NON-NLS-1$
+		// Source capabilities must support batched updates
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        // batch with two commands
+		ArrayList<ArrayList<Object>> values = new ArrayList<ArrayList<Object>>(2);
+		values.add(new ArrayList<Object>(Arrays.asList(new Object[] { "a",  Boolean.FALSE, new Integer(0) })));  //$NON-NLS-1$
+    	values.add(new ArrayList<Object>(Arrays.asList(new Object[] { null, Boolean.FALSE, new Integer(1) })));
+    	
+    	List<?>[] expected = new List[] { 
+                Arrays.asList(4)
+        };
+    	
+    	// Create the plan and process the query
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, FakeMetadataFactory.example1Cached(), prepPlanCache, false, false, false);
+    	Update update = (Update)dataManager.getCommandHistory().iterator().next();
+    	assertTrue(((Constant)update.getChangeList().getClauses().get(0).getValue()).isMultiValued());
+    }
+    
 }

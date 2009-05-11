@@ -22,9 +22,48 @@
 
 package org.teiid.connector.visitor.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.teiid.connector.language.*;
+import org.teiid.connector.language.IAggregate;
+import org.teiid.connector.language.IBatchedUpdates;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.ICompoundCriteria;
+import org.teiid.connector.language.IDelete;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExistsCriteria;
+import org.teiid.connector.language.IFrom;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IGroup;
+import org.teiid.connector.language.IGroupBy;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.IInlineView;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
+import org.teiid.connector.language.IIsNullCriteria;
+import org.teiid.connector.language.IJoin;
+import org.teiid.connector.language.ILanguageObject;
+import org.teiid.connector.language.ILikeCriteria;
+import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.INotCriteria;
+import org.teiid.connector.language.IOrderBy;
+import org.teiid.connector.language.IOrderByItem;
+import org.teiid.connector.language.IParameter;
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.IScalarSubquery;
+import org.teiid.connector.language.ISearchedCaseExpression;
+import org.teiid.connector.language.ISelect;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ISetClause;
+import org.teiid.connector.language.ISetClauseList;
+import org.teiid.connector.language.ISetQuery;
+import org.teiid.connector.language.ISubqueryCompareCriteria;
+import org.teiid.connector.language.ISubqueryInCriteria;
+import org.teiid.connector.language.IUpdate;
 import org.teiid.connector.visitor.framework.DelegatingHierarchyVisitor;
 import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
@@ -153,7 +192,7 @@ public class CollectorVisitor<T> implements LanguageObjectVisitor {
     /* 
      * @see com.metamatrix.data.visitor.framework.LanguageObjectVisitor#visit(com.metamatrix.data.language.IBulkInsert)
      */
-    public void visit(IBulkInsert obj) {
+    public void visit(IInsertExpressionValueSource obj) {
         checkInstance(obj);
     }
     /* 

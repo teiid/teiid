@@ -37,9 +37,7 @@ import java.util.Set;
 
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.language.IBulkInsert;
 import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.language.ILimit;
@@ -71,7 +69,6 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     private boolean prepared;
     
     private List preparedValues = new ArrayList();
-    private List preparedTypes = new ArrayList();
     
     private Set<ILanguageObject> recursionObjects = Collections.newSetFromMap(new IdentityHashMap<ILanguageObject, Boolean>());
     
@@ -123,19 +120,6 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 		}
 	}
 
-    public void visit(IBulkInsert obj) {
-        this.prepared = true;
-
-        super.visit(obj);
-        
-        for (int i = 0; i < obj.getElements().size(); i++) {
-            IElement element = (IElement) obj.getElements().get(i);
-            this.preparedTypes.add(element.getType());
-        }
-
-        this.preparedValues = obj.getRows();
-    } 
-    
     /**
      * @param type
      * @param object
@@ -203,8 +187,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     public void visit(ILiteral obj) {
         if (this.prepared && obj.isBindValue()) {
             buffer.append(UNDEFINED_PARAM);
-            preparedValues.add(obj.getValue());
-            preparedTypes.add(obj.getType());
+            preparedValues.add(obj);
         } else {
             translateSQLType(obj.getType(), obj.getValue(), buffer);
         }
@@ -288,13 +271,6 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      */
     List getPreparedValues() {
         return this.preparedValues;
-    }
-    
-    /** 
-     * @return the preparedValues
-     */
-    List getPreparedTypes() {
-        return this.preparedTypes;
     }
     
     public boolean isPrepared() {

@@ -34,10 +34,7 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
  */
 public class DB2Capabilities extends JDBCCapabilities {
 
-    public static final int DB2_MAX_SET_SIZE = 1000;
-    
     public DB2Capabilities() {
-        this.setMaxInCriteriaSize(DB2_MAX_SET_SIZE);
     }
     
     /**

@@ -46,6 +46,7 @@ import org.teiid.connector.language.IDelete;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.ISetClause;
 import org.teiid.connector.language.IUpdate;
@@ -164,7 +165,7 @@ public class LDAPUpdateExecution extends BasicExecution implements UpdateExecuti
 			throws ConnectorException {
 
 		List insertElementList = ((IInsert)command).getElements();
-		List insertValueList = ((IInsert)command).getValues();
+		List insertValueList = ((IInsertExpressionValueSource)((IInsert)command).getValueSource()).getValues();
 		// create a new attribute list with case ignored in attribute
 		// names
 		Attributes insertAttrs = new BasicAttributes(true);

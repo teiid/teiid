@@ -93,7 +93,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 results = getStatement().executeQuery(sql);
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
-                sqlTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
+                bindPreparedStatementValues(pstatement, translatedComm, 1);
                 results = pstatement.executeQuery();
             } 
             addStatementWarnings();

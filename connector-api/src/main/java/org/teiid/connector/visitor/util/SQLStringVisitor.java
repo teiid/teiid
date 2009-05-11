@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IBulkInsert;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.ICompareCriteria;
 import org.teiid.connector.language.ICompoundCriteria;
@@ -44,6 +43,7 @@ import org.teiid.connector.language.IGroupBy;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.IInlineView;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.IIsNullCriteria;
 import org.teiid.connector.language.IJoin;
 import org.teiid.connector.language.ILanguageObject;
@@ -124,11 +124,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      */
     protected void append(List<? extends ILanguageObject> items) {
         if (items != null && items.size() != 0) {
-            append((ILanguageObject)items.get(0));
+            append(items.get(0));
             for (int i = 1; i < items.size(); i++) {
                 buffer.append(COMMA)
                       .append(SPACE);
-                append((ILanguageObject)items.get(i));
+                append(items.get(i));
             }
         }
     }
@@ -538,57 +538,35 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IInsert)
      */
     public void visit(IInsert obj) {
-        formatBasicInsert(obj);
-        buffer.append(SPACE)
-              .append(VALUES)
-              .append(SPACE)
-              .append(LPAREN);
-        append(obj.getValues());
-        buffer.append(RPAREN);  
+    	buffer.append(INSERT).append(SPACE);
+		buffer.append(getSourceComment(obj));
+		buffer.append(INTO).append(SPACE);
+		append(obj.getGroup());
+		if (obj.getElements() != null && obj.getElements().size() != 0) {
+			buffer.append(SPACE).append(LPAREN);
+
+			int elementCount = obj.getElements().size();
+			for (int i = 0; i < elementCount; i++) {
+				buffer.append(getElementName(obj.getElements().get(i), false));
+				if (i < elementCount - 1) {
+					buffer.append(COMMA);
+					buffer.append(SPACE);
+				}
+			}
+
+			buffer.append(RPAREN);
+		}
+        buffer.append(SPACE);
+        append(obj.getValueSource());
     }
     
-    /**
-     * @param obj
-     */
-    private void formatBasicInsert(IInsert obj) {
-        buffer.append(INSERT)
-              .append(SPACE);
-        buffer.append(getSourceComment(obj));
-        buffer.append(INTO)
-              .append(SPACE);
-        append(obj.getGroup());
-        if (obj.getElements() != null && obj.getElements().size() != 0) {
-            buffer.append(SPACE)
-                  .append(LPAREN);
-
-            int elementCount= obj.getElements().size();
-            for(int i=0; i<elementCount; i++) {
-           		buffer.append(getElementName(obj.getElements().get(i), false));
-                if (i<elementCount-1) {
-                    buffer.append(COMMA);
-                    buffer.append(SPACE);
-                }
-            }            
-
-            buffer.append(RPAREN);
-        }
-    }
-    
-    public void visit(IBulkInsert obj) {
-        formatBasicInsert(obj);
-        buffer.append(SPACE)
-              .append(VALUES)
-              .append(SPACE)
-              .append(LPAREN);
-        int elementCount= obj.getElements().size();
-        for(int i=0; i<elementCount; i++) {
-            buffer.append(UNDEFINED_PARAM);
-            if (i<elementCount-1) {
-                buffer.append(COMMA);
-            }
-        }
-        buffer.append(RPAREN);  
-    }    
+    @Override
+	public void visit(IInsertExpressionValueSource obj) {
+		buffer.append(VALUES).append(SPACE).append(LPAREN);
+		append(obj.getValues());
+		buffer.append(RPAREN);
+	}
+        
     /**
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IIsNullCriteria)
      */
@@ -720,7 +698,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.ILiteral)
      */
     public void visit(ILiteral obj) {
-        if (obj.getValue() == null) {
+    	if (obj.isBindValue()) {
+    		buffer.append("?"); //$NON-NLS-1$
+    	} else if (obj.getValue() == null) {
             buffer.append(NULL);
         } else {
             Class type = obj.getType();

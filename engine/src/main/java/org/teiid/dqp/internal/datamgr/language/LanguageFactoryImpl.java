@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.IBulkInsert;
 import org.teiid.connector.language.ICompareCriteria;
 import org.teiid.connector.language.ICompoundCriteria;
 import org.teiid.connector.language.ICriteria;
@@ -42,6 +41,8 @@ import org.teiid.connector.language.IGroupBy;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.IInlineView;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
+import org.teiid.connector.language.IInsertValueSource;
 import org.teiid.connector.language.IIsNullCriteria;
 import org.teiid.connector.language.IJoin;
 import org.teiid.connector.language.ILanguageFactory;
@@ -136,14 +137,15 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     
     @Override
     public IFunction createFunction(String functionName, IExpression[] args,
-    		Class type) {
+    		Class<?> type) {
     	return new FunctionImpl(functionName, Arrays.asList(args), type);
     }
 
     /* 
      * @see com.metamatrix.data.language.ILanguageFactory#createFunction(java.lang.String, com.metamatrix.data.language.IExpression[], java.lang.Class)
      */
-    public IFunction createFunction(String functionName, List<? extends IExpression> args, Class type) {
+    @Override
+    public IFunction createFunction(String functionName, List<? extends IExpression> args, Class<?> type) {
         return new FunctionImpl(functionName, args, type);
     }
 
@@ -167,19 +169,17 @@ public class LanguageFactoryImpl implements ILanguageFactory {
     public IInCriteria createInCriteria(IExpression leftExpression, List rightExpressions, boolean isNegated) {
         return new InCriteriaImpl(leftExpression, rightExpressions, isNegated);
     }
-
-    /* 
-     * @see com.metamatrix.data.language.ILanguageFactory#createInsert(com.metamatrix.data.language.IGroup, java.util.List, java.util.List)
-     */
-    public IInsert createInsert(IGroup group, List columns, List values) {
-        return new InsertImpl(group, columns, values);
+    
+    @Override
+    public IInsert createInsert(IGroup group, List<IElement> columns,
+    		IInsertValueSource valueSource) {
+        return new InsertImpl(group, columns, valueSource);
     }
-
-    /**
-     * @see org.teiid.connector.language.ILanguageFactory#createBulkInsert(org.teiid.connector.language.IGroup, java.util.List, java.util.List)
-     */
-    public IBulkInsert createBulkInsert(IGroup group, List columns, List rows) {
-        return new BulkInsertImpl(group, columns, rows);
+    
+    @Override
+    public IInsertExpressionValueSource createInsertExpressionValueSource(
+    		List<IExpression> values) {
+    	return new InsertValueExpressionsImpl(values);
     }
     
     /* 

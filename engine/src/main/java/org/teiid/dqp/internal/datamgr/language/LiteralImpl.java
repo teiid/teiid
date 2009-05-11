@@ -27,11 +27,12 @@ import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 public class LiteralImpl extends BaseLanguageObject implements ILiteral {
     
-    Object value;
-    Class type;
-    private boolean bindValue = false;
+    private Object value;
+    private Class<?> type;
+    private boolean bindValue;
+    private boolean multiValued;
     
-    public LiteralImpl(Object value, Class type) {
+    public LiteralImpl(Object value, Class<?> type) {
         this.value = value;
         this.type = type;
     }
@@ -53,7 +54,7 @@ public class LiteralImpl extends BaseLanguageObject implements ILiteral {
     /* 
      * @see com.metamatrix.data.language.ILiteral#getType()
      */
-    public Class getType() {
+    public Class<?> getType() {
         return this.type;
     }
 
@@ -62,13 +63,6 @@ public class LiteralImpl extends BaseLanguageObject implements ILiteral {
      */
     public void setValue(Object value) {
         this.value = value;
-    }
-
-    /* 
-     * @see com.metamatrix.data.language.ILiteral#setType(java.lang.Class)
-     */
-    public void setType(Class type) {
-        this.type = type;
     }
 
     /** 
@@ -84,5 +78,20 @@ public class LiteralImpl extends BaseLanguageObject implements ILiteral {
     public void setBindValue(boolean bindValue) {
         this.bindValue = bindValue;
     }
+
+	@Override
+	public boolean isMultiValued() {
+		return multiValued;
+	}
+
+	@Override
+	public void setMultiValued(boolean multiValued) {
+		this.multiValued = multiValued;
+	}
+
+	@Override
+	public void setType(Class<?> type) {
+		this.type = type;
+	}
 
 }

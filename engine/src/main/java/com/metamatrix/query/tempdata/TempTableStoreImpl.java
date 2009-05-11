@@ -48,12 +48,12 @@ import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.processor.proc.UpdateCountTupleSource;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.sql.lang.BulkInsert;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Create;
 import com.metamatrix.query.sql.lang.Drop;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -178,7 +178,7 @@ public class TempTableStoreImpl implements TempTableStore{
                 return new UpdateCountTupleSource(0);
             }
         }
-        throw new AssertionError("unhandled temp table reqest");
+        throw new AssertionError("unhandled temp table reqest"); //$NON-NLS-1$
     }
     
     public void removeTempTables() throws MetaMatrixComponentException{
@@ -225,8 +225,8 @@ public class TempTableStoreImpl implements TempTableStore{
             TupleBatch tupleBatch;
             List elements = ResolverUtil.resolveElementsInGroup(group, new TempMetadataAdapter(null, tempMetadataStore));
             
-            if ( insert instanceof BulkInsert ) {
-                List tuples = ((BulkInsert)insert).getRows();
+            if ( insert.isBulk() ) {
+                List<List<Object>> tuples = getBulkRows(insert);
                 
                 tuplesAdded = tuples.size();
 
@@ -261,6 +261,23 @@ public class TempTableStoreImpl implements TempTableStore{
         
         return new UpdateCountTupleSource(tuplesAdded);
     }
+
+	public static List<List<Object>> getBulkRows(Insert insert) {
+		Constant c = (Constant)insert.getValues().get(0);
+		int bulkRowCount = ((List<?>)c.getValue()).size();
+		
+		List<List<Object>> tuples = new ArrayList<List<Object>>(bulkRowCount);
+		
+		for (int row = 0; row < bulkRowCount; row++) {
+			List<Object> currentRow = new ArrayList<Object>(insert.getValues().size());
+		    for (int i = 0; i < insert.getValues().size(); i++) {
+		    	Constant multiValue = (Constant)insert.getValues().get(i);
+		    	currentRow.add(((List<?>)multiValue.getValue()).get(row));
+		    }
+		    tuples.add(currentRow);
+		}
+		return tuples;
+	}
     
     public boolean hasTempTable(Command command){
         switch (command.getType()) {

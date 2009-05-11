@@ -37,12 +37,12 @@ import com.metamatrix.query.processor.FakeTupleSource;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.FakeTupleSource.FakeComponentException;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
-import com.metamatrix.query.sql.lang.BulkInsert;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.query.util.CommandContext;
 
 
@@ -152,17 +152,19 @@ public class TestProjectIntoNode extends TestCase {
             int batchSize = 1;
             
             // ensure that we have the right kind of insert, and that the data for this row is valid
-            if (!(command instanceof BulkInsert) && (command instanceof Insert)) {
-                ensureValue((Insert)command, 2, callCount);
-            } else if ( command instanceof BulkInsert ){
-                BulkInsert bulkInsert = (BulkInsert)command;
-                List batch = bulkInsert.getRows();
-                batchSize = batch.size();
-                assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$
-                
-                for (int i = 0; i < batchSize; i++) {
-                    ensureValue2((List)batch.get(i), 2, ((callCount-1) * batchSize) + i + 1);
-                }
+            if (command instanceof Insert) {
+            	Insert insert = (Insert)command;
+            	if (insert.isBulk()) {
+                    List batch = TempTableStoreImpl.getBulkRows(insert);
+                    batchSize = batch.size();
+                    assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$
+                    
+                    for (int i = 0; i < batchSize; i++) {
+                        ensureValue2((List)batch.get(i), 2, ((callCount-1) * batchSize) + i + 1);
+                    }
+            	} else {
+            		ensureValue((Insert)command, 2, callCount);
+            	}
             } else if ( command instanceof BatchedUpdateCommand ){
                 BatchedUpdateCommand bu = (BatchedUpdateCommand)command;
                 List batch = bu.getSubCommands();

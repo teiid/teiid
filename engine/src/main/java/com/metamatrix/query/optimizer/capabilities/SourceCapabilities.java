@@ -277,12 +277,7 @@ public interface SourceCapabilities {
          * @since 4.2
          */
         BATCHED_UPDATES,
-        /**
-         * Support indicates connector can accept queries with searched CASE WHEN <criteria> ... END
-         * 
-         * @since 4.2
-         */
-        BULK_INSERT,
+        BULK_UPDATE,
         /**
          * Support indicates connector can limit result rows
          * 
@@ -308,10 +303,6 @@ public interface SourceCapabilities {
          * @since 5.0.2
          */
         CONNECTOR_ID,
-        /** Support indicates connector support prepared statement batch update
-         * @since 5.5.2
-         */
-        PREPARED_BATCH_UPDATE,
         /**
          * @since 6.0.0 indicates the source supports XA transactions
          */
@@ -320,6 +311,7 @@ public interface SourceCapabilities {
          * @since 6.0.0 indicates support for where all
          */
         REQUIRES_CRITERIA,
+        INSERT_WITH_QUERYEXPRESSION
     }
 
     public enum Scope {

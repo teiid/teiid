@@ -4,9 +4,7 @@
             <PropertyDefinition Name="username" DisplayName="User Name" ShortDescription="Name value for Salesforce authentication" DefaultValue="" Multiplicity="1" IsPreferred="true" />
             <PropertyDefinition Name="ConnectorStateClass" DisplayName="Connector State Class" ShortDescription="" DefaultValue="com.metamatrix.connector.salesforce.ConnectorState" Multiplicity="1" IsExpert="true" />
             <PropertyDefinition Name="ConnectorClass" DisplayName="Connector Class" ShortDescription="" DefaultValue="com.metamatrix.connector.salesforce.Connector" Multiplicity="1" IsExpert="true" />
-            <PropertyDefinition Name="InLimit" DisplayName="IN Criteria Limit" ShortDescription="The maximum number of values that can be supplied in an IN criteria" DefaultValue="-1" Multiplicity="1" IsExpert="true" />
             <PropertyDefinition Name="password" DisplayName="Password" ShortDescription="Password value for Salesforce authentication" DefaultValue="" Multiplicity="1" IsMasked="true" IsPreferred="true" />
             <PropertyDefinition Name="URL" DisplayName="Salesforce URL" ShortDescription="URL for connecting to Salesforce" DefaultValue="" IsExpert="true" />
             <PropertyDefinition Name="ConnectorCapabilities" DisplayName="Connector Capabilities Class" ShortDescription="The class to use to provide the Connector Capabilities" DefaultValue="com.metamatrix.connector.salesforce.SalesforceCapabilities" IsConstrainedToAllowedValues="false" IsExpert="true" />
-			<PropertyDefinition Name="SetCriteriaBatchSize" DisplayName="SetCriteria Batch Size" ShortDescription="Max number of values in a SetCriteria before batching into multiple queries.  A value &lt;= 0 indicates batching is OFF." DefaultValue="0" Multiplicity="0..1" PropertyType="Integer" ValueDelimiter="," IsConstrainedToAllowedValues="false" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
         </ComponentType>

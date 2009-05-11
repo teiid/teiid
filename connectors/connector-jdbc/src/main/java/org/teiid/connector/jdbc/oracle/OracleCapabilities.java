@@ -33,10 +33,7 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
  */
 public class OracleCapabilities extends JDBCCapabilities {    
     
-    public static final int ORACLE_MAX_SET_SIZE = 1000;
-    
     public OracleCapabilities() {
-        this.setMaxInCriteriaSize(ORACLE_MAX_SET_SIZE);
     }
     
     /**

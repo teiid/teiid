@@ -39,6 +39,7 @@ import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.lang.SubquerySetCriteria;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
@@ -71,6 +72,13 @@ public class EvaluatableVisitor extends LanguageVisitor {
         		|| obj.getFunctionDescriptor().getDeterministic() >= FunctionMethod.COMMAND_DETERMINISTIC) {
             evaluationNotPossible(EvaluationLevel.PROCESSING);
         }
+    }
+    
+    @Override
+    public void visit(Constant obj) {
+    	if (obj.isMultiValued()) {
+            evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+    	}
     }
     
     private void setDeterminismLevel(int value) {

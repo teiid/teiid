@@ -83,12 +83,12 @@ public class EvaluateExpressionVisitor extends ExpressionMappingVisitor {
         try {
             value = new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(expr, Collections.emptyList());
         } catch (MetaMatrixException err) {
-        	if (expr instanceof Reference) {
-        		return expr;
-        	}
             throw new MetaMatrixRuntimeException(err);
         }
-		return new Constant(value, expr.getType());			 
+        if (value instanceof Constant) {
+        	return (Constant)value; //multi valued substitution
+        }
+		return new Constant(value, expr.getType());
     }
     
     /**

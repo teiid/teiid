@@ -29,7 +29,6 @@ import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
-import com.metamatrix.query.sql.lang.BulkInsert;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Create;
@@ -300,15 +299,6 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNode(obj.getTable());
         postVisitVisitor(obj);
     }
-    public void visit(BulkInsert obj) {
-        preVisitVisitor(obj);
-        visitNode(obj.getGroup());
-        visitNodes(obj.getVariables());
-        // No values neeed to be traversed for this.
-        // visitNodes(obj.getValues());
-        visitNode(obj.getOption());
-        postVisitVisitor(obj);
-    }    
     public void visit(Into obj) {
         preVisitVisitor(obj);
         visitNode(obj.getGroup());

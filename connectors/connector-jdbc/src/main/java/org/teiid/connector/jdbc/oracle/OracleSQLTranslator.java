@@ -45,6 +45,7 @@ import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.ILimit;
 import org.teiid.connector.language.IQueryCommand;
 import org.teiid.connector.language.ISetQuery.Operation;
@@ -101,8 +102,13 @@ public class OracleSQLTranslator extends Translator {
          * then pull the Sequence name out of the name in source of the column.
          */
     	IInsert insert = (IInsert)command;
+    	
+    	if (!(insert.getValueSource() instanceof IInsertExpressionValueSource)) {
+    		return command;
+    	}
+    	IInsertExpressionValueSource values = (IInsertExpressionValueSource)insert.getValueSource();
     	List<Element> allElements = insert.getGroup().getMetadataObject().getChildren();
-    	if (allElements.size() == insert.getValues().size()) {
+    	if (allElements.size() == values.getValues().size()) {
     		return command;
     	}
     	
@@ -134,7 +140,7 @@ public class OracleSQLTranslator extends Translator {
             
             int delimiterIndex = sequence.indexOf(SQLReservedWords.DOT);
             if (delimiterIndex == -1) {
-            	throw new ConnectorException("Invalid name in source sequence format.  Expected <element name>" + SEQUENCE + "<sequence name>.<sequence value>, but was " + name);
+            	throw new ConnectorException("Invalid name in source sequence format.  Expected <element name>" + SEQUENCE + "<sequence name>.<sequence value>, but was " + name); //$NON-NLS-1$ //$NON-NLS-2$
             }
             String sequenceGroupName = sequence.substring(0, delimiterIndex);
             String sequenceElementName = sequence.substring(delimiterIndex + 1);
@@ -142,7 +148,7 @@ public class OracleSQLTranslator extends Translator {
             IGroup sequenceGroup = this.getLanguageFactory().createGroup(sequenceGroupName, null, null);
             IElement sequenceElement = this.getLanguageFactory().createElement(sequenceElementName, sequenceGroup, null, element.getJavaType());
             insert.getElements().add(index, this.getLanguageFactory().createElement(element.getName(), insert.getGroup(), element, element.getJavaType()));
-            insert.getValues().add(index, sequenceElement);
+            values.getValues().add(index, sequenceElement);
 		}
         return command;
     }

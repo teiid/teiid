@@ -22,7 +22,7 @@
 
 package org.teiid.connector.language;
 
-public interface IQueryCommand extends ICommand {
+public interface IQueryCommand extends ICommand, IInsertValueSource {
     
     /**
      * Set ORDER BY clause, may be null.

@@ -41,6 +41,7 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.AccessNode;
 import com.metamatrix.query.processor.relational.RelationalPlan;
+import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
@@ -48,6 +49,7 @@ import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.FromClause;
 import com.metamatrix.query.sql.lang.GroupBy;
+import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.JoinPredicate;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.Limit;
@@ -87,8 +89,19 @@ public final class RuleCollapseSource implements OptimizerRule {
         		Command command = FrameUtil.getNonQueryCommand(accessNode);
         		
                 if(command == null) {
-                    plan = removeUnnecessaryInlineView(plan, accessNode);
-                    command = createQuery(metadata, capFinder, accessNode, accessNode);
+                	PlanNode commandRoot = accessNode;
+                	GroupSymbol intoGroup = (GroupSymbol)accessNode.getFirstChild().getProperty(NodeConstants.Info.INTO_GROUP);
+                	if (intoGroup != null) {
+                		commandRoot = NodeEditor.findNodePreOrder(accessNode, NodeConstants.Types.SOURCE).getFirstChild();
+                	}
+                    plan = removeUnnecessaryInlineView(plan, commandRoot);
+                    QueryCommand queryCommand = createQuery(metadata, capFinder, accessNode, commandRoot);
+                    command = queryCommand;
+                    if (intoGroup != null) {
+                    	Insert insertCommand = new Insert(intoGroup, ResolverUtil.resolveElementsInGroup(intoGroup, metadata), null);
+                    	insertCommand.setQueryExpression(queryCommand);
+                    	command = insertCommand;
+                    }
                 } 
         		accessNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
             }

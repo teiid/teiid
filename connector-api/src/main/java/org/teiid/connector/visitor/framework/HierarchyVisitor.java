@@ -34,6 +34,7 @@ import org.teiid.connector.language.IGroupBy;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.IInlineView;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.IIsNullCriteria;
 import org.teiid.connector.language.IJoin;
 import org.teiid.connector.language.ILikeCriteria;
@@ -41,6 +42,7 @@ import org.teiid.connector.language.INotCriteria;
 import org.teiid.connector.language.IOrderBy;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.language.IQuery;
+import org.teiid.connector.language.IQueryCommand;
 import org.teiid.connector.language.IScalarSubquery;
 import org.teiid.connector.language.ISearchedCaseExpression;
 import org.teiid.connector.language.ISelect;
@@ -127,7 +129,14 @@ public abstract class HierarchyVisitor extends AbstractLanguageVisitor {
     public void visit(IInsert obj) {
         visitNode(obj.getGroup());
         visitNodes(obj.getElements());
-        visitNodes(obj.getValues());
+        if (!(obj.getValueSource() instanceof IQueryCommand) || visitSubcommands) {
+    		visitNode(obj.getValueSource());
+        }
+    }
+    
+    @Override
+    public void visit(IInsertExpressionValueSource obj) {
+    	visitNodes(obj.getValues());
     }
     
     public void visit(IIsNullCriteria obj) {

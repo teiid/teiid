@@ -29,8 +29,9 @@ import org.teiid.connector.basic.BasicConnectorCapabilities;
  */
 public class LDAPConnectorCapabilities extends BasicConnectorCapabilities {
 	
-	public void setInCriteriaSize(int maxInCriteriaSize) {
-		this.maxInCriteriaSize = maxInCriteriaSize;
+	@Override
+	public int getMaxInCriteriaSize() {
+		return 1000;
 	}
 	
     public boolean supportsCompareCriteriaEquals() {

@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.List;
 import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorException;
@@ -39,6 +40,7 @@ import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ILiteral;
 
 import com.metamatrix.common.util.PropertiesUtils;
 
@@ -88,6 +90,28 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
         }
         if (maxResultRows > 0) {
         	fetchSize = Math.min(fetchSize, maxResultRows);
+        }
+    }
+    
+    /**
+     * Return true if this is a batched update
+     */
+    protected void bindPreparedStatementValues(PreparedStatement stmt, TranslatedCommand tc, int rowCount) throws SQLException {
+        List params = tc.getPreparedValues();
+
+        for (int row = 0; row < rowCount; row++) {
+	        for (int i = 0; i< params.size(); i++) {
+	            ILiteral paramValue = (ILiteral)params.get(i);
+	            Object value = paramValue.getValue();
+	            if (paramValue.isMultiValued()) {
+	            	value = ((List<?>)value).get(row);
+	            }
+	            Class paramType = paramValue.getType();
+	            sqlTranslator.bindValue(stmt, value, paramType, i+1);
+	            if (rowCount > 1) {
+	            	stmt.addBatch();
+	            }
+	        }          
         }
     }
 

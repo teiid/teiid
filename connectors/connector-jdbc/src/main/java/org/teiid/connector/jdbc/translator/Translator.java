@@ -462,30 +462,6 @@ public class Translator {
     }
     
     /**
-     * Will be called by Query and Update executions if a PreparedStatement is used.
-     * 
-     * bindValue is ultimately called from this method and for binding CallableStatement
-     * values, so subclasses should override that method if necessery to change the binding 
-     * behavior.
-     *  
-     * @see com.metamatrix.connector.jdbc.extension.ResultsTranslator#bindPreparedStatementValues(java.sql.Connection, java.sql.PreparedStatement, org.teiid.connector.jdbc.translator.TranslatedCommand)
-     */
-    public void bindPreparedStatementValues(Connection conn, PreparedStatement stmt, TranslatedCommand command) throws SQLException {
-        List params = command.getPreparedValues();
-        
-        setPreparedStatementValues(stmt, params, command.getPreparedTypes());
-    }
-
-    private void setPreparedStatementValues(PreparedStatement stmt, List paramValues, List paramTypes) throws SQLException {
-    	for (int i = 0; i< paramValues.size(); i++) {
-            Object parmvalue = paramValues.get(i);
-            Class paramType = (Class)paramTypes.get(i);
-            // this means the params is one row
-            bindValue(stmt, parmvalue, paramType, i+1);
-        }          
-    }
-
-    /**
      * Sets prepared statement parameter i with param.
      * 
      * Performs special handling to translate dates using the database time zone and to
@@ -498,7 +474,7 @@ public class Translator {
      * @param cal
      * @throws SQLException
      */
-    protected void bindValue(PreparedStatement stmt, Object param, Class paramType, int i) throws SQLException {
+    public void bindValue(PreparedStatement stmt, Object param, Class paramType, int i) throws SQLException {
         int type = TypeFacility.getSQLTypeFromRuntimeType(paramType);
                 
         if (param == null) {
@@ -529,34 +505,6 @@ public class Translator {
         stmt.setObject(i, param, type);
     }
     
-    /**
-     * Execute a bulk insert on the given preparedstatement.
-     * @param conn
-     * @param stmt
-     * @param command
-     * @return
-     * @throws SQLException
-     */
-    public int executeStatementForBulkInsert(Connection conn, PreparedStatement stmt, TranslatedCommand command) throws SQLException {
-        List rows = command.getPreparedValues();
-        int updateCount = 0;
-        
-        for (int i = 0; i< rows.size(); i++) {
-            List row = (List) rows.get(i);
-             
-            setPreparedStatementValues(stmt, row, command.getPreparedTypes());
-            
-            stmt.addBatch();
-        }
-        
-        int[] results = stmt.executeBatch();
-        
-        for (int i=0; i<results.length; i++) {
-            updateCount += results[i];
-        }        
-        return updateCount;
-    } 
-
 	/**
 	 * Retrieve the value on the current resultset row for the given column index.
 	 * @param results
@@ -818,16 +766,6 @@ public class Translator {
 				result = getDefaultCapabilities().newInstance();
 			}
 
-			if (result instanceof JDBCCapabilities) {
-				String setCriteriaBatchSize = this.environment.getProperties().getProperty(JDBCPropertyNames.SET_CRITERIA_BATCH_SIZE);
-				if (setCriteriaBatchSize != null) {
-					int maxInCriteriaSize = Integer
-							.parseInt(setCriteriaBatchSize);
-					if (maxInCriteriaSize > 0) {
-						((JDBCCapabilities) result).setMaxInCriteriaSize(maxInCriteriaSize);
-					}
-				}
-			}
 			return result;
 		} catch (Exception e) {
 			throw new ConnectorException(e);

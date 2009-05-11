@@ -31,6 +31,7 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
@@ -51,7 +52,7 @@ public class InsertVisitor extends CriteriaVisitor {
 			loadColumnMetadata(insert.getGroup());
 			
 			List<IElement> columns = insert.getElements();
-			List<IExpression> values = insert.getValues();
+			List<IExpression> values = ((IInsertExpressionValueSource)insert.getValueSource()).getValues();
 			if(columns.size() != values.size()) {
 				throw new ConnectorException("Error:  columns.size and values.size are not the same.");
 			}

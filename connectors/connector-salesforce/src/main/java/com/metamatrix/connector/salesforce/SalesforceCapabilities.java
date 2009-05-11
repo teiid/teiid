@@ -30,11 +30,7 @@ import org.teiid.connector.basic.BasicConnectorCapabilities;
 public class SalesforceCapabilities extends BasicConnectorCapabilities {
 	
     public int getMaxInCriteriaSize() {
-    	return maxInCriteriaSize;
-    }
-    
-    public void setMaxInCriteriaSize(int size) {
-    	maxInCriteriaSize = size;
+    	return 100;
     }
     
     public List getSupportedFunctions() {

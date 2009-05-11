@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -193,29 +194,38 @@ public class PreparedStatementRequest extends Request {
      */
 	private void handlePreparedBatchUpdate() throws QueryMetadataException,
 			MetaMatrixComponentException, QueryResolverException, QueryPlannerException, QueryValidatorException {
-		ProcessorPlan plan = this.processPlan;
 		List<List<?>> paramValues = requestMsg.getParameterValues();
 		if (paramValues.isEmpty()) {
 			throw new QueryValidatorException("No batch values sent for prepared batch update"); //$NON-NLS-1$
 		}
 		boolean supportPreparedBatchUpdate = false;
-		if (plan instanceof RelationalPlan) {
-			RelationalPlan rPlan = (RelationalPlan)plan;
+		if (this.processPlan instanceof RelationalPlan && this.prepPlan.getRewritenCommand().getSubCommands().isEmpty()) {
+			RelationalPlan rPlan = (RelationalPlan)this.processPlan;
 			if (rPlan.getRootNode() instanceof AccessNode) {
 				AccessNode aNode = (AccessNode)rPlan.getRootNode();
-			    String modelName = aNode.getModelName();
+				String modelName = aNode.getModelName();
 		        SourceCapabilities caps = capabilitiesFinder.findCapabilities(modelName);
-		        supportPreparedBatchUpdate = caps.supportsCapability(SourceCapabilities.Capability.PREPARED_BATCH_UPDATE);
+		        supportPreparedBatchUpdate = caps.supportsCapability(SourceCapabilities.Capability.BULK_UPDATE);
 			}
 		}
 		CommandTreeNode ctn = new CommandTreeNode();
 		List<Command> commands = new LinkedList<Command>();
 		List<VariableContext> contexts = new LinkedList<VariableContext>();
+		List<List<Object>> multiValues = new ArrayList<List<Object>>(this.prepPlan.getReferences().size());
 		for (List<?> values : paramValues) {
 			resolveAndValidateParameters(this.userCommand, this.prepPlan.getReferences(), values);
 			contexts.add(this.context.getVariableContext());
 			if(supportPreparedBatchUpdate){
-				continue; // -- TODO make this work
+				if (multiValues.isEmpty()) {
+					for (int i = 0; i < values.size(); i++) {
+						multiValues.add(new ArrayList<Object>(paramValues.size()));
+					}					
+				}
+				for (int i = 0; i < values.size(); i++) {
+					List<Object> multiValue = multiValues.get(i);
+					multiValue.add(values.get(i));
+				}
+				continue; 
 			}
 			Command c = (Command)this.prepPlan.getRewritenCommand().clone();
 			commands.add(c);
@@ -229,8 +239,17 @@ public class PreparedStatementRequest extends Request {
 			this.context.setVariableContext(new VariableContext());
 		} 
 		
-		if (supportPreparedBatchUpdate || paramValues.size() == 1) {
-			return; // just use the existing plan
+		if (paramValues.size() == 1) {
+			return; // just use the existing plan, and global reference evaluation
+		}
+		
+		if (supportPreparedBatchUpdate) {
+			for (int i = 0; i < this.prepPlan.getReferences().size(); i++) {
+				Constant c = new Constant(null, this.prepPlan.getReferences().get(i).getType());
+				c.setMultiValued(multiValues.get(i));
+				this.context.getVariableContext().setGlobalValue(this.prepPlan.getReferences().get(i).getContextSymbol(), c);
+			}
+			return;
 		}
 		
 		BatchedUpdateCommand buc = new BatchedUpdateCommand(commands);

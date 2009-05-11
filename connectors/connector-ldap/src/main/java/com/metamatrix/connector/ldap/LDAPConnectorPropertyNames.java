@@ -29,7 +29,6 @@ public class LDAPConnectorPropertyNames {
     public static final String LDAP_ADMIN_USER_DN = "LdapAdminUserDN"; //$NON-NLS-1$
     public static final String LDAP_ADMIN_USER_PASSWORD = "LdapAdminUserPassword"; //$NON-NLS-1$
     public static final String LDAP_TXN_TIMEOUT_IN_MILLIS = "LdapTxnTimeoutInMillis"; //$NON-NLS-1$
-    public static final String LDAP_MAX_CRITERIA = "LdapMaxCriteria"; //$NON-NLS-1$
     public static final String LDAP_DEFAULT_BASEDN = "SearchDefaultBaseDN"; //$NON-NLS-1$
     public static final String LDAP_DEFAULT_SCOPE = "SearchDefaultScope"; //$NON-NLS-1$
     public static final String LDAP_RESTRICT_TO_OBJECTCLASS = "RestrictToObjectClass"; //$NON-NLS-1$

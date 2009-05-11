@@ -26,7 +26,6 @@ import java.util.Collection;
 
 import org.teiid.connector.language.IAggregate;
 import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.IBulkInsert;
 import org.teiid.connector.language.ICompareCriteria;
 import org.teiid.connector.language.ICompoundCriteria;
 import org.teiid.connector.language.IDelete;
@@ -39,6 +38,7 @@ import org.teiid.connector.language.IGroupBy;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.IInlineView;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.IIsNullCriteria;
 import org.teiid.connector.language.IJoin;
 import org.teiid.connector.language.ILanguageObject;
@@ -129,7 +129,7 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     public void visit(IInCriteria obj) {}
     public void visit(IInlineView obj) {}
     public void visit(IInsert obj) {}
-    public void visit(IBulkInsert obj) {}
+    public void visit(IInsertExpressionValueSource obj) {}
     public void visit(IIsNullCriteria obj) {}
     public void visit(IJoin obj) {}
     public void visit(ILikeCriteria obj) {}

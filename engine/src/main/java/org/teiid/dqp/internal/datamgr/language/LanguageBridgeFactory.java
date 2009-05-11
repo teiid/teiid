@@ -44,6 +44,7 @@ import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.IGroupBy;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertValueSource;
 import org.teiid.connector.language.IIsNullCriteria;
 import org.teiid.connector.language.IJoin;
 import org.teiid.connector.language.ILikeCriteria;
@@ -79,7 +80,6 @@ import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
-import com.metamatrix.query.sql.lang.BulkInsert;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
@@ -119,7 +119,6 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
@@ -468,8 +467,6 @@ public class LanguageBridgeFactory {
             return translate((Constant)expr);
         } else if (expr instanceof Function) {
             return translate((Function)expr);
-        } else if (expr instanceof Reference) {
-            return translate((Reference)expr);
         } else if (expr instanceof ScalarSubquery) {
             return translate((ScalarSubquery)expr);
         } else if (expr instanceof SearchedCaseExpression) {
@@ -481,7 +478,10 @@ public class LanguageBridgeFactory {
     }
 
     ILiteral translate(Constant constant) {
-        return new LiteralImpl(constant.getValue(), constant.getType());
+        LiteralImpl result = new LiteralImpl(constant.getValue(), constant.getType());
+        result.setBindValue(constant.isMultiValued());
+        result.setMultiValued(constant.isMultiValued());
+        return result;
     }
 
     IFunction translate(Function function) throws MetaMatrixComponentException {
@@ -493,10 +493,6 @@ public class LanguageBridgeFactory {
             }
         }
         return new FunctionImpl(function.getName(), params, function.getType());
-    }
-
-    IExpression translate(Reference ref) throws MetaMatrixComponentException {
-        return translate(ref.getExpression());
     }
 
     ISearchedCaseExpression translate(SearchedCaseExpression expr) throws MetaMatrixComponentException {
@@ -570,32 +566,31 @@ public class LanguageBridgeFactory {
             translatedElements.add(translate((ElementSymbol)i.next()));
         }
         
-        // If the insert is bulk insert then translate the multiple values
-        if (insert instanceof BulkInsert) {
-            BulkInsert bulkInsert = (BulkInsert)insert;
-            BulkInsertImpl translatedBulkInsert = 
-                new BulkInsertImpl(translate(insert.getGroup()),translatedElements);
-            List rows = bulkInsert.getRows();
-            translatedBulkInsert.setRows(rows);
-            return translatedBulkInsert;
+        IInsertValueSource valueSource = null;
+        if (insert.getQueryExpression() != null) {
+        	valueSource = translate(insert.getQueryExpression());
+        } else {
+            // This is for the simple one row insert.
+            List values = insert.getValues();
+            List translatedValues = new ArrayList();
+            for (Iterator i = values.iterator(); i.hasNext();) {
+                translatedValues.add(translate((Expression)i.next()));
+            }
+            valueSource = new InsertValueExpressionsImpl(translatedValues);
         }
         
-        // This is for the simple one row insert.
-        List values = insert.getValues();
-        List translatedValues = new ArrayList();
-        for (Iterator i = values.iterator(); i.hasNext();) {
-            translatedValues.add(translate((Expression)i.next()));
-        }
-        return new InsertImpl(translate(insert.getGroup()),
+        InsertImpl result = new InsertImpl(translate(insert.getGroup()),
                               translatedElements,
-                              translatedValues);
+                              valueSource);
+        return result;
     }
 
     /* Update */
     IUpdate translate(Update update) throws MetaMatrixComponentException {
-        return new UpdateImpl(translate(update.getGroup()),
+        UpdateImpl updateImpl =  new UpdateImpl(translate(update.getGroup()),
                               translate(update.getChangeList()),
                               translate(update.getCriteria()));
+        return updateImpl;
     }
     
     ISetClauseList translate(SetClauseList setClauseList) throws MetaMatrixComponentException {
@@ -612,8 +607,9 @@ public class LanguageBridgeFactory {
 
     /* Delete */
     IDelete translate(Delete delete) throws MetaMatrixComponentException {
-        return new DeleteImpl(translate(delete.getGroup()),
+        DeleteImpl deleteImpl = new DeleteImpl(translate(delete.getGroup()),
                               translate(delete.getCriteria()));
+        return deleteImpl;
     }
 
     /* Execute */
@@ -636,7 +632,7 @@ public class LanguageBridgeFactory {
         return new ProcedureImpl(sp.getProcedureName(), translatedParameters, proc);
     }
 
-    IParameter translate(SPParameter param, Procedure parent) throws MetaMatrixComponentException {
+    IParameter translate(SPParameter param, Procedure parent) {
         Direction direction = Direction.IN;
         switch(param.getParameterType()) {
             case ParameterInfo.IN:    

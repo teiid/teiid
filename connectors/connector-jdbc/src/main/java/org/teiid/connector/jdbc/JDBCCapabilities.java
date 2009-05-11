@@ -32,19 +32,16 @@ import org.teiid.connector.basic.BasicConnectorCapabilities;
  */
 public class JDBCCapabilities extends BasicConnectorCapabilities {
     
-    public static final int DEFAULT_JDBC_MAX_IN_CRITERIA_SIZE = 1000;
-
     /**
      * 
      */
     public JDBCCapabilities() {
-        this.setMaxInCriteriaSize(DEFAULT_JDBC_MAX_IN_CRITERIA_SIZE);
     }
 
     /* 
      * @see com.metamatrix.data.ConnectorCapabilities#getSupportedFunctions()
      */
-    public List getSupportedFunctions() {
+    public List<String> getSupportedFunctions() {
         return Arrays.asList(new String[] { "+", "-", "*", "/" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
 
@@ -53,11 +50,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
      * @since 4.2
      */
     public int getMaxInCriteriaSize() {
-        return maxInCriteriaSize;
-    }
-    
-    public void setMaxInCriteriaSize(int maxInCriteriaSize) {
-        this.maxInCriteriaSize = maxInCriteriaSize;
+        return 1000;
     }
     
     @Override
@@ -291,7 +284,7 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     }
     
     @Override
-    public boolean supportsBulkInsert() {
+    public boolean supportsBulkUpdate() {
     	return true;
     }
     
@@ -322,6 +315,11 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     
     @Override
     public boolean supportsSelectExpression() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsInsertWithQueryExpression() {
     	return true;
     }
 

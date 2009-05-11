@@ -171,7 +171,7 @@ public class PlanToProcessConverter {
                         if (!metadata.isVirtualGroup(groupID) && !metadata.isTemporaryTable(groupID)) {
                             SourceCapabilities caps = capFinder.findCapabilities(modelName);
                             pinode.setDoBatching(caps.supportsCapability(Capability.BATCHED_UPDATES));
-                            pinode.setDoBulkInsert(caps.supportsCapability(Capability.BULK_INSERT));
+                            pinode.setDoBulkInsert(caps.supportsCapability(Capability.BULK_UPDATE));
                         } else if (metadata.isTemporaryTable(groupID)) {
                             pinode.setDoBulkInsert(true);
                         }

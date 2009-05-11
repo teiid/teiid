@@ -39,7 +39,7 @@ public class TestCallableStatement extends TestCase {
 		String sql = "{? = call pm4.spTest9()}"; //$NON-NLS-1$
 
 		try {
-			TestPreparedStatement.helpTestProcessing(sql, Collections.EMPTY_LIST, null, FakeMetadataFactory.exampleBQTCached(), true);
+			TestPreparedStatement.helpTestProcessing(sql, Collections.EMPTY_LIST, null, new HardcodedDataManager(), FakeMetadataFactory.exampleBQTCached(), true);
 			fail();
 		} catch (QueryResolverException e) {
 			assertEquals("Required parameter 'PM4.SPTEST9.INKEY' has no value was set or is an invalid parameter.", e.getMessage()); //$NON-NLS-1$

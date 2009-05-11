@@ -33,10 +33,7 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
  */
 public class SqlServerCapabilities extends JDBCCapabilities {
 
-    public static final int SQLSRVR_MAX_SET_SIZE = 1000;
-    
     public SqlServerCapabilities() {
-        this.setMaxInCriteriaSize(SQLSRVR_MAX_SET_SIZE);
     }
     
     /**

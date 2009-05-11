@@ -42,11 +42,17 @@ public interface IInsert extends ICommand {
     List<IElement> getElements();
     
     /**
-     * Get list of values being inserted
-     * @return List of ILiteral
+     * Get the IInsertValues
+     * @return
      */
-    List<IExpression> getValues();
+    IInsertValueSource getValueSource();
     
+    /**
+     * Set the IInsertValues
+     * @param values
+     */
+    void setValueSource(IInsertValueSource values);
+        
     /**
      * Set group that is being inserted into.
      * @param group Insert group

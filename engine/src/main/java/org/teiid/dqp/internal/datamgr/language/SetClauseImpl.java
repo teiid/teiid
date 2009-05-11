@@ -27,7 +27,7 @@ import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.ISetClause;
 import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
-public class SetClauseImpl implements ISetClause {
+public class SetClauseImpl extends BaseLanguageObject implements ISetClause {
 
 	private IElement symbol;
 	private IExpression value;

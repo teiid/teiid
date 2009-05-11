@@ -34,7 +34,7 @@ import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.IGroupBy;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.IInlineView;
-import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.IIsNullCriteria;
 import org.teiid.connector.language.ILikeCriteria;
 import org.teiid.connector.language.IQueryCommand;
@@ -106,7 +106,7 @@ public class ReplacementVisitor extends AbstractLanguageVisitor {
         List<IExpression> expressions = obj.getElements();
         
         for (int i=0; i<expressions.size(); i++) {
-            IExpression expression = (IExpression)expressions.get(i);
+            IExpression expression = expressions.get(i);
             expressions.set(i, replaceFunction(expression));
         }
     }      
@@ -119,22 +119,20 @@ public class ReplacementVisitor extends AbstractLanguageVisitor {
         List<IExpression> rightExprs = obj.getRightExpressions();
         
         for(int i=0; i<rightExprs.size(); i++) {
-            IExpression expr = (IExpression) rightExprs.get(i);
+            IExpression expr = rightExprs.get(i);
             rightExprs.set(i, replaceFunction(expr));
         }
     }
-
-    /**
-     * @see com.metamatrix.data.visitor.SQLStringVisitor#visit(org.teiid.connector.language.IInsert)
-     */
-    public void visit(IInsert obj) {
+    
+    @Override
+    public void visit(IInsertExpressionValueSource obj) {
         List<IExpression> values = obj.getValues();
         
         for(int i=0; i<values.size(); i++) {
-            IExpression expr = (IExpression) values.get(i);
+            IExpression expr = values.get(i);
             values.set(i, replaceFunction(expr));
         }
-    }  
+    }
     
     /* 
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(com.metamatrix.data.language.IIsNullCriteria)

@@ -38,7 +38,7 @@ public interface ILiteral extends IExpression {
      * Get the Java type of the literal
      * @return Java class name of type
      */
-    Class getType();  
+    Class<?> getType();  
     
     /**
      * Set the value of the literal 
@@ -50,13 +50,29 @@ public interface ILiteral extends IExpression {
      * Set the Java type of the literal
      * @param type Java class name of type
      */
-    void setType(Class type);
+    void setType(Class<?> type);
     
     /**
      * Returns true if this literal should be treated as a bind value
      */
     boolean isBindValue();
     
+    /**
+     * Set whether this literal should be treated as a bind value
+     * @param bindValue
+     */
     void setBindValue(boolean bindValue);
+    
+    /**
+     * Returns true if the value for this literal is a list of values.
+     * @return
+     */
+    boolean isMultiValued();
+    
+    /**
+     * Set whether the value for this literal is a list of values.
+     * @param multiValued
+     */
+    void setMultiValued(boolean multiValued);
      
 }

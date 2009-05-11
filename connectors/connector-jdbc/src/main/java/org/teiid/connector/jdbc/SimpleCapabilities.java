@@ -34,8 +34,11 @@ import java.util.List;
 public class SimpleCapabilities extends JDBCCapabilities {
 
     public SimpleCapabilities() {
-        // Max acceptable by all BQT dbs (Sybase=250, Oracle=1000)
-        setMaxInCriteriaSize(250);
+    }
+    
+    @Override
+    public int getMaxInCriteriaSize() {
+    	return 250;
     }
     
     /* 
@@ -261,6 +264,11 @@ public class SimpleCapabilities extends JDBCCapabilities {
      */
     public boolean supportsUnions() {
         return false;
+    }
+    
+    @Override
+    public boolean supportsInsertWithQueryExpression() {
+    	return false;
     }
 
 }

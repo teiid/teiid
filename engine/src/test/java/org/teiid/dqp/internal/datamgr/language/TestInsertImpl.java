@@ -27,6 +27,7 @@ import java.util.Iterator;
 
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.dqp.internal.datamgr.language.InsertImpl;
 
 import com.metamatrix.query.sql.lang.Insert;
@@ -103,9 +104,9 @@ public class TestInsertImpl extends TestCase {
 
     public void testGetValues() throws Exception {
         InsertImpl insert = example("a.b"); //$NON-NLS-1$
-        assertNotNull(insert.getValues());
-        assertEquals(4, insert.getValues().size());
-        for (Iterator i = insert.getValues().iterator(); i.hasNext();) {
+        assertNotNull(insert.getValueSource());
+        assertEquals(4, ((IInsertExpressionValueSource)insert.getValueSource()).getValues().size());
+        for (Iterator i = ((IInsertExpressionValueSource)insert.getValueSource()).getValues().iterator(); i.hasNext();) {
             assertTrue(i.next() instanceof IExpression);
         }
     }
@@ -117,9 +118,9 @@ public class TestInsertImpl extends TestCase {
         for (Iterator i = insert.getElements().iterator(); i.hasNext();) {
             assertTrue(i.next() instanceof IElement);
         }
-        assertNotNull(insert.getValues());
-        assertEquals(1, insert.getValues().size());
-        for (Iterator i = insert.getValues().iterator(); i.hasNext();) {
+        assertNotNull(insert.getValueSource());
+        assertEquals(1, ((IInsertExpressionValueSource)insert.getValueSource()).getValues().size());
+        for (Iterator i = ((IInsertExpressionValueSource)insert.getValueSource()).getValues().iterator(); i.hasNext();) {
             assertTrue(i.next() instanceof IExpression);
         }
     }

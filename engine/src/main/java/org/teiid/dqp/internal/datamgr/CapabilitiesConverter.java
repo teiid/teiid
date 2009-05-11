@@ -83,7 +83,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_INTERSECT, srcCaps.supportsIntersect());
         tgtCaps.setCapabilitySupport(Capability.QUERY_EXCEPT, srcCaps.supportsExcept());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SET_ORDER_BY, srcCaps.supportsSetQueryOrderBy());
-        tgtCaps.setCapabilitySupport(Capability.BULK_INSERT , srcCaps.supportsBulkInsert());
+        tgtCaps.setCapabilitySupport(Capability.BULK_UPDATE , srcCaps.supportsBulkUpdate());
         tgtCaps.setCapabilitySupport(Capability.BATCHED_UPDATES, srcCaps.supportsBatchedUpdates());
         tgtCaps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, srcCaps.supportsFunctionsInGroupBy());
         tgtCaps.setCapabilitySupport(Capability.ROW_LIMIT, srcCaps.supportsRowLimit());
@@ -92,6 +92,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.REQUIRES_CRITERIA, srcCaps.requiresCriteria());
         tgtCaps.setCapabilitySupport(Capability.QUERY_GROUP_BY, srcCaps.supportsGroupBy());
         tgtCaps.setCapabilitySupport(Capability.QUERY_HAVING, srcCaps.supportsHaving());
+        tgtCaps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, srcCaps.supportsInsertWithQueryExpression());
         
         List functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {

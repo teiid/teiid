@@ -30,7 +30,7 @@ package org.teiid.connector.jdbc.oracle;
 public class SequeLinkOracleCapabilities extends OracleCapabilities {
     
 	@Override
-	public boolean supportsBulkInsert() {
+	public boolean supportsBulkUpdate() {
 		return false;
 	}
 	

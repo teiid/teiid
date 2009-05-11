@@ -30,7 +30,7 @@ import org.teiid.connector.language.ISetClauseList;
 import org.teiid.connector.visitor.framework.LanguageObjectVisitor;
 
 
-public class SetClauseListImpl implements ISetClauseList {
+public class SetClauseListImpl extends BaseLanguageObject implements ISetClauseList {
 
 	private List<ISetClause> clauses;
 	

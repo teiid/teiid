@@ -73,24 +73,8 @@ public class LDAPConnector extends BasicConnector {
 		}
 		this.props = env.getProperties();
 		
-		// Get properties for initial connection.
-		// LDAP Max In Criteria
-		String ldapMaxCriteriaStr = props.getProperty(LDAPConnectorPropertyNames.LDAP_MAX_CRITERIA);
-		if(ldapMaxCriteriaStr!=null) {
-			try {
-				ldapMaxCriteria = Integer.parseInt(ldapMaxCriteriaStr);
-			} catch (NumberFormatException ex) {
-	            final String msg = LDAPPlugin.Util.getString("LDAPConnection.maxCriteriaParseError"); //$NON-NLS-1$
-	            throw new ConnectorException(msg);
-			}
-		} else {
-            final String msg = LDAPPlugin.Util.getString("LDAPConnection.maxCriteriaPropNotFound"); //$NON-NLS-1$
-            throw new ConnectorException(msg);
-		}
-		
 		// Create and configure capabilities class.
 		myCaps = new LDAPConnectorCapabilities();
-		myCaps.setInCriteriaSize(ldapMaxCriteria);
 	}
 
 	/** 

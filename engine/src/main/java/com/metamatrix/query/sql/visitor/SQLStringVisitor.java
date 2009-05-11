@@ -36,7 +36,6 @@ import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
-import com.metamatrix.query.sql.lang.BulkInsert;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
 import com.metamatrix.query.sql.lang.Create;
@@ -468,26 +467,6 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
     }
 
-    public void visit(BulkInsert obj) {
-        formatBasicInsert(obj);
-        int varCount = obj.getVariables().size();
-        parts.add(ReservedWords.VALUES);
-        parts.add(" ("); //$NON-NLS-1$
-        for (int i=0; i<varCount; i++) {
-            parts.add("?"); //$NON-NLS-1$
-            if (i < varCount-1) {
-                parts.add(","); //$NON-NLS-1$
-            }
-        }        
-        parts.add(")"); //$NON-NLS-1$
-
-    	// Option clause
-		if(obj.getOption() != null) {
-            parts.add(SPACE);
-            parts.add(registerNode(obj.getOption()));
-		}
-    }
-    
     public void visit(IsNullCriteria obj) {
         Expression expr = obj.getExpression();
         Object exprPart = registerNode(expr);
@@ -1153,8 +1132,9 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit(Constant obj) {
         Object[] constantParts = null;
-
-		if(obj.isNull()) {
+        if (obj.isMultiValued()) {
+        	constantParts = new Object[] {"?"}; //$NON-NLS-1$
+        } else if(obj.isNull()) {
 			constantParts = new Object[] {"null"}; //$NON-NLS-1$
 		} else {
 		    try {

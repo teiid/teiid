@@ -35,8 +35,6 @@ import org.teiid.connector.api.ConnectorCapabilities;
  */
 public class BasicConnectorCapabilities implements ConnectorCapabilities {
     
-    protected int maxInCriteriaSize = -1;
-    
     /**
      * Construct the basic capabilities class.
      */
@@ -272,7 +270,7 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
      * @since 4.2
      */
     public int getMaxInCriteriaSize() {
-        return this.maxInCriteriaSize;
+        return -1;
     }
     
     /** 
@@ -335,11 +333,6 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
 	}
 
 	@Override
-	public boolean supportsBulkInsert() {
-		return false;
-	}
-	
-	@Override
 	public boolean supportsGroupBy() {
 		return false;
 	}
@@ -366,6 +359,16 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
 	
 	@Override
 	public boolean supportsCompareCriteriaOrdered() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsInsertWithQueryExpression() {
+		return false;
+	}
+	
+	@Override
+	public boolean supportsBulkUpdate() {
 		return false;
 	}
 	

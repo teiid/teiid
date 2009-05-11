@@ -22,7 +22,6 @@
 
 package org.teiid.dqp.internal.datamgr.language;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.connector.api.ConnectorException;

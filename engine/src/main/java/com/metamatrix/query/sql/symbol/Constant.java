@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.sql.symbol;
 
+import java.util.List;
+
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageVisitor;
@@ -34,10 +36,11 @@ import com.metamatrix.query.util.ErrorMessageKeys;
  * value, but that is not true if the value is null.  In that case, the type is unknown
  * and is set to the null type until the type is resolved at a later point.
  */
-public class Constant implements Expression, Comparable {
+public class Constant implements Expression {
 
 	private Object value;
 	private Class type;
+	private boolean multiValued;
 
 	/**
 	 * Construct a typed constant.  The specified value is not verified to be a value
@@ -103,11 +106,20 @@ public class Constant implements Expression, Comparable {
 	public boolean isResolved() {
 		return true;
 	}
+	
+    public void setMultiValued(List<?> value) {
+		this.multiValued = true;
+		this.value = value;
+	}
+    
+    public boolean isMultiValued() {
+		return multiValued;
+	}
 
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }
-
+    
 	/**
 	 * Compare this constant to another constant for equality.
 	 * @param obj Other object
@@ -155,7 +167,9 @@ public class Constant implements Expression, Comparable {
 	 * @return Shallow copy of object
 	 */
 	public Object clone() {
-        return new Constant(getValue(), getType());
+        Constant copy =  new Constant(getValue(), getType());
+        copy.multiValued = multiValued;
+        return copy;
 	}
 
 	/**
@@ -165,26 +179,5 @@ public class Constant implements Expression, Comparable {
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
 	}
-
-    /** 
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     * @since 4.2
-     */
-    public int compareTo(Object o) throws ClassCastException {
-        if(o instanceof Constant) {
-            Constant compare = (Constant)o;
-            if(this.type.equals(compare.type)) {
-                if(compare.value == null) {
-                    return 1;
-                } else if(this.value == null) {
-                    return -1;
-                } else if(compare.value instanceof Comparable) {
-                    return ((Comparable)this.value).compareTo(compare.value);
-                }
-            }
-        }
-        throw new ClassCastException();
-    }
-    
-
+	
 }

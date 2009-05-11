@@ -179,7 +179,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
                     return null;
                 }
                 
-                if (!CapabilitiesUtil.supportsInlineView(modelID, metadata, capFinder)) {
+                //raise only if there is no intervening project into
+                PlanNode parentProject = NodeEditor.findParent(parentNode, NodeConstants.Types.PROJECT);
+                GroupSymbol intoGroup = (GroupSymbol)parentProject.getProperty(NodeConstants.Info.INTO_GROUP); 
+                if (intoGroup != null && parentProject.getParent() == null) {
+                	if (CapabilitiesUtil.supports(Capability.INSERT_WITH_QUERYEXPRESSION, modelID, metadata, capFinder) && CapabilitiesUtil.isSameConnector(modelID, metadata.getModelID(intoGroup.getMetadataID()), metadata, capFinder)) {
+                    	rootNode = performRaise(rootNode, accessNode, parentNode);
+                    	return performRaise(rootNode, accessNode, parentProject);
+                	}
+                	return null;
+                } else if (!CapabilitiesUtil.supportsInlineView(modelID, metadata, capFinder)) {
                 	return null;
                 }
 
@@ -188,12 +197,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 	return null;
                 }
                                 
-                //raise only if there is no intervening project into
-                PlanNode parentProject = NodeEditor.findParent(parentNode, NodeConstants.Types.PROJECT);
-                if (parentProject.getProperty(NodeConstants.Info.INTO_GROUP) != null) {
-                    return null;
-                }
-                
                 //switch to inline view and change the group on the access to that of the source
             	parentNode.setProperty(NodeConstants.Info.INLINE_VIEW, Boolean.TRUE);
             	accessNode.getGroups().clear();

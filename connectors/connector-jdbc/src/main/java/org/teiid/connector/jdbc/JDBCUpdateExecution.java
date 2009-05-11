@@ -37,8 +37,8 @@ import org.teiid.connector.api.UpdateExecution;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.IBatchedUpdates;
-import org.teiid.connector.language.IBulkInsert;
 import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ILiteral;
 
 
 /**
@@ -71,15 +71,13 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
 
     @Override
     public void execute() throws ConnectorException {
-        if (command instanceof IBulkInsert) {
-            result = new int [] {execute((IBulkInsert)command)};
-        } else if (command instanceof IBatchedUpdates) {
+        if (command instanceof IBatchedUpdates) {
         	result = execute(((IBatchedUpdates)command));
         } else {
             // translate command
             TranslatedCommand translatedComm = translateCommand(command);
 
-            result = new int [] {executeTranslatedCommand(translatedComm)};
+            result = executeTranslatedCommand(translatedComm);
         }
     }
 
@@ -119,7 +117,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                         }
                         pstmt = getPreparedStatement(command.getSql());
                     }
-                    sqlTranslator.bindPreparedStatementValues(this.connection, pstmt, command);
+                    bindPreparedStatementValues(pstmt, command, 1);
                     pstmt.addBatch();
                 } else {
                     if (previousCommand != null && previousCommand.isPrepared()) {
@@ -149,44 +147,6 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
         return results;
     }
 
-    /**
-     * An implementation to bulk insert rows into single table.
-     * 
-     * @param command
-     * @return
-     * @throws ConnectorException
-     */
-    public int execute(IBulkInsert command) throws ConnectorException {
-        boolean succeeded = false;
-
-        // translate command
-        TranslatedCommand translatedComm = translateCommand(command);
-
-        // create statement or PreparedStatement and execute
-        String sql = translatedComm.getSql();
-
-        boolean commitType = getAutoCommit(translatedComm);
-        int updateCount = -1;
-        try {
-            // temporarily turn the auto commit off, and set it back to what it was
-            // before at the end of the command execution.
-            if (commitType) {
-                connection.setAutoCommit(false);
-            }
-            PreparedStatement stmt = getPreparedStatement(sql);
-            updateCount = sqlTranslator.executeStatementForBulkInsert(this.connection, stmt, translatedComm);
-            addStatementWarnings();
-            succeeded = true;
-        } catch (SQLException e) {
-        	throw new JDBCExecutionException(e, translatedComm);
-        } finally {
-            if (commitType) {
-                restoreAutoCommit(!succeeded, translatedComm);
-            }
-        }
-        return updateCount;
-    }
-
     private void executeBatch(int commandCount,
                               int[] results,
                               List<TranslatedCommand> commands) throws ConnectorException {
@@ -198,7 +158,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             }
             commands.clear();
         } catch (SQLException err) {
-            throw new JDBCExecutionException(err, commands.toArray(new TranslatedCommand[commands.size()])); //$NON-NLS-1$
+            throw new JDBCExecutionException(err, commands.toArray(new TranslatedCommand[commands.size()]));
         }
     }
 
@@ -207,23 +167,51 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
      * @throws ConnectorException
      * @since 4.3
      */
-    private int executeTranslatedCommand(TranslatedCommand translatedComm) throws ConnectorException {
+    private int[] executeTranslatedCommand(TranslatedCommand translatedComm) throws ConnectorException {
         // create statement or PreparedStatement and execute
         String sql = translatedComm.getSql();
-
+        boolean commitType = false;
+        boolean succeeded = false;
         try {
-        	int updateCount;
+        	int updateCount = 0;
             if (!translatedComm.isPrepared()) {
                 updateCount = getStatement().executeUpdate(sql);
             } else {
             	PreparedStatement pstatement = getPreparedStatement(sql);
-                sqlTranslator.bindPreparedStatementValues(this.connection, pstatement, translatedComm);
-                updateCount = pstatement.executeUpdate();
+                int rowCount = 1;
+                for (int i = 0; i< translatedComm.getPreparedValues().size(); i++) {
+                    ILiteral paramValue = (ILiteral)translatedComm.getPreparedValues().get(i);
+                    if (paramValue.isMultiValued()) {
+                    	rowCount = ((List<?>)paramValue).size();
+                    	break;
+                    }
+                }
+                if (rowCount > 1) {
+                    commitType = getAutoCommit(translatedComm);
+                    if (commitType) {
+                        connection.setAutoCommit(false);
+                    }
+                }
+                bindPreparedStatementValues(pstatement, translatedComm, rowCount);
+            	if (rowCount > 1) {
+                    int[] results = pstatement.executeBatch();
+                    
+                    for (int i=0; i<results.length; i++) {
+                        updateCount += results[i];
+                    }
+                    succeeded = true;
+            	} else {
+            		updateCount = pstatement.executeUpdate();
+            	}
             } 
             addStatementWarnings();
-            return updateCount;
+            return new int[] {updateCount};
         } catch (SQLException err) {
         	throw new JDBCExecutionException(err, translatedComm);
+        } finally {
+        	if (commitType) {
+                restoreAutoCommit(!succeeded, translatedComm);
+            }
         }
     }
 
@@ -253,9 +241,14 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             if (exceptionOccurred) {
                 connection.rollback();
             }
-            connection.setAutoCommit(true);
         } catch (SQLException err) {
         	throw new JDBCExecutionException(err, command);
+        } finally {
+        	try {
+        		connection.setAutoCommit(true);
+        	} catch (SQLException err) {
+            	throw new JDBCExecutionException(err, command);
+            }
         }
     }
     

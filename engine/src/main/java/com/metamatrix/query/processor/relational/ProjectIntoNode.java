@@ -35,12 +35,12 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
-import com.metamatrix.query.sql.lang.BulkInsert;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 
 public class ProjectIntoNode extends RelationalNode {
 
@@ -115,7 +115,7 @@ public class ProjectIntoNode extends RelationalNode {
                 currentBatch = getChildren()[0].nextBatch(); // can throw BlockedException
                 this.batchRow = currentBatch.getBeginRow();
                 
-                if(currentBatch.getRowCount() == 0 && !this.intoGroup.isImplicitTempGroupSymbol()) {
+                if(currentBatch.getRowCount() == 0) {
                     continue;
                 }
             } else if (currentBatch.getTerminationFlag() && this.batchRow > currentBatch.getEndRow()) {
@@ -126,15 +126,22 @@ public class ProjectIntoNode extends RelationalNode {
             int batchSize = currentBatch.getRowCount();
             
             if (doBulkInsert) {
+            	//convert to multivalued parameter
+                List<Constant> parameters = new ArrayList<Constant>(intoElements.size());
+                for (int i = 0; i < intoElements.size(); i++) {
+					Constant value = new Constant(null, ((ElementSymbol)intoElements.get(i)).getType());
+					value.setMultiValued(new ArrayList<Object>(currentBatch.getAllTuples().length));
+                	parameters.add(value);
+				}
+                for (List row : currentBatch.getAllTuples()) {
+                	for (int i = 0; i < row.size(); i++) {
+                		((List<Object>)parameters.get(i).getValue()).add(row.get(i));
+                	}
+				}
                 // Create a bulk insert command batching all rows in the current batch.
-                BulkInsert insert = new BulkInsert(intoGroup, intoElements);
-                
-                List rows = Arrays.asList(currentBatch.getAllTuples());
-                insert.setRows(rows);
-                
+                Insert insert = new Insert(intoGroup, intoElements, parameters);
                 // Register insert command against source 
                 registerRequest(insert);
-                
             } else if (doBatching) { 
                 // Register batched update command against source
                 int endRow = currentBatch.getEndRow();

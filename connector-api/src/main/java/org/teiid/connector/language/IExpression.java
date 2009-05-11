@@ -30,21 +30,17 @@ package org.teiid.connector.language;
 public interface IExpression extends ILanguageObject {
 
     /**
-     * Determine the type returned by this expression.  The connector should
-     * return an object of this type if this expression is used in a SELECT 
-     * clause.  
+     * Determine the type returned by this expression.
      * 
      * @return The type, as defined by a Java class
      */
-    Class getType();
+    Class<?> getType();
 
     /**
-     * Set the type returned by this expression.  The connector should
-     * return an object of this type if this expression is used in a SELECT 
-     * clause.  
+     * Set the type returned by this expression.
      * 
      * @param type The type, as defined by a Java class
      */
-    void setType(Class type);
+    void setType(Class<?> type);
     
 }

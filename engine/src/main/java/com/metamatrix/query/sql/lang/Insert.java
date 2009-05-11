@@ -33,6 +33,7 @@ import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.ProcedureReservedWords;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
@@ -103,6 +104,16 @@ public class Insert extends ProcedureContainer {
      */
     public void setGroup(GroupSymbol group) {
         this.group = group;
+    }
+    
+    public boolean isBulk() {
+    	if (this.values == null) {
+    		return false;
+    	}
+    	if (!(this.values.get(0) instanceof Constant)) {
+    		return false;
+    	}
+    	return ((Constant)this.values.get(0)).isMultiValued();
     }
 
     /**
@@ -260,6 +271,9 @@ public class Insert extends ProcedureContainer {
         }
         
 	    Insert copy = new Insert(copyGroup, copyVars, copyVals);
+	    if (this.queryExpression != null) {
+	    	copy.setQueryExpression((QueryCommand)this.queryExpression.clone());
+	    }
         this.copyMetadataState(copy);
 		return copy;
 	}

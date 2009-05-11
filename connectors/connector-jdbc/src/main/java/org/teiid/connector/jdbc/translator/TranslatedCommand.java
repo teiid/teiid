@@ -45,7 +45,6 @@ public class TranslatedCommand {
     private String sql;
     private boolean prepared;
     private List preparedValues;
-    private List preparedTypes;
     
     private SQLConversionVisitor sqlConversionVisitor;
     private ReplacementVisitor functionVisitor;
@@ -74,7 +73,6 @@ public class TranslatedCommand {
     public void translateCommand(ICommand command) throws ConnectorException {
         this.sql = getSQL(command);
         this.preparedValues = this.sqlConversionVisitor.getPreparedValues();
-        this.preparedTypes = this.sqlConversionVisitor.getPreparedTypes();
         this.prepared = this.sqlConversionVisitor.isPrepared();
     }
 	
@@ -127,15 +125,6 @@ public class TranslatedCommand {
         return preparedValues;
     }
     
-    /**
-     * Return List of types to set on a prepared statement, if 
-     * necessary (see {@link #getStatementType})
-     * @return List of types to be set on a prepared statement
-     */
-    public List getPreparedTypes() {
-        return preparedTypes;
-    }
-
     /**
      * Get String SQL of translated command; but use 
      * {@link #nextLargeSetQuerySQL} if this command is 

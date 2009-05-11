@@ -34,10 +34,12 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
  */
 public class SybaseCapabilities extends JDBCCapabilities {
 
-    public static final int SYBASE_MAX_SET_SIZE = 250;
-
     public SybaseCapabilities() {
-        this.setMaxInCriteriaSize(SYBASE_MAX_SET_SIZE);
+    }
+    
+    @Override
+    public int getMaxInCriteriaSize() {
+    	return 250;
     }
     
     /**

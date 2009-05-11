@@ -28,6 +28,7 @@ import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.IInlineView;
 import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.language.ILikeCriteria;
 import org.teiid.connector.language.ILiteral;
@@ -111,7 +112,7 @@ final class BindValueVisitor extends HierarchyVisitor {
     }
 
     @Override
-    public void visit(IInsert obj) {
+    public void visit(IInsertExpressionValueSource obj) {
         replaceWithBinding = true;
         visitNodes(obj.getValues());
     }
