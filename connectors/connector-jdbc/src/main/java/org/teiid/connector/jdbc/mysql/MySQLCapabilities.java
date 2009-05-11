@@ -25,6 +25,7 @@ package org.teiid.connector.jdbc.mysql;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.JDBCCapabilities;
 
 
@@ -34,98 +35,88 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
  */
 public class MySQLCapabilities extends JDBCCapabilities {
 
-    public List getSupportedFunctions() {
-        List supportedFunctions = new ArrayList();
+    public List<String> getSupportedFunctions() {
+        List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
 
-        supportedFunctions.add("ABS"); //$NON-NLS-1$
-        supportedFunctions.add("ACOS"); //$NON-NLS-1$
-        supportedFunctions.add("ASIN"); //$NON-NLS-1$
-        supportedFunctions.add("ATAN"); //$NON-NLS-1$
-        supportedFunctions.add("ATAN2"); //$NON-NLS-1$
-        // These are executed within the server and never pushed down
-//        supportedFunctions.add("BITAND"); //$NON-NLS-1$
-//        supportedFunctions.add("BITNOT"); //$NON-NLS-1$
-//        supportedFunctions.add("BITOR"); //$NON-NLS-1$
-//        supportedFunctions.add("BITXOR"); //$NON-NLS-1$
-        supportedFunctions.add("CEILING"); //$NON-NLS-1$
-        supportedFunctions.add("COS"); //$NON-NLS-1$
-        supportedFunctions.add("COT"); //$NON-NLS-1$
-        supportedFunctions.add("DEGREES"); //$NON-NLS-1$
-        supportedFunctions.add("EXP"); //$NON-NLS-1$
-        supportedFunctions.add("FLOOR"); //$NON-NLS-1$
-        supportedFunctions.add("LOG"); //$NON-NLS-1$
-        supportedFunctions.add("LOG10"); //$NON-NLS-1$
-        supportedFunctions.add("MOD"); //$NON-NLS-1$
-        supportedFunctions.add("PI"); //$NON-NLS-1$
-        supportedFunctions.add("POWER"); //$NON-NLS-1$
-        supportedFunctions.add("RADIANS"); //$NON-NLS-1$
-        supportedFunctions.add("ROUND"); //$NON-NLS-1$
-        supportedFunctions.add("SIGN"); //$NON-NLS-1$
-        supportedFunctions.add("SIN"); //$NON-NLS-1$
-        supportedFunctions.add("SQRT"); //$NON-NLS-1$
-        supportedFunctions.add("TAN"); //$NON-NLS-1$
-        
-        supportedFunctions.add("ASCII"); //$NON-NLS-1$
-        supportedFunctions.add("CHR"); //$NON-NLS-1$
-        supportedFunctions.add("CHAR"); //$NON-NLS-1$
-        supportedFunctions.add("||"); //$NON-NLS-1$
-        supportedFunctions.add("CONCAT"); //$NON-NLS-1$
-        supportedFunctions.add("INSERT"); //$NON-NLS-1$
-        supportedFunctions.add("LCASE"); //$NON-NLS-1$
-        supportedFunctions.add("LEFT"); //$NON-NLS-1$
-        supportedFunctions.add("LENGTH"); //$NON-NLS-1$
-        supportedFunctions.add("LOCATE"); //$NON-NLS-1$
-        supportedFunctions.add("LOWER"); //$NON-NLS-1$
-        supportedFunctions.add("LPAD"); //$NON-NLS-1$
-        supportedFunctions.add("LTRIM"); //$NON-NLS-1$
-        supportedFunctions.add("REPEAT"); //$NON-NLS-1$
-        supportedFunctions.add("REPLACE"); //$NON-NLS-1$
-        supportedFunctions.add("RIGHT"); //$NON-NLS-1$
-        supportedFunctions.add("RPAD"); //$NON-NLS-1$
-        supportedFunctions.add("RTRIM"); //$NON-NLS-1$
-        supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
-        supportedFunctions.add("UCASE"); //$NON-NLS-1$
-        supportedFunctions.add("UPPER"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.ABS); 
+        supportedFunctions.add(SourceSystemFunctions.ACOS); 
+        supportedFunctions.add(SourceSystemFunctions.ASIN);
+        supportedFunctions.add(SourceSystemFunctions.ATAN);
+        supportedFunctions.add(SourceSystemFunctions.ATAN2);
+        supportedFunctions.add(SourceSystemFunctions.BITAND);
+        supportedFunctions.add(SourceSystemFunctions.BITNOT);
+        supportedFunctions.add(SourceSystemFunctions.BITOR);
+        supportedFunctions.add(SourceSystemFunctions.BITXOR);
+        supportedFunctions.add(SourceSystemFunctions.CEILING);
+        supportedFunctions.add(SourceSystemFunctions.COS);
+        supportedFunctions.add(SourceSystemFunctions.COT);
+        supportedFunctions.add(SourceSystemFunctions.DEGREES);
+        supportedFunctions.add(SourceSystemFunctions.EXP);
+        supportedFunctions.add(SourceSystemFunctions.FLOOR);
+        supportedFunctions.add(SourceSystemFunctions.LOG);
+        supportedFunctions.add(SourceSystemFunctions.LOG10);
+        supportedFunctions.add(SourceSystemFunctions.MOD);
+        supportedFunctions.add(SourceSystemFunctions.PI);
+        supportedFunctions.add(SourceSystemFunctions.POWER);
+        supportedFunctions.add(SourceSystemFunctions.RADIANS);
+        supportedFunctions.add(SourceSystemFunctions.ROUND);
+        supportedFunctions.add(SourceSystemFunctions.SIGN);
+        supportedFunctions.add(SourceSystemFunctions.SIN);
+        supportedFunctions.add(SourceSystemFunctions.SQRT);
+        supportedFunctions.add(SourceSystemFunctions.TAN);
+
+        supportedFunctions.add(SourceSystemFunctions.ASCII);
+        supportedFunctions.add(SourceSystemFunctions.CHAR);
+        supportedFunctions.add(SourceSystemFunctions.CONCAT);
+        supportedFunctions.add(SourceSystemFunctions.INSERT);
+        supportedFunctions.add(SourceSystemFunctions.LCASE);
+        supportedFunctions.add(SourceSystemFunctions.LEFT);
+        supportedFunctions.add(SourceSystemFunctions.LENGTH);
+        supportedFunctions.add(SourceSystemFunctions.LOCATE);
+        supportedFunctions.add(SourceSystemFunctions.LPAD);
+        supportedFunctions.add(SourceSystemFunctions.LTRIM);
+        supportedFunctions.add(SourceSystemFunctions.REPEAT);
+        supportedFunctions.add(SourceSystemFunctions.REPLACE);
+        supportedFunctions.add(SourceSystemFunctions.RIGHT);
+        supportedFunctions.add(SourceSystemFunctions.RPAD);
+        supportedFunctions.add(SourceSystemFunctions.RTRIM);
+        supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
+        supportedFunctions.add(SourceSystemFunctions.UCASE);
         
         // These are executed within the server and never pushed down
 //        supportedFunctions.add("CURDATE"); //$NON-NLS-1$
 //        supportedFunctions.add("CURTIME"); //$NON-NLS-1$
 //        supportedFunctions.add("NOW"); //$NON-NLS-1$
-        supportedFunctions.add("DAYNAME"); //$NON-NLS-1$
-        supportedFunctions.add("DAYOFMONTH"); //$NON-NLS-1$
-        supportedFunctions.add("DAYOFWEEK"); //$NON-NLS-1$
-        supportedFunctions.add("DAYOFYEAR"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.DAYNAME);
+        supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
+        supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
+        supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
         
         // These should not be pushed down since the grammar for string conversion is different
 //        supportedFunctions.add("FORMATDATE"); //$NON-NLS-1$
 //        supportedFunctions.add("FORMATTIME"); //$NON-NLS-1$
 //        supportedFunctions.add("FORMATTIMESTAMP"); //$NON-NLS-1$
-        supportedFunctions.add("HOUR"); //$NON-NLS-1$
-        supportedFunctions.add("MINUTE"); //$NON-NLS-1$
-        supportedFunctions.add("MONTH"); //$NON-NLS-1$
-        supportedFunctions.add("MONTHNAME"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.HOUR);
+        supportedFunctions.add(SourceSystemFunctions.MINUTE);
+        supportedFunctions.add(SourceSystemFunctions.MONTH);
+        supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
         
         // These should not be pushed down since the grammar for string conversion is different
 //        supportedFunctions.add("PARSEDATE"); //$NON-NLS-1$
 //        supportedFunctions.add("PARSETIME"); //$NON-NLS-1$
 //        supportedFunctions.add("PARSETIMESTAMP"); //$NON-NLS-1$
-        supportedFunctions.add("QUARTER"); //$NON-NLS-1$
-        supportedFunctions.add("SECOND"); //$NON-NLS-1$
-        supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
-//        supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
-        supportedFunctions.add("WEEK"); //$NON-NLS-1$
-        supportedFunctions.add("YEAR"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.QUARTER);
+        supportedFunctions.add(SourceSystemFunctions.SECOND);
+//        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
+//        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        supportedFunctions.add(SourceSystemFunctions.WEEK);
+        supportedFunctions.add(SourceSystemFunctions.YEAR);
+
+        supportedFunctions.add(SourceSystemFunctions.CONVERT);
+        supportedFunctions.add(SourceSystemFunctions.IFNULL);
+        supportedFunctions.add(SourceSystemFunctions.COALESCE);
         
-        supportedFunctions.add("CAST"); //$NON-NLS-1$
-        supportedFunctions.add("CONVERT"); //$NON-NLS-1$
-        supportedFunctions.add("IFNULL"); //$NON-NLS-1$
-        supportedFunctions.add("NVL"); //$NON-NLS-1$
-        
-        //   ADDITIONAL functions supported by MySQL
-        
-//        // Comparison
-        supportedFunctions.add("COALESCE"); //$NON-NLS-1$
 //        supportedFunctions.add("GREATEST"); //$NON-NLS-1$
 //        supportedFunctions.add("ISNULL"); //$NON-NLS-1$
 //        supportedFunctions.add("LEAST"); //$NON-NLS-1$

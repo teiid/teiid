@@ -22,8 +22,11 @@
 
 package org.teiid.connector.visitor.util;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.IAggregate;
@@ -81,6 +84,9 @@ import com.metamatrix.core.util.StringUtil;
  */
 public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLReservedWords {
    
+    private Set<String> infixFunctions = new HashSet<String>(Arrays.asList("%", "+", "-", "*", "+", "/", "||", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
+    		"&", "~", "|", "^"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+	
     private static final String ESCAPED_QUOTE = "''"; //$NON-NLS-1$    
 
     protected static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
@@ -388,6 +394,10 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
               .append(SPACE);
         append(obj.getItems());
     }
+        
+    protected boolean isInfixFunction(String function) {
+    	return infixFunctions.contains(function);
+    }
 
     /**
      * @see com.metamatrix.data.visitor.LanguageObjectVisitor#visit(org.teiid.connector.language.IFunction)
@@ -415,7 +425,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
             }
             buffer.append(typeValue);
             buffer.append(RPAREN); 
-        } else if(name.equals("%") || name.equals("+") || name.equals("-") || name.equals("*") || name.equals("/") || name.equals("||")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+        } else if(isInfixFunction(name)) { 
             buffer.append(LPAREN); 
 
             if(args != null) {
