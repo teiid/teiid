@@ -31,6 +31,7 @@ import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
+import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.CacheAdmin;
@@ -60,7 +61,7 @@ public interface QueryServiceInterface extends ServiceInterface, CacheAdmin {
     public void cancelQuery(RequestID requestID, boolean shouldRollback)
         throws InvalidRequestIDException, MetaMatrixComponentException;
     
-    public void cancelQuery(RequestID requestID, int nodeID)
+    public void cancelQuery(AtomicRequestID ari)
     throws InvalidRequestIDException, MetaMatrixComponentException;   
     
     Collection<Transaction> getTransactions();

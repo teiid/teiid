@@ -105,9 +105,9 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         //positive case
         assertTrue(FakeQueryService.cancelledQueries.isEmpty());
         
-        admin.cancelSourceRequest(REQUEST_1_1_1);  
+        admin.cancelSourceRequest(REQUEST_1_1_1_0);  
         
-        assertTrue(FakeQueryService.cancelledQueries.contains(REQUEST_1_1_1)); 
+        assertTrue(FakeQueryService.cancelledQueries.contains(REQUEST_1_1_1_0)); 
         
         
         

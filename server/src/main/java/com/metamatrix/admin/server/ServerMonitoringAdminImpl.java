@@ -928,8 +928,9 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 
 			    MMRequest request;
 			    if (info.isAtomicQuery()) {
-			    	identifierParts = new String[3];
+			    	identifierParts = new String[4];
 			    	identifierParts[2] = String.valueOf(info.getNodeID());
+			    	identifierParts[3] = String.valueOf(info.getExecutionID());
 			    } else {
 			    	identifierParts = new String[2];
 			    }

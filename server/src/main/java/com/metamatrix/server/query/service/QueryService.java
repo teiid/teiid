@@ -53,6 +53,7 @@ import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -190,9 +191,9 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
     /*
      * @see com.metamatrix.server.query.service.QueryServiceInterface#cancelQuery(com.metamatrix.dqp.message.RequestID, int)
      */
-    public void cancelQuery(RequestID requestID, int nodeID)
+    public void cancelQuery(AtomicRequestID ari)
         throws InvalidRequestIDException, MetaMatrixComponentException {
-		this.dqp.cancelAtomicRequest(requestID, nodeID);
+		this.dqp.cancelAtomicRequest(ari);
     }    
     
     /**

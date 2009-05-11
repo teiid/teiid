@@ -55,6 +55,7 @@ import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.core.vdb.VDBStatus;
+import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
 import com.metamatrix.metadata.runtime.RuntimeVDBDeleteUtility;
@@ -131,12 +132,13 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
         String sessionID = null; 
         long requestIDLong = -1;
         int nodeID = -1;
-        
+        int executionId = -1;
         try {
             String[] identifierParts = MMRequest.buildIdentifierArray(identifier);
             sessionID = identifierParts[0];
             requestIDLong = Long.parseLong(identifierParts[1]);
             nodeID = Integer.parseInt(identifierParts[2]);
+            executionId = Integer.parseInt(identifierParts[3]);
         } catch (NumberFormatException e) {
             throwProcessingException("ServerRuntimeStateAdminImpl.Invalid_Source_Request_Identifier", new Object[] {identifier, Request.DELIMITER}); //$NON-NLS-1$
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -145,8 +147,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
         
             
         try {
-            RequestID requestID = new RequestID(sessionID, requestIDLong);
-            getQueryServiceProxy().cancelQuery(requestID, nodeID);
+            getQueryServiceProxy().cancelQuery(new AtomicRequestID(new RequestID(sessionID, requestIDLong), nodeID, executionId));
         }  catch(InvalidRequestIDException e) {
         	throw new AdminProcessingException(e);
         } catch (MetaMatrixComponentException e) {

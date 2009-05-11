@@ -68,6 +68,7 @@ import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
+import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
@@ -220,6 +221,7 @@ public class DQPCore extends Application implements ClientSideDQP {
                 	info.setSessionToken(holder.dqpWorkContext.getSessionToken());
                 	info.setConnectorBindingUUID(arm.getConnectorBindingID());
         			info.setNodeID(arm.getAtomicRequestID().getNodeID());
+        			info.setExecutionID(arm.getAtomicRequestID().getExecutionId());
         			results.add(info);
                 }
                 results.add(req);
@@ -349,12 +351,13 @@ public class DQPCore extends Application implements ClientSideDQP {
      * partial results then remove the original request.
      * @throws MetaMatrixComponentException 
      */
-    public void cancelAtomicRequest(RequestID requestID, int nodeID) throws MetaMatrixComponentException {                    
-        RequestWorkItem workItem = safeGetWorkItem(requestID);
+    public void cancelAtomicRequest(AtomicRequestID requestID) throws MetaMatrixComponentException {                    
+        RequestWorkItem workItem = safeGetWorkItem(requestID.getRequestID());
         if (workItem == null) {
+    		LogManager.logDetail(LogConstants.CTX_DQP, "Could not cancel", requestID, "parent request does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
         	return;
         }
-        workItem.requestAtomicRequestCancel(nodeID);
+        workItem.requestAtomicRequestCancel(requestID);
     }
     
     RequestWorkItem getRequestWorkItem(RequestID reqID) throws MetaMatrixProcessingException {

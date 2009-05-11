@@ -44,6 +44,7 @@ public class RequestInfo implements Serializable {
     private int nodeID = Integer.MIN_VALUE;
     private String connectorBindingUUID;
     private String transactionId;
+    private int executionID;
     
     public RequestInfo(RequestID requestId, String originalCommand, Date submittedTime, Date processingTime) {
         this.requestID = requestId;
@@ -113,6 +114,14 @@ public class RequestInfo implements Serializable {
     public void setNodeID(int nodeID) {
         this.nodeID = nodeID;
     }
+    
+    public int getExecutionID() {
+		return executionID;
+	}
+    
+    public void setExecutionID(int executionID) {
+		this.executionID = executionID;
+	}
 
     /**
      * Get the actual command to perform.

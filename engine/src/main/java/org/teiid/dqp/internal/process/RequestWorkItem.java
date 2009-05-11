@@ -64,7 +64,6 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.message.AtomicRequestID;
-import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
@@ -604,24 +603,20 @@ public class RequestWorkItem extends AbstractWorkItem {
         return true;
     }
     
-    public boolean requestAtomicRequestCancel(int accessNodeID) throws MetaMatrixComponentException {
+    public boolean requestAtomicRequestCancel(AtomicRequestID ari) throws MetaMatrixComponentException {
     	// in the case that this does not support partial results; cancel
         // the original processor request.
         if(!requestMsg.supportsPartialResults()) {
         	return requestCancel();
         }
-        // Walk through all connector infos and attempt to cancel each one
-    	for (DataTierTupleSource connectorRequest : this.connectorInfo.values()) {
-            AtomicRequestMessage aqr = connectorRequest.getAtomicRequestMessage();
-            if (aqr.getAtomicRequestID().getNodeID() == accessNodeID) {
-            	connectorRequest.cancelRequest();
-            	return true;
-            }
+        
+        DataTierTupleSource connectorRequest = this.connectorInfo.get(ari);
+        if (connectorRequest != null) {
+	        connectorRequest.cancelRequest();
+        	return true;
         }
         
-    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-    		LogManager.logDetail(LogConstants.CTX_DQP, "Connector request not queued yet. RequestID=" + requestID+ " Node id="+ accessNodeID); //$NON-NLS-1$ //$NON-NLS-2$
-    	}
+		LogManager.logDetail(LogConstants.CTX_DQP, "Connector request not found. AtomicRequestID=", ari); //$NON-NLS-1$ 
         return false;
     }
     

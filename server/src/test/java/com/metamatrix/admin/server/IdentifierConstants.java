@@ -61,7 +61,7 @@ public interface IdentifierConstants {
     /** 
      * @since 4.3
      */
-    final String REQUEST_1_1_1 = "1" + Request.DELIMITER + "1" + Request.DELIMITER + "1"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    final String REQUEST_1_1_1_0 = "1" + Request.DELIMITER + "1" + Request.DELIMITER + "1" + Request.DELIMITER + "0"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$  
     /** 
      * @since 4.3
      */

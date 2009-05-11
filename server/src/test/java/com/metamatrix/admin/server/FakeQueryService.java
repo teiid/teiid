@@ -37,12 +37,14 @@ import javax.transaction.xa.Xid;
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.api.objects.Transaction;
+import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -131,16 +133,14 @@ public class FakeQueryService implements QueryServiceInterface {
     public void cancelQuery(RequestID requestID,
                             boolean shouldRollback) throws InvalidRequestIDException,
                                                    MetaMatrixComponentException {
-        cancelledQueries.add(buildIdentifierFromRequestId(requestID, null));
+        cancelledQueries.add(requestID.getConnectionID() + MMAdminObject.DELIMITER_CHAR + requestID.getExecutionID());
     }
-
-    /** 
-     * @see com.metamatrix.server.query.service.BaseQueryServiceInterface#cancelQuery(com.metamatrix.dqp.message.RequestID, int)
-     */
-    public void cancelQuery(RequestID requestID,
-                            int nodeID) throws InvalidRequestIDException,
-                                       MetaMatrixComponentException{
-        cancelledQueries.add(buildIdentifierFromRequestId(requestID, "" +nodeID)); //$NON-NLS-1$
+    
+    @Override
+    public void cancelQuery(AtomicRequestID ari)
+    		throws InvalidRequestIDException, MetaMatrixComponentException {
+    	cancelledQueries.add(ari.getRequestID().getConnectionID() + MMAdminObject.DELIMITER_CHAR + ari.getRequestID().getExecutionID()
+    			+MMAdminObject.DELIMITER_CHAR + ari.getNodeID() + MMAdminObject.DELIMITER_CHAR + ari.getExecutionId());
     }
 
     /** 
@@ -257,29 +257,6 @@ public class FakeQueryService implements QueryServiceInterface {
      */
     public void clearCache(String name,
                            Properties props) throws MetaMatrixComponentException{
-    }
-    
-    /**
-     * Build the Identifer, as an array of its parts
-     * @param requestId
-     *  
-     * @return the Identifer, as an array of its parts
-     * @since 4.3
-     */
-    private static String buildIdentifierFromRequestId(RequestID requestId, String nodeId) {
-        String connectionId = requestId.getConnectionID();
-        String executionId = Long.toString(requestId.getExecutionID());
-        
-        StringBuffer buff = new StringBuffer();
-        buff.append(connectionId);
-        buff.append(Request.DELIMITER_CHAR);
-        buff.append(executionId);
-        if ( nodeId != null ) {
-            buff.append(Request.DELIMITER_CHAR);
-            buff.append(nodeId);
-        }
-        
-        return buff.toString();
     }
 
 	public void init(ServiceID id, DeployedComponentID deployedComponentID,

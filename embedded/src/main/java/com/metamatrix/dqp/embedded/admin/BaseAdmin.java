@@ -403,7 +403,7 @@ abstract class BaseAdmin {
         
         MMRequest request = null;
         if (src.getConnectorBindingUUID() != null) {
-            request = new MMRequest(new String[] {connId, String.valueOf(src.getRequestID().getExecutionID()), String.valueOf(src.getNodeID())}); 
+            request = new MMRequest(new String[] {connId, String.valueOf(src.getRequestID().getExecutionID()), String.valueOf(src.getNodeID()), String.valueOf(src.getExecutionID())}); 
         }
         else {
             request = new MMRequest(new String[] {connId, String.valueOf(src.getRequestID().getExecutionID())}); 

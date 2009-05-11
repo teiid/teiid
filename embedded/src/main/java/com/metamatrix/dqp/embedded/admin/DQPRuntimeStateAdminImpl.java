@@ -45,6 +45,7 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
@@ -272,7 +273,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     public void cancelSourceRequest(String identifier) 
         throws AdminException {
         
-        if (identifier == null || !identifier.matches("\\d+\\" + Request.DELIMITER + "\\d+\\" + Request.DELIMITER + "\\d+")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        if (identifier == null || !identifier.matches("\\d+\\" + Request.DELIMITER + "\\d+\\" + Request.DELIMITER + "\\d+" + Request.DELIMITER + "\\d+")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_identifier")); //$NON-NLS-1$                
         }
         
@@ -281,10 +282,11 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
         String connId = identifierParts[0];
         long requestId = Long.parseLong(identifierParts[1]);
         int nodeId = Integer.parseInt(identifierParts[2]);
-        RequestID id = new RequestID(connId, requestId);
+        int executionId = Integer.parseInt(identifierParts[3]);
+        AtomicRequestID id = new AtomicRequestID(new RequestID(connId, requestId), nodeId, executionId);
 
         try {
-            this.manager.getDQP().cancelAtomicRequest(id, nodeId);
+            this.manager.getDQP().cancelAtomicRequest(id);
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);
 		}

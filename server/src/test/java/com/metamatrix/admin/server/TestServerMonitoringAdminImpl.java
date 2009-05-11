@@ -483,7 +483,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         assertEquals(2, results.size());
         
         Request request = (Request) results.iterator().next();
-        assertEquals(REQUEST_1_1_1, request.getIdentifier()); 
+        assertEquals(REQUEST_1_1_1_0, request.getIdentifier()); 
         assertEquals("1", request.getSessionID()); //$NON-NLS-1$
         assertEquals("1", request.getRequestID()); //$NON-NLS-1$ 
         assertEquals("1", request.getNodeID()); //$NON-NLS-1$ 
@@ -497,7 +497,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         results = admin.getSourceRequests(_1_1_WILDCARD);  
         assertEquals(1, results.size());
         
-        results = admin.getSourceRequests(REQUEST_1_1_1);  
+        results = admin.getSourceRequests(REQUEST_1_1_1_0);  
         assertEquals(1, results.size());
     }
     
