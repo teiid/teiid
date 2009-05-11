@@ -50,4 +50,8 @@ public class FakeTranslationFactory {
 		return new TranslationUtility(TestValidator.exampleMetadata3());
 	}
 	
+	public TranslationUtility getExampleTranslationUtility() {
+		return new TranslationUtility(FakeMetadataFactory.example1Cached());
+	}
+	
 }
