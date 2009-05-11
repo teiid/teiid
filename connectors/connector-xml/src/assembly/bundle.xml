@@ -20,4 +20,19 @@
       <outputDirectory>/</outputDirectory>
     </fileSet>    
   </fileSets>    
+  
+  <dependencySets>
+    <dependencySet>
+      <useProjectArtifact>true</useProjectArtifact>      
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <useTransitiveFiltering>false</useTransitiveFiltering>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <unpack>false</unpack>
+      
+      <excludes>
+        <exclude>teiid:*</exclude>
+      </excludes>      
+    </dependencySet>
+  </dependencySets>
+  
 </assembly>

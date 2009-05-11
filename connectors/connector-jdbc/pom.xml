@@ -72,6 +72,7 @@
                             <excludeTransitive>false</excludeTransitive>
                             <includeScope>runtime</includeScope>
                             <excludeTypes>pom</excludeTypes>
+                            <includeArtifactIds>${project.artifactId}</includeArtifactIds>
                             <outputDirectory>target/dependency</outputDirectory>
                         </configuration>
                     </execution>
