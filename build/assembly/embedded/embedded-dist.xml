@@ -45,8 +45,8 @@
     </fileSet>      
 
     <fileSet>
-        <directory>build/kit-embedded</directory>
-        <outputDirectory>/</outputDirectory>      
+        <directory>build/target/kit-embedded</directory>
+        <outputDirectory>/</outputDirectory>
         <excludes>
           <exclude>**/*.foo</exclude>
         </excludes>        

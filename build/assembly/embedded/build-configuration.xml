@@ -1,0 +1,35 @@
+<project default="main" name="teiid-configuration-build" basedir=".">
+    
+	<property name="kit.dir" value="${basedir}/target/kit-embedded"/>
+	<property name="extensions.dir" value="${basedir}/target/dependency"/>
+	
+		
+	<target name="main" >
+
+		<copy todir="${kit.dir}">
+			<fileset dir="${basedir}/kit-embedded"/>
+		</copy>		
+		
+		<!-- unzip the connector zip files in to directory and move the jar files into extensions directory -->
+		<unzip dest="${extensions.dir}/unzipped">
+			<fileset dir="${extensions.dir}">
+			    <include name="*.zip"/>
+			</fileset>
+		</unzip>
+		<move todir="${kit.dir}/extensions">
+			<fileset dir="${extensions.dir}/unzipped">
+				<include name="**/*.jar"/>
+			</fileset>
+		</move>
+	
+	  <!-- add all the cdk files, and then add the combined fragment to the config.xml -->
+	  <concat destfile="${extensions.dir}/unzipped/all-cdks.xml">
+	    <fileset dir="${extensions.dir}/unzipped" includes="connector-*.xml"/>
+	  </concat>
+	
+	  <loadfile property="connector-types-fragment"  srcFile="${extensions.dir}/unzipped/all-cdks.xml"/>
+	  <replace file="${kit.dir}/deploy/configuration.xml" token="${connector-types-fragment-fill-in}" value="${connector-types-fragment}"/>
+
+	</target>	
+	
+</project>
