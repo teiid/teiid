@@ -273,6 +273,8 @@ public class ConnectorManager implements ApplicationService {
      * @see com.metamatrix.dqp.internal.datamgr.ConnectorManager#isAlive()
      */
     public Boolean getStatus() {
+    	if (this.connector == null) return false;
+    	
         ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
         try {
         	Thread.currentThread().setContextClassLoader(classloader);
