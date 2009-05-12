@@ -23,66 +23,61 @@ package com.metamatrix.connector.salesforce;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.teiid.connector.basic.BasicConnectorCapabilities;
 
-
 public class SalesforceCapabilities extends BasicConnectorCapabilities {
-	
+
     public int getMaxInCriteriaSize() {
-    	return 100;
+        return 700;
     }
-    
+
     public List getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.add("includes");
         supportedFunctions.add("excludes");
-    	return supportedFunctions;
+        return supportedFunctions;
     }
 
-   
-	public boolean supportsCompareCriteriaEquals() {
+    public boolean supportsCompareCriteriaEquals() {
         return true;
     }
 
-   
     public boolean supportsInCriteria() {
         return true;
     }
 
+    public boolean supportsLikeCriteria() {
+        return true;
+    }
 
-	public boolean supportsLikeCriteria() {
-		return true;
-	}
+    public boolean supportsRowLimit() {
+        return true;
+    }
 
-	public boolean supportsRowLimit() {
-		return true;
-	}
+    // http://jira.jboss.org/jira/browse/JBEDSP-306
+    // Salesforce supports ORDER BY, but not on all column types
+    public boolean supportsOrderBy() {
+        return false;
+    }
 
-	// http://jira.jboss.org/jira/browse/JBEDSP-306
-	// Salesforce supports ORDER BY, but not on all column types
-	public boolean supportsOrderBy() {
-		return false;
-	}
+    @Override
+    public boolean supportsAggregatesCountStar() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsAggregatesCountStar() {
-		return true;
-	}
+    @Override
+    public boolean supportsNotCriteria() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsNotCriteria() {
-		return true;
-	}
-	
-	@Override
-	public boolean supportsOrCriteria() {
-		return true;
-	}
-	
-	@Override
-	public boolean supportsCompareCriteriaOrdered() {
-		return true;
-	}
+    @Override
+    public boolean supportsOrCriteria() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsCompareCriteriaOrdered() {
+        return true;
+    }
 
 }
