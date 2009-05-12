@@ -162,7 +162,6 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 			Command command = QueryParser.getQueryParser().parseCommand(value.toString());
 			command.setExternalGroupContexts(dynamicCommand.getExternalGroupContexts());
 			command.setTemporaryMetadata(dynamicCommand.getTemporaryMetadata());
-            command.setVariableValues(new HashMap(dynamicCommand.getVariableValues()));
 			updateContextWithUsingValues(procEnv, localContext);
 			
 			Map tempMetadata = command.getTemporaryMetadata();
@@ -188,11 +187,10 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 			// create a new set of variables including vars
 			Map nameValueMap = createVariableValuesMap(localContext);
-			command.getVariableValues().putAll(nameValueMap);
-            
+            nameValueMap.putAll(QueryResolver.getVariableValues(parentProcCommand.getUserCommand(), metadata));
             // validation visitor?
 
-            VariableSubstitutionVisitor.substituteVariables(command, command.getVariableValues(), command.getType());
+            VariableSubstitutionVisitor.substituteVariables(command, nameValueMap, command.getType());
             
 			QueryRewriter.rewrite(command, parentProcCommand, metadata,
 					procEnv.getContext());
@@ -352,7 +350,6 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 					.getCanonicalName(), new Constant(entry.getValue()));
 		}
 
-		nameValueMap.putAll(dynamicCommand.getVariableValues());
 		return nameValueMap;
 	}
 

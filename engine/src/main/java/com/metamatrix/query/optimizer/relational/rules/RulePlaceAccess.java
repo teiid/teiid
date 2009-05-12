@@ -307,28 +307,6 @@ public final class RulePlaceAccess implements
         if (patternElements == null) {
             return false;
         }
-        Command command = (Command)node.getProperty(NodeConstants.Info.NESTED_COMMAND);
-
-        // check for input values that have been set by the resolver
-        if (command != null) {
-            Map values = command.getVariableValues();
-
-            if (values != null) {
-                List ids = new LinkedList();
-                for (Iterator i = values.keySet().iterator(); i.hasNext();) {
-                    String elementName = (String)i.next();
-                    Object id = metadata.getElementID(elementName);
-                    ids.add(id);
-                }
-
-                List elements = ResolverUtil.resolveElements(command.getVirtualGroup(), metadata, ids);
-
-                if (RulePushSelectCriteria.satisfyAccessPatterns(patternElements, elements)) {
-                    return false;
-                }
-            }
-        }
-
         Collections.sort(patternElements);
         node.setProperty(NodeConstants.Info.ACCESS_PATTERNS, patternElements);
         return true;

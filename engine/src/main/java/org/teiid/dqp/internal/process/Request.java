@@ -24,7 +24,6 @@ package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -311,13 +310,9 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     	//ensure that the user command is distinct from the processing command
         //rewrite and planning may alter options, symbols, etc.
-        
-        //TODO clone after the resolve - but that doesn't currently work for exec resolving
-    	this.userCommand = (Command)command.clone();
-    	
-    	QueryResolver.resolveCommand(this.userCommand, Collections.emptyMap(), false, metadata, analysisRecord);
-    	
     	QueryResolver.resolveCommand(command, metadata, analysisRecord);
+    	
+    	this.userCommand = (Command)command.clone();
     }
         
     private void validateQuery(Command command, boolean validateVisibility)

@@ -107,9 +107,7 @@ public abstract class Command implements LanguageObject {
     
     public static final int TYPE_DROP = 12;
 
-    private static List updateCommandSymbol = null;
-    
-    private static List updatesCommandSymbol = null;
+    private static List updateCommandSymbol;
     
     /**
      * All temporary group IDs discovered while resolving this 
@@ -118,18 +116,12 @@ public abstract class Command implements LanguageObject {
      */
     protected Map tempGroupIDs;
     
-    private transient GroupContext externalGroups = null;
+    private transient GroupContext externalGroups;
 
-    private boolean isResolved = false;
+    private boolean isResolved;
     
     private GroupSymbol virtualGroup;
     
-    /**
-     * holds variable values found during resolution until they can be used during processing
-     */ 
-    private Map variableValues = new HashMap();
-
-	
 	/** The option clause */
 	private Option option;
 	
@@ -238,10 +230,6 @@ public abstract class Command implements LanguageObject {
         }
         copy.setVirtualGroup(getVirtualGroup());
         
-        if (variableValues != null) {
-            copy.setVariableValues(new HashMap(variableValues));
-        }
-        
         copy.setIsResolved(this.isResolved());
         copy.plan = this.plan;
         if (this.correlatedReferences != null) {
@@ -326,15 +314,6 @@ public abstract class Command implements LanguageObject {
         return updateCommandSymbol;
     }
     
-    public static List getUpdatesCommandSymbol() {
-        if (updatesCommandSymbol == null ) {
-            ElementSymbol symbol = new ElementSymbol("Counts"); //$NON-NLS-1$
-            symbol.setType(int[].class);
-            updatesCommandSymbol = Arrays.asList(new ElementSymbol[] {symbol});
-        }
-        return updatesCommandSymbol;
-    }
-    
     /**
      * Return the number of updates on physical sources by this command. 
      * @param metadata QueryMetadataInterface
@@ -368,14 +347,6 @@ public abstract class Command implements LanguageObject {
 
     public void setVirtualGroup(GroupSymbol virtualGroup) {
         this.virtualGroup = virtualGroup;
-    }
-    
-    public Map getVariableValues() {
-        return variableValues;
-    }
-
-    public void setVariableValues(Map parameters) {
-        this.variableValues = parameters;
     }
     
     public ProcessorPlan getProcessorPlan() {

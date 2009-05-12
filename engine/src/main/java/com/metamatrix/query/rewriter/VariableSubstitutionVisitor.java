@@ -84,21 +84,6 @@ public class VariableSubstitutionVisitor extends ExpressionMappingVisitor {
         this.commandType = commandType;
 	}
 
-	// ############### Visitor methods for language objects ##################
-    
-	public void visit(Insert obj) {
-	    super.visit(obj);
-        obj.getVariableValues().putAll(getVariableValues());
-	}
-
-    /** 
-     * @see com.metamatrix.query.sql.LanguageVisitor#visit(com.metamatrix.query.sql.lang.DynamicCommand)
-     */
-    public void visit(DynamicCommand obj) {
-        super.visit(obj);
-        obj.getVariableValues().putAll(getVariableValues());
-    }
-    
     public void visit(XQuery obj) {
         obj.getCompiledXQuery().setParameters(getVariableValues());
     }
@@ -117,19 +102,6 @@ public class VariableSubstitutionVisitor extends ExpressionMappingVisitor {
             }
         }
         obj.setChangeList(newChangeList);
-        obj.getVariableValues().putAll(getVariableValues());
-    }
-    
-    public void visit(SetQuery obj) {
-        obj.getVariableValues().putAll(getVariableValues());
-    }
-    
-    public void visit(Query obj) {
-        obj.getVariableValues().putAll(getVariableValues());
-    }
-    
-    public void visit(Delete obj) {
-        obj.getVariableValues().putAll(getVariableValues());
     }
     
     /**

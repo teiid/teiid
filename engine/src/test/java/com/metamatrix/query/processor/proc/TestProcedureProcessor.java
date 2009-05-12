@@ -1321,15 +1321,15 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
 
-    //procedure with Has Criteria and Translate Criteria 
+    //procedure with Has Criteria and Translate Criteria and changing
     public void testDynamicCommandWithTranslate() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "IF(HAS CRITERIA ON (vm1.g4.e2))\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "execute string 'Select pm1.g1.e2 from pm1.g1 where TRANSLATE = CRITERIA ON (vm1.g4.e2)' as x integer into #temp;\n"; //$NON-NLS-1$
-        procedure = procedure + "var1 = select * from #temp;\n"; //$NON-NLS-1$
+        procedure = procedure + "execute string 'Select pm1.g1.e2 x, changing.e1 y from pm1.g1 where TRANSLATE = CRITERIA ON (vm1.g4.e2)' as x integer, y boolean into #temp;\n"; //$NON-NLS-1$
+        procedure = procedure + "var1 = select x from #temp;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";		 //$NON-NLS-1$
         procedure = procedure + "if(var1 = 5)\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
