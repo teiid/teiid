@@ -13,11 +13,11 @@
             	<AllowedValue>TRANSACTION_NONE</AllowedValue>
             	<AllowedValue></AllowedValue>
             </PropertyDefinition>
-            <PropertyDefinition Name="Password" DisplayName="Password" ShortDescription="" Multiplicity="0" IsConstrainedToAllowedValues="false" IsMasked="true" IsPreferred="true" />
+            <PropertyDefinition Name="Password" DisplayName="Password" ShortDescription="" Multiplicity="0..1" IsConstrainedToAllowedValues="false" IsMasked="true" IsPreferred="true" />
             <PropertyDefinition Name="ExtensionTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.translator.Translator" IsExpert="true" />
             <PropertyDefinition Name="SetCriteriaBatchSize" DisplayName="Max Values in IN Predicate" ShortDescription="Max number of values in an IN Predicate.  Must be &gt;= 0." DefaultValue="1000" PropertyType="Integer" IsConstrainedToAllowedValues="false" IsExpert="true" />
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" Multiplicity="1" IsConstrainedToAllowedValues="false" IsPreferred="true" />
-            <PropertyDefinition Name="User" DisplayName="User Name" ShortDescription="" Multiplicity="0" IsConstrainedToAllowedValues="false" IsPreferred="true" />
+            <PropertyDefinition Name="User" DisplayName="User Name" ShortDescription="" Multiplicity="0..1" IsConstrainedToAllowedValues="false" IsPreferred="true" />
             <PropertyDefinition Name="TrimStrings" DisplayName="Trim string flag" ShortDescription="Right Trim fixed character types returned as Strings" DefaultValue="false" PropertyType="Boolean" IsExpert="true" />
             <PropertyDefinition Name="IsXA" DisplayName="Is XA" ShortDescription="Is XA" DefaultValue="false" Multiplicity="1" PropertyType="Boolean" IsConstrainedToAllowedValues="true" IsPreferred="true" />
             <PropertyDefinition Name="UseCommentsInSourceQuery" DisplayName="Use informational comments in Source Queries" ShortDescription="This will embed /*comment*/ style comment with session/request id in source SQL query for informational purposes" DefaultValue="false" PropertyType="Boolean" IsPreferred="true" IsExpert="true"/>
