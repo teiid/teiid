@@ -501,7 +501,7 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
      * Get the database name that this connection is representing 
      * @return String name of the database
      */
-    abstract String getDatabaseName();
+    public abstract String getDatabaseName();
     
     /**
      * Retrieves the current holdability of ResultSet objects created using this Connection object.
@@ -904,9 +904,9 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         }
 	}
 	
-	abstract BaseDriver getBaseDriver();
+	public abstract BaseDriver getBaseDriver();
 	
-	abstract boolean isSameProcess(MMConnection conn) throws CommunicationException;
+	public abstract boolean isSameProcess(MMConnection conn) throws CommunicationException;
     
 	public void setClientInfo(Properties properties)
 		throws SQLClientInfoException {

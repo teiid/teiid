@@ -213,8 +213,6 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             }
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
-		} catch (MetaMatrixProcessingException e) {
-			throw new AdminProcessingException(e);
 		}            
     }
 
@@ -287,20 +285,18 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             // now that all of the input parameters validated, add the connector binding
             binding = addConnectorBinding(deployName, binding, ctype, true);
             
-        } catch (MetaMatrixProcessingException e) {
-        	throw new AdminProcessingException(e);
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
         }
         return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
     }
 
-    boolean bindingExists(String name) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    boolean bindingExists(String name) throws MetaMatrixComponentException {
         ConnectorBinding binding = getDataService().getConnectorBinding(name);
         return (binding != null);
     }
     
-    boolean bindingTypeExists(String name) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+    boolean bindingTypeExists(String name) throws MetaMatrixComponentException {
         ConnectorBindingType type = getConfigurationService().getConnectorType(name);
         return (type != null);
     }
@@ -366,8 +362,6 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                                 
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw new AdminProcessingException(e);
         }
         
         return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
@@ -397,9 +391,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                     return binding;
                 } catch (MetaMatrixComponentException e) {
                 	throw new AdminComponentException(e);
-                } catch (MetaMatrixProcessingException e) {
-                	throw new AdminProcessingException(e);
-                }
+                } 
             }
             throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.connector_load_failed_wrong_type", deployName));  //$NON-NLS-1$                    
         }
@@ -468,7 +460,6 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 try {
                     startVDBConnectorBindings(deployedVDB);
                 } catch (MetaMatrixComponentException e) {
-                } catch (MetaMatrixProcessingException e) {
                 } catch (ApplicationLifecycleException e) {
                     // we can safely ignore these because the cause of the not starting is already recorded
                     // and more likely VDB deployment succeeded.
@@ -478,8 +469,6 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
             return (VDB) convertToAdminObjects(deployedVDB);
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
-        } catch (MetaMatrixProcessingException e) {
-        	throw new AdminProcessingException(e);
         }
     }
 
@@ -488,7 +477,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
      * @param vdb
      */
     private void startVDBConnectorBindings(VDBArchive vdb) throws MetaMatrixComponentException,
-        MetaMatrixProcessingException, ApplicationLifecycleException {
+        ApplicationLifecycleException {
         
     	VDBDefn def = vdb.getConfigurationDef();
     	Collection<ConnectorBinding> bindings = def.getConnectorBindings().values();
@@ -503,8 +492,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
      * the decrypt properties.
      */
     void validateConnectorBindingsInVdb(VDBArchive vdb, AdminOptions options) 
-        throws MetaMatrixComponentException, MetaMatrixProcessingException, 
-        AdminProcessingException, AdminException {
+        throws MetaMatrixComponentException, AdminProcessingException, AdminException {
         
     	VDBDefn def = vdb.getConfigurationDef();
     	
@@ -861,7 +849,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 if (type == null) {
                     type = connectorTypes[typeIndex];
                     ExtensionModule[] extModules = archive.getExtensionModules(type);
-                    checkAddingConnectorType(type, extModules, options, previouslyAddedModules);
+                    checkDuplicateExtensionModules(extModules, options, previouslyAddedModules);
                     saveConnectorType(type);
 
                 } else {
@@ -876,14 +864,14 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                         // Now that we know we need to add this to configuration; let's get on with it
                         type = connectorTypes[typeIndex];
                         ExtensionModule[] extModules = archive.getExtensionModules(type);
-                        checkAddingConnectorType(type, extModules, options, previouslyAddedModules);
+                        checkDuplicateExtensionModules(extModules, options, previouslyAddedModules);
                         saveConnectorType(type);
                     }                
                 }
                 // Now that we know we need to add this to configuration; let's get on with it
                 type = connectorTypes[typeIndex];
                 ExtensionModule[] extModules = archive.getExtensionModules(type);
-                checkAddingConnectorType(type, extModules, options, previouslyAddedModules);
+                checkDuplicateExtensionModules(extModules, options, previouslyAddedModules);
             }
             
             // Now add the extension modules
@@ -894,8 +882,6 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                         
         } catch (MetaMatrixComponentException e) {
             throw new AdminComponentException(e);
-        } catch(MetaMatrixProcessingException e) {
-        	throw new AdminProcessingException(e);
         }
     }
 
@@ -904,12 +890,12 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
      * system, if it there takes the appropriate action. Otherwise keeps tracks of all modules 
      * to add. 
      * @param type - connector type
-     * @param extModules - Extension modules for the Coneector Type
+     * @param extModules - Extension modules for the Connector Type
      * @param options - Admin Options
      * @param ignorableModules - Modules which are already added, can be ignored for adding
      */
-    void checkAddingConnectorType(ConnectorBindingType type, ExtensionModule[] extModules, AdminOptions options, HashSet ignorableModules) 
-        throws MetaMatrixComponentException, MetaMatrixProcessingException, AdminException  {
+    void checkDuplicateExtensionModules(ExtensionModule[] extModules, AdminOptions options, HashSet ignorableModules) 
+        throws AdminException  {
 
         // Now check if the the extension modules are already there        
         for (int i = 0; i < extModules.length; i++) {
@@ -932,7 +918,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 // this is OK, we did not find any thing
             }
             
-            // if we found it take approprite action.
+            // if we found it take appropriate action.
             if(previousModule != null && options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
                 throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.extension_module_exists", previousModule.getFullName())); //$NON-NLS-1$
             }
@@ -1003,14 +989,12 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
         } 
     }
     
-    private void saveConnectorType(ConnectorBindingType type) throws MetaMatrixProcessingException, MetaMatrixComponentException {
+    private void saveConnectorType(ConnectorBindingType type) throws MetaMatrixComponentException {
         getConfigurationService().saveConnectorType(type);
     }
     
     
-	 	/**
-	 * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addUDF(byte[], java.lang.String)
-	 */
+    @Override
 	public void addUDF(byte[] modelFileContents, String classpath)
 			throws AdminException {
 		if (modelFileContents == null || modelFileContents.length == 0) {
@@ -1057,9 +1041,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
 		}
 	}
 
-	/**
-	 * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deleteUDF()
-	 */
+	@Override
 	public void deleteUDF() throws AdminException {
 		try {
 			getConfigurationService().unloadUDF();
@@ -1067,5 +1049,14 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);
 		}
+	}
+
+	@Override
+	public void reloadUDF() throws AdminException {
+		try {
+			getConfigurationService().loadUDF();
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}		
 	}    
 }

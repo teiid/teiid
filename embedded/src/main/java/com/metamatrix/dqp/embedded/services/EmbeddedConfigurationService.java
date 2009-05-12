@@ -231,32 +231,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 DQPEmbeddedPlugin.logError(e, "EmbeddedConfigurationService.udf_classspath_failure", new Object[] {}); //$NON-NLS-1$                
             }
         }
-        /*
-        else {
-            try {
-                StringBuffer sb = new StringBuffer();
-                List<ExtensionModule> extModules = getExtensionModules();
-                boolean valid = false;
-                for (ExtensionModule module:extModules) {
-                    sb.append("extensionjar:").append(module.getFullName()).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
-                    valid = true;
-                }
-                if (valid) {
-                	classpath = sb.toString();
-                	ArrayList<URL> allExtensionModules = new ArrayList<URL>();
-                    URL[] contexts = getExtensionPath();
-                    for (URL context:contexts) {
-                    	allExtensionModules.addAll(ExtensionModuleReader.resolveExtensionClasspath(classpath, context));
-                    }
-                    return allExtensionModules;
-                }
-            } catch (MetaMatrixComponentException e) {
-                // ok to return null
-            } catch (IOException e) {
-                DQPEmbeddedPlugin.logError(e, "EmbeddedConfigurationService.udf_classspath_failure", new Object[] {}); //$NON-NLS-1$
-            }
-        }
-        */
         return null;
     }
     
@@ -875,7 +849,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public void saveConnectorType(ConnectorBindingType type) throws MetaMatrixComponentException {
-        loadedConnectorTypes.put(type.getName(), addFullPropertyDefns(type));
+        loadedConnectorTypes.put(type.getName(), ServerConfigFileReader.resolvePropertyDefns(type, this.configurationModel));
 
         // Also add binding type to the configuration and save.        
         DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connector_type_save", new Object[] {type.getName()}); //$NON-NLS-1$
@@ -928,7 +902,16 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         if(udfFile != null && exists(udfFile)) {
             List<URL> urls = getCommonExtensionClasspath();            
             try {
-				this.udfSource = new UDFSource(udfFile, urls.toArray(new URL[urls.size()]));
+            	
+            	// un-register the old UDF model, if there is one.
+            	unloadUDF();
+            	
+            	if (urls == null || urls.isEmpty()) {
+            		this.udfSource = new UDFSource(udfFile);
+            	}
+            	else {
+            		this.udfSource = new UDFSource(udfFile, urls.toArray(new URL[urls.size()]));
+            	}
 				FunctionLibraryManager.registerSource(this.udfSource);
 				DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.udf_load", new Object[] {udfFile, urls}); //$NON-NLS-1$
 			} catch (IOException e) {
@@ -1089,7 +1072,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             for (Iterator it = def.getConnectorTypes().values().iterator(); it.hasNext();) {
                 ConnectorBindingType type= (ConnectorBindingType)it.next();
                 if (!loadedConnectorTypes.containsKey(type.getName())) {
-                    loadedConnectorTypes.put(type.getName(), addFullPropertyDefns(type));
+                    loadedConnectorTypes.put(type.getName(), ServerConfigFileReader.resolvePropertyDefns(type, this.configurationModel));
                 }
             }                        
             
@@ -1107,24 +1090,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         }
     }
 
-    private ComponentType addFullPropertyDefns(ConnectorBindingType type) {
-    	BasicComponentType baseType = (BasicComponentType)type;
-    	Collection c = this.configurationModel.getAllComponentTypeDefinitions((ComponentTypeID)baseType.getID());
 
-    	// if the type is found in the configuration.xml, then add its prop-definitions; else look for parent
-    	if (c == null || c.isEmpty()) {
-    		// this means user has added a new connector type
-    		c = this.configurationModel.getAllComponentTypeDefinitions(type.getSuperComponentTypeID());
-    	}
-    		
-		if (c != null && !c.isEmpty()) {
-			Set<PropertyDefinition> defns = new HashSet<PropertyDefinition>();
-			defns.addAll(c);
-			defns.addAll(type.getComponentTypeDefinitions());
-			baseType.setComponentTypeDefinitions(defns);
-		}
-		return baseType;
-	}
 
 	/** 
      * Add the connnector binding with new deployment name

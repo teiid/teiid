@@ -23,12 +23,17 @@
 package com.metamatrix.admin.api.embedded;
 
 import com.metamatrix.admin.api.core.CoreConfigAdmin;
+import com.metamatrix.admin.api.exception.AdminException;
 
 
 /** 
  * @since 4.3
  */
-public interface EmbeddedConfigAdmin extends
-                               CoreConfigAdmin {
-
+public interface EmbeddedConfigAdmin extends CoreConfigAdmin {
+    /**
+     * Reload the User Defined function. 
+     * @throws AdminException
+     * @since 6.1.0
+     */
+    void reloadUDF() throws AdminException;
 }
