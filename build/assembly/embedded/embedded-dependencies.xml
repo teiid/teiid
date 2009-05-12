@@ -16,9 +16,6 @@
                
         <includes>
             <include>org.jboss.teiid:teiid-cache-jbosscache</include>
-            <include>org.jboss.teiid:teiid-client</include>
-            <include>org.jboss.teiid:teiid-client-jdbc</include>	
-            <include>org.jboss.teiid:teiid-common-core</include>	
             <include>org.jboss.teiid:teiid-common-internal</include>
     	
         	<include>org.jboss.teiid:teiid-connector-api</include>
@@ -31,11 +28,11 @@
         
         <binaries>        
           <includeDependencies>true</includeDependencies>
-          <unpack>true</unpack>
+          <unpack>false</unpack>
                                     
           <dependencySets>
             <dependencySet>
-              <useProjectArtifact>false</useProjectArtifact>
+              <useProjectArtifact>true</useProjectArtifact>
               <unpack>false</unpack>
               <useTransitiveDependencies>true</useTransitiveDependencies>
               <useDefaultExcludes>true</useDefaultExcludes>
