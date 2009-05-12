@@ -602,7 +602,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
         // Since catelog is allways null with MM, if nay supplied send empty
         //result set
-        if (catalog != null) {
+        if ((catalog != null) && (catalog.trim().length() > 0)) {
             return emptyColumnsResultSet();
         }
         
@@ -934,7 +934,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining server results
      */
     public ResultSet getExportedKeys(String catalog, String schema, String table) throws SQLException {
-        if (catalog != null) {
+        if ((catalog != null) && (catalog.trim().length() > 0)) {
             return emptyExportedKeys();
         }
         
@@ -1008,7 +1008,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining server results
      */
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        if (catalog != null) {
+        if ((catalog != null) && (catalog.trim().length() > 0)) {
             return emptyImportedKeys();
         }
         
@@ -1061,7 +1061,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if catalog/schema info does not match for this connection.
      */
     public ResultSet getIndexInfo(String catalog, String schema, String table, boolean unique, boolean approximate) throws SQLException {
-        if(catalog != null) {
+        if ((catalog != null) && (catalog.trim().length() > 0)) {
             return emptyIndexInfo();
         }
         
@@ -1356,8 +1356,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getPrimaryKeys(String catalog, String schema, String table) throws SQLException {
-        
-        if (catalog != null) {
+        if ((catalog != null) && (catalog.trim().length() > 0)) {
             return emptyPrimaryKeys();
         }
         
@@ -1448,7 +1447,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getProcedureColumns(String catalog, String schemaPattern, String procedureNamePattern, String columnNamePattern) throws SQLException {
-        if(catalog != null) {
+        if ((catalog != null) && (catalog.trim().length() > 0)) {
             return emptyProcedureColumns();
         }
         if (schemaPattern == null) {
@@ -1556,7 +1555,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getProcedures(String catalog, String schemaPattern, String procedureNamePattern) throws SQLException {
-        if (catalog != null) {
+        if ((catalog != null) && (catalog.trim().length() > 0)) {
             return emptyProcedures();
         }
         if (schemaPattern == null) {
@@ -1885,8 +1884,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error obtaining metamatrix results.
      */
     public ResultSet getTables(String catalog, String schemaPattern, String tableNamePattern, String types[]) throws SQLException {
-
-        if (catalog != null) {
+        if ((catalog != null) && (catalog.trim().length() > 0)) {
             return emptyTablesResultSet();
         }
         
