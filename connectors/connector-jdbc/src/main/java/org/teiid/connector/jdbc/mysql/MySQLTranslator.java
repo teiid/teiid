@@ -103,4 +103,7 @@ public class MySQLTranslator extends Translator {
 		return MySQLCapabilities.class;
 	}
 	
+    public boolean useParensForJoins() {
+    	return true;
+    }
 }

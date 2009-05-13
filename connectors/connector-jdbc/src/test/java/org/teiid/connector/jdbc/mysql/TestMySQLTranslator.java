@@ -200,5 +200,13 @@ public class TestMySQLTranslator {
             input, 
             output, TRANSLATOR);        
     }
+
+    @Test public void testJoins() throws Exception {
+        String input = "select smalla.intkey from bqt1.smalla inner join bqt1.smallb on smalla.stringkey=smallb.stringkey cross join bqt1.mediuma"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM (SmallA INNER JOIN SmallB ON SmallA.StringKey = SmallB.StringKey) CROSS JOIN MediumA"; //$NON-NLS-1$
           
+        TestMySQLTranslator.helpTestVisitor(MetadataFactory.BQT_VDB,
+            input, 
+            output, TRANSLATOR);        
+    }
 }
