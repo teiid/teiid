@@ -77,7 +77,8 @@ public class TestInlineView extends TestCase {
         sourceQueries.add("db2"); //$NON-NLS-1$ 
         sourceQueries.add("sybase"); //$NON-NLS-1$ 
         sourceQueries.add("sqlserver"); //$NON-NLS-1$ 
-		
+        sourceQueries.add("mysql"); //$NON-NLS-1$
+        sourceQueries.add("postgres"); //$NON-NLS-1$
         return new InlineViewCase("testANSIJoinInlineView", userQuery, optimizedQuery, //$NON-NLS-1$
 				sourceQueries, expectedResults);
         
@@ -100,7 +101,8 @@ public class TestInlineView extends TestCase {
         sourceQueries.add("db2"); //$NON-NLS-1$ 
         sourceQueries.add("sybase"); //$NON-NLS-1$ 
         sourceQueries.add("sqlserver"); //$NON-NLS-1$ 
-		
+        sourceQueries.add("mysql"); //$NON-NLS-1$
+        sourceQueries.add("postgres"); //$NON-NLS-1$
         return new InlineViewCase("testInlineView", userQuery, optimizedQuery,  //$NON-NLS-1$
 				sourceQueries, expectedResults);        
 	}	
@@ -121,7 +123,8 @@ public class TestInlineView extends TestCase {
         sourceQueries.add("db2"); //$NON-NLS-1$ 
         sourceQueries.add("sybase"); //$NON-NLS-1$ 
         sourceQueries.add("sqlserver"); //$NON-NLS-1$ 
-		
+        sourceQueries.add("mysql"); //$NON-NLS-1$
+        sourceQueries.add("postgres"); //$NON-NLS-1$
         return new InlineViewCase("testInlineViewWithDistinctAndOrderBy", userQuery, optimizedQuery, //$NON-NLS-1$
 				sourceQueries, expectedResults);
         
@@ -139,7 +142,8 @@ public class TestInlineView extends TestCase {
         sourceQueries.add("db2"); //$NON-NLS-1$ 
         sourceQueries.add("sybase"); //$NON-NLS-1$ 
         sourceQueries.add("sqlserver"); //$NON-NLS-1$ 
-		
+        sourceQueries.add("mysql"); //$NON-NLS-1$
+        sourceQueries.add("postgres"); //$NON-NLS-1$
         return new InlineViewCase("testInlineViewOfVirtual", userQuery, optimizedQuery, //$NON-NLS-1$
 				sourceQueries, expectedResults);        
 	}	
@@ -160,7 +164,8 @@ public class TestInlineView extends TestCase {
         sourceQueries.add("db2"); //$NON-NLS-1$ 
         sourceQueries.add("sybase"); //$NON-NLS-1$ 
         sourceQueries.add("sqlserver"); //$NON-NLS-1$ 
-		
+        sourceQueries.add("mysql"); //$NON-NLS-1$
+        sourceQueries.add("postgres"); //$NON-NLS-1$
         return new InlineViewCase("testInlineViewWithOuterOrderAndGroup", userQuery, optimizedQuery, //$NON-NLS-1$
 				sourceQueries, expectedResults);        
 	}
@@ -184,7 +189,8 @@ public class TestInlineView extends TestCase {
         sourceQueries.add("db2"); //$NON-NLS-1$ 
         sourceQueries.add("sybase"); //$NON-NLS-1$ 
         sourceQueries.add("sqlserver"); //$NON-NLS-1$ 
-		
+        sourceQueries.add("mysql"); //$NON-NLS-1$
+        sourceQueries.add("postgres"); //$NON-NLS-1$
 		return new InlineViewCase("testInlineViewsInUnions", userQuery, optimizedQuery, //$NON-NLS-1$
 				sourceQueries, expectedResults);
 		
@@ -213,12 +219,12 @@ public class TestInlineView extends TestCase {
         //sourceQueries.add("db2"); //$NON-NLS-1$ 
         sourceQueries.add("sybase"); //$NON-NLS-1$ 
         sourceQueries.add("sqlserver"); //$NON-NLS-1$ 
-		
+        sourceQueries.add("mysql"); //$NON-NLS-1$
+        sourceQueries.add("postgres"); //$NON-NLS-1$
 		return new InlineViewCase("testUnionInInlineView", userQuery, optimizedQuery, //$NON-NLS-1$
 				sourceQueries, expectedResults);
 		
 	}	
-
 	
 	protected void runTest(InlineViewCase testCase) throws Exception {
 		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();

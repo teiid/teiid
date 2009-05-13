@@ -25,11 +25,6 @@ package com.metamatrix.query.optimizer;
 import java.util.List;
 import java.util.Set;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
-
 public class InlineViewCase {
 	public String name;
 	public String userQuery;
@@ -37,7 +32,7 @@ public class InlineViewCase {
 	public Set<String> sourceQueries;
 	public List<List<Object>> expectedResults;
 	
-	public String getFullyQualifiedQuery() throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException {
+	public String getFullyQualifiedQuery() {
 		return optimizedQuery;    	
 	}		
 	public InlineViewCase(String name, String userQuery, String optimizedQuery, Set<String> sourceQueries, List expectedResults) {
