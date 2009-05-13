@@ -564,8 +564,13 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             copyNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
         }
 
-        FrameUtil.convertNode(copyNode, sourceGroup, null, symbolMap.asMap());        
-		projectNode.getFirstChild().addAsParent(copyNode);
+        FrameUtil.convertNode(copyNode, sourceGroup, null, symbolMap.asMap());  
+        PlanNode intermediateParent = NodeEditor.findParent(projectNode, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
+        if (intermediateParent != null) {
+            intermediateParent.addAsParent(copyNode);
+        } else {
+        	projectNode.getFirstChild().addAsParent(copyNode);
+        }
 		return true;
     }
 
