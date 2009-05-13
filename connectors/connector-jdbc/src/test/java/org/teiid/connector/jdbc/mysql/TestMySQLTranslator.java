@@ -62,7 +62,6 @@ public class TestMySQLTranslator {
         TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), translator); //$NON-NLS-1$
         tc.translateCommand(obj);
         
-        
         // Check stuff
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
     }
@@ -195,7 +194,7 @@ public class TestMySQLTranslator {
     
     @Test public void testBitAnd() throws Exception {
         String input = "select bitand(intkey, intnum) from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT (SmallA.IntKey & SmallA.IntNum) FROM SmallA"; //$NON-NLS-1$
+        String output = "SELECT convert((SmallA.IntKey & SmallA.IntNum), SIGNED INTEGER) FROM SmallA"; //$NON-NLS-1$
                
         TestMySQLTranslator.helpTestVisitor(MetadataFactory.BQT_VDB,
             input, 
