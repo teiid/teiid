@@ -597,7 +597,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
      */
     public void visit(IJoin obj) {
         IFromItem leftItem = obj.getLeftItem();
-        if(leftItem instanceof IJoin) {
+        if(useParensForJoins() && leftItem instanceof IJoin) {
             buffer.append(LPAREN);
             append(leftItem);
             buffer.append(RPAREN);
@@ -635,7 +635,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
               .append(SPACE);
         
         IFromItem rightItem = obj.getRightItem();
-        if(rightItem instanceof IJoin) {
+        if(rightItem instanceof IJoin && (useParensForJoins() || obj.getJoinType() == IJoin.JoinType.CROSS_JOIN)) {
             buffer.append(LPAREN);
             append(rightItem);
             buffer.append(RPAREN);
@@ -1030,5 +1030,8 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
         visitor.append(obj);
         return visitor.toString();
     }
-
+    
+    protected boolean useParensForJoins() {
+    	return false;
+    }
 }
