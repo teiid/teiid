@@ -772,4 +772,12 @@ public class Translator {
 		}
 	}
     
+    /**
+     * Set to true to indicate that every branch of a join
+     * should have parenthesis.
+     * @return
+     */
+    public boolean useParensForJoins() {
+    	return false;
+    }
 }

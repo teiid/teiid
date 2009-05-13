@@ -300,5 +300,9 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	protected void appendSetOperation(Operation operation) {
 		buffer.append(translator.getSetOperationString(operation));
 	}
-                
+    
+	@Override
+    protected boolean useParensForJoins() {
+    	return translator.useParensForJoins();
+    }
 }
