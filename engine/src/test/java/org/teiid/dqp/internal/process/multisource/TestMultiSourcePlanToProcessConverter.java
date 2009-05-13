@@ -77,7 +77,9 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
         }
 
         public TupleSource registerRequest(Object processorID, Command command, String modelName, String connectorBindingId, int nodeID) throws com.metamatrix.api.exception.MetaMatrixComponentException {
-            Collection elements = ElementCollectorVisitor.getElements(command, true, true);
+        	assertNotNull(connectorBindingId);
+        	
+        	Collection elements = ElementCollectorVisitor.getElements(command, true, true);
             
             for (Iterator i = elements.iterator(); i.hasNext();) {
                 ElementSymbol symbol = (ElementSymbol)i.next();

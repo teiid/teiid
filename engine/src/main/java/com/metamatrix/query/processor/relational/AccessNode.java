@@ -103,7 +103,7 @@ public class AccessNode extends RelationalNode {
         isUpdate = RelationalNodeUtil.isUpdate(atomicCommand);
         
 		if(needProcessing) {
-            this.tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, null, getID());
+            this.tupleSource = getDataManager().registerRequest(this.getContext().getProcessorID(), atomicCommand, modelName, connectorBindingId, getID());
 		}
 	}
 
