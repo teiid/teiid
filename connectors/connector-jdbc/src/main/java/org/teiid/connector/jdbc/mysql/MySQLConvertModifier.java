@@ -41,7 +41,9 @@ import org.teiid.connector.language.ICompareCriteria.Operator;
  */
 class MySQLConvertModifier extends BasicFunctionModifier {
     
-    private static DropFunctionModifier DROP_MODIFIER = new DropFunctionModifier();
+    public static final String SIGNED_INTEGER = "SIGNED INTEGER"; //$NON-NLS-1$
+
+	private static DropFunctionModifier DROP_MODIFIER = new DropFunctionModifier();
     
     private ILanguageFactory langFactory;
     
@@ -66,7 +68,7 @@ class MySQLConvertModifier extends BasicFunctionModifier {
             } else if (target.equals("byte") || //$NON-NLS-1$
                        target.equals("short") || //$NON-NLS-1$
                        target.equals("integer")) {  //$NON-NLS-1$ 
-                return convertToNativeType(function, "SIGNED INTEGER"); //$NON-NLS-1$
+                return convertToNativeType(function, SIGNED_INTEGER);
             } else if (target.equals("long") || //$NON-NLS-1$
                        target.equals("biginteger")) { //$NON-NLS-1$ 
                 return convertToNativeType(function, "SIGNED"); //$NON-NLS-1$

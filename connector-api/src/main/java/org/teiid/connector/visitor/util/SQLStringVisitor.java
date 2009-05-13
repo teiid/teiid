@@ -85,7 +85,7 @@ import com.metamatrix.core.util.StringUtil;
 public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLReservedWords {
    
     private Set<String> infixFunctions = new HashSet<String>(Arrays.asList("%", "+", "-", "*", "+", "/", "||", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
-    		"&", "~", "|", "^"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+    		"&", "|", "^"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 	
     private static final String ESCAPED_QUOTE = "''"; //$NON-NLS-1$    
 
