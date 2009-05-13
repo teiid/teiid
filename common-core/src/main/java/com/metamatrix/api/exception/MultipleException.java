@@ -44,6 +44,14 @@ public class MultipleException extends Exception implements Externalizable {
     /** An error code. */
     private String code;
     
+    
+    /**
+     * No-arg Constructor
+     */
+    public MultipleException() {
+    	super();
+    }
+    
     /**
      * Construct an instance with the set of exceptions and error message
      * specified.
