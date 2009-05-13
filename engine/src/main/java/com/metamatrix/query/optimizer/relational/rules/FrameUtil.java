@@ -72,17 +72,17 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class FrameUtil {
 
-    static void convertFrame(PlanNode startNode, GroupSymbol oldGroup, GroupSymbol newGroup, Map symbolMap, QueryMetadataInterface metadata) 
+    static void convertFrame(PlanNode startNode, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap, QueryMetadataInterface metadata) 
         throws QueryPlannerException {
 
         PlanNode current = startNode;
         
-        PlanNode endNode = NodeEditor.findParent(startNode.getParent(), NodeConstants.Types.SOURCE);
+        PlanNode endNode = NodeEditor.findParent(startNode.getType()==NodeConstants.Types.SOURCE?startNode.getParent():startNode, NodeConstants.Types.SOURCE);
         
         while(current != endNode) { 
             
-            // Make translations as defined in vnode in each current node
-            convertNode(current, oldGroup, newGroup, symbolMap);
+            // Make translations as defined in node in each current node
+            convertNode(current, oldGroup, newGroups, symbolMap);
             
             PlanNode parent = current.getParent(); 
             
@@ -164,11 +164,15 @@ public class FrameUtil {
     // symbols.  In that case, some additional work can be done because we can assume 
     // that an oldElement isn't being replaced by an expression using elements from 
     // multiple new groups.  
-    static void convertNode(PlanNode node, GroupSymbol oldGroup, GroupSymbol newGroup, Map symbolMap)
+    static void convertNode(PlanNode node, GroupSymbol oldGroup, Set<GroupSymbol> newGroups, Map symbolMap)
         throws QueryPlannerException {
 
         // Update groups for current node   
         Set groups = node.getGroups();  
+
+        boolean hasOld = groups.remove(oldGroup);
+
+        int type = node.getType();
 
         // Convert expressions from correlated subquery references;
         // currently only for SELECT or PROJECT nodes
@@ -183,28 +187,27 @@ public class FrameUtil {
             }
         }
         
-        boolean hasOld = groups.remove(oldGroup);
+        boolean singleMapping = newGroups != null && newGroups.size() == 1;
         
-        if(newGroup != null) {
+        if(singleMapping) {
             if (!hasOld) {
                 return;
             }
-            groups.add(newGroup);
+            groups.addAll(newGroups);
+        } else if ((type & (NodeConstants.Types.ACCESS | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE)) == type) {
+        	if (newGroups != null) {
+        		groups.addAll(newGroups);
+        	}
+        } else {
+        	groups.clear();
         }   
 
-        // Updated elements
-        List newElementSymbols = null;
-        if (newGroup == null) {
-            newElementSymbols = new ArrayList();
-        }
-
-        int type = node.getType();
         if(type == NodeConstants.Types.SELECT) { 
             Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
             convertCriteria(crit, symbolMap);
             
-            if (newGroup == null) {
-                ElementCollectorVisitor.getElements(crit, newElementSymbols);
+            if (!singleMapping) {
+                GroupsUsedByElementsVisitor.getGroups(crit, groups);
             }
                             
         } else if(type == NodeConstants.Types.PROJECT) {                    
@@ -217,8 +220,8 @@ public class FrameUtil {
                 SingleElementSymbol mappedSymbol = convertSingleElementSymbol(symbol, symbolMap, true);
                 newElements.add(mappedSymbol);
                       
-                if (newGroup == null) {
-                    ElementCollectorVisitor.getElements(mappedSymbol, newElementSymbols);
+                if (!singleMapping) {
+                    GroupsUsedByElementsVisitor.getGroups(mappedSymbol, groups);
                 }
             }
             
@@ -232,10 +235,6 @@ public class FrameUtil {
                 while(critIter.hasNext()) { 
                     Criteria crit = (Criteria) critIter.next();
                     convertCriteria(crit, symbolMap);
-                    
-                    if (newGroup == null) {
-                        ElementCollectorVisitor.getElements(crit, newElementSymbols);
-                    }
                 }   
             }
             
@@ -251,8 +250,8 @@ public class FrameUtil {
                 SingleElementSymbol mappedSymbol = convertSingleElementSymbol(symbol, symbolMap, true);
                 newElements.add( mappedSymbol );
                 
-                if (newGroup == null) {
-                    ElementCollectorVisitor.getElements(mappedSymbol, newElementSymbols);
+                if (!singleMapping) {
+                    GroupsUsedByElementsVisitor.getGroups(mappedSymbol, groups);
                 }
             }
             
@@ -269,18 +268,14 @@ public class FrameUtil {
                     Expression mappedCol = convertSingleElementSymbol(groupCol, symbolMap, false);                   
                     newGroupCols.add( mappedCol );
                     
-                    if (newGroup == null) {
-                        ElementCollectorVisitor.getElements(mappedCol, newElementSymbols);
+                    if (!singleMapping) {
+                        GroupsUsedByElementsVisitor.getGroups(mappedCol, groups);
                     }
                 }                        
                 node.setProperty(NodeConstants.Info.GROUP_COLS, newGroupCols);            
             }               
         } else if (type == NodeConstants.Types.SOURCE || type == NodeConstants.Types.ACCESS) {
             convertAccessPatterns(symbolMap, node);
-        }
-
-        if (newGroup == null) {
-            GroupsUsedByElementsVisitor.getGroups(newElementSymbols, groups);
         }
     }
     

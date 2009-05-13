@@ -22,11 +22,11 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -48,13 +48,13 @@ import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
+import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -214,9 +214,10 @@ public class RuleRemoveOptionalJoins implements
 
     /**
      * remove the optional node if possible
+     * @throws QueryPlannerException 
      */ 
     private boolean removedJoin(PlanNode joinNode, PlanNode optionalNode,
-                                           Set elements, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
+                                           Set elements, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException, QueryPlannerException {
         Set groups = optionalNode.getGroups();
         
         Assertion.isNotNull(elements);
@@ -240,12 +241,14 @@ public class RuleRemoveOptionalJoins implements
 		NodeEditor.removeChildNode(parentNode, joinNode);
 
 		// correct the parent nodes that may be using optional elements
-		HashSet optionElements = new HashSet();
-		for (Iterator i = optionalNode.getGroups().iterator(); i.hasNext();) {
-			optionElements.addAll(ResolverUtil.resolveElementsInGroup((GroupSymbol) i.next(), metadata));
+		for (GroupSymbol optionalGroup : optionalNode.getGroups()) {
+			List<ElementSymbol> optionalElements = ResolverUtil.resolveElementsInGroup(optionalGroup, metadata);
+			List<Constant> replacements = new ArrayList<Constant>(optionalElements.size());
+			for (ElementSymbol elementSymbol : optionalElements) {
+				replacements.add(new Constant(null, elementSymbol.getType()));
+			}
+			FrameUtil.convertFrame(parentNode, optionalGroup, null, SymbolMap.createSymbolMap(optionalElements, replacements).asMap(), metadata);
 		}
-
-		correctParents(optionalNode.getGroups(), parentNode, optionElements);
 
 		return true;
     }
@@ -281,88 +284,6 @@ public class RuleRemoveOptionalJoins implements
 		}
 		return false;
 	}
-
-    private void correctParents(Set groups,
-                                PlanNode parentNode,
-                                HashSet optionElements) {
-        boolean done = false;
-        boolean correctJoinGroups = true; //true until the first source node is reached
-        
-        while (!done && parentNode != null) {
-            
-            switch (parentNode.getType()) {
-                
-                case NodeConstants.Types.SET_OP:
-                {
-                    done = true;
-                    break;
-                }
-                case NodeConstants.Types.SOURCE:
-                {
-                    HashSet parentOptionalElements = new HashSet();
-                    SymbolMap symbolMap = (SymbolMap)parentNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-                    for (Map.Entry<ElementSymbol, Expression> entry : symbolMap.asMap().entrySet()) {
-                        Expression parentExpression = entry.getValue();
-                        Collection parentElements = ElementCollectorVisitor.getElements(parentExpression, true);
-                        parentElements.retainAll(optionElements);
-                        if (!parentElements.isEmpty()) {
-                            parentOptionalElements.add(entry.getKey());
-                        }
-                    }
-                    correctJoinGroups = false;
-                    optionElements = parentOptionalElements;
-                    if (optionElements.isEmpty()) {
-                        done = true;
-                    }
-                    break;
-                }   
-                case NodeConstants.Types.JOIN:
-                {
-                    List joinCriteria = (List)parentNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
-                    removeOptionalEntries(optionElements, joinCriteria, null);
-                    if (correctJoinGroups) {
-                        parentNode.getGroups().removeAll(groups);
-                    }
-                    break;
-                }
-                case NodeConstants.Types.PROJECT:
-                {
-                    if (parentNode.getParent() == null || parentNode.getProperty(NodeConstants.Info.INTO_GROUP) != null) {
-                        done = true;
-                    }
-                    break;
-                }
-            }
-            
-            parentNode = parentNode.getParent();
-        }
-    }
-
-    /** 
-     * Will remove the optional entries from the list of languageObjects.  This will
-     * also correct the groups on the parentNode if it is non-null.
-     * 
-     * @param optionElements
-     * @param languageObjects
-     */
-    private void removeOptionalEntries(HashSet optionElements,
-                                       List languageObjects, PlanNode parentNode) {
-        if (languageObjects != null && !languageObjects.isEmpty()) {
-            if (parentNode != null) {
-                parentNode.getGroups().clear();
-            }
-            for (Iterator i = languageObjects.iterator(); i.hasNext();) {
-                LanguageObject object = (LanguageObject)i.next();
-                if (isOptional(optionElements, object)) {
-                    i.remove();
-                    continue;
-                }
-                if (parentNode != null) {
-                    parentNode.addGroups(GroupsUsedByElementsVisitor.getGroups(object));
-                }
-            }
-        }
-    }
 
     private boolean isOptional(HashSet optionElements,
                                           LanguageObject languageObject) {

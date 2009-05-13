@@ -130,10 +130,10 @@ public final class RuleMergeVirtual implements
 
         // Convert parent frame before merge
         SymbolMap symbolMap = (SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP);
-        FrameUtil.convertFrame(frame, virtualGroup, null, symbolMap.asMap(), metadata);
+        FrameUtil.convertFrame(frame, virtualGroup, FrameUtil.findJoinSourceNode(projectNode).getGroups(), symbolMap.asMap(), metadata);
 
         PlanNode parentBottom = frame.getParent();
-        prepareFrame(frame, parentJoin);
+        prepareFrame(frame);
 
         // Remove top 2 nodes (SOURCE, PROJECT) of virtual group - they're no longer needed
         NodeEditor.removeChildNode(parentBottom, frame);
@@ -142,8 +142,7 @@ public final class RuleMergeVirtual implements
         return root;
     }
 
-    private static void prepareFrame(PlanNode frame,
-                                     PlanNode parentJoin) {
+    private static void prepareFrame(PlanNode frame) {
         // find the new root of the frame so that access patterns can be propagated
         PlanNode newRoot = FrameUtil.findJoinSourceNode(frame.getFirstChild());
         if (newRoot != null) {
@@ -157,18 +156,6 @@ public final class RuleMergeVirtual implements
                 }
             }
             RulePlaceAccess.copyDependentHints(frame, newRoot);
-    
-            // correct the upper join with the groups introduced in the lower join
-            if (parentJoin != null) {
-                PlanNode upperJoin = newRoot.getParent();
-                while (upperJoin != parentJoin) {
-                    if (upperJoin.getType() == NodeConstants.Types.JOIN) {
-                        upperJoin.addGroups(newRoot.getGroups());
-                    }
-                    upperJoin = upperJoin.getParent();
-                }
-                upperJoin.addGroups(newRoot.getGroups());
-            }
         }
     }
 
@@ -257,7 +244,7 @@ public final class RuleMergeVirtual implements
             sort.addGroups(GroupsUsedByElementsVisitor.getGroups(newElements));
         }
         
-        prepareFrame(frame, null);
+        prepareFrame(frame);
         
         //remove the parent project and the source node
         NodeEditor.removeChildNode(parentProject, frame);
@@ -300,7 +287,7 @@ public final class RuleMergeVirtual implements
                     checkForNullDependent = true;
                     break;
                 }
-                joinToTest = NodeEditor.findParent(joinToTest.getParent(), NodeConstants.Types.JOIN);
+                joinToTest = NodeEditor.findParent(joinToTest.getParent(), NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
             }
         }
 
