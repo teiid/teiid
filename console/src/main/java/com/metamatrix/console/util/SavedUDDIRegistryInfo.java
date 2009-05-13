@@ -1,123 +1,106 @@
 /*
- * JBoss, Home of Professional Open Source.
- * See the COPYRIGHT.txt file distributed with this work for information
- * regarding copyright ownership.  Some portions may be licensed
- * to Red Hat, Inc. under one or more contributor license agreements.
- * 
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- * 
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301 USA.
+ * Copyright 2000-2008 MetaMatrix, Inc. All rights reserved.
  */
-
 package com.metamatrix.console.util;
 
-
-/** 
+/**
  * Data class to represent the info on UDDI registy that is saved to the properties file.
  * 
- * @since 4.2
+ * @since 5.5.3
  */
 public class SavedUDDIRegistryInfo {
-    private String name;
-    private String userName;
-    private String host;
-    private String port;
-    
-    public SavedUDDIRegistryInfo(String name, String userName, String host, String port) {
-        super();
-        this.name = name;
-        this.userName = userName;
-        this.host = host;
-        this.port = port;
-    }
-    
-    public String getName() {
-        return name;
-    }
-    
-    public void setName(String name) {
-        this.name = name;
-    }
-    
-    public String getUserName() {
-        return userName;
-    }
-    
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-    
-    public String getHost() {
-        return host;
-    }
-    
-    public void setHost(String host) {
-        this.host = host;
-    }
-    
-    public String getPort() {
-        return port;
-    }
-    
-    public void setPort(String port) {
-        this.port = port;
-    }
-    
-    public boolean equals(Object obj) {
-        boolean same;
-        if (obj == this) {
-            same = true;
-        } else if (!(obj instanceof SavedUDDIRegistryInfo)) {
-            same = false;
-        } else {
-            SavedUDDIRegistryInfo that = (SavedUDDIRegistryInfo)obj;
-            boolean nameMatches;
-            boolean userNameMatches = false;
-            boolean hostMatches = false;
-            boolean portMatches = false;
-            String thatName = that.getName();
-            if (name == null) {
-                nameMatches = (thatName == null);
-            } else {
-                nameMatches = name.equals(thatName);
-            }
-            if (nameMatches) {
-                String thatUserName = that.getUserName();
-                if (userName == null) {
-                    userNameMatches = (thatUserName == null);
-                } else {
-                    userNameMatches = userName.equals(thatUserName);
-                }
-                if (userNameMatches) {
-                    String thatHost = that.getHost();
-                    if (host == null) {
-                        hostMatches = (thatHost == null);
-                    } else {
-                        hostMatches = host.equals(thatHost);
-                    }
-                    if (hostMatches) {
-                        String thatPort = that.getPort();
-                        if (port == null) {
-                            portMatches = (thatPort == null);
-                        } else {
-                            portMatches = port.equals(thatPort);
-                        }
-                    }
-                }
-            }
-            same = (nameMatches && userNameMatches && hostMatches && portMatches);
-        }
-        return same;
-    }
+	private String name;
+	private String userName;
+	private String inquiryUrl;
+	private String publishUrl;
+
+	public SavedUDDIRegistryInfo( String name,
+	                              String userName,
+	                              String inquiryUrl,
+	                              String publishUrl ) {
+		super();
+		this.name = name;
+		this.userName = userName;
+		this.inquiryUrl = inquiryUrl;
+		this.publishUrl = publishUrl;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName( String name ) {
+		this.name = name;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName( String userName ) {
+		this.userName = userName;
+	}
+
+	public String getInquiryUrl() {
+		return inquiryUrl;
+	}
+
+	public void setInquiryUrl( String inquiryUrl ) {
+		this.inquiryUrl = inquiryUrl;
+	}
+
+	public String getPublishUrl() {
+		return publishUrl;
+	}
+
+	public void setPublishUrl( String publishUrl ) {
+		this.publishUrl = publishUrl;
+	}
+
+	public boolean equals( Object obj ) {
+		boolean same;
+		if (obj == this) {
+			same = true;
+		} else if (!(obj instanceof SavedUDDIRegistryInfo)) {
+			same = false;
+		} else {
+			SavedUDDIRegistryInfo that = (SavedUDDIRegistryInfo)obj;
+			boolean nameMatches;
+			boolean userNameMatches = false;
+			boolean inquiryUrlMatches = false;
+			boolean publishUrlMatches = false;
+			String thatName = that.getName();
+			if (name == null) {
+				nameMatches = (thatName == null);
+			} else {
+				nameMatches = name.equals(thatName);
+			}
+			if (nameMatches) {
+				String thatUserName = that.getUserName();
+				if (userName == null) {
+					userNameMatches = (thatUserName == null);
+				} else {
+					userNameMatches = userName.equals(thatUserName);
+				}
+				if (userNameMatches) {
+					String thatInquiryUrl = that.getInquiryUrl();
+					if (inquiryUrl == null) {
+						inquiryUrlMatches = (thatInquiryUrl == null);
+					} else {
+						inquiryUrlMatches = inquiryUrl.equals(thatInquiryUrl);
+					}
+					if (inquiryUrlMatches) {
+						String thatPublishUrl = that.getPublishUrl();
+						if (publishUrl == null) {
+							publishUrlMatches = (thatPublishUrl == null);
+						} else {
+							publishUrlMatches = publishUrl.equals(thatPublishUrl);
+						}
+					}
+				}
+			}
+			same = (nameMatches && userNameMatches && inquiryUrlMatches && publishUrlMatches);
+		}
+		return same;
+	}
 }

@@ -118,6 +118,7 @@ public class VdbMainPanel extends BasePanel implements
     private static final String TREE_TAB_TITLE = "Metadata Tree"; //$NON-NLS-1$
     private static final String CONNBIND_TAB_TITLE = "Connector Bindings"; //$NON-NLS-1$
     private static final String ENTITLEMENTS_TAB_TITLE = "Roles"; //$NON-NLS-1$
+    private static final String WEB_SERVICES_TAB_TITLE = "Web Services"; //$NON-NLS-1$
     private static final String MATERIALIZATION_TAB_TITLE = "Materialization"; //$NON-NLS-1$
     
     private static final String ACTIVE_DEFAULT_DISPLAY_LABEL = "Active (Default)"; //$NON-NLS-1$
@@ -248,6 +249,7 @@ public class VdbMainPanel extends BasePanel implements
         pnlBindings = new VdbConnBindPanel(connection);
         pnlEntitlements = new VdbEntitlementsPanel(connection);
         javax.swing.JPanel pnlMaterialization = new MaterializationPanel(connection);
+        javax.swing.JPanel pnlWebServices = new WebServicesPanel(connection);
         javax.swing.JPanel pnlOps = new javax.swing.JPanel();
         btnImportVDB = new ButtonWidget();
         setup(MenuEntry.ACTION_MENUITEM, btnImportVDB, actionImportVDB);
@@ -292,6 +294,7 @@ public class VdbMainPanel extends BasePanel implements
         tpnDetails.addTab(TREE_TAB_TITLE, pnlTree);
         tpnDetails.addTab(CONNBIND_TAB_TITLE, pnlBindings);
         tpnDetails.addTab(ENTITLEMENTS_TAB_TITLE, pnlEntitlements);
+        tpnDetails.addTab(WEB_SERVICES_TAB_TITLE, pnlWebServices);
         tpnDetails.addTab(MATERIALIZATION_TAB_TITLE, pnlMaterialization);
         tpnDetails.setSelectedIndex(0);
         pnlBottom.add(tpnDetails);

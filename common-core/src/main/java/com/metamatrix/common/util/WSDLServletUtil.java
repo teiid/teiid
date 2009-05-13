@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.soap.util;
+package com.metamatrix.common.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;

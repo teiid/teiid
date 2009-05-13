@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 
 import org.apache.axis2.AxisFault;
 
-import com.metamatrix.soap.util.WSDLServletUtil;
+import com.metamatrix.common.util.WSDLServletUtil;
 
 /**
  * 

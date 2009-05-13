@@ -215,154 +215,154 @@ public class StaticProperties {
     }
 
     public static SavedUDDIRegistryInfo[] getUDDIRegistryInfo() {
-        Map /*<Integer (index stored with property) to SavedUDDIRegistryInfo>*/ infoMap = new HashMap();
-        Properties properties = getProperties();
-        Iterator it = properties.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry me = (Map.Entry)it.next();
-            String key = (String)me.getKey();
-            if (key.startsWith(UDDI_REGISTRY_NAME)) {
-                String remainder = key.substring(UDDI_REGISTRY_NAME_STR_LEN);
-                Integer index = null;
-                try {
-                    index = new Integer(remainder);
-                } catch (Exception ex) {
-                }
-                if (index != null) {
-                    String name = (String)me.getValue();
-                    SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)infoMap.get(index);
-                    if (info == null) {
-                        info = new SavedUDDIRegistryInfo(name, null, null, null);
-                        infoMap.put(index, info);
-                    } else {
-                        info.setName(name);
-                    }
-                }
-            } else if (key.startsWith(UDDI_REGISTRY_USER)) {
-                String remainder = key.substring(UDDI_REGISTRY_USER_STR_LEN);
-                Integer index = null;
-                try {
-                    index = new Integer(remainder);
-                } catch (Exception ex) {
-                }
-                if (index != null) {
-                    String user = (String)me.getValue();
-                    SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)infoMap.get(index);
-                    if (info == null) {
-                        info = new SavedUDDIRegistryInfo(null, user, null, null);
-                        infoMap.put(index, info);
-                    } else {
-                        info.setUserName(user);
-                    }
-                } 
-            } else if (key.startsWith(UDDI_REGISTRY_HOST)) {
-                String remainder = key.substring(UDDI_REGISTRY_HOST_STR_LEN);
-                Integer index = null;
-                try {
-                    index = new Integer(remainder);
-                } catch (Exception ex) {
-                }
-                if (index != null) {
-                    String host = (String)me.getValue();
-                    SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)infoMap.get(index);
-                    if (info == null) {
-                        info = new SavedUDDIRegistryInfo(null, null, host, null);
-                        infoMap.put(index, info);
-                    } else {
-                        info.setHost(host);
-                    }
-                }
-            } else if (key.startsWith(UDDI_REGISTRY_PORT)) {
-                String remainder = key.substring(UDDI_REGISTRY_PORT_STR_LEN);
-                Integer index = null;
-                try {
-                    index = new Integer(remainder);
-                } catch (Exception ex) {
-                }
-                if (index != null) {
-                    String port = (String)me.getValue();
-                    SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)infoMap.get(index);
-                    if (info == null) {
-                        info = new SavedUDDIRegistryInfo(null, null, null, port);
-                        infoMap.put(index, info);
-                    } else {
-                        info.setPort(port);
-                    }
-                }
-            }
-        }
-        Map revisedInfoMap = new HashMap();
-        it = infoMap.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry me = (Map.Entry)it.next();
-            SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)me.getValue();
-            if ((info.getUserName() != null) && (info.getHost() != null) && (info.getPort() != null)) {
-                revisedInfoMap.put(me.getKey(), info);
-            }
-        }
-        SavedUDDIRegistryInfo[] result = new SavedUDDIRegistryInfo[revisedInfoMap.size()];
-        int[] indices = new int[result.length];
-        it = revisedInfoMap.entrySet().iterator();
-        for (int i = 0; it.hasNext(); i++) {
-            Map.Entry me = (Map.Entry)it.next();
-            Integer intKey = (Integer)me.getKey();
-            indices[i] = intKey.intValue();
-            result[i] = (SavedUDDIRegistryInfo)me.getValue();
-        }
-        //Do bubble sort to put items in ascending order by index value
-        boolean done = false;
-        while (!done) {
-            done = true;
-            for (int i = 0; i < indices.length - 1; i++) {
-                if (indices[i] > indices[i + 1]) {
-                    done = false;
-                    int tempInt = indices[i];
-                    indices[i] = indices[i + 1];
-                    indices[i + 1] = tempInt;
-                    SavedUDDIRegistryInfo tempInfo = result[i];
-                    result[i] = result[i + 1];
-                    result[i + 1] = tempInfo;
-                }
-            }
-        }
-        if (StaticProperties.numUDDIRegistries < 0) {
-            StaticProperties.numUDDIRegistries = result.length;
-        }
-        return result;
-    }
-    
-    public static void setUDDIRegistryInfo(SavedUDDIRegistryInfo[] info) {
-        //First clean out the old
-        Properties properties = getProperties();
-        //To avoid ConcurrentModificationException, copy the keys to a separate list and
-        //iterate through that list.
-        java.util.List tempList = new ArrayList(properties.size());
-        Iterator it = properties.keySet().iterator();
-        while (it.hasNext()) {
-            String key = (String)it.next();
-            tempList.add(key);
-        }
-        it = tempList.iterator();
-        while (it.hasNext()) {
-            String key = (String)it.next();
-            if (key.startsWith(UDDI_REGISTRY_NAME) || key.startsWith(UDDI_REGISTRY_USER) 
-                    || key.startsWith(UDDI_REGISTRY_HOST) || key.startsWith(UDDI_REGISTRY_PORT)) {
-                UserPreferences.getInstance().removeValue(key);
-            }
-        }
-        //Then add the new
-        for (int i = 0; i < info.length; i++) {
-            int index = i + 1;
-            String key = UDDI_REGISTRY_NAME + index;
-            setProperty(key, info[i].getName());
-            key = UDDI_REGISTRY_USER + index;
-            setProperty(key, info[i].getUserName());
-            key = UDDI_REGISTRY_HOST + index;
-            setProperty(key, info[i].getHost());
-            key = UDDI_REGISTRY_PORT + index;
-            setProperty(key, info[i].getPort());
-        }
-    }
+		Map /* <Integer (index stored with property) to SavedUDDIRegistryInfo> */infoMap = new HashMap();
+		Properties properties = getProperties();
+		Iterator it = properties.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry me = (Map.Entry)it.next();
+			String key = (String)me.getKey();
+			if (key.startsWith(UDDI_REGISTRY_NAME)) {
+				String remainder = key.substring(UDDI_REGISTRY_NAME_STR_LEN);
+				Integer index = null;
+				try {
+					index = new Integer(remainder);
+				} catch (Exception ex) {
+				}
+				if (index != null) {
+					String name = (String)me.getValue();
+					SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)infoMap.get(index);
+					if (info == null) {
+						info = new SavedUDDIRegistryInfo(name, null, null, null);
+						infoMap.put(index, info);
+					} else {
+						info.setName(name);
+					}
+				}
+			} else if (key.startsWith(UDDI_REGISTRY_USER)) {
+				String remainder = key.substring(UDDI_REGISTRY_USER_STR_LEN);
+				Integer index = null;
+				try {
+					index = new Integer(remainder);
+				} catch (Exception ex) {
+				}
+				if (index != null) {
+					String user = (String)me.getValue();
+					SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)infoMap.get(index);
+					if (info == null) {
+						info = new SavedUDDIRegistryInfo(null, user, null, null);
+						infoMap.put(index, info);
+					} else {
+						info.setUserName(user);
+					}
+				}
+			} else if (key.startsWith(UDDI_REGISTRY_HOST)) {
+				String remainder = key.substring(UDDI_REGISTRY_HOST_STR_LEN);
+				Integer index = null;
+				try {
+					index = new Integer(remainder);
+				} catch (Exception ex) {
+				}
+				if (index != null) {
+					String inquiryUrl = (String)me.getValue();
+					SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)infoMap.get(index);
+					if (info == null) {
+						info = new SavedUDDIRegistryInfo(null, null, inquiryUrl, null);
+						infoMap.put(index, info);
+					} else {
+						info.setInquiryUrl(inquiryUrl);
+					}
+				}
+			} else if (key.startsWith(UDDI_REGISTRY_PORT)) {
+				String remainder = key.substring(UDDI_REGISTRY_PORT_STR_LEN);
+				Integer index = null;
+				try {
+					index = new Integer(remainder);
+				} catch (Exception ex) {
+				}
+				if (index != null) {
+					String publishUrl = (String)me.getValue();
+					SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)infoMap.get(index);
+					if (info == null) {
+						info = new SavedUDDIRegistryInfo(null, null, null, publishUrl);
+						infoMap.put(index, info);
+					} else {
+						info.setPublishUrl(publishUrl);
+					}
+				}
+			}
+		}
+		Map revisedInfoMap = new HashMap();
+		it = infoMap.entrySet().iterator();
+		while (it.hasNext()) {
+			Map.Entry me = (Map.Entry)it.next();
+			SavedUDDIRegistryInfo info = (SavedUDDIRegistryInfo)me.getValue();
+			if ((info.getUserName() != null) && (info.getInquiryUrl() != null) && (info.getPublishUrl() != null)) {
+				revisedInfoMap.put(me.getKey(), info);
+			}
+		}
+		SavedUDDIRegistryInfo[] result = new SavedUDDIRegistryInfo[revisedInfoMap.size()];
+		int[] indices = new int[result.length];
+		it = revisedInfoMap.entrySet().iterator();
+		for (int i = 0; it.hasNext(); i++) {
+			Map.Entry me = (Map.Entry)it.next();
+			Integer intKey = (Integer)me.getKey();
+			indices[i] = intKey.intValue();
+			result[i] = (SavedUDDIRegistryInfo)me.getValue();
+		}
+		// Do bubble sort to put items in ascending order by index value
+		boolean done = false;
+		while (!done) {
+			done = true;
+			for (int i = 0; i < indices.length - 1; i++) {
+				if (indices[i] > indices[i + 1]) {
+					done = false;
+					int tempInt = indices[i];
+					indices[i] = indices[i + 1];
+					indices[i + 1] = tempInt;
+					SavedUDDIRegistryInfo tempInfo = result[i];
+					result[i] = result[i + 1];
+					result[i + 1] = tempInfo;
+				}
+			}
+		}
+		if (StaticProperties.numUDDIRegistries < 0) {
+			StaticProperties.numUDDIRegistries = result.length;
+		}
+		return result;
+	}
+
+	public static void setUDDIRegistryInfo( SavedUDDIRegistryInfo[] info ) {
+		// First clean out the old
+		Properties properties = getProperties();
+		// To avoid ConcurrentModificationException, copy the keys to a separate list and
+		// iterate through that list.
+		java.util.List tempList = new ArrayList(properties.size());
+		Iterator it = properties.keySet().iterator();
+		while (it.hasNext()) {
+			String key = (String)it.next();
+			tempList.add(key);
+		}
+		it = tempList.iterator();
+		while (it.hasNext()) {
+			String key = (String)it.next();
+			if (key.startsWith(UDDI_REGISTRY_NAME) || key.startsWith(UDDI_REGISTRY_USER) || key.startsWith(UDDI_REGISTRY_HOST)
+			    || key.startsWith(UDDI_REGISTRY_PORT)) {
+				UserPreferences.getInstance().removeValue(key);
+			}
+		}
+		// Then add the new
+		for (int i = 0; i < info.length; i++) {
+			int index = i + 1;
+			String key = UDDI_REGISTRY_NAME + index;
+			setProperty(key, info[i].getName());
+			key = UDDI_REGISTRY_USER + index;
+			setProperty(key, info[i].getUserName());
+			key = UDDI_REGISTRY_HOST + index;
+			setProperty(key, info[i].getInquiryUrl());
+			key = UDDI_REGISTRY_PORT + index;
+			setProperty(key, info[i].getPublishUrl());
+		}
+	}
     
     public static Properties getProperties() {
         return UserPreferences.getInstance().getProperties();

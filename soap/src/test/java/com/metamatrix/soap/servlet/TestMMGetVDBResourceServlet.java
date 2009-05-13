@@ -25,7 +25,7 @@ package com.metamatrix.soap.servlet;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.metamatrix.soap.util.WSDLServletUtil;
+import com.metamatrix.common.util.WSDLServletUtil;
 
 import junit.framework.TestCase;
 

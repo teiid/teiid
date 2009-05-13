@@ -25,7 +25,7 @@ package com.metamatrix.soap.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.metamatrix.soap.util.WSDLServletUtil;
+import com.metamatrix.common.util.WSDLServletUtil;
 
 import junit.framework.TestCase;
 

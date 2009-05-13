@@ -74,10 +74,10 @@ public class UDDIConfigurationsDialog extends JDialog {
             "General.Remove"); //$NON-NLS-1$
     private final static String CONFIG_NAME = ConsolePlugin.Util.getString(
             "UDDIConfigurationsDialog.configName") + ':'; //$NON-NLS-1$
-    private final static String HOST = ConsolePlugin.Util.getString(
-            "UDDIConfigurationsDialog.host") + ':'; //$NON-NLS-1$
-    private final static String PORT = ConsolePlugin.Util.getString(
-            "UDDIConfigurationsDialog.port") + ':'; //$NON-NLS-1$
+    private final static String INQUIRY_URL = ConsolePlugin.Util.getString(
+            "UDDIConfigurationsDialog.uddiInquiryUrl") + ':'; //$NON-NLS-1$
+    private final static String PUBLISH_URL = ConsolePlugin.Util.getString(
+            "UDDIConfigurationsDialog.uddiPublishUrl") + ':'; //$NON-NLS-1$
     private final static String USER_NAME = ConsolePlugin.Util.getString(
             "UDDIConfigurationsDialog.userName") + ':'; //$NON-NLS-1$
     private final static String NOTE_LINE_1 = ConsolePlugin.Util.getString(
@@ -103,8 +103,8 @@ public class UDDIConfigurationsDialog extends JDialog {
     private JButton okButton;
     private JButton cancelButton;
     private JTextField nameField;
-    private JTextField hostField;
-    private JTextField portField;
+    private JTextField inquiryUrlField;
+    private JTextField publishUrlField;
     private JTextField userField;
     private SavedUDDIRegistryInfo removedItem = null;
     private int curState = NO_STATE;
@@ -184,13 +184,13 @@ public class UDDIConfigurationsDialog extends JDialog {
         textFieldsPanel.add(nameLabel);
         textFieldsLayout.setConstraints(nameLabel, new GridBagConstraints(0, 0, 1, 1, 0.0, 0.0,
                 GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        JLabel hostLabel = new LabelWidget(HOST);
-        textFieldsPanel.add(hostLabel);
-        textFieldsLayout.setConstraints(hostLabel, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
+        JLabel inquiryUrlLabel = new LabelWidget(INQUIRY_URL);
+        textFieldsPanel.add(inquiryUrlLabel);
+        textFieldsLayout.setConstraints(inquiryUrlLabel, new GridBagConstraints(0, 1, 1, 1, 0.0, 0.0,
                 GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
-        JLabel portLabel = new LabelWidget(PORT);
-        textFieldsPanel.add(portLabel);
-        textFieldsLayout.setConstraints(portLabel, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
+        JLabel publishUrlLabel = new LabelWidget(PUBLISH_URL);
+        textFieldsPanel.add(publishUrlLabel);
+        textFieldsLayout.setConstraints(publishUrlLabel, new GridBagConstraints(0, 2, 1, 1, 0.0, 0.0,
                 GridBagConstraints.WEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         JLabel userLabel = new LabelWidget(USER_NAME);
         textFieldsPanel.add(userLabel);
@@ -213,17 +213,17 @@ public class UDDIConfigurationsDialog extends JDialog {
         textFieldsPanel.add(nameField);
         textFieldsLayout.setConstraints(nameField, new GridBagConstraints(1, 0, 1, 1, 1.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 2, 0, 0), 0, 0));
-        hostField = new TextFieldWidget();
-        hostField.getDocument().addDocumentListener(docListener);
-        hostField.setEnabled(false);
-        textFieldsPanel.add(hostField);
-        textFieldsLayout.setConstraints(hostField, new GridBagConstraints(1, 1, 1, 1, 1.0, 0.0,
+        inquiryUrlField = new TextFieldWidget();
+        inquiryUrlField.getDocument().addDocumentListener(docListener);
+        inquiryUrlField.setEnabled(false);
+        textFieldsPanel.add(inquiryUrlField);
+        textFieldsLayout.setConstraints(inquiryUrlField, new GridBagConstraints(1, 1, 1, 1, 1.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 2, 0, 0), 0, 0));
-        portField = new TextFieldWidget();
-        portField.getDocument().addDocumentListener(docListener);
-        portField.setEnabled(false);
-        textFieldsPanel.add(portField);
-        textFieldsLayout.setConstraints(portField, new GridBagConstraints(1, 2, 1, 1, 1.0, 0.0,
+        publishUrlField = new TextFieldWidget();
+        publishUrlField.getDocument().addDocumentListener(docListener);
+        publishUrlField.setEnabled(false);
+        textFieldsPanel.add(publishUrlField);
+        textFieldsLayout.setConstraints(publishUrlField, new GridBagConstraints(1, 2, 1, 1, 1.0, 0.0,
                 GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 2, 0, 0), 0, 0));
         userField = new TextFieldWidget();
         userField.getDocument().addDocumentListener(docListener);
@@ -301,10 +301,10 @@ public class UDDIConfigurationsDialog extends JDialog {
     private void textFieldChanged() {
         boolean newConfig = (curState == ADDING);
         String configName = nameField.getText().trim();
-        String host = hostField.getText().trim();
-        String port = portField.getText().trim();
+        String inquiryUrl = inquiryUrlField.getText().trim();
+        String publishUrl = publishUrlField.getText().trim();
         String user = userField.getText().trim();
-        boolean entriesValid = isValidConfig(configName, host, port, user, newConfig);
+        boolean entriesValid = isValidConfig(configName, inquiryUrl, publishUrl, user, newConfig);
         okButton.setEnabled(entriesValid);
     }
     
@@ -339,10 +339,10 @@ public class UDDIConfigurationsDialog extends JDialog {
             case EDITING:
                 SavedUDDIRegistryInfo item = getSelectedItem();
                 String configName = item.getName();
-                String host = hostField.getText().trim();
-                String port = portField.getText().trim();
+                String inquiryUrl = inquiryUrlField.getText().trim();
+                String publishUrl = publishUrlField.getText().trim();
                 String user = userField.getText().trim();
-                SavedUDDIRegistryInfo editedItem = new SavedUDDIRegistryInfo(configName, user, host, port);
+                SavedUDDIRegistryInfo editedItem = new SavedUDDIRegistryInfo(configName, user, inquiryUrl, publishUrl);
                 if (item.equals(editedItem)) {
                     handler.unchangedConfiguration(item);
                 } else {
@@ -351,10 +351,10 @@ public class UDDIConfigurationsDialog extends JDialog {
                 break;
             case ADDING:
                 configName = nameField.getText().trim();
-                host = hostField.getText().trim();
-                port = portField.getText().trim();
+                inquiryUrl = inquiryUrlField.getText().trim();
+                publishUrl = publishUrlField.getText().trim();
                 user = userField.getText().trim();
-                SavedUDDIRegistryInfo newItem = new SavedUDDIRegistryInfo(configName, user, host, port);
+                SavedUDDIRegistryInfo newItem = new SavedUDDIRegistryInfo(configName, user, inquiryUrl, publishUrl);
                 handler.addedConfiguration(newItem);
                 break;
             case REMOVING:
@@ -377,10 +377,10 @@ public class UDDIConfigurationsDialog extends JDialog {
         return found;
     }
     
-    private boolean isValidConfig(String configName, String host, String port, String userName,
+    private boolean isValidConfig(String configName, String inquiryUrl, String publishUrl, String userName,
             boolean newConfig) {
         boolean valid = false;
-        if ((configName.length() > 0) && (host.length() > 0) && (port.length() > 0) && (userName.length() >
+        if ((configName.length() > 0) && (inquiryUrl.length() > 0) && (publishUrl.length() > 0) && (userName.length() >
                 0)) {
             if (newConfig) {
                 if (!isExistingConfigName(configName)) {
@@ -396,14 +396,14 @@ public class UDDIConfigurationsDialog extends JDialog {
     private void clearText() {
         String empty = StringUtil.Constants.EMPTY_STRING;
         nameField.setText(empty);
-        hostField.setText(empty);
-        portField.setText(empty);
+        inquiryUrlField.setText(empty);
+        publishUrlField.setText(empty);
         userField.setText(empty);
     }
     
     private void enableText(boolean includingName) {
-        hostField.setEnabled(true);
-        portField.setEnabled(true);
+        inquiryUrlField.setEnabled(true);
+        publishUrlField.setEnabled(true);
         userField.setEnabled(true);
         if (includingName) {
             nameField.setEnabled(true);
@@ -412,8 +412,8 @@ public class UDDIConfigurationsDialog extends JDialog {
     
     private void disableText() {
         nameField.setEnabled(false);
-        hostField.setEnabled(false);
-        portField.setEnabled(false);
+        inquiryUrlField.setEnabled(false);
+        publishUrlField.setEnabled(false);
         userField.setEnabled(false);
     }
     
@@ -431,8 +431,8 @@ public class UDDIConfigurationsDialog extends JDialog {
             clearText();
         } else {
             nameField.setText(item.getName());
-            hostField.setText(item.getHost());
-            portField.setText(item.getPort());
+            inquiryUrlField.setText(item.getInquiryUrl());
+			publishUrlField.setText(item.getPublishUrl());
             userField.setText(item.getUserName());
         }
     }

@@ -43,6 +43,7 @@ import org.apache.axis2.context.MessageContext;
 
 import com.metamatrix.admin.api.objects.LogConfiguration;
 import com.metamatrix.common.util.ByteArrayHelper;
+import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.jdbc.api.SQLStates;
 import com.metamatrix.soap.SOAPPlugin;
@@ -50,7 +51,6 @@ import com.metamatrix.soap.exceptions.SOAPProcessingException;
 import com.metamatrix.soap.security.Credential;
 import com.metamatrix.soap.sqlquerywebservice.log.LogUtil;
 import com.metamatrix.soap.util.EndpointUriTranslatorStrategyImpl;
-import com.metamatrix.soap.util.WSDLServletUtil;
 import com.metamatrix.soap.util.WebServiceUtil;
 
 /**

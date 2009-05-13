@@ -48,6 +48,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 
 import com.metamatrix.common.api.MMURL;
+import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.log.FileLogWriter;
 import com.metamatrix.core.log.LogListener;
@@ -56,7 +57,6 @@ import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.soap.SOAPPlugin;
 import com.metamatrix.soap.util.ErrorMessageKeys;
 import com.metamatrix.soap.util.SOAPConstants;
-import com.metamatrix.soap.util.WSDLServletUtil;
 import com.metamatrix.soap.util.WebServiceUtil;
  
 
