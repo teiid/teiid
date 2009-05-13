@@ -33,6 +33,7 @@ import java.util.Set;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.api.exception.query.QueryProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
@@ -74,47 +75,13 @@ public class TempTableStoreImpl implements TempTableStore{
         this.sessionID = sessionID;
         this.parentTempTableStore = parentTempTableStore;
     }
-    
-    public void addTempTable(Command command, boolean removeExistingTable) throws MetaMatrixComponentException{
-        String tempTableName = null;
-        List columns = null;
 
-        switch (command.getType()) {
-            case Command.TYPE_CREATE:
-                tempTableName = ((Create)command).getTable().getName().toUpperCase();
-                columns = ((Create)command).getColumns();
-                break;
-            case Command.TYPE_QUERY:
-                Query query = (Query)command;
-                if(query.getInto() != null) {
-                    tempTableName = query.getInto().getGroup().getName().toUpperCase();
-                    columns = query.getSelect().getSymbols();
-                    break;
-                }else if(((GroupSymbol)query.getFrom().getGroups().get(0)).isTempGroupSymbol()) {
-                    tempTableName = ((GroupSymbol)query.getFrom().getGroups().get(0)).getNonCorrelationName().toUpperCase();
-                    columns = query.getSelect().getSymbols();
-                    break;
-                }
-                return;
-            case Command.TYPE_INSERT:
-                Insert insert = (Insert)command;
-                GroupSymbol group = insert.getGroup();
-                if(group.isTempGroupSymbol()) {
-                    tempTableName = group.getNonCorrelationName().toUpperCase();
-                    columns = insert.getVariables();
-                    break; 
-                }
-                return;
-            default:
-                return;
-        }
-        
+    public void addTempTable(String tempTableName, List columns, boolean removeExistingTable) throws MetaMatrixComponentException, QueryProcessingException{        
         if(tempMetadataStore.getTempGroupID(tempTableName) != null) {
-            if(removeExistingTable) {
-                removeTempTableByName(tempTableName);
-            }else {
-                throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
+            if(!removeExistingTable) {
+                throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_exist_error", tempTableName));//$NON-NLS-1$
             }
+            removeTempTableByName(tempTableName);
         }
         
         //add metadata
@@ -151,7 +118,7 @@ public class TempTableStoreImpl implements TempTableStore{
         return tempMetadataStore;
     }
         
-    public TupleSource registerRequest(Command command) throws MetaMatrixComponentException, ExpressionEvaluationException{
+    public TupleSource registerRequest(Command command) throws MetaMatrixComponentException, ExpressionEvaluationException, QueryProcessingException{
         if(!hasTempTable(command)) {
             return null;
         }
@@ -165,11 +132,16 @@ public class TempTableStoreImpl implements TempTableStore{
             {
                 Query query = (Query)command;
                 GroupSymbol group = (GroupSymbol)query.getFrom().getGroups().get(0);
-                return connectTupleSource(group.getNonCorrelationName(), command);
+                TupleSourceID tsId = getTupleSourceID(group.getNonCorrelationName().toUpperCase(), command);
+                try {
+                    return buffer.getTupleSource(tsId);
+                }catch(TupleSourceNotFoundException e) {
+                    throw new MetaMatrixComponentException(e);
+                }
             }
             case Command.TYPE_CREATE:
             {
-                addTempTable(command, false);
+                addTempTable(((Create)command).getTable().getName().toUpperCase(), ((Create)command).getColumns(), false);
                 return new UpdateCountTupleSource(0);
             }
             case Command.TYPE_DROP:
@@ -190,18 +162,9 @@ public class TempTableStoreImpl implements TempTableStore{
         }
     }
     
-    private TupleSource connectTupleSource(String tableName, Command command) throws MetaMatrixComponentException{
-        TupleSourceID tsId = getTupleSourceID(tableName, command);
-        try {
-            return buffer.getTupleSource(tsId);
-        }catch(TupleSourceNotFoundException e) {
-            throw new MetaMatrixComponentException(e);
-        }
-    }
-    
-    private TupleSourceID getTupleSourceID(String tempTableID, Command command) throws MetaMatrixComponentException{
+    private TupleSourceID getTupleSourceID(String tempTableID, Command command) throws MetaMatrixComponentException, QueryProcessingException{
        
-        TupleSourceID tsID = (TupleSourceID)groupToTupleSourceID.get(tempTableID.toUpperCase());
+        TupleSourceID tsID = (TupleSourceID)groupToTupleSourceID.get(tempTableID);
         if(tsID != null) {
             return tsID;
         }
@@ -211,14 +174,33 @@ public class TempTableStoreImpl implements TempTableStore{
     	        return tsID;
     	    }
         }
-        addTempTable(command, true);       
-        return (TupleSourceID)groupToTupleSourceID.get(tempTableID.toUpperCase());
+        //allow implicit temp group definition
+        List columns = null;
+        switch (command.getType()) {
+        case Command.TYPE_QUERY:
+            Query query = (Query)command;
+            if(query.getInto() != null && query.getInto().getGroup().isImplicitTempGroupSymbol()) {
+                columns = query.getSelect().getSymbols();
+            }
+            break;
+        case Command.TYPE_INSERT:
+            Insert insert = (Insert)command;
+            GroupSymbol group = insert.getGroup();
+            if(group.isImplicitTempGroupSymbol()) {
+                columns = insert.getVariables();
+            }
+            break;
+        }
+        if (columns == null) {
+        	throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
+        }
+        addTempTable(tempTableID, columns, true);       
+        return (TupleSourceID)groupToTupleSourceID.get(tempTableID);
     }
     
-    
-    private TupleSource addTuple(Insert insert) throws MetaMatrixComponentException, ExpressionEvaluationException {
+    private TupleSource addTuple(Insert insert) throws MetaMatrixComponentException, ExpressionEvaluationException, QueryProcessingException {
         GroupSymbol group = insert.getGroup();
-        TupleSourceID tsId = getTupleSourceID(group.getNonCorrelationName(), insert);
+        TupleSourceID tsId = getTupleSourceID(group.getNonCorrelationName().toUpperCase(), insert);
         int tuplesAdded = 0;
         try {
             int rowCount = buffer.getRowCount(tsId);

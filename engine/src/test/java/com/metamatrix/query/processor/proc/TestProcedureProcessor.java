@@ -2009,7 +2009,7 @@ public class TestProcedureProcessor extends TestCase {
         procedure.append("select e1 into t1 from pm1.g1;\n"); //$NON-NLS-1$
         procedure.append("drop table t1;\n"); //$NON-NLS-1$
         procedure.append("drop table t1;\n"); //$NON-NLS-1$
-        procedure.append("SELECT e1 from t1;\n"); //$NON-NLS-1$
+        procedure.append("SELECT 1;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
         QueryNode sq2n1 = new QueryNode("pm1.sq1", procedure.toString()); //$NON-NLS-1$ 
@@ -2024,7 +2024,7 @@ public class TestProcedureProcessor extends TestCase {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
-        helpTestProcess(plan, new List[] {}, dataMgr); 
+        helpTestProcess(plan, new List[] {Arrays.asList(1)}, dataMgr); 
     }
     
     /**

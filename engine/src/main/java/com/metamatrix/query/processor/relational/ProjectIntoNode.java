@@ -25,7 +25,6 @@
 package com.metamatrix.query.processor.relational;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +39,6 @@ import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 
 public class ProjectIntoNode extends RelationalNode {
 
@@ -115,7 +113,7 @@ public class ProjectIntoNode extends RelationalNode {
                 currentBatch = getChildren()[0].nextBatch(); // can throw BlockedException
                 this.batchRow = currentBatch.getBeginRow();
                 
-                if(currentBatch.getRowCount() == 0) {
+                if(currentBatch.getRowCount() == 0 && !this.intoGroup.isImplicitTempGroupSymbol()) {
                     continue;
                 }
             } else if (currentBatch.getTerminationFlag() && this.batchRow > currentBatch.getEndRow()) {

@@ -155,4 +155,11 @@ public class TestQuery extends TestCase {
         UnitTestUtil.helpTestEquivalence(equals, q, qclone);
         assertEquals(projectedSymbols, qclone.getProjectedSymbols());
     }  
+    
+    public void testClone3() {
+    	Query q = sample2();
+        q.setInto(new Into(new GroupSymbol("#foo"))); //$NON-NLS-1$
+        Query qclone = (Query)q.clone();
+        assertNotNull(qclone.getInto());
+    }
 }

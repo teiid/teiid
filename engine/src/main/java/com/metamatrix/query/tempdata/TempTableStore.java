@@ -25,7 +25,7 @@ package com.metamatrix.query.tempdata;
 import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.query.ExpressionEvaluationException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.query.metadata.TempMetadataStore;
@@ -36,15 +36,13 @@ import com.metamatrix.query.sql.lang.Command;
  */
 public interface TempTableStore {
     
-    void addTempTable(Command command, boolean removeExistingTable) throws MetaMatrixComponentException;
-    
     void removeTempTable(Command command) throws MetaMatrixComponentException;
 
     void removeTempTables() throws MetaMatrixComponentException;
   
     TempMetadataStore getMetadataStore();
 
-    public TupleSource registerRequest(Command command)  throws MetaMatrixComponentException, ExpressionEvaluationException;
+    public TupleSource registerRequest(Command command)  throws MetaMatrixComponentException, MetaMatrixProcessingException;
     
     public boolean hasTempTable(Command command);
     

@@ -34,6 +34,7 @@ import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 /**
@@ -364,6 +365,10 @@ public class Query extends QueryCommand {
             while(iter.hasNext()) {
             	copy.selectList.add(((SelectSymbol)iter.next()).clone());
             }
+        }
+        
+        if (into != null) {
+        	copy.into = (Into)into.clone();
         }
         
         copyMetadataState(copy);

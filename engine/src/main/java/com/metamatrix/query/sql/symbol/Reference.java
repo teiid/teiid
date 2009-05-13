@@ -89,7 +89,7 @@ public class Reference implements Expression, ContextReference {
     }
 
     public Class<?> getType() {
-    	if (this.isPositional()) {
+    	if (this.isPositional() && this.expression == null) {
     		return type;
     	}
     	return expression.getType();

@@ -216,10 +216,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         metadata = metadataService.lookupMetadata(vdbName, vdbVersion);            
 
         if (metadata == null) {
-            Object[] params = new Object[] { this.vdbName, this.vdbVersion };
-            String msg = DQPPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", params); //$NON-NLS-1$
-            MetaMatrixComponentException e = new MetaMatrixComponentException(msg);
-            throw e;
+            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("DQPCore.Unable_to_load_metadata_for_VDB_name__{0},_version__{1}", this.vdbName, this.vdbVersion)); //$NON-NLS-1$
         }
         
         this.metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
