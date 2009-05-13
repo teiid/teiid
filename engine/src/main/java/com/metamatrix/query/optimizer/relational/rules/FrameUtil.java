@@ -55,7 +55,6 @@ import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
@@ -264,24 +263,14 @@ public class FrameUtil {
             return expression;
         }
         
-        if(expression instanceof ElementSymbol) { 
+        if(expression instanceof SingleElementSymbol) { 
             Expression mappedSymbol = (Expression) symbolMap.get(expression);
             if (mappedSymbol != null) {
                 return mappedSymbol;
             }
             return expression;
         }
-        
-        if(expression instanceof AggregateSymbol) {
-            AggregateSymbol aggSymbol = (AggregateSymbol) expression;
-            
-            // First try to replace the entire aggregate
-            SingleElementSymbol replacement = (SingleElementSymbol) symbolMap.get(aggSymbol);
-            if(replacement != null) {
-                return replacement;
-            }
-        } 
-        
+                
         ExpressionMappingVisitor.mapExpressions(expression, symbolMap);
         
         return expression;
@@ -507,7 +496,7 @@ public class FrameUtil {
         if (project != null) {
             return (List<SingleElementSymbol>)project.getProperty(NodeConstants.Info.PROJECT_COLS);
         }
-        Assertion.failed("no top cols in frame");
+        Assertion.failed("no top cols in frame"); //$NON-NLS-1$
         return null;
     }
 

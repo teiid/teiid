@@ -22,18 +22,23 @@
 
 package com.metamatrix.query.sql.visitor;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+import org.teiid.connector.api.SourceSystemFunctions;
 
 import com.metamatrix.query.sql.LanguageObject;
+import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.CompareCriteria;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetCriteria;
+import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -44,11 +49,7 @@ import com.metamatrix.query.sql.symbol.TestCaseExpression;
 import com.metamatrix.query.sql.symbol.TestSearchedCaseExpression;
 
 
-public class TestExpressionMappingVisitor extends TestCase {
-
-    public TestExpressionMappingVisitor(String arg0) {
-        super(arg0);
-    }
+public class TestExpressionMappingVisitor {
 
     public void helpTest(LanguageObject original, Map map, LanguageObject expected) {
         ExpressionMappingVisitor.mapExpressions(original, map);
@@ -56,7 +57,7 @@ public class TestExpressionMappingVisitor extends TestCase {
         assertEquals("Did not get expected mapped expression", expected, original);     //$NON-NLS-1$
     }
     
-    public void testCompareCriteria1() {
+    @Test public void testCompareCriteria1() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         Function f = new Function("+", new Expression[] { new Constant(new Integer(2)), new Constant(new Integer(5)) }); //$NON-NLS-1$
         Map map = new HashMap();
@@ -66,7 +67,7 @@ public class TestExpressionMappingVisitor extends TestCase {
         helpTest(before, map, after);
     }
     
-    public void testCompareCriteria2() {
+    @Test public void testCompareCriteria2() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         Function f = new Function("+", new Expression[] { new Constant(new Integer(2)), new Constant(new Integer(5)) }); //$NON-NLS-1$
         Map map = new HashMap();
@@ -76,7 +77,7 @@ public class TestExpressionMappingVisitor extends TestCase {
         helpTest(before, map, after);
     }
 
-    public void testFunction1() {
+    @Test public void testFunction1() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         ElementSymbol e3 = new ElementSymbol("e3"); //$NON-NLS-1$
@@ -100,7 +101,7 @@ public class TestExpressionMappingVisitor extends TestCase {
         helpTest(f3, map, f7);
     }
 
-    public void testSetCriteria() {
+    @Test public void testSetCriteria() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         ElementSymbol e2 = new ElementSymbol("e2"); //$NON-NLS-1$
         Constant c1 = new Constant("xyz"); //$NON-NLS-1$
@@ -122,7 +123,7 @@ public class TestExpressionMappingVisitor extends TestCase {
         helpTest(before, map, after);
     }
     
-    public void testCaseExpression1() {
+    @Test public void testCaseExpression1() {
         ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
         ElementSymbol y = new ElementSymbol("y"); //$NON-NLS-1$
         Constant a = new Constant(String.valueOf('a'));
@@ -145,7 +146,7 @@ public class TestExpressionMappingVisitor extends TestCase {
         helpTest(TestCaseExpression.example(3), map, mapped);
     }
     
-    public void testCaseExpression2() {
+    @Test public void testCaseExpression2() {
         ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
         ElementSymbol y = new ElementSymbol("y"); //$NON-NLS-1$
         
@@ -168,7 +169,7 @@ public class TestExpressionMappingVisitor extends TestCase {
     /**
      * We do not need to create an alias if the canonical short names match
      */
-    public void testSelectAlias() {
+    @Test public void testSelectAlias() {
         ElementSymbol x = new ElementSymbol("y.x"); //$NON-NLS-1$
         ElementSymbol y = new ElementSymbol("z.X"); //$NON-NLS-1$
         
@@ -181,6 +182,26 @@ public class TestExpressionMappingVisitor extends TestCase {
         
         assertEquals("Did not get expected mapped expression", "SELECT z.X", toMap.toString());     //$NON-NLS-1$ //$NON-NLS-2$
     }
-
+    
+    /**
+     * we are not careful about ensuring that that every symbol is
+     * unique in a plan, so there's a chance mapping the expression in an
+     * aggregate in a project node will cause the same symbol to be 
+     * updated in a sort node.  to ensure that we don't get into
+     * recursion trouble we detect if we're replacing an expression
+     * that already exists as a mapping.
+     * 
+     * we simulate that situation here using the same aggregate twice in
+     * a function.
+     */
+    @Test public void testRecursionDetection() {
+    	ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
+    	AggregateSymbol a1 = new AggregateSymbol("x", ReservedWords.SUM, false, e1); //$NON-NLS-1$
+    	Function f = new Function(SourceSystemFunctions.ADD_OP, new Expression[] {a1, a1});
+    	HashMap<AggregateSymbol, AggregateSymbol> map = new HashMap<AggregateSymbol, AggregateSymbol>();
+    	map.put(a1, new AggregateSymbol("x", ReservedWords.SUM, false, a1)); //$NON-NLS-1$
+    	ExpressionMappingVisitor.mapExpressions(f, map);
+        assertEquals("(SUM(SUM(e1)) + SUM(SUM(e1)))", f.toString()); //$NON-NLS-1$
+    }
     
 }

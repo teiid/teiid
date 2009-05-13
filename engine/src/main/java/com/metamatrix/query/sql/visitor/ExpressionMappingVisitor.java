@@ -24,9 +24,11 @@ package com.metamatrix.query.sql.visitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
@@ -47,7 +49,6 @@ import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.lang.SubquerySetCriteria;
-import com.metamatrix.query.sql.navigator.PostOrderNavigator;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -74,7 +75,7 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     public ExpressionMappingVisitor(Map symbolMap) {
         this.symbolMap = symbolMap;
     }
-    
+        
     protected boolean createAliases() {
     	return true;
     }
@@ -293,27 +294,25 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     }
     
     /**
-     * Take a language object (currently only criteria and expressions will be 
-     * properly mapped) and use the map to swap out expressions with new expressions.
-     * If an expression is not found in the map, it is not swapped.  The object
-     * is modified in place, so is not returned.
+     * The object is modified in place, so is not returned.
      * @param obj Language object
      * @param exprMap Expression map, Expression to Expression
      */
     public static void mapExpressions(LanguageObject obj, Map exprMap) {
-        mapExpressions(obj, exprMap, false);
-    }
-    
-    public static void mapExpressions(LanguageObject obj, Map exprMap, boolean preOrder) {
         if(obj == null || exprMap == null || exprMap.isEmpty()) { 
             return;
         }
-        ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(exprMap);
-        if (preOrder) {
-            PreOrderNavigator.doVisit(obj, visitor);
-        } else {
-            PostOrderNavigator.doVisit(obj, visitor);
-        }
+        final Set reverseSet = new HashSet(exprMap.values());
+        final ExpressionMappingVisitor visitor = new ExpressionMappingVisitor(exprMap);
+        PreOrderNavigator pon = new PreOrderNavigator(visitor) {
+        	@Override
+        	protected void visitNode(LanguageObject obj) {
+        		if (!(obj instanceof Expression) || !reverseSet.contains(obj)) {
+            		super.visitNode(obj);
+        		}
+        	}
+        };
+        obj.acceptVisitor(pon);
     }
     
     protected void setVariableValues(Map variableValues) {

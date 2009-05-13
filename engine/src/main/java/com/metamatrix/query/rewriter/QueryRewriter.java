@@ -751,14 +751,14 @@ public class QueryRewriter {
                 for (SingleElementSymbol symbol : (List<SingleElementSymbol>)query.getSelect().getProjectedSymbols()) {
                     expressionMap.put((Expression)SymbolMap.getExpression(symbol).clone(), (SingleElementSymbol)iter.next());
                 }
-                ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap, true);
+                ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
                 outerQuery.setGroupBy(groupBy);
-                ExpressionMappingVisitor.mapExpressions(having, expressionMap, true);
+                ExpressionMappingVisitor.mapExpressions(having, expressionMap);
                 outerQuery.setHaving(having);
-                ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap, true);
+                ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);
                 outerQuery.setOrderBy(orderBy);
                 outerQuery.setLimit(limit);
-                ExpressionMappingVisitor.mapExpressions(select, expressionMap, true);
+                ExpressionMappingVisitor.mapExpressions(select, expressionMap);
                 outerQuery.setSelect(select);
                 outerQuery.setInto(into);
                 outerQuery.setOption(query.getOption());
