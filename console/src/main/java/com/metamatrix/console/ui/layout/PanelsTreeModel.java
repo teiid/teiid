@@ -252,7 +252,7 @@ public class PanelsTreeModel extends DefaultTreeModel {
         props.setToolTipText(tipText); 
         configuration.add(props);
         
-        // connector bindings panel node
+        // services panel node
         PanelsTreeNode services = new PanelsTreeNode(SERVICE_DEFINTIONS,
         		SERVICE_DEFINITION_PANEL_CLASS, connection, false);
         tipText = ConsolePlugin.Util.getString("PanelsTreeModel.servicesPanel.tooltip"); //$NON-NLS-1$

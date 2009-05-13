@@ -55,6 +55,7 @@ import com.metamatrix.console.notification.RuntimeUpdateNotification;
 import com.metamatrix.console.security.UserCapabilities;
 import com.metamatrix.console.ui.ViewManager;
 import com.metamatrix.console.ui.layout.BasePanel;
+import com.metamatrix.console.ui.layout.PanelsTreeModel;
 import com.metamatrix.console.ui.layout.WorkspacePanel;
 import com.metamatrix.console.ui.views.deploy.event.ConfigurationChangeEvent;
 import com.metamatrix.console.ui.views.deploy.event.ConfigurationChangeListener;
@@ -453,7 +454,7 @@ public class ServiceDefinitionPanel extends BasePanel implements
     }
 
     public String getTitle() {
-        return "Connector Bindings"; //$NON-NLS-1$
+        return PanelsTreeModel.SERVICE_DEFINTIONS; 
     }
 
     public ConnectionInfo getConnection() {
