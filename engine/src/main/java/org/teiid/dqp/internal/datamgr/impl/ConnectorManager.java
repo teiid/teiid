@@ -96,7 +96,7 @@ import com.metamatrix.query.sql.lang.Command;
  */
 public class ConnectorManager implements ApplicationService {
 
-    public static final int DEFAULT_MAX_PROCESSOR_THREADS = 15;
+    public static final int DEFAULT_MAX_THREADS = 20;
     private static final String DEFAULT_MAX_RESULTSET_CACHE_SIZE = "20"; //$NON-NLS-1$
     private static final String DEFAULT_MAX_RESULTSET_CACHE_AGE = "3600000"; //$NON-NLS-1$
 
@@ -308,7 +308,7 @@ public class ConnectorManager implements ApplicationService {
             throw new ApplicationLifecycleException(DQPPlugin.Util.getString("Missing_required_property", new Object[]{ConnectorPropertyNames.CONNECTOR_CLASS, connectorName})); //$NON-NLS-1$
         }
 
-        int maxThreads = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_THREADS, DEFAULT_MAX_PROCESSOR_THREADS);
+        int maxThreads = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_CONNECTIONS, DEFAULT_MAX_THREADS);
 
         connectorWorkerPool = WorkerPoolFactory.newWorkerPool(connectorName, maxThreads);
 

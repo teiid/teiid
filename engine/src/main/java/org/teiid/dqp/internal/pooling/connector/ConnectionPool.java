@@ -42,6 +42,7 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SingleIdentity;
+import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWrapper;
@@ -60,10 +61,7 @@ public class ConnectionPool {
      */
     public static final String SOURCE_CONNECTION_TEST_INTERVAL = "SourceConnectionTestInterval"; //$NON-NLS-1$
 
-    /**
-     * Maximum connections for this pool. Default to 0, which means there is no limit.
-     */
-    public static final String MAX_CONNECTIONS = "com.metamatrix.data.pool.max_connections"; //$NON-NLS-1$
+    public static final String MAX_CONNECTIONS = ConnectorPropertyNames.MAX_CONNECTIONS;
 
     /**
      * Maximum connection for each ConnectorIdentity. Default to 0, which means there is no limit.

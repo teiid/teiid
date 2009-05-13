@@ -221,14 +221,13 @@ public class ConnectorHost implements IConnectorHost {
 		    			results.add(result);
 		    		}
 		    		break;
-		    	} else {
-		    		UpdateExecution rs = (UpdateExecution)execution;
-		    		int[] result = rs.getUpdateCounts();
-		    		for (int i = 0; i < result.length; i++) {
-		    			results.add(Arrays.asList(result[i]));
-		    		}
-		    		break;
-		    	}
+		    	} 
+		    	UpdateExecution rs = (UpdateExecution)execution;
+	    		int[] result = rs.getUpdateCounts();
+	    		for (int i = 0; i < result.length; i++) {
+	    			results.add(Arrays.asList(result[i]));
+	    		}
+	    		break;
 	    	} catch (DataNotAvailableException e) {
 	    		try {
 					Thread.sleep(e.getRetryDelay());

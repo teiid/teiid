@@ -34,7 +34,7 @@ public class ConnectorPropertyNames {
      * The environment property name whose value defines the maximum number
      * of processor threads.  This property is required.
      */
-    public static final String MAX_THREADS = "ConnectorMaxThreads"; //$NON-NLS-1$
+    public static final String MAX_CONNECTIONS = "ConnectorMaxConnections"; //$NON-NLS-1$
 
 	/**
 	 * This property can be used to specify the maximum number of rows to be returned
