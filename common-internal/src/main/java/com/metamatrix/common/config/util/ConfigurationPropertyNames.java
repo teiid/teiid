@@ -40,6 +40,6 @@ public interface ConfigurationPropertyNames {
     public static final String MEMBERSHIP_ADMIN_PASSWORD = "security.membership.admin.password"; //$NON-NLS-1$
     public static final String MEMBERSHIP_ADMIN_USERNAME = "security.membership.admin.username"; //$NON-NLS-1$
     public static final String MEMBERSHIP_SECURITY_ENABLED = "security.membership.security.enabled"; //$NON-NLS-1$
-    public static final String MEMBERSHIP_DOMAIN_ORDER = "security.membership.security.DomainOrder"; //$NON-NLS-1$
+    public static final String MEMBERSHIP_DOMAIN_ORDER = "security.membership.DomainOrder"; //$NON-NLS-1$
     
 }

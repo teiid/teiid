@@ -59,6 +59,7 @@ import com.metamatrix.common.config.ResourceNames;
 import com.metamatrix.common.config.api.AuthenticationProvider;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
+import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.console.connections.ConnectionInfo;
 import com.metamatrix.console.models.AuthenticationProviderManager;
@@ -415,7 +416,7 @@ public class ProvidersMain extends BasePanel implements
         ServiceComponentDefn serviceDefn = config.getServiceComponentDefn(ResourceNames.MEMBERSHIP_SERVICE);
         Properties currentProps = serviceDefn.getProperties();
         
-        currentProps.put("security.membership.DomainOrder",sb.toString()); //$NON-NLS-1$
+        currentProps.put(ConfigurationPropertyNames.MEMBERSHIP_DOMAIN_ORDER,sb.toString()); 
     	
 		getConfigurationManager().modifyService(serviceDefn,currentProps);
     }
