@@ -344,16 +344,15 @@ public class TestValidator extends TestCase {
 		return command;
 	}
 
-	static void helpValidate(String sql, String[] expectedStringArray, QueryMetadataInterface metadata) {
+	static ValidatorReport helpValidate(String sql, String[] expectedStringArray, QueryMetadataInterface metadata) {
         Command command = helpResolve(sql, metadata);
 
-        helpRunValidator(command, expectedStringArray, metadata);
+        return helpRunValidator(command, expectedStringArray, metadata);
     }
 
-    public static void helpRunValidator(Command command, String[] expectedStringArray, QueryMetadataInterface metadata) {
+    public static ValidatorReport helpRunValidator(Command command, String[] expectedStringArray, QueryMetadataInterface metadata) {
         try {
             ValidatorReport report = Validator.validate(command, metadata);
-            //System.out.println("\nReport = \n" + report);
             
             ValidatorReport report3 = Validator.validate(command, metadata, new ValueValidationVisitor(), true);
 
@@ -372,12 +371,13 @@ public class TestValidator extends TestCase {
             }
 
             if(expectedStrings.size() == 0 && actualStrings.size() > 0) {
-                fail("Expected no failures but got some: " + report.getFailureMessage() + ", "  + report3.getFailureMessage()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+                fail("Expected no failures but got some: " + report.getFailureMessage() + ", "  + report3.getFailureMessage()); //$NON-NLS-1$ //$NON-NLS-2$ 
             } else if(actualStrings.size() == 0 && expectedStrings.size() > 0) {
                 fail("Expected some failures but got none for sql = " + command); //$NON-NLS-1$
             } else {
                 assertEquals("Expected and actual sets of strings are not the same: ", expectedStrings, actualStrings); //$NON-NLS-1$
             }
+            return report;
         } catch(MetaMatrixException e) {
 			throw new MetaMatrixRuntimeException(e);
         }
@@ -441,11 +441,11 @@ public class TestValidator extends TestCase {
 	}
  
 	public void testValidateCompare1() {        
-        helpValidate("SELECT e2 FROM vTest.vMap WHERE e2 = 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM vTest.vMap WHERE e2 = 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
 	}
 
     public void testValidateCompare4() {        
-        helpValidate("SELECT e3 FROM vTest.vMap WHERE e3 LIKE 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e3 FROM vTest.vMap WHERE e3 LIKE 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
     }
 
     public void testValidateCompare6() {        
@@ -453,19 +453,19 @@ public class TestValidator extends TestCase {
     }
 
 	public void testValidateCompareInHaving2() {        
-        helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 IS NULL", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 IS NULL", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
 	}
 
 	public void testValidateCompareInHaving3() {        
-        helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 IN ('a')", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 IN ('a')", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
 	}
 
     public void testValidateCompareInHaving4() {        
-        helpValidate("SELECT e3 FROM vTest.vMap GROUP BY e3 HAVING e3 LIKE 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e3 FROM vTest.vMap GROUP BY e3 HAVING e3 LIKE 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
     }
 
     public void testValidateCompareInHaving5() {        
-        helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 BETWEEN 1000 AND 2000", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM vTest.vMap GROUP BY e2 HAVING e2 BETWEEN 1000 AND 2000", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
     }
 
 	public void testInvalidAggregate1() {        
@@ -1019,11 +1019,11 @@ public class TestValidator extends TestCase {
     }      
     
     public void testValidateSubquery1() {        
-        helpValidate("SELECT e2 FROM (SELECT e2 FROM vTest.vMap WHERE e2 = 'a') AS x", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM (SELECT e2 FROM vTest.vMap WHERE e2 = 'a') AS x", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
     }
 
     public void testValidateSubquery2() {        
-        helpValidate("SELECT e2 FROM (SELECT e3 FROM vTest.vMap) AS x, vTest.vMap WHERE e2 = 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM (SELECT e3 FROM vTest.vMap) AS x, vTest.vMap WHERE e2 = 'a'", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
     }
     
     public void testValidateSubquery3() {        
@@ -1035,11 +1035,11 @@ public class TestValidator extends TestCase {
     }
 
     public void testValidateExistsSubquery() {        
-        helpValidate("SELECT e2 FROM test.group2 WHERE EXISTS (SELECT e2 FROM vTest.vMap WHERE e2 = 'a')", new String[] {}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM test.group2 WHERE EXISTS (SELECT e2 FROM vTest.vMap WHERE e2 = 'a')", new String[] {}, exampleMetadata()); //$NON-NLS-1$ 
     }
 
     public void testValidateScalarSubquery() {        
-        helpValidate("SELECT e2, (SELECT e1 FROM vTest.vMap WHERE e2 = '3') FROM test.group2", new String[] {"e1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpValidate("SELECT e2, (SELECT e1 FROM vTest.vMap WHERE e2 = '3') FROM test.group2", new String[] {"e1"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
 
     public void testValidateAnyCompareSubquery() {        
@@ -1633,6 +1633,8 @@ public class TestValidator extends TestCase {
     
     public void testValidateObjectInComparison() throws Exception {
         String sql = "SELECT IntKey FROM BQT1.SmallA WHERE ObjectValue = 5";   //$NON-NLS-1$
+        ValidatorReport report = helpValidate(sql, new String[] {"ObjectValue = 5"}, FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
+        assertEquals("Expressions of type OBJECT, CLOB, BLOB, or XML cannot be used in comparison: ObjectValue = 5.", report.toString()); //$NON-NLS-1$
     }
 
     public void testValidateAssignmentWithFunctionOnParameter_InServer() throws Exception{
@@ -1737,7 +1739,7 @@ public class TestValidator extends TestCase {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleBQTCached();
         
         // Validate
-        helpValidate(sql, new String[] {"BQT1.SmallA.ObjectValue = BQT2.SmallB.ObjectValue"}, metadata);  //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate(sql, new String[] {"BQT1.SmallA.ObjectValue = BQT2.SmallB.ObjectValue"}, metadata);  //$NON-NLS-1$ 
     }
 
     public void testDefect16772() throws Exception{
@@ -1958,7 +1960,7 @@ public class TestValidator extends TestCase {
     }
     
     public void testClobEquals() {
-        TestValidator.helpValidate("SELECT * FROM test.group where e4 = '1'", new String[] {"e4 = '1'"}, TestValidator.exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        TestValidator.helpValidate("SELECT * FROM test.group where e4 = '1'", new String[] {"e4 = '1'"}, TestValidator.exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
     /**
@@ -1969,11 +1971,11 @@ public class TestValidator extends TestCase {
     }
 
     public void testBlobLessThan() {
-        TestValidator.helpValidate("SELECT * FROM test.group where e3 < ?", new String[] {"e3 < ?"}, TestValidator.exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        TestValidator.helpValidate("SELECT * FROM test.group where e3 < ?", new String[] {"e3 < ?"}, TestValidator.exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
 	public void testValidateCompare2() {        
-        helpValidate("SELECT e2 FROM test.group WHERE e4 IS NULL", new String[] {}, exampleMetadata2()); //$NON-NLS-1$ //$NON-NLS-2$
+        helpValidate("SELECT e2 FROM test.group WHERE e4 IS NULL", new String[] {}, exampleMetadata2()); //$NON-NLS-1$ 
 	}
 
 	public void testValidateCompare3() {        

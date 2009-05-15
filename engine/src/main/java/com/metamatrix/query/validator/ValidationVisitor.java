@@ -224,7 +224,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
 	public void visit(SubquerySetCriteria obj) {
 		if (isNonComparable(obj.getExpression())) {
-			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);
+			handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027, obj),obj);
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
         
@@ -932,7 +932,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      */
     public void visit(BetweenCriteria obj) {
     	if (isNonComparable(obj.getExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);    		
+    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027, obj),obj);    		
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -967,7 +967,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      */
     public void visit(SetCriteria obj) {
     	if (isNonComparable(obj.getExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);    		
+    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027, obj),obj);    		
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -978,7 +978,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
      */
     public void visit(SubqueryCompareCriteria obj) {
     	if (isNonComparable(obj.getLeftExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);    		
+    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027, obj),obj);    		
     	}
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);
     }
@@ -1027,7 +1027,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     @Override
     public void visit(CompareCriteria obj) {
     	if (isNonComparable(obj.getLeftExpression())) {
-    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027),obj);    		
+    		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027, obj),obj);    		
     	}
     }
         
