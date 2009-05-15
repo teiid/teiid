@@ -123,7 +123,23 @@ public class ConnectionPool {
     
     private Semaphore poolSemaphore;
 
+    /**
+     * Total number of connections that are currently in the system (in use or waiting)
+     */
     private volatile int totalConnectionCount;
+    /**
+     * Total number of connections that have been created since the inception of this pool
+     */
+    private volatile int totalCreatedConnections;
+    /**
+     * Total number of connections that have been destroyed since the inception of this pool
+     */
+    private volatile int totalDestroyedConnections;
+    
+    /**
+     * The number of connections currently in use by a client
+     */
+    private volatile int totalConnectionsInUse;
 
     private volatile boolean shuttingDownPool;
 
@@ -249,6 +265,7 @@ public class ConnectionPool {
 	                        LogManager.logDetail(CTX_CONNECTOR,  new Object[] {"Existing connection leased for", id}); //$NON-NLS-1$
 	                        connLists.used.addLast(conn);
 	                        success = true;
+	                        this.totalConnectionsInUse++;
 	                        return conn;
 						} catch (ConnectorException e) {
 							LogManager.logDetail(CTX_CONNECTOR,  new Object[] {"Existing connection failed to have identity updated", id}); //$NON-NLS-1$
@@ -270,7 +287,7 @@ public class ConnectionPool {
             }
             
             updateStateWithNewConnection(id, connection, idSize);
-
+            this.totalConnectionsInUse++;
             success = true;
             return connection;
         } catch (InterruptedException err) {
@@ -295,6 +312,7 @@ public class ConnectionPool {
         synchronized (this.lock) {
             this.reverseIdConnections.put(connection, id);
             this.totalConnectionCount++;
+            this.totalCreatedConnections++;
             
             if (this.totalConnectionCount > this.maxConnections) {
                 ids = new ArrayList(this.idConnections.values());
@@ -357,6 +375,7 @@ public class ConnectionPool {
         }
         
         synchronized (connLists) {
+        	totalConnectionsInUse--;
             //release it only if there is one.
             //If the same connection is to be released twice, just ignore
             if ( connLists.used.remove(connection)) {
@@ -428,6 +447,7 @@ public class ConnectionPool {
     private void closeSourceConnection(ConnectionWrapper connection, ConnectorIdentity id) {
     	synchronized (this.lock) {
             this.totalConnectionCount--;
+            this.totalDestroyedConnections++;
             this.reverseIdConnections.remove(connection);
         }
     	try {
@@ -475,9 +495,25 @@ public class ConnectionPool {
         return Collections.emptyList();
     }
 
-    //for testing purpose
+    
     int getTotalConnectionCount() {
         return this.totalConnectionCount;
+    }
+    
+    int getTotalCreatedConnectionCount() {
+    	return this.totalCreatedConnections;
+    }
+    
+    int getTotalDestroyedConnectionCount() {
+    	return this.totalDestroyedConnections;
+    }
+    
+    int getNumberOfConnectionsInUse() {
+    	return this.totalConnectionsInUse;
+    }
+    
+    int getNumberOfConnectinsWaiting() {
+    	return this.totalConnectionCount - this.totalConnectionsInUse;
     }
 
 }

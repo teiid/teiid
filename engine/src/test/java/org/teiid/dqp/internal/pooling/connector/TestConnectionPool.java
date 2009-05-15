@@ -101,9 +101,27 @@ public class TestConnectionPool {
         ConnectionWrapper conn1 = singleIDPool.obtain(context);
         ConnectionWrapper conn2 = singleIDPool.obtain(context);
         ConnectionWrapper conn3 = singleIDPool.obtain(context);
-        ConnectionWrapper conn4 = singleIDPool.obtain(context);         
+        ConnectionWrapper conn4 = singleIDPool.obtain(context);   
+        
+        assertEquals(4, singleIDPool.getTotalCreatedConnectionCount());
+        assertEquals(4, singleIDPool.getTotalConnectionCount());
+        assertEquals(4, singleIDPool.getNumberOfConnectionsInUse());
+        assertEquals(0, singleIDPool.getNumberOfConnectinsWaiting());
+        assertEquals(0, singleIDPool.getTotalDestroyedConnectionCount());
+
+     
+
+        
         singleIDPool.release(conn2, false);
         singleIDPool.release(conn4, true);
+        
+        // only 1 has been closed/destroyed  #4
+        assertEquals(3, singleIDPool.getTotalConnectionCount());
+        assertEquals(1, singleIDPool.getTotalDestroyedConnectionCount());
+        assertEquals(1, singleIDPool.getNumberOfConnectinsWaiting());
+        assertEquals(4, singleIDPool.getTotalCreatedConnectionCount());
+        assertEquals(2, singleIDPool.getNumberOfConnectionsInUse());
+
         
         List unusedConns = singleIDPool.getUnusedConnections(conn1);
         assertEquals(1, unusedConns.size());
@@ -112,7 +130,7 @@ public class TestConnectionPool {
         assertEquals(2, usedConns.size());
         assertTrue(usedConns.contains(conn1));
         assertTrue(usedConns.contains(conn3));    
-        assertEquals(3, singleIDPool.getTotalConnectionCount());        
+        assertEquals(3, singleIDPool.getTotalConnectionCount());  
     }
 
     @Test public void testMaxConnectionTest() throws Exception {
@@ -223,9 +241,26 @@ public class TestConnectionPool {
         userIDPool.obtain(context1);
         ConnectionWrapper conn2 = userIDPool.obtain(context1);
         ConnectionWrapper conn3 = userIDPool.obtain(context2);
-        ConnectionWrapper conn4 = userIDPool.obtain(context2);         
+        ConnectionWrapper conn4 = userIDPool.obtain(context2);      
+        
+        assertEquals(4, userIDPool.getTotalCreatedConnectionCount());
+        assertEquals(4, userIDPool.getTotalConnectionCount());
+        assertEquals(4, userIDPool.getNumberOfConnectionsInUse());
+        assertEquals(0, userIDPool.getNumberOfConnectinsWaiting());
+        assertEquals(0, userIDPool.getTotalDestroyedConnectionCount());
+        
+        
+        
         userIDPool.release(conn2, false);
         userIDPool.release(conn4, true);
+        
+        // only 1 has been closed/destroyed  #4
+        assertEquals(3, userIDPool.getTotalConnectionCount());
+        assertEquals(1, userIDPool.getTotalDestroyedConnectionCount());
+        assertEquals(1, userIDPool.getNumberOfConnectinsWaiting());
+        assertEquals(4, userIDPool.getTotalCreatedConnectionCount());
+        assertEquals(2, userIDPool.getNumberOfConnectionsInUse());
+        
         
         List unusedConns = userIDPool.getUnusedConnections(conn2);
         assertEquals(1, unusedConns.size());
