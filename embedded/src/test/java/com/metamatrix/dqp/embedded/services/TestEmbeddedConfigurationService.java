@@ -31,8 +31,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import junit.framework.TestCase;
+
+import org.teiid.connector.internal.ConnectorPropertyNames;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -533,11 +536,12 @@ public class TestEmbeddedConfigurationService extends TestCase {
         
         modules = service.getExtensionModules();
         assertEquals(2,  modules.size()); 
-                
-        // test common class path; also makes sure that the conect in position (1) has the newly added module
+        
+        // test common class path; also makes sure that the connect in position (1) has the newly added module
         service.userPreferences.setProperty("dqp.extension.CommonClasspath", "extensionjar:added-ext.jar;extensionjar:extfile.jar"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("mmfile:target/scratch/dqp/foo/added-ext.jar", service.getCommonExtensionClasspath().get(0).toString()); //$NON-NLS-1$
-        assertEquals("mmfile:target/scratch/dqp/bar/extfile.jar", service.getCommonExtensionClasspath().get(1).toString()); //$NON-NLS-1$
+        Iterator<URL> i = service.getCommonExtensionClasspath().iterator();
+        assertEquals("mmfile:target/scratch/dqp/foo/added-ext.jar", i.next().toString()); //$NON-NLS-1$
+        assertEquals("mmfile:target/scratch/dqp/bar/extfile.jar", i.next().toString()); //$NON-NLS-1$
         
         // test delete 
         service.deleteExtensionModule("added-ext.jar"); //$NON-NLS-1$
@@ -554,4 +558,39 @@ public class TestEmbeddedConfigurationService extends TestCase {
 		f.delete();
     }      
     
+    public void testCommonExtensionPath() throws Exception{
+        Properties p = EmbeddedTestUtil.getProperties();
+        File f = new File("target/scratch/dqp/bar"); //$NON-NLS-1$
+        f.mkdirs();
+        FileWriter fw = new FileWriter("target/scratch/dqp/bar/extfile.jar"); //$NON-NLS-1$
+        fw.write("testing extension modules"); //$NON-NLS-1$
+        fw.flush();
+        fw.close();
+        
+        fw = new FileWriter("target/scratch/dqp/bar/driver.jar"); //$NON-NLS-1$
+        fw.write("testing extension modules"); //$NON-NLS-1$
+        fw.flush();
+        fw.close();        
+        
+        p.setProperty("dqp.extensions", "./foo/;./bar/"); //$NON-NLS-1$ //$NON-NLS-2$
+        service.userPreferences = p;
+        
+        assertNull(service.getCommonExtensionClasspath());
+        
+        p.setProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, "extensionjar:extfile.jar"); //$NON-NLS-1$
+               
+        Set<URL> urls  = service.getCommonExtensionClasspath();
+        assertEquals("mmfile:target/scratch/dqp/bar/extfile.jar", urls.iterator().next().toString()); //$NON-NLS-1$
+        
+        BasicConnectorBinding binding = new BasicConnectorBinding(new ConfigurationID("foo"), new ConnectorBindingID(new ConfigurationID("foo"), "foo"), new ComponentTypeID("foo type")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        Properties props = new Properties();
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH, "extensionjar:driver.jar"); //$NON-NLS-1$ 
+        binding.setProperties(props);
+        service.loadedConnectorBindings.put("Foo", binding); //$NON-NLS-1$
+
+        Iterator<URL> i  = service.getCommonExtensionClasspath().iterator();
+        
+        assertEquals("mmfile:target/scratch/dqp/bar/extfile.jar", i.next().toString()); //$NON-NLS-1$
+        assertEquals("mmfile:target/scratch/dqp/bar/driver.jar", i.next().toString()); //$NON-NLS-1$
+    }
 }

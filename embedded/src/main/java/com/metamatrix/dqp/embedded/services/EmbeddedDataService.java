@@ -24,13 +24,13 @@ package com.metamatrix.dqp.embedded.services;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.connector.api.ConnectorException;
@@ -566,10 +566,10 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             
             DQPEmbeddedPlugin.logInfo("DataService.useClassloader", new Object[] {classPath}); //$NON-NLS-1$
 
-            List<URL> userPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, getConfigurationService().getExtensionPath());
+            Set<URL> userPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, getConfigurationService().getExtensionPath());
 
             // since we are using the extensions, get the common extension path 
-            List<URL> commonExtensionPath = getConfigurationService().getCommonExtensionClasspath();
+            Set<URL> commonExtensionPath = getConfigurationService().getCommonExtensionClasspath();
             
             ArrayList<URL> urlPath = new ArrayList<URL>();            
             urlPath.addAll(userPath);

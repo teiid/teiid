@@ -38,6 +38,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.teiid.connector.internal.ConnectorPropertyNames;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -50,10 +52,8 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.ExtensionModule;
-import com.metamatrix.common.config.model.BasicComponentType;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -222,15 +222,28 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     /**  
      * @see com.metamatrix.dqp.service.ConfigurationService#getCommonExtensionClasspath()
      */
-    public List<URL> getCommonExtensionClasspath() {
+    public Set<URL> getCommonExtensionClasspath() {
         String classpath= userPreferences.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH);
+        
+        // add the "ConnectorClasspath" to the common extension path
+        Collection<ConnectorBinding> bindings = this.loadedConnectorBindings.values();
+        for (ConnectorBinding b:bindings) {
+        	if (classpath == null) {
+        		classpath = b.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH);
+        	}
+        	else {
+        		classpath += ";"; //$NON-NLS-1$
+        		classpath += b.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH);
+        	}
+        }
+        
         if (valid(classpath)) {            
             try {
             	return ExtensionModuleReader.resolveExtensionClasspath(classpath, getExtensionPath());
             } catch (IOException e) {
                 DQPEmbeddedPlugin.logError(e, "EmbeddedConfigurationService.udf_classspath_failure", new Object[] {}); //$NON-NLS-1$                
             }
-        }
+        }        
         return null;
     }
     
@@ -900,7 +913,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     public void loadUDF() throws MetaMatrixComponentException {
         URL udfFile = getUDFFile();
         if(udfFile != null && exists(udfFile)) {
-            List<URL> urls = getCommonExtensionClasspath();            
+            Set<URL> urls = getCommonExtensionClasspath();            
             try {
             	
             	// un-register the old UDF model, if there is one.

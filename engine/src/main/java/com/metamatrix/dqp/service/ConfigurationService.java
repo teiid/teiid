@@ -102,7 +102,7 @@ public interface ConfigurationService extends ApplicationService {
      * files are loaded usually as the extension modules. 
      * @return URL[] - Classpath for the UDF jar files
      */
-    public List<URL> getCommonExtensionClasspath();
+    public Set<URL> getCommonExtensionClasspath();
     
     /**
      * URL to Log file name  

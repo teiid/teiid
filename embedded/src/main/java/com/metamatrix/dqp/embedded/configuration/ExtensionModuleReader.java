@@ -29,17 +29,18 @@ import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.config.model.BasicExtensionModule;
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.util.LogConstants;
 
 
 /** 
@@ -135,10 +136,10 @@ public class ExtensionModuleReader {
      * @throws MalformedURLException
      * @since 4.3
      */
-    public static List<URL> resolveExtensionClasspath(String extClassPath, URL[] contexts) 
+    public static Set<URL> resolveExtensionClasspath(String extClassPath, URL[] contexts) 
         throws IOException {
         
-        List<URL> urls = new ArrayList<URL>();
+        Set<URL> urls = new LinkedHashSet<URL>();
         StringTokenizer st = new StringTokenizer(extClassPath, ";"); //$NON-NLS-1$
         while (st.hasMoreTokens()) {
             String  extModule = st.nextToken();
