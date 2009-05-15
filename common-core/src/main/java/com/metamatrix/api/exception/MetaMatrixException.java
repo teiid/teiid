@@ -22,9 +22,6 @@
 
 package com.metamatrix.api.exception;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.util.Iterator;
 
 import com.metamatrix.core.MetaMatrixCoreException;

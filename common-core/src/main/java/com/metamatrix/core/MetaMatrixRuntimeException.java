@@ -166,10 +166,7 @@ public class MetaMatrixRuntimeException extends RuntimeException {
      * @return The linked exception
      */
     public Throwable getChild() {
-        if (this.getCause() != this) {
-        	return this.getCause();
-        }
-        return null;
+        return this.getCause();
     }
     
     /**

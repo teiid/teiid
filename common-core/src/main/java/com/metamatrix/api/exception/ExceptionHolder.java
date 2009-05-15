@@ -110,7 +110,7 @@ public class ExceptionHolder implements Externalizable {
 		out.writeObject(exception.getStackTrace());
 		
 		// specify that this cause is nested exception; not top level
-		if (this.exception.getCause() != null) {
+		if (this.exception.getCause() != null && this.exception.getCause() != this.exception) {
 			out.writeObject(new ExceptionHolder(this.exception.getCause(), true));
 		}
 		else {

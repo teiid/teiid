@@ -169,7 +169,7 @@ public class ServerWorkItem implements Runnable {
 	
 	private void logProcessingException(Throwable e, String context) {
 		Throwable cause = e;
-		while (cause.getCause() != null) {
+		while (cause.getCause() != null && cause != cause.getCause()) {
 			cause = e.getCause();
 		}
 		StackTraceElement elem = cause.getStackTrace()[0];

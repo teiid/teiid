@@ -231,7 +231,7 @@ public class RequestWorkItem extends AbstractWorkItem {
                 //log the processing errors as warnings only
                 if(e instanceof MetaMatrixProcessingException) {                          
                 	Throwable cause = e;
-                	while (cause.getCause() != null) {
+                	while (cause.getCause() != null && cause.getCause() != cause) {
                 		cause = e.getCause();
                 	}
                 	StackTraceElement elem = cause.getStackTrace()[0];

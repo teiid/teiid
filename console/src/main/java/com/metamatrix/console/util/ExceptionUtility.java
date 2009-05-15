@@ -134,7 +134,7 @@ public class ExceptionUtility {
             }
         }
 
-        showMessage(text, comment, thr.getCause(), root);
+        showMessage(text, comment, thr.getCause() != thr?thr.getCause():null, root);
     }
 
     public static void showMessage(String text, Throwable t) {

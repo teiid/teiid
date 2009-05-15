@@ -39,6 +39,9 @@ public class ExceptionUtil {
             if (cls.isAssignableFrom(ex.getClass())) {
                 return (T)ex;
             } 
+            if (ex.getCause() == ex) {
+            	break;
+            }
             ex = ex.getCause();
         }
         return null;
