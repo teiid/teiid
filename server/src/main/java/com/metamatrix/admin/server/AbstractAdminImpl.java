@@ -518,6 +518,8 @@ public class AbstractAdminImpl {
                 return parent.getQueueWorkerPools(identifier);
             case MMAdminObject.OBJECT_TYPE_REQUEST:
                 return parent.getRequests(identifier);
+            case MMAdminObject.OBJECT_TYPE_SERVICE:
+                return parent.getServices(identifier);
             case MMAdminObject.OBJECT_TYPE_RESOURCE:
                 return parent.getResources(identifier);
             case MMAdminObject.OBJECT_TYPE_SESSION:
