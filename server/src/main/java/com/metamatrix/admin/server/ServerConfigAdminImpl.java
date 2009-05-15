@@ -1582,6 +1582,39 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 				}
                 break;
                 
+            case MMAdminObject.OBJECT_TYPE_SERVICE:
+                String serviceName = adminObject.getName();
+                try {
+					ServiceComponentDefn serviceDefn = this.getServiceByName(serviceName);
+
+					Properties svcProperties = serviceDefn.getProperties();
+					svcProperties.putAll(properties);
+					
+					ServiceComponentDefn updatedServiceDefn = 
+					    (ServiceComponentDefn)getConfigurationServiceProxy().modify(serviceDefn,
+					                                                            svcProperties,
+					                                                            getUserName());
+					
+					if (updatedServiceDefn == null) {
+					    throwProcessingException("ServerConfigAdminImpl.Service_was_null_when_updating_properties", new Object[] {serviceName}); //$NON-NLS-1$
+					}
+				} catch (ConfigurationException e) {
+					throw new AdminComponentException(e);
+				} catch (ServiceException e) {
+					throw new AdminComponentException(e);
+				} catch (InvalidSessionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (AuthorizationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (MetaMatrixComponentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+                break;
+                
+                
             default:
                 throwProcessingException("ServerConfigAdminImpl.Unsupported_Admin_Object", new Object[] {className}); //$NON-NLS-1$
         }
