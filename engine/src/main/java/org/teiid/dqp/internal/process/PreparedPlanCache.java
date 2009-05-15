@@ -36,10 +36,10 @@ import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
- * This class is used to cahce plan and related objects for prepared statement
+ * This class is used to cache plan and related objects for prepared statement
  */
 public class PreparedPlanCache {
-	public static final int DEFAULT_MAX_SIZE_TOTAL = 100;
+	public static final int DEFAULT_MAX_SIZE_TOTAL = 250;
 
 	private Map<CacheID, PreparedPlan> cache;
 	private int maxSize;
