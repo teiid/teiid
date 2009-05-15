@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.metamatrix.common.classloader.NonDelegatingClassLoader;
+import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.common.protocol.MMURLConnection;
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.common.protocol.URLHelper;
@@ -390,7 +390,7 @@ public final class EmbeddedDriver extends BaseDriver {
             
             if (postDelegationClasspathList != null && !postDelegationClasspathList.isEmpty()) {
             	URL[] path = postDelegationClasspathList.toArray(new URL[postDelegationClasspathList.size()]);
-            	this.classLoader = new NonDelegatingClassLoader(path, this.classLoader, new MetaMatrixURLStreamHandlerFactory());
+            	this.classLoader = new PostDelegatingClassLoader(path, this.classLoader, new MetaMatrixURLStreamHandlerFactory());
             }
             
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_classpath"); //$NON-NLS-1$

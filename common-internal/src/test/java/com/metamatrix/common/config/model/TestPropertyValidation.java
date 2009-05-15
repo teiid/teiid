@@ -24,12 +24,8 @@ package com.metamatrix.common.config.model;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.classloader.NonDelegatingClassLoader;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 
-/**
- * Test {@link NonDelegatingClassLoader}
- */
 public class TestPropertyValidation extends TestCase {
 
     /**

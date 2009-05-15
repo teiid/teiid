@@ -36,7 +36,7 @@ import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
- * Test {@link NonDelegatingClassLoader}
+ * Test {@link PostDelegatingClassLoader}
  */
 public class TestNonDelegatingClassLoader extends TestCase {
 
@@ -52,8 +52,8 @@ public class TestNonDelegatingClassLoader extends TestCase {
 
     private URL[] getURLs() throws Exception {
     	URL[] result = new URL[2];
-        result[0] = UnitTestUtil.getTestDataFile("extensionmodule/testjar.jar").toURL(); //$NON-NLS-1$
-        result[1] = UnitTestUtil.getTestDataFile("extensionmodule/testjar2.jar").toURL(); //$NON-NLS-1$
+        result[0] = UnitTestUtil.getTestDataFile("extensionmodule/testjar.jar").toURI().toURL(); //$NON-NLS-1$
+        result[1] = UnitTestUtil.getTestDataFile("extensionmodule/testjar2.jar").toURI().toURL(); //$NON-NLS-1$
         return result;
     }
 
@@ -63,16 +63,16 @@ public class TestNonDelegatingClassLoader extends TestCase {
         String classname = "com.test.TestClass"; //$NON-NLS-1$
         String expectedToString = "This is a test class"; //$NON-NLS-1$
 
-        NonDelegatingClassLoader loader = new NonDelegatingClassLoader(getURLs());
+        PostDelegatingClassLoader loader = new PostDelegatingClassLoader(getURLs());
 
-        Class clazz = loader.loadClass(classname);
+        Class<?> clazz = loader.loadClass(classname);
         Object obj = clazz.newInstance();
         assertEquals(expectedToString, obj.toString());
     }
 
     public void testLoadResource() throws Exception {
         String resourcename = "com/test/TestDoc.txt"; //$NON-NLS-1$
-        NonDelegatingClassLoader loader = new NonDelegatingClassLoader(getURLs());
+        PostDelegatingClassLoader loader = new PostDelegatingClassLoader(getURLs());
 
         InputStream stream = loader.getResourceAsStream(resourcename);
         assertNotNull(stream);
@@ -90,7 +90,7 @@ public class TestNonDelegatingClassLoader extends TestCase {
     public void testLoadResourceFileProtocol() throws Exception {
         String resourcename = "nonModelFile.txt"; //$NON-NLS-1$
         URL url = new URL("file", "localhost", UnitTestUtil.getTestDataPath()); //$NON-NLS-1$ //$NON-NLS-2$
-        NonDelegatingClassLoader loader = new NonDelegatingClassLoader(new URL[] {
+        PostDelegatingClassLoader loader = new PostDelegatingClassLoader(new URL[] {
             url
         });
 
@@ -102,13 +102,13 @@ public class TestNonDelegatingClassLoader extends TestCase {
     }
 
     public void testGetURLs() throws Exception {
-        URL url1 = new URL("extensionjar", "localhost", -1, "testjar.jar", new URLStreamHandler() {
+        URL url1 = new URL("extensionjar", "localhost", -1, "testjar.jar", new URLStreamHandler() { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			@Override
 			protected URLConnection openConnection(URL u) throws IOException {
 				return null;
-			}}); //$NON-NLS-1$
-        URL url2 = UnitTestUtil.getTestDataFile("Books.xsd").toURL(); //$NON-NLS-1$
-        NonDelegatingClassLoader loader = new URLFilteringClassLoader(new URL[] {
+			}}); 
+        URL url2 = UnitTestUtil.getTestDataFile("Books.xsd").toURI().toURL(); //$NON-NLS-1$
+        PostDelegatingClassLoader loader = new PostDelegatingClassLoader(new URL[] {
             url1, url2
         }, this.getClass().getClassLoader(), new MetaMatrixURLStreamHandlerFactory());
         URL[] urls = loader.getURLs();

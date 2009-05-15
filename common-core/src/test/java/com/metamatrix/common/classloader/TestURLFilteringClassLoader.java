@@ -22,10 +22,15 @@
 
 package com.metamatrix.common.classloader;
 
+import static org.junit.Assert.*;
+
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.HashSet;
 
-import junit.framework.TestCase;
+import javax.sql.DataSource;
+
+import org.junit.Test;
 
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.common.protocol.URLHelper;
@@ -34,12 +39,12 @@ import com.metamatrix.common.protocol.URLHelper;
 /** 
  * @since 4.3
  */
-public class TestURLFilteringClassLoader extends TestCase {
+public class TestURLFilteringClassLoader {
 
     /*
      * Test method for 'com.metamatrix.common.classloader.URLFilteringClassLoader.getURLs()'
      */
-    public void testGetURLs() throws Exception{
+    @Test public void testGetURLs() throws Exception{
         URL http = URLHelper.buildURL("http://foo.com/foo.jar"); //$NON-NLS-1$
         URL ftp = URLHelper.buildURL("ftp://foo.com/foo.jar"); //$NON-NLS-1$
         URL mmfile = URLHelper.buildURL("mmfile:foo.jar"); //$NON-NLS-1$
@@ -66,4 +71,5 @@ public class TestURLFilteringClassLoader extends TestCase {
         assertTrue(!filteredURLSet.contains(mmrofile));
         assertTrue(!filteredURLSet.contains(classpath));
     }
+    
 }

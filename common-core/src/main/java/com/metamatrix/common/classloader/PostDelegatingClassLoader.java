@@ -33,18 +33,18 @@ import java.net.URLStreamHandlerFactory;
  * then check it's parent ClassLoader, which is the reverse
  * of the delegation model.
  */
-public class NonDelegatingClassLoader extends URLClassLoader {
+public class PostDelegatingClassLoader extends URLClassLoader {
 
-    public NonDelegatingClassLoader(URL[] urls, ClassLoader parent) {
+    public PostDelegatingClassLoader(URL[] urls, ClassLoader parent) {
         super(urls, parent);
     }
     
-    public NonDelegatingClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
+    public PostDelegatingClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory factory) {
         super(urls, parent, factory);
     }
     
 
-    public NonDelegatingClassLoader(URL[] urls) {
+    public PostDelegatingClassLoader(URL[] urls) {
         super(urls);
     }
     

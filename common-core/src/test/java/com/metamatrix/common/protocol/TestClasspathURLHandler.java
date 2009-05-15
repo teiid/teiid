@@ -37,7 +37,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import com.metamatrix.common.classloader.NonDelegatingClassLoader;
+import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.core.util.UnitTestUtil;
 
 
@@ -157,7 +157,7 @@ public class TestClasspathURLHandler extends TestCase {
         URL patchurl = new URL(patchpath);
         URL url = new URL(path);
         
-        ClassLoader jarClassPath = new NonDelegatingClassLoader(new URL[] {patchurl, url}, previousClsLoader);
+        ClassLoader jarClassPath = new PostDelegatingClassLoader(new URL[] {patchurl, url}, previousClsLoader);
         Thread.currentThread().setContextClassLoader(jarClassPath);
     
         URL fooURL = URLHelper.buildURL("classpath:pathtest/foo.txt"); //$NON-NLS-1$
@@ -183,7 +183,7 @@ public class TestClasspathURLHandler extends TestCase {
         // Right now there is an error with issuing patches with "classpath"
         // protocol (defect 21557), there is no fix just workaround, that is
         // to reverse the url path to the class loader.        
-        ClassLoader jarClassLoader = new NonDelegatingClassLoader(new URL[] {url, patchurl}, previousClsLoader, new MetaMatrixURLStreamHandlerFactory());
+        ClassLoader jarClassLoader = new PostDelegatingClassLoader(new URL[] {url, patchurl}, previousClsLoader, new MetaMatrixURLStreamHandlerFactory());
         
         // this is how it is supposed to work!
         ClassLoader urlClassLoader = new URLClassLoader(new URL[] {patchurl, url}, previousClsLoader, new MetaMatrixURLStreamHandlerFactory());

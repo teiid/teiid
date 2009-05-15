@@ -52,8 +52,7 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.classloader.NonDelegatingClassLoader;
-import com.metamatrix.common.classloader.URLFilteringClassLoader;
+import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.CurrentConfiguration;
@@ -114,7 +113,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
      * This is based on the assumption that two classloaders 
      * with the same URLs should be identical.
      */
-    private static Map<String, WeakReference<NonDelegatingClassLoader>> classLoaderCache = new HashMap<String, WeakReference<NonDelegatingClassLoader>> ();
+    private static Map<String, WeakReference<PostDelegatingClassLoader>> classLoaderCache = new HashMap<String, WeakReference<PostDelegatingClassLoader>> ();
         
     static {
         //read value of cacheClassLoaders
@@ -204,9 +203,9 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         }
         
         synchronized (ConnectorService.class) {
-        	NonDelegatingClassLoader result = null;
+        	PostDelegatingClassLoader result = null;
         	if (cacheClassLoaders) {
-	        	WeakReference<NonDelegatingClassLoader> ref = classLoaderCache.get(urls);
+	        	WeakReference<PostDelegatingClassLoader> ref = classLoaderCache.get(urls);
 	        	if (ref != null) {
 	        		result = ref.get();
 	        		if (result != null) {
@@ -216,9 +215,9 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         	}
         	
             try {
-                result = new URLFilteringClassLoader(URLFactory.parseURLs(urls, ";"), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
+                result = new PostDelegatingClassLoader(URLFactory.parseURLs(urls, ";"), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
                 if (cacheClassLoaders) {
-                    classLoaderCache.put(urls, new WeakReference<NonDelegatingClassLoader>(result));
+                    classLoaderCache.put(urls, new WeakReference<PostDelegatingClassLoader>(result));
                 }
                 return result;
             } catch (MalformedURLException e1) {

@@ -23,6 +23,7 @@
 package com.metamatrix.common.classloader;
 
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -35,12 +36,12 @@ import com.metamatrix.common.protocol.mmrofile.MMROFileURLConnection;
 /** 
  * @since 4.3
  */
-public class URLFilteringClassLoader extends NonDelegatingClassLoader {
+public class URLFilteringClassLoader extends URLClassLoader {
 
-    private static HashSet excludeProtocols = null;
+    private static HashSet<String> excludeProtocols = null;
     
     static {
-        excludeProtocols = new HashSet(); 
+        excludeProtocols = new HashSet<String>(); 
         excludeProtocols.add("extensionjar"); //$NON-NLS-1$
         excludeProtocols.add(ClasspathURLConnection.PROTOCOL);
         excludeProtocols.add(MMFileURLConnection.PROTOCOL);
@@ -80,7 +81,7 @@ public class URLFilteringClassLoader extends NonDelegatingClassLoader {
          * JBOSS is using to filter out our extensionjar URLs.  Interestingly, WebLogic does not use this
          * function, so I think JBOSS may be doing something wrong here.
          */
-        ArrayList temp = new ArrayList();
+        ArrayList<URL> temp = new ArrayList<URL>();
         URL[] all = super.getURLs();
         for (int i = 0; i < all.length; i++) {
             String protocol = all[i].getProtocol();
@@ -88,7 +89,7 @@ public class URLFilteringClassLoader extends NonDelegatingClassLoader {
                 temp.add(all[i]);
             }            
         }
-        return (URL[])temp.toArray(new URL[temp.size()]);
+        return temp.toArray(new URL[temp.size()]);
     }
 
 }

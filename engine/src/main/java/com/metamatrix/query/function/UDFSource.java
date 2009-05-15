@@ -27,7 +27,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 
-import com.metamatrix.common.classloader.NonDelegatingClassLoader;
+import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.query.function.metadata.FunctionMetadataReader;
 import com.metamatrix.query.function.metadata.FunctionMethod;
@@ -72,7 +72,7 @@ public class UDFSource implements FunctionMetadataSource {
         // If the class loader is not created for the UDF functions then create 
         // one and cache it.
         if (classLoader == null) {
-            classLoader = new NonDelegatingClassLoader(this.classpath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());                        
+            classLoader = new PostDelegatingClassLoader(this.classpath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());                        
         }
         
         return classLoader.loadClass(className);

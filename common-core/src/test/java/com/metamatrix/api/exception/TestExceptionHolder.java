@@ -1,7 +1,5 @@
 package com.metamatrix.api.exception;
 
-import static org.junit.Assert.*;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -14,9 +12,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import com.metamatrix.api.exception.ExceptionHolder;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.classloader.NonDelegatingClassLoader;
+import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -34,7 +30,7 @@ public class TestExceptionHolder extends TestCase {
 	}
 	
 	@Test public void testDeserializationUnknownException() throws Exception {
-		ClassLoader cl = new NonDelegatingClassLoader(new URL[] {UnitTestUtil.getTestDataFile("test.jar").toURI().toURL()}); //$NON-NLS-1$
+		ClassLoader cl = new PostDelegatingClassLoader(new URL[] {UnitTestUtil.getTestDataFile("test.jar").toURI().toURL()}); //$NON-NLS-1$
 		Object obj = ReflectionHelper.create("test.Test", null, cl); //$NON-NLS-1$
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -60,7 +56,7 @@ public class TestExceptionHolder extends TestCase {
 	}
 	
 	@Test public void testDeserializationUnknownChildException() throws Exception {
-		ClassLoader cl = new NonDelegatingClassLoader(new URL[] {UnitTestUtil.getTestDataFile("test.jar").toURI().toURL()}); //$NON-NLS-1$
+		ClassLoader cl = new PostDelegatingClassLoader(new URL[] {UnitTestUtil.getTestDataFile("test.jar").toURI().toURL()}); //$NON-NLS-1$
 		Exception obj = (Exception)ReflectionHelper.create("test.UnknownException", null, cl); //$NON-NLS-1$
 		obj.initCause(new SQLException("something bad happended")); //$NON-NLS-1$
 		
@@ -82,7 +78,7 @@ public class TestExceptionHolder extends TestCase {
 	}	
 	
 	@Test public void testDeserializationUnknownChildException2() throws Exception {
-		ClassLoader cl = new NonDelegatingClassLoader(new URL[] {UnitTestUtil.getTestDataFile("test.jar").toURI().toURL()}); //$NON-NLS-1$
+		ClassLoader cl = new PostDelegatingClassLoader(new URL[] {UnitTestUtil.getTestDataFile("test.jar").toURI().toURL()}); //$NON-NLS-1$
 		ArrayList<String> args = new ArrayList<String>();
 		args.add("Unknown Exception"); //$NON-NLS-1$
 		Exception obj = (Exception)ReflectionHelper.create("test.UnknownException", args, cl); //$NON-NLS-1$ 
