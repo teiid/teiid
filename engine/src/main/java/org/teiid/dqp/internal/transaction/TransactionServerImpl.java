@@ -312,7 +312,7 @@ public class TransactionServerImpl implements TransactionService {
                     } catch (SystemException err) {
                         throw new XATransactionException(err, XAException.XAER_RMERR);
                     }
-                    throw new XATransactionException(new XAException(XAException.XA_RBROLLBACK));
+                    break;
                 }
                 default:
                     throw new XATransactionException(XAException.XAER_INVAL, DQPPlugin.Util.getString("TransactionServer.unknown_flags")); //$NON-NLS-1$
@@ -329,7 +329,7 @@ public class TransactionServerImpl implements TransactionService {
         TransactionContextImpl tc = transactions.getTransactionContext(xid);
         
         if (transactionExpected && tc == null) {
-            throw new XATransactionException(XAException.XAER_INVAL, DQPPlugin.Util.getString("TransactionServer.no_global_transaction", xid)); //$NON-NLS-1$
+            throw new XATransactionException(XAException.XAER_NOTA, DQPPlugin.Util.getString("TransactionServer.no_global_transaction", xid)); //$NON-NLS-1$
         } else if (!transactionExpected) {
             if (tc != null) {
                 throw new XATransactionException(XAException.XAER_DUPID, DQPPlugin.Util.getString("TransactionServer.existing_global_transaction", new Object[] {xid})); //$NON-NLS-1$
