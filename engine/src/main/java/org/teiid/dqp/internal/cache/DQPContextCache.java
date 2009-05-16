@@ -28,8 +28,6 @@ import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.CacheConfiguration.Policy;
-import com.metamatrix.dqp.message.RequestID;
-import com.metamatrix.platform.security.api.SessionToken;
 
 @Singleton
 public class DQPContextCache {
