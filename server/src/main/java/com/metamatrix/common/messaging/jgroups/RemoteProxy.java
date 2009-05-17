@@ -54,9 +54,9 @@ public class RemoteProxy {
 					throw e.getTargetException();
 				}
 			}
-			throw new ServiceNotFoundException();
+			throw new ServiceNotFoundException(PlatformPlugin.Util.getString("RemoteProxy.localCallFailed", methodName, classId)); //$NON-NLS-1$
 		} catch (Throwable t) {
-			LogManager.logWarning(LogCommonConstants.CTX_PROXY, t, PlatformPlugin.Util.getString("RemoteProxy.localCallFailed", methodName, classId));
+			LogManager.logWarning(LogCommonConstants.CTX_PROXY, t, PlatformPlugin.Util.getString("RemoteProxy.localCallFailed", methodName, classId)); //$NON-NLS-1$
 			throw t;
 		}
 	}		

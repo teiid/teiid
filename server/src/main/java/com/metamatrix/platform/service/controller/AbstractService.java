@@ -58,38 +58,13 @@ import com.metamatrix.platform.service.api.exception.ServiceSuspendedException;
 //public abstract class AbstractService extends UnicastRemoteObject implements ServiceInterface, EventObjectListener {
 public abstract class AbstractService implements ServiceInterface, EventObjectListener {
 
-    // current state, default to not initialized.
-    private int state = ServiceState.STATE_NOT_INITIALIZED;
-
-    // Service type, used to look up in registry.
-    private String serviceType;
-
-    // Instance name
-    private String instanceName;
-
-    // ID of service
-	private ServiceID id;
-    
-    // ID of this deployed component
-    private DeployedComponentID deployedComponentID;
-
-    // properties used to initialize service
+    private ServiceData data = new ServiceData(ServiceState.STATE_NOT_INITIALIZED);
     private Properties props;
 
-    // time service was initialized
-    private Date startTime;
-
-    // time current state was set
-    private Date stateChangeTime;
-
-    private Throwable initException = null;
-    
-    /**
+	/**
      * Default constructor.
-     * Set stateChangedTime
      */
     public AbstractService() {
-        stateChangeTime = new Date();
     }
 
     //--------------------------------------------------------------
@@ -115,19 +90,14 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
             throw new ServiceException(ServiceMessages.SERVICE_0001, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0001));
         }
 
-        this.id = id;
-        this.deployedComponentID = deployedComponentID;
         this.props = props;
 
-        serviceType = props.getProperty(ServicePropertyNames.COMPONENT_TYPE_NAME);
-        instanceName = props.getProperty(ServicePropertyNames.INSTANCE_NAME);
-
-        if (serviceType == null || serviceType.trim().length() == 0) {
+        if (data.getServiceType() == null || data.getServiceType().trim().length() == 0) {
             throw new ServiceException(ServiceMessages.SERVICE_0002, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0002, ServicePropertyNames.COMPONENT_TYPE_NAME ));
         }
 
-        logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0001, instanceName));
-        logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0002, instanceName, System.getProperty("java.class.path"))); //$NON-NLS-1$
+        logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0001, data.getInstanceName()));
+        logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0002, data.getInstanceName(), System.getProperty("java.class.path"))); //$NON-NLS-1$
 
         try {
             Properties resourceProps = CurrentConfiguration.getInstance().getResourceProperties(getResourceName());
@@ -136,25 +106,20 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
             }
 
             logServiceProperties(this.props);
-            logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0003, instanceName));
+            logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0003, data.getInstanceName()));
 
             // Initialize!
-            logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0004, serviceType));
+            logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0004, data.getServiceType()));
             initService(this.props);
             registerForEvents();
             logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0005, getServiceType()));
 
-            startTime = new Date();
+            data.setStartTime(new Date());
             markAsOpen();
-            setInitException(null);
-            return;
-
         } catch (Throwable e) {
             setInitException(e);
             throw new ServiceException(e, ServiceMessages.SERVICE_0004, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0004, getServiceType()) );
-        } finally {
-            // Cleanup!
-        }
+        } 
     }
 
     /**
@@ -163,7 +128,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return String representing type of service.
      */
     public final String getServiceType() {
-        return serviceType;
+        return data.getServiceType();
     }
 
     /**
@@ -177,7 +142,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return int representing current state.
      */
     public final int getCurrentState() {
-        return state;
+        return data.getState();
     }
 
     /**
@@ -186,7 +151,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return Date representing time of state change.
      */
     public final Date getStateChangeTime() {
-        return this.stateChangeTime;
+        return this.data.getStateChangeTime();
     }
 
     /**
@@ -195,18 +160,8 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return ServiceID
      */
     public final ServiceID getID() {
-        return this.id;
+        return this.data.getId();
     }
-
-    /**
-     * Return DepoloyedComponentID of this service.
-     * 
-     * @return deployedComponentID
-     */
-    public final DeployedComponentID getDeployedComponentID() {
-        return this.deployedComponentID;
-    }
-
 
     /**
      * This method will gracefully shutdown the service.
@@ -217,7 +172,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      */
     public final void die() {
         try {
-            logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0006, this.id));
+            logMessagePrivate(ServicePlugin.Util.getString(ServiceMessages.MSG_SERVICE_0006, this.data.getId()));
             markAsClosed();
             unregisterForEvents();
             closeService();
@@ -241,7 +196,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
                 markAsClosed();
                 unregisterForEvents();
             }
-            this.initException = null;
+            this.data.setInitException(null);
             killService();
         } catch (Exception e) {
             throw new ServiceException(e, ServiceMessages.SERVICE_0005, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0005, getServiceType()));
@@ -255,7 +210,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return Properties
      */
     public final Properties getProperties() {
-        return props;
+        return this.props;
     }
 
     /**
@@ -264,7 +219,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return Date containing time service started.
      */
     public final Date getStartTime() {
-        return startTime;
+        return data.getStartTime();
     }
 
     /**
@@ -273,14 +228,14 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return String Host name
      */
     public final String getHostname() {
-        return this.id.getHostName();
+        return this.data.getId().getHostName();
     }
 
     /**
      * @see com.metamatrix.platform.service.api.ServiceInterface#getProcessName()
      */
 	public final String getProcessName(){
-		return this.id.getProcessName();
+		return this.data.getId().getProcessName();
 	}
 	
     /**
@@ -289,7 +244,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @return String instance name
      */
     public final String getInstanceName() {
-        return this.instanceName;
+        return this.data.getInstanceName();
     }
 
 
@@ -311,23 +266,23 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
 
     public void checkState() throws ServiceStateException {
 
-        if (state == ServiceState.STATE_OPEN) {
+        if (data.getState() == ServiceState.STATE_OPEN) {
             return;
         }
 
-        if (state == ServiceState.STATE_NOT_INITIALIZED) {
-            throw new ServiceNotInitializedException(ServiceMessages.SERVICE_0009, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0009, this.getServiceName(), id));
+        if (data.getState() == ServiceState.STATE_NOT_INITIALIZED) {
+            throw new ServiceNotInitializedException(ServiceMessages.SERVICE_0009, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0009, this.getServiceName(), data.getId()));
         }
 
-        if (state == ServiceState.STATE_CLOSED) {
-            throw new ServiceClosedException(ServiceMessages.SERVICE_0010, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0010, this.getServiceName(), id));
+        if (data.getState() == ServiceState.STATE_CLOSED) {
+            throw new ServiceClosedException(ServiceMessages.SERVICE_0010, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0010, this.getServiceName(), data.getId()));
         }
 
-        if (state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
-            throw new ServiceClosedException(ServiceMessages.SERVICE_0069, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0069, this.getServiceName(), id));
+        if (data.getState() == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE) {
+            throw new ServiceClosedException(ServiceMessages.SERVICE_0069, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0069, this.getServiceName(), data.getId()));
         }
 
-        throw new ServiceStateException(ServiceMessages.SERVICE_0012, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0012, this.getServiceName(), id));
+        throw new ServiceStateException(ServiceMessages.SERVICE_0012, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0012, this.getServiceName(), data.getId()));
     }
 
     /**
@@ -348,21 +303,21 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * Return true if service has been initialized.
      */
     public final boolean isInitialized() {
-        return state != ServiceState.STATE_NOT_INITIALIZED;
+        return data.getState() != ServiceState.STATE_NOT_INITIALIZED;
     }
 
     /**
      * Return true if service is open
      */
     public final boolean isOpen() {
-        return state == ServiceState.STATE_OPEN;
+        return data.getState() == ServiceState.STATE_OPEN;
     }
 
     /**
      * Return true if service is closed.
      */
     public final boolean isClosed() {
-        return state == ServiceState.STATE_CLOSED;
+        return data.getState() == ServiceState.STATE_CLOSED;
     }
 
 
@@ -403,7 +358,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
     * the resource name will probably be defined as a static variable called RESOURCE_NAME.
     */
     protected String getResourceName() {
-        return serviceType;
+        return data.getServiceType();
     }
 
     /**
@@ -566,7 +521,6 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
     '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
     };
 
-    
     /**
      * Update state and stateChangedTime with new state;
      * If newState == state then do nothing.
@@ -574,10 +528,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @param int new state of service
      */
     public synchronized void updateState(int newState) {
-        if (state != newState) {
-            state = newState;
-            stateChangeTime = new Date();
-        }
+        data.updateState(newState);
     }
 
     /**
@@ -586,21 +537,26 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @param Throwable 
      *      */
     public void setInitException(Throwable error) {
-    	this.initException = error;
+    	this.data.setInitException(error);
     	if (error != null) {
-    		state = ServiceState.STATE_INIT_FAILED;
+    		data.updateState(ServiceState.STATE_INIT_FAILED);
     	}
     }
 
     public Throwable getInitException() {
-    	return this.initException;
+    	return this.data.getInitException();
     }
     
     /**
      * Return name of service (instance name)
      */
     protected String getServiceName() {
-        return instanceName;
+        return data.getInstanceName();
+    }
+    
+    @Override
+    public ServiceData getServiceData() {
+    	return data;
     }
     
 }

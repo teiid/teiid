@@ -44,6 +44,7 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.controller.ServiceData;
 import com.metamatrix.platform.util.ProductInfoConstants;
 
 public class FakeServerSessionService implements SessionServiceInterface {
@@ -262,6 +263,11 @@ public class FakeServerSessionService implements SessionServiceInterface {
 
 	@Override
 	public Throwable getInitException() {
+		return null;
+	}
+	
+	@Override
+	public ServiceData getServiceData() {
 		return null;
 	}
 

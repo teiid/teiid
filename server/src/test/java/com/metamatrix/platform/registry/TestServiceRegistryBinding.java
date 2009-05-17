@@ -22,20 +22,15 @@
 
 package com.metamatrix.platform.registry;
 
-import java.util.Date;
+import java.lang.reflect.Proxy;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.admin.server.FakeConfiguration;
-import com.metamatrix.common.config.api.DeployedComponent;
-import com.metamatrix.common.messaging.NoOpMessageBus;
-import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceClosedException;
 import com.metamatrix.platform.service.controller.AbstractService;
-import com.metamatrix.server.query.service.QueryService;
 
 public class TestServiceRegistryBinding extends TestCase {
 
@@ -74,24 +69,21 @@ public class TestServiceRegistryBinding extends TestCase {
 	public void testStateCheckingProxy() throws Exception {
 		FakeServiceImpl service = new FakeServiceImpl();
 		
-    	ProcessRegistryBinding vmBinding2  = FakeRegistryUtil.buildVMRegistryBinding("2.2.2.2", "process2");             //$NON-NLS-1$ //$NON-NLS-2$ 
-    	ServiceID sid1 = new ServiceID(5, vmBinding2.getHostName(), vmBinding2.getProcessName());
-    	ServiceRegistryBinding binding = new ServiceRegistryBinding(sid1, service, QueryService.SERVICE_NAME,
-                                                                    "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                                                                    "dqp2", "2.2.2.2",(DeployedComponent)new FakeConfiguration().deployedComponents.get(4),  //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                    ServiceState.STATE_CLOSED,
-                                                                    new Date(),  
-                                                                    false, new NoOpMessageBus()); 
+    	FakeServiceInterface fakeServiceInterface = (FakeServiceInterface) Proxy
+				.newProxyInstance(Thread.currentThread()
+						.getContextClassLoader(),
+						new Class[] { FakeServiceInterface.class },
+						new ServiceRegistryBinding.StateAwareProxy(service));
 		
-		assertEquals(1, ((FakeServiceInterface)binding.getService()).doSomething(1));
+		assertEquals(1, fakeServiceInterface.doSomething(1));
 
 		service.die();
 		
 		//ensure that check state is not called through the proxy
-		((FakeServiceInterface)binding.getService()).die();
+		fakeServiceInterface.die();
 		
 		try {
-			((FakeServiceInterface)binding.getService()).doSomething(1);
+			fakeServiceInterface.doSomething(1);
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (ServiceClosedException e) {
 			//expected

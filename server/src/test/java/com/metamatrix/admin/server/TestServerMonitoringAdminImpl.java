@@ -47,7 +47,6 @@ import com.metamatrix.admin.objects.MMResource;
 import com.metamatrix.admin.objects.MMService;
 import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSystem;
-import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.FakeRegistryUtil;

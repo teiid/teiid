@@ -22,91 +22,33 @@
 
 package com.metamatrix.platform.registry;
 
-import java.io.Serializable;
-
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.platform.vm.api.controller.ProcessManagement;
-import com.metamatrix.server.ResourceFinder;
 
 /**
  * This class is a container for ServiceRegistryBinding objects for
  * all the services running in this VM
  */
-public class ProcessRegistryBinding implements Serializable {
-
-    /** Host that this VM belongs to. */
-    private String hostName;
+public class ProcessRegistryBinding extends RegistryBinding<ProcessManagement> {
 
     /** Name of vm */
     private String processName;
     
     private boolean alive;
     
-    private long startTime = System.currentTimeMillis();
-
-    /**
-     * Local reference to VMController, this is transient to prevent it from
-     * being sent to other vm's. Remote vm's must use the stub to access vmController
-     */
-    private transient ProcessManagement processController;
-
-    /** Remote reference to VMController */
-    private Object vmControllerStub;
-
     /** defines vm in configuration */
     // TODO: this is part of configuration, this should be removed from here..
     private VMComponentDefn vmComponent;
-
-    private transient MessageBus messageBus;
     
     public ProcessRegistryBinding(String hostName, String processName, VMComponentDefn deployedComponent, ProcessManagement vmController, MessageBus bus) {
-    	this.hostName = hostName;
+    	super(vmController, hostName, bus);
     	this.processName = processName;
         this.vmComponent = deployedComponent;
-        this.processController = vmController;
-        this.messageBus = bus;
-        this.vmControllerStub = getStub(vmController);
-    }
-
-    private Object getStub(ProcessManagement controller) {
-        if (controller == null) {
-            return null;
-        }
-        return this.messageBus.export(controller, new Class[] {ProcessManagement.class});
-    }
-
-    /**
-     * Return reference for VMController.
-     * If VMController is running in this VM then return local reference.
-     * Else return remote reference.
-     *
-     * @return VMController reference
-     */
-    public synchronized ProcessManagement getProcessController() {
-
-        // if vmController is null then this must be a remote vm so return the stub.
-        if (this.processController != null) {
-            return processController;
-        }
-        if (this.vmControllerStub == null) {
-        	return null;
-        }
-    	// when exported to the remote, use remote's message bus instance.
-    	MessageBus bus = this.messageBus;
-    	if(bus == null) {
-    		bus = ResourceFinder.getMessageBus();
-    	}        
-        processController = (ProcessManagement)bus.getRPCProxy(this.vmControllerStub);
-        return processController;
     }
 
     public VMComponentDefn getDeployedComponent() {
        return this.vmComponent;
-    }
-
-    public String getHostName() {
-    	return hostName;
     }
 
     public String getProcessName() {
@@ -126,15 +68,11 @@ public class ProcessRegistryBinding implements Serializable {
     }
 
     public String toString() {
-        return "Process<" +this.hostName+"|"+ this.processName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        return "Process<" +this.getHostName()+"|"+ this.processName + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
-    public long getStartTime() {
-		return startTime;
-	}
-    
-    public void setStartTime(long startTime) {
-		this.startTime = startTime;
-	}
+    public ProcessManagement getProcessController() {
+    	return getBindObject();
+    }
 }
 

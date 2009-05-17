@@ -100,6 +100,7 @@ import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
+import com.metamatrix.platform.service.controller.ServiceData;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
@@ -202,7 +203,7 @@ public abstract class ProcessController implements ProcessManagement {
         this.clientServices.registerClientService(ConfigurationAdminAPI.class, wrapAdminService(ConfigurationAdminAPI.class, ConfigurationAdminAPIImpl.getInstance(this.registry)), PlatformAdminConstants.CTX_CONFIGURATION_ADMIN_API);
         this.clientServices.registerClientService(RuntimeStateAdminAPI.class, wrapAdminService(RuntimeStateAdminAPI.class, RuntimeStateAdminAPIImpl.getInstance(this.registry, hostManagement)), PlatformAdminConstants.CTX_RUNTIME_STATE_ADMIN_API);
         this.clientServices.registerClientService(AuthorizationAdminAPI.class, wrapAdminService(AuthorizationAdminAPI.class, AuthorizationAdminAPIImpl.getInstance()), PlatformAdminConstants.CTX_AUTHORIZATION_ADMIN_API);
-        this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, wrapAdminService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance()), PlatformAdminConstants.CTX_ADMIN_API);
+        this.clientServices.registerClientService(ExtensionSourceAdminAPI.class, wrapAdminService(ExtensionSourceAdminAPI.class, ExtensionSourceAdminAPIImpl.getInstance()), PlatformAdminConstants.CTX_EXTENSION_SOURCE_ADMIN_API);
         this.clientServices.registerClientService(RuntimeMetadataAdminAPI.class, wrapAdminService(RuntimeMetadataAdminAPI.class, RuntimeMetadataAdminAPIImpl.getInstance()), PlatformAdminConstants.CTX_RUNTIME_METADATA_ADMIN_API);
     }	
     
@@ -727,16 +728,19 @@ public abstract class ProcessController implements ProcessManagement {
         	}
         	
             serviceInstanceName = serviceProps.getProperty(ServicePropertyNames.INSTANCE_NAME);
-            String componentType = serviceProps.getProperty(ServicePropertyNames.COMPONENT_TYPE_NAME);
             String serviceType = serviceProps.getProperty(ServicePropertyNames.SERVICE_NAME);
-            String routingID = serviceProps.getProperty(ServicePropertyNames.SERVICE_ROUTING_ID);
             boolean essential = PropertiesUtils.getBooleanProperty(serviceProps, ServicePropertyNames.SERVICE_ESSENTIAL, false);
 
             // Create an instance of serviceClass
             final ServiceInterface service  = (ServiceInterface) Thread.currentThread().getContextClassLoader().loadClass(serviceClass).newInstance();
 
+            ServiceData serviceData = service.getServiceData();
+            serviceData.setId(serviceID);
+            serviceData.setServiceType(serviceProps.getProperty(ServicePropertyNames.COMPONENT_TYPE_NAME));
+            serviceData.setInstanceName(serviceProps.getProperty(ServicePropertyNames.INSTANCE_NAME));
+
             // Create ServiceRegistryBinding and register
-            final ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, service, routingID,serviceInstanceName, componentType, serviceInstanceName,host.getFullName(), deployedComponent,  service.getCurrentState(), service.getStateChangeTime(),essential, this.messageBus);
+            final ServiceRegistryBinding binding = new ServiceRegistryBinding(service, host.getFullName(), deployedComponent, essential, this.messageBus);
             
             logMessage(PlatformPlugin.Util.getString("ServiceController.0",serviceInstanceName)); //$NON-NLS-1$
             
@@ -746,7 +750,8 @@ public abstract class ProcessController implements ProcessManagement {
             final Object[] param1 = new Object[] { serviceID };
             DeployedComponentID deployedComponentID = (DeployedComponentID) deployedComponent.getID();
             logMessage(PlatformPlugin.Util.getString("ServiceController.1",param1)); //$NON-NLS-1$
-            binding.getService().init(serviceID, deployedComponentID, serviceProps, serverListenerRegistry); 
+            
+            service.init(serviceID, deployedComponentID, serviceProps, serverListenerRegistry); 
             logMessage(PlatformPlugin.Util.getString("ServiceController.2",param1)); //$NON-NLS-1$
             logMessage(PlatformPlugin.Util.getString("ServiceController.3",param1)); //$NON-NLS-1$                
                                

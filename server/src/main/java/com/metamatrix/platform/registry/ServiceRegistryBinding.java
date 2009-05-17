@@ -22,7 +22,6 @@
 
 package com.metamatrix.platform.registry;
 
-import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -35,17 +34,21 @@ import java.util.Iterator;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.platform.service.ServiceMessages;
+import com.metamatrix.platform.service.ServicePlugin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.ServiceState;
-import com.metamatrix.server.ResourceFinder;
+import com.metamatrix.platform.service.api.exception.ServiceException;
+import com.metamatrix.platform.service.api.exception.ServiceStateException;
+import com.metamatrix.platform.service.controller.ServiceData;
 
-public class ServiceRegistryBinding implements Serializable {
+public class ServiceRegistryBinding extends RegistryBinding<ServiceInterface> {
 
-    private final class StateAwareProxy implements InvocationHandler {
+    public final static class StateAwareProxy implements InvocationHandler {
 		private final ServiceInterface proxiedService;
 
-		private StateAwareProxy(ServiceInterface proxiedService) {
+		public StateAwareProxy(ServiceInterface proxiedService) {
 			this.proxiedService = proxiedService;
 		}
 
@@ -61,45 +64,11 @@ public class ServiceRegistryBinding implements Serializable {
 		    } catch (InvocationTargetException err) {
 		        throw err.getTargetException();
 		    }
-		    
-		    ServiceRegistryBinding.this.setInitException(proxiedService.getInitException());
-		    ServiceRegistryBinding.this.updateState(proxiedService.getCurrentState());
 		    return returnObj;
 		}
 	}
-
-	/** Identifies service for purpose of looking up in registry */
-    private ServiceID serviceID;
-
-    /** local reference to service, made transient so it will not be sent to remote registries */
-    private transient ServiceInterface service;
     
-    /** remote reference */
-    private Object serviceStub;
-    
-    /** type of service */
-    private String serviceType;
-
-    /** component type */
-    private String componentType;
-
-    /** Name of deployed service */
-    private String deployedName;
-
-    /** Name of host this service is running on */
-    private String hostName;
-
-    /** Instance name */
-    private String instanceName;
-
-    /**
-     * Current state of service, this is updated by the service framework
-     * whenever the state changes
-     */
-    private int currentState;
-
-    /** Time of the last state change */
-    private Date stateChangeTime;
+    private ServiceData serviceData;
 
     /** indicates if service is an essential service */
     private boolean essential;
@@ -107,51 +76,34 @@ public class ServiceRegistryBinding implements Serializable {
     /** defines service in configuration */
     private DeployedComponent deployedComponent;
 
-//    /** identifies psc this service belongs to. */
-//    private ProductServiceConfigID pscID;
-
     /** collection of queue names for service */
     private Collection queueNames;
     
-    /** Exception during initialization */
-    private Throwable initException;
-    
-    private transient MessageBus messageBus;
-    
-    private transient boolean dirty;
+    public ServiceRegistryBinding(ServiceID serviceID, ServiceInterface si, String serviceType, String instanceName,
+            String componentType, String deployedName,
+            String hostName, DeployedComponent deployedComponent,
+            int state, Date time, boolean essential, MessageBus bus) {
+    	super(si, hostName, bus);
+    	this.serviceData = new ServiceData(ServiceState.STATE_NOT_INITIALIZED);
+    	this.serviceData.setId(serviceID);
+    	this.serviceData.setServiceType(serviceType);
+    	this.serviceData.setInstanceName(instanceName);
+        this.deployedComponent = deployedComponent;
+        this.essential = essential;
+    }
     
     /**
      * Create new ServiceRegistryInstance
-     *
-     * @param serviceID Identifies service
-     * @param service ServiceInstance
-     * @param serviceType
-     * @param instanceName Instance name of service
-     * @param componenetType
-     * @param deployedName
-     * @param hostName
-     * @param state
-     * @param time
-     * @param essential, true indicates service is an essential service and cannot be shutdown if there are no other similiar services running.
      */
-    public ServiceRegistryBinding(ServiceID serviceID, ServiceInterface si, String serviceType, String instanceName,
-                                  String componentType, String deployedName,
-                                  String hostName, DeployedComponent deployedComponent,
-                                  int state, Date time, boolean essential, MessageBus bus) {
-
-        this.serviceID = serviceID;
-        this.serviceType = serviceType;
-        this.instanceName = instanceName;
-        this.componentType = componentType;
-        this.deployedName = deployedName;
-        this.hostName = hostName;
+    public ServiceRegistryBinding(ServiceInterface si, String hostName,
+			DeployedComponent deployedComponent, boolean essential,
+			MessageBus bus) {
+    	super((ServiceInterface) Proxy.newProxyInstance(Thread
+				.currentThread().getContextClassLoader(), si.getClass().getInterfaces(),
+				new StateAwareProxy(si)), hostName, bus);
+    	this.serviceData = si.getServiceData();
         this.deployedComponent = deployedComponent;
-        this.currentState = state;
-        this.stateChangeTime = time;
         this.essential = essential;
-        this.messageBus = bus;
-        this.setService(si);
-        
     }
 
     /**
@@ -159,60 +111,35 @@ public class ServiceRegistryBinding implements Serializable {
      * @return ServiceID
      */
     public ServiceID getServiceID() {
-        return this.serviceID;
+        return this.serviceData.getId();
     }
 
-    /**
-     * Return reference to service
-     * If service is local then return local reference
-     * Else return stub
-     */
-    public synchronized ServiceInterface getService() {
-    	if (this.service != null) {
-    		return service;
-    	}
-    	if (this.serviceStub == null) {
-    		return null;
-    	}
-    	// when exported to the remote, use remote's message bus instance.
-    	MessageBus bus = this.messageBus;
-    	if(bus == null) {
-    		bus = ResourceFinder.getMessageBus();
-    	}
-    	this.service = (ServiceInterface)bus.getRPCProxy(this.serviceStub);
-    	return this.service;
-    }
-    
     public String getServiceType() {
-        return this.serviceType;
+        return this.serviceData.getServiceType();
     }
 
     public String getInstanceName() {
-        return this.instanceName;
-    }
-
-    public String getComponentType() {
-        return this.componentType;
+        return this.serviceData.getInstanceName();
     }
 
     public String getDeployedName() {
-        return this.deployedName;
+        return this.serviceData.getInstanceName();
     }
 
-    public String getHostName() {
-        return this.hostName;
-    }
-    
     public String getProcessName() {
-        return this.serviceID.getProcessName();
+        return this.getServiceID().getProcessName();
     }
 
     public int getCurrentState() {
-        return this.currentState;
+        return this.serviceData.getState();
     }
 
     public Date getStateChangeTime() {
-        return this.stateChangeTime;
+        return this.serviceData.getStateChangeTime();
+    }
+    
+    public Throwable getInitException() {
+        return this.serviceData.getInitException();
     }
 
     public boolean isEssential() {
@@ -223,37 +150,42 @@ public class ServiceRegistryBinding implements Serializable {
         return this.deployedComponent;
     }
 
-//    public ProductServiceConfigID getPscID() {
-//        return this.pscID;
-//    }
-
     public boolean isServiceBad() {
-        return (currentState == ServiceState.STATE_CLOSED ||
-                currentState == ServiceState.STATE_FAILED ||
-                currentState == ServiceState.STATE_INIT_FAILED);
+        return (getCurrentState() == ServiceState.STATE_CLOSED ||
+                getCurrentState() == ServiceState.STATE_FAILED ||
+                getCurrentState() == ServiceState.STATE_INIT_FAILED);
     }
 
     public Collection getQueueNames() {
-    	if (this.queueNames == null) {
-    		this.queueNames = buildQueueNames(this.service);
+    	try {
+	    	if (this.queueNames == null) {
+	    		this.queueNames = buildQueueNames(getBindObject());
+	    	}
+    	} catch (ServiceException e) {
+    		markServiceAsBad();
+    		throw e;
     	}
         return this.queueNames;
     }
-
-    public Throwable getInitException() {
-        return this.initException;
-    }
     
-    public void setInitException(Throwable t) {
-        this.initException = t;
+    public void checkState() {
+    	//handle a stale process entry
+    	if (!this.isLocal()) {
+    		markServiceAsBad();
+    		return;
+    	}
+    	ServiceInterface bindObject = getBindObject();
+    	if (bindObject != null) {
+    		try {
+    			bindObject.checkState();
+    		} catch (ServiceException e) {
+    			
+    		}
+    	}
     }
     
     public void updateState(int state) {
-    	if (this.currentState != state) {
-	        this.currentState = state;
-	        this.stateChangeTime = new Date();
-	        this.dirty = true;
-    	}
+    	this.serviceData.updateState(state);
     }
    
     private Collection buildQueueNames(ServiceInterface si) {
@@ -273,54 +205,40 @@ public class ServiceRegistryBinding implements Serializable {
     }
 
     public String toString() {
-
         StringBuffer b = new StringBuffer("ServiceRegistryBinding: "); //$NON-NLS-1$
-        b.append("\n\tserviceID: " + serviceID); //$NON-NLS-1$
-        b.append("\n\tserviceType: " + serviceType); //$NON-NLS-1$
-        b.append("\n\tinstanceName: " + instanceName); //$NON-NLS-1$
-        b.append("\n\thostName: " + hostName); //$NON-NLS-1$
-//        b.append("\n\tpscName: " + pscID); //$NON-NLS-1$
+        b.append("\n\tserviceID: " + getServiceID()); //$NON-NLS-1$
+        b.append("\n\tserviceType: " + getServiceType()); //$NON-NLS-1$
+        b.append("\n\tinstanceName: " + getInstanceName()); //$NON-NLS-1$
+        b.append("\n\thostName: " + getHostName()); //$NON-NLS-1$
         b.append("\n\tDeployedComponent: " + deployedComponent); //$NON-NLS-1$
-        b.append("\n\tcurrentState: " + currentState); //$NON-NLS-1$
+        b.append("\n\tcurrentState: " + getCurrentState()); //$NON-NLS-1$
         b.append("\n\tessential: " + (essential?"true":"false")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-
-        try {
-            b.append("\n\tserviceStub className = " + serviceStub.getClass().getName()); //$NON-NLS-1$
-        } catch (Exception e) {
-            b.append("\n\tserviceStub className = null"); //$NON-NLS-1$
-        }
         return b.toString();
     }
 
-	private synchronized void setService(ServiceInterface service) {
-		this.service = service;
-    	if (this.serviceStub != null) {
-    		this.messageBus.unExport(serviceStub);
-    		serviceStub = null;
-    	}
-        if (service != null) {
-            this.serviceStub = this.messageBus.export(service, service.getClass().getInterfaces());
-			this.service = (ServiceInterface) Proxy.newProxyInstance(Thread
-					.currentThread().getContextClassLoader(), service.getClass().getInterfaces(),
-					new StateAwareProxy(service));
-		}
-	}
-	
 	public boolean isActive() {
-		return (this.currentState == ServiceState.STATE_OPEN || this.currentState == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE);		
+		return (this.getCurrentState() == ServiceState.STATE_OPEN || this.getCurrentState() == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE);		
 	}
 	
 	public void markServiceAsBad() {
-		setService(null);
+		invalidateBindObject();
 		updateState(ServiceState.STATE_FAILED);
 	}
-
+	
+	public ServiceInterface getService() {
+		ServiceInterface result = getBindObject();
+		if (result == null) {
+	        throw new ServiceStateException(ServiceMessages.SERVICE_0012, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0012, this.serviceData.getInstanceName(), this.serviceData.getId()));
+		}
+		return result;
+	}
+	
 	public void setDirty(boolean dirty) {
-		this.dirty = dirty;
+		this.serviceData.setDirty(dirty);
 	}
 
 	public boolean isDirty() {
-		return dirty;
+		return this.serviceData.isDirty();
 	}
-}
 
+}

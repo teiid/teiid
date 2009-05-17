@@ -128,7 +128,7 @@ public class FakeRegistryUtil {
 		BasicDeployedComponent deployedComponent = new BasicDeployedComponent(deployedComponentID1, Configuration.NEXT_STARTUP_ID, vm.getDeployedComponent().getHostID(), (VMComponentDefnID)vm.getDeployedComponent().getID(), connectorBindingID1, ConnectorBindingType.CONNECTOR_TYPE_ID);
 		deployedComponent.setDescription(name); 
 		
-	    return new ServiceRegistryBinding(sid, new FakeCacheAdmin(sid), type,"instance-"+id, null, name, vm.getHostName(), deployedComponent,  ServiceState.STATE_OPEN, new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$
+	    return new ServiceRegistryBinding(sid, new FakeCacheAdmin(sid), type,name, null, name, vm.getHostName(), deployedComponent,  ServiceState.STATE_OPEN, new Date(), false, new NoOpMessageBus());	 //$NON-NLS-1$
 	}
 	
 	static HostControllerRegistryBinding buildHostRegistryBinding(String name) {

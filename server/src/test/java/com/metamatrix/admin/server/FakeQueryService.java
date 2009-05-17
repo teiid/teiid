@@ -49,6 +49,7 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.controller.ServiceData;
 import com.metamatrix.server.query.service.QueryServiceInterface;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -288,6 +289,11 @@ public class FakeQueryService implements QueryServiceInterface {
 	@Override
 	public void terminateTransaction(Xid transactionId) throws AdminException {
 		
+	}
+	
+	@Override
+	public ServiceData getServiceData() {
+		return null;
 	}
 
 }

@@ -111,4 +111,8 @@ public class FakeService implements FakeServiceInterface {
 	public Throwable getInitException() {
 		return null;
 	}
+	@Override
+	public ServiceData getServiceData() {
+		return null;
+	}
 }

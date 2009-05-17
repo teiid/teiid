@@ -40,6 +40,7 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
+import com.metamatrix.platform.service.controller.ServiceData;
 
 
 public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
@@ -151,6 +152,11 @@ public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
 
 	@Override
 	public Throwable getInitException() {
+		return null;
+	}
+	
+	@Override
+	public ServiceData getServiceData() {
 		return null;
 	}
 

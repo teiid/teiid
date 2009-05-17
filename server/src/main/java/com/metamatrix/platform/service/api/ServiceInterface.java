@@ -29,6 +29,7 @@ import java.util.Properties;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.platform.service.controller.ServiceData;
 
 public interface ServiceInterface {
 
@@ -129,4 +130,6 @@ public interface ServiceInterface {
      * There are reflective based calls on this
      */    
     void updateState(int state);
+    
+    ServiceData getServiceData();
 }

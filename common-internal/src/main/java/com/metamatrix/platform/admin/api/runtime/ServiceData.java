@@ -25,6 +25,7 @@ package com.metamatrix.platform.admin.api.runtime;
 import java.util.Collection;
 import java.util.Date;
 
+import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.platform.service.api.ServiceID;
 
@@ -57,7 +58,7 @@ public class ServiceData extends ComponentData {
     private Collection queueNames;
     
     /** initialization Exception */
-    private Throwable initError;
+    private ExceptionHolder initError;
 
     /**
      * Create new ServiceRegistryInstance
@@ -91,7 +92,9 @@ public class ServiceData extends ComponentData {
         this.currentState = state;
         this.stateChangeTime = time;
         this.essential = essential;
-        this.initError = initError;
+        if (initError != null) {
+        	this.initError = new ExceptionHolder(initError);
+        }
         computeHashCode();
     }
 
@@ -128,7 +131,10 @@ public class ServiceData extends ComponentData {
     }
     
     public Throwable getInitError() {
-        return this.initError;
+    	if (this.initError != null) {
+    		return this.initError.getException();
+    	}
+        return null;
     }
     
     public boolean isEssential() {

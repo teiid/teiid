@@ -74,6 +74,7 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
+import com.metamatrix.platform.service.controller.ServiceData;
 
 public class FakeConfigurationService implements ConfigurationServiceInterface {
 
@@ -784,6 +785,11 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 
 	@Override
 	public Throwable getInitException() {
+		return null;
+	}
+	
+	@Override
+	public ServiceData getServiceData() {
 		return null;
 	}
 

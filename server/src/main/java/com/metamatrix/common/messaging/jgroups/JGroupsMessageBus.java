@@ -145,7 +145,11 @@ public class JGroupsMessageBus implements MessageBus {
 					throw new RemoteMessagingException(PlatformPlugin.Util.getString("JGroupsMessageBus.noResponse")); //$NON-NLS-1$
 				}
 	
-				return rsp_list.getFirst();
+				Object result = rsp_list.getFirst();
+				if (result instanceof Throwable) {
+					throw (Throwable)result;
+				}
+				return result;
 			}
 		});
 	}

@@ -30,13 +30,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.messaging.RemoteMessagingException;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.platform.registry.ClusteredRegistryState.CacheNodeNotFoundException;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.ServiceInterface;
 import com.metamatrix.platform.service.api.exception.ServiceException;
-import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.platform.vm.controller.ServerEvents;
 import com.metamatrix.server.Configuration;
@@ -91,19 +90,14 @@ public class ProcessMonitor implements ServerEvents {
 
     			for (ProcessRegistryBinding binding: vmBindings) {
                     ProcessManagement vm = binding.getProcessController();
-                    boolean alive = binding.isAlive();
-	                
                     try {
 	                    vm.ping();
 	                    binding.setAlive(true);
 	                } catch (ServiceException e) {
 	                	// mark as not alive, then no services will be pinged from this vm
 	                	binding.setAlive(false);
-	                }
-	                
-	                // if the vmstate changed then, update the registry.
-	                if (alive != binding.isAlive()) {
-	                	processUpdated(binding);
+	                } catch (RemoteMessagingException e) {
+	                	binding.setAlive(false);
 	                }
 	            }
     		}
@@ -117,16 +111,8 @@ public class ProcessMonitor implements ServerEvents {
         		List<ServiceRegistryBinding> bindings = registry.getServiceBindings(hostName, processName);
                 for (ServiceRegistryBinding binding:bindings) {
 
-                	ServiceInterface si = binding.getService();
-                	try {
-            			// when service in stopped state; this will be null
-            			// if shut down there will not be a binding for it.
-            			if(si != null) {
-            				binding.getService().checkState();
-            			}
-    				} catch (ServiceStateException e) {
-    					// OK to throw up, service will capture the error to logs.
-    				}
+    				// the state of the service changed, then update the cache.
+    				binding.checkState();
     				
     				// the state of the service changed, then update the cache.
     				if (binding.isDirty()) {

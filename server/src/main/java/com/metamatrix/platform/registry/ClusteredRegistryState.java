@@ -65,6 +65,7 @@ public class ClusteredRegistryState implements CacheListener {
 	
 	private Cache addProcessNode(String hostName, String processName) throws CacheNodeNotFoundException {
 		Cache hostNode = getHostNode(hostName);
+		hostNode.removeChild(processName.toUpperCase());
 		Cache n =  hostNode.addChild(processName.toUpperCase());
 		n.put(NAME, processName);
 		return n;
