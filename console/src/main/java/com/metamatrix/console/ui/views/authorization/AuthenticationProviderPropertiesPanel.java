@@ -187,7 +187,6 @@ public class AuthenticationProviderPropertiesPanel extends JPanel
             getPropertiedObjectPanel().setShowInvalidProperties(true);
             getPropertiedObjectPanel().setShowHiddenProperties(false);
             getPropertiedObjectPanel().setShowExpertProperties(false);
-            getPropertiedObjectPanel().setShowOptionalProperties(true);
 
             if (!canModify) {
                 getPropertiedObjectPanel().setReadOnlyForced(true);
@@ -208,13 +207,7 @@ public class AuthenticationProviderPropertiesPanel extends JPanel
                 }
             };
             
-            ItemListener includeOptionalListener = new ItemListener() {
-                public void itemStateChanged(ItemEvent ev) {
-                    includeOptionalStateChanged();
-                }
-            };
-            
-            popHolder = new ExpertPropertiedObjectPanelHolder(pop, includeExpertListener, includeOptionalListener);
+            popHolder = new ExpertPropertiedObjectPanelHolder(pop, includeExpertListener);
             popWithButtons = new POPWithButtons(popHolder, poe, this);
 
             pnlPOPShell.add(popWithButtons);
@@ -234,12 +227,6 @@ public class AuthenticationProviderPropertiesPanel extends JPanel
         getPropertiedObjectPanel().refreshDisplay();
     }
     
-    private void includeOptionalStateChanged() {
-        getPropertiedObjectPanel().setShowOptionalProperties(
-                popHolder.isIncludingOptionalProperties());
-        getPropertiedObjectPanel().refreshDisplay();
-    }
-
     public ComponentDefn getNewProvider() {
         return providerDefn;
     }

@@ -86,6 +86,7 @@ import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
  */
 public class PropertiedObjectPanel extends JPanel
 implements UIConstants {
+		
     //############################################################################################################################
     //# Constants                                                                                                                #
     //############################################################################################################################
@@ -140,7 +141,6 @@ implements UIConstants {
     private boolean showToolTips = true;
     private boolean showRequired = false;
     private boolean showInvalid = false;
-    private boolean showOptional = true;
     private boolean readOnlyForced = false;
     
     private Collection propertiesToFilterOut = Collections.EMPTY_LIST;
@@ -651,26 +651,20 @@ implements UIConstants {
         Iterator iter = defs.iterator();
         while ( iter.hasNext() ) {
             PropertyDefinition def = (PropertyDefinition) iter.next();
-            boolean addToList = true;
-            if ( ! showExpert && def.isExpert() ) {
-                addToList = false;
+            if ( ! showHidden && (def.isHidden() || !def.isModifiable())) {
+                continue;
             }
-            if ( ! showHidden && def.isHidden() ) {
-                addToList = false;
-            }
-            if (!showOptional && !def.isRequired()) {
-                addToList = false;
+            if ( ! showExpert && def.isExpert() && !def.isRequired() ) {
+            	continue;
             }
             if ( propertiesToFilterOut.contains(def) ) {
-                addToList = false;
+                continue;
             }
             // Skip read-only password fields
             if (def.isMasked()  &&  (readOnlyForced  ||  !def.isModifiable()  ||  editor.isReadOnly(propObj))) {
-                addToList = false;
+                continue;
             }
-            if ( addToList ) {
-                result.add(def);
-            }
+            result.add(def);
         }
         return result;
     }
@@ -790,13 +784,6 @@ implements UIConstants {
     */
     public boolean getShowInvalidProperties() {
         return showInvalid;
-    }
-
-    /**
-    @since 2.0
-    */
-    public boolean getShowOptionalProperties() {
-        return showOptional;
     }
 
     /**
@@ -1195,15 +1182,6 @@ implements UIConstants {
     */
     public void setShowInvalidProperties(final boolean showInvalid) {
         this.showInvalid = showInvalid;
-    }
-
-    /**
-    Sets whether properties not marked as required (i.e., optional properties) should be shown.
-    @param show True if optional properties should be shown.  The default is true.
-    @since 2.0
-    */
-    public void setShowOptionalProperties(final boolean show) {
-        showOptional = show;
     }
 
     /**

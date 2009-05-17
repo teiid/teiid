@@ -52,8 +52,8 @@ import com.metamatrix.console.models.ConnectorManager;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.ui.layout.ConsoleMainFrame;
 import com.metamatrix.console.ui.util.BasicWizardSubpanelContainer;
+import com.metamatrix.console.ui.util.ExpertPropertiedObjectPanelHolder;
 import com.metamatrix.console.ui.util.InitialAndCurrentValues;
-import com.metamatrix.console.ui.util.PropertiedObjectPanelHolder;
 import com.metamatrix.console.ui.util.WizardInterface;
 import com.metamatrix.console.util.ExceptionUtility;
 import com.metamatrix.console.util.StaticUtilities;
@@ -202,7 +202,6 @@ public class NewBindingWizardSpecificationPanel extends BasicWizardSubpanelConta
             popThePanel.setShowInvalidProperties(true);
             popThePanel.setShowHiddenProperties(false);
             popThePanel.setShowExpertProperties(true);
-            popThePanel.setShowOptionalProperties(false);
 
             popThePanel.refreshDisplay();
             popThePanel.createComponent();
@@ -212,10 +211,10 @@ public class NewBindingWizardSpecificationPanel extends BasicWizardSubpanelConta
             ItemListener popChangeListener = new ItemListener() {
 
                 public void itemStateChanged(ItemEvent ev) {
-                    includeOptionalsChanged(ev);
+                    includeExpertChanged(ev);
                 }
             };
-            pnlPOPShell.add(new PropertiedObjectPanelHolder(popThePanel, popChangeListener));
+            pnlPOPShell.add(new ExpertPropertiedObjectPanelHolder(popThePanel, popChangeListener));
 
             setInitialValues();
             popThePanel.addPropertyChangeListener(this);
@@ -230,9 +229,9 @@ public class NewBindingWizardSpecificationPanel extends BasicWizardSubpanelConta
         }
     }
 
-    private void includeOptionalsChanged(ItemEvent ev) {
+    private void includeExpertChanged(ItemEvent ev) {
         CheckBox cb = (CheckBox)ev.getSource();
-        popThePanel.setShowOptionalProperties(cb.isSelected());
+        popThePanel.setShowExpertProperties(cb.isSelected());
         popThePanel.refreshDisplay();
     }
 

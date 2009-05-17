@@ -208,7 +208,6 @@ public class NewAuthenticationProviderSpecificationPanel extends BasicWizardSubp
             popThePanel.setShowInvalidProperties(true);
             popThePanel.setShowHiddenProperties(false);
             popThePanel.setShowExpertProperties(false);
-            popThePanel.setShowOptionalProperties(true);
 
             popThePanel.refreshDisplay();
             popThePanel.createComponent();
@@ -221,14 +220,8 @@ public class NewAuthenticationProviderSpecificationPanel extends BasicWizardSubp
                 }
             };
             
-            ItemListener includeOptionalListener = new ItemListener() {
-                public void itemStateChanged(ItemEvent ev) {
-                    includeOptionalStateChanged();
-                }
-            };
-            popHolder = new ExpertPropertiedObjectPanelHolder(popThePanel, includeExpertListener, includeOptionalListener);
+            popHolder = new ExpertPropertiedObjectPanelHolder(popThePanel, includeExpertListener);
             popHolder.setIsIncludingExpertProperties(false);
-            popHolder.setIsIncludingOptionalProperties(true);
             pnlPOPShell.add(popHolder);
 
             setInitialValues();
@@ -249,11 +242,6 @@ public class NewAuthenticationProviderSpecificationPanel extends BasicWizardSubp
     	popThePanel.refreshDisplay();
     }
     
-    private void includeOptionalStateChanged() {
-    	popThePanel.setShowOptionalProperties(popHolder.isIncludingOptionalProperties());
-    	popThePanel.refreshDisplay();
-    }
-
     public AuthenticationProvider getNewAuthenticationProvider() {
         return scdNewAuthenticationProvider;
     }

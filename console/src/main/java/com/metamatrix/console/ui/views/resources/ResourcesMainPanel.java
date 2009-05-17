@@ -56,9 +56,9 @@ import com.metamatrix.console.ui.NotifyOnExitConsole;
 import com.metamatrix.console.ui.layout.BasePanel;
 import com.metamatrix.console.ui.layout.ConsoleMainFrame;
 import com.metamatrix.console.ui.layout.WorkspacePanel;
+import com.metamatrix.console.ui.util.ExpertPropertiedObjectPanelHolder;
 import com.metamatrix.console.ui.util.POPWithButtons;
 import com.metamatrix.console.ui.util.POPWithButtonsController;
-import com.metamatrix.console.ui.util.PropertiedObjectPanelHolder;
 import com.metamatrix.console.ui.views.DefaultConsoleTableComparator;
 import com.metamatrix.console.util.DialogUtility;
 import com.metamatrix.console.util.ExceptionUtility;
@@ -146,7 +146,7 @@ public class ResourcesMainPanel extends BasePanel implements
         pop = new PropertiedObjectPanel(rpoe, manager.getEncryptor());
         pop.setReadOnlyForced(!canModify);
         pop.createComponent();
-        PropertiedObjectPanelHolder popHolder = new PropertiedObjectPanelHolder(
+        ExpertPropertiedObjectPanelHolder popHolder = new ExpertPropertiedObjectPanelHolder(
         		pop, null);
         popWithButtons = new POPWithButtons(popHolder, rpoe, this);
         popWithButtons.setButtonsVisible(canModify);		

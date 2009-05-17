@@ -52,7 +52,7 @@ import com.metamatrix.toolbox.ui.widget.property.PropertiedObjectPanel;
 public class BindingPropertiesPanel extends JPanel
         implements POPWithButtonsController {
     private PropertiedObjectPanel pop;
-    private PropertiedObjectPanelHolder popHolder;
+    private ExpertPropertiedObjectPanelHolder popHolder;
     private POPWithButtons popWithButtons = null; 
 
     private TextFieldWidget txfConnectorName     = new TextFieldWidget();
@@ -177,7 +177,6 @@ public class BindingPropertiesPanel extends JPanel
             getPropertiedObjectPanel().setShowInvalidProperties(true);
             getPropertiedObjectPanel().setShowHiddenProperties(false);
             getPropertiedObjectPanel().setShowExpertProperties(true);
-            getPropertiedObjectPanel().setShowOptionalProperties(false);
 
             if (!canModify) {
                 getPropertiedObjectPanel().setReadOnlyForced(true);
@@ -186,23 +185,23 @@ public class BindingPropertiesPanel extends JPanel
             getPropertiedObjectPanel().createComponent();
             getPropertiedObjectPanel().refreshDisplay();
 
-            boolean includeOptional = false;
+            boolean includeExpert = false;
             if (popHolder != null) {
-                includeOptional = popHolder.isIncludingOptionalProperties();
+            	includeExpert = popHolder.isIncludingExpertProperties();
             }
 
             pnlPOPShell.removeAll();
             ItemListener includeOptionalListener = new ItemListener() {
                 public void itemStateChanged(ItemEvent ev) {
-                    includeOptionalStateChanged();
+                    includeExpertStateChanged();
                 }
             };
-            popHolder = new PropertiedObjectPanelHolder(pop, includeOptionalListener);
+            popHolder = new ExpertPropertiedObjectPanelHolder(pop, includeOptionalListener);
             popWithButtons = new POPWithButtons(popHolder, poe, this);
 
             pnlPOPShell.add(popWithButtons);
 
-            popHolder.setIsIncludingOptionalProperties(includeOptional);
+            popHolder.setIsIncludingExpertProperties(includeExpert);
 
         } catch(Exception e) {
             ExceptionUtility.showMessage("Failed while creating Connector Binding Panel", //$NON-NLS-1$
@@ -211,9 +210,9 @@ public class BindingPropertiesPanel extends JPanel
 
     }
 
-    private void includeOptionalStateChanged() {
-        getPropertiedObjectPanel().setShowOptionalProperties(
-                popHolder.isIncludingOptionalProperties());
+    private void includeExpertStateChanged() {
+        getPropertiedObjectPanel().setShowExpertProperties(
+                popHolder.isIncludingExpertProperties());
         getPropertiedObjectPanel().refreshDisplay();
     }
 

@@ -115,49 +115,17 @@ public class ConsolePropertyObjectId implements PropertiedObject {
             }
 
         }
-        else {
-            //ystem.out.println("Not find groupPropertyDefination,should call getPropertyDefinitions in ConsolePropertiedEditor to gain groupPropertyDefination");
-        }
-
     }
 
     private ArrayList filterBEpropDefns(Collection pd){
         ArrayList propDefnsBE = new ArrayList();
-        if (isBasicProperties()){
-            Iterator iter = pd.iterator();
-            while ( iter.hasNext()){
-                PropertyDefinition propDefn = (PropertyDefinition)iter.next();
-                if (!propDefn.isExpert()){
-                    if(!propDefnsBE.contains(propDefn)){
-                            propDefnsBE.add(propDefn);
-                    }
-                }
+        Iterator iter = pd.iterator();
+        while ( iter.hasNext()){
+            PropertyDefinition propDefn = (PropertyDefinition)iter.next();
+            boolean expert = propDefn.isExpert() && !propDefn.isRequired();
+            if(((expert && isExpertProperties()) || (!expert && !isExpertProperties()) || isBothBEProperties()) && !propDefnsBE.contains(propDefn)){
+                propDefnsBE.add(propDefn);
             }
-        return propDefnsBE;
-        }
-
-        if (isExpertProperties()){
-            Iterator iter = pd.iterator();
-            while ( iter.hasNext()){
-                PropertyDefinition propDefn = (PropertyDefinition)iter.next();
-                if (propDefn.isExpert()){
-                    if(!propDefnsBE.contains(propDefn)){
-                            propDefnsBE.add(propDefn);
-                    }
-                }
-            }
-            return propDefnsBE;
-        }
-
-        if (isBothBEProperties()){
-            Iterator iter = pd.iterator();
-            while ( iter.hasNext()){
-                PropertyDefinition propDefn = (PropertyDefinition)iter.next();
-                if(!propDefnsBE.contains(propDefn)){
-                    propDefnsBE.add(propDefn);
-                }
-            }
-            return propDefnsBE;
         }
         return propDefnsBE;
     }

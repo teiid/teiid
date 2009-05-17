@@ -42,14 +42,12 @@ import com.metamatrix.console.models.ConfigurationManager;
 import com.metamatrix.console.models.ConfigurationPropertiedObjectEditor;
 import com.metamatrix.console.models.ModelManager;
 import com.metamatrix.console.ui.layout.ConsoleMainFrame;
+import com.metamatrix.console.ui.util.ExpertPropertiedObjectPanelHolder;
 import com.metamatrix.console.ui.util.POPWithButtons;
 import com.metamatrix.console.ui.util.POPWithButtonsController;
-import com.metamatrix.console.ui.util.PropertiedObjectPanelHolder;
 import com.metamatrix.console.util.ExceptionUtility;
 import com.metamatrix.console.util.LogContexts;
 import com.metamatrix.console.util.StaticUtilities;
-import com.metamatrix.toolbox.ui.widget.LabelWidget;
-import com.metamatrix.toolbox.ui.widget.TextFieldWidget;
 import com.metamatrix.toolbox.ui.widget.property.PropertiedObjectPanel;
 
 
@@ -57,7 +55,7 @@ import com.metamatrix.toolbox.ui.widget.property.PropertiedObjectPanel;
 public class ServiceDefinitionPropertiesPanel extends JPanel
         implements POPWithButtonsController {
     private PropertiedObjectPanel pop;
-    private PropertiedObjectPanelHolder popHolder;
+    private ExpertPropertiedObjectPanelHolder popHolder;
     private POPWithButtons popWithButtons = null; 
 
 //    private TextFieldWidget txfServiceName     = new TextFieldWidget();
@@ -182,7 +180,6 @@ public class ServiceDefinitionPropertiesPanel extends JPanel
             getPropertiedObjectPanel().setShowInvalidProperties(true);
             getPropertiedObjectPanel().setShowHiddenProperties(false);
             getPropertiedObjectPanel().setShowExpertProperties(true);
-            getPropertiedObjectPanel().setShowOptionalProperties(false);
 
             if (!canModify) {
                 getPropertiedObjectPanel().setReadOnlyForced(true);
@@ -191,23 +188,23 @@ public class ServiceDefinitionPropertiesPanel extends JPanel
             getPropertiedObjectPanel().createComponent();
             getPropertiedObjectPanel().refreshDisplay();
 
-            boolean includeOptional = false;
+            boolean includeExpert = false;
             if (popHolder != null) {
-                includeOptional = popHolder.isIncludingOptionalProperties();
+            	includeExpert = popHolder.isIncludingExpertProperties();
             }
 
             pnlPOPShell.removeAll();
-            ItemListener includeOptionalListener = new ItemListener() {
+            ItemListener includeExpertListener = new ItemListener() {
                 public void itemStateChanged(ItemEvent ev) {
                     includeOptionalStateChanged();
                 }
             };
-            popHolder = new PropertiedObjectPanelHolder(pop, includeOptionalListener);
+            popHolder = new ExpertPropertiedObjectPanelHolder(pop, includeExpertListener);
             popWithButtons = new POPWithButtons(popHolder, poe, this);
 
             pnlPOPShell.add(popWithButtons);
 
-            popHolder.setIsIncludingOptionalProperties(includeOptional);
+            popHolder.setIsIncludingExpertProperties(includeExpert);
 
         } catch(Exception e) {
             ExceptionUtility.showMessage("Failed while creating Service Definition Panel", //$NON-NLS-1$
@@ -217,8 +214,8 @@ public class ServiceDefinitionPropertiesPanel extends JPanel
     }
 
     private void includeOptionalStateChanged() {
-        getPropertiedObjectPanel().setShowOptionalProperties(
-                popHolder.isIncludingOptionalProperties());
+        getPropertiedObjectPanel().setShowExpertProperties(
+                popHolder.isIncludingExpertProperties());
         getPropertiedObjectPanel().refreshDisplay();
     }
 

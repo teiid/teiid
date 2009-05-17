@@ -33,16 +33,17 @@ import javax.swing.JPanel;
 import com.metamatrix.toolbox.ui.widget.CheckBox;
 import com.metamatrix.toolbox.ui.widget.property.PropertiedObjectPanel;
 
-public class ExpertPropertiedObjectPanelHolder extends AbstractPropertiedObjectPanelHolder {
+public class ExpertPropertiedObjectPanelHolder extends JPanel {
     protected CheckBox expertPropertiesCheckBox = null;
+    protected PropertiedObjectPanel thePanel;
 
 	public ExpertPropertiedObjectPanelHolder(PropertiedObjectPanel pnl,
-            ItemListener expertCheckBoxChangeListener, ItemListener optionalCheckBoxChangeListener) {
-        super(pnl);
-        init(expertCheckBoxChangeListener, optionalCheckBoxChangeListener);
+            ItemListener expertCheckBoxChangeListener) {
+		this.thePanel = pnl;
+        init(expertCheckBoxChangeListener);
     }
 
-    protected void init(ItemListener expertCheckBoxChangeListener, ItemListener optionalCheckBoxChangeListener) {
+    protected void init(ItemListener expertCheckBoxChangeListener) {
         setBorder(BorderFactory.createEtchedBorder());
         GridBagLayout layout = new GridBagLayout();
         setLayout(layout);
@@ -61,13 +62,12 @@ public class ExpertPropertiedObjectPanelHolder extends AbstractPropertiedObjectP
             expertPropertiesCheckBox = new CheckBox("Include expert properties"); //$NON-NLS-1$
             expertPropertiesCheckBox.addItemListener(expertCheckBoxChangeListener);
             buttonPanel.add(expertPropertiesCheckBox);
+        } else {
+            layout.setConstraints(buttonPanel, new GridBagConstraints(0, 0, 1, 1,
+                    0.0, 0.0, GridBagConstraints.CENTER,
+                    GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
         }
         
-        if (optionalCheckBoxChangeListener != null) {
-            optionalPropertiesCheckBox = new CheckBox("Include optional properties", CheckBox.SELECTED); //$NON-NLS-1$
-            optionalPropertiesCheckBox.addItemListener(optionalCheckBoxChangeListener);
-            buttonPanel.add(optionalPropertiesCheckBox);
-        }
     }
 
     public boolean isIncludingExpertProperties() {
@@ -76,5 +76,9 @@ public class ExpertPropertiedObjectPanelHolder extends AbstractPropertiedObjectP
 
     public void setIsIncludingExpertProperties( boolean b ) {
         expertPropertiesCheckBox.setSelected( b );
+    }
+    
+    public PropertiedObjectPanel getThePanel() {
+        return thePanel;
     }
 }

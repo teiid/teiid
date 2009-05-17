@@ -49,7 +49,7 @@ import com.metamatrix.toolbox.ui.widget.property.PropertiedObjectPanel;
 
 public class POPWithButtons extends JPanel
         implements PropertyChangeListener {
-    private AbstractPropertiedObjectPanelHolder thePanel;
+    private ExpertPropertiedObjectPanelHolder thePanel;
     private PropertiedObjectEditor theEditor;
     private AbstractButton applyButton;
     private AbstractButton resetButton;
@@ -59,7 +59,7 @@ public class POPWithButtons extends JPanel
             defsMap = new HashMap();
     private POPWithButtonsController controller;
 
-    public POPWithButtons(AbstractPropertiedObjectPanelHolder pnl,
+    public POPWithButtons(ExpertPropertiedObjectPanelHolder pnl,
             PropertiedObjectEditor edtr,
             POPWithButtonsController ctrlr) {
         super();
@@ -74,7 +74,7 @@ public class POPWithButtons extends JPanel
 
     public POPWithButtons(PropertiedObjectPanel pnl,
             PropertiedObjectEditor editor, POPWithButtonsController controller) {
-        this(new PropertiedObjectPanelHolder(pnl, null), editor, controller);
+        this(new ExpertPropertiedObjectPanelHolder(pnl, null), editor, controller);
     }
 
     private void init() {
