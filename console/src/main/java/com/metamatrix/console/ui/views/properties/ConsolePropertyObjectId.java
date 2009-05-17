@@ -122,7 +122,7 @@ public class ConsolePropertyObjectId implements PropertiedObject {
         Iterator iter = pd.iterator();
         while ( iter.hasNext()){
             PropertyDefinition propDefn = (PropertyDefinition)iter.next();
-            boolean expert = propDefn.isExpert() && !propDefn.isRequired();
+            boolean expert = propDefn.isExpert() && (!propDefn.isRequired() || propDefn.hasDefaultValue());
             if(((expert && isExpertProperties()) || (!expert && !isExpertProperties()) || isBothBEProperties()) && !propDefnsBE.contains(propDefn)){
                 propDefnsBE.add(propDefn);
             }

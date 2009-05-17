@@ -654,7 +654,7 @@ implements UIConstants {
             if ( ! showHidden && (def.isHidden() || !def.isModifiable())) {
                 continue;
             }
-            if ( ! showExpert && def.isExpert() && !def.isRequired() ) {
+            if ( ! showExpert && def.isExpert() && (!def.isRequired() || def.hasDefaultValue())) {
             	continue;
             }
             if ( propertiesToFilterOut.contains(def) ) {

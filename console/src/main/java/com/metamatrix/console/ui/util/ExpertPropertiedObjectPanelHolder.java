@@ -59,7 +59,7 @@ public class ExpertPropertiedObjectPanelHolder extends JPanel {
                 GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0));
 
         if (expertCheckBoxChangeListener != null) {
-            expertPropertiesCheckBox = new CheckBox("Include expert properties"); //$NON-NLS-1$
+            expertPropertiesCheckBox = new CheckBox("Include expert properties", thePanel.getShowExpertProperties()?CheckBox.SELECTED:CheckBox.DESELECTED); //$NON-NLS-1$
             expertPropertiesCheckBox.addItemListener(expertCheckBoxChangeListener);
             buttonPanel.add(expertPropertiesCheckBox);
         } else {
