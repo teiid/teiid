@@ -299,8 +299,6 @@ public class RuntimeStateAdminAPIImpl implements RuntimeStateAdminAPI {
 
         LogManager.logInfo(LogPlatformConstants.CTX_RUNTIME_ADMIN, ServicePlugin.Util.getString(LogMessageKeys.ADMIN_0019, new Object[] {serviceID}));
 
-        // Validate caller's session
-        SessionToken token = AdminAPIHelper.validateSession();
         helper.restartService(serviceID);
     }
 

@@ -37,7 +37,6 @@ import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
-import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationID;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
