@@ -170,7 +170,7 @@ public class ServerWorkItem implements Runnable {
 	private void logProcessingException(Throwable e, String context) {
 		Throwable cause = e;
 		while (cause.getCause() != null && cause != cause.getCause()) {
-			cause = e.getCause();
+			cause = cause.getCause();
 		}
 		StackTraceElement elem = cause.getStackTrace()[0];
 		LogManager.logDetail(context, e, "Processing exception for session", this.socketClientInstance.getWorkContext().getConnectionID()); //$NON-NLS-1$ 

@@ -232,7 +232,7 @@ public class RequestWorkItem extends AbstractWorkItem {
                 if(e instanceof MetaMatrixProcessingException) {                          
                 	Throwable cause = e;
                 	while (cause.getCause() != null && cause.getCause() != cause) {
-                		cause = e.getCause();
+                		cause = cause.getCause();
                 	}
                 	StackTraceElement elem = cause.getStackTrace()[0];
                     LogManager.logWarning(LogConstants.CTX_DQP, DQPPlugin.Util.getString("ProcessWorker.processing_error", e.getMessage(), requestID, e.getClass().getName(), elem)); //$NON-NLS-1$
