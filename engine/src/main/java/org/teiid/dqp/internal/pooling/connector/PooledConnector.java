@@ -22,6 +22,8 @@
 
 package org.teiid.dqp.internal.pooling.connector;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +41,8 @@ import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWrapper;
+
+import com.metamatrix.common.stats.ConnectionPoolStats;
 
 
 /**
@@ -85,15 +89,21 @@ public class PooledConnector extends ConnectorWrapper {
 
 	private ConnectionPool pool;
 	private ConnectionPool xaPool;
+	
+	private ConnectionPoolStats poolStats=null;
+	private ConnectionPoolStats xaPoolStats=null;
+	
 	private Map<String, ConnectionWrapper> idToConnections = Collections.synchronizedMap(new HashMap<String, ConnectionWrapper>());
 	private ConnectorEnvironment environment;
 	
 	public PooledConnector(Connector actualConnector) {
 		super(actualConnector);
 		pool = new ConnectionPool(this);
+		poolStats = new ConnectionPoolStats(ConnectionPoolStats.NON_XA_POOL_TYPE);
 		
 		if (actualConnector instanceof XAConnector) {
 			xaPool = new ConnectionPool(this);
+			xaPoolStats = new ConnectionPoolStats(ConnectionPoolStats.XA_POOL_TYPE);
 		}
 	}
 
@@ -163,6 +173,31 @@ public class PooledConnector extends ConnectorWrapper {
 			}
         }
         return conn;
+	}
+
+	public Collection <ConnectionPoolStats>getConnectionPoolStats() {
+		Collection<ConnectionPoolStats> pools = new ArrayList<ConnectionPoolStats>(2);
+
+		setStats(pool, poolStats);
+		pools.add(poolStats);
+		
+		if (xaPool != null) {
+			setStats(xaPool, xaPoolStats);
+			pools.add(xaPoolStats);
+		}
+		
+		return pools;
+	}
+	
+	private void setStats(ConnectionPool connpool, ConnectionPoolStats stats) {
+
+		stats.setConnectionsWaiting(connpool.getNumberOfConnectinsWaiting());
+		stats.setConnectionsCreated(connpool.getTotalCreatedConnectionCount());
+		stats.setConnectionsDestroyed(connpool.getTotalDestroyedConnectionCount());
+		stats.setConnectionsInUse(connpool.getNumberOfConnectionsInUse());
+		stats.setTotalConnections(connpool.getTotalConnectionCount());
+		
+	
 	}
 
 }

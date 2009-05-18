@@ -312,8 +312,7 @@ public class ConnectionPool {
         synchronized (this.lock) {
             this.reverseIdConnections.put(connection, id);
             this.totalConnectionCount++;
-            this.totalCreatedConnections++;
-            
+             
             if (this.totalConnectionCount > this.maxConnections) {
                 ids = new ArrayList(this.idConnections.values());
             }
@@ -355,6 +354,8 @@ public class ConnectionPool {
         		connection = this.connectionFactory.getActualConnector().getConnection(id);
         	}
         	sourceConnection = new ConnectionWrapper(connection, this, testConnectInterval);
+            this.totalCreatedConnections++;
+
         	LogManager.logTrace(CTX_CONNECTOR, new Object[] {"Connection pool created a connection for", id}); //$NON-NLS-1$
         } catch (ConnectorException e) {
             throw new ConnectionPoolException(e);

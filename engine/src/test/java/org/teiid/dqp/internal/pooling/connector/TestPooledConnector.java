@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.pooling.connector;
 
+import java.util.Collection;
 import java.util.Properties;
 
 import javax.transaction.Transaction;
@@ -52,6 +53,9 @@ public class TestPooledConnector {
 		conn.close();
 		XAConnection conn1 = pc.getXAConnection(Mockito.mock(ExecutionContext.class), tc);
 		assertSame(conn, conn1);
+		
+		Collection stats = pc.getConnectionPoolStats();
+		assertEquals(2, stats.size());
 		pc.stop();
 	}
 

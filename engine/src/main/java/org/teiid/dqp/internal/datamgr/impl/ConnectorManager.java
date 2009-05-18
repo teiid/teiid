@@ -66,6 +66,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.Assertion;
@@ -677,5 +678,16 @@ public class ConnectorManager implements ApplicationService {
 			}
 			return StringUtil.valueOf(value, method.getReturnType());
 		}
+	}
+
+	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
+	     if (connector.getActualConnector() instanceof  PooledConnector) {
+	    	 	PooledConnector pc = (PooledConnector) connector;
+	    	 	
+	    	 	return pc.getConnectionPoolStats();
+
+	     }
+	     return Collections.EMPTY_LIST;
+	    		 	
 	}
 }
