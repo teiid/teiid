@@ -213,6 +213,14 @@ public class PlatformDataService implements DataService {
         throws MetaMatrixComponentException{
         throw new UnsupportedOperationException();
     }
+    
+    /** 
+     * @see com.metamatrix.dqp.service.DataService#getConnectionPoolStatistics(java.lang.String)
+     * @since 6.1
+     */
+    public Collection getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException {
+    	throw new UnsupportedOperationException();
+    } 
 
     /** 
      * @see com.metamatrix.dqp.service.DataService#clearConnectorBindingCache(java.lang.String)
