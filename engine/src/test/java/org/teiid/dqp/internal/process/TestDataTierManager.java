@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -42,6 +44,7 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -370,6 +373,8 @@ public class TestDataTierManager extends TestCase {
         public Boolean getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public ConnectorBinding getConnectorBinding(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public Collection getConnectorBindingStatistics(String connectorBindingName) throws MetaMatrixComponentException {return null;}
+        public Collection getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException { return null; }
+        
         public void clearConnectorBindingCache(String connectorBindingName) throws MetaMatrixComponentException {}
         
 		public void cancelRequest(AtomicRequestID request,

@@ -39,12 +39,15 @@ import org.teiid.connector.xa.api.XAConnector;
 public class ConnectorWrapper implements XAConnector {
 	
 	private Connector actualConnector;
+	private String name;
+	
 	
 	public ConnectorWrapper(Connector actualConnector){
 		this.actualConnector = actualConnector;
 	}
 
 	public void start(ConnectorEnvironment environment) throws ConnectorException {
+		name = environment.getConnectorName();
 		actualConnector.start(environment);
 	}
 
@@ -122,5 +125,9 @@ public class ConnectorWrapper implements XAConnector {
 		} catch (ConnectorException e) {
 			return false;
 		}
+	}
+	
+	public String getConnectorBindingName() {
+		return this.name;
 	}
 }

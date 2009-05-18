@@ -29,14 +29,17 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -215,6 +218,14 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
     public Collection getConnectorBindingStatistics(String connectorBindingName) throws MetaMatrixComponentException {
         return null;
     }
+    
+    /** 
+     * @see com.metamatrix.dqp.service.DataService#getConnectionPoolStatistics(java.lang.String)
+     * @since 6.1
+     */
+    public Collection getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException {
+    	return null;
+    } 
 
     /** 
      * @see com.metamatrix.dqp.service.DataService#clearConnectorBindingCache(java.lang.String)

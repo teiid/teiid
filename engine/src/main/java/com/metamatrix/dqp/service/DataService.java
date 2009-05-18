@@ -144,4 +144,14 @@ public interface DataService extends ApplicationService {
      */
     void clearConnectorBindingCache(String connectorBindingName) 
         throws MetaMatrixComponentException;
+    
+    /**
+     * Get connection pool statistics for connector binding 
+     * @param connectorBindingName - Name of the connector binding
+     * @return a list of {@link com.metamatrix.common.stats.ConnectionPoolStats}
+     * @throws MetaMatrixComponentException
+     * @since 6.1
+     */
+    Collection getConnectionPoolStatistics(String connectorBindingName)
+        throws MetaMatrixComponentException;
 }

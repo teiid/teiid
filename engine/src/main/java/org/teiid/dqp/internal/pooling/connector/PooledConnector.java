@@ -100,10 +100,12 @@ public class PooledConnector extends ConnectorWrapper {
 		super(actualConnector);
 		pool = new ConnectionPool(this);
 		poolStats = new ConnectionPoolStats(ConnectionPoolStats.NON_XA_POOL_TYPE);
+		poolStats.setConnectorBindingName(this.getConnectorBindingName());
 		
 		if (actualConnector instanceof XAConnector) {
 			xaPool = new ConnectionPool(this);
 			xaPoolStats = new ConnectionPoolStats(ConnectionPoolStats.XA_POOL_TYPE);
+			xaPoolStats.setConnectorBindingName(this.getConnectorBindingName());
 		}
 	}
 
