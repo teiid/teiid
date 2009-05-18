@@ -397,15 +397,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         return getQueueStatistics();
     }
     
-    /**
-     * Returns a QueueStats object that represent the queue in
-     * this service.
-     * If there is no queue with the given name, an empty Collection is returned.
-     */
-    public Collection getConnectionPoolsStatistics(String connectorBindingName) {
 
-    	
-    }
             
     /**
      * Cancel and close all requests associated with the clientConnection/session. Also runs a final cleanup any caches within
