@@ -370,7 +370,13 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
 	@Override
 	public Collection getConnectionPoolStats(String identifier)
 			throws AdminException {
-		return Collections.EMPTY_LIST;
+		
+		try {
+			return this.getDataService().getConnectionPoolStatistics(identifier);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
+
 	}
     
     

@@ -198,7 +198,22 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             }
         }
         throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connectorBindingName })); //$NON-NLS-1$
-    }    
+    }  
+    
+    /** 
+     * @see com.metamatrix.dqp.service.DataService#getConnectionPoolStatistics(java.lang.String)
+     * @since 6.1
+     */
+    public Collection getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException {
+    	ConnectorBinding binding = getConnectorBinding(connectorBindingName);
+        if (binding != null) {
+            ConnectorManager mgr = getConnectorManager(binding);
+            if (mgr != null ) {  
+            	return mgr.getConnectionPoolStats();
+            }
+        }
+        throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connectorBindingName })); //$NON-NLS-1$
+    }     
     
     /** 
      * @see com.metamatrix.dqp.service.DataService#clearConnectorBindingCache(java.lang.String)
