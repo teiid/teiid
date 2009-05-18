@@ -253,7 +253,7 @@ public class VdbMainPanel extends BasePanel implements
         javax.swing.JPanel pnlOps = new javax.swing.JPanel();
         btnImportVDB = new ButtonWidget();
         setup(MenuEntry.ACTION_MENUITEM, btnImportVDB, actionImportVDB);
-        actionImportVDB.setEnabled(bCanModify);
+        actionImportVDB.setEnabled(UserCapabilities.getInstance().isSystemAdmin(connection));
         btnExportVDB = new ButtonWidget();
         setup(MenuEntry.ACTION_MENUITEM, btnExportVDB, actionExportVDB);
         actionExportVDB.setEnabled(false);
