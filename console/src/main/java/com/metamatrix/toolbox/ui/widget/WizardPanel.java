@@ -458,6 +458,7 @@ public class WizardPanel extends DialogPanel {
                     nextButton.setMaximumSize(size);
 */                    
                     addNavigationButton(nextButton, removeNavigationButton(finishButton));
+                    this.validate();
                 }
             } else if (nextButton.getParent() != null) {
                 addAcceptButton(finishButton, removeNavigationButton(nextButton));

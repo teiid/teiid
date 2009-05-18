@@ -128,7 +128,7 @@ public class NewBindingWizardController extends WizardInterfaceImpl {
             currentPage = CONNECTOR_SELECT_PAGE_NUM;
 
             setLocationOn(dialog);
-            dialog.show();
+            dialog.setVisible(true);
         }
         return scdNewConnectorBinding;
     }
