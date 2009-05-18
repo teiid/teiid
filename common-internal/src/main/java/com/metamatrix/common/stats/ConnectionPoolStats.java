@@ -48,11 +48,11 @@ public class ConnectionPoolStats implements Serializable {
 	/**
 	 * Total number of connections that have been destroyed since the inception of the pool
 	 */
-	private int connectionsDestroyed;
+	private long connectionsDestroyed;
 	/**
 	 * Total number of connections that have been created since the inception of the pool
 	 */
-	private int connectionsCreated;
+	private long connectionsCreated;
 	
 	/**
 	 * Constructor for ConnectionPoolStats
@@ -63,7 +63,11 @@ public class ConnectionPoolStats implements Serializable {
 	}
 	
 	public boolean isXAPoolType() {
-		return (this.poolType==1?true:false);
+		return (this.poolType==XA_POOL_TYPE?true:false);
+	}
+	
+	public int getPoolType() {
+		return this.poolType;
 	}
 		
 	public String getConnectorBindingName() {
@@ -115,11 +119,11 @@ public class ConnectionPoolStats implements Serializable {
 		this.totalConnections = totalConnections;
 	}
 
-	public void setConnectionsDestroyed(int connectionsDestroyed) {
+	public void setConnectionsDestroyed(long connectionsDestroyed) {
 		this.connectionsDestroyed = connectionsDestroyed;
 	}
 
-	public void setConnectionsCreated(int connectionsCreated) {
+	public void setConnectionsCreated(long connectionsCreated) {
 		this.connectionsCreated = connectionsCreated;
 	}
 
