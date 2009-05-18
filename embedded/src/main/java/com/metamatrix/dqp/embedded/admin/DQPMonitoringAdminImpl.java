@@ -366,5 +366,13 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     	}
     	return ts.getTransactions();
     }
+
+	@Override
+	public Collection getConnectionPoolStats(String identifier)
+			throws AdminException {
+		return Collections.EMPTY_LIST;
+	}
+    
+    
     
 }
