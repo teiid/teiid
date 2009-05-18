@@ -163,6 +163,8 @@ public interface CoreMonitoringAdmin {
     
     /**
      * Get the Connection Pool Stats that correspond to the specified identifier pattern.
+     * If the {@link ConnectionPool ConnectionPool} represents an XA connection, there
+     * will be 2 {@link ConnectionPool ConnectionPool}s.  
      *
      * @param identifier - an identfier that corresponds to the ConnectorBinding that is
      * 		running in a process {@link ConnectionPool}
