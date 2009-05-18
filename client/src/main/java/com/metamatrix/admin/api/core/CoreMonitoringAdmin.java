@@ -159,7 +159,24 @@ public interface CoreMonitoringAdmin {
      * @since 4.3
      */
     Collection getQueueWorkerPools(String identifier) throws AdminException;
-
+    
+    
+    /**
+     * Get the Connection Pool Stats that correspond to the specified identifier pattern.
+     *
+     * @param identifier - an identfier that corresponds to the ConnectorBinding that is
+     * 		running in a process {@link ConnectionPool}
+     * <ul>
+     *      <li> <code>"*"</code> - for all Connection Pools in the system
+     *      <li> <code>"name*"</code> - for all the Connection Pools that begin with given name
+     *      <li><code>"name"</code> - for a single Connection Pool in the system
+     * </ul>
+      * @return Collection of {@link ConnectionPool}
+     * @throws AdminException if there's a system error.
+     * @since 6.1
+     */
+    Collection getConnectionPoolStats(String identifier) throws AdminException;
+        
 
     /**
      * Get the Caches that correspond to the specified identifier pattern
