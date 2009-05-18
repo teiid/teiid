@@ -38,6 +38,7 @@ import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
@@ -270,5 +271,12 @@ public class FakeServerSessionService implements SessionServiceInterface {
 	public ServiceData getServiceData() {
 		return null;
 	}
+
+	@Override
+	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
+		return null;
+	}
+	
+	
 
 }

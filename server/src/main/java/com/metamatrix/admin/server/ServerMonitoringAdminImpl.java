@@ -54,6 +54,7 @@ import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.api.server.ServerMonitoringAdmin;
 import com.metamatrix.admin.objects.MMAdminObject;
+import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorType;
 import com.metamatrix.admin.objects.MMDQP;
@@ -82,6 +83,7 @@ import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.FileUtils;
@@ -884,6 +886,71 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
         return results;
     }
 
+    
+    /**
+     * Get monitoring information about connection pool stats for the connector bindings.
+     * @see com.metamatrix.admin.api.server.ServerMonitoringAdmin#getConnectionPoolStats(java.lang.String)
+     * @param identifier Identifier of a host, process, or connector binding to get information for.
+     * For example "hostname", or "hostname.processname", or "hostname.processname.bindingname"
+     * <p>If identifier is "*", this method returns information about all connection pools in the system.
+     * @return a <code>Collection</code> of <code>com.metamatrix.admin.api.ConnectionPool</code>
+     * @since 6.1
+     */
+     public Collection getConnectionPoolStats(String identifier) throws AdminException  {
+         
+         if (identifier == null) {
+             throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
+         }
+         
+         ArrayList results = null;
+         try {
+ 			//get pools from RuntimeStateAdminAPIHelper
+ 			Collection serviceBindings = this.registry.getServiceBindings(null, null);
+
+ 			//convert runtime data into MMQueueStatistics objects
+ 			results = new ArrayList(serviceBindings.size());
+ 			for (Iterator iter = serviceBindings.iterator(); iter.hasNext();) {
+ 			    ServiceRegistryBinding binding = (ServiceRegistryBinding) iter.next();
+ 			    DeployedComponent component = binding.getDeployedComponent();
+ 			    
+ 			    if (component.isDeployedConnector()) {
+			            String[] identifierParts = new String[] {binding.getHostName(), 
+	 			                component.getVMComponentDefnID().getName(), 
+	 			                component.getServiceComponentDefnID().getFullName()};                
+ 			            if (identifierMatches(identifier, identifierParts)) {
+ 			            	 			                
+ 		 			        Collection statsCollection = getRuntimeStateAdminAPIHelper().getConnectionPoolStats(binding);
+ 		 			        if (statsCollection != null) {
+	 		 			        for (Iterator iter2 = statsCollection.iterator(); iter2.hasNext();) {
+	 		 			        	ConnectionPoolStats stats = (ConnectionPoolStats) iter2.next();
+	 		 			        	
+	 		 			        	MMConnectionPool mmstats = new MMConnectionPool();
+	 		 			        	
+	 		 			        	mmstats.setConnectorBindingName(component.getServiceComponentDefnID().getFullName());
+	 		 			        	mmstats.setConnectorBindingIdentifier(component.getFullName());
+	 		 			        	
+	 		 			        	mmstats.setConnectionsInUse(stats.getConnectionsInuse());
+	 		 			        	mmstats.setConnectionsCreated(stats.getConnectionsCreated());
+	 		 			        	mmstats.setConnectionsDestroyed(stats.getConnectionsDestroyed());
+	 		 			        	mmstats.setConnectionsWaiting(stats.getConnectionsWaiting());
+	 		 			        	mmstats.setTotalConnections(stats.getTotalConnections());	 		 			        	
+	 		 			        	
+	 		 			        	results.add(mmstats);	 		 			        	
+	 		 			        }
+ 		 			        }
+
+ 			            }
+ 			    	
+ 			                
+ 			    }
+ 			}
+ 		} catch (MetaMatrixComponentException e) {
+ 			throw new AdminComponentException(e);
+ 		} catch (ServiceException e) {
+ 			throw new AdminComponentException(e);
+ 		}
+         return results;
+     }    
    
 
     /**
@@ -1181,9 +1248,18 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        config = getConfigurationServiceProxy().getCurrentConfiguration();
 			        ConnectorBinding configBinding = config.getConnectorBinding(MMAdminObject.getNameFromIdentifier(objectIdentifier));
 			        
-			        component = getConnectorBindingComponent(objectIdentifier);
+			        component = getDeployedComponent(objectIdentifier);
 			        
 			        return convertPropertyDefinitions(component, configBinding.getProperties());
+			        
+			    case MMAdminObject.OBJECT_TYPE_SERVICE:
+			        config = getConfigurationServiceProxy().getCurrentConfiguration();
+			        ServiceComponentDefn svc = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));
+			        
+			        component = this.getDeployedComponent(objectIdentifier);
+			        
+			        return convertPropertyDefinitions(component, svc.getProperties());
+
 			        
 			    case MMAdminObject.OBJECT_TYPE_CONNECTOR_TYPE:
 			        ComponentType componentType = getConnectorTypeComponentType(objectIdentifier);
@@ -1305,21 +1381,22 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
     }
     
     
-    private ComponentObject getConnectorBindingComponent(String identifier) throws ConfigurationException {
+    private ComponentObject getDeployedComponent(String identifier) throws ConfigurationException {
         Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
         Collection components = config.getDeployedComponents();
         for (Iterator iter = components.iterator(); iter.hasNext(); ) {
             BasicDeployedComponent bdc = (BasicDeployedComponent)iter.next();
-            
             String[] identifierParts = new String[] {
                 bdc.getHostID().getName(), bdc.getVMComponentDefnID().getName(), bdc.getName()
             };
             if (identifierMatches(identifier, identifierParts)) {
                 return bdc;
             }
+
         }
         return null;
     }
+    
     
     private ComponentType getConnectorTypeComponentType(String identifier) throws ConfigurationException {
         Collection types = getConfigurationServiceProxy().getAllComponentTypes(false);

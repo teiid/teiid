@@ -69,6 +69,7 @@ import com.metamatrix.common.config.model.BasicSharedResource;
 import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.PlatformPlugin;
@@ -792,5 +793,19 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 	public ServiceData getServiceData() {
 		return null;
 	}
+
+
+
+
+
+
+
+
+	@Override
+	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
+		return null;
+	}
+	
+	
 
 }

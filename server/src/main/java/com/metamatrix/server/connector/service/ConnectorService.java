@@ -71,6 +71,7 @@ import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -529,5 +530,11 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     private static void logOK(String messageProperty, Object value) {
         LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString(messageProperty, value)); 
     }
+    
+	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
+//		return Collections.EMPTY_LIST;
+		
+		return this.connectorMgr.getConnectionPoolStats();
+	}
     
 }

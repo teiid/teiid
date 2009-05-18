@@ -1009,6 +1009,12 @@ public class ServerAdminImpl implements ServerAdmin {
 		// TODO Auto-generated method stub
 		return getMonitoringAdmin().getServices(identifier);
 	}
+
+	@Override
+	public Collection getConnectionPoolStats(String identifier)
+			throws AdminException {
+		return getMonitoringAdmin().getConnectionPoolStats(identifier);
+	}
 	
 	
 	

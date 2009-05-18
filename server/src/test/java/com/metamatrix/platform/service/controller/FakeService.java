@@ -31,6 +31,7 @@ import java.util.Properties;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.platform.service.api.ServiceID;
 
 public class FakeService implements FakeServiceInterface {
@@ -115,4 +116,11 @@ public class FakeService implements FakeServiceInterface {
 	public ServiceData getServiceData() {
 		return null;
 	}
+	@Override
+	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	
 }

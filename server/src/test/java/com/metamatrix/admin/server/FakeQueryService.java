@@ -44,6 +44,7 @@ import com.metamatrix.api.exception.server.InvalidRequestIDException;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
@@ -295,5 +296,12 @@ public class FakeQueryService implements QueryServiceInterface {
 	public ServiceData getServiceData() {
 		return null;
 	}
+
+	@Override
+	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
+		return null;
+	}
+	
+	
 
 }

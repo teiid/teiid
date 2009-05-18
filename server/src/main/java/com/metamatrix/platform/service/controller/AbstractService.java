@@ -37,6 +37,7 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PasswordMaskUtil;
 import com.metamatrix.core.event.EventObjectListener;
@@ -558,5 +559,11 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
     public ServiceData getServiceData() {
     	return data;
     }
+    
+
+	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
+		return Collections.EMPTY_LIST;
+	}
+    
     
 }

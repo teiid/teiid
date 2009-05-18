@@ -189,15 +189,9 @@ public class RuntimeStateAdminAPIHelper {
     /**
      * Return Collection of QueueStats for service.
      * 
-     * @param callerSessionID
-     *            ID of the caller's current session.
-     * @param serviceID
-     *            ID of the service.
+     * @param binding
+     *            The {@link ServiceRegistryBinding} for the connector 
      * @return Collection of QueueStats objects.
-     * @throws AuthorizationException
-     *             if caller is not authorized to perform this method.
-     * @throws InvalidSessionException
-     *             if the <code>callerSessionID</code> is not valid or is expired.
      * @throws MetaMatrixComponentException
      *             if an error occurred in communicating with a component.
      */
@@ -207,7 +201,24 @@ public class RuntimeStateAdminAPIHelper {
 		    return service.getQueueStatistics();
 		}
         return Collections.EMPTY_LIST;
-    }      
+    }  
+    
+    /**
+     * Return Collection of ConnectionPoolStats for a service.
+     * 
+     * @param binding
+     *            The {@link ServiceRegistryBinding} for the connector 
+     * @return Collection of ConnectionPoolStat objects.
+     * @throws MetaMatrixComponentException
+     *             if an error occurred in communicating with a component.
+     */
+    public Collection getConnectionPoolStats(ServiceRegistryBinding binding) throws MetaMatrixComponentException {
+		ServiceInterface service = binding.getService();
+		if (service != null) {
+		    return service.getConnectionPoolStats();
+		}
+        return Collections.EMPTY_LIST;
+    }  
 
     /**
      * Return ServiceRegistryBinding for the given serviceID
