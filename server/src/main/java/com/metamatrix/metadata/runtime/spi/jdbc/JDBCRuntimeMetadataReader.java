@@ -339,13 +339,10 @@ public final class JDBCRuntimeMetadataReader {
         String sql = null;
         VirtualDatabaseID result = null;
 
-        int nParms = 2;
-
         try{
             if(isActive){
                 if(version == null){
                     sql = JDBCTranslator.SELECT_ACTIVE_VIRTUAL_DATABASE_ID_LV;
-                    nParms = 3;
                 }else{
                     sql = JDBCTranslator.SELECT_ACTIVE_VIRTUAL_DATABASE_ID;
                 }
@@ -362,9 +359,6 @@ public final class JDBCRuntimeMetadataReader {
             }
             else{
                 statement.setString(2, fullName.toUpperCase());
-                if(nParms==3) {
-                	statement.setString(3, fullName.toUpperCase());
-                }
             }
             if (! statement.execute()){
                 throw new VirtualDatabaseException(ErrorMessageKeys.GEN_0007, RuntimeMetadataPlugin.Util.getString(ErrorMessageKeys.GEN_0007, sql) );
