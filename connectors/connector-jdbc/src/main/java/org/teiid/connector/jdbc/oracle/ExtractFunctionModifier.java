@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
-import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 
@@ -35,7 +34,7 @@ import org.teiid.connector.language.IFunction;
  * Convert the YEAR/MONTH/DAY etc. function into an equivalent Oracle function.  
  * Format: EXTRACT(YEAR from Element) or EXTRACT(YEAR from DATE '2004-03-03')
  */
-public class ExtractFunctionModifier extends BasicFunctionModifier implements FunctionModifier {
+public class ExtractFunctionModifier extends BasicFunctionModifier {
     public static final String SPACE = " ";  //$NON-NLS-1$
     
     private String target;
@@ -44,20 +43,17 @@ public class ExtractFunctionModifier extends BasicFunctionModifier implements Fu
         this.target = target;
     }
     
-    public List translate(IFunction function) {
-        StringBuffer buffer = new StringBuffer();
+    public List<?> translate(IFunction function) {
         List<IExpression> args = function.getParameters();
         
-        List objs = new ArrayList();
-        buffer.append("EXTRACT("); //$NON-NLS-1$
-        buffer.append(target);
-        buffer.append(SPACE);
-        buffer.append("FROM"); //$NON-NLS-1$
-
-        buffer.append(SPACE);               
-        buffer.append(args.get(0));
-        buffer.append(")"); //$NON-NLS-1$
-        objs.add(buffer.toString());
+        List<Object> objs = new ArrayList<Object>();
+        objs.add("EXTRACT("); //$NON-NLS-1$
+        objs.add(target);
+        objs.add(SPACE);
+        objs.add("FROM"); //$NON-NLS-1$
+        objs.add(SPACE);               
+        objs.add(args.get(0));
+        objs.add(")"); //$NON-NLS-1$
         return objs;
     }    
 }

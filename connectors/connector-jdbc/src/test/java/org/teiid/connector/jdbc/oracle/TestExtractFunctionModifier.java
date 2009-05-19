@@ -24,6 +24,7 @@ package org.teiid.connector.jdbc.oracle;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 import org.teiid.connector.api.TypeFacility;
@@ -64,18 +65,17 @@ public class TestExtractFunctionModifier extends TestCase {
         
         ExtractFunctionModifier mod = new ExtractFunctionModifier (target);
         IExpression expr = mod.modify(func);
-
+        List<?> parts = mod.translate(func);
+        assertEquals(7, parts.size());
+        assertFalse(parts.get(5) instanceof String);
         OracleSQLTranslator trans = new OracleSQLTranslator();
         trans.registerFunctionModifier("extract", mod);
         trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
 
-        //sqlVisitor.setFunctionModifiers(trans.getFunctionModifiers());
         sqlVisitor.append(expr);  
-        //System.out.println(" expected: " + expectedStr + " \t actual: " + sqlVisitor.toString());
         assertEquals(expectedStr, sqlVisitor.toString());
-        
         return expr;
     }
     public void test1() throws Exception {
