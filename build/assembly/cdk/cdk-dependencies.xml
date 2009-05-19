@@ -27,14 +27,8 @@
             <dependencySet>
               <useProjectArtifact>true</useProjectArtifact>
               <unpack>false</unpack>
-              <useTransitiveDependencies>false</useTransitiveDependencies>
+              <useTransitiveDependencies>true</useTransitiveDependencies>
               <useDefaultExcludes>true</useDefaultExcludes>
-              <!-- 
-              <excludes>
-                <exclude>teiid*</exclude>
-                <exclude>jta*</exclude>
-              </excludes>
-               -->
             </dependencySet>
           </dependencySets>
           
