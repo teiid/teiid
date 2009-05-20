@@ -28,7 +28,7 @@ import junit.framework.TestCase;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.MetadataFactory;
-import org.teiid.connector.jdbc.TestUtil;
+import org.teiid.connector.jdbc.Util;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
@@ -72,7 +72,7 @@ public class TestOracleTranslator extends TestCase {
         String input = "select smalla.intkey from bqt1.smalla inner join bqt1.smallb on smalla.stringkey=smallb.stringkey cross join bqt1.mediuma"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA INNER JOIN SmallB ON SmallA.StringKey = SmallB.StringKey CROSS JOIN MediumA"; //$NON-NLS-1$
           
-        TestUtil.helpTestVisitor(MetadataFactory.BQT_VDB,
+        Util.helpTestVisitor(MetadataFactory.BQT_VDB,
             input, 
             output, TRANSLATOR);        
     }
@@ -81,7 +81,7 @@ public class TestOracleTranslator extends TestCase {
         String input = "select smalla.intkey from bqt1.smalla cross join (bqt1.smallb cross join bqt1.mediuma)"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA CROSS JOIN (SmallB CROSS JOIN MediumA)"; //$NON-NLS-1$
       
-        TestUtil.helpTestVisitor(MetadataFactory.BQT_VDB,
+        Util.helpTestVisitor(MetadataFactory.BQT_VDB,
             input, 
             output, TRANSLATOR);        
     }

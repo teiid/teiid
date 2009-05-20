@@ -28,7 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.MetadataFactory;
-import org.teiid.connector.jdbc.TestUtil;
+import org.teiid.connector.jdbc.Util;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 
@@ -55,7 +55,7 @@ public class TestMySQLTranslator {
         String input = "SELECT char(convert(PART_WEIGHT, integer) + 100) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT char((convert(PARTS.PART_WEIGHT, SIGNED INTEGER) + 100)) FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -64,7 +64,7 @@ public class TestMySQLTranslator {
         String input = "SELECT convert(PART_WEIGHT, long) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT convert(PARTS.PART_WEIGHT, SIGNED) FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -73,7 +73,7 @@ public class TestMySQLTranslator {
         String input = "SELECT convert(convert(PART_WEIGHT, long), string) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT convert(convert(PARTS.PART_WEIGHT, SIGNED), CHAR) FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -82,7 +82,7 @@ public class TestMySQLTranslator {
         String input = "SELECT convert(convert(PART_WEIGHT, date), string) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT date_format(DATE(PARTS.PART_WEIGHT), '%Y-%m-%d') FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -90,7 +90,7 @@ public class TestMySQLTranslator {
         String input = "SELECT convert(convert(PART_WEIGHT, time), string) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT date_format(TIME(PARTS.PART_WEIGHT), '%H:%i:%S') FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -98,7 +98,7 @@ public class TestMySQLTranslator {
         String input = "SELECT convert(convert(PART_WEIGHT, timestamp), string) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT date_format(TIMESTAMP(PARTS.PART_WEIGHT), '%Y-%m-%d %H:%i:%S.%f') FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -106,7 +106,7 @@ public class TestMySQLTranslator {
         String input = "SELECT ifnull(PART_WEIGHT, 'otherString') FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT ifnull(PARTS.PART_WEIGHT, 'otherString') FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -114,7 +114,7 @@ public class TestMySQLTranslator {
         String input = "SELECT convert(convert(PART_WEIGHT, integer), string) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT convert(convert(PARTS.PART_WEIGHT, SIGNED INTEGER), CHAR) FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -122,7 +122,7 @@ public class TestMySQLTranslator {
         String input = "SELECT insert(PART_WEIGHT, 1, 5, 'chimp') FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT insert(PARTS.PART_WEIGHT, 1, 5, 'chimp') FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -130,7 +130,7 @@ public class TestMySQLTranslator {
         String input = "SELECT locate(PART_WEIGHT, 'chimp', 1) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT locate(PARTS.PART_WEIGHT, 'chimp', 1) FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -138,7 +138,7 @@ public class TestMySQLTranslator {
         String input = "SELECT substring(PART_WEIGHT, 1) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT substring(PARTS.PART_WEIGHT, 1) FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -146,7 +146,7 @@ public class TestMySQLTranslator {
         String input = "SELECT substring(PART_WEIGHT, 1, 5) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT substring(PARTS.PART_WEIGHT, 1, 5) FROM PARTS";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -154,7 +154,7 @@ public class TestMySQLTranslator {
         String input = "SELECT PART_ID FROM PARTS UNION SELECT PART_ID FROM PARTS ORDER BY PART_ID"; //$NON-NLS-1$
         String output = "(SELECT PARTS.PART_ID FROM PARTS) UNION (SELECT PARTS.PART_ID FROM PARTS) ORDER BY PART_ID";  //$NON-NLS-1$
 
-        TestUtil.helpTestVisitor(getTestVDB(),
+        Util.helpTestVisitor(getTestVDB(),
             input, 
             output, TRANSLATOR);
     }
@@ -163,7 +163,7 @@ public class TestMySQLTranslator {
         String input = "select intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA LIMIT 100"; //$NON-NLS-1$
                
-        TestUtil.helpTestVisitor(getTestBQTVDB(),
+        Util.helpTestVisitor(getTestBQTVDB(),
             input, 
             output, TRANSLATOR);        
     }
@@ -172,7 +172,7 @@ public class TestMySQLTranslator {
         String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA LIMIT 50, 100"; //$NON-NLS-1$
                
-        TestUtil.helpTestVisitor(getTestBQTVDB(),
+        Util.helpTestVisitor(getTestBQTVDB(),
             input, 
             output, TRANSLATOR);        
     }
@@ -181,7 +181,7 @@ public class TestMySQLTranslator {
         String input = "select bitand(intkey, intnum) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT convert((SmallA.IntKey & SmallA.IntNum), SIGNED INTEGER) FROM SmallA"; //$NON-NLS-1$
                
-        TestUtil.helpTestVisitor(MetadataFactory.BQT_VDB,
+        Util.helpTestVisitor(MetadataFactory.BQT_VDB,
             input, 
             output, TRANSLATOR);        
     }
@@ -190,7 +190,7 @@ public class TestMySQLTranslator {
         String input = "select smalla.intkey from bqt1.smalla inner join bqt1.smallb on smalla.stringkey=smallb.stringkey cross join bqt1.mediuma"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM (SmallA INNER JOIN SmallB ON SmallA.StringKey = SmallB.StringKey) CROSS JOIN MediumA"; //$NON-NLS-1$
           
-        TestUtil.helpTestVisitor(MetadataFactory.BQT_VDB,
+        Util.helpTestVisitor(MetadataFactory.BQT_VDB,
             input, 
             output, TRANSLATOR);        
     }
