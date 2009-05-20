@@ -31,7 +31,6 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
-import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.Host;
@@ -47,7 +46,6 @@ import com.metamatrix.console.ui.views.deploy.event.ConfigurationTreeModelListen
 import com.metamatrix.console.ui.views.deploy.util.DeployPkgUtils;
 import com.metamatrix.console.util.ExternalException;
 import com.metamatrix.console.util.LogContexts;
-
 import com.metamatrix.toolbox.ui.widget.tree.DefaultTreeModel;
 import com.metamatrix.toolbox.ui.widget.tree.DefaultTreeNode;
 
@@ -101,7 +99,6 @@ public final class ConfigurationTreeModel
 
         super(new DefaultTreeNode());
         root = (DefaultTreeNode)getRoot();
-        System.out.println("root");
     }
     
    public void init(Configuration theConfig) {
