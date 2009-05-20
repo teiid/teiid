@@ -22,10 +22,16 @@
 
 package org.teiid.connector.jdbc;
 
+import static org.junit.Assert.*;
+
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.jdbc.translator.TranslatedCommand;
+import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
 
 import junit.framework.Assert;
 
+import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
 
@@ -45,5 +51,16 @@ public class MetadataFactory {
     	}
         return util.parseCommand(sql);        
     }
+
+	public static void helpTestVisitor(String vdb, String input, String expectedOutput, Translator translator) throws ConnectorException {
+	    // Convert from sql to objects
+	    ICommand obj = helpTranslate(vdb, input);
+	    
+	    TranslatedCommand tc = new TranslatedCommand(EnvironmentUtility.createSecurityContext("user"), translator); //$NON-NLS-1$
+	    tc.translateCommand(obj);
+	    
+	    // Check stuff
+	    assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
+	}
 
 }
