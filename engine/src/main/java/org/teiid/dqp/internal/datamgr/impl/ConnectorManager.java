@@ -381,9 +381,10 @@ public class ConnectorManager implements ApplicationService {
         	classloader = threadContextLoader;
         } else {
         	env.getProperties().setProperty(ConnectorPropertyNames.USING_CUSTOM_CLASSLOADER, Boolean.TRUE.toString());
-            LogManager.logInfo(DQPPlugin.Util.getString("DataService.useClassloader"), classPath); //$NON-NLS-1$
-
+            
             boolean postDelegation = PropertiesUtils.getBooleanProperty(env.getProperties(), ConnectorPropertyNames.USE_POST_DELEGATION, false);
+            
+            LogManager.logInfo(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.useClassloader", connectorName, postDelegation, classPath)); //$NON-NLS-1$
             
             if (postDelegation) {
             	this.classloader = this.clManager.getPostDelegationClassLoader(classPath);

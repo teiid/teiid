@@ -25,8 +25,19 @@
       <includes>
         <include>*.jar</include>
       </includes>
+      <excludes>
+      	<exclude>teiid-txn-jbossts-${version}.jar</exclude>
+      </excludes>
       <outputDirectory>lib</outputDirectory>      
-    </fileSet>    
+    </fileSet>
+    
+    <fileSet>
+      <directory>target/distribution/teiid-${version}-embedded-dependencies.dir</directory>
+      <includes>
+        <include>teiid-txn-jbossts-${version}.jar</include>
+      </includes>
+      <outputDirectory>lib/patches</outputDirectory>      
+    </fileSet>      
     
     <fileSet>
       <directory>target/distribution/teiid-${version}-connector-dependencies.dir</directory>

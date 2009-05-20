@@ -375,14 +375,22 @@ public final class EmbeddedDriver extends BaseDriver {
             // find jars in the "lib" directory; patches is reverse alpaha and not case sensitive so small letters then capitals
             if (!EmbeddedDriver.getDefaultConnectionURL().equals(dqpURL.toString())) {
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation+"patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
-	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
-
+	            
 	            // check if a specific post delegation rules specified for loading
 	            String postDelgationLibraries  = info.getProperty(POST_DELEGATION_LIBRARIES); 
 	            if (postDelgationLibraries != null) {
 	            	postDelegationClasspathList = resolvePath(dqpURL, libLocation, postDelgationLibraries);
+	            	List<URL> postDelegationPatches = new ArrayList<URL>(runtimeClasspathList);
+	            	postDelegationPatches.retainAll(postDelegationClasspathList);
+	            	postDelegationClasspathList.removeAll(postDelegationPatches);
+	            	postDelegationClasspathList.addAll(0, postDelegationPatches);
+	            }
+	            
+	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
+	            
+	            if (postDelegationClasspathList != null) {
 	            	runtimeClasspathList.removeAll(postDelegationClasspathList);
-	            }	         
+	            }
             }
             
             URL[] dqpClassPath = runtimeClasspathList.toArray(new URL[runtimeClasspathList.size()]);
