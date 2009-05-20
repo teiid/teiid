@@ -11,16 +11,8 @@
   <baseDirectory>teiid-embedded-${version}</baseDirectory>
 
   <fileSets>
-  
+      
     <fileSet>
-      <directory>target/distribution</directory>
-      <includes>
-        <include>teiid-${version}-embedded.jar</include>
-      </includes>
-      <outputDirectory>lib</outputDirectory>      
-    </fileSet>
-    
-      <fileSet>
       <directory>target/distribution</directory>
       <includes>
         <include>teiid-${version}-client.jar</include>
@@ -48,10 +40,19 @@
         <directory>build/target/kit-embedded</directory>
         <outputDirectory>/</outputDirectory>
         <excludes>
-          <exclude>**/*.foo</exclude>
+          <exclude>**/run.*</exclude>
         </excludes>        
-    </fileSet>      
+    </fileSet>
+    
+    <fileSet>
+        <directory>build/target/kit-embedded</directory>
+        <outputDirectory>/</outputDirectory>
+        <includes>
+          <include>**/run.*</include>
+        </includes>        
+        <filtered>true</filtered>        
+    </fileSet>
+        
   </fileSets>
 
-  
 </assembly>

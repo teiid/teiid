@@ -60,6 +60,7 @@ import org.teiid.dqp.internal.transaction.TransactionProvider;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
@@ -121,6 +122,8 @@ public class ConnectorManager implements ApplicationService {
     private BufferService bufferService;
     
     private volatile Boolean started;
+    
+    private ClassLoaderManager clManager;
 
     // known requests
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
@@ -344,20 +347,51 @@ public class ConnectorManager implements ApplicationService {
         this.started = true;
     }
     
+	private String buildClasspath(Properties connectorProperties) {
+		StringBuilder sb = new StringBuilder();
+		appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH), sb); // this is user defined, could be very specific to the binding
+        appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_TYPE_CLASSPATH), sb); // this is system defined; type classpath
+        return sb.toString();
+	}
+	
+	private void appendlasspath(String path, StringBuilder builder) {
+        if (path != null && path.length() > 0) {
+        	builder.append(path);
+        	if (!path.endsWith(";")) { //$NON-NLS-1$
+        		builder.append(";"); //$NON-NLS-1$
+        	}
+        }
+	} 
+	
     /**
      * Initialize and start the connector.
      * @param env
      * @throws ApplicationLifecycleException
      */
     private void initStartConnector(ConnectorEnvironment env) throws ApplicationLifecycleException {
+    	
         String connectorClassName = env.getProperties().getProperty(ConnectorPropertyNames.CONNECTOR_CLASS);
-        if(classloader == null){
-            classloader = getClass().getClassLoader();
-        } else {
-        	env.getProperties().setProperty(ConnectorPropertyNames.USING_CUSTOM_CLASSLOADER, Boolean.TRUE.toString());
-        }
+        
+        String classPath = buildClasspath(env.getProperties());
+
         Thread currentThread = Thread.currentThread();
         ClassLoader threadContextLoader = currentThread.getContextClassLoader();
+        
+        if (classPath == null || classPath.trim().length() == 0) {
+        	classloader = threadContextLoader;
+        } else {
+        	env.getProperties().setProperty(ConnectorPropertyNames.USING_CUSTOM_CLASSLOADER, Boolean.TRUE.toString());
+            LogManager.logInfo(DQPPlugin.Util.getString("DataService.useClassloader"), classPath); //$NON-NLS-1$
+
+            boolean postDelegation = PropertiesUtils.getBooleanProperty(env.getProperties(), ConnectorPropertyNames.USE_POST_DELEGATION, false);
+            
+            if (postDelegation) {
+            	this.classloader = this.clManager.getPostDelegationClassLoader(classPath);
+            } else {
+            	this.classloader = this.clManager.getCommonClassLoader(classPath);
+            }
+        }
+        
         try {
         	currentThread.setContextClassLoader(classloader);
         	Connector c;
@@ -650,8 +684,8 @@ public class ConnectorManager implements ApplicationService {
 		return isXa;
 	}
 	
-	public void setClassloader(ClassLoader classloader) {
-		this.classloader = classloader;
+	public void setClassLoaderManager(ClassLoaderManager clManager) {
+		this.clManager = clManager;
 	}
 	
 	public void setWorkItemFactory(ConnectorWorkItemFactory workItemFactory) {
@@ -681,13 +715,11 @@ public class ConnectorManager implements ApplicationService {
 	}
 
 	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
-	     if (connector.getActualConnector() instanceof  PooledConnector) {
-	    	 	PooledConnector pc = (PooledConnector) connector;
-	    	 	
-	    	 	return pc.getConnectionPoolStats();
-
+	     if (connector instanceof  PooledConnector) {
+    	 	PooledConnector pc = (PooledConnector) connector;
+    	 	
+    	 	return pc.getConnectionPoolStats();
 	     }
-	     return Collections.EMPTY_LIST;
-	    		 	
+	     return Collections.emptyList();
 	}
 }

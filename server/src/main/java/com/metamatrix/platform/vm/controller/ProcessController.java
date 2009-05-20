@@ -26,6 +26,7 @@ import java.io.File;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EventObject;
@@ -41,7 +42,7 @@ import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.admin.server.ServerAdminImpl;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
-import com.metamatrix.common.classloader.URLFilteringClassLoader;
+import com.metamatrix.common.application.AbstractClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.platform.socket.server.AdminAuthorizationInterceptor;
 import com.metamatrix.common.comm.platform.socket.server.LogonImpl;
@@ -117,7 +118,7 @@ import com.metamatrix.server.util.ServerPropertyNames;
  * This class is used to start up a server process and start all services that are 
  * configured under this server
  */
-public abstract class ProcessController implements ProcessManagement {
+public abstract class ProcessController extends AbstractClassLoaderManager implements ProcessManagement {
 	
     public final static String SERVICE_ID = "Service"; //$NON-NLS-1$
 
@@ -154,7 +155,6 @@ public abstract class ProcessController implements ProcessManagement {
     
     protected ClientServiceRegistry clientServices;
     private Map<ComponentTypeID, Properties> defaultPropertiesCache = new HashMap<ComponentTypeID, Properties>();
-    private ClassLoader commonExtensionClassLoader = null;
     private String commonExtensionClasspath;
 
     private int force_shutdown_time = DEFAULT_FORCE_SHUTDOWN_TIME;
@@ -168,6 +168,7 @@ public abstract class ProcessController implements ProcessManagement {
      * @throws Exception if an error occurs initializing vmController
      */
     public ProcessController(Host host, String processname, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
+    	super(Thread.currentThread().getContextClassLoader(), PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), ServerPropertyNames.CACHE_CLASS_LOADERS, true));
     	this.host = host;
     	this.processName = processname;
     	
@@ -191,10 +192,19 @@ public abstract class ProcessController implements ProcessManagement {
         
         this.registerSubSystemAdminAPIs(hostManagement);
         
-        manageCommonExtensionClassloader();
+        manageClassloaders();
     }
 
-	
+    @Override
+    public URL parseURL(String url) throws MalformedURLException {
+		return URLFactory.parseURL(null, url);
+    }
+    
+    @Override
+    public String getCommonExtensionClassPath() {
+		return CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH, ""); //$NON-NLS-1$
+    }
+    	
     /**
      * Register the ServiceInterceptors for the SubSystemAdminAPIs 
      * @throws MetaMatrixComponentException
@@ -342,7 +352,6 @@ public abstract class ProcessController implements ProcessManagement {
             logException(e, PlatformPlugin.Util.getString(LogMessageKeys.VM_0017, vmComponentDefnID.getName(), host.getID().getName()));
         }
     }
-
 
     public void startService(ServiceID serviceID) {
         logMessage(PlatformPlugin.Util.getString(LogMessageKeys.VM_0018, serviceID));
@@ -669,12 +678,13 @@ public abstract class ProcessController implements ProcessManagement {
      * Throw away the common extension class loader when there is change in the Extension modules or has a changed extension
      * classpath.
      */
-    private void manageCommonExtensionClassloader() throws MessagingException {
+    private void manageClassloaders() throws MessagingException {
+    	this.commonExtensionClasspath = getCommonExtensionClassPath();
     	this.messageBus.addListener(ExtensionModuleEvent.class, new EventObjectListener() {
 			@Override
 			public void processEvent(EventObject obj) {
 				if (obj instanceof ExtensionModuleEvent) {
-					ProcessController.this.commonExtensionClassLoader = null;
+					clearCache();
 				}
 			}
     	});
@@ -683,34 +693,14 @@ public abstract class ProcessController implements ProcessManagement {
 			@Override
 			public void processEvent(EventObject obj) {
 				if (obj instanceof ConfigurationChangeEvent) {
-					String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH);
-					if (extensionClasspath != null) {
-						if (!extensionClasspath.equals(ProcessController.this.commonExtensionClasspath)) {
-							ProcessController.this.commonExtensionClassLoader = null;	
-						}
-					}
-					else {
-						ProcessController.this.commonExtensionClassLoader = null;
+					String extensionClasspath = getCommonExtensionClassPath();
+					if (!extensionClasspath.equals(ProcessController.this.commonExtensionClasspath)) {
+						commonExtensionClasspath = extensionClasspath;
+						clearCache();	
 					}
 				}
 			}
     	});    	
-    }
-    
-    private ClassLoader getCommonExtensionClassloader() {
-    	if (this.commonExtensionClassLoader == null) {
-	        String extensionClasspath = CurrentConfiguration.getInstance().getProperties().getProperty(ServerPropertyNames.COMMON_EXTENSION_CLASPATH);
-	        if (extensionClasspath != null && extensionClasspath.length() > 0) {
-	        	try {
-	        		this.commonExtensionClassLoader = new URLFilteringClassLoader(URLFactory.parseURLs(extensionClasspath, ";"), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
-	        		this.commonExtensionClasspath = extensionClasspath;
-					logMessage(PlatformPlugin.Util.getString("commonextensionspath_in_use", extensionClasspath)); //$NON-NLS-1$
-				} catch (MalformedURLException e) {
-					logMessage(PlatformPlugin.Util.getString("commonextensionspath_not_in_use",extensionClasspath)); //$NON-NLS-1$
-				}
-	        }
-    	}
-    	return this.commonExtensionClassLoader;
     }
     
     private void startService(ClientServiceRegistry serverListenerRegistry, ServiceID serviceID, DeployedComponent deployedComponent,final String serviceClass,Properties serviceProps) {
@@ -718,7 +708,7 @@ public abstract class ProcessController implements ProcessManagement {
 
         ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
         try {
-    		ClassLoader commonExtensionClassLoader = getCommonExtensionClassloader(); 
+    		ClassLoader commonExtensionClassLoader = getCommonClassLoader(null); 
     		if (commonExtensionClassLoader != null) {
     			Thread.currentThread().setContextClassLoader(commonExtensionClassLoader);
     		}
@@ -751,7 +741,7 @@ public abstract class ProcessController implements ProcessManagement {
             DeployedComponentID deployedComponentID = (DeployedComponentID) deployedComponent.getID();
             logMessage(PlatformPlugin.Util.getString("ServiceController.1",param1)); //$NON-NLS-1$
             
-            service.init(serviceID, deployedComponentID, serviceProps, serverListenerRegistry); 
+            service.init(serviceID, deployedComponentID, serviceProps, serverListenerRegistry, this); 
             logMessage(PlatformPlugin.Util.getString("ServiceController.2",param1)); //$NON-NLS-1$
             logMessage(PlatformPlugin.Util.getString("ServiceController.3",param1)); //$NON-NLS-1$                
                                

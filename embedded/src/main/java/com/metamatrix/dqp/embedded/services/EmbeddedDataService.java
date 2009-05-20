@@ -22,7 +22,6 @@
 
 package com.metamatrix.dqp.embedded.services;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,7 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.connector.api.ConnectorException;
@@ -43,20 +41,17 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.classloader.URLFilteringClassLoader;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.embedded.configuration.ExtensionModuleReader;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -457,7 +452,8 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         connectorProperties.setProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, binding.getFullName());
         
         try {
-            ConnectorManager mgr = initConnectorManager(connectorProperties);            
+            ConnectorManager mgr = new ConnectorManager();       
+            mgr.setClassLoaderManager(this.getConfigurationService());
             mgr.initialize(connectorProperties);            
             return mgr;
         } catch(Exception e) {
@@ -558,65 +554,4 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         return new DefaultIndexConnectorBinding();          
     }    
         
-    /**
-     * Depending upon the setting for the connector manager either load the class in 
-     * same class loader or different class loader. Connector Bindings has property
-     * called ConnectorClassPath which defines the class path. 
-     */
-    ConnectorManager initConnectorManager(Properties connectorProperties) 
-        throws ApplicationLifecycleException{
-
-        try {
-            // Ask the configuration if we can use the extension class loader. 
-            boolean useExtensionClassPath = (getConfigurationService().useExtensionClasspath());
-            String classPath = buildClasspath(connectorProperties);
-            
-            if (classPath == null || classPath.length() == 0) {
-                useExtensionClassPath = false;
-            }
-            
-            if (!useExtensionClassPath) {
-                return new ConnectorManager();
-            }
-            
-            DQPEmbeddedPlugin.logInfo("DataService.useClassloader", new Object[] {classPath}); //$NON-NLS-1$
-
-            Set<URL> userPath = ExtensionModuleReader.resolveExtensionClasspath(classPath, getConfigurationService().getExtensionPath());
-
-            // since we are using the extensions, get the common extension path 
-            Set<URL> commonExtensionPath = getConfigurationService().getCommonExtensionClasspath();
-            
-            ArrayList<URL> urlPath = new ArrayList<URL>();            
-            urlPath.addAll(userPath);
-            
-            if (commonExtensionPath != null) {
-            	urlPath.addAll(commonExtensionPath);
-            }
-            
-            ClassLoader classLoader = new URLFilteringClassLoader(urlPath.toArray(new URL[urlPath.size()]), Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
-            
-            ConnectorManager cm = new ConnectorManager();
-            cm.setClassloader(classLoader);
-            return cm;
-        } catch (Exception e) {
-            throw new ApplicationLifecycleException(e);
-        }
-    }
-
-	private String buildClasspath(Properties connectorProperties) {
-		StringBuilder sb = new StringBuilder();
-		appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH), sb); // this is user defined, could be very specific to the binding
-        appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_TYPE_CLASSPATH), sb); // this is system defined; type classpath
-        return sb.toString();
-	}
-	
-	private void appendlasspath(String path, StringBuilder builder) {
-        if (path != null && path.length() > 0) {
-        	builder.append(path);
-        	if (!path.endsWith(";")) { //$NON-NLS-1$
-        		builder.append(";"); //$NON-NLS-1$
-        	}
-        }
-	}
-
 }

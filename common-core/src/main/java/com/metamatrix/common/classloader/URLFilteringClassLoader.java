@@ -91,5 +91,10 @@ public class URLFilteringClassLoader extends URLClassLoader {
         }
         return temp.toArray(new URL[temp.size()]);
     }
+    
+    @Override
+    public void addURL(URL url) {
+    	super.addURL(url);
+    }
 
 }

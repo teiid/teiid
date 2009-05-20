@@ -30,6 +30,7 @@ import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionListener;
 import com.metamatrix.common.config.api.ComponentType;
@@ -46,7 +47,7 @@ import com.metamatrix.common.vdb.api.VDBArchive;
  * for other services and also DQP configuration. 
  * @since 4.3
  */
-public interface ConfigurationService extends ApplicationService {
+public interface ConfigurationService extends ApplicationService, ClassLoaderManager {
     public static final String NEXT_VDB_VERSION = "NEXT_VDB_VERSION";         //$NON-NLS-1$
     public static final String USER_DEFINED_FUNCTION_MODEL = "FunctionDefinitions.xmi"; //$NON-NLS-1$
     /**
@@ -96,13 +97,6 @@ public interface ConfigurationService extends ApplicationService {
      * @return URL - URL to the User defined file; null if one not defined
      */
     public URL getUDFFile();
-    
-    /**
-     * Get the user defined extension file classpath. The jar
-     * files are loaded usually as the extension modules. 
-     * @return URL[] - Classpath for the UDF jar files
-     */
-    public Set<URL> getCommonExtensionClasspath();
     
     /**
      * URL to Log file name  

@@ -27,15 +27,12 @@
 package com.metamatrix.server.connector.service;
 
 import java.io.Serializable;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -50,9 +47,9 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.config.CurrentConfiguration;
@@ -64,11 +61,7 @@ import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.extensionmodule.ExtensionModuleEvent;
-import com.metamatrix.common.extensionmodule.protocol.URLFactory;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.stats.ConnectionPoolStats;
@@ -76,7 +69,6 @@ import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
-import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -91,9 +83,7 @@ import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.service.controller.AbstractService;
 import com.metamatrix.platform.service.controller.ServicePropertyNames;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
-import com.metamatrix.server.ResourceFinder;
 import com.metamatrix.server.ServerPlugin;
-import com.metamatrix.server.util.ServerPropertyNames;
 
 /**
  * ConnectorService.
@@ -106,53 +96,17 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     private boolean monitoringEnabled = true;
     
     private ClientServiceRegistry registry;
-    
-    private static boolean cacheClassLoaders = true;
-    
-    /**
-     * Map of String (urls) to ClassLoader.
-     * This is based on the assumption that two classloaders 
-     * with the same URLs should be identical.
-     */
-    private static Map<String, WeakReference<PostDelegatingClassLoader>> classLoaderCache = new HashMap<String, WeakReference<PostDelegatingClassLoader>> ();
-        
-    static {
-        //read value of cacheClassLoaders
-        cacheClassLoaders = PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), ServerPropertyNames.CACHE_CLASS_LOADERS, false);
-        logOK("ConnectorService.Cache_class_loaders", new Boolean(cacheClassLoaders)); //$NON-NLS-1$
-        initExtensionModuleListener();
-    }
-
-    private static void initExtensionModuleListener() {
-        MessageBus vmb = ResourceFinder.getMessageBus();
-        EventObjectListener listener = new EventObjectListener() {
-            public void processEvent(EventObject obj) {
-                if (obj instanceof ExtensionModuleEvent) {
-                    ExtensionModuleEvent event = (ExtensionModuleEvent) obj;
-                    
-                    switch (event.getType()) {
-                        case ExtensionModuleEvent.TYPE_FILE_CHANGED:
-                            clearClassLoaderCache();
-                        break;
-                    }
-                }
-            }
-        };
-        try {
-            vmb.addListener(ExtensionModuleEvent.class, listener);
-        } catch (MessagingException e) {
-        	LogManager.logError(LogCommonConstants.CTX_CONFIG, e, e.getMessage()); 
-        }
-    }
+    private ClassLoaderManager clManager;
     
     /**
      * Initialize ConnectorService
      */
-    public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry) {
+    public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry, ClassLoaderManager clManager) {
     	//this assumes that the dqp has already been initialized and i
     	this.registry = listenerRegistry;
+    	this.clManager = clManager;
         
-        super.init(id, deployedComponentID, props, listenerRegistry);
+        super.init(id, deployedComponentID, props, listenerRegistry, clManager);
         //read value of monitoringEnabled
         String monitoringEnabledString = getProperties().getProperty(ServicePropertyNames.SERVICE_MONITORING_ENABLED);
         if (monitoringEnabledString != null) {
@@ -190,44 +144,6 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     	this.connectorMgr.requstMore(request);
 	}
     
-
-    //=========================================================================
-    // Methods from AbstractService
-    //=========================================================================
-   /**
-    * Build a custom class loader from a given set of urls.
-    */
-    private ClassLoader getCustomClassLoader(String urls) throws ApplicationInitializationException{
-        if(urls == null || urls.trim().length() == 0){
-            LogManager.logDetail(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString("ConnectorService.NoClassPath")); //$NON-NLS-1$
-            return null;
-        }
-        
-        synchronized (ConnectorService.class) {
-        	PostDelegatingClassLoader result = null;
-        	if (cacheClassLoaders) {
-	        	WeakReference<PostDelegatingClassLoader> ref = classLoaderCache.get(urls);
-	        	if (ref != null) {
-	        		result = ref.get();
-	        		if (result != null) {
-	        			return result;
-	        		}
-	        	}
-        	}
-        	
-            try {
-                result = new PostDelegatingClassLoader(URLFactory.parseURLs(urls, ";"), Thread.currentThread().getContextClassLoader()); //$NON-NLS-1$
-                if (cacheClassLoaders) {
-                    classLoaderCache.put(urls, new WeakReference<PostDelegatingClassLoader>(result));
-                }
-                return result;
-            } catch (MalformedURLException e1) {
-                String msg = ServerPlugin.Util.getString("ConnectorService.IllegalClassPath", urls); //$NON-NLS-1$
-                throw new ApplicationInitializationException(msg);
-            }
-        }
-    }
-    
     /**
      * Build and intialize the Connector Manager class. 
      * @param deMaskedProps
@@ -235,16 +151,15 @@ public class ConnectorService extends AbstractService implements ConnectorServic
      * @throws ApplicationLifecycleException
      * @throws ApplicationInitializationException
      */
-    private ConnectorManager createConnectorManager(Properties deMaskedProps, ClassLoader loader) throws ApplicationLifecycleException {        
+    private ConnectorManager createConnectorManager(Properties deMaskedProps) throws ApplicationLifecycleException {        
         ConnectorManager connectorManager = new ConnectorManager();
-        
+        connectorManager.setClassLoaderManager(clManager);
         // Create a stringified connector ID from the serviceID
         ServiceID id = this.getID();
         String connID = id.getHostName()+"|"+ id.getProcessName() + "|" + id.getID();   //$NON-NLS-1$ //$NON-NLS-2$
         deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_ID, connID);
         deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, getInstanceName());
         deMaskedProps.put(ConnectorPropertyNames.CONNECTOR_VM_NAME, CurrentConfiguration.getInstance().getProcessName());
-        connectorManager.setClassloader(loader);
         connectorManager.initialize(deMaskedProps);
         return connectorManager;
     }
@@ -256,12 +171,9 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         // Decrypt masked properties
         Properties deMaskedProps = decryptMaskedProperties(props);
 
-        String urls = buildClasspath(deMaskedProps);
-        
-        ClassLoader loader = getCustomClassLoader(urls);
         // Build a Connector manager using the custom class loader and initialize
         // the service.
-        this.connectorMgr = createConnectorManager(deMaskedProps, loader);
+        this.connectorMgr = createConnectorManager(deMaskedProps);
 
         ApplicationEnvironment env = new ApplicationEnvironment();
         env.bindService(DQPServiceNames.REGISTRY_SERVICE, new ClientServiceRegistryService(this.registry));
@@ -297,23 +209,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
             killService();
             throw e;
         }
-    }
-
-	private String buildClasspath(Properties connectorProperties) {
-		StringBuilder sb = new StringBuilder();
-		appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH), sb); // this is user defined, could be very specific to the binding
-        appendlasspath(connectorProperties.getProperty(ConnectorPropertyNames.CONNECTOR_TYPE_CLASSPATH), sb); // this is system defined; type classpath
-        return sb.toString();
-	}
-	
-	private void appendlasspath(String path, StringBuilder builder) {
-        if (path != null && path.length() > 0) {
-        	builder.append(path);
-        	if (!path.endsWith(";")) { //$NON-NLS-1$
-        		builder.append(";"); //$NON-NLS-1$
-        	}
-        }
-	}    
+    }   
     
     /**
      * Close the service to new work if applicable. After this method is called
@@ -521,12 +417,6 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         }
     }
     
-    private synchronized static void clearClassLoaderCache() {
-    	LogManager.logInfo(LogCommonConstants.CTX_CONFIG, "ConnectorService clearing ClassLoader cache"); //$NON-NLS-1$
-        
-        classLoaderCache.clear();
-    }
-
     private static void logOK(String messageProperty, Object value) {
         LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString(messageProperty, value)); 
     }

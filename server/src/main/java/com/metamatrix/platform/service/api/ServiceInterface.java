@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
 
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -42,9 +43,10 @@ public interface ServiceInterface {
      * service must notify any lifecycle listeners of its initialization
      * using the unique service instance name returned.
      * @param deployedComponentID Unique identifier of this deployed component.
+     * @param clManager
      * @return The unique name of this service instance.
      */
-    void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry);
+    void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry, ClassLoaderManager clManager);
 
 
     /*

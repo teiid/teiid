@@ -38,6 +38,7 @@ import com.metamatrix.admin.api.objects.Resource;
 import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.ModificationException;
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
@@ -775,7 +776,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     }
 
 	public void init(ServiceID id, DeployedComponentID deployedComponentID,
-			Properties props, ClientServiceRegistry listenerRegistry) {
+			Properties props, ClientServiceRegistry listenerRegistry, ClassLoaderManager clManager) {
 	}
 
 	public void setInitException(Throwable t) {

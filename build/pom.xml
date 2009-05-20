@@ -10,10 +10,6 @@
   <packaging>pom</packaging>
   <name>Build</name>
   <description>Teiid Build</description>
-  <properties>
-        <org.jboss.teiid.version>6.1.0-SNAPSHOT</org.jboss.teiid.version>
-  </properties>
-
     <build>
         <plugins>
             <plugin>
@@ -32,7 +28,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid</groupId>
                                     <artifactId>teiid-connector-api</artifactId>
-                                    <version>${org.jboss.teiid.version}</version>
+                                    <version>${pom.version}</version>
                                     <classifier>bundle</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
@@ -40,7 +36,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.connectors</groupId>
                                     <artifactId>connector-xml</artifactId>
-                                    <version>${org.jboss.teiid.version}</version>
+                                    <version>${pom.version}</version>
                                     <classifier>bundle</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
@@ -48,7 +44,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.connectors</groupId>
                                     <artifactId>connector-xml-common</artifactId>
-                                    <version>${org.jboss.teiid.version}</version>
+                                    <version>${pom.version}</version>
                                     <classifier>bundle</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
@@ -56,7 +52,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.connectors</groupId>
                                     <artifactId>connector-jdbc</artifactId>
-                                    <version>${org.jboss.teiid.version}</version>
+                                    <version>${pom.version}</version>
                                     <classifier>bundle</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
@@ -64,7 +60,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.connectors</groupId>
                                     <artifactId>connector-text</artifactId>
-                                    <version>${org.jboss.teiid.version}</version>
+                                    <version>${pom.version}</version>
                                     <classifier>bundle</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
@@ -72,7 +68,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.connectors</groupId>
                                     <artifactId>connector-ldap</artifactId>
-                                    <version>${org.jboss.teiid.version}</version>
+                                    <version>${pom.version}</version>
                                     <classifier>bundle</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
@@ -80,7 +76,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.connectors</groupId>
                                     <artifactId>connector-loopback</artifactId>
-                                    <version>${org.jboss.teiid.version}</version>
+                                    <version>${pom.version}</version>
                                     <classifier>bundle</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>
@@ -88,7 +84,7 @@
                                 <artifactItem>
                                     <groupId>org.jboss.teiid.connectors</groupId>
                                     <artifactId>connector-salesforce</artifactId>
-                                    <version>${org.jboss.teiid.version}</version>
+                                    <version>${pom.version}</version>
                                     <classifier>bundle</classifier>
                                     <type>zip</type>
                                     <overWrite>true</overWrite>

@@ -41,6 +41,7 @@ import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.CurrentConfiguration;
@@ -252,8 +253,8 @@ public class QueryService extends AbstractService implements QueryServiceInterfa
     
     @Override
     public void init(ServiceID id, DeployedComponentID deployedComponentID,
-    		Properties props, ClientServiceRegistry listenerRegistry) {
-    	super.init(id, deployedComponentID, props, listenerRegistry);
+    		Properties props, ClientServiceRegistry listenerRegistry, ClassLoaderManager clManager) {
+    	super.init(id, deployedComponentID, props, listenerRegistry, clManager);
     	listenerRegistry.registerClientService(ClientSideDQP.class, this.dqp, LogConstants.CTX_QUERY_SERVICE);
     }
     

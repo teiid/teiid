@@ -29,11 +29,7 @@ import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.StringTokenizer;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.config.api.ExtensionModule;
@@ -126,32 +122,7 @@ public class ExtensionModuleReader {
         return extModuleList;
     }
     
-    /**
-     * Convert the extension path into URLS
-     * @param extClassPath -
-     * ClassPath String for the extension 
-     * classpath Example:extensionjar:jdbcconn.jar;extensionjar:MJjdbc.jar;file://E/mydir/my.jar
-     * @param context - dqp.extensions directory path used for finding the context URL
-     * @return URL[] array of URLs
-     * @throws MalformedURLException
-     * @since 4.3
-     */
-    public static Set<URL> resolveExtensionClasspath(String extClassPath, URL[] contexts) 
-        throws IOException {
-        
-        Set<URL> urls = new LinkedHashSet<URL>();
-        StringTokenizer st = new StringTokenizer(extClassPath, ";"); //$NON-NLS-1$
-        while (st.hasMoreTokens()) {
-            String  extModule = st.nextToken();
-            URL entry = resolveExtensionModule(extModule, contexts);
-            if (entry != null) {
-            	urls.add(entry);
-            }
-        }
-        return urls;
-    }
-    
-    public static URL resolveExtensionModule(String extModule, URL[] contexts) throws IOException {
+    public static URL resolveExtensionModule(String extModule, URL[] contexts) throws MalformedURLException {
 		int idx = extModule.indexOf(MM_JAR_PROTOCOL);
 		if (idx != -1) {
 			for (URL context : contexts) {

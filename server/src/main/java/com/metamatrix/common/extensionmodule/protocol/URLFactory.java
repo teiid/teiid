@@ -24,11 +24,13 @@ package com.metamatrix.common.extensionmodule.protocol;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import com.metamatrix.common.extensionmodule.protocol.extensionjar.Handler;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogCommonConstants;
 
 /**
  * Factory to convert String urls into URL objects.  This factory
@@ -107,57 +109,6 @@ public class URLFactory {
             result = new URL(context, url);
         }
         return result;
-    }
-    
-    /**
-     * Parse the url string into a URL object
-     * @param url String url
-     * @return URL object
-     * @throws MalformedURLException if url String is invalid
-     */
-    public static URL parseURL(String url) throws MalformedURLException {
-        return parseURL(null, url);
-    }
-    
-    /**
-     * Parse the List of string urls into an array of 
-     * URL objects
-     * @param urls List of String urls
-     * @return array of URL objects
-     * @throws MalformedURLException if any of the url Strings
-     * are invalid
-     */
-    public static URL[] parseURLs(List urls) throws MalformedURLException{
-        URL[] result = new URL[urls.size()];
-        
-        Iterator urlIter = urls.iterator();
-        for (int i=0; urlIter.hasNext(); i++){
-            result[i] = parseURL((String)urlIter.next());
-        }
-        
-        return result;
-    }
-
-    /**
-     * Parse the single delimited String of URLs into an array of URL objects 
-     * @param delimitedURLs a single String of delimiter-separated URL strings
-     * @param delimiter delimiter of tokens in delmitedURLs - if this is null, a single 
-     * whitespace will be assumed as the delimiter
-     * @return URL[] array
-     * @throws MalformedURLException if any of the url Strings are invalid
-     */
-    public static URL[] parseURLs(String delimitedURLs, String delimiter) throws MalformedURLException{
-        
-        if (delimiter == null){
-            delimiter = " "; //$NON-NLS-1$
-        }
-        StringTokenizer toke = new StringTokenizer(delimitedURLs, delimiter);
-        List urlStrings = new ArrayList(toke.countTokens());
-        while (toke.hasMoreElements()) {
-            String urlString = toke.nextToken();
-            urlStrings.add(urlString);
-        }
-        return parseURLs(urlStrings);
     }
     
 }

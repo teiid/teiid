@@ -35,6 +35,7 @@ import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -253,7 +254,7 @@ public class FakeServerSessionService implements SessionServiceInterface {
 	}
 
 	public void init(ServiceID id, DeployedComponentID deployedComponentID,
-			Properties props, ClientServiceRegistry listenerRegistry){
+			Properties props, ClientServiceRegistry listenerRegistry, ClassLoaderManager clManager){
 	}
 
 	public void setInitException(Throwable t) {

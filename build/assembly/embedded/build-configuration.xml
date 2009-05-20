@@ -18,17 +18,10 @@
 		</unzip>
 		<move todir="${kit.dir}/extensions">
 			<fileset dir="${extensions.dir}/unzipped">
-				<exclude name="**/connector-*.jar"/>
-				<exclude name="**/*.xml"/>
+				<include name="**/*.jar"/>
 			</fileset>
 		</move>
-		
-		<move todir="${kit.dir}/lib">
-			<fileset dir="${extensions.dir}/unzipped">
-				<include name="**/connector-*.jar"/>
-			</fileset>
-		</move>		
-	
+			
 	  <!-- add all the cdk files, and then add the combined fragment to the config.xml -->
 	  <concat destfile="${extensions.dir}/unzipped/all-cdks.xml">
 	    <fileset dir="${extensions.dir}/unzipped" includes="connector-*.xml"/>

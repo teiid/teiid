@@ -108,5 +108,7 @@ public class ConnectorPropertyNames {
      * is about to be executed by a non-XA compatible connector, but there is a global transaction.
      */
     public static final String IS_IMMUTABLE = "Immutable"; //$NON-NLS-1$
+    
+    public static final String USE_POST_DELEGATION = "UsePostDelegation"; //$NON-NLS-1$
 
 }

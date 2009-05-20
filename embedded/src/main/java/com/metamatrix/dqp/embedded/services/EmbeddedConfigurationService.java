@@ -38,9 +38,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.teiid.connector.internal.ConnectorPropertyNames;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.application.AbstractClassLoaderManager;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -91,7 +90,7 @@ import com.metamatrix.vdb.runtime.BasicVDBDefn;
  * - Onlu used get, save, delete of any configuration on public api
  * @since 4.3
  */
-public class EmbeddedConfigurationService extends EmbeddedBaseDQPService implements ConfigurationService{
+public class EmbeddedConfigurationService extends EmbeddedBaseDQPService implements ConfigurationService {
     
     private static final String VDB_LIST_SEPARATOR = ";"; //$NON-NLS-1$
     private static final String VDB = ".vdb"; //$NON-NLS-1$
@@ -111,6 +110,19 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     private UDFSource udfSource;
     private HashSet<ServerConnection> clientConnections = new HashSet<ServerConnection>();
     
+    private AbstractClassLoaderManager classLoaderManager = new AbstractClassLoaderManager(Thread.currentThread().getContextClassLoader(), true) {
+    	
+    	@Override
+    	public String getCommonExtensionClassPath() {
+    		return userPreferences.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, ""); //$NON-NLS-1$
+    	}
+    	
+    	@Override
+    	public URL parseURL(String url) throws MalformedURLException {
+    		return ExtensionModuleReader.resolveExtensionModule(url, getExtensionPath());
+    	}
+    };
+        
     boolean valid(String str) {
         if (str != null) {
             str = str.trim();
@@ -218,34 +230,20 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 			return null;
 		}
     }
-
-    /**  
-     * @see com.metamatrix.dqp.service.ConfigurationService#getCommonExtensionClasspath()
-     */
-    public Set<URL> getCommonExtensionClasspath() {
-        String classpath= userPreferences.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH);
-        
-        // add the "ConnectorClasspath" to the common extension path
-        Collection<ConnectorBinding> bindings = this.loadedConnectorBindings.values();
-        for (ConnectorBinding b:bindings) {
-        	if (classpath == null) {
-        		classpath = b.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH);
-        	}
-        	else {
-        		classpath += ";"; //$NON-NLS-1$
-        		classpath += b.getProperty(ConnectorPropertyNames.CONNECTOR_CLASSPATH);
-        	}
-        }
-        
-        if (valid(classpath)) {            
-            try {
-            	return ExtensionModuleReader.resolveExtensionClasspath(classpath, getExtensionPath());
-            } catch (IOException e) {
-                DQPEmbeddedPlugin.logError(e, "EmbeddedConfigurationService.udf_classspath_failure", new Object[] {}); //$NON-NLS-1$                
-            }
-        }        
-        return null;
+    
+    @Override
+    public ClassLoader getCommonClassLoader(String urls) {
+    	return this.classLoaderManager.getCommonClassLoader(urls);
     }
+    
+    @Override
+    public ClassLoader getPostDelegationClassLoader(String urls) {
+    	return this.classLoaderManager.getPostDelegationClassLoader(urls);
+    }
+    
+    public AbstractClassLoaderManager getClassLoaderManager() {
+		return classLoaderManager;
+	}
     
     /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#getLogFile()
@@ -838,6 +836,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public void saveExtensionModule(ExtensionModule extModule) throws MetaMatrixComponentException {
+    	this.classLoaderManager.clearCache();
         ExtensionModuleWriter.write(extModule, getExtensionPath());                 
     }
 
@@ -846,6 +845,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public void deleteExtensionModule(String extModuleName) throws MetaMatrixComponentException {
+    	this.classLoaderManager.clearCache();
     	ExtensionModuleWriter.deleteModule(extModuleName, getExtensionPath());
     }    
     
@@ -913,20 +913,14 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     public void loadUDF() throws MetaMatrixComponentException {
         URL udfFile = getUDFFile();
         if(udfFile != null && exists(udfFile)) {
-            Set<URL> urls = getCommonExtensionClasspath();            
             try {
             	
             	// un-register the old UDF model, if there is one.
             	unloadUDF();
 
-            	if (urls == null || urls.isEmpty()) {
-            		this.udfSource = new UDFSource(udfFile);
-            	}
-            	else {
-            		this.udfSource = new UDFSource(udfFile, urls.toArray(new URL[urls.size()]));
-            	}
+        		this.udfSource = new UDFSource(udfFile.openStream(), getCommonClassLoader(null));
 				FunctionLibraryManager.registerSource(this.udfSource);
-				DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.udf_load", new Object[] {udfFile, urls}); //$NON-NLS-1$
+				LogManager.logInfo(LogConstants.CTX_DQP, DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.udf_load", udfFile)); //$NON-NLS-1$
 			} catch (IOException e) {
 				LogManager.logError(LogConstants.CTX_DQP, e, e.getMessage());
 			}

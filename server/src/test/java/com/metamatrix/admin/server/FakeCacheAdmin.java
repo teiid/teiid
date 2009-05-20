@@ -34,6 +34,7 @@ import java.util.Set;
 
 import com.metamatrix.admin.api.objects.Cache;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -134,7 +135,7 @@ public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
     public void init(ServiceID id,
                      DeployedComponentID deployedComponentID,
                      Properties props,
-                     ClientServiceRegistry listenerRegistry) {
+                     ClientServiceRegistry listenerRegistry, ClassLoaderManager clManager) {
     }
 
     public boolean isAlive() {

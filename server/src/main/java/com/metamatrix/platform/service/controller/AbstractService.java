@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.DeployedComponentID;
@@ -85,7 +86,7 @@ public abstract class AbstractService implements ServiceInterface, EventObjectLi
      * @param props the properties which define the service configuration
      * @param controller ServiceBusInterface which supplies resources such as event processing
      */
-    public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry) {
+    public void init(ServiceID id, DeployedComponentID deployedComponentID, Properties props, ClientServiceRegistry listenerRegistry, ClassLoaderManager clManager) {
 
         if (props == null) {
             throw new ServiceException(ServiceMessages.SERVICE_0001, ServicePlugin.Util.getString(ServiceMessages.SERVICE_0001));
