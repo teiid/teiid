@@ -13,7 +13,7 @@
             <PropertyDefinition Name="MaxResultRows" DisplayName="Maximum Result Rows" ShortDescription="" DefaultValue="10000" Multiplicity="1" PropertyType="Integer" IsExpert="true" />
             <PropertyDefinition Name="SynchWorkers" DisplayName="Synchronous Workers" ShortDescription="Whether worker threads will be bound to connections. Asynch connectors should set this value to false." DefaultValue="true" Multiplicity="1" PropertyType="Boolean" IsExpert="true" />
             <PropertyDefinition Name="ResultSetCacheEnabled" DisplayName="ResultSet Cache Enabled" ShortDescription="" DefaultValue="false" Multiplicity="0..1" PropertyType="Boolean" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="false" IsMasked="false" IsModifiable="true" IsPreferred="false" />
-            <PropertyDefinition Name="ResultSetCacheMaxSize" DisplayName="ResultSet Cache Maximum Size (megabytes)" ShortDescription="" DefaultValue="20" PropertyType="Integer" />
+            <PropertyDefinition Name="ResultSetCacheMaxSize" DisplayName="ResultSet Cache Maximum Size (megabytes)" ShortDescription="" DefaultValue="20" PropertyType="Integer" IsExpert="true" />
             <PropertyDefinition Name="ResultSetCacheMaxAge" DisplayName="ResultSet Cache Maximum Age (milliseconds)" ShortDescription="" DefaultValue="3600000" PropertyType="Long" IsExpert="true" />
             <PropertyDefinition Name="ResultSetCacheScope" DisplayName="ResultSet Cache Scope" ShortDescription="" DefaultValue="vdb" IsExpert="true">
                 <AllowedValue>vdb</AllowedValue>
