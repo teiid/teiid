@@ -30,6 +30,7 @@ import com.metamatrix.platform.service.api.ServiceID;
 public class ServiceData implements Serializable {
 	private int state;
 	private String serviceType;
+	private String routingId;
 	private String instanceName;
 	private ServiceID id;
 	private Date startTime;
@@ -114,5 +115,13 @@ public class ServiceData implements Serializable {
             setStateChangeTime(new Date());
         }
     }
+    
+    public String getRoutingId() {
+		return routingId;
+	}
+    
+    public void setRoutingId(String routingId) {
+		this.routingId = routingId;
+	}
 
 }

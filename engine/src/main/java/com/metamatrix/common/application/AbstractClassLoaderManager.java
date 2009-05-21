@@ -42,18 +42,22 @@ public abstract class AbstractClassLoaderManager implements ClassLoaderManager {
     private URLFilteringClassLoader commonExtensionClassloader;
     private Map<String, PostDelegatingClassLoader> postdelegationClassLoaderCache = new HashMap<String, PostDelegatingClassLoader>();
     private boolean usePostDelegationCache;
+    private MetaMatrixURLStreamHandlerFactory factory;
     private Object lock = new Object();
     
-    public AbstractClassLoaderManager(ClassLoader parentClassLoader, boolean usePostDelegationCache) {
+    public AbstractClassLoaderManager(ClassLoader parentClassLoader, boolean usePostDelegationCache, boolean useStreamHandler) {
     	this.usePostDelegationCache = usePostDelegationCache;
     	this.parentClassLoader = parentClassLoader;
+    	if (useStreamHandler) {
+    		factory = new MetaMatrixURLStreamHandlerFactory();
+    	}
     }
     
 	public ClassLoader getCommonClassLoader(String urls) {
 		synchronized (lock) {
 			if (this.commonExtensionClassloader == null) {
 	            // since we are using the extensions, get the common extension path 
-				this.commonExtensionClassloader = new URLFilteringClassLoader(parseURLs(getCommonExtensionClassPath()), parentClassLoader, new MetaMatrixURLStreamHandlerFactory());
+				this.commonExtensionClassloader = new URLFilteringClassLoader(parseURLs(getCommonExtensionClassPath()), parentClassLoader, factory);
 			}
 			if (urls != null && urls.trim().length() > 0) {
 	            for (URL url : parseURLs(urls)) {
@@ -69,7 +73,7 @@ public abstract class AbstractClassLoaderManager implements ClassLoaderManager {
 			PostDelegatingClassLoader cl = this.postdelegationClassLoaderCache.get(urls);
 	    	if (cl == null) {
 	    		if (urls != null && urls.trim().length() > 0) {
-		            cl = new PostDelegatingClassLoader(parseURLs(urls), getCommonClassLoader(null), new MetaMatrixURLStreamHandlerFactory());
+		            cl = new PostDelegatingClassLoader(parseURLs(urls), getCommonClassLoader(null), factory);
 		            if (usePostDelegationCache) {
 		            	this.postdelegationClassLoaderCache.put(urls, cl);
 		            }

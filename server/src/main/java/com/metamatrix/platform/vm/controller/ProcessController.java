@@ -168,7 +168,7 @@ public abstract class ProcessController extends AbstractClassLoaderManager imple
      * @throws Exception if an error occurs initializing vmController
      */
     public ProcessController(Host host, String processname, ClusteredRegistryState registry, ServerEvents serverEvents, MessageBus bus, HostManagement hostManagement) throws Exception {
-    	super(Thread.currentThread().getContextClassLoader(), PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), ServerPropertyNames.CACHE_CLASS_LOADERS, true));
+    	super(Thread.currentThread().getContextClassLoader(), PropertiesUtils.getBooleanProperty(CurrentConfiguration.getInstance().getProperties(), ServerPropertyNames.CACHE_CLASS_LOADERS, true), false);
     	this.host = host;
     	this.processName = processname;
     	
@@ -726,7 +726,8 @@ public abstract class ProcessController extends AbstractClassLoaderManager imple
 
             ServiceData serviceData = service.getServiceData();
             serviceData.setId(serviceID);
-            serviceData.setServiceType(serviceProps.getProperty(ServicePropertyNames.COMPONENT_TYPE_NAME));
+			serviceData.setServiceType(serviceProps.getProperty(ServicePropertyNames.COMPONENT_TYPE_NAME));
+            serviceData.setRoutingId(serviceProps.getProperty(ServicePropertyNames.SERVICE_ROUTING_ID));
             serviceData.setInstanceName(serviceProps.getProperty(ServicePropertyNames.INSTANCE_NAME));
 
             // Create ServiceRegistryBinding and register

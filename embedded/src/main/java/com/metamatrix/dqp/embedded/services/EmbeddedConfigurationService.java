@@ -110,7 +110,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     private UDFSource udfSource;
     private HashSet<ServerConnection> clientConnections = new HashSet<ServerConnection>();
     
-    private AbstractClassLoaderManager classLoaderManager = new AbstractClassLoaderManager(Thread.currentThread().getContextClassLoader(), true) {
+    private AbstractClassLoaderManager classLoaderManager = new AbstractClassLoaderManager(Thread.currentThread().getContextClassLoader(), true, true) {
     	
     	@Override
     	public String getCommonExtensionClassPath() {

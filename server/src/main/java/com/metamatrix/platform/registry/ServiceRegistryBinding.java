@@ -86,7 +86,8 @@ public class ServiceRegistryBinding extends RegistryBinding<ServiceInterface> {
     	super(si, hostName, bus);
     	this.serviceData = new ServiceData(ServiceState.STATE_NOT_INITIALIZED);
     	this.serviceData.setId(serviceID);
-    	this.serviceData.setServiceType(serviceType);
+    	this.serviceData.setRoutingId(serviceType);
+    	this.serviceData.setServiceType(componentType);
     	this.serviceData.setInstanceName(instanceName);
         this.deployedComponent = deployedComponent;
         this.essential = essential;
@@ -115,7 +116,7 @@ public class ServiceRegistryBinding extends RegistryBinding<ServiceInterface> {
     }
 
     public String getServiceType() {
-        return this.serviceData.getServiceType();
+        return this.serviceData.getRoutingId();
     }
 
     public String getInstanceName() {

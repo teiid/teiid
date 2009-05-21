@@ -24,13 +24,8 @@ package com.metamatrix.common.extensionmodule.protocol;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringTokenizer;
 
 import com.metamatrix.common.extensionmodule.protocol.extensionjar.Handler;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogCommonConstants;
 
 /**
  * Factory to convert String urls into URL objects.  This factory
