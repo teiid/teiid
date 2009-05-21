@@ -59,7 +59,7 @@ public class FilePasswordConverter {
     public static final int FILE_TYPE_VDB = 3;
     
     private static String DEFAULT_KEY_FILE = System.getProperty(CommonPropertyNames.INSTALLATION_DIRECTORY) + File.separator 
-    + "lib" + File.separator + CryptoUtil.KEY_NAME; //$NON-NLS-1$
+    + "config" + File.separator + CryptoUtil.KEY_NAME; //$NON-NLS-1$
     
     private static final String PASSWORD = "PASSWORD"; //$NON-NLS-1$
     
