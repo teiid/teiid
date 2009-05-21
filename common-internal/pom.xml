@@ -33,12 +33,7 @@
 			<groupId>jdom</groupId>
 			<artifactId>jdom</artifactId>
 		</dependency>
-				
-		<dependency>
-			<groupId>beanshell</groupId>
-			<artifactId>bsh</artifactId>
-		</dependency>
-		
+						
 		<dependency>
 			<groupId>net.sf.saxon</groupId>
 			<artifactId>saxon</artifactId>
