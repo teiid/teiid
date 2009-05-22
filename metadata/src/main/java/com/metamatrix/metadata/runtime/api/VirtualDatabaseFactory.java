@@ -24,7 +24,6 @@ package com.metamatrix.metadata.runtime.api;
 
 import java.util.Properties;
 
-import com.metamatrix.common.object.Multiplicity;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.modeler.core.metadata.runtime.MetadataConstants;
 
@@ -48,7 +47,6 @@ public interface VirtualDatabaseFactory {
     public static final String DEFAULT_FORMAT                  = null;
     public static final String DEFAULT_MAX_RANGE               = null;
     public static final String DEFAULT_MIN_RANGE               = null;
-    public static final Multiplicity DEFAULT_MULTIPLICITY      = null;
     public static final short DEFAULT_NULL_TYPE               = MetadataConstants.NULL_TYPES.NULLABLE;
     public static final short DEFAULT_SEARCH_TYPE             = MetadataConstants.SEARCH_TYPES.SEARCHABLE;
     public static final int DEFAULT_RADIX                      = 0;
@@ -93,7 +91,6 @@ public interface VirtualDatabaseFactory {
                                  final String format, 
                                  final String maxRange, 
                                  final String minRange, 
-                                 final Multiplicity multiplicity, 
                                  final short nullType, 
                                  final short searchType, 
                                  final int radix, 
@@ -241,13 +238,6 @@ public interface VirtualDatabaseFactory {
     public void setMinRange(final Element element, final String minRange)
     throws VirtualDatabaseException;
 
-    
-    /**
-     * @since 3.1
-     */    
-    public void setMultiplicity(final Element element, final Multiplicity multiplicity)
-    throws VirtualDatabaseException;
-    
     /**
      * @since 3.1
      */    

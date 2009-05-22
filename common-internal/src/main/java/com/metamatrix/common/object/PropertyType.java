@@ -75,11 +75,9 @@ public final class PropertyType implements Comparable, Serializable {
 	public static final PropertyType HOSTNAME           = new PropertyType(115, HOSTNAME_NAME,     java.net.InetAddress.class.getName() );
 	public static final PropertyType FILE               = new PropertyType(116, FILE_NAME,         com.metamatrix.common.tree.directory.DirectoryEntry.class.getName() );
 	public static final PropertyType OBJECT_ID          = new PropertyType(117, OBJECT_ID_NAME,    com.metamatrix.core.id.ObjectID.class.getName() );
-	public static final PropertyType MULTIPLICITY       = new PropertyType(118, MULTIPLICITY_NAME, com.metamatrix.common.object.Multiplicity.class.getName() );
 	public static final PropertyType PASSWORD           = new PropertyType(119, PASSWORD_NAME,     PASSWORD_CLASS.getName() );
 	public static final PropertyType PROPERTIED_OBJECT  = new PropertyType(120, PROPERTIED_OBJECT_NAME,    com.metamatrix.common.object.PropertiedObject.class.getName() );
     public static final PropertyType DESCRIPTOR         = new PropertyType(121, DESCRIPTOR_NAME,   com.metamatrix.common.object.PropertiedObject.class.getName() );
-    public static final PropertyType OBJECT_REFERENCE   = new PropertyType(122, OBJECT_REFERENCE_NAME,   java.lang.Object.class.getName() );
     public static final PropertyType DATA_TYPE          = new PropertyType(123, DATA_TYPE_NAME,   java.lang.Object.class.getName() );
     public static final PropertyType UNBOUNDED_INTEGER  = new PropertyType(124, UNBOUNDED_INTEGER_NAME,   String.class.getName() );
     public static final PropertyType REG_EXPRESSION     = new PropertyType(125, REG_EXPRESSION_NAME,   String.class.getName() );
@@ -110,11 +108,9 @@ public final class PropertyType implements Comparable, Serializable {
         add( HOSTNAME );
         add( FILE );
         add( OBJECT_ID );
-        add( MULTIPLICITY );
         add( PASSWORD );
         add( PROPERTIED_OBJECT );
         add( DESCRIPTOR );
-        add( OBJECT_REFERENCE );
         add( DATA_TYPE );
         add( UNBOUNDED_INTEGER );
         add( REG_EXPRESSION );

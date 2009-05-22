@@ -549,7 +549,7 @@ class UserPreferencesEditor implements PropertiedObjectEditor {
 
 		// Check for a null value ...
 		if (value == null) {
-			return (def.getMultiplicity().getMinimum() == 0);
+			return (!def.isRequired());
 			// only if minimum==0 is value allowed to be null
 		}
 		// From this point forward, the value is never null

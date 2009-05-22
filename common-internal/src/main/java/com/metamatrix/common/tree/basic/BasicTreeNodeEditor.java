@@ -153,7 +153,7 @@ public class BasicTreeNodeEditor implements TreeNodeEditor {
 
         // Check for a null value ...
         if ( value == null ) {
-            return ( def.getMultiplicity().getMinimum() == 0 ); // only if minimum==0 is value allowed to be null
+            return ( !def.isRequired() ); // only if minimum==0 is value allowed to be null
         }
         // From this point forward, the value is never null
 

@@ -651,7 +651,7 @@ implements UIConstants {
         Iterator iter = defs.iterator();
         while ( iter.hasNext() ) {
             PropertyDefinition def = (PropertyDefinition) iter.next();
-            if ( ! showHidden && (def.isHidden() || !def.isModifiable())) {
+            if ( ! showHidden && !def.isModifiable()) {
                 continue;
             }
             if ( ! showExpert && def.isExpert() && (!def.isRequired() || def.hasDefaultValue())) {

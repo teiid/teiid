@@ -97,8 +97,6 @@ implements UIConstants {
     private PropertiedObject obj;
     private PropertiedObjectEditor editor; 
     private PropertyChangeAdapter adapter;
-    private ObjectReferenceHandler objectReferenceHandler;
-    private ListCellRenderer objectReferenceRenderer;
     private Encryptor encryptor;
 
     //############################################################################################################################
@@ -130,179 +128,99 @@ implements UIConstants {
         }
         JComponent comp = null;
         final PropertyType type = def.getPropertyType();
-        if (def.getMultiplicity().getMaximum() == 1) {
-            // single-valued PropertyDefinition
-            if (isReadOnly  ||  !def.isModifiable()  || (type.equals(PropertyType.OBJECT_REFERENCE) && objectReferenceHandler == null) ) {
-                // treat property value as read-only
-                if (type.equals(PropertyType.BOOLEAN)) {
-                    final CheckBox cb = new CheckBox() {
-                        public boolean isFocusTraversable() {
-                            return false;
-                        }
-                    };
-                    cb.setMinimumSize(new Dimension(cb.getMinimumSize().width, HEIGHT));
-                    cb.setPreferredSize(new Dimension(cb.getPreferredSize().width, HEIGHT));
-                    cb.setMaximumSize(new Dimension(Short.MAX_VALUE, HEIGHT));
-                    if ( value != null ) {
-                        cb.setSelected(new Boolean(value.toString()).booleanValue());
+        // single-valued PropertyDefinition
+        if (isReadOnly  ||  !def.isModifiable() ) {
+            // treat property value as read-only
+            if (type.equals(PropertyType.BOOLEAN)) {
+                final CheckBox cb = new CheckBox() {
+                    public boolean isFocusTraversable() {
+                        return false;
                     }
-                    cb.setEnabled(false);
-                    comp = cb;
-                } else if (type.equals(PropertyType.DATE)) {
-                    comp = createDateField(def, value, false);
-                } else if (type.equals(PropertyType.OBJECT_REFERENCE)) {
-
-					if ( objectReferenceHandler == null ) {
-                        
-                        Object mpcValue = value;
-                        
-                        if ( value != null && ( ! (value instanceof Object[] ) ) ) {
-                            mpcValue = new Object[] { value };
-                        }
-                        
-                        // without an objectReferenceHandler, can't edit ObjectReferences
-	                    MultivaluedPropertyComponent mvpcComponent = new MultivaluedPropertyComponent(def, mpcValue, isReadOnly, index, obj, editor);
-	                    if ( objectReferenceRenderer != null ) {
-	                        mvpcComponent.getListWidget().setCellRenderer(objectReferenceRenderer);
-	                    }                    
-	                    comp = mvpcComponent;
-					} else {
-	                    ObjectReferencePropertyComponent orComponent = new ObjectReferencePropertyComponent(def, value, isReadOnly, index, obj, editor, objectReferenceHandler, adapter);
-	
-	                    if ( objectReferenceRenderer != null ) {
-	                        orComponent.getListWidget().setCellRenderer(objectReferenceRenderer);
-	                    }
-	                    comp = orComponent;						
-					}                    
-                    
-                    comp.setMaximumSize(new Dimension(Short.MAX_VALUE, comp.getPreferredSize().height));
-                } else if ( type.equals(PropertyType.URL) ) { 
-                    comp = createURLTextField(def, value, false);
-                //} else if ( type.equals(PropertyType.URI) ) { 
-                //    comp = createURLTextField(def, value, false);
-                } else {
-                    comp = createTextField(def, value, false);
+                };
+                cb.setMinimumSize(new Dimension(cb.getMinimumSize().width, HEIGHT));
+                cb.setPreferredSize(new Dimension(cb.getPreferredSize().width, HEIGHT));
+                cb.setMaximumSize(new Dimension(Short.MAX_VALUE, HEIGHT));
+                if ( value != null ) {
+                    cb.setSelected(new Boolean(value.toString()).booleanValue());
                 }
+                cb.setEnabled(false);
+                comp = cb;
+            } else if (type.equals(PropertyType.DATE)) {
+                comp = createDateField(def, value, false);
+            } else if ( type.equals(PropertyType.URL) ) { 
+                comp = createURLTextField(def, value, false);
+            //} else if ( type.equals(PropertyType.URI) ) { 
+            //    comp = createURLTextField(def, value, false);
             } else {
-                // determine the type of JComponent to use to display and edit this value
-
-                if (type.equals(PropertyType.FILE)) {
-                    comp = new DirectoryEntryPropertyComponent(def.getDisplayName(), null, (DirectoryEntry)value, index);
-                    comp.setMaximumSize(new Dimension(Short.MAX_VALUE, comp.getPreferredSize().height));
-
-                } else if ( type.equals(PropertyType.OBJECT_REFERENCE) ) {
-	
-					if ( objectReferenceHandler == null ) {
-                        
-                        Object mpcValue = value;
-                        if ( value != null && ( ! (value instanceof Object[] ) ) ) {
-                            mpcValue = new Object[] { value };
-                        }
-                        
-                        // without an objectReferenceHandler, can't edit ObjectReferences
-	                    MultivaluedPropertyComponent mvpcComponent = new MultivaluedPropertyComponent(def, mpcValue, isReadOnly, index, obj, editor);
-	                    if ( objectReferenceRenderer != null ) {
-	                        mvpcComponent.getListWidget().setCellRenderer(objectReferenceRenderer);
-	                    }                    
-	                    comp = mvpcComponent;
-					} else {
-	                    ObjectReferencePropertyComponent orComponent = new ObjectReferencePropertyComponent(def, value, isReadOnly, index, obj, editor, objectReferenceHandler, adapter);
-	
-	                    if ( objectReferenceRenderer != null ) {
-	                        orComponent.getListWidget().setCellRenderer(objectReferenceRenderer);
-	                    }
-	                    comp = orComponent;						
-					}                    
-
-                    comp.setMaximumSize(new Dimension(Short.MAX_VALUE, comp.getPreferredSize().height));
-
-                } else if ( def.hasAllowedValues() ) {
-                    // use a JComboBox
-                    JComboBox cob;
-                    if (editor != null  &&  obj != null) {
-                        Collection allowedValues =  editor.getAllowedValues(obj, def);
-                        ArrayList displayedValues = new ArrayList( allowedValues );
-                        if ( value != null ) {
-                            // make sure the current value is in the list (for unconstrained defs)
-                            if ( ! allowedValues.contains(value) ) {
-                                displayedValues.add(0, value);
-                            }
-                            if ( ! def.isRequired() && ! def.hasDefaultValue() ) {
-                                displayedValues.add(NULL_OBJECT);
-                            }
-                        }
-                        cob = new JComboBox(displayedValues.toArray());
-                        cob.setSelectedItem(value);
-                    } else {
-                        cob = new JComboBox();
-                    }
-                    // set if the user can type into the field
-                    cob.setEditable( ! def.isConstrainedToAllowedValues() );
-                    comp = cob;
-                } else if (type.equals(PropertyType.BOOLEAN)) {
-                    // use a JCheckBox
-                    final CheckBox cb = new CheckBox();
-                    cb.setMinimumSize(new Dimension(cb.getMinimumSize().width, HEIGHT));
-                    final Dimension prefSize = new Dimension(cb.getPreferredSize().width, HEIGHT);
-                    cb.setPreferredSize(prefSize);
-                    cb.setMaximumSize(prefSize);
-                    if ( value != null ) {
-                        cb.setSelected(new Boolean(value.toString()).booleanValue());
-                    }
-                    comp = cb;
-                } else if ( def.isMasked() ) {
-                    if (value == null) {
-                        // use a JPasswordField
-                        final JPasswordField pf = new JPasswordField();
-                        pf.setMaximumSize(new Dimension(Short.MAX_VALUE, pf.getPreferredSize().height));
-                        if ( value != null ) {
-                            pf.setText(value.toString());
-                        }
-                        comp = pf;
-                    } else {
-                        comp = new PasswordPropertyButton(def, ((String)value).toCharArray(), encryptor);
-                    }
-
-                } else if (type.equals(PropertyType.DATE)) {
-                    comp = createDateField(def, value, true);
-
-                } else if (type.equals(PropertyType.URL) ) {
-                    // use a URLTextWidget
-                    comp = createURLTextField(def, value, true);
-                //{ else if ( type.equals(PropertyType.URI) ) {
-                    // use a URLTextWidget
-                    //comp = createURLTextField(def, value, true);
-                } else {
-                    // use a TextWidget
-                    comp = createTextField(def, value, true);
-                }
+                comp = createTextField(def, value, false);
             }
         } else {
-            // multi-valued PropertyDefinition
-            if ( type.equals(PropertyType.OBJECT_REFERENCE) ) {
-                if ( objectReferenceHandler != null ) {
+            // determine the type of JComponent to use to display and edit this value
 
-                    ObjectReferencePropertyComponent orComponent = new ObjectReferencePropertyComponent(def, value, isReadOnly, index, obj, editor, objectReferenceHandler, adapter);
-                    if ( objectReferenceRenderer != null ) {
-                        orComponent.getListWidget().setCellRenderer(objectReferenceRenderer);
+            if (type.equals(PropertyType.FILE)) {
+                comp = new DirectoryEntryPropertyComponent(def.getDisplayName(), null, (DirectoryEntry)value, index);
+                comp.setMaximumSize(new Dimension(Short.MAX_VALUE, comp.getPreferredSize().height));
+
+            } else if ( def.isConstrainedToAllowedValues() ) {
+                // use a JComboBox
+                JComboBox cob;
+                if (editor != null  &&  obj != null) {
+                    Collection allowedValues =  editor.getAllowedValues(obj, def);
+                    ArrayList displayedValues = new ArrayList( allowedValues );
+                    if ( value != null ) {
+                        // make sure the current value is in the list (for unconstrained defs)
+                        if ( ! allowedValues.contains(value) ) {
+                            displayedValues.add(0, value);
+                        }
+                        if ( ! def.isRequired() && ! def.hasDefaultValue() ) {
+                            displayedValues.add(NULL_OBJECT);
+                        }
                     }
-                    comp = orComponent;
-                    
+                    cob = new JComboBox(displayedValues.toArray());
+                    cob.setSelectedItem(value);
                 } else {
-                    
-	                Object mpcValue = value;
-	                if ( value != null && (! (value instanceof Object[]) ) ) {
-	                    mpcValue = new Object[] { value };
-	                }
-	                
-	                comp = new MultivaluedPropertyComponent(def, mpcValue, isReadOnly, index, obj, editor);
-
+                    cob = new JComboBox();
+                }
+                // set if the user can type into the field
+                cob.setEditable( true );
+                comp = cob;
+            } else if (type.equals(PropertyType.BOOLEAN)) {
+                // use a JCheckBox
+                final CheckBox cb = new CheckBox();
+                cb.setMinimumSize(new Dimension(cb.getMinimumSize().width, HEIGHT));
+                final Dimension prefSize = new Dimension(cb.getPreferredSize().width, HEIGHT);
+                cb.setPreferredSize(prefSize);
+                cb.setMaximumSize(prefSize);
+                if ( value != null ) {
+                    cb.setSelected(new Boolean(value.toString()).booleanValue());
+                }
+                comp = cb;
+            } else if ( def.isMasked() ) {
+                if (value == null) {
+                    // use a JPasswordField
+                    final JPasswordField pf = new JPasswordField();
+                    pf.setMaximumSize(new Dimension(Short.MAX_VALUE, pf.getPreferredSize().height));
+                    if ( value != null ) {
+                        pf.setText(value.toString());
+                    }
+                    comp = pf;
+                } else {
+                    comp = new PasswordPropertyButton(def, ((String)value).toCharArray(), encryptor);
                 }
 
-            } else {
-                comp = new MultivaluedPropertyComponent(def, value, isReadOnly, index, obj, editor);
-            }
+            } else if (type.equals(PropertyType.DATE)) {
+                comp = createDateField(def, value, true);
 
+            } else if (type.equals(PropertyType.URL) ) {
+                // use a URLTextWidget
+                comp = createURLTextField(def, value, true);
+            //{ else if ( type.equals(PropertyType.URI) ) {
+                // use a URLTextWidget
+                //comp = createURLTextField(def, value, true);
+            } else {
+                // use a TextWidget
+                comp = createTextField(def, value, true);
+            }
         }
         comp.setAlignmentY(0.0f);
         if (value != null) {
@@ -430,22 +348,7 @@ implements UIConstants {
         this.adapter = adapter;
     }
 
-    /**
-     * @param handler
-     * @since 3.0
-     */
-    public void setObjectReferenceHandler(final ObjectReferenceHandler handler) {
-        this.objectReferenceHandler = handler;
-    }
-
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-    Sets a ListCellRenderer for use with ObjectReferencePropertyComponent.
-    @since 3.0
-    */
-    public void setObjectReferenceRenderer(final ListCellRenderer renderer) {
-        this.objectReferenceRenderer = renderer;
-    }
 
 	//############################################################################################################################
     //# Inner Class: PasswordPropertyButton                                                                                      #

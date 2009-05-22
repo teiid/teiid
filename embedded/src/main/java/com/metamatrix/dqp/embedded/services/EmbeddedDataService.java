@@ -483,8 +483,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         ComponentTypeID id = binding.getComponentTypeID();
         ComponentType type = getConfigurationService().getConnectorType(id.getName());
         
-        Properties props = null;
-        props = getConfigurationService().getDefaultProperties(binding);
+        Properties props = getConfigurationService().getDefaultProperties(binding);
         if (props == null || props.isEmpty()) {
             ComponentType defaultType = getConfigurationService().getConnectorType("Connector"); //$NON-NLS-1$
             if (defaultType != null) {

@@ -453,22 +453,16 @@ public class AbstractAdminImpl {
                         
             MMPropertyDefinition result = new MMPropertyDefinition(new String[] {pdefn.getName()});
             result.setAllowedValues(pdefn.getAllowedValues());
-            result.setConstrainedToAllowedValues(pdefn.isConstrainedToAllowedValues());
             result.setDefaultValue(pdefn.getDefaultValue());
             result.setDescription(pdefn.getShortDescription());
             result.setDisplayName(pdefn.getDisplayName());
             result.setExpert(pdefn.isExpert());
-            result.setHidden(pdefn.isHidden());
             result.setMasked(pdefn.isMasked());
-            result.setMinimumMultiplicity(pdefn.getMultiplicity().getMinimum());
-            result.setMaximumMultiplicity(pdefn.getMultiplicity().getMaximum());
             result.setModifiable(pdefn.isModifiable());
-            result.setPreferred(pdefn.isPreferred());
             result.setPropertyType(pdefn.getPropertyType().getDisplayName());
             result.setPropertyTypeClassName(pdefn.getPropertyType().getClassName());
             result.setRequired(pdefn.isRequired());
             result.setRequiresRestart(pdefn.getRequiresRestart());
-            result.setValueDelimiter(pdefn.getValueDelimiter());
             
             String value = properties.getProperty(pdefn.getName());
             result.setValue(value);

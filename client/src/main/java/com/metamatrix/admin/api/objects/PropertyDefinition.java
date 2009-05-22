@@ -115,13 +115,6 @@ public interface PropertyDefinition extends AdminObject {
     boolean isConstrainedToAllowedValues();
 
     /**
-     * Return the text expression that is used to delimit multiple values
-     * within a single String value.
-     * @return the delimiter String; may be null only if the multiplicity
-     * has a maximum value of 1.
-     */
-    String getValueDelimiter();
-    /**
      * The "expert" flag is used to distinguish between features that are
      * intended for expert users from those that are intended for normal users.
      * @return true if this property is to be marked with the expert flag,
@@ -129,20 +122,6 @@ public interface PropertyDefinition extends AdminObject {
      */
     boolean isExpert();
     /**
-     * The "preferred" flag is used to identify features that are particularly important
-     * for presenting to humans.
-     * @return true if this property is marked with the preferred
-     * flag, or false otherwise.
-     */
-    boolean isPreferred();
-    /**
-     * The "hidden" flag is used to identify features that are intended only for tool
-     * use, and which should not be exposed to humans.
-     * @return true if this property is marked with the hidden
-     * flag, or false otherwise.
-     */
-    boolean isHidden();
-        /**
      * The "required" flag is used to identify features that require at least
      * one value (possibly a default value) by the consumer of the property.  Whether
      * a property definition is required or not can be determined entirely from the
@@ -165,19 +144,6 @@ public interface PropertyDefinition extends AdminObject {
      * or false otherwise.
      */
     boolean isMasked();
-
-    /**
-     * Get the minimum multiplicity for this property.
-     * @return the minimum multiplicity for this property.
-     */
-    int getMinimumMultiplicity();
-    
-    /**
-     * Get the maximum multiplicity for this property.
-     * @return the minimum multiplicity for this property.
-     * If the multiplicity is unbounded, this will return PropertyDefinition.UNBOUNDED_VALUE.
-     */
-    int getMaximumMultiplicity();
 
     
     

@@ -177,31 +177,14 @@
           </row>
           <row>
             <entry>
-              <para>Multiplicity</para>
-            </entry>
-            <entry>
-              <para>0..1</para>
-            </entry>
-            <entry>
-              <para>If the multiplicity is set to “1”, then this property is required.  If the
-                multiplicity is set to “0..1”, the property is optional and will not be displayed in
-                the connector binding properties panel until the user clicks the “Optional
-                properties” checkbox.   Any required property without a value is displayed in red in
-                the connector binding properties panel.  Other values for the multiplicity are not
-                supported.</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>IsHidden</para>
+              <para>IsRequired</para>
             </entry>
             <entry>
               <para>false</para>
             </entry>
             <entry>
-              <para>If set to”true”, the property will be hidden in all connector binding property
-                panels and the value cannot be set.  Hidden properties should always set a default
-                value.  </para>
+              <para>If true, then this property is required.  Any required property without a value 
+                is displayed in red in the connector binding properties panel.</para>
             </entry>
           </row>
           <row>
@@ -212,8 +195,8 @@
               <para>true</para>
             </entry>
             <entry>
-              <para>If set to “false”, the property is visible but not modifiable in the
-                properties panel.  </para>
+              <para>If set to “false”, the property is visible only when viewing all properties and is 
+              not modifiable in the properties panel.  </para>
             </entry>
           </row>
           <row>
@@ -230,18 +213,6 @@
           </row>
           <row>
             <entry>
-              <para>IsPreferred</para>
-            </entry>
-            <entry>
-              <para>true</para>
-            </entry>
-            <entry>
-              <para>All “preferred” properties are sorted in alphabetical order at the top of the
-                connector binding properties panel.</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
               <para>IsExpert</para>
             </entry>
             <entry>
@@ -250,18 +221,6 @@
             <entry>
               <para>Depending on the property display, the property can be optionally
                 displayed for advanced users.</para>
-            </entry>
-          </row>
-          <row>
-            <entry>
-              <para>IsConstrainedToAllowedValues</para>
-            </entry>
-            <entry>
-              <para>true</para>
-            </entry>
-            <entry>
-              <para>Constrains the property to a subset of values, that are listed as
-                subelements to the PropertyDefinition.  For example,</para>
             </entry>
           </row>
           <row>
@@ -276,20 +235,13 @@
                 possible values include Integer, Boolean, etc.</para>
             </entry>
           </row>
-          <row>
-            <entry>
-              <para>ValueDelimiter</para>
-            </entry>
-            <entry>
-              <para>,</para>
-            </entry>
-            <entry>
-              <para>Denotes how to delimit multiple values (not currently utilized by the Console).</para>
-            </entry>
-          </row>
         </tbody>
       </tgroup>
     </table>
+    
+    <para>A property may also be constrained to a set of allowed values by adding child AllowedValue elements, i.e. &lt;AllowedValue&gt;value&lt;/AllowedValue&gt;.  
+    Adding allowed values will cause the property to be displayed with a dropdown that limits the user selection to the allowed values.
+    </para>
     </sect2>
   </sect1>
 

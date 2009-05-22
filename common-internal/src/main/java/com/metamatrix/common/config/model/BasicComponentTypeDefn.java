@@ -103,7 +103,7 @@ public class BasicComponentTypeDefn extends BasicObject implements ComponentType
     }
 
     public boolean hasAllowedValues() {
-        return this.unModifiablePropertyDefinition.hasAllowedValues();
+        return this.unModifiablePropertyDefinition.isConstrainedToAllowedValues();
     }
 
     public List getAllowedValues() {

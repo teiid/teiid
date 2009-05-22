@@ -831,10 +831,6 @@ public class BasicTreeNode implements TreeNode, Serializable {
             throw new AssertionError("The property value is a Set but the PropertyType is a " + propertyDefn.getPropertyType().getDisplayName() ); //$NON-NLS-1$
         }
 
-        // If not null but the property is multi-valued, make sure the return type is an array
-        if ( propertyDefn.getMultiplicity().getMaximum() > 1 && !(result instanceof Object[]) ) {
-            result = new Object[]{result};
-        }
         return result;
     }
 
@@ -882,11 +878,6 @@ public class BasicTreeNode implements TreeNode, Serializable {
         Object result = value;
         if ( PropertyType.BOOLEAN.equals(def.getPropertyType()) ) {
             if ( value instanceof Boolean ) {
-                result = value.toString();
-            }
-        }
-        else if ( PropertyType.MULTIPLICITY.equals(def.getPropertyType()) ) {
-            if ( value instanceof Multiplicity ) {
                 result = value.toString();
             }
         }

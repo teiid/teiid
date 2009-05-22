@@ -26,7 +26,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
-import com.metamatrix.common.object.Multiplicity;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.object.PropertyDefinitionImpl;
 import com.metamatrix.common.object.PropertyType;
@@ -54,18 +53,17 @@ public class ComponentTypePropDefn implements PropertyDefinition, Serializable {
     }
 
     public ComponentTypePropDefn(String name, String displayName, PropertyType type,
-                        Multiplicity multiplicity,  String shortDescription,
+                        boolean required,  String shortDescription,
                         String defaultValue, List allowedValues, String valueDelimiter,
                         boolean isHidden, boolean isPreferred, boolean isExpert, boolean isModifiable) {
 
-        origPropertyDefinition = new PropertyDefinitionImpl(name, displayName, type, multiplicity, shortDescription,
-                                                            defaultValue, allowedValues, valueDelimiter, isHidden, isPreferred,
-                                                            isExpert, isModifiable);
+        origPropertyDefinition = new PropertyDefinitionImpl(name, displayName, type, required, shortDescription,
+                                                            defaultValue, allowedValues, isHidden, isExpert, isModifiable);
     }
 
     public ComponentTypePropDefn(String name, String displayName, PropertyType type,
-                        Multiplicity multiplicity) {
-        origPropertyDefinition = new PropertyDefinitionImpl(name,displayName,type,multiplicity);
+                        boolean required) {
+        origPropertyDefinition = new PropertyDefinitionImpl(name,displayName,type,required);
     }
 
 
@@ -94,16 +92,6 @@ public class ComponentTypePropDefn implements PropertyDefinition, Serializable {
     }
 
     /**
-     * Get the multiplicity specification for this property.
-     * @return the instance of Multiplicity that captures the allowable
-     * range of the cardinality of property values; never null
-     */
-    public Multiplicity getMultiplicity() {
-        return origPropertyDefinition.getMultiplicity();
-    }
-
-
-    /**
      * The "required" flag is used to identify features that require at least
      * one value (possibly a default value) by the consumer of the property.  Whether
      * a property definition is required or not can be determined entirely from the
@@ -122,17 +110,6 @@ public class ComponentTypePropDefn implements PropertyDefinition, Serializable {
         return origPropertyDefinition.isRequired();
     }
 
-    /**
-     * The "hidden" flag is used to identify features that are intended only for tool
-     * use, and which should not be exposed to humans.
-     * @return true if this property is marked with the hidden
-     * flag, or false otherwise.
-     */
-    public boolean isHidden() {
-        return origPropertyDefinition.isHidden();
-    }
-
-    
     /** 
      * @see com.metamatrix.common.object.PropertyDefinition#getRequiresRestart()
      * @since 4.3
@@ -159,17 +136,6 @@ public class ComponentTypePropDefn implements PropertyDefinition, Serializable {
      */
     public boolean isModifiable(){
         return origPropertyDefinition.isModifiable();
-    }
-
-
-    /**
-     * The "preferred" flag is used to identify features that are particularly important
-     * for presenting to humans.
-     * @return true if this property is marked with the preferred
-     * flag, or false otherwise.
-     */
-    public boolean isPreferred() {
-        return origPropertyDefinition.isPreferred();
     }
 
     /**
@@ -221,39 +187,10 @@ public class ComponentTypePropDefn implements PropertyDefinition, Serializable {
     public boolean hasDefaultValue() {
         return origPropertyDefinition.hasDefaultValue();
     }
-
-
-    /**
-     * Return whether the value or values for this property are constrained to be only
-     * those in the AllowedValues list.
-     * @see #hasAllowedValues
-     * @see #getAllowedValues
-     * @return true if this property's value must be with the list of AllowedValues.
-     */
-    public boolean isConstrainedToAllowedValues(){
-        return origPropertyDefinition.isConstrainedToAllowedValues();
-    }
-
-
-    /**
-     * Return whether there is a prescribed set of values that all property values
-     * should be selected from.
-     * @see #getAllowedValues
-     * @return true if this property has a set from which all values must be
-     * selected, or false if the property values may be any value.
-     */
-    public boolean hasAllowedValues() {
-        return origPropertyDefinition.hasAllowedValues();
-    }
-
-    /**
-     * Return the text expression that is used to delimit multiple values
-     * within a single String value.
-     * @return the delimiter String; may be null only if the multiplicity
-     * has a maximum value of 1.
-     */
-    public String getValueDelimiter() {
-        return origPropertyDefinition.getValueDelimiter();
+    
+    @Override
+    public boolean isConstrainedToAllowedValues() {
+    	return origPropertyDefinition.isConstrainedToAllowedValues();
     }
 
     /**
@@ -359,48 +296,4 @@ public class ComponentTypePropDefn implements PropertyDefinition, Serializable {
 
     */
 
-    /**
-     * Convert the specified values to a stringified form.  This method uses the
-     * <code>toString</code> method on the values.
-     * @param values the array of values that this definition describes; may not be null
-     * @return the stringified form of the values; never null
-     */
-    public String getValuesAsString( Object[] values ) {
-        return origPropertyDefinition.getValuesAsString(values);
-    }
-
-    /**
-     * Convert the stringified form to an array of String values.
-     * @param stringifiedValue the stringified form of the values
-     * @return the array of String values; never null, but may by empty
-     */
-    public Object[] getValuesFromString( String stringifiedValues ) {
-        return origPropertyDefinition.getValuesFromString(stringifiedValues);
-    }
-    
-    /**
-     * Convert the specified values to a stringified form.  This method uses the
-     * <code>toString</code> method on the values.
-     * @param values the array of values that this definition describes; may not be null
-     * @param delim the delimiter to use, overriding the property definition's
-     * set of values; if null, the property definition's delimiter will be used, or
-     * if there is no delimiter defined for the property definition, the default delimiter of ','
-     * @return the stringified form of the values; never null
-     */
-    public String getValuesAsString( Object[] values, String delim ) {
-        return origPropertyDefinition.getValuesAsString(values, delim);
-    }
-
-    /**
-     * Convert the stringified form to an array of String values.
-     * @param stringifiedValue the stringified form of the values
-     * @param delim the delimiter to use, overriding the property definition's
-     * set of values; if null, the property definition's delimiter will be used, or
-     * if there is no delimiter defined for the property definition, the default delimiter of ','
-     * @return the array of String values; never null, but may by empty
-     */
-    public Object[] getValuesFromString( String stringifiedValues, String delim ) {
-        return origPropertyDefinition.getValuesFromString(stringifiedValues, delim);
-    }
-    
 }

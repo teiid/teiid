@@ -264,10 +264,6 @@ public class PropertiedObjectImpl implements PropertiedObject, Serializable, Clo
             throw new AssertionError(CommonPlugin.Util.getString(ErrorMessageKeys.OBJECT_ERR_0022, def.getPropertyType().getDisplayName() ));
         }
 
-        // If not null but the property is multi-valued, make sure the return type is an array
-        if ( def.getMultiplicity().getMaximum() > 1 && !(result instanceof Object[]) ) {
-            result = new Object[]{result};
-        }
         return result;
     }
 
@@ -291,7 +287,7 @@ public class PropertiedObjectImpl implements PropertiedObject, Serializable, Clo
 
         // Check for a null value ...
         if ( value == null ) {
-            return ( def.getMultiplicity().getMinimum() == 0 ); // only if minimum==0 is value allowed to be null
+            return ( !def.isRequired() ); // only if minimum==0 is value allowed to be null
         }
         // This is a check to verify that the types correspond to types and that we
         // are no longer using Collection to hold multi-valued properties
@@ -302,10 +298,6 @@ public class PropertiedObjectImpl implements PropertiedObject, Serializable, Clo
             throw new AssertionError(CommonPlugin.Util.getString(ErrorMessageKeys.OBJECT_ERR_0022, def.getPropertyType().getDisplayName() ));
         }
 
-        // From this point forward, the value is never null
-        if ( def.getMultiplicity().getMaximum() > 1 ) {
-            Assertion.assertTrue(value instanceof Object[],"The property definition " + def.getDisplayName() + " is multi-valued, so the property value must be an Object[]"); //$NON-NLS-1$ //$NON-NLS-2$
-        }
         return def.getPropertyType().isValidValue(value);
     }
 
@@ -333,9 +325,6 @@ public class PropertiedObjectImpl implements PropertiedObject, Serializable, Clo
             throw new AssertionError(CommonPlugin.Util.getString(ErrorMessageKeys.OBJECT_ERR_0022, def.getPropertyType().getDisplayName() ));
         }
 
-        if ( value != null && def.getMultiplicity().getMaximum() > 1 ) {
-            Assertion.assertTrue(value instanceof Object[],"The property definition " + def.getDisplayName() + " is multi-valued, so the property value must be an Object[]"); //$NON-NLS-1$ //$NON-NLS-2$
-        }
         this.properties.put(def,value);
         updateHashCode();
     }

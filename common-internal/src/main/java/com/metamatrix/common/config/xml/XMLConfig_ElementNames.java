@@ -538,7 +538,7 @@ public interface XMLConfig_ElementNames {
 		                    public static final String IS_HIDDEN = "IsHidden"; //$NON-NLS-1$
 		                    public static final String IS_MASKED = "IsMasked"; //$NON-NLS-1$
 		                    public static final String IS_MODIFIABLE = "IsModifiable"; //$NON-NLS-1$
-		                    public static final String IS_PREFERRED = "IsPreferred"; //$NON-NLS-1$
+		                    public static final String IS_REQUIRED = "IsRequired"; //$NON-NLS-1$
 		                    public static final String REQUIRES_RESTART = "RequiresRestart"; //$NON-NLS-1$
 		                }
 		                

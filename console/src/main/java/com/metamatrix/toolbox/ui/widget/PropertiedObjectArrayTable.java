@@ -130,7 +130,7 @@ public class PropertiedObjectArrayTable extends TreeNodeTableWidget {
             while (propIter.hasNext()) {
                 PropertyDefinition propDef = (PropertyDefinition)propIter.next();
                 //weed out hidden PropertyDefinitions and PropertyDefinitions not to be shown
-                if (!propDef.isHidden()) {
+                if (propDef.isModifiable()) {
                     propertyDefinitions.add(propDef);
                 }
             }
@@ -143,7 +143,7 @@ public class PropertiedObjectArrayTable extends TreeNodeTableWidget {
             ArrayList displayedPropertyDefinitions = new ArrayList(propertyDefinitions.size());
             while (propIter.hasNext()) {
                 PropertyDefinition propDef = (PropertyDefinition)propIter.next();
-                if (!propDef.isHidden()) {
+                if (propDef.isModifiable()) {
                     displayedPropertyDefinitions.add(propDef);
                 }
             }

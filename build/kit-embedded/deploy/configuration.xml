@@ -33,8 +33,8 @@
     </Services>
     <ComponentTypes>
         <ComponentType Name="Service" ComponentTypeCode="1" Deployable="false" Deprecated="false" Monitorable="false" ParentComponentType="VM" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
-            <PropertyDefinition Name="ServiceClassName" DisplayName="Service Class Name" ShortDescription="" Multiplicity="1" PropertyType="String" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsHidden="true" IsMasked="false" IsModifiable="true" IsPreferred="false" />
-            <PropertyDefinition Name="metamatrix.service.essentialservice" DisplayName="Essential Service" ShortDescription="Indicates if the service is essential to operation of the Integration Server" DefaultValue="false" Multiplicity="1" PropertyType="Boolean" ValueDelimiter="," IsConstrainedToAllowedValues="true" IsExpert="true" IsHidden="true" IsMasked="false" IsModifiable="true" IsPreferred="false" />
+            <PropertyDefinition Name="ServiceClassName" DisplayName="Service Class Name" ShortDescription="" PropertyType="String" IsModifiable="false" IsMasked="false"   />
+            <PropertyDefinition Name="metamatrix.service.essentialservice" DisplayName="Essential Service" ShortDescription="Indicates if the service is essential to operation of the Integration Server" DefaultValue="false" PropertyType="Boolean" IsModifable="false" IsMasked="false"   />
         </ComponentType>
         <ComponentType Name="QueryService" ComponentTypeCode="1" Deployable="true" Deprecated="false" Monitorable="true" SuperComponentType="Service" ParentComponentType="Integration Server" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
         </ComponentType>

@@ -63,10 +63,7 @@ import com.metamatrix.common.config.model.BasicUtil;
 import com.metamatrix.common.config.model.BasicVMComponentDefn;
 import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
-import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.namedobject.BaseID;
-import com.metamatrix.common.object.Multiplicity;
-import com.metamatrix.common.object.MultiplicityExpressionException;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.object.PropertyDefinitionImpl;
 import com.metamatrix.common.object.PropertyType;
@@ -251,13 +248,6 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
                                value.toString(), PropertyDefinitionImpl.DEFAULT_DEFAULT_VALUE);
         }
         
-        Multiplicity mult = defn.getMultiplicity();
-        if (mult!=null) {
-            setAttributeString(element,
-                               XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.MULTIPLICITY, 
-                               mult.toString(), PropertyDefinitionImpl.DEFAULT_MULTIPLICITY);
-        }
-
         PropertyType type = defn.getPropertyType();
         if (type != null) {
             setAttributeString(element,
@@ -266,21 +256,13 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         }
 
 
-        setAttributeString(element,
-                           XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.VALUE_DELIMITER, 
-                           defn.getValueDelimiter(), PropertyDefinitionImpl.DEFAULT_DELIMITER);
-
-        setAttributeBoolean(element, 
-                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_CONSTRAINED_TO_ALLOWED_VALUES,
-                            defn.isConstrainedToAllowedValues(), PropertyDefinitionImpl.DEFAULT_IS_CONSTRAINED);
+        setAttributeBoolean(element,
+                XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_REQUIRED, 
+                defn.isRequired(), PropertyDefinitionImpl.DEFAULT_IS_REQUIRED);
 
         setAttributeBoolean(element, 
                             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_EXPERT,
                             defn.isExpert(), PropertyDefinitionImpl.DEFAULT_IS_EXPERT);
-
-        setAttributeBoolean(element, 
-                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN,
-                            defn.isHidden(), PropertyDefinitionImpl.DEFAULT_IS_HIDDEN);
 
         setAttributeBoolean(element, 
                             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MASKED,
@@ -290,10 +272,6 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
                             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MODIFIABLE,
                             defn.isModifiable(), PropertyDefinitionImpl.DEFAULT_IS_MODIFIABLE);
         
-        setAttributeBoolean(element, 
-                            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED,
-                            defn.isPreferred(), PropertyDefinitionImpl.DEFAULT_IS_PREFERRED);
-            
         setAttributeString(element,
                             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.REQUIRES_RESTART,
                             defn.getRequiresRestart().toString(), PropertyDefinitionImpl.DEFAULT_REQUIRES_RESTART.toString());
@@ -1363,41 +1341,23 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.DEFAULT_VALUE,
             PropertyDefinitionImpl.DEFAULT_DEFAULT_VALUE);
         
-        String valueDelimiterString = getAttributeString(element,
-            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.VALUE_DELIMITER,
-            PropertyDefinitionImpl.DEFAULT_DELIMITER);
-        
-        
         String multiplicityString = getAttributeString(element,
             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.MULTIPLICITY,
-            PropertyDefinitionImpl.DEFAULT_MULTIPLICITY);
-        Multiplicity mult = null;
-        try {
-            mult = Multiplicity.getInstance(multiplicityString);
-        }catch(MultiplicityExpressionException e) {
-            throw new InvalidConfigurationElementException(e, "The PropertyDefinition object: " + nameString + " could not be created because the multiplicity definition: '" + multiplicityString + " is not a valid multiplicity definition."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        }
-
+            "0..1"); //$NON-NLS-1$
         
         String propertyTypeString = getAttributeString(element,
             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.PROPERTY_TYPE,
             PropertyDefinitionImpl.DEFAULT_TYPE.getDisplayName());
         PropertyType type = PropertyType.getInstance(propertyTypeString);
 
-
-        
-        boolean isConstrainedToAllowedValues = getAttributeBoolean(element,
-            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_CONSTRAINED_TO_ALLOWED_VALUES,
-            PropertyDefinitionImpl.DEFAULT_IS_CONSTRAINED);
-
         boolean isExpert = getAttributeBoolean(element,
             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_EXPERT,
             PropertyDefinitionImpl.DEFAULT_IS_EXPERT);
         
-        boolean isHidden = getAttributeBoolean(element,
-            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN,
-            PropertyDefinitionImpl.DEFAULT_IS_HIDDEN);
-
+        boolean isRequired = getAttributeBoolean(element,
+                XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_REQUIRED,
+                PropertyDefinitionImpl.DEFAULT_IS_REQUIRED);
+        
         boolean isMasked = getAttributeBoolean(element,
             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MASKED,
             PropertyDefinitionImpl.DEFAULT_IS_MASKED);
@@ -1406,22 +1366,36 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_MODIFIABLE,
             PropertyDefinitionImpl.DEFAULT_IS_MODIFIABLE);
 
-        boolean isPreferred = getAttributeBoolean(element,
-            XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_PREFERRED,
-            PropertyDefinitionImpl.DEFAULT_IS_PREFERRED);
-                                                  
+        boolean isHidden = getAttributeBoolean(element,
+                XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.IS_HIDDEN,
+                false);
+        
         String requiresRestart = getAttributeString(element,
             XMLConfig_ElementNames.ComponentTypes.ComponentType.ComponentTypeDefn.PropertyDefinition.Attributes.REQUIRES_RESTART,
             PropertyDefinitionImpl.DEFAULT_REQUIRES_RESTART.toString());
 
         RestartType restartType = null;
 
+        /*
+         * -- backwards compatibility checks
+         * requiresRestart="true" for requiresRestart="PROCESS"
+         * isHidden="true" for isModifiable="false"
+         * multiplicity="1" for isRequired="true" 
+         */
+        
         if ("true".equalsIgnoreCase(requiresRestart)) { //$NON-NLS-1$
         	restartType = RestartType.PROCESS;
         } else {
         	restartType = RestartType.valueOf(requiresRestart.toUpperCase());
         }
-            
+
+        if (isHidden) {
+        	isModifiable = false;
+        }
+
+        if (!isRequired && !multiplicityString.startsWith("0")) { //$NON-NLS-1$
+        	isRequired = true;
+        }
         
         // we must retrieve all of the allowed values from the PropertyDefinition
         // element
@@ -1435,12 +1409,11 @@ public class XMLHelperImpl implements  ConfigurationPropertyNames  {
         }
 
         PropertyDefinitionImpl defn = new PropertyDefinitionImpl(nameString, displayNameString, type,
-                        mult,  shortDescriptionString, defaultValueString,
-                        allowedValues, valueDelimiterString,
-                        isHidden, isPreferred, isExpert, isModifiable);
+                        isRequired,  shortDescriptionString, defaultValueString,
+                        allowedValues, isHidden,
+                        isExpert, isModifiable);
 
                 defn.setMasked(isMasked);
-                defn.setConstrainedToAllowedValues(isConstrainedToAllowedValues);
                 defn.setRequiresRestart(restartType);
         return defn;
 

@@ -243,7 +243,7 @@ public class TreeNodeTableWidget extends TableWidget {
                 // Ensure list contains only PropertyDefinitions along the way
                 Assertion.assertTrue(def instanceof PropertyDefinition, "All elements must be instances of PropertyDefinition: "
                                  + def.getClass().getName());
-                if (!((PropertyDefinition)def).isHidden()) {
+                if (((PropertyDefinition)def).isModifiable()) {
                     defs.add(def);
                 }
             }

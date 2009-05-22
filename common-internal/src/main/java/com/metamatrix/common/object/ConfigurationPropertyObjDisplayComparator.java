@@ -84,10 +84,6 @@ public class ConfigurationPropertyObjDisplayComparator implements Comparator {
 
     private final int compareObjects(PropertyDefinition o1, PropertyDefinition o2) {
         int o1c = 0;
-        if ( o1.isPreferred()) {
-            o1c = o1c + PREFERRED_VALUE;
-            
-        }
         if (o1.isRequired()) {
             o1c = o1c + REQUIRED_VALUE;
         }    
@@ -97,10 +93,6 @@ public class ConfigurationPropertyObjDisplayComparator implements Comparator {
         } 
                
         int o2c = 0;
-        if ( o2.isPreferred()) {
-            o2c = o2c + PREFERRED_VALUE;
-
-        }
         if (o2.isRequired()) {
             o2c = o2c + REQUIRED_VALUE;
         }    

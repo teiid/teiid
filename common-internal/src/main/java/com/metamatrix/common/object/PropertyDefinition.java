@@ -86,42 +86,12 @@ public interface PropertyDefinition extends ObjectDefinition {
     boolean hasDefaultValue();
 
     /**
-     * Return whether there is a prescribed set of values that all property values
-     * should be selected from.
-     * @see #getAllowedValues
-     * @return true if this property has a set from which all values must be
-     * selected, or false if the property values may be any value.
-     */
-    boolean hasAllowedValues();
-
-    /**
-     * Return the text expression that is used to delimit multiple values
-     * within a single String value.
-     * @return the delimiter String; may be null only if the multiplicity
-     * has a maximum value of 1.
-     */
-    String getValueDelimiter();
-    /**
      * The "expert" flag is used to distinguish between features that are
      * intended for expert users from those that are intended for normal users.
      * @return true if this property is to be marked with the expert flag,
      * or false otherwise.
      */
     boolean isExpert();
-    /**
-     * The "preferred" flag is used to identify features that are particularly important
-     * for presenting to humans.
-     * @return true if this property is marked with the preferred
-     * flag, or false otherwise.
-     */
-    boolean isPreferred();
-    /**
-     * The "hidden" flag is used to identify features that are intended only for tool
-     * use, and which should not be exposed to humans.
-     * @return true if this property is marked with the hidden
-     * flag, or false otherwise.
-     */
-    boolean isHidden();
         /**
      * The "required" flag is used to identify features that require at least
      * one value (possibly a default value) by the consumer of the property.  Whether
@@ -145,49 +115,6 @@ public interface PropertyDefinition extends ObjectDefinition {
      * or false otherwise.
      */
     boolean isMasked();
-
-    /**
-     * Get the multiplicity specification for this property.
-     * @return the instance of Multiplicity that captures the allowable
-     * range of the cardinality of property values; never null
-     */
-    Multiplicity getMultiplicity();
-
-    /**
-     * Convert the specified values to a stringified form.  This method uses the
-     * <code>toString</code> method on the values.
-     * @param values the array of values that this definition describes; may not be null
-     * @return the stringified form of the values; never null
-     */
-    String getValuesAsString( Object[] values );
-
-    /**
-     * Convert the specified values to a stringified form.  This method uses the
-     * <code>toString</code> method on the values.
-     * @param values the array of values that this definition describes; may not be null
-     * @param delim the delimiter to use, overriding the property definition's
-     * set of values; if null, the property definition's delimiter will be used, or
-     * if there is no delimiter defined for the property definition, the default delimiter of ','
-     * @return the stringified form of the values; never null
-     */
-    String getValuesAsString( Object[] values, String delim );
-
-    /**
-     * Convert the stringified form to an array of String values.
-     * @param stringifiedValue the stringified form of the values
-     * @return the array of String values; never null, but may by empty
-     */
-    Object[] getValuesFromString( String stringifiedValues );
-
-    /**
-     * Convert the stringified form to an array of String values.
-     * @param stringifiedValue the stringified form of the values
-     * @param delim the delimiter to use, overriding the property definition's
-     * set of values; if null, the property definition's delimiter will be used, or
-     * if there is no delimiter defined for the property definition, the default delimiter of ','
-     * @return the array of String values; never null, but may by empty
-     */
-    Object[] getValuesFromString( String stringifiedValues, String delim );
 }
 
 

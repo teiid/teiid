@@ -39,18 +39,12 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     private Object defaultValue = null;
     private String description = null;
     private String displayName = null;
-    private int minimumMultiplicity = 0;
-    private int maximumMultiplicity = PropertyDefinition.UNBOUNDED_VALUE;
     private String propertyType = "String"; //$NON-NLS-1$
     private String propertyTypeClassName = String.class.getName();
     private RestartType requiresRestart = RestartType.NONE;
-    private String valueDelimiter = null;
-    private boolean constrainedToAllowedValues = false;
     private boolean expert = false;
-    private boolean hidden = false;
     private boolean masked = false;
     private boolean modifiable = true;
-    private boolean preferred = false;
     private boolean required = false;
     
     
@@ -67,17 +61,12 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Property_type")).append(getPropertyType()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Property_type_class_name")).append(getPropertyTypeClassName()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Default_value")).append(getDefaultValue()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Minimum_multiplicity")).append(getMinimumMultiplicity()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Maximum_multiplicity")).append(getMaximumMultiplicity()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Constrained_to_allow_values")).append(isConstrainedToAllowedValues()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Allowed_values")).append(getAllowedValues()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Value_delimiter")).append(getValueDelimiter()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Required")).append(isRequired()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Expert")).append(isExpert()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Hidden")).append(isHidden()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Masked")).append(isMasked()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Modifiable")).append(isModifiable()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMPropertyDefinition.Preferred")).append(isPreferred()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMPropertyDefinition.RequiresRestart")).append(getRequiresRestart()); //$NON-NLS-1$
         return result.toString();
     }
@@ -138,23 +127,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getMaximumMultiplicity()
-     * @since 4.3
-     */
-    public int getMaximumMultiplicity() {
-        return maximumMultiplicity;
-    }
-
-    /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getMinimumMultiplicity()
-     * @since 4.3
-     */
-    public int getMinimumMultiplicity() {
-        return minimumMultiplicity;
-    }
-
-    
-    /** 
      * @see com.metamatrix.admin.api.objects.PropertyDefinition#getPropertyType()
      * @since 4.3
      */
@@ -180,35 +152,11 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getValueDelimiter()
-     * @since 4.3
-     */
-    public String getValueDelimiter() {
-        return valueDelimiter;
-    }
-
-    /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#isConstrainedToAllowedValues()
-     * @since 4.3
-     */
-    public boolean isConstrainedToAllowedValues() {
-        return constrainedToAllowedValues;
-    }
-
-    /** 
      * @see com.metamatrix.admin.api.objects.PropertyDefinition#isExpert()
      * @since 4.3
      */
     public boolean isExpert() {
         return expert;
-    }
-
-    /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#isHidden()
-     * @since 4.3
-     */
-    public boolean isHidden() {
-        return hidden;
     }
 
     /** 
@@ -225,14 +173,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
      */
     public boolean isModifiable() {
         return modifiable;
-    }
-
-    /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#isPreferred()
-     * @since 4.3
-     */
-    public boolean isPreferred() {
-        return preferred;
     }
 
     /** 
@@ -255,15 +195,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     public void setAllowedValues(Collection allowedValues) {
         this.allowedValues = allowedValues;
     }
-
-    /** 
-     * @param constrainedToAllowedValues The value of constrainedToAllowedValues to set.
-     * @since 4.3
-     */
-    public void setConstrainedToAllowedValues(boolean constrainedToAllowedValues) {
-        this.constrainedToAllowedValues = constrainedToAllowedValues;
-    }
-
 
     /** 
      * @param defaultValue The defaultValue to set.
@@ -300,36 +231,12 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @param hidden The value of hidden to set.
-     * @since 4.3
-     */
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
-    }
-
-    /** 
      * @param masked The value of masked to set.
      * @since 4.3
      */
     public void setMasked(boolean masked) {
         this.masked = masked;
     }
-    /** 
-     * @param maximumMultiplicity The maximumMultiplicity to set.
-     * @since 4.3
-     */
-    public void setMaximumMultiplicity(int maximumMultiplicity) {
-        this.maximumMultiplicity = maximumMultiplicity;
-    }
-
-    /** 
-     * @param minimumMultiplicity The minimumMultiplicity to set.
-     * @since 4.3
-     */
-    public void setMinimumMultiplicity(int minimumMultiplicity) {
-        this.minimumMultiplicity = minimumMultiplicity;
-    }
-
     /** 
      * @param modifiable The value of modifiable to set.
      * @since 4.3
@@ -338,15 +245,6 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
         this.modifiable = modifiable;
     }
 
-    /** 
-     * @param preferred The value of preferred to set.
-     * @since 4.3
-     */
-    public void setPreferred(boolean preferred) {
-        this.preferred = preferred;
-    }
-    
-    
     /** 
      * @param propertyTypeAsString The propertyTypeAsString to set.
      * @since 4.3
@@ -387,16 +285,11 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     public void setValue(String value) {
         this.value = value;
     }
-    
-    /** 
-     * @param valueDelimiter The valueDelimiter to set.
-     * @since 4.3
-     */
-    public void setValueDelimiter(String valueDelimiter) {
-        this.valueDelimiter = valueDelimiter;
-    }
 
-
+	@Override
+	public boolean isConstrainedToAllowedValues() {
+		return allowedValues != null && !allowedValues.isEmpty();
+	}
     
     
 }

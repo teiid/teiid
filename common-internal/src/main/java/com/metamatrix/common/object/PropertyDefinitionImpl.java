@@ -22,7 +22,6 @@
 
 package com.metamatrix.common.object;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -30,8 +29,6 @@ import java.util.List;
 import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.StringUtil;
 
 /**
  * Prototype implementation of PropertyDefinition
@@ -43,43 +40,33 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
     public static final PropertyType DEFAULT_TYPE = PropertyType.STRING;
     public static final String DEFAULT_DELIMITER = ","; //$NON-NLS-1$
     public static final Object DEFAULT_VALUE = null;
+    public static final boolean DEFAULT_IS_REQUIRED = false;
     public static final boolean DEFAULT_IS_EXPERT = false;
-    public static final boolean DEFAULT_IS_PREFERRED = false;
-    public static final boolean DEFAULT_IS_HIDDEN = false;
     public static final boolean DEFAULT_IS_MASKED = false;
     public static final boolean DEFAULT_IS_CONSTRAINED = true;
     public static final boolean DEFAULT_IS_MODIFIABLE = true;
     public static final RestartType DEFAULT_REQUIRES_RESTART = RestartType.SERVICE;
-    public static final String DEFAULT_MULTIPLICITY = "0..1"; //$NON-NLS-1$
     public static final String DEFAULT_DEFAULT_VALUE = null; 
     public static final String DEFAULT_DISPLAY_NAME = null; 
     public static final String DEFAULT_SHORT_DESCRIPTION = null; 
 
     private boolean modifiable = DEFAULT_IS_MODIFIABLE;
-    private boolean constrained = DEFAULT_IS_CONSTRAINED;
-    private boolean hidden = DEFAULT_IS_HIDDEN;
-    private boolean preferred = DEFAULT_IS_PREFERRED;
     private boolean expert = DEFAULT_IS_EXPERT;
     private boolean masked = DEFAULT_IS_MASKED;
     private RestartType requiresRestart = RestartType.SERVICE;
 
     private Object defaultValue = DEFAULT_VALUE;
-    private List allowedValues = new ArrayList();
-    private String valueDelimiter = DEFAULT_DELIMITER;
+    private List allowedValues = Collections.emptyList();
     private PropertyType type = DEFAULT_TYPE;
 
-    /**
-     * @clientCardinality 0..1
-     * @supplierCardinality 1
-     */
-    private Multiplicity multiplicity;
+    private boolean required = DEFAULT_IS_REQUIRED;
 
     /**
      * Create an empty property definition object with all defaults.
      */
     public PropertyDefinitionImpl() {
         super();
-        this.multiplicity = Multiplicity.getInstance();
+        this.setRequired(true);
     }
 
     /**
@@ -95,10 +82,10 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      * range of the cardinality of property values; if null, the default
      * multiplicity of "1" is used.
      */
-    public PropertyDefinitionImpl(String name, PropertyType type, Multiplicity multiplicity) {
+    public PropertyDefinitionImpl(String name, PropertyType type, boolean required) {
         super(name);
         this.setPropertyType(type);
-        this.setMultiplicity(multiplicity);
+        this.setRequired(required);
     }
 
     /**
@@ -117,10 +104,10 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      * multiplicity of "1" is used.
      */
     public PropertyDefinitionImpl(String name, String displayName, PropertyType type,
-                        Multiplicity multiplicity) {
+                        boolean required) {
         super(name,displayName);
         this.setPropertyType(type);
-        this.setMultiplicity(multiplicity);
+        this.setRequired(required);
     }
     /**
      * Create a property definition object with the fully-specified set of attributes.
@@ -130,47 +117,39 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      * if the display name is the same as the property name.
      * @param type the new property type; if null, the default type
      * (PropertyType.STRING) is used.
-     * @param multiplicity the instance of Multiplicity that captures the allowable
-     * range of the cardinality of property values; if null, the default
-     * multiplicity of "1" is used.
      * @param shortDescription the short description for this property, or
      * null if there is no short description.
      * @param defaultValue the new default value for this property, or null
      * if there is to be no default value.
      * @param allowedValues the list of allowable values for this property,
      * or an empty set or null reference if there is no prescribed set of values.
-     * @param valueDelimiter the delimiter String; may be null only if the multiplicity
-     * has a maximum value of 1.  The default delimiter expression is a
-     * single comma.
      * @param isHidden true if this property definition is intended only for tool
      * use, and which should not be exposed to humans.
-     * @param isPreferred true if this property definition is particularly important
-     * for presenting to humans.
      * @param isExpert true if this property definition is intended for expert users
      * an not for normal users.
+     * @param multiplicity the instance of Multiplicity that captures the allowable
+     * range of the cardinality of property values; if null, the default
+     * multiplicity of "1" is used.
      */
     public PropertyDefinitionImpl(String name, String displayName, PropertyType type,
-                        Multiplicity multiplicity,  String shortDescription,
-                        Object defaultValue, List allowedValues, String valueDelimiter,
-                        boolean isHidden, boolean isPreferred, boolean isExpert ) {
+                        boolean required,  String shortDescription,
+                        Object defaultValue, List allowedValues, boolean isHidden,
+                        boolean isExpert ) {
         super(name,displayName);
         this.setPropertyType(type);
-        this.setMultiplicity(multiplicity);
+        this.setRequired(required);
         this.setShortDescription(shortDescription);
         this.setDefaultValue(defaultValue);
         this.setAllowedValues(allowedValues);
-        this.setHidden(isHidden);
-        this.setPreferred(isPreferred);
         this.setExpert(isExpert);
-        this.setValueDelimiter(valueDelimiter);
     }
 
     public PropertyDefinitionImpl(String name, String displayName, PropertyType type,
-                        Multiplicity multiplicity,  String shortDescription,
-                        Object defaultValue, List allowedValues, String valueDelimiter,
-                        boolean isHidden, boolean isPreferred, boolean isExpert, boolean isModifiable) {
-        this(name,displayName,type,multiplicity,shortDescription,defaultValue,allowedValues,valueDelimiter,
-             isHidden,isPreferred,isExpert);
+                        boolean required,  String shortDescription,
+                        Object defaultValue, List allowedValues, boolean isHidden,
+                        boolean isExpert, boolean isModifiable) {
+        this(name,displayName,type,required,shortDescription,defaultValue,allowedValues,isHidden,
+             isExpert);
         this.setModifiable(isModifiable);
     }
     /**
@@ -182,20 +161,18 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
         super(defn);
         this.setDefaultValue(defn.getDefaultValue());
         this.setPropertyType(defn.getPropertyType());
-        this.setMultiplicity(defn.getMultiplicity());
+        this.setRequired(defn.isRequired());
         this.setAllowedValues(defn.getAllowedValues());
-        this.setHidden(defn.isHidden());
-        this.setPreferred(defn.isPreferred());
         this.setExpert(defn.isExpert());
-        this.setValueDelimiter(defn.getValueDelimiter());
         this.setModifiable(defn.isModifiable());
         this.setMasked(defn.isMasked());
-        this.setConstrainedToAllowedValues(defn.isConstrainedToAllowedValues());
         this.setRequiresRestart(defn.getRequiresRestart());
     }
     
-    
-    
+    public void setRequired(boolean required) {
+		this.required = required;
+	}
+        
     /** 
      * @see com.metamatrix.common.object.PropertyDefinition#getRequiresRestart()
      * @since 4.3
@@ -226,56 +203,6 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
     }
 
     /**
-     * Return whether the value or values for this property are constrained to be only
-     * those in the AllowedValues list.
-     * @see #hasAllowedValues
-     * @see #getAllowedValues
-     * @return true if this property's value must be with the list of AllowedValues.
-     */
-    public boolean isConstrainedToAllowedValues() {
-        return this.constrained;
-    }
-
-    public void setConstrainedToAllowedValues(boolean flag) {
-        this.constrained = flag;
-    }
-    /**
-     * The "hidden" flag is used to identify features that are intended only for tool
-     * use, and which should not be exposed to humans.
-     * @return true if this property is marked with the hidden
-     * flag, or false otherwise.
-     */
-    public boolean isHidden() {
-        return this.hidden;
-    }
-    /**
-     * The "hidden" flag is used to identify features that are intended only for tool
-     * use, and which should not be exposed to humans.
-     * @param hidden true if this property is to be marked with the hidden flag,
-     * or false otherwise.
-     */
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
-    }
-    /**
-     * The "preferred" flag is used to identify features that are particularly important
-     * for presenting to humans.
-     * @return true if this property is marked with the preferred
-     * flag, or false otherwise.
-     */
-    public boolean isPreferred() {
-        return this.preferred;
-    }
-    /**
-     * The "preferred" flag is used to identify features that are particularly important
-     * for presenting to humans.
-     * @param preferred true if this property is to be marked with the preferred
-     * flag, or false otherwise.
-     */
-    public void setPreferred(boolean preferred) {
-        this.preferred = preferred;
-    }
-    /**
      * The "masked" flag is used to tell whether the value should be masked
      * when displayed to users.
      * @return true if this property value is to be masked,
@@ -300,7 +227,7 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      * or false otherwise.
      */
     public boolean isExpert() {
-        return this.expert;
+        return !this.modifiable || this.expert;
     }
     /**
      * The "expert" flag is used to distinguish between features that are intended for
@@ -333,10 +260,6 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      * @return the default value for this property, or null if there is no default value.
      */
     public Object getDefaultValue() {
-        // If this property definition can ONLY have one value ...
-        if ( this.multiplicity != null && this.multiplicity.getMaximum() > 1 ) {
-            return null;
-        }
         return this.defaultValue;
     }
     /**
@@ -367,28 +290,13 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      * or an empty set or null reference if there is no prescribed set of values.
      */
     public void setAllowedValues(List allowedValues) {
-        this.allowedValues = (allowedValues != null ? allowedValues : new ArrayList());
-        this.allowedValues = Collections.unmodifiableList(this.allowedValues);
+    	if (allowedValues == null) {
+    		this.allowedValues = Collections.emptyList();
+    	} else {
+    		this.allowedValues = Collections.unmodifiableList(allowedValues);
+    	}
     }
-    /**
-     * Return the text expression that is used to delimit multiple values
-     * within a single String value.
-     * @return the delimiter String; may be null only if the multiplicity
-     * has a maximum value of 1.
-     */
-    public String getValueDelimiter() {
-        return this.valueDelimiter;
-    }
-    /**
-     * Set the text expression that is used to delimit multiple values
-     * within a single String value.
-     * @param delim the delimiter String; may be null only if the multiplicity
-     * has a maximum value of 1.  The default delimiter expression is a
-     * single comma.
-     */
-    public void setValueDelimiter(String delim) {
-        this.valueDelimiter = delim;
-    }
+    
     /**
      * Return whether there is a default value for this property.
      * @see #getDefaultValue
@@ -397,46 +305,12 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      */
     public boolean hasDefaultValue() {
         // If this property definition can ONLY have one value ...
-        if ( this.multiplicity != null && this.multiplicity.getMaximum() > 1 ) {
-            return false;
-        }
-        if ( this.defaultValue == null ) {
-            return false;
-        }
-        return true;
+        return this.defaultValue != null;
     }
-    /**
-     * Return whether there is a prescribed set of values that all property values
-     * should be selected from.
-     * @see #getAllowedValues
-     * @return true if this property has a set from which all values must be
-     * selected, or false if the property values may be any value.
-     */
-    public boolean hasAllowedValues() {
-        return (!this.allowedValues.isEmpty());
-    }
-
-    /**
-     * Get the multiplicity specification for this property.
-     * @return the instance of Multiplicity that captures the allowable
-     * range of the cardinality of property values; never null
-     */
-    public Multiplicity getMultiplicity() {
-        return this.multiplicity;
-    }
-
-    /**
-     * Set the multiplicity specification for this property.
-     * @param multiplicity the instance of Multiplicity that captures the allowable
-     * range of the cardinality of property values; if null, the default
-     * multiplicity of "1" is used.
-     */
-    public void setMultiplicity(Multiplicity multiplicity) {
-        if (multiplicity == null) {
-            this.multiplicity = Multiplicity.getInstance();
-        } else {
-            this.multiplicity = multiplicity;
-        }
+    
+    @Override
+    public boolean isConstrainedToAllowedValues() {
+        return !this.allowedValues.isEmpty();
     }
 
     /**
@@ -455,7 +329,7 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
      * @return true if this property requires at least one value.
      */
     public boolean isRequired() {
-        return !this.multiplicity.isIncluded(0);
+        return this.modifiable && this.required;
     }
 
     public Object clone() {
@@ -514,72 +388,6 @@ public class PropertyDefinitionImpl extends ObjectDefinitionImpl implements Prop
         return false;
     }
 
-    /**
-     * Convert the specified values to a stringified form.  This method uses the
-     * <code>toString</code> method on the values.
-     * @param values the array of values that this definition describes; may not be null
-     * @return the stringified form of the values; never null
-     */
-    public String getValuesAsString( Object[] values ) {
-		ArgCheck.isNotNull(values);
-        return getValuesAsString(values,this.getValueDelimiter());
-    }
-
-    /**
-     * Convert the specified values to a stringified form.  This method uses the
-     * <code>toString</code> method on the values.
-     * @param values the array of values that this definition describes; may not be null
-     * @param delim the delimiter to use, overriding the property definition's
-     * set of values; if null, the property definition's delimiter will be used, or
-     * if there is no delimiter defined for the property definition, the default delimiter of ','
-     * @return the stringified form of the values; never null
-     */
-    public String getValuesAsString( Object[] values, String delim ) {
-    	ArgCheck.isNotNull(values);
-
-        // Make sure there is a delimiter of some form!
-        if ( delim == null ) {
-            delim = this.getValueDelimiter();
-        }
-        if ( delim == null ) {
-            delim = PropertyDefinitionImpl.DEFAULT_DELIMITER;
-        }
-        return StringUtil.join(Arrays.asList(values),delim);
-    }
-
-    /**
-     * Convert the stringified form to an array of String values.
-     * @param stringifiedValue the stringified form of the values
-     * @return the array of String values; never null, but may by empty
-     */
-    public Object[] getValuesFromString( String stringifiedValues ) {
-        return getValuesFromString(stringifiedValues,this.getValueDelimiter());
-    }
-
-    /**
-     * Convert the stringified form to an array of String values.
-     * @param stringifiedValue the stringified form of the values
-     * @param delim the delimiter to use, overriding the property definition's
-     * set of values; if null, the property definition's delimiter will be used, or
-     * if there is no delimiter defined for the property definition, the default delimiter of ','
-     * @return the array of String values; never null, but may by empty
-     */
-    public Object[] getValuesFromString( String stringifiedValues, String delim ) {
-        // Shortcut this method ...
-        if ( stringifiedValues == null || stringifiedValues.length() == 0 ) {
-            return new Object[0];
-        }
-
-        // Make sure there is a delimiter of some form!
-        if ( delim == null ) {
-            delim = this.getValueDelimiter();
-        }
-        if ( delim == null ) {
-            delim = PropertyDefinitionImpl.DEFAULT_DELIMITER;
-        }
-        List result = StringUtil.getTokens(stringifiedValues,delim);
-        return result.toArray();
-    }
 }
 
 

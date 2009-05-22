@@ -59,7 +59,6 @@ public final class StandardPropertyTypeValidator implements Serializable {
         STANDARD_VALIDATORS.put( PropertyType.HOSTNAME_NAME,  new HostnameValidator() );
         STANDARD_VALIDATORS.put( PropertyType.FILE_NAME,      new DirectoryEntryValidator() );
         STANDARD_VALIDATORS.put( PropertyType.OBJECT_ID_NAME, new ObjectIDValidator() );
-        STANDARD_VALIDATORS.put( PropertyType.MULTIPLICITY_NAME,   new MultiplicityValidator() );
         STANDARD_VALIDATORS.put( PropertyType.PASSWORD_NAME,       new PasswordValidator() );
         STANDARD_VALIDATORS.put( PropertyType.PROPERTIED_OBJECT_NAME,  new PropertiedObjectValidator() );
         STANDARD_VALIDATORS.put( PropertyType.DESCRIPTOR_NAME,     new DefaultValidator() );
@@ -127,24 +126,6 @@ class RegularExpressionValidator extends StringValidator {
     public boolean isValidValue(Object value ) {
         if (value instanceof String) {
             // TODO:  Attempt to parse the regular expression
-            return true;
-        }else if(value instanceof Object[]) {
-            return StandardPropertyTypeValidator.isValidValue((Object[])value, this);
-        }else {
-            return false;
-        }
-    }
-}
-class MultiplicityValidator implements PropertyTypeValidator, Serializable {
-    public boolean isValidValue(Object value ) {
-        if (value instanceof Multiplicity) {
-            return true;
-        }else if (value instanceof String) {
-            try {
-                Multiplicity.getInstance((String)value);    
-            } catch ( MultiplicityExpressionException e ) {
-                return false;
-            }
             return true;
         }else if(value instanceof Object[]) {
             return StandardPropertyTypeValidator.isValidValue((Object[])value, this);

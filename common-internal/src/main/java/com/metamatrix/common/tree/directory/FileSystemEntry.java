@@ -40,8 +40,6 @@ import java.util.Map;
 import java.util.zip.ZipFile;
 
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.object.MultiplicityExpressionException;
-import com.metamatrix.common.object.MultiplicityPool;
 import com.metamatrix.common.object.ObjectDefinition;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.object.PropertyDefinitionImpl;
@@ -70,72 +68,52 @@ public class FileSystemEntry implements DirectoryEntry {
     private static final List UNMODIFIABLE_PROPERTY_DEFINITIONS = Collections.unmodifiableList( PROPERTY_DEFINITIONS );
 
     static {
-        try {
-            NAME_PROPERTY = new PropertyDefinitionImpl("name",PropertyType.STRING,MultiplicityPool.get("1")); //$NON-NLS-1$ //$NON-NLS-2$
-            NAME_PROPERTY.setDisplayName("Name"); //$NON-NLS-1$
-            NAME_PROPERTY.setPluralDisplayName("Name"); //$NON-NLS-1$
-            NAME_PROPERTY.setShortDisplayName("Name"); //$NON-NLS-1$
-            NAME_PROPERTY.setShortDescription("The name of the file or directory"); //$NON-NLS-1$
-            NAME_PROPERTY.setDefaultValue(""); //$NON-NLS-1$
-            NAME_PROPERTY.setExpert(false);
-            NAME_PROPERTY.setModifiable(true);
-            NAME_PROPERTY.setHidden(false);
-            NAME_PROPERTY.setPreferred(true);
-            NAME_PROPERTY.setConstrainedToAllowedValues(false);
+        NAME_PROPERTY = new PropertyDefinitionImpl("name",PropertyType.STRING,true); //$NON-NLS-1$
+        NAME_PROPERTY.setDisplayName("Name"); //$NON-NLS-1$
+        NAME_PROPERTY.setPluralDisplayName("Name"); //$NON-NLS-1$
+        NAME_PROPERTY.setShortDisplayName("Name"); //$NON-NLS-1$
+        NAME_PROPERTY.setShortDescription("The name of the file or directory"); //$NON-NLS-1$
+        NAME_PROPERTY.setDefaultValue(""); //$NON-NLS-1$
+        NAME_PROPERTY.setExpert(false);
+        NAME_PROPERTY.setModifiable(true);
 
-            SIZE_PROPERTY = new PropertyDefinitionImpl("size",PropertyType.STRING,MultiplicityPool.get("1")); //$NON-NLS-1$ //$NON-NLS-2$
-            SIZE_PROPERTY.setDisplayName("Size"); //$NON-NLS-1$
-            SIZE_PROPERTY.setPluralDisplayName("Size"); //$NON-NLS-1$
-            SIZE_PROPERTY.setShortDisplayName("Size"); //$NON-NLS-1$
-            SIZE_PROPERTY.setShortDescription("The size of the file or directory"); //$NON-NLS-1$
-            SIZE_PROPERTY.setDefaultValue("0KB"); //$NON-NLS-1$
-            SIZE_PROPERTY.setExpert(false);
-            SIZE_PROPERTY.setModifiable(false);
-            SIZE_PROPERTY.setHidden(false);
-            SIZE_PROPERTY.setPreferred(false);
-            SIZE_PROPERTY.setConstrainedToAllowedValues(false);
+        SIZE_PROPERTY = new PropertyDefinitionImpl("size",PropertyType.STRING,true); //$NON-NLS-1$
+        SIZE_PROPERTY.setDisplayName("Size"); //$NON-NLS-1$
+        SIZE_PROPERTY.setPluralDisplayName("Size"); //$NON-NLS-1$
+        SIZE_PROPERTY.setShortDisplayName("Size"); //$NON-NLS-1$
+        SIZE_PROPERTY.setShortDescription("The size of the file or directory"); //$NON-NLS-1$
+        SIZE_PROPERTY.setDefaultValue("0KB"); //$NON-NLS-1$
+        SIZE_PROPERTY.setExpert(false);
+        SIZE_PROPERTY.setModifiable(false);
 
-            LAST_MODIFIED_PROPERTY = new PropertyDefinitionImpl("modified",PropertyType.TIMESTAMP,MultiplicityPool.get("1")); //$NON-NLS-1$ //$NON-NLS-2$
-            LAST_MODIFIED_PROPERTY.setDisplayName("Modified"); //$NON-NLS-1$
-            LAST_MODIFIED_PROPERTY.setPluralDisplayName("Modified"); //$NON-NLS-1$
-            LAST_MODIFIED_PROPERTY.setShortDisplayName("Modified"); //$NON-NLS-1$
-            LAST_MODIFIED_PROPERTY.setShortDescription("The time of last modification"); //$NON-NLS-1$
-            LAST_MODIFIED_PROPERTY.setDefaultValue(null);
-            LAST_MODIFIED_PROPERTY.setExpert(false);
-            LAST_MODIFIED_PROPERTY.setModifiable(false);
-            LAST_MODIFIED_PROPERTY.setHidden(false);
-            LAST_MODIFIED_PROPERTY.setPreferred(false);
-            LAST_MODIFIED_PROPERTY.setConstrainedToAllowedValues(false);
+        LAST_MODIFIED_PROPERTY = new PropertyDefinitionImpl("modified",PropertyType.TIMESTAMP,true); //$NON-NLS-1$
+        LAST_MODIFIED_PROPERTY.setDisplayName("Modified"); //$NON-NLS-1$
+        LAST_MODIFIED_PROPERTY.setPluralDisplayName("Modified"); //$NON-NLS-1$
+        LAST_MODIFIED_PROPERTY.setShortDisplayName("Modified"); //$NON-NLS-1$
+        LAST_MODIFIED_PROPERTY.setShortDescription("The time of last modification"); //$NON-NLS-1$
+        LAST_MODIFIED_PROPERTY.setDefaultValue(null);
+        LAST_MODIFIED_PROPERTY.setExpert(false);
+        LAST_MODIFIED_PROPERTY.setModifiable(false);
 
-            READ_ONLY_PROPERTY = new PropertyDefinitionImpl("readOnly",PropertyType.BOOLEAN,MultiplicityPool.get("1")); //$NON-NLS-1$ //$NON-NLS-2$
-            READ_ONLY_PROPERTY.setDisplayName("Read Only"); //$NON-NLS-1$
-            READ_ONLY_PROPERTY.setPluralDisplayName("Read Only"); //$NON-NLS-1$
-            READ_ONLY_PROPERTY.setShortDisplayName("RO"); //$NON-NLS-1$
-            READ_ONLY_PROPERTY.setShortDescription("Whether the file is read-only"); //$NON-NLS-1$
-            READ_ONLY_PROPERTY.setExpert(false);
-            READ_ONLY_PROPERTY.setModifiable(false);
-            READ_ONLY_PROPERTY.setHidden(false);
-            READ_ONLY_PROPERTY.setPreferred(false);
-            READ_ONLY_PROPERTY.setAllowedValues( PropertyDefinitionImpl.BOOLEAN_ALLOWED_VALUES );
-            READ_ONLY_PROPERTY.setDefaultValue( PropertyDefinitionImpl.BOOLEAN_ALLOWED_VALUES.get(0).toString() );
-            READ_ONLY_PROPERTY.setConstrainedToAllowedValues(true);
+        READ_ONLY_PROPERTY = new PropertyDefinitionImpl("readOnly",PropertyType.BOOLEAN,true); //$NON-NLS-1$
+        READ_ONLY_PROPERTY.setDisplayName("Read Only"); //$NON-NLS-1$
+        READ_ONLY_PROPERTY.setPluralDisplayName("Read Only"); //$NON-NLS-1$
+        READ_ONLY_PROPERTY.setShortDisplayName("RO"); //$NON-NLS-1$
+        READ_ONLY_PROPERTY.setShortDescription("Whether the file is read-only"); //$NON-NLS-1$
+        READ_ONLY_PROPERTY.setExpert(false);
+        READ_ONLY_PROPERTY.setModifiable(false);
+        READ_ONLY_PROPERTY.setAllowedValues( PropertyDefinitionImpl.BOOLEAN_ALLOWED_VALUES );
+        READ_ONLY_PROPERTY.setDefaultValue( PropertyDefinitionImpl.BOOLEAN_ALLOWED_VALUES.get(0).toString() );
 
-            IS_HIDDEN_PROPERTY = new PropertyDefinitionImpl("hidden",PropertyType.BOOLEAN,MultiplicityPool.get("1")); //$NON-NLS-1$ //$NON-NLS-2$
-            IS_HIDDEN_PROPERTY.setDisplayName("Hidden"); //$NON-NLS-1$
-            IS_HIDDEN_PROPERTY.setPluralDisplayName("Hidden"); //$NON-NLS-1$
-            IS_HIDDEN_PROPERTY.setShortDisplayName("Hidden"); //$NON-NLS-1$
-            IS_HIDDEN_PROPERTY.setShortDescription("Whether the file is hidden"); //$NON-NLS-1$
-            IS_HIDDEN_PROPERTY.setExpert(false);
-            IS_HIDDEN_PROPERTY.setModifiable(false);
-            IS_HIDDEN_PROPERTY.setHidden(true);
-            IS_HIDDEN_PROPERTY.setPreferred(false);
-            IS_HIDDEN_PROPERTY.setAllowedValues( PropertyDefinitionImpl.BOOLEAN_ALLOWED_VALUES );
-            IS_HIDDEN_PROPERTY.setDefaultValue( PropertyDefinitionImpl.BOOLEAN_ALLOWED_VALUES.get(0).toString() );
-            IS_HIDDEN_PROPERTY.setConstrainedToAllowedValues(true);
-
-        } catch ( MultiplicityExpressionException e ) {
-            e.printStackTrace(System.out);
-        }
+        IS_HIDDEN_PROPERTY = new PropertyDefinitionImpl("hidden",PropertyType.BOOLEAN,true); //$NON-NLS-1$
+        IS_HIDDEN_PROPERTY.setDisplayName("Hidden"); //$NON-NLS-1$
+        IS_HIDDEN_PROPERTY.setPluralDisplayName("Hidden"); //$NON-NLS-1$
+        IS_HIDDEN_PROPERTY.setShortDisplayName("Hidden"); //$NON-NLS-1$
+        IS_HIDDEN_PROPERTY.setShortDescription("Whether the file is hidden"); //$NON-NLS-1$
+        IS_HIDDEN_PROPERTY.setExpert(false);
+        IS_HIDDEN_PROPERTY.setModifiable(false);
+        IS_HIDDEN_PROPERTY.setAllowedValues( PropertyDefinitionImpl.BOOLEAN_ALLOWED_VALUES );
+        IS_HIDDEN_PROPERTY.setDefaultValue( PropertyDefinitionImpl.BOOLEAN_ALLOWED_VALUES.get(0).toString() );
 
     }
 
@@ -278,7 +256,7 @@ public class FileSystemEntry implements DirectoryEntry {
     	ArgCheck.isNotNull(definition);
 
         // A null value is not allowed if multiplicity is 1 or more ...
-        if ( value == null && definition.getMultiplicity().getMinimum() != 0 ) {
+        if ( value == null && definition.isRequired() ) {
             return false;
         }
 

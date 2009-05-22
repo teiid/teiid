@@ -28,7 +28,6 @@ import com.metamatrix.common.transaction.UserTransaction;
 import com.metamatrix.common.transaction.UserTransactionFactory;
 import com.metamatrix.common.transaction.manager.SimpleUserTransactionFactory;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.core.util.Assertion;
 
 public class PropertiedObjectEditorImpl implements PropertiedObjectEditor {
 
@@ -138,9 +137,6 @@ public class PropertiedObjectEditorImpl implements PropertiedObjectEditor {
     public boolean isValidValue(PropertiedObject obj, PropertyDefinition def, Object value ) {
         PropertiedObjectImpl propObj = assertPropertiedObject(obj);
         ArgCheck.isNotNull(def);
-        if ( def.getMultiplicity().getMaximum() > 1 ) {
-            Assertion.assertTrue(value instanceof Object[],"The property definition " + def.getDisplayName() + " is multi-valued, so the property value must be an Object[]"); //$NON-NLS-1$ //$NON-NLS-2$
-        }
         return propObj.isValidValue(def,value);
     }
 
@@ -162,9 +158,6 @@ public class PropertiedObjectEditorImpl implements PropertiedObjectEditor {
     public void setValue(PropertiedObject obj, PropertyDefinition def, Object value) {
         PropertiedObjectImpl propObj = assertPropertiedObject(obj);
         ArgCheck.isNotNull(def);
-        if ( def.getMultiplicity().getMaximum() > 1 ) {
-            Assertion.assertTrue(value instanceof Object[],"The property definition " + def.getDisplayName() + " is multi-valued, so the property value must be an Object[]"); //$NON-NLS-1$ //$NON-NLS-2$
-        }
         propObj.setValue(def, value);
     }
 

@@ -22,8 +22,6 @@
 
 package com.metamatrix.metadata.runtime.model;
 
-import com.metamatrix.common.object.Multiplicity;
-
 import com.metamatrix.metadata.runtime.api.DataType;
 import com.metamatrix.metadata.runtime.api.Element;
 import com.metamatrix.metadata.runtime.api.ElementID;
@@ -54,7 +52,6 @@ public class BasicElement extends BasicMetadataObject implements Element {
         private String maxRange;
         private short searchType = 1;
         private String format;
-        private Multiplicity multiplicity;
         private String defaultValue;
 //        private long dataTypeUID;
         private int position;
@@ -153,9 +150,6 @@ public class BasicElement extends BasicMetadataObject implements Element {
     public String getFormat() {
       return format;
     }
-    public Multiplicity getMultplicity() {
-      return multiplicity;
-    }
     public Object getDefaultValue() {
       return defaultValue;
     }
@@ -231,10 +225,6 @@ public class BasicElement extends BasicMetadataObject implements Element {
     public void setFormat(String format) {
         this.format = format;
     }
-    public void setMultplicity(Multiplicity multiplicity) {
-        this.multiplicity = multiplicity;
-    }
-
     public void setDefaultValue(String defaultValue) {
         this.defaultValue = defaultValue;
     }

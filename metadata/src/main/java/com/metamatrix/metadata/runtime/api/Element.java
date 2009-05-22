@@ -22,7 +22,6 @@
 
 package com.metamatrix.metadata.runtime.api;
 
-import com.metamatrix.common.object.Multiplicity;
 /**
  * <p>Instances of this interface represent Elements for a Group.  The values of an Element are analogous to a Column ion a table in a database.</p> 
  */
@@ -152,11 +151,6 @@ public interface Element extends MetadataObject {
  * @return String 
  */
     String getFormat();
-/**
- * Returns the multiplicity this element can have.
- * @return Multiplicity
- */
-    Multiplicity getMultplicity();
 /**
  * Returns the default value in the object form based on the data type for this element.
  *  @return Object 

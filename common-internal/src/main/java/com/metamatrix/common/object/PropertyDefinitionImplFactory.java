@@ -25,7 +25,6 @@ package com.metamatrix.common.object;
 public class PropertyDefinitionImplFactory {
 
     private static final PropertyType DEFAULT_TYPE = PropertyType.STRING;
-    private static final Multiplicity DEFAULT_MULTIPLICITY = Multiplicity.getInstance();
 
     /**
      * Create a new ObjectDefinition instance.
@@ -40,7 +39,7 @@ public class PropertyDefinitionImplFactory {
      * @return the new instance
      */
     public ObjectDefinition create(String name ) {
-        return new PropertyDefinitionImpl(name,DEFAULT_TYPE,DEFAULT_MULTIPLICITY);
+        return new PropertyDefinitionImpl(name,DEFAULT_TYPE,true);
     }
     /**
      * Create a definition object with the specified set of attributes.
@@ -50,7 +49,7 @@ public class PropertyDefinitionImplFactory {
      * @return the new instance
      */
     public ObjectDefinition create(String name, String displayName ) {
-        return new PropertyDefinitionImpl(name,displayName,DEFAULT_TYPE,DEFAULT_MULTIPLICITY);
+        return new PropertyDefinitionImpl(name,displayName,DEFAULT_TYPE,true);
     }
 }
 
