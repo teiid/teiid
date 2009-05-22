@@ -34,7 +34,7 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.api.ConnectorPropertyNames;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;

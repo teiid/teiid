@@ -5,11 +5,11 @@ import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorIdentity;
+import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.CredentialMap;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.MappedUserIdentity;
 import org.teiid.connector.api.SingleIdentity;
-import org.teiid.connector.internal.ConnectorPropertyNames;
 
 import com.metamatrix.common.util.PropertiesUtils;
 

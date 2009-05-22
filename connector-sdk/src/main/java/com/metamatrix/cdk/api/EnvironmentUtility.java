@@ -27,8 +27,8 @@ import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
 

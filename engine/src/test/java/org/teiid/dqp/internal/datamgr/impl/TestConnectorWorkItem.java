@@ -33,8 +33,8 @@ import javax.transaction.Transaction;
 import junit.framework.TestCase;
 
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ProcedureExecution;
-import org.teiid.connector.internal.ConnectorPropertyNames;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;

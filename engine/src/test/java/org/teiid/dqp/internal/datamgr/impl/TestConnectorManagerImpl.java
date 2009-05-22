@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
 import org.teiid.dqp.internal.pooling.connector.FakeSourceConnectionFactory;

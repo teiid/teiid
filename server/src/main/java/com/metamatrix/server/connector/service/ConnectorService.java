@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;

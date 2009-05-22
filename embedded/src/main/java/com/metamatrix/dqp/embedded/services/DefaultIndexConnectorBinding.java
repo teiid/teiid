@@ -25,7 +25,7 @@ package com.metamatrix.dqp.embedded.services;
 import java.util.Date;
 import java.util.Properties;
 
-import org.teiid.connector.internal.ConnectorPropertyNames;
+import org.teiid.connector.api.ConnectorPropertyNames;
 
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationID;

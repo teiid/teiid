@@ -39,7 +39,7 @@ public interface ConnectorBindingType extends ServiceComponentType {
         public static final String IS_XA = "IsXA"; //$NON-NLS-1$
         public static final String CONNECTOR_CLASS = "ConnectorClass";//$NON-NLS-1$
         public static final String MM_JAR_PROTOCOL = "extensionjar"; //$NON-NLS-1$   
-        public static final String CONNECTOR_CLASSPATH = "ConnectorClassPath"; //$NON-NLS-1$
+        public static final String CONNECTOR_TYPE_CLASSPATH = "ConnectorTypeClassPath"; //$NON-NLS-1$
     }
     
     /**

@@ -83,7 +83,7 @@ public class BasicConnectorBindingType extends BasicComponentType implements Con
      */
     public String[] getExtensionModules() {
         ArrayList modules = new ArrayList();
-        String classPath = getDefaultValue(Attributes.CONNECTOR_CLASSPATH);
+        String classPath = getDefaultValue(Attributes.CONNECTOR_TYPE_CLASSPATH);
         if (classPath != null) {
             StringTokenizer st = new StringTokenizer(classPath, ";"); //$NON-NLS-1$
             while (st.hasMoreTokens()) {
