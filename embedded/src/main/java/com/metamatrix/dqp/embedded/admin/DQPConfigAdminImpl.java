@@ -42,7 +42,6 @@ import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMAdminStatus;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
@@ -1050,10 +1049,11 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
 			throw new AdminComponentException(e);
 		}
 	}
-
+	
 	@Override
-	public void reloadUDF() throws AdminException {
+	public void extensionModuleModified(String name) throws AdminException {
 		try {
+			getConfigurationService().clearClassLoaderCache();
 			getConfigurationService().loadUDF();
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);

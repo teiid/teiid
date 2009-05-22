@@ -31,9 +31,9 @@ import com.metamatrix.admin.api.exception.AdminException;
  */
 public interface EmbeddedConfigAdmin extends CoreConfigAdmin {
     /**
-     * Reload the User Defined function. 
+     * Indicates that an extension module has changed 
      * @throws AdminException
      * @since 6.1.0
      */
-    void reloadUDF() throws AdminException;
+    void extensionModuleModified(String name) throws AdminException;
 }

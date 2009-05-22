@@ -408,7 +408,9 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
      * Load the UDF function model 
      * @throws MetaMatrixComponentException
      */
-    void loadUDF() throws MetaMatrixComponentException;    
+    void loadUDF() throws MetaMatrixComponentException;
+    
+    void clearClassLoaderCache() throws MetaMatrixComponentException;
     
     boolean isFullyConfiguredVDB(VDBArchive vdb) throws MetaMatrixComponentException;
 }

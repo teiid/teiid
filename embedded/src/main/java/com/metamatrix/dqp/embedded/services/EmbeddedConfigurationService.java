@@ -1496,5 +1496,10 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 	public void unregister(ConnectorBindingLifeCycleListener listener) {
 		this.connectorBindingLifeCycleListeners.remove(listener);
 	}    
+	
+	@Override
+	public void clearClassLoaderCache() throws MetaMatrixComponentException {
+		this.classLoaderManager.clearCache();
+	}
 }
 
