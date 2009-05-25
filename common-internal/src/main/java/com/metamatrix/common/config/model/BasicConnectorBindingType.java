@@ -94,8 +94,24 @@ public class BasicConnectorBindingType extends BasicComponentType implements Con
                     modules.add(jarFile);
                 }                                        
             }
+        } else {
+            // This is a pre-6 campatibility to support connector types that use the old classpath variable.
+
+            classPath = getDefaultValue(Attributes.CONNECTOR_CLASSPATH_PRE_6);
+            if (classPath != null) {
+                StringTokenizer st = new StringTokenizer(classPath, ";"); //$NON-NLS-1$
+                while (st.hasMoreTokens()) {
+                    String path = st.nextToken();
+                    int idx = path.indexOf(Attributes.MM_JAR_PROTOCOL);
+                    if (idx != -1) {
+                        String jarFile = path.substring(idx + Attributes.MM_JAR_PROTOCOL.length() + 1);
+                        modules.add(jarFile);
+                    }                                        
+                }
+            }
+
         }
         return (String[])modules.toArray(new String[modules.size()]);
     }    
-
+    
 }
