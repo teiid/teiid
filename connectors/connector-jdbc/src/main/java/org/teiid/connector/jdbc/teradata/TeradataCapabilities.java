@@ -28,7 +28,7 @@ import java.util.List;
 import org.teiid.connector.jdbc.JDBCCapabilities;
 
 
-
+// ghelblin test: Can I commit?
 /** 
  * for Teradata database Release V2R5.1
  */
