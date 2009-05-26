@@ -129,6 +129,10 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			}
 			try {
 				state.processor.process(Integer.MAX_VALUE);
+			} catch (MetaMatrixComponentException e) {
+				throw e;
+			} catch (MetaMatrixProcessingException e) {
+				throw e;
 			} catch (MetaMatrixCoreException e) {
 				throw new MetaMatrixComponentException(e);
 			}

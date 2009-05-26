@@ -7641,6 +7641,7 @@ public class TestProcessor extends TestCase {
 
         // Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.setBlockOnce(true);
         dataManager.addData("SELECT pm1.g1.e2, pm1.g1.e1 FROM pm1.g1", new List[] { //$NON-NLS-1$
         		Arrays.asList(Integer.valueOf(1), "a"), //$NON-NLS-1$
         		Arrays.asList(Integer.valueOf(2), "b") //$NON-NLS-1$

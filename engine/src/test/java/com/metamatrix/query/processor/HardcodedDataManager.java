@@ -50,6 +50,8 @@ public class HardcodedDataManager implements
     
     private boolean mustRegisterCommands = true;
     
+    private boolean blockOnce;
+    
     // Collect all commands run against this class
     private Collection commandHistory = new ArrayList(); // Commands
     
@@ -69,6 +71,10 @@ public class HardcodedDataManager implements
     	this.data.clear();
     	this.commandHistory.clear();
     }
+    
+    public void setBlockOnce(boolean blockOnce) {
+		this.blockOnce = blockOnce;
+	}
     
     /**
      * Set of model names that are valid.  Invalid ones will throw an error. 
@@ -132,6 +138,9 @@ public class HardcodedDataManager implements
         }
         
         FakeTupleSource source = new FakeTupleSource(projectedSymbols, rows);
+        if (blockOnce) {
+        	source.setBlockOnce();
+        }
         return source;
     }
 
