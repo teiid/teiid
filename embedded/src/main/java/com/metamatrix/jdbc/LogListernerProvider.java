@@ -29,6 +29,7 @@ import java.net.URL;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -43,9 +44,11 @@ class LogListernerProvider implements Provider<LogListener> {
 	@Inject
 	DQPConfigSource configSource;
 	
+	@Inject @Named("BootstrapURL")
+	URL dqpURL;
+	
 	@Override
 	public LogListener get() {
-    	URL dqpURL = (URL)configSource.getProperties().get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE);
         String logFile = configSource.getProperties().getProperty(DQPEmbeddedProperties.DQP_LOGFILE);
         String instanceId = configSource.getProperties().getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "0"); //$NON-NLS-1$        
         

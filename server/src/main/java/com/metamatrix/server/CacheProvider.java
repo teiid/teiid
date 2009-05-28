@@ -22,15 +22,20 @@
 
 package com.metamatrix.server;
 
+import java.util.List;
+import java.util.Properties;
+
 import org.jboss.cache.Cache;
 import org.jboss.cache.DefaultCacheFactory;
 import org.jboss.cache.config.Configuration;
+import org.jboss.cache.config.CacheLoaderConfig.IndividualCacheLoaderConfig;
 import org.jgroups.Channel;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.metamatrix.common.config.CurrentConfiguration;
 
 @Singleton
 class CacheProvider implements Provider<org.jboss.cache.Cache> {
@@ -47,6 +52,10 @@ class CacheProvider implements Provider<org.jboss.cache.Cache> {
 		
 		Cache cache = new DefaultCacheFactory().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
 		Configuration config = cache.getConfiguration();
+		List<IndividualCacheLoaderConfig> configs = config.getCacheLoaderConfig().getIndividualCacheLoaderConfigs();
+		Properties p = configs.get(0).getProperties();
+		p.setProperty("location", CurrentConfiguration.getInstance().getDefaultHost().getDataDirectory() + "/cache"); //$NON-NLS-1$ //$NON-NLS-2$
+		configs.get(0).setProperties(p);
 		config.getRuntimeConfig().setChannel(channel);
 		config.setClusterName(this.channelName);
 		

@@ -22,7 +22,6 @@
 
 package com.metamatrix.jdbc;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -45,44 +44,6 @@ public class EmbeddedDataSource extends BaseDataSource {
      */
     private String bootstrapFile;
     
-    //*************************** ConnectionPoolDataSource Specific Properties
-    /**
-     * maxstatements -
-     * The total number of statements that the pool should keep open. 
-     * 0 (zero) indicates that caching of statements is disabled.
-     */
-    private int maxStatements;
-    /**
-     * initialPoolSize - 
-     * The number of physical connections the pool should contain when it is created
-     */
-    private int initialPoolSize;
-    /**
-     * minPoolSize -
-     * The number of physical connections the pool should keep available at all times. 
-     * 0 (zero) indicates that connections should be created as needed.
-     */
-    private int minPoolSize;
-    /**
-     * maxPoolSize -
-     * The maximum number of physical connections that the pool should contain. 
-     * 0 (zero) indicates no maximum size.
-     */
-    private int maxPoolSize;
-    /**
-     * maxIdleTime -
-     * The number of seconds that a physical connection should remain unused in the pool 
-     * before the connection is closed. 0 (zero) indicates no limit.
-     */
-    private int maxIdleTime;
-    /**
-     * propertyCycle -
-     * The interval, in seconds, that the pool should wait before enforcing the current 
-     * policy defined by the values of the above connection pool properties
-     */
-    private int propertyCycle;
-    
-    
     //  string constant for the embedded configuration file property
     public static final String DQP_BOOTSTRAP_FILE = "bootstrapFile"; //$NON-NLS-1$
     
@@ -100,16 +61,10 @@ public class EmbeddedDataSource extends BaseDataSource {
                                          final String password) {
         Properties props = super.buildProperties(userName, password);
 
-        if (this.getBootstrapFile() != null && this.getBootstrapFile().trim().length() != 0) {
-            try {
-            	if (this.getBootstrapFile().equals(EmbeddedDriver.getDefaultConnectionURL())) {
-            		props.put("vdb.definition", getDatabaseName() +".vdb"); //$NON-NLS-1$ //$NON-NLS-2$
-            	}
-                props.put(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, URLHelper.buildURL(this.getBootstrapFile().trim()));
-            } catch (MalformedURLException e) {
-                // we can safely ignore as this will would have caught in validate..
-            }
-        }
+    	if (this.getBootstrapFile().equals(EmbeddedDriver.getDefaultConnectionURL())) {
+    		props.put("vdb.definition", getDatabaseName() +".vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+    	}
+    	props.put(DQP_BOOTSTRAP_FILE, this.bootstrapFile);
         return props;
     }
 
@@ -179,111 +134,4 @@ public class EmbeddedDataSource extends BaseDataSource {
         this.bootstrapFile = configFile;
     }
             
-    /** 
-     * @return Returns the initialPoolSize.
-     * @since 4.3
-     */
-    public int getInitialPoolSize() {
-        return this.initialPoolSize;
-    }
-
-    
-    /** 
-     * @param initialPoolSize The initialPoolSize to set.
-     * @since 4.3
-     */
-    public void setInitialPoolSize(int initialPoolSize) {
-        this.initialPoolSize = initialPoolSize;
-    }
-
-    
-    /** 
-     * @return Returns the maxIdleTime.
-     * @since 4.3
-     */
-    public int getMaxIdleTime() {
-        return this.maxIdleTime;
-    }
-
-    
-    /** 
-     * @param maxIdleTime The maxIdleTime to set.
-     * @since 4.3
-     */
-    public void setMaxIdleTime(int maxIdleTime) {
-        this.maxIdleTime = maxIdleTime;
-    }
-
-    
-    /** 
-     * @return Returns the maxPoolSize.
-     * @since 4.3
-     */
-    public int getMaxPoolSize() {
-        return this.maxPoolSize;
-    }
-
-    
-    /** 
-     * @param maxPoolSize The maxPoolSize to set.
-     * @since 4.3
-     */
-    public void setMaxPoolSize(int maxPoolSize) {
-        this.maxPoolSize = maxPoolSize;
-    }
-
-    
-    /** 
-     * @return Returns the maxStatements.
-     * @since 4.3
-     */
-    public int getMaxStatements() {
-        return this.maxStatements;
-    }
-
-    
-    /** 
-     * @param maxStatements The maxStatements to set.
-     * @since 4.3
-     */
-    public void setMaxStatements(int maxStatements) {
-        this.maxStatements = maxStatements;
-    }
-
-    
-    /** 
-     * @return Returns the minPoolSize.
-     * @since 4.3
-     */
-    public int getMinPoolSize() {
-        return this.minPoolSize;
-    }
-
-    
-    /** 
-     * @param minPoolSize The minPoolSize to set.
-     * @since 4.3
-     */
-    public void setMinPoolSize(int minPoolSize) {
-        this.minPoolSize = minPoolSize;
-    }
-
-    
-    /** 
-     * @return Returns the propertyCycle.
-     * @since 4.3
-     */
-    public int getPropertyCycle() {
-        return this.propertyCycle;
-    }
-
-    
-    /** 
-     * @param propertyCycle The propertyCycle to set.
-     * @since 4.3
-     */
-    public void setPropertyCycle(int propertyCycle) {
-        this.propertyCycle = propertyCycle;
-    }
-
 }

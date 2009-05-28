@@ -20,31 +20,16 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.jdbc;
+package com.metamatrix.common.application;
 
-import java.util.List;
-import java.util.Properties;
+/**
+ * Used as an entry mechanism for the Designer to extend service classes
+ * without depending upon embedded.
+ */
+public class ServiceLoader {
 
-import org.jboss.cache.Cache;
-import org.jboss.cache.DefaultCacheFactory;
-import org.jboss.cache.config.CacheLoaderConfig.IndividualCacheLoaderConfig;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
-@Singleton
-class CacheProvider implements Provider<org.jboss.cache.Cache> {
-	
-	@Inject @Named("WorkspaceDir") String workspaceDir;
-
-	public Cache get() {
-		Cache cache = new DefaultCacheFactory().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
-		List<IndividualCacheLoaderConfig> configs = cache.getConfiguration().getCacheLoaderConfig().getIndividualCacheLoaderConfigs();
-		Properties p = configs.get(0).getProperties();
-		p.setProperty("location", workspaceDir + "/cache"); //$NON-NLS-1$ //$NON-NLS-2$
-		configs.get(0).setProperties(p);
-		return cache;
+	public ApplicationService loadService(String serviceType, ApplicationService service) {
+		return service;
 	}
+	
 }

@@ -22,6 +22,7 @@
 
 package com.metamatrix.jdbc;
 
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
@@ -60,7 +61,6 @@ import com.metamatrix.jdbc.transport.LocalTransportHandler;
  */
 public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory {
     private static final int ACTIVE = 3;
-    private boolean initialized = false;
     private LocalTransportHandler handler = null;    
     private volatile boolean shutdownInProgress = false;
     private DQPCore dqp;
@@ -72,12 +72,9 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
     /** 
      * @see com.metamatrix.jdbc.EmbeddedConnectionFactory#createConnection()
      */
-    public Connection createConnection(Properties props) throws SQLException {
+    public Connection createConnection(URL bootstrapURL, Properties props) throws SQLException {
 
     	try {
-            // Initialize the transport
-        	initialize(props);
-        	
         	// check for the valid connection properties
             checkConnectionProperties (props);
 
@@ -87,8 +84,6 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             return new EmbeddedConnection(this, serverConn, props, listener);            
         } catch (ConnectionException e) {
             throw new EmbeddedSQLException(e);
-        }  catch (ApplicationInitializationException e) {
-        	throw new EmbeddedSQLException(e);
 		}
     }
         
@@ -98,34 +93,34 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
      * holding on to a previous transport handler, so we need to check if the DQP is 
      * still alive and create a new one if necessary. 
      * @param props
-     * @throws SQLException
+     * @throws ApplicationInitializationException 
      * @since 4.3
      */
-    private synchronized void initialize(Properties props) throws ApplicationInitializationException {
-        if (!initialized) {
-            
-    		Injector injector = Guice.createInjector(new EmbeddedGuiceModule(props));
-    		ResourceFinder.setInjector(injector); 
-    		DQPConfigSource configSource = injector.getInstance(DQPConfigSource.class);
+    public void initialize(URL bootstrapURL, Properties props) throws SQLException {
+		Injector injector = Guice.createInjector(new EmbeddedGuiceModule(bootstrapURL, props));
+		ResourceFinder.setInjector(injector); 
+		DQPConfigSource configSource = injector.getInstance(DQPConfigSource.class);
 
-    		// start the DQP
-    		this.dqp = new DQPCore();
-    		this.dqp.start(configSource);
-    		
-    		// make the configuration service listen for the connection life-cycle events
-    		// used during VDB delete
-            ConfigurationService configService = (ConfigurationService)findService(DQPServiceNames.CONFIGURATION_SERVICE);
-    		
-            //in new class loader - all of these should be created lazily and held locally
-            this.handler = new LocalTransportHandler(this.dqp);
-        	this.handler.registerListener(configService.getConnectionListener());
-        	this.shutdownThread = new ShutdownWork();
-        	Runtime.getRuntime().addShutdownHook(this.shutdownThread);
-            
-            this.initialized = true;       
-            this.starttime = System.currentTimeMillis();
-            DQPEmbeddedPlugin.logInfo("DQPEmbeddedManager.start_dqp", new Object[] {new Date(System.currentTimeMillis()).toString()}); //$NON-NLS-1$
-        }
+		// start the DQP
+		this.dqp = new DQPCore();
+		try {
+			this.dqp.start(configSource);
+		} catch (ApplicationInitializationException e) {
+			throw new EmbeddedSQLException(e);
+		}
+		
+		// make the configuration service listen for the connection life-cycle events
+		// used during VDB delete
+        ConfigurationService configService = (ConfigurationService)findService(DQPServiceNames.CONFIGURATION_SERVICE);
+		
+        //in new class loader - all of these should be created lazily and held locally
+        this.handler = new LocalTransportHandler(this.dqp);
+    	this.handler.registerListener(configService.getConnectionListener());
+    	this.shutdownThread = new ShutdownWork();
+    	Runtime.getRuntime().addShutdownHook(this.shutdownThread);
+        
+        this.starttime = System.currentTimeMillis();
+        DQPEmbeddedPlugin.logInfo("DQPEmbeddedManager.start_dqp", new Object[] {new Date(System.currentTimeMillis()).toString()}); //$NON-NLS-1$
     }
     
     class ShutdownWork extends Thread {
@@ -166,7 +161,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
     }    
         
     public ApplicationService findService(String type) {
-    	return this.dqp.getEnvironment().findService(type);
+    	return getDQP().getEnvironment().findService(type);
     }
     
     /**  
@@ -180,7 +175,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
     	shutdown(true);
     }
      
-    private void shutdown(boolean undoShutdownHook) throws SQLException {
+    private synchronized void shutdown(boolean undoShutdownHook) throws SQLException {
     	
     	if (undoShutdownHook) {
     		Runtime.getRuntime().removeShutdownHook(this.shutdownThread);
@@ -189,7 +184,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
         // Make sure shutdown is not already in progress; as call to shutdown will close
         // connections; and after the last connection closes, the listener also calls shutdown
         // for normal route.
-        if (!this.shutdownInProgress && this.initialized) {
+        if (!this.shutdownInProgress) {
 
             // this will by pass, and only let shutdown called once.
             shutdownInProgress = true;
@@ -207,9 +202,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             this.dqp = null;
             
             this.handler = null;
-            
-            this.initialized = false;
-            
+
             // shutdown the cache.
             ResourceFinder.getCacheFactory().destroy();
             

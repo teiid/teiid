@@ -43,6 +43,7 @@ public class Application {
 
     protected ApplicationEnvironment environment = new ApplicationEnvironment();
     private ArrayList<String> installedServices = new ArrayList<String>();
+    private ServiceLoader loader = new ServiceLoader();
 
     /* 
      * @see com.metamatrix.common.application.Application#initialize(java.util.Properties)
@@ -60,6 +61,7 @@ public class Application {
                 LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceIsNull", serviceName)); //$NON-NLS-1$
             }else{
             	ApplicationService appService = injector.getInstance(type);
+            	appService = loader.loadService(serviceName, appService);
             	String loggingContext = DQPServiceNames.SERVICE_LOGGING_CONTEXT[i];
 				if (loggingContext != null) {
 					appService = (ApplicationService)LogManager.createLoggingProxy(loggingContext, appService, new Class[] {type}, MessageLevel.DETAIL);

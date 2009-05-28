@@ -23,7 +23,6 @@
 package com.metamatrix.common.classloader;
 
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLStreamHandlerFactory;
 
 /**
@@ -62,12 +61,15 @@ public class PostDelegatingClassLoader extends URLFilteringClassLoader {
      */    
     public synchronized Class loadClass(String name) throws ClassNotFoundException {
         
+    	if (name.startsWith("javax.") || name.startsWith("java.")) { //$NON-NLS-1$ //$NON-NLS-2$
+			return super.loadClass(name);
+    	}
+    	
         Class loadedClass = this.findLoadedClass(name);
         if (loadedClass != null) {
             return loadedClass;
         }
 
-        
         // class not in cache
         try {
             loadedClass = super.findClass(name);

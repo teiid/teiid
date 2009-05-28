@@ -54,7 +54,7 @@ public class TestEmbeddedDataService extends TestCase {
 
     public void testSelectConnector() throws Exception {
         Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath()+"/dqp/dqp.properties"); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        configService.setUserPreferences(p);
         configService.initializeService(p);
         
     }

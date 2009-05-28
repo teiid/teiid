@@ -91,8 +91,8 @@ public class ArjunaTransactionProvider implements TransactionProvider {
         String txnMgrUniqueName = "txnmgr_" + props.getProperty(TransactionService.HOSTNAME, "").replace('.', '_') + "_" + vmName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // set the directory for storing the in-flight transactions
-        String baseDir = props.getProperty(TransactionService.TXN_STORE_DIR, TransactionService.DEFAULT_TXN_STORE_DIR);
-        Configuration.setObjectStoreRoot(baseDir + File.separator +  "MetaMatrixTxnStore" + File.separator + txnMgrUniqueName); //$NON-NLS-1$        
+        String baseDir = props.getProperty(TransactionService.TXN_STORE_DIR, System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
+        Configuration.setObjectStoreRoot(baseDir + File.separator +  "TeiidTxnStore" + File.separator + txnMgrUniqueName); //$NON-NLS-1$        
         
         configureLogging(txnMgrUniqueName, props);
 

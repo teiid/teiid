@@ -38,6 +38,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.AbstractClassLoaderManager;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -96,7 +98,10 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     private static final String VDB = ".vdb"; //$NON-NLS-1$
     private static final String DEF = ".def"; //$NON-NLS-1$
     
-    Properties userPreferences;
+	public final static String PROPERTIES_URL = "dqp.bootstrap"; //$NON-NLS-1$
+    
+    private Properties userPreferences;
+    private URL bootStrapURL;
     private Map<String, VDBArchive> loadedVDBs = new HashMap<String, VDBArchive>();
     Map<String, ConnectorBinding> loadedConnectorBindings = new HashMap<String, ConnectorBinding>();
     Map<String, ComponentType> loadedConnectorTypes = new HashMap<String, ComponentType>(); 
@@ -114,7 +119,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     	
     	@Override
     	public String getCommonExtensionClassPath() {
-    		return userPreferences.getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, ""); //$NON-NLS-1$
+    		return getUserPreferences().getProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, ""); //$NON-NLS-1$
     	}
     	
     	@Override
@@ -122,7 +127,15 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     		return ExtensionModuleReader.resolveExtensionModule(url, getExtensionPath());
     	}
     };
-        
+    
+    public URL getBootStrapURL() {
+		return bootStrapURL;
+	}
+    
+    @Inject public void setBootStrapURL(@Named("BootstrapURL") URL bootStrapURL) {
+		this.bootStrapURL = bootStrapURL;
+	}
+    
     boolean valid(String str) {
         if (str != null) {
             str = str.trim();
@@ -136,7 +149,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public URL getSystemVdb() {
-        String systemVDB = userPreferences.getProperty(DQPEmbeddedProperties.DQP_METADATA_SYSTEMURL);
+        String systemVDB = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_METADATA_SYSTEMURL);
         if (valid(systemVDB)) {
             return getFullyQualifiedPath(systemVDB);
         }
@@ -148,7 +161,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public Properties getSystemProperties() {
-        return userPreferences;
+        return getUserPreferences();
     }
 
     /** 
@@ -156,7 +169,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public void setSystemProperty(String key, String value) throws MetaMatrixComponentException {
-        userPreferences.setProperty(key, value);
+        getUserPreferences().setProperty(key, value);
         DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.add_system_property", new Object[] {key, value}); //$NON-NLS-1$
         this.configurationModel = ServerConfigFileWriter.addProperty(getSystemConfiguration(), key, value);
         saveSystemConfiguration(configurationModel);
@@ -167,7 +180,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public void updateSystemProperties(Properties properties) throws MetaMatrixComponentException {
-        userPreferences.putAll(properties);
+        getUserPreferences().putAll(properties);
         DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.update_system_properties", new Object[] {properties}); //$NON-NLS-1$
         this.configurationModel = ServerConfigFileWriter.addProperties(getSystemConfiguration(), properties);
         saveSystemConfiguration(configurationModel);
@@ -208,7 +221,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @see com.metamatrix.dqp.service.ConfigurationService#getConfigFile()
      */
     public URL getConfigFile() {
-        String configFile = userPreferences.getProperty(DQPEmbeddedProperties.DQP_CONFIGFILE, "configuration.xml"); //$NON-NLS-1$
+        String configFile = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_CONFIGFILE, "configuration.xml"); //$NON-NLS-1$
         if (valid(configFile)) {
             return getFullyQualifiedPath(configFile);
         }
@@ -221,7 +234,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      */
     public URL getUDFFile() {
         try {
-			String udfFile = userPreferences.getProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS);
+			String udfFile = getUserPreferences().getProperty(DQPEmbeddedProperties.USER_DEFINED_FUNCTIONS);
 			if (valid(udfFile)) {
 				return ExtensionModuleReader.resolveExtensionModule(udfFile, getExtensionPath());
 			}
@@ -250,7 +263,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public URL getLogFile() {
-        String logFile = userPreferences.getProperty(DQPEmbeddedProperties.DQP_LOGFILE);
+        String logFile = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_LOGFILE);
         if (valid(logFile)) {
             return getFullyQualifiedPath(logFile); 
         }
@@ -262,7 +275,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public String getLogLevel(){
-        String level = userPreferences.getProperty(DQPEmbeddedProperties.DQP_LOGLEVEL);
+        String level = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_LOGLEVEL);
         if (level == null) {
             level = "3"; //$NON-NLS-1$
         }
@@ -795,7 +808,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public URL[] getExtensionPath() {
-        String path = userPreferences.getProperty(DQPEmbeddedProperties.DQP_EXTENSIONS, "./extensions/"); //$NON-NLS-1$
+        String path = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_EXTENSIONS, "./extensions/"); //$NON-NLS-1$
         if (valid(path)) {
         	ArrayList<URL> urlPaths = new ArrayList<URL>();
         	StringTokenizer st = new StringTokenizer(path, ";"); //$NON-NLS-1$
@@ -811,7 +824,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @see com.metamatrix.dqp.service.ConfigurationService#useExtensionClasspath()
      */
     public boolean useExtensionClasspath() {
-        String path = userPreferences.getProperty(DQPEmbeddedProperties.DQP_EXTENSIONS);
+        String path = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_EXTENSIONS);
         return valid(path);
     }
     
@@ -963,7 +976,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         throws ApplicationInitializationException {
         
         try {
-            userPreferences = PropertiesUtils.clone(properties);
+            this.setUserPreferences(PropertiesUtils.clone(properties));
                         
             DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.dqp_loading", new Object[] {getInstanceIdenifier()}); //$NON-NLS-1$
             
@@ -975,7 +988,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             ServerConfigFileReader configReader = loadServerConfigFile();
             
             // Add properties to all the user preferences.
-            userPreferences.putAll(configReader.getSystemProperties());
+            getUserPreferences().putAll(configReader.getSystemProperties());
             
             // Get the alternate connector bindings from the server configuration
             Map connectorBindings = configReader.getConnectorBindings();
@@ -1031,7 +1044,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      */
     public URL[] getVDBLocations() {
         ArrayList vdbs = new ArrayList();
-        String vdbProperty = userPreferences.getProperty(DQPEmbeddedProperties.VDB_DEFINITION);
+        String vdbProperty = getUserPreferences().getProperty(DQPEmbeddedProperties.VDB_DEFINITION);
         if (vdbProperty != null  && vdbProperty.length() != 0) {
             StringTokenizer st = new StringTokenizer(vdbProperty, VDB_LIST_SEPARATOR);
             while( st.hasMoreTokens() ) {
@@ -1193,9 +1206,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     URL getFullyQualifiedPath(String file){
         if (file != null) {
             try {
-                // get the original URL to kick start the DQP as context URL
-                URL bootStrapURL = (URL)userPreferences.get(DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE);
-                
                 // since DQP can use metamatrix specific URLs to load the DQP, and we can not
                 // register the URLStreamHandler, we need to create the URL with correct handler
                 // URLHelper will let us do that.
@@ -1237,7 +1247,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @see com.metamatrix.dqp.service.ConfigurationService#getEncryptionKeyStore()
      */
     public URL getEncryptionKeyStore() {
-        String keyStoreFile = userPreferences.getProperty(DQPEmbeddedProperties.DQP_KEYSTORE);
+        String keyStoreFile = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_KEYSTORE);
         if (valid(keyStoreFile)) {
             return getFullyQualifiedPath(keyStoreFile);
         }
@@ -1433,7 +1443,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @return true if yes to use buffering; false otherwise
      */
     public boolean useDiskBuffering() {
-        return Boolean.valueOf(userPreferences.getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_USEDISK, "true")).booleanValue(); //$NON-NLS-1$        
+        return Boolean.valueOf(getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_USEDISK, "true")).booleanValue(); //$NON-NLS-1$        
     }
 
     
@@ -1443,7 +1453,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      */
     public File getDiskBufferDirectory() {
         File bufferDir = null;
-        String bufferDirectory = userPreferences.getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_DIR);
+        String bufferDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_DIR);
         if (valid(bufferDirectory)) {
             if (!bufferDirectory.endsWith("/")) { //$NON-NLS-1$
                 bufferDirectory += "/"; //$NON-NLS-1$
@@ -1453,7 +1463,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             bufferDir = new File(bufferURL.getPath());
         }
         else {            
-            bufferDir = new File(userPreferences.getProperty(DQPEmbeddedProperties.DQP_TMPDIR)); 
+            bufferDir = new File(getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_TMPDIR)); 
         }
         
         // create the buffer directory if not alread exists.
@@ -1469,22 +1479,22 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @return must a return a location 
      */
     public String getBufferMemorySize() {
-       return userPreferences.getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_MEMORY, "64"); //$NON-NLS-1$        
+       return getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_MEMORY, "64"); //$NON-NLS-1$        
     }
     
     /**  
      * @see com.metamatrix.dqp.service.ConfigurationService#getInstanceIdenifier()
      */
     public String getInstanceIdenifier() {
-        return userPreferences.getProperty(DQPEmbeddedProperties.DQP_IDENTITY);
+        return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_IDENTITY);
     }
     
     
     public String getProcessorBatchSize() {
-        return userPreferences.getProperty(DQPEmbeddedProperties.BufferService.DQP_PROCESSOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
+        return getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_PROCESSOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
     }
     public String getConnectorBatchSize() {
-        return userPreferences.getProperty(DQPEmbeddedProperties.BufferService.DQP_CONNECTOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
+        return getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_CONNECTOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
     }
 
 	@Override
@@ -1500,6 +1510,19 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 	@Override
 	public void clearClassLoaderCache() throws MetaMatrixComponentException {
 		this.classLoaderManager.clearCache();
+	}
+
+	void setUserPreferences(Properties userPreferences) {
+		this.userPreferences = userPreferences;
+		//test hack
+		URL url = (URL)userPreferences.get(PROPERTIES_URL);
+		if (url != null) {
+			this.bootStrapURL = url;
+		}
+	}
+
+	Properties getUserPreferences() {
+		return userPreferences;
 	}
 }
 

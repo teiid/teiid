@@ -586,6 +586,8 @@ public class Request implements QueryProcessor.ProcessorFactory {
     public void processRequest() 
         throws QueryValidatorException, QueryParserException, QueryResolverException, MetaMatrixComponentException, QueryPlannerException {
                     
+    	LogManager.logDetail(LogConstants.CTX_DQP, this.requestId, "executing", this.requestMsg.isPreparedStatement()?"prepared":"", this.requestMsg.getCommandString()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	
         initMetadata();
         
         Command processingCommand = generatePlan();

@@ -28,8 +28,6 @@ public interface DQPEmbeddedProperties {
 
     public static final String DQP_LOGFILE = "dqp.logFile"; //$NON-NLS-1$
     public static final String DQP_LOGLEVEL = "dqp.logLevel"; //$NON-NLS-1$
-    public static final String DQP_SERVICE_METADATA = "dqp.service.metadata"; //$NON-NLS-1$
-    public static final String DQP_SERVICE_DATA = "dqp.service.data"; //$NON-NLS-1$ 
     public static final String DQP_EXTENSIONS = "dqp.extensions"; //$NON-NLS-1$
     public static final String DQP_CONFIGFILE = "dqp.configFile"; //$NON-NLS-1$
     public static final String DQP_METADATA_SYSTEMURL = "dqp.metadata.systemURL"; //$NON-NLS-1$    
@@ -40,10 +38,6 @@ public interface DQPEmbeddedProperties {
     public static final String DQP_IDENTITY = "dqp.identity"; //$NON-NLS-1$
     public static final String DQP_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
     
-     // Holds the value of the DQP Embedded configuration properties file.
-    public static final String DQP_BOOTSTRAP_PROPERTIES_FILE = "dqp.propertiesFile"; //$NON-NLS-1$
-
-
     public interface BufferService {
         /**
          * Property prefix for DQP Buffer Service properties.

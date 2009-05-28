@@ -22,6 +22,7 @@
 
 package com.metamatrix.jdbc;
 
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
@@ -31,14 +32,17 @@ import java.util.Properties;
  * defined so that it can be used with DQP class loading.  
  */
 public interface EmbeddedConnectionFactory {
+	
+    public void initialize(URL bootstrapURL, Properties props) throws SQLException;
 
     /**
      * Create a Connection to the DQP. This will load a DQP instance if one is not present 
+     * @param bootstrapURL
      * @param properties
      * @return Connection to DQP
      * @throws SQLException
      */
-    public Connection createConnection(Properties properties) throws SQLException;  
+    public Connection createConnection(URL bootstrapURL, Properties properties) throws SQLException;  
     
     /**
      * Shutdown the connection factory, including the DQP and all its existing connections 

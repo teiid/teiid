@@ -1,4 +1,5 @@
         <ComponentType Name="JDBC Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.952-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.952-06:00">
+            <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:" IsRequired="true" PropertyType="String"/>
             <PropertyDefinition Name="User" DisplayName="User Name" ShortDescription=""    />
             <PropertyDefinition Name="Password" DisplayName="Password" ShortDescription=""   IsMasked="true"  />
             <PropertyDefinition Name="ConnectorTypeClassPath" DisplayName="Connector Type Class Path" ShortDescription="Connector Type classpath (defined by system, do not modify)" DefaultValue="extensionjar:connector_patch.jar;extensionjar:${project.artifactId}-${project.version}.jar;${classpath}"  IsModifiable="false" />

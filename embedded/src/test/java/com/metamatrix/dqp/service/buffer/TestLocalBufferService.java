@@ -31,6 +31,7 @@ import com.metamatrix.common.application.exception.ApplicationInitializationExce
 import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
 import com.metamatrix.dqp.embedded.services.EmbeddedBufferService;
 import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
@@ -45,12 +46,12 @@ public class TestLocalBufferService extends TestCase {
 
     public void testMissingRequiredProperties() throws Exception {        
         try {
-            System.setProperty("mm.io.tmpdir", System.getProperty("java.io.tmpdir")+"/metamatrix/1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, System.getProperty("java.io.tmpdir")+"/metamatrix/1"); //$NON-NLS-1$ //$NON-NLS-2$ 
             
             Application r = new Application();
             ConfigurationService cs = new EmbeddedConfigurationService();
             Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest1.properties"); //$NON-NLS-1$
-            p.setProperty("mm.io.tmpdir", System.getProperty("mm.io.tmpdir")); //$NON-NLS-1$ //$NON-NLS-2$
+            p.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, System.getProperty(DQPEmbeddedProperties.DQP_TMPDIR)); 
             cs.initialize(p);
             r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
             EmbeddedBufferService svc = new EmbeddedBufferService();
@@ -94,12 +95,12 @@ public class TestLocalBufferService extends TestCase {
     }
 
     public void testCheckMemPropertyGotSet2() throws Exception {
-        System.setProperty("mm.io.tmpdir", System.getProperty("java.io.tmpdir")+"/metamatrix/1");         //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, System.getProperty("java.io.tmpdir")+"/metamatrix/1");         //$NON-NLS-1$ //$NON-NLS-2$ 
         EmbeddedBufferService svc = null;
         Application r = new Application();
         ConfigurationService cs = new EmbeddedConfigurationService();
         Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest3.properties"); //$NON-NLS-1$
-        p.setProperty("mm.io.tmpdir", System.getProperty("mm.io.tmpdir")); //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, System.getProperty(DQPEmbeddedProperties.DQP_TMPDIR)); 
         cs.initialize(p);            
         r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
         svc = new EmbeddedBufferService();

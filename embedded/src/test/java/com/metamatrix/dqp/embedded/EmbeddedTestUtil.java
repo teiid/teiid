@@ -30,6 +30,7 @@ import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
 
 public class EmbeddedTestUtil {
 	
@@ -39,7 +40,7 @@ public class EmbeddedTestUtil {
 	
     public static Properties getProperties(String file) throws IOException {
         Properties props = PropertiesUtils.load(file);        
-        props.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_PROPERTIES_FILE, URLHelper.buildURL(file));
+        props.put(EmbeddedConfigurationService.PROPERTIES_URL, URLHelper.buildURL(file));
         return props;
     }
     

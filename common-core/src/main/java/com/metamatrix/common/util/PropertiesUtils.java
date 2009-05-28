@@ -753,7 +753,7 @@ public final class PropertiesUtils {
      * @return resolved properties object.
      * @since 4.4
      */
-    public static Properties resolveNestedProperties(Properties original) throws IOException{
+    public static Properties resolveNestedProperties(Properties original) {
         Properties modified = new Properties();
         
         for(Enumeration e = original.keys(); e.hasMoreElements();) {

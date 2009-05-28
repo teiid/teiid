@@ -64,8 +64,8 @@ public class TestEmbeddedVDBService extends TestCase{
     }
 
     public void testGetTestVDB() throws Exception {        
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        Properties p = EmbeddedTestUtil.getProperties(); 
+        configService.setUserPreferences(p);
         configService.initializeService(p);
         
         VDBArchive vdb = vdbService.getVDB("QT_Ora9DS", "1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -81,8 +81,8 @@ public class TestEmbeddedVDBService extends TestCase{
     }
     
     public void testSystemModelConnectorBinding() throws Exception {        
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        Properties p = EmbeddedTestUtil.getProperties(); 
+        configService.setUserPreferences(p);
         configService.initializeService(p);
         
         // asking "vdb.name" and stored "vdb.name"
@@ -102,8 +102,8 @@ public class TestEmbeddedVDBService extends TestCase{
     // name     | trim stored   |   name    |
     //---------------------------------------
     public void testGetConnectorBindingNames() throws Exception {
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        Properties p = EmbeddedTestUtil.getProperties(); 
+        configService.setUserPreferences(p);
         configService.initializeService(p);
         
         // asking "vdb.name" and stored "vdb.name"
@@ -113,8 +113,8 @@ public class TestEmbeddedVDBService extends TestCase{
     }
     
     public void testMapConnectorBinding() throws Exception {
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        Properties p = EmbeddedTestUtil.getProperties(); 
+        configService.setUserPreferences(p);
         configService.initializeService(p);
         
         Properties props = new Properties();        
@@ -156,7 +156,7 @@ public class TestEmbeddedVDBService extends TestCase{
         
         Application registry = new Application();
         configService = new EmbeddedConfigurationService();
-        configService.userPreferences = p;
+        configService.setUserPreferences(p);
         configService.initializeService(p);
         registry.installService(DQPServiceNames.CONFIGURATION_SERVICE, configService);
         vdbService = new EmbeddedVDBService();
@@ -170,14 +170,14 @@ public class TestEmbeddedVDBService extends TestCase{
     
     public void testVDBResource() throws Exception {
         Properties p = EmbeddedTestUtil.getProperties();         
-        configService.userPreferences = p;
+        configService.setUserPreferences(p);
         configService.initializeService(p);                
         assertNotNull(vdbService.getVDBResource("Admin", "1")); //$NON-NLS-1$ //$NON-NLS-2$              
     }
     
     public void testAvailableVDBs() throws Exception {
         Properties p = EmbeddedTestUtil.getProperties();         
-        configService.userPreferences = p;
+        configService.setUserPreferences(p);
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
         
@@ -188,8 +188,8 @@ public class TestEmbeddedVDBService extends TestCase{
     }
     
     public void testDeployNewVDB() throws Exception{
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        Properties p = EmbeddedTestUtil.getProperties(); 
+        configService.setUserPreferences(p);
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
         assertEquals(3, configService.getConnectorBindings().size());
@@ -211,8 +211,8 @@ public class TestEmbeddedVDBService extends TestCase{
     // when we deploy the already deployed VDB it should take on the next version
     // number.
     public void testDeploySameVDB() throws Exception{
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        Properties p = EmbeddedTestUtil.getProperties(); 
+        configService.setUserPreferences(p);
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
         assertEquals(3, configService.getConnectorBindings().size());
@@ -232,8 +232,8 @@ public class TestEmbeddedVDBService extends TestCase{
     
     
     public void changeVDBStatus_delete() throws Exception {
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        Properties p = EmbeddedTestUtil.getProperties(); 
+        configService.setUserPreferences(p);
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
         
@@ -243,8 +243,8 @@ public class TestEmbeddedVDBService extends TestCase{
     }
 
     public void changeVDBStatus_inactive() throws Exception {
-        Properties p = EmbeddedTestUtil.getProperties(); //$NON-NLS-1$        
-        configService.userPreferences = p;
+        Properties p = EmbeddedTestUtil.getProperties(); 
+        configService.setUserPreferences(p);
         configService.initializeService(p);                
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
         

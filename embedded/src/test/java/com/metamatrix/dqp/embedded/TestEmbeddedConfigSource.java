@@ -34,7 +34,6 @@ import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeAbstractService;
 import com.metamatrix.dqp.service.FakeVDBService;
-import com.metamatrix.jdbc.EmbeddedDataSource;
 
 public class TestEmbeddedConfigSource extends TestCase {
     
@@ -48,9 +47,9 @@ public class TestEmbeddedConfigSource extends TestCase {
 
     public void testServiceLoading() throws Exception {
     	Properties p = new Properties();
-    	p.put(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, buildDQPUrl(UnitTestUtil.getTestDataPath() + "/bqt/fakebqt.properties")); //$NON-NLS-1$
-    	
-        EmbeddedConfigSource source = new EmbeddedConfigSource(p);        
+    	URL url = buildDQPUrl(UnitTestUtil.getTestDataPath() + "/bqt/fakebqt.properties"); //$NON-NLS-1$
+    	p.load(url.openStream());
+        EmbeddedConfigSource source = new EmbeddedConfigSource(url, p);        
         Application application = new Application();
         application.start(source);
         assertTrue(application.getEnvironment().findService(DQPServiceNames.VDB_SERVICE) instanceof FakeVDBService);

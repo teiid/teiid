@@ -22,11 +22,16 @@
 
 package com.metamatrix.dqp.embedded.services;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
 
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
+import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.service.TransactionService;
@@ -36,6 +41,8 @@ public class EmbeddedTransactionService extends TransactionServerImpl {
 
     public static final String TRANSACTIONS_ENABLED = "metamatrix.xatxnmgr.enabled"; //$NON-NLS-1$
     
+    @Inject @Named("BootstrapURL") URL bootstrapURL;
+    
     @Override
     public void initialize(Properties props)
     		throws ApplicationInitializationException {
@@ -44,10 +51,18 @@ public class EmbeddedTransactionService extends TransactionServerImpl {
             props.put(TransactionService.HOSTNAME, "dqp"); //$NON-NLS-1$
             props.put(TransactionService.VMNAME, props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY));
             
+            String dir = props.getProperty(TransactionService.TXN_STORE_DIR);
+            if (dir != null) {
+            	props.setProperty(TXN_STORE_DIR, URLHelper.buildURL(bootstrapURL, dir).getPath());
+            } else {
+            	props.setProperty(TXN_STORE_DIR, props.getProperty(DQPEmbeddedProperties.DQP_TMPDIR));
+            }
             this.setTransactionProvider(ArjunaTransactionProvider.getInstance(props));
         } catch (XATransactionException e) {
             throw new ApplicationInitializationException(e);
-        } 
+        } catch (MalformedURLException e) {
+        	throw new ApplicationInitializationException(e);
+		} 
     }
     
 }

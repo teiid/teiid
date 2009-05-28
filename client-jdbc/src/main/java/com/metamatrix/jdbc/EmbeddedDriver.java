@@ -28,18 +28,16 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,6 +47,8 @@ import com.metamatrix.common.protocol.MMURLConnection;
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.ApplicationInfo;
+import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
@@ -74,10 +74,7 @@ public final class EmbeddedDriver extends BaseDriver {
     static final String URL_PATTERN = "jdbc:metamatrix:(\\w+)@(([^;]*)[;]?)((.*)*)"; //$NON-NLS-1$
     static final String BASE_PATTERN = "jdbc:metamatrix:((\\w+)[;]?)(;([^@])+)*"; //$NON-NLS-1$
     public static final String DRIVER_NAME = "Teiid Embedded JDBC Driver"; //$NON-NLS-1$
-    public static final String POST_DELEGATION_LIBRARIES = "PostDelegationLibraries"; //$NON-NLS-1$
 
-    static final String DQP_IDENTITY = "dqp.identity"; //$NON-NLS-1$
-    static final String MM_IO_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
     private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
     
     private static EmbeddedTransport currentTransport = null;
@@ -108,6 +105,8 @@ public final class EmbeddedDriver extends BaseDriver {
         // create a properties obj if it is null
         if (info == null) {
             info = new Properties();
+        } else {
+        	info = PropertiesUtils.clone(info);
         }
         if (!acceptsURL(url)) {
         	return null;
@@ -123,22 +122,24 @@ public final class EmbeddedDriver extends BaseDriver {
         return conn;
 
     }
-
+    
     Connection createConnection(Properties info) throws SQLException{
         
         // first validate the properties as this may called from the EmbeddedDataSource
         // and make sure we have all the properties we need.
         validateProperties(info);
         
+        URL dqpURL;
+		try {
+			dqpURL = URLHelper.buildURL(info.getProperty(EmbeddedDataSource.DQP_BOOTSTRAP_FILE));
+		} catch (MalformedURLException e) {
+			throw MMSQLException.create(e);
+		}
+        
         // now create the connection
-        URL dqpURL = (URL)info.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE);
         EmbeddedTransport transport = getDQPTransport(dqpURL, info);                        
         
         Connection conn = transport.createConnection(info);
-
-        // only upon successful creation of the connection, keep the transport
-        // available for future connections
-        currentTransport = transport;
         
         return conn;
     }
@@ -151,7 +152,7 @@ public final class EmbeddedDriver extends BaseDriver {
      * @throws SQLException
      * @since 4.4
      */
-    private static EmbeddedTransport getDQPTransport(URL dqpURL, Properties info) throws SQLException {      
+    private synchronized static EmbeddedTransport getDQPTransport(URL dqpURL, Properties info) throws SQLException {      
         EmbeddedTransport transport = currentTransport;
         if (transport != null && currentTransport.getURL().equals(dqpURL)) {
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_existing_transport"); //$NON-NLS-1$
@@ -164,6 +165,7 @@ public final class EmbeddedDriver extends BaseDriver {
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_new_transport"); //$NON-NLS-1$
             DriverManager.println(logMsg);
         }
+        currentTransport = transport;
         return transport;
     }
 
@@ -198,9 +200,7 @@ public final class EmbeddedDriver extends BaseDriver {
                 connectionURL = getDefaultConnectionURL();
                 info.setProperty("vdb.definition", jdbcURL.getVDBName()+".vdb"); //$NON-NLS-1$ //$NON-NLS-2$
             }
-            
-            // Set the dqp.properties file properties
-            URL dqpURL = URLHelper.buildURL(connectionURL);
+            info.setProperty(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, connectionURL);
                        
             Properties optionalParams = jdbcURL.getProperties();
             MMJDBCURL.normalizeProperties(info);
@@ -221,10 +221,6 @@ public final class EmbeddedDriver extends BaseDriver {
             if(!info.containsKey(BaseDataSource.APP_NAME)) {
                 info.setProperty(BaseDataSource.APP_NAME, BaseDataSource.DEFAULT_APP_NAME);
             }
-            
-            // Add the DQP URL as the configuration URL
-            info.put(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, dqpURL);            
-            
         } catch (Exception e) {
             String logMsg = e.getClass() +": "+e.getMessage(); //$NON-NLS-1$
             DriverManager.println(logMsg); 
@@ -259,13 +255,6 @@ public final class EmbeddedDriver extends BaseDriver {
             throw new SQLException(logMsg);
         }
 
-        // DQP config file must be supplied
-        URL url = (URL)info.get(EmbeddedDataSource.DQP_BOOTSTRAP_FILE);
-        if (url == null) {
-            String logMsg = BaseDataSource.getResourceMessage("EmbeddedDataSource.Configuration_file_must_be_specified"); //$NON-NLS-1$
-            DriverManager.println(logMsg);
-            throw new SQLException(logMsg);
-        }
     }
 
 
@@ -297,9 +286,7 @@ public final class EmbeddedDriver extends BaseDriver {
 	@Override
 	List<DriverPropertyInfo> getAdditionalPropertyInfo(String url,
 			Properties info) {
-        DriverPropertyInfo dpi = new DriverPropertyInfo(EmbeddedDataSource.DQP_BOOTSTRAP_FILE, info.getProperty(EmbeddedDataSource.DQP_BOOTSTRAP_FILE));
-        dpi.required = true;
-        return Arrays.asList(dpi);
+        return Collections.emptyList();
 	}    
     
     /**
@@ -355,19 +342,22 @@ public final class EmbeddedDriver extends BaseDriver {
 
         	this.url = dqpURL;
         	
-            // Create a temporary workspace directory
-            this.workspaceDirectory = createWorkspace(getDQPIdentity());
-            
             //Load the properties from dqp.properties file
             Properties props = loadDQPProperties(dqpURL);
             props.putAll(info);
-
+            
+            props = PropertiesUtils.resolveNestedProperties(props);
+            
+            String dqpId = getDQPIdentity();
+            props.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, dqpId);
+            // Create a temporary workspace directory
+            this.workspaceDirectory = createWorkspace(props.getProperty(DQPEmbeddedProperties.DQP_TMPDIR), dqpId);
+            
             this.classLoader = this.getClass().getClassLoader();
             
             // a non-delegating class loader will be created from where all third party dependent jars can be loaded
             ArrayList<URL> runtimeClasspathList = new ArrayList<URL>();
-            ArrayList<URL> postDelegationClasspathList = null;
-            String libLocation = info.getProperty("dqp.lib", "./lib/"); //$NON-NLS-1$ //$NON-NLS-2$
+            String libLocation = props.getProperty("dqp.lib", "./lib/"); //$NON-NLS-1$ //$NON-NLS-2$
             if (!libLocation.endsWith("/")) { //$NON-NLS-1$
             	libLocation = libLocation + "/"; //$NON-NLS-1$
             }
@@ -375,31 +365,11 @@ public final class EmbeddedDriver extends BaseDriver {
             // find jars in the "lib" directory; patches is reverse alpaha and not case sensitive so small letters then capitals
             if (!EmbeddedDriver.getDefaultConnectionURL().equals(dqpURL.toString())) {
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation+"patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
-	            
-	            // check if a specific post delegation rules specified for loading
-	            String postDelgationLibraries  = info.getProperty(POST_DELEGATION_LIBRARIES); 
-	            if (postDelgationLibraries != null) {
-	            	postDelegationClasspathList = resolvePath(dqpURL, libLocation, postDelgationLibraries);
-	            	List<URL> postDelegationPatches = new ArrayList<URL>(runtimeClasspathList);
-	            	postDelegationPatches.retainAll(postDelegationClasspathList);
-	            	postDelegationClasspathList.removeAll(postDelegationPatches);
-	            	postDelegationClasspathList.addAll(0, postDelegationPatches);
-	            }
-	            
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
-	            
-	            if (postDelegationClasspathList != null) {
-	            	runtimeClasspathList.removeAll(postDelegationClasspathList);
-	            }
             }
             
             URL[] dqpClassPath = runtimeClasspathList.toArray(new URL[runtimeClasspathList.size()]);
-            this.classLoader = new URLClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
-            
-            if (postDelegationClasspathList != null && !postDelegationClasspathList.isEmpty()) {
-            	URL[] path = postDelegationClasspathList.toArray(new URL[postDelegationClasspathList.size()]);
-            	this.classLoader = new PostDelegatingClassLoader(path, this.classLoader, new MetaMatrixURLStreamHandlerFactory());
-            }
+            this.classLoader = new PostDelegatingClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
             
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_classpath"); //$NON-NLS-1$
             DriverManager.println(logMsg);
@@ -408,13 +378,13 @@ public final class EmbeddedDriver extends BaseDriver {
             }
             
             // Now using this class loader create the connection factory to the dqp.            
-            ClassLoader current = null;            
+            ClassLoader current = Thread.currentThread().getContextClassLoader();            
             try {
-                current = Thread.currentThread().getContextClassLoader();             
                 Thread.currentThread().setContextClassLoader(this.classLoader);            
                 String className = "com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl"; //$NON-NLS-1$
-                Class clazz = this.classLoader.loadClass(className);            
+                Class<?> clazz = this.classLoader.loadClass(className);            
                 this.connectionFactory = (EmbeddedConnectionFactory)clazz.newInstance();
+                this.connectionFactory.initialize(dqpURL, props);
             } catch (Exception e) {
                 DriverManager.println(e.getClass() +": "+e.getMessage()); //$NON-NLS-1$
                 throw new EmbeddedSQLException(e);                
@@ -454,19 +424,6 @@ public final class EmbeddedDriver extends BaseDriver {
             }        
             return urlList;
         }        
-        
-        private ArrayList<URL> resolvePath(URL dqpURL, String directory, String path) throws SQLException {
-        	StringTokenizer st = new StringTokenizer(path, ","); //$NON-NLS-1$
-        	ArrayList<URL> urlList = new ArrayList<URL>();
-        	while (st.hasMoreTokens()) {
-        		try {
-        			urlList.add(URLHelper.buildURL(dqpURL, directory+st.nextToken()));
-				} catch (MalformedURLException e) {
-					throw new EmbeddedSQLException(e);
-				}
-        	}
-        	return urlList;
-        }
         
         /**
          * Load DQP Properties from the URL supplied. 
@@ -526,7 +483,7 @@ public final class EmbeddedDriver extends BaseDriver {
             try {
                 current = Thread.currentThread().getContextClassLoader();             
                 Thread.currentThread().setContextClassLoader(classLoader);            
-                return connectionFactory.createConnection(info);            
+                return connectionFactory.createConnection(url, info);            
             } finally {
                 Thread.currentThread().setContextClassLoader(current);
             }            
@@ -537,21 +494,29 @@ public final class EmbeddedDriver extends BaseDriver {
          * @return a JVM level unique identifier
          */
         String getDQPIdentity() {
-            String id = System.getProperty(DQP_IDENTITY, "0"); //$NON-NLS-1$
+            String id = System.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "0"); //$NON-NLS-1$
             int identity = Integer.parseInt(id)+1;    
             id = String.valueOf(identity);
-            System.setProperty(DQP_IDENTITY, id); 
-            
             return id;
         }        
         
         /**
          * Create the temporary workspace directory for the dqp  
          * @param identity - identity of the dqp
+         * @throws MMSQLException 
          */
-        String createWorkspace(String identity) {
-            String dir = System.getProperty("java.io.tmpdir")+"/metamatrix/"+identity; //$NON-NLS-1$ //$NON-NLS-2$
-            System.setProperty(MM_IO_TMPDIR, dir); 
+        String createWorkspace(String baseDir, String identity) throws MMSQLException {
+        	if (baseDir == null) {
+        		baseDir = System.getProperty("java.io.tmpdir")+"/teiid/"; //$NON-NLS-1$ //$NON-NLS-2$
+        	} else {
+				try {
+	        		baseDir = URLHelper.buildURL(this.url, baseDir).getPath();
+				} catch (MalformedURLException e) {
+					throw MMSQLException.create(e);
+				}
+        	}
+        	String dir = baseDir + identity;
+            System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, dir); 
 
             File f = new File(dir);
 
