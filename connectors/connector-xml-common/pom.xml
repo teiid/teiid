@@ -110,6 +110,31 @@
       <version>2.7.0</version>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+    	<groupId>xom</groupId>
+    	<artifactId>xom</artifactId>
+    	<version>1.2</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.jboss.cache</groupId>
+    	<artifactId>jbosscache-core</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>org.mortbay.jetty</groupId>
+    	<artifactId>jetty</artifactId>
+    	<version>6.1.9</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.cxf</groupId>
+    	<artifactId>cxf</artifactId>
+    	<version>2.2</version>
+    	<type>pom</type>
+    </dependency>
+    <dependency>
+    	<groupId>nux</groupId>
+    	<artifactId>nux</artifactId>
+    	<version>1.6</version>
+    </dependency>
   </dependencies>
   
     <!-- bundles all its dependencies in a single zip file  -->
