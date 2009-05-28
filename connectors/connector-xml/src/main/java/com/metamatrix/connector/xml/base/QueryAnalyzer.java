@@ -26,6 +26,7 @@ package com.metamatrix.connector.xml.base;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
@@ -45,10 +46,6 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.xml.IQueryPreprocessor;
 
-/**
- * @author JChoate
- *  
- */
 public class QueryAnalyzer {
 
     private IQuery m_query;
@@ -66,6 +63,9 @@ public class QueryAnalyzer {
 	private ConnectorEnvironment connectorEnv;
 
 	private ExecutionContext exeContext;
+
+	private Properties schemaProperties;
+
     
     public QueryAnalyzer(IQuery query, RuntimeMetadata metadata, IQueryPreprocessor preprocessor, 
     		ConnectorLogger logger, ExecutionContext exeContext, ConnectorEnvironment connectorEnv) throws ConnectorException {
@@ -99,10 +99,10 @@ public class QueryAnalyzer {
     	IQuery newQuery = preprocessor.preprocessQuery(m_query, m_metadata, exeContext, connectorEnv, logger);
     	logger.logTrace("XML Connector Framework: executing command: " + newQuery);
     	setQuery(newQuery);
-    	setTable();
+    	setGroupInfo();
         setRequestedColumns();
         setParametersAndCriteria();
-        setOtherProperties();
+        setProperties();
     }
 
     private void setMetaData(RuntimeMetadata metadata) {
@@ -117,16 +117,37 @@ public class QueryAnalyzer {
         return m_info;
     }
 
-    private void setTable() throws ConnectorException {
+    private void setGroupInfo() throws ConnectorException {
         IFrom from = m_query.getFrom();
         List fromItems = from.getItems();
         //better be only one
         IGroup group = (IGroup) fromItems.get(0);
-        m_table = (Group) group.getMetadataObject();
+        m_table = group.getMetadataObject();
         m_info.setTableXPath(m_table.getNameInSource());
+        
+        String fqTableName = m_table.getFullName();
+        String fqSchemaName = extractSchemaName(fqTableName);
+        
+        if(null != fqSchemaName) {
+        	try{
+        	Group schema = m_metadata.getGroup(fqSchemaName);
+        	schemaProperties = schema.getProperties();
+        	} catch(ConnectorException ex) {
+        		
+        	}
+        }
     }
 
-    private void setRequestedColumns() throws ConnectorException {
+    private String extractSchemaName(String fqTableName) {
+		int schemaEnd = fqTableName.lastIndexOf('.');
+		int schemaStart = fqTableName.lastIndexOf('.', schemaEnd -1);
+		if(-1 == schemaStart || -1 == schemaEnd) {
+			return null;
+		}
+		return fqTableName.substring(schemaStart +1, schemaEnd);
+	}
+
+	private void setRequestedColumns() throws ConnectorException {
 
         ArrayList columns = new ArrayList();
         //get the request items
@@ -255,8 +276,9 @@ public class QueryAnalyzer {
         }
     }
 
-    private void setOtherProperties() throws ConnectorException {
+    private void setProperties() throws ConnectorException {
         m_info.setOtherProperties(m_table.getProperties());
+        m_info.setSchemaProperties(schemaProperties);
     }
 
 	public List getRequestPerms() {

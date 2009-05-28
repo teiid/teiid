@@ -26,7 +26,6 @@ import junit.framework.TestCase;
 
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestXMLCapabilities extends TestCase {
@@ -41,7 +40,8 @@ public class TestXMLCapabilities extends TestCase {
         super(arg0);
     }
 
-    public void setUp() {
+    @Override
+	public void setUp() {
     	m_caps = new XMLCapabilities();
     	
     }

@@ -44,7 +44,8 @@ public class XMLSourceConnector extends BasicConnector {
      * Initialization with environment.
      */
 
-    public void start(ConnectorEnvironment environment) throws ConnectorException {
+    @Override
+	public void start(ConnectorEnvironment environment) throws ConnectorException {
         start = true;
 
         this.env = environment;

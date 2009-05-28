@@ -24,18 +24,15 @@ package com.metamatrix.connector.xml.file;
 
 import java.util.Properties;
 
-import org.teiid.connector.api.ConnectorException;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.api.ConnectorException;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
-import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
-import com.metamatrix.connector.xml.base.XMLExecutionImpl;
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestFileConnectorState extends TestCase {
@@ -68,24 +65,6 @@ public class TestFileConnectorState extends TestCase {
 	    } catch (ConnectorException e) {
 	    	fail(e.getMessage());
 	    }
-    }
-
-    public void testGetExecutor() {
-       	Properties props = ProxyObjectFactory.getDefaultFileProps();
-    	FileConnectorState state = new FileConnectorState();
-    	state.setLogger(new SysLogger(false));
-    	try {
-    		state.setState(EnvironmentUtility.createEnvironment(props));
-        	XMLExecutionImpl exen = ProxyObjectFactory.getDefaultXMLExecution(ProxyObjectFactory.getDefaultIQuery(ProxyObjectFactory.getStateCollegeVDBLocation(), 
-			"select Company_id from Company"), ProxyObjectFactory.getStateCollegeVDBLocation());
-			exen.execute();
-			DocumentProducer exec = (DocumentProducer) state.makeExecutor(exen);
-	    	assertNotNull(exec);
-		} catch (ConnectorException e1) {
-			e1.printStackTrace();
-			fail(e1.getMessage());
-		}
-    	
     }
 
     /*

@@ -23,18 +23,20 @@
 
 package com.metamatrix.connector.xml.file;
 
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.util.Properties;
 
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 
 import com.metamatrix.connector.xml.CachingConnector;
-import com.metamatrix.connector.xml.DocumentProducer;
-import com.metamatrix.connector.xml.XMLExecution;
-import com.metamatrix.connector.xml.base.XMLConnectionImpl;
+import com.metamatrix.connector.xml.base.LoggingInputStreamFilter;
 import com.metamatrix.connector.xml.base.XMLConnectorStateImpl;
+import com.metamatrix.connector.xml.cache.CachingInputStreamFilter;
 
 
 public class FileConnectorState extends XMLConnectorStateImpl {
@@ -51,6 +53,7 @@ public class FileConnectorState extends XMLConnectorStateImpl {
 		setDirectoryPath(""); //$NON-NLS-1$
 	}
 	
+	@Override
 	public Properties getState() {
 		Properties props = super.getState();
 		props.setProperty(FILE_NAME, getFileName());
@@ -58,6 +61,7 @@ public class FileConnectorState extends XMLConnectorStateImpl {
 		return props;		
 	}
 	
+	@Override
 	public void setState(ConnectorEnvironment env) throws ConnectorException {
         super.setState(env);
         setFileName(env.getProperties().getProperty(FILE_NAME));
@@ -101,14 +105,34 @@ public class FileConnectorState extends XMLConnectorStateImpl {
 		return m_directoryPath;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.metamatrix.connector.xml.XMLConnectorState#getExecutioner(com.metamatrix.connector.xml.ExecutionInfo)
-	 */
-	public DocumentProducer makeExecutor(XMLExecution execution) throws ConnectorException {
-		return new FileExecutor(this, execution);
+	public Connection getConnection(CachingConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
+		return new FileConnectionImpl(connector, context, environment);
 	}
 
-	public Connection getConnection(CachingConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
-		return new XMLConnectionImpl(connector, context, environment);
+	public InputStream addStreamFilters(InputStream stream)
+			throws ConnectorException {
+
+		if (isLogRequestResponse()) {
+			stream = new LoggingInputStreamFilter(stream, logger);
+		}
+
+		try {
+			Class pluggableFilter = Class
+					.forName(getPluggableInputStreamFilterClass());
+			Constructor ctor = pluggableFilter.getConstructor(new Class[] {
+					java.io.InputStream.class,
+					ConnectorLogger.class });
+			stream = (InputStream) ctor.newInstance(new Object[] { stream,
+					logger });
+		} catch (Exception cnf) {
+			throw new ConnectorException(cnf);
+		}
+		return stream;
+	}
+	
+	public InputStream addCachingStreamFilters(InputStream stream, ExecutionContext context, String queryId) throws ConnectorException {
+		stream = addStreamFilters(stream);
+		stream = new CachingInputStreamFilter(stream, context, queryId);
+		return stream;
 	}
 }

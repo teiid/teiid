@@ -99,6 +99,8 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
     private String capabilitiesClass;
 
+	private Boolean caching;
+
     public XMLConnectorStateImpl() {
         final int defaultCacheTimeoutMillis = 60000;
         final int defaultMemoryCacheSize = 512;
@@ -119,6 +121,12 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
             throw new RuntimeException("Internal Exception: logger is null");
         }
         Properties props = env.getProperties();
+        String cachingString = props.getProperty(CACHE_ENABLED);
+        if (cachingString != null) {
+        	Boolean caching = Boolean.parseBoolean(cachingString);
+        	setCaching(caching);
+        }
+        
         String cache = props.getProperty(CACHE_TIMEOUT);
         if (cache != null) {
             setCacheTimeoutSeconds(Integer.parseInt(cache));
@@ -183,6 +191,14 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
         	setPluggableInputStreamFilterClass(streamFilter);
         }
     }
+
+	private void setCaching(Boolean caching) {
+		this.caching = caching;	
+	}
+	
+	public boolean isCaching() {
+		return this.caching;
+	}
 
 	private ConnectorCapabilities loadConnectorCapabilities(
             String connectorCapabilitiesClass) throws ConnectorException {

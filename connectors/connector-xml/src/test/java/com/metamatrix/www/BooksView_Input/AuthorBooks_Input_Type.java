@@ -61,7 +61,8 @@ public class AuthorBooks_Input_Type  implements java.io.Serializable {
     }
 
     private java.lang.Object __equalsCalc = null;
-    public synchronized boolean equals(java.lang.Object obj) {
+    @Override
+	public synchronized boolean equals(java.lang.Object obj) {
         if (!(obj instanceof AuthorBooks_Input_Type)) return false;
         AuthorBooks_Input_Type other = (AuthorBooks_Input_Type) obj;
         if (obj == null) return false;
@@ -78,7 +79,8 @@ public class AuthorBooks_Input_Type  implements java.io.Serializable {
     }
 
     private boolean __hashCodeCalc = false;
-    public synchronized int hashCode() {
+    @Override
+	public synchronized int hashCode() {
         if (__hashCodeCalc) {
             return 0;
         }

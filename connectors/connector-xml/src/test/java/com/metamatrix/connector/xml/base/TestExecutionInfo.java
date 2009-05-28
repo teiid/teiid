@@ -41,7 +41,6 @@ import com.metamatrix.connector.xml.IQueryPreprocessor;
 import com.metamatrix.connector.xml.MockQueryPreprocessor;
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestExecutionInfo extends TestCase {
@@ -67,7 +66,8 @@ public class TestExecutionInfo extends TestCase {
         super(arg0);
     }
     
-    public void setUp() throws ConnectorException {
+    @Override
+	public void setUp() throws ConnectorException {
      String vdbPath = ProxyObjectFactory.getStateCollegeVDBLocation();
      IQuery query = ProxyObjectFactory.getDefaultIQuery(vdbPath, QUERY);
      RuntimeMetadata meta = ProxyObjectFactory.getDefaultRuntimeMetadata(vdbPath);
@@ -79,7 +79,8 @@ public class TestExecutionInfo extends TestCase {
      
     }
     
-    public void tearDown() {
+    @Override
+	public void tearDown() {
         m_info = null;        
     }
 

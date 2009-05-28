@@ -43,7 +43,6 @@ import org.teiid.connector.api.ConnectorLogger;
 
 
 /**
- * created by JChoate on Jul 12, 2005
  *
  */
 public class HTTPRequestor {

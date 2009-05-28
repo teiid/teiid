@@ -41,6 +41,7 @@ public class LoggingServlet extends HttpServlet {
 		super();
 	}
 	
+	@Override
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		if(null != req) {
 			System.out.println("Start headers");

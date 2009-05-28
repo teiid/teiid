@@ -35,7 +35,7 @@ import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.XMLFilterImpl;
 
 
-class IDGeneratingXmlFilter extends XMLFilterImpl
+public class IDGeneratingXmlFilter extends XMLFilterImpl
 {
     protected static class PathElement
     {
@@ -50,7 +50,7 @@ class IDGeneratingXmlFilter extends XMLFilterImpl
         protected Map predecessorCounts; // keys: predecessor sibling names, values: count of times it has appeared
     }
     
-    IDGeneratingXmlFilter(String documentId, ConnectorLogger logger)
+    public IDGeneratingXmlFilter(String documentId, ConnectorLogger logger)
     {
         this.documentId = documentId;
         this.logger = logger;
@@ -71,7 +71,8 @@ class IDGeneratingXmlFilter extends XMLFilterImpl
     // This way is nicer
     List path; // a list of PathElement objects
 
-    public void startDocument() throws SAXException
+    @Override
+	public void startDocument() throws SAXException
     {
         path = new ArrayList();
         PathElement newPathElement = new PathElement(documentId, -1);
@@ -103,7 +104,7 @@ class IDGeneratingXmlFilter extends XMLFilterImpl
         else {
             index = count.intValue() + 1;
         }
-        predecessorCounts.put(qName, new Integer(index));
+        predecessorCounts.put(qName, Integer.valueOf(index));
         
         PathElement newPathElement = new PathElement(qName, index);
         path.add(newPathElement);
@@ -129,7 +130,8 @@ class IDGeneratingXmlFilter extends XMLFilterImpl
         return retval.toString();
     }
     
-    public void startElement(String namespaceURI, String localName,
+    @Override
+	public void startElement(String namespaceURI, String localName,
             String qName, Attributes atts) throws SAXException
     {
         String indexValue = getIdFromIndex();
@@ -146,6 +148,7 @@ class IDGeneratingXmlFilter extends XMLFilterImpl
 		return newAtts;
 	}
 
+	@Override
 	public void endElement(String namespaceURI, String localName, String qName)
             throws SAXException {
         path.remove(path.size() - 1);

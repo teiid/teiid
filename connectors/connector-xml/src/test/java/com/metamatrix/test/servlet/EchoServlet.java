@@ -42,9 +42,9 @@ public class EchoServlet extends HttpServlet {
 
 	public EchoServlet() {
 		super();
-		// TODO: Auto-generated constructor stub
 	}
 	
+	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		if(null != req) {
 			boolean isSpecial = checkRequestForSpecialConditions(req);
@@ -67,6 +67,7 @@ public class EchoServlet extends HttpServlet {
 		writer.flush();		
 	}
 
+	@Override
 	public void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		if(null != req) {
 			boolean isSpecial = checkRequestForSpecialConditions(req);

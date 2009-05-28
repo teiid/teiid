@@ -24,6 +24,8 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
@@ -32,11 +34,8 @@ import org.teiid.connector.language.ISelect;
 import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.metadata.runtime.Element;
 
-import junit.framework.TestCase;
-
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestParameterDescriptor extends TestCase {

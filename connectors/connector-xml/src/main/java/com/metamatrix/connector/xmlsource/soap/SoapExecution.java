@@ -121,7 +121,8 @@ public class SoapExecution extends XMLSourceExecution {
         }
     }
     
-    public Source getReturnValue() {
+    @Override
+	public Source getReturnValue() {
 		return returnValue;
 	}
     

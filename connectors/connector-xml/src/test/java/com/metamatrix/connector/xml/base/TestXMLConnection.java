@@ -24,10 +24,10 @@ package com.metamatrix.connector.xml.base;
 
 
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-
-import junit.framework.TestCase;
 
 
 

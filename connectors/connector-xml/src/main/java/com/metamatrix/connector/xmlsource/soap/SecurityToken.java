@@ -191,7 +191,8 @@ class WSSecurityToken extends SecurityToken implements CallbackHandler {
         super(env, trustedPayloadHandler);
     }
     
-    public void handleSecurity(Call call) {
+    @Override
+	public void handleSecurity(Call call) {
         addSecurity(call);
         if (nextToken != null) {
             this.nextToken.handleSecurity(call);
@@ -243,7 +244,8 @@ class NoProvider extends SecurityToken{
     public NoProvider(ConnectorEnvironment env, TrustedPayloadHandler trustedPayloadHandler){
         super(env, trustedPayloadHandler);
     }
-    public void handleSecurity(Call stub) {
+    @Override
+	public void handleSecurity(Call stub) {
     }
 }
 
@@ -255,7 +257,8 @@ class HTTPBasic extends SecurityToken{
     public HTTPBasic(ConnectorEnvironment env, TrustedPayloadHandler trustedPayloadHandler){
         super(env, trustedPayloadHandler);
     }
-    public void handleSecurity(Call stub) {
+    @Override
+	public void handleSecurity(Call stub) {
         stub.setUsername(getUsername());
         stub.setPassword(getPassword());
         XMLSourcePlugin.logDetail(this.env.getLogger(), "using_http_basic"); //$NON-NLS-1$
@@ -271,7 +274,8 @@ class TimestampProfile extends WSSecurityToken {
         super(env, trustedPayloadHandler);
         XMLSourcePlugin.logDetail(this.env.getLogger(), "using_timestamp_profile"); //$NON-NLS-1$
     }
-    public void addSecurity(Call call) {
+    @Override
+	public void addSecurity(Call call) {
         setAction(call, WSHandlerConstants.TIMESTAMP);
         
         // How long ( in seconds ) message is valid since send.
@@ -294,7 +298,8 @@ class UsernameTokenProfile extends WSSecurityToken {
         XMLSourcePlugin.logDetail(this.env.getLogger(), "using_username_profile"); //$NON-NLS-1$
     }
     
-    public void addSecurity(Call call) {
+    @Override
+	public void addSecurity(Call call) {
         setAction(call, WSHandlerConstants.USERNAME_TOKEN);
         call.setProperty(WSHandlerConstants.USER, getUsername());
         if (this.encryptedPassword) {
@@ -306,7 +311,8 @@ class UsernameTokenProfile extends WSSecurityToken {
         call.setProperty(WSHandlerConstants.PW_CALLBACK_REF, this);
     }
 
-    public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+    @Override
+	public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         for (int i = 0; i < callbacks.length; i++) {
             if (callbacks[i] instanceof WSPasswordCallback) {
                 WSPasswordCallback pc = (WSPasswordCallback)callbacks[i];
@@ -341,7 +347,8 @@ class EncryptProfile extends WSSecurityToken {
         XMLSourcePlugin.logDetail(this.env.getLogger(), "using_encrypt_profile"); //$NON-NLS-1$
     }
     
-    public void addSecurity(Call call) {
+    @Override
+	public void addSecurity(Call call) {
         setAction(call, WSHandlerConstants.ENCRYPT);
         String user = getProperty(SoapConnectorProperties.ENCRYPTION_USER);
         if (user == null || user.length() == 0) {            
@@ -372,7 +379,8 @@ class SignatureProfile extends WSSecurityToken {
         XMLSourcePlugin.logDetail(this.env.getLogger(), "using_signature_profile"); //$NON-NLS-1$
     }
     
-    public void addSecurity(Call call) {
+    @Override
+	public void addSecurity(Call call) {
         setAction(call, WSHandlerConstants.SIGNATURE);
         call.setProperty(WSHandlerConstants.USER, getUsername());
         call.setProperty(WSHandlerConstants.PW_CALLBACK_REF, this);
@@ -398,7 +406,8 @@ class SAMLTokenProfile extends WSSecurityToken {
         this.signed = signed;
     }
 
-    public void addSecurity(Call call) {
+    @Override
+	public void addSecurity(Call call) {
         
         if (signed) {
             setAction(call, WSHandlerConstants.SAML_TOKEN_SIGNED);

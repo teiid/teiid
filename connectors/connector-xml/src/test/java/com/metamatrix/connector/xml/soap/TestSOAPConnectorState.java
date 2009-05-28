@@ -1,9 +1,9 @@
 package com.metamatrix.connector.xml.soap;
 
+import junit.framework.TestCase;
+
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
-
-import junit.framework.TestCase;
 
 public class TestSOAPConnectorState extends TestCase {
 

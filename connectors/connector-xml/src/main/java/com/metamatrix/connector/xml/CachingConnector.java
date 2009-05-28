@@ -20,23 +20,9 @@
  * 02110-1301 USA.
  */
 
-
-
 package com.metamatrix.connector.xml;
 
-import org.teiid.connector.api.ConnectorException;
-
-import com.metamatrix.connector.xml.base.StatefulConnector;
-import com.metamatrix.connector.xml.cache.IDocumentCache;
 
 public interface CachingConnector extends StatefulConnector {
-
-	public abstract IDocumentCache getCache();
-
-	public abstract IDocumentCache getStatementCache();
-
-    public void createCacheObjectRecord(String requestID, String partID, String executionID, String sourceRequestID, String cacheKey) throws ConnectorException;
-	
-    public abstract void deleteCacheItems(String requestIdentifier, String partIdentifier, String executionID);
 
 }

@@ -40,11 +40,12 @@ public class LoggingInputStreamFilter extends FilterInputStream {
 		this.logger = logger;
 	}
 
-    public int read() throws IOException
+    @Override
+	public int read() throws IOException
     {
         int retval = in.read();
         if (retval != -1) {
-        	String aChar = new Character((char)retval).toString();
+        	String aChar = Character.valueOf((char)retval).toString();
         	buff.append(aChar);
         } else {
         	log();
@@ -52,29 +53,32 @@ public class LoggingInputStreamFilter extends FilterInputStream {
         return retval;
     }
     
+	@Override
 	public int read(byte[] b) throws IOException
     {
     	int retval = in.read(b);
     	if(retval != -1 ) {
     		buff.append(new String(b, 0, retval));
     	}
-    	if (-1 == retval || retval < b.length) {
+    	else {
     		log();
         }
         return retval;
     }
 
-    public int read(byte[] b, int off, int len) throws IOException
+    @Override
+	public int read(byte[] b, int off, int len) throws IOException
     {
         int retval = in.read(b, off, len);
         if (retval != -1) {
-        	buff.append(new String(b));
+        	buff.append(new String(b, off, off+retval));
         } else {
         	log();
         }
         return retval;
     }
 
+	@Override
 	public void close() throws IOException {
 		super.close();
 		if(!alreadyLogged) {
@@ -82,21 +86,27 @@ public class LoggingInputStreamFilter extends FilterInputStream {
 		}
 	}
 
+	@Override
 	public synchronized void mark(int readlimit) {
 		// we don't suppoort this.
 	}
 
+	@Override
 	public boolean markSupported() {
 		return false;
 	}
 
+	@Override
 	public synchronized void reset() throws IOException {
 		throw new IOException(Messages.getString("InputStream_reset_not_supported"));
 	}
 
+	@Override
 	public long skip(long n) throws IOException {
+		int readval;
 		for(int i = 0; i < n; i++) {
-			if(-1 == this.read()) {
+			readval = this.read();
+			if(readval == -1) {
 				return i;
 			}
 		}

@@ -39,16 +39,14 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.xml.SecureConnectorState;
+import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.file.FileConnectorState;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
-import com.metamatrix.connector.xml.jms.JMSConnectorState;
-import com.metamatrix.connector.xml.jms.JMSSOAPConnectorState;
 import com.metamatrix.connector.xml.soap.SOAPConnectorStateImpl;
 import com.metamatrix.connector.xmlsource.soap.SecurityToken;
 import com.metamatrix.connector.xmlsource.soap.SoapConnectorProperties;
 import com.metamatrix.core.util.UnitTestUtil;
 /**
- * created by JChoate on Jun 16, 2005
  *
  */
 public class ProxyObjectFactory {
@@ -93,9 +91,9 @@ public class ProxyObjectFactory {
         testFileProps.put(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("500000"));
         testFileProps.put(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("5000"));
         testFileProps.put(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("5000"));
-        testFileProps.put(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE);
+        testFileProps.setProperty(XMLConnectorStateImpl.CACHE_ENABLED, "false");
         testFileProps.put(XMLConnectorStateImpl.FILE_CACHE_LOCATION, UnitTestUtil.getTestScratchPath()+"/test/cache");
-        testFileProps.setProperty(XMLConnectorStateImpl.STATE_CLASS_PROP, "com.metamatrix.connector.xml.file.FileConnectorState");
+        testFileProps.setProperty(XMLConnectorState.STATE_CLASS_PROP, "com.metamatrix.connector.xml.file.FileConnectorState");
         testFileProps.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");
         testFileProps.setProperty(XMLConnectorStateImpl.SAX_FILTER_PROVIDER_CLASS, "com.metamatrix.connector.xml.base.NoExtendedFilters"); 
         testFileProps.put(XMLConnectorStateImpl.CONNECTOR_CAPABILITES, "com.metamatrix.connector.xml.base.XMLCapabilities");
@@ -121,10 +119,10 @@ public class ProxyObjectFactory {
         testHTTPProps.setProperty(XMLConnectorStateImpl.MAX_IN_MEMORY_STRING_SIZE, "10"); //$NON-NSL-1$
         testHTTPProps.setProperty(HTTPConnectorState.URI, "http://localhost:8673"); //$NON-NLS-1$
         testHTTPProps.setProperty(HTTPConnectorState.REQUEST_TIMEOUT, "60");	 //$NON-NLS-1$
-        testHTTPProps.setProperty(XMLConnectorStateImpl.STATE_CLASS_PROP, "com.metamatrix.connector.xml.http.HTTPConnectorState"); //$NON-NLS-1$
+        testHTTPProps.setProperty(XMLConnectorState.STATE_CLASS_PROP, "com.metamatrix.connector.xml.http.HTTPConnectorState"); //$NON-NLS-1$
         testHTTPProps.setProperty(HTTPConnectorState.HTTP_BASIC_USER, "");
         testHTTPProps.setProperty(HTTPConnectorState.HTTP_BASIC_PASSWORD, "");
-        testHTTPProps.setProperty(HTTPConnectorState.SECURITY_DESERIALIZER_CLASS, "com.metamatrix.connector.xml.http.DefaultTrustDeserializer");
+        testHTTPProps.setProperty(SecureConnectorState.SECURITY_DESERIALIZER_CLASS, "com.metamatrix.connector.xml.http.DefaultTrustDeserializer");
         testHTTPProps.setProperty(HTTPConnectorState.PARAMETER_METHOD, HTTPConnectorState.PARAMETER_NAME_VALUE);
         testHTTPProps.setProperty(HTTPConnectorState.ACCESS_METHOD, HTTPConnectorState.GET);
         return testHTTPProps;
@@ -150,13 +148,13 @@ public class ProxyObjectFactory {
          testHTTPProps.put(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE);
          testHTTPProps.put(XMLConnectorStateImpl.FILE_CACHE_LOCATION, UnitTestUtil.getTestScratchPath()+"/test/cache");
          testHTTPProps.put(XMLConnectorStateImpl.CONNECTOR_CAPABILITES, "com.metamatrix.connector.xml.base.XMLCapabilities");
-         testHTTPProps.setProperty(XMLConnectorStateImpl.STATE_CLASS_PROP, "com.metamatrix.connector.xml.http.HTTPConnectorState");
+         testHTTPProps.setProperty(XMLConnectorState.STATE_CLASS_PROP, "com.metamatrix.connector.xml.http.HTTPConnectorState");
          testHTTPProps.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");
          testHTTPProps.setProperty(XMLConnectorStateImpl.SAX_FILTER_PROVIDER_CLASS, "com.metamatrix.connector.xml.base.NoExtendedFilters");
          testHTTPProps.setProperty(HTTPConnectorState.ACCESS_METHOD, HTTPConnectorState.GET);
          testHTTPProps.setProperty(HTTPConnectorState.PARAMETER_METHOD, HTTPConnectorState.PARAMETER_XML_REQUEST);
-         testHTTPProps.setProperty(HTTPConnectorState.URI, "http://www.metamatrix.com:80");
-         testHTTPProps.setProperty(HTTPConnectorState.PROXY_URI, "http://www.metamatrix.com:80");
+         testHTTPProps.setProperty(HTTPConnectorState.URI, "http://0.0.0.0:8673");
+         //testHTTPProps.setProperty(HTTPConnectorState.PROXY_URI, "http://0.0.0.0:8673");
          testHTTPProps.setProperty(HTTPConnectorState.REQUEST_TIMEOUT, "60");
          testHTTPProps.setProperty(HTTPConnectorState.XML_PARAMETER_NAME, "XMLRequest");
          testHTTPProps.setProperty(HTTPConnectorState.HTTP_BASIC_USER, "");
@@ -165,59 +163,10 @@ public class ProxyObjectFactory {
          return testHTTPProps;
      }
     
-    public static Properties getJMSPropertiesNoAuth() {
-        Properties testJMSProps = new Properties();
-         testJMSProps.put(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("5000"));
-         testJMSProps.put(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("5000"));
-         testJMSProps.put(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("5000"));
-         testJMSProps.put(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE);
-         testJMSProps.put(XMLConnectorStateImpl.FILE_CACHE_LOCATION,UnitTestUtil.getTestScratchPath()+"/test/cache");
-         testJMSProps.put(XMLConnectorStateImpl.CONNECTOR_CAPABILITES, "com.metamatrix.connector.xml.jms.JMSCapabilities");
-         testJMSProps.setProperty(XMLConnectorStateImpl.STATE_CLASS_PROP, "com.metamatrix.connector.xml.jms.JMSXMLConnectorState");
-         testJMSProps.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");
-         testJMSProps.setProperty(XMLConnectorStateImpl.SAX_FILTER_PROVIDER_CLASS, "com.metamatrix.connector.xml.base.NoExtendedFilters");
-         testJMSProps.setProperty(JMSConnectorState.PROVIDER_URL, "tcp://localhost:3035/");
-         testJMSProps.setProperty(JMSConnectorState.CONNECTION_FACTORY, "ConnectionFactory");
-         testJMSProps.setProperty(JMSConnectorState.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-         testJMSProps.setProperty(JMSConnectorState.INBOUND_JMS_DESTINATION, JMS_DESTINATION);
-         testJMSProps.setProperty(JMSConnectorState.OUTBOUND_JMS_DESTINATION, JMS_DESTINATION);
-         testJMSProps.setProperty(JMSConnectorState.ACKNOWLEDGEMENT_MODE, JMSConnectorState.CLIENT_ACKNOWLEDGE);
-         testJMSProps.setProperty(JMSConnectorState.RECEIVE_TIMEOUT, "5000");
-         testJMSProps.setProperty(JMSConnectorState.CORRELATION_ID, "prefix");
-         testJMSProps.setProperty(JMSConnectorState.MESSAGE_PRIORITY, "7");
-         testJMSProps.setProperty(JMSConnectorState.MESSAGE_DURATION, "500");
-         testJMSProps.setProperty(JMSConnectorState.MESSAGE_DELIVERY_MODE, JMSConnectorState.DELIVERY_MODE_PERISTENT);
-         testJMSProps.setProperty(JMSConnectorState.CONNECTION_RETRY_COUNT, "1");
-         testJMSProps.setProperty(JMSConnectorState.REPLY_TO_DESTINATION, "reply");
-         testJMSProps.setProperty(SecureConnectorState.SECURITY_DESERIALIZER_CLASS, "com.metamatrix.connector.xml.http.DefaultTrustDeserializer");
-         return testJMSProps;
-     }
-    
-    public static Properties getJMSPropertiesAuth() {
-        Properties testJMSProps = getJMSPropertiesNoAuth();
-        testJMSProps.setProperty(JMSConnectorState.PASSWORD, "1234");
-        testJMSProps.setProperty(JMSConnectorState.USERNAME, "user");
-        return testJMSProps;
-     }
-    
-	public static Properties getSOAPJMSPropertiesAuth() {
-		Properties testJMSProps = getJMSPropertiesAuth();
-		testJMSProps.putAll(createSOAPState());
-		return testJMSProps;
-	}
-
-	public static Properties getSOAPJMSPropertiesNoAuth() {
-		Properties testJMSProps = getJMSPropertiesNoAuth();
-		testJMSProps.putAll(createSOAPState());
-		return testJMSProps;
-	}
 	
 	public static Properties createSOAPState() {
 		Properties soapProps = new Properties();
-		soapProps.setProperty(JMSSOAPConnectorState.AUTH_USER_PROPERTY_NAME, "someUser");
-		soapProps.setProperty(JMSSOAPConnectorState.AUTH_PASSWORD_PROPERTY_NAME, "getSome");
 		soapProps.setProperty(SOAPConnectorStateImpl.ENCODING_STYLE_PROPERTY_NAME, SOAPConnectorStateImpl.RPC_ENC_STYLE);
-		soapProps.setProperty(JMSSOAPConnectorState.AUTH_REGIME_PROPERTY_NAME, JMSSOAPConnectorState.AUTH_REGIME_BASIC);
 		soapProps.setProperty(SOAPConnectorStateImpl.CONNECTOR_EXCEPTION_ON_SOAP_FAULT, "true");
 		return soapProps;
 	}
@@ -280,29 +229,6 @@ public class ProxyObjectFactory {
         return connection;
 	}
     
-    public static XMLExecutionImpl getDefaultXMLExecution(IQuery command, String vdbPath) {
-        try {
-            ExecutionContext context = getDefaultExecutionContext();
-            ConnectorEnvironment env = getDefaultTestConnectorEnvironment();
-			
-            RuntimeMetadata meta = getDefaultRuntimeMetadata(vdbPath);
-            return new XMLExecutionImpl(command, ProxyObjectFactory.getDefaultXMLConnection(), meta, context, env);
-        } catch (NullPointerException ne) {
-            return null;
-        }
-    }
-    
-    public static XMLExecutionImpl getXMLExecution(IQuery command, String vdbPath, String requestID, String partID) {
-       try {
-           ExecutionContext context = getExecutionContext(requestID, partID);
-           ConnectorEnvironment env = getDefaultTestConnectorEnvironment();
-            
-           RuntimeMetadata meta = getDefaultRuntimeMetadata(vdbPath);
-           return new XMLExecutionImpl(command, ProxyObjectFactory.getDefaultXMLConnection(), meta, context, env);
-       } catch (NullPointerException ne) {
-           return null;
-       }
-   }
     
     public static IQuery getDefaultIQuery(String vdbPath, String queryString) {
         TranslationUtility transUtil = new TranslationUtility(vdbPath);

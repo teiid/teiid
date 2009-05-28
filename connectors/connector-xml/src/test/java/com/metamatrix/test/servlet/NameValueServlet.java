@@ -22,8 +22,9 @@
 
 package com.metamatrix.test.servlet;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,6 +34,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.commons.httpclient.util.ParameterParser;
+
+import com.metamatrix.connector.xml.base.ProxyObjectFactory;
 
 public class NameValueServlet  extends HttpServlet {
 
@@ -45,42 +48,35 @@ public class NameValueServlet  extends HttpServlet {
 		super();
 	}
 	
+	@Override
 	public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         System.out.println("NameValueServlet in doGet");
         if(null != req) {
 			String queryString = req.getQueryString();
+			System.out.println("NameValueServlet qstring = " + queryString);
 			ParameterParser parser = new ParameterParser();
 			List pairs = parser.parse(queryString, '?');
 			for(Iterator iter = pairs.iterator(); iter.hasNext(); ){
 				NameValuePair pair = (NameValuePair) iter.next();
 				if(pair.getName().equals("id")) {
-					String id = pair.getName();
-					StringBuffer buff = new StringBuffer();
-					buff.append("<?xml version='1.0' ?>");
-					//buff.append("<document>");
-					buff.append("<Data>");
-                    buff.append("<First>" + pair.getValue()+ "</First>");
-                    buff.append("<Second>passed</Second>");
-                    buff.append("</Data>");
-                    //buff.append("</document>");
-					writeResponse(resp.getWriter(), buff.toString());
+					File response = new File(ProxyObjectFactory.getDocumentsFolder() + "/purchaseOrdersShort.xml");
+					FileInputStream stream = new FileInputStream(response);
+					int data;
+					while(true) {
+						data = stream.read();
+						if(-1 != data) {
+							resp.getWriter().write(data);
+						} else {
+							resp.getWriter().flush();
+							break;
+						}
+					}
+					
+							
 				}
 			}
+		} else {
+			System.out.println("NameValueServlet req is null");
 		}
-	}
-	
-	private void writeResponse(PrintWriter writer, String response) {
-		writer.write(response);
-		System.out.println(response);
-		writer.flush();		
-	}
-
-	
-	private StringBuffer setupReturn() {
-		StringBuffer buff = new StringBuffer();
-		buff.append("<?xml version='1.0' ?>");
-		buff.append("<document xmlns:mmx='http://www.metamatrix.com>");
-		buff.append("<mmx:return>");
-		return buff;		
 	}
 }

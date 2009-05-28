@@ -39,15 +39,9 @@ import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.LanguageUtil;
 import org.teiid.connector.language.ICompareCriteria.Operator;
 import org.teiid.connector.metadata.runtime.Element;
+import org.teiid.connector.metadata.runtime.TypeModel;
 
 
-/**
- * @author BLotenberg
- * 
- * To change this generated comment edit the template variable "typecomment":
- * Window>Preferences>Java>Templates. To enable and disable the creation of type
- * comments go to Window>Preferences>Java>Code Generation.
- */
 public class CriteriaDesc extends ParameterDescriptor {
     // TODO: a lot of this is HTTP/SOAP specific (i.e., do not apply to files).
     // There are various
@@ -147,20 +141,14 @@ public class CriteriaDesc extends ParameterDescriptor {
             throws ConnectorException {
             String value = element.getProperties().getProperty(
                     PARM_REQUIRED_VALUE_COLUMN_PROPERTY_NAME);
-			return convertBooleanString(value);
+			return Boolean.valueOf(value);
     }
-
-    private static boolean convertBooleanString(String value) {
-		Boolean retval = (value == null ? Boolean.FALSE : new Boolean(value
-				.equalsIgnoreCase(Boolean.TRUE.toString())));
-		return retval.booleanValue();
-	}
 
 	private static boolean findAllowEmptyValue(Element element)
             throws ConnectorException {
             String value = element.getProperties().getProperty(
                     PARM_ALLOWS_EMPTY_VALUES_COLUMN_PROPERTY_NAME);
-			return convertBooleanString(value);
+            return Boolean.valueOf(value);
     }
 
     /**
@@ -171,8 +159,8 @@ public class CriteriaDesc extends ParameterDescriptor {
 
         super(myElement);
 		m_values = myValues;
-		final String enumerated = PARM_HAS_MULTIPLE_VALUES_COMMA_DELIMITED_NAME; //$NON-NLS-1$
-		final String multiElement = PARM_HAS_MULTIPLE_VALUES_MULTI_ELEMENT_NAME; //$NON-NLS-1$
+		final String enumerated = PARM_HAS_MULTIPLE_VALUES_COMMA_DELIMITED_NAME; 
+		final String multiElement = PARM_HAS_MULTIPLE_VALUES_MULTI_ELEMENT_NAME; 
         String multiplicityStr = getElement().getProperties().getProperty(
 				PARM_HAS_MULTIPLE_VALUES_COLUMN_PROPERTY_NAME);
         if (multiplicityStr == null) {
@@ -208,17 +196,17 @@ public class CriteriaDesc extends ParameterDescriptor {
         setIsParameter(other.isParameter());
         setIsResponseId(other.isResponseId());
         setIsLocation(other.isLocation());
-        setColumnName(new String(other.getColumnName()));
+        setColumnName(String.valueOf(other.getColumnName()));
         setColumnNumber(other.getColumnNumber());
         setElement(other.getElement());
         setNativeType(other.getNativeType());
         
-    	m_parentAttribute = other.m_parentAttribute == null ? null : new Boolean(other.m_parentAttribute.booleanValue());
-    	m_enumeratedAttribute = other.m_enumeratedAttribute == null ? null : new Boolean(other.m_enumeratedAttribute.booleanValue());
-    	m_allowEmptyValue = other.m_allowEmptyValue == null ? null : new Boolean(other.m_allowEmptyValue.booleanValue());
-    	m_dataAttributeName = other.m_dataAttributeName == null ? null : new String(other.m_dataAttributeName);
+    	m_parentAttribute = other.m_parentAttribute == null ? null : Boolean.valueOf(other.m_parentAttribute);
+    	m_enumeratedAttribute = other.m_enumeratedAttribute == null ? null : Boolean.valueOf(other.m_enumeratedAttribute);
+    	m_allowEmptyValue = other.m_allowEmptyValue == null ? null : Boolean.valueOf(other.m_allowEmptyValue);
+    	m_dataAttributeName = other.m_dataAttributeName == null ? null : String.valueOf(other.m_dataAttributeName);
     	m_additionalAttributes = other.m_additionalAttributes == null ? null : new Properties(other.m_additionalAttributes);
-    	m_inputXpath = other.m_inputXpath == null ? null : new String(other.m_inputXpath);
+    	m_inputXpath = other.m_inputXpath == null ? null : String.valueOf(other.m_inputXpath);
     	m_unlimited = other.m_unlimited;
     	m_enumerated = other.m_enumerated;
     	m_multiElement = other.m_multiElement;
@@ -268,7 +256,7 @@ public class CriteriaDesc extends ParameterDescriptor {
     private void findParentAttribute() throws ConnectorException {
     	String value = getElement().getProperties()
     			.getProperty(PARM_AS_PARENT_ATTRIBUTE_COLUMN_PROPERTY_NAME);
-		m_parentAttribute = new Boolean(convertBooleanString(value));
+		m_parentAttribute = Boolean.valueOf(value);
     }
 
     //from model extensions
@@ -288,7 +276,7 @@ public class CriteriaDesc extends ParameterDescriptor {
     private void findAllowEmptyValue() throws ConnectorException {
     	String value = getElement().getProperties()
     			.getProperty(PARM_ALLOWS_EMPTY_VALUES_COLUMN_PROPERTY_NAME);
-		m_allowEmptyValue = new Boolean(convertBooleanString(value));
+		m_allowEmptyValue = Boolean.valueOf(value);
     }
 
     //from model extensions
@@ -372,8 +360,8 @@ public class CriteriaDesc extends ParameterDescriptor {
 
         String fullName = element.getFullName().trim().toUpperCase();
         ArrayList parmPair = new ArrayList();
-        if (element.getSearchability() == Element.SEARCHABLE
-                || element.getSearchability() == Element.SEARCHABLE_COMPARE) {
+        if (element.getSearchability() == TypeModel.SEARCHABLE
+                || element.getSearchability() == TypeModel.SEARCHABLE_COMPARE) {
             // Check and set criteria for the IData input
             ICriteria criteria = query.getWhere();
             List criteriaList = LanguageUtil.separateCriteriaByAnd(criteria);
@@ -469,11 +457,6 @@ public class CriteriaDesc extends ParameterDescriptor {
                 return cStr.substring(1, indx2 + 1);
             }
         }
-        //why would you want to do this?
-        //indx = cStr.indexOf(" "); //$NON-NLS-1$
-        //if (indx > 0) {
-        //    return cStr.substring(0, indx);
-        //}
         return cStr;
     }
 

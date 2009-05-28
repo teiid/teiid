@@ -29,11 +29,7 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.basic.BasicConnection;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.IQueryCommand;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.SecureConnectorState;
@@ -71,14 +67,6 @@ public class XMLConnectionImpl extends BasicConnection implements XMLConnection 
 	}
 	///////////////////////////////////////////////////////////////
 	//Connection API Implementation
-	@Override
-	public ResultSetExecution createResultSetExecution(IQueryCommand command,
-			ExecutionContext executionContext, RuntimeMetadata metadata)
-			throws ConnectorException {
-		return new XMLExecutionImpl((IQuery)command, this, metadata, executionContext, connectorEnv);
-	}
-
-
 	@Override
 	public void close() {
 		logger.logTrace("XMLConnection released for RequestIdentifier " + 

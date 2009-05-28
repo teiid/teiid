@@ -24,6 +24,8 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.ICompareCriteria;
 import org.teiid.connector.language.ICriteria;
@@ -36,11 +38,8 @@ import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.language.LanguageUtil;
 import org.teiid.connector.metadata.runtime.Element;
 
-import junit.framework.TestCase;
-
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestOutputXPathDesc extends TestCase {
@@ -90,7 +89,7 @@ public class TestOutputXPathDesc extends TestCase {
     	String query = "select RequiredDefaultedParam from CriteriaDescTable where RequiredDefaultedParam in ('foo')";
     	IQuery iquery = ProxyObjectFactory.getDefaultIQuery(vdbPath, query);
     	final int colLocation = 0;
-    	ISelectSymbol symbol = (ISelectSymbol) iquery.getSelect().getSelectSymbols().get(colLocation);
+    	ISelectSymbol symbol = iquery.getSelect().getSelectSymbols().get(colLocation);
     	IExpression expr = symbol.getExpression();
     	assertTrue(expr instanceof IElement);
     	Element element = ((IElement) expr).getMetadataObject(); 
@@ -111,6 +110,7 @@ public class TestOutputXPathDesc extends TestCase {
             OutputXPathDesc desc = new OutputXPathDesc(element);
             fail("should not be able to create OuputXPathDesc with no XPath");
         } catch (ConnectorException ce) {
+        	return;
         }
     }
     /*

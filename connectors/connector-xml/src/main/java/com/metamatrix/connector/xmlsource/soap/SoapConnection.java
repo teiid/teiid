@@ -88,14 +88,16 @@ public class SoapConnection extends XMLSourceConnection {
     /** 
      * @see com.metamatrix.connector.xmlsource.XMLSourceConnection#isConnected()
      */
-    public boolean isConnected() {
+    @Override
+	public boolean isConnected() {
         return this.connected;
     }
 
     /** 
      * @see com.metamatrix.connector.xmlsource.XMLSourceConnection#release()
      */
-    public void close() {
+    @Override
+	public void close() {
         disconnect();
         super.close();        
     }

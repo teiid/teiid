@@ -25,11 +25,11 @@ package com.metamatrix.connector.xml.base;
 import java.io.File;
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.connector.xml.XMLConnectorState;
@@ -52,7 +52,8 @@ public class TestXMLConnector extends TestCase {
 		super(arg0);
 	}
     
-    public void setUp() {        
+    @Override
+	public void setUp() {        
         m_env = ProxyObjectFactory.getDefaultTestConnectorEnvironment();                
         
         m_secCtx = ProxyObjectFactory.getDefaultSecurityContext();        
@@ -74,7 +75,6 @@ public class TestXMLConnector extends TestCase {
             int expectedTimeout = Integer.parseInt((String) testFileProps.get(XMLConnectorStateImpl.CACHE_TIMEOUT));
             assertEquals(state.getCacheTimeoutSeconds(), expectedTimeout);
             assertNotNull("Logger is null", connector.getLogger());
-            assertNotNull("cache is null", connector.getCache());
         } catch (ConnectorException ex) {
         	ex.printStackTrace();
             fail(ex.getMessage());         
@@ -143,7 +143,7 @@ public class TestXMLConnector extends TestCase {
             testFileProps.put(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("50"));
             testFileProps.put(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE);
             testFileProps.put(XMLConnectorStateImpl.FILE_CACHE_LOCATION, new String("./test/cache"));
-            testFileProps.setProperty(XMLConnectorStateImpl.STATE_CLASS_PROP, "sure.to.Fail");
+            testFileProps.setProperty(XMLConnectorState.STATE_CLASS_PROP, "sure.to.Fail");
             
             testFileProps.put(FileConnectorState.FILE_NAME, "state_college.xml");
             String localPath = "test/documents";
@@ -177,19 +177,5 @@ public class TestXMLConnector extends TestCase {
             fail(ex.getMessage());            
         }
         
-    }
-    
-    public void testCacheInit() {
-
-        XMLConnector connector = new XMLConnector();
-        
-        try {
-            connector.start(m_env);
-            assertNotNull("the cache is null", connector.getCache());
-            connector.getLogger().logInfo("cache is properly initialized");
-        } catch (ConnectorException ex) {
-            ex.printStackTrace();
-            fail(ex.getMessage());            
-        }                   
     }
 }

@@ -24,6 +24,8 @@ package com.metamatrix.connector.xml.base;
 
 
 
+import junit.framework.TestCase;
+
 import org.mockito.Mockito;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
@@ -32,14 +34,11 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
-import junit.framework.TestCase;
-
 import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.connector.xml.IQueryPreprocessor;
 import com.metamatrix.connector.xml.MockQueryPreprocessor;
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestQueryAnalyzer extends TestCase {

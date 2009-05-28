@@ -27,24 +27,20 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.basic.BasicConnector;
 
+import com.metamatrix.connector.xml.StatefulConnector;
 import com.metamatrix.connector.xml.XMLConnectorState;
 
-/**
- * @author JChoate
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
 public abstract class LoggingConnector extends BasicConnector implements StatefulConnector {
 
-    private static ConnectorLogger m_logger;
-    private ConnectorEnvironment m_environment;
+	protected ConnectorLogger m_logger;
+    protected ConnectorEnvironment m_environment;
     protected XMLConnectorState m_state;
     
     /* (non-Javadoc)
 	 * @see com.metamatrix.connector.xml.base.StatefulConnector#initialize(com.metamatrix.data.api.ConnectorEnvironment)
 	 */
-    public void start(ConnectorEnvironment environment) throws ConnectorException {
+    @Override
+	public void start(ConnectorEnvironment environment) throws ConnectorException {
     	m_logger = environment.getLogger();
     	m_environment = environment;
     	m_state = createState(m_environment);

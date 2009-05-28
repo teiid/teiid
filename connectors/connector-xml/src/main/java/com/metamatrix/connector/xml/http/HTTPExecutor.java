@@ -26,10 +26,14 @@ package com.metamatrix.connector.xml.http;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -43,36 +47,39 @@ import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.util.ParameterParser;
 import org.jdom.Document;
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 
 import com.metamatrix.connector.xml.CachingConnector;
+import com.metamatrix.connector.xml.Constants;
+import com.metamatrix.connector.xml.ResultProducer;
 import com.metamatrix.connector.xml.SAXFilterProvider;
 import com.metamatrix.connector.xml.XMLConnection;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.DocumentBuilder;
-import com.metamatrix.connector.xml.base.DocumentInfo;
+import com.metamatrix.connector.xml.base.ExecutionInfo;
+import com.metamatrix.connector.xml.base.LoggingInputStreamFilter;
+import com.metamatrix.connector.xml.base.OutputXPathDesc;
+import com.metamatrix.connector.xml.base.ParameterDescriptor;
 import com.metamatrix.connector.xml.base.RequestGenerator;
-import com.metamatrix.connector.xml.base.RequestResponseDocumentProducer;
-import com.metamatrix.connector.xml.base.Response;
-import com.metamatrix.connector.xml.base.XMLDocument;
-import com.metamatrix.connector.xml.cache.DocumentCache;
-import com.metamatrix.connector.xml.cache.IDocumentCache;
+import com.metamatrix.connector.xml.cache.CachedXMLStream;
+import com.metamatrix.connector.xml.streaming.DocumentImpl;
 
-/**
- * created by JChoate on Jun 27, 2005
- *
- */
-public class HTTPExecutor extends RequestResponseDocumentProducer {
+public class HTTPExecutor implements ResultProducer {
 
-    protected HTTPRequestor m_requestor;
+    protected XMLExecution execution;
+	
+	protected HTTPRequestor m_requestor;
 
     protected HttpMethod request;
 
-    private HTTPConnectorState h_state;
+    private HTTPConnectorState state;
 
     private boolean m_allowHttp500;
+
+	private ExecutionInfo exeInfo;
 
     public static final String PARM_INPUT_XPATH_TABLE_PROPERTY_NAME = "XPathRootForInput"; //$NON-NLS-1$
 
@@ -81,13 +88,17 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
     /**
      * @param state
      * @param execution
+     * @param exeInfo 
      * @throws ConnectorException
      */
-    public HTTPExecutor(XMLConnectorState state, XMLExecution execution)
+    public HTTPExecutor(XMLConnectorState state, XMLExecution execution, ExecutionInfo exeInfo)
             throws ConnectorException {
-        super(state, execution);
-        h_state = (HTTPConnectorState) state;
-        m_requestor = new HTTPRequestor(getLogger(), h_state.getAccessMethod());
+        this.execution = execution;
+    	this.setExeInfo(exeInfo);
+        this.setState((HTTPConnectorState) state);
+        processOutputXPathDescs(getExeInfo().getRequestedColumns()
+        		, getExeInfo().getParameters());
+        m_requestor = new HTTPRequestor(getLogger(), getState().getAccessMethod());
         setAllowHttp500(false);
         try {
             String uri = buildRawUriString();
@@ -99,21 +110,14 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
                 .logDetail(Messages.getString("HTTPExecutor.url.validated")); //$NON-NLS-1$
     }
 
-    public void releaseDocumentStream(int i) throws ConnectorException {
+    protected void releaseDocumentStream() {
         if (request != null) {
             request.releaseConnection();
             request = null;
         }
     }
 
-    public int getDocumentCount() throws ConnectorException {
-        return 1;
-    }
-
-    public String getCacheKey(int i) throws ConnectorException {
-
-        // http method, xmlparamname and parameter method are static for a given
-        // binding so they are not needed in a unique key
+    protected String getCacheKey() throws ConnectorException {
 
         if (request == null) {
             String message = com.metamatrix.connector.xml.http.Messages
@@ -122,8 +126,8 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
         }
         // the key consists of a String in the form of
         // |uri|parameterList|
-        String userName = getExecution().getConnection().getUser();
-        String session = getExecution().getConnection().getQueryId();
+        String userName = execution.getConnection().getUser();
+        String session = execution.getConnection().getQueryId();
 
         StringBuffer cacheKey = new StringBuffer();
         cacheKey.append("|"); //$NON-NLS-1$
@@ -151,9 +155,9 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
         return cacheKey.toString();
     }
 
-    public InputStream getDocumentStream(int i) throws ConnectorException {
-        HttpClient client = ((HTTPConnectorState) getState()).getClient();
-        XMLConnection conn = getExecution().getConnection();
+    protected InputStream getDocumentStream() throws ConnectorException {
+        HttpClient client = (getState()).getClient();
+        XMLConnection conn = execution.getConnection();
         try {
             HTTPTrustDeserializer ser = (HTTPTrustDeserializer) conn
                     .getTrustedPayloadHandler();
@@ -175,60 +179,45 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
         return responseBody;
     }
 
-    public Response getXMLResponse(int invocationNumber) throws ConnectorException {
-        createRequests();
-        CachingConnector connector = getExecution().getConnection().getConnector();
-        IDocumentCache cache = getExecution().getCache();
-        ExecutionContext exeContext = getExecution().getExeContext();
-        String requestID = exeContext.getRequestIdentifier();
-        String partID = exeContext.getPartIdentifier();
-        String executionID = exeContext.getExecutionCountIdentifier();
-        String cacheReference = requestID + partID + executionID + Integer.toString(invocationNumber);
+	@Override
+    public Iterator<com.metamatrix.connector.xml.Document> getXMLDocuments() throws ConnectorException {
+		ArrayList<com.metamatrix.connector.xml.Document> result = new ArrayList<com.metamatrix.connector.xml.Document>();
+		createRequests();
+        CachingConnector connector = execution.getConnection().getConnector();
+        ExecutionContext exeContext = execution.getExeContext();
+        String cacheKey = getCacheKey();
         
-        CriteriaDesc criterion = getExecutionInfo().getResponseIDCriterion();
+        
+        // Is this a request part joining across a document
+        CriteriaDesc criterion = getExeInfo().getResponseIDCriterion();
         if (null != criterion) {
             String responseid = (String) (criterion.getValues().get(0));
-            getExecution().getConnection().getConnector().createCacheObjectRecord(requestID, partID, executionID,
-                  Integer.toString(invocationNumber), responseid);
-            return new Response(responseid, this, cache, cacheReference);
-        }
-
-        int documentCount = getDocumentCount();
-        String[] cacheKeys = new String[documentCount];
-        XMLDocument[] docs = new XMLDocument[documentCount];
-        for (int i = 0; i < documentCount; i++) {
-            String cacheKey = getCacheKey(i);
-            XMLDocument doc = DocumentCache.cacheLookup(cache, cacheKey, cacheReference);
-            if (doc == null) {
-                String documentDistinguishingId = "";
-                if (documentCount > 1) {
-                    documentDistinguishingId = new Integer(i).toString();
-                }
-                DocumentInfo info;
-                SAXFilterProvider provider = null;
-                provider = h_state.getSAXFilterProvider();
-                InputStream responseBody = getDocumentStream(i);
-                InputStream filteredStream = addStreamFilters(responseBody, getLogger());
-                info = xmlExtractor.createDocumentFromStream(filteredStream,
-                        documentDistinguishingId, provider);
-
-                Document domDoc = info.m_domDoc;
-                doc = new XMLDocument(domDoc, info.m_externalFiles);
-
-                cache.addToCache(cacheKey, doc, info.m_memoryCacheSize, cacheReference);
-                connector.createCacheObjectRecord(requestID, partID, executionID,
-                      Integer.toString(invocationNumber), cacheKey);
+            
+            if(null == exeContext.get(responseid)) {
+            	throw new ConnectorException(Messages.getString("HTTPExecutor.No.doc.in.cache"));
+            } else {
+            	InputStream stream = new CachedXMLStream(exeContext, responseid);
+            	com.metamatrix.connector.xml.Document doc = new DocumentImpl(stream, cacheKey);
+            	result.add(doc);
             }
-            docs[i] = doc;
-            cacheKeys[i] = cacheKey;
         }
-        return new Response(docs, cacheKeys, this, cache, cacheReference);
+
+        // Not a join, but might still be cached.
+            if (null == exeContext.get(cacheKey)) {
+                SAXFilterProvider provider = null;
+                provider = getState().getSAXFilterProvider();
+                InputStream responseBody = getDocumentStream();
+                InputStream filteredStream = addStreamFilters(responseBody, getLogger());
+                com.metamatrix.connector.xml.Document doc = new DocumentImpl(filteredStream, cacheKey);
+                result.add(doc);
+        }
+        return result.iterator();
 	}
 
     private void createRequests() throws ConnectorException {
-        if (checkIfRequestIsNeeded(getExecutionInfo())) {
+        if (checkIfRequestIsNeeded(getExeInfo())) {
             String uriString = buildUriString();
-            setRequests(getExecutionInfo().getParameters(), uriString);
+            setRequests(getExeInfo().getParameters(), uriString);
         }
     }
 
@@ -240,14 +229,14 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
     public boolean cannotProjectParameter(CriteriaDesc parmCriteria) {
         return parmCriteria.getNumberOfValues() > 1
                 && parmCriteria.isUnlimited()
-                && !(((HTTPConnectorState) getState()).getParameterMethod() == HTTPConnectorState.PARAMETER_NAME_VALUE);
+                && !((getState()).getParameterMethod() == HTTPConnectorState.PARAMETER_NAME_VALUE);
     }
 
     // this routine builds the input XML document using JDOM structures
     protected Document buildInputXMLDocument(List parameters,
             String inputParmsXPath) throws ConnectorException {
-        String namespacePrefixes = getExecutionInfo().getOtherProperties()
-                .getProperty(NAMESPACE_PREFIX_PROPERTY_NAME);
+        String namespacePrefixes = getExeInfo().getOtherProperties()
+                .getProperty(Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
         DocumentBuilder builder = new DocumentBuilder();
         return builder.buildDocument(parameters, inputParmsXPath,
                 namespacePrefixes);
@@ -272,10 +261,8 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
             throws ConnectorException {
 
         String xmlDoc = null;
-        HTTPConnectorState state = (HTTPConnectorState) getState();
-
-        // see if there are parameters to set
-        if (state.getParameterMethod() == HTTPConnectorState.PARAMETER_NONE
+                // see if there are parameters to set
+        if (getState().getParameterMethod() == HTTPConnectorState.PARAMETER_NONE
                 || params.size() == 0) {
             getLogger()
                     .logTrace("XML Connector Framework: no parameters for request"); //$NON-NLS-1$
@@ -309,17 +296,17 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
             java.util.List newList = java.util.Arrays.asList(queryParameters);
             List queryList = new ArrayList(newList);
 
-            String parameterMethod = state.getParameterMethod();
+            String parameterMethod = getState().getParameterMethod();
             if (parameterMethod == HTTPConnectorState.PARAMETER_XML_REQUEST ||
                     parameterMethod == HTTPConnectorState.PARAMETER_XML_QUERY_STRING ) {
                 xmlDoc = createXMLRequestDocString(queryList);
-                String paramName = state.getXmlParameterName();
+                String paramName = getState().getXmlParameterName();
                 if(null != paramName) {
-                    pairs = new NameValuePair[] { new NameValuePair(state
+                    pairs = new NameValuePair[] { new NameValuePair(getState()
                             .getXmlParameterName(), xmlDoc) };
                     if (pairs != null) {
                         attemptConditionalLog("XML Connector Framework: request parameters -\n "
-                                + generatePairString(pairs)); //$NON-NLS-1$
+                                + generatePairString(pairs)); 
                     }
                 }
             } else if (parameterMethod == HTTPConnectorState.PARAMETER_NAME_VALUE ||
@@ -328,7 +315,7 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
             }
 
             HttpMethod method = null;
-            String accessMethod = state.getAccessMethod();
+            String accessMethod = getState().getAccessMethod();
             if(accessMethod.equals(HTTPConnectorState.POST)) {
                 method = m_requestor.generateMethod(bindingURI);
                 PostMethod post = (PostMethod) method;
@@ -351,7 +338,7 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
                             requestEntity.append(bindingQueryString);
                             requestEntity.append('&');
                         }
-                        requestEntity.append(state.getXmlParameterName());
+                        requestEntity.append(getState().getXmlParameterName());
                         requestEntity.append('=');
                         requestEntity.append(xmlDoc);
                         URI realURI = null;
@@ -405,7 +392,7 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
 
     protected Document createXMLRequestDoc(List parameterPairs)
             throws ConnectorException {
-        Properties props = getExecutionInfo().getOtherProperties();
+        Properties props = getExeInfo().getOtherProperties();
         String inputParmsXPath = props
                 .getProperty(PARM_INPUT_XPATH_TABLE_PROPERTY_NAME);
         Document inputXMLDoc = buildInputXMLDocument(parameterPairs,
@@ -515,11 +502,169 @@ public class HTTPExecutor extends RequestResponseDocumentProducer {
         return newInfo;
     }
 
-    public void setAllowHttp500(boolean allowHttp500) {
+    private void setAllowHttp500(boolean allowHttp500) {
         m_allowHttp500 = allowHttp500;
     }
 
     public boolean getAllowHttp500() {
         return m_allowHttp500;
     }
+
+	@Override
+	public void closeStreams() {
+		releaseDocumentStream();
+	}
+
+	private void setExeInfo(ExecutionInfo exeInfo) {
+		this.exeInfo = exeInfo;
+	}
+
+	protected ExecutionInfo getExeInfo() {
+		return exeInfo;
+	}
+	
+	private void setState(HTTPConnectorState state) {
+		this.state = state;
+	}
+
+	protected HTTPConnectorState getState() {
+		return state;
+	}
+
+	protected String buildUriString() {
+	    String uriString = "<" + buildRawUriString() + ">"; //$NON-NLS-1$
+	    getLogger().logDetail("XML Connector Framework: using url " + uriString); //$NON-NLS-1$
+	    return uriString;
+	}
+
+	protected ConnectorLogger getLogger() {
+		return getState().getLogger();
+	}
+
+	protected String buildRawUriString() {
+	    String location = getExeInfo().getLocation();
+	    if (location != null) {
+	        // If the location is a URL, it replaces the full URL (first part
+	        // set in the
+	        // connector binding and second part set in the model).
+	        try {
+	            new URL(location);
+	            return location;
+	        } catch (MalformedURLException e) {
+	        }
+	    }
+	
+	    if (location == null) {
+	        final String tableServletCallPathProp = "ServletCallPathforURL"; //$NON-NLS-1$
+	        location = getExeInfo().getOtherProperties().getProperty(
+	                tableServletCallPathProp);
+	    }
+	
+	    String retval = (getState()).getUri();
+	    if (location != null && location.trim().length() > 0) {
+	        retval = retval + "/" + location; //$NON-NLS-1$
+	    }
+	    return retval;
+	}
+
+	public InputStream addStreamFilters(InputStream response, ConnectorLogger logger)
+	throws ConnectorException {
+		
+		if(getState().isLogRequestResponse()) {
+			response = new LoggingInputStreamFilter(response, logger);
+		}
+		
+		InputStream filter = null;
+		try {
+			Class pluggableFilter = Thread.currentThread().getContextClassLoader().loadClass(getState().getPluggableInputStreamFilterClass());
+			Constructor ctor = pluggableFilter.getConstructor(
+					new Class[] { java.io.InputStream.class, org.teiid.connector.api.ConnectorLogger.class});
+			filter = (InputStream) ctor.newInstance(new Object[] {response, logger});
+		} catch (Exception cnf) {
+			throw new ConnectorException(cnf);
+		}
+		return filter;
+	}
+
+	/**
+	 * Examines the Query to determine if a request to a source is needed.  If any of the 
+	 * request parameters is a ResponseIn, then we don't need to make a request because it 
+	 * has already been made by another call to Execution.execute()
+	 */ 
+    public static boolean checkIfRequestIsNeeded(ExecutionInfo info) throws ConnectorException {
+    	List cols = info.getRequestedColumns();
+    	boolean retVal = true;
+    	Iterator paramIter = cols.iterator();
+    	while(paramIter.hasNext()) {
+    		ParameterDescriptor desc = (ParameterDescriptor) paramIter.next();
+    		if(desc.getRole().equalsIgnoreCase(ParameterDescriptor.ROLE_COLUMN_PROPERTY_NAME_RESPONSE_IN)) {
+    			retVal = false;
+    			break;
+    		}
+    	}
+    	return retVal;
+    }
+
+	protected String removeAngleBrackets(String uri) {
+	    char[] result = new char[uri.length()];
+	    char[] source = uri.toCharArray();
+	    int r = 0;
+	    char v;
+	    for(int i = 0; i < source.length; i++) {
+	          v = source[i];
+	          if(v == '<' || v == '>')
+	             continue;
+	          result[r] = v;
+	          ++r;
+	    }
+	    return new String(result).trim();
+	}
+
+	protected void attemptConditionalLog(String message) {
+	    if (getState().isLogRequestResponse()) {
+	        getLogger().logInfo(message);
+	    }
+	}
+	
+	/**
+	 * Because of the structure of relational databases it is a simple and common practice
+	 * to return the vaule of a critera in a result set.  For instance, 
+	 * SELECT name, ssn from people where ssn='xxx-xx-xxxx'
+	 * In a Request/Response XML scenario, there is no guarantee that ssn is in the response.  
+	 * In most cases it will not be.  In order to meet the relational users expectation that
+	 * the value for a select critera can be returned we stash the value from the parameter 
+	 * in the output value and then fetch it when gathering results if possible. In some cases
+	 * this is not possible, and in those cases we throw a ConnectorException. Implementations
+	 * of this class can override cannotProjectParameter(CriteriaDesc parmCriteria) to make the 
+	 * determination.
+	 */
+	private void processOutputXPathDescs(final List requestedColumns, final List parameterPairs) throws ConnectorException {
+	    for (int i = 0; i < requestedColumns.size(); i++) {
+	        OutputXPathDesc xPath = (com.metamatrix.connector.xml.base.OutputXPathDesc) requestedColumns.get(i);
+	        if (xPath.isParameter() && xPath.getXPath() == null) {
+	            setOutputValues(parameterPairs, xPath);
+	        }
+	    }
+	}
+
+	/**
+	 * Put the input parameter value in the result column value if possible.
+	 */
+	private void setOutputValues(final List parameterPairs, OutputXPathDesc xPath) throws ConnectorException {
+	    int colNum = xPath.getColumnNumber();
+	    for (int x = 0; x < parameterPairs.size(); x++) {
+	        CriteriaDesc parmCriteria =
+	                    (CriteriaDesc) parameterPairs.get(x);
+	        if (parmCriteria.getColumnNumber() == colNum) {
+	            if (cannotProjectParameter(parmCriteria)) {
+	                throw new ConnectorException(Messages.getString("HTTPExecutor.cannot.project.repeating.values")); //$NON-NLS-1$
+	            } else {
+	                xPath.setCurrentValue(parmCriteria.getCurrentIndexValue());
+	                break;
+	            }
+	        }
+	    }        
+	}
+
+
 }

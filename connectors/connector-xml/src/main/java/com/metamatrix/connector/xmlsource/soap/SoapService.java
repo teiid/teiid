@@ -51,7 +51,8 @@ public class SoapService extends org.apache.axis.client.Service {
         this.securityToken = secToken;
     }
     
-    protected EngineConfiguration getEngineConfiguration() {        
+    @Override
+	protected EngineConfiguration getEngineConfiguration() {        
         EngineConfiguration config =  super.getEngineConfiguration();
         return new ClientEngineConfiguration(config);
     }   

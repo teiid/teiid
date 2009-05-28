@@ -33,9 +33,6 @@ public interface XMLConnectorState extends BaseXMLConnectorState {
 
 	public static final String STATE_CLASS_PROP = "ConnectorStateClass"; //$NON-NLS-1$
 
-	public DocumentProducer makeExecutor(XMLExecution info)
-			throws ConnectorException;
-
 	/**
 	 * @return Returns the m_cacheTimeout.
 	 */
@@ -70,5 +67,7 @@ public interface XMLConnectorState extends BaseXMLConnectorState {
 			throws ConnectorException;
 
 	public String getPluggableInputStreamFilterClass();
+
+	public boolean isCaching();
 
 }

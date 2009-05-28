@@ -31,7 +31,6 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
 
-import com.metamatrix.connector.xml.AbstractCachingConnector;
 
 @ConnectionPooling(enabled=false)
 public class XMLConnector extends AbstractCachingConnector {

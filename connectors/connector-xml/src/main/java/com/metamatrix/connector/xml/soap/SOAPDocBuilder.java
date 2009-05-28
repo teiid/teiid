@@ -24,7 +24,6 @@
 
 package com.metamatrix.connector.xml.soap;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
@@ -39,9 +38,6 @@ import org.teiid.connector.api.ConnectorException;
 import com.metamatrix.connector.xml.SOAPConnectorState;
 import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.DocumentBuilder;
-import com.metamatrix.connector.xml.base.Response;
-import com.metamatrix.connector.xml.base.XMLDocument;
-import com.metamatrix.connector.xml.jms.JMSSOAPConnectorState;
 
 public class SOAPDocBuilder {
 
@@ -84,8 +80,8 @@ public class SOAPDocBuilder {
 	public SOAPDocBuilder() {
 		super();
 	}
-	
-	public String createSOAPRequest(JMSSOAPConnectorState state, List queryList, String namespacePrefixes, String inputParmsXPath) throws ConnectorException {
+/*	
+	public String createSOAPRequest(SOAPConnectorState state, List queryList, String namespacePrefixes, String inputParmsXPath) throws ConnectorException {
 		Element body = new Element(soapBody, SOAPDocBuilder.soapNSObj);
 		Element envelope = new Element(soapEnvelope, SOAPDocBuilder.soapNSObj);
 		envelope.addNamespaceDeclaration(SOAPDocBuilder.xsiNSObj);
@@ -136,7 +132,6 @@ public class SOAPDocBuilder {
 				envelope.addNamespaceDeclaration((Namespace) nsIter.next());	
 			}				
 		}			
-		//TODO: strip dummy root element
 		// Here is where I need to check for a dummy element to hold the 
 		// document together until we can attach it to the body
 		if(docRoot.getNamespaceURI().equals(DUMMY_NS_NAME)) {
@@ -174,7 +169,7 @@ public class SOAPDocBuilder {
 		String xmlDoc = DocumentBuilder.outputDocToString(doc);
 		return xmlDoc;
 	}
-
+*/
     private void sortParams(List allParams, List headerParams, List bodyParams) throws ConnectorException {
     	// sort the parameter list into header and body content
     	//replace this later with model extensions
@@ -275,38 +270,7 @@ public class SOAPDocBuilder {
 		}
 		return builder.buildDocument(params, inputParmsXPath, namespacePrefixes);
     }
-    
-    public static void removeEnvelope(SOAPConnectorState state, Response response) throws ConnectorException {
-        XMLDocument xmlDoc = response.getDocuments()[0];
-        //remove envelope and body
-        removeEnvelope(state, xmlDoc);
-    }
 
-	public static void removeEnvelope(SOAPConnectorState state,
-			XMLDocument xmlDoc) throws ConnectorException {
-        Object contextRoot = xmlDoc.getContextRoot();
-        //if it came from the cache, its already the body element, not the document
-        if(contextRoot instanceof Document) {
-            Document doc = (Document)contextRoot;
-            Element env = doc.getRootElement();
-            Element bod = env.getChild(SOAPDocBuilder.soapBody, SOAPDocBuilder.soapNSObj);
-            //is there a soap fault?
-            if(bod != null) {
-                if (state.isExceptionOnFault() == true) {
-                    Element soapFault = null;
-                    if ((soapFault = bod.getChild("fault", SOAPDocBuilder.soapNSObj)) != null) {  // yuck.
-                        handleSoapFault(soapFault, state);
-                    } else if ((soapFault = bod.getChild("Fault", SOAPDocBuilder.soapNSObj)) != null) {
-                        handleSoapFault(soapFault, state);
-                    }
-                }
-                xmlDoc.setContextRoot(bod);
-            } else {
-                xmlDoc.setContextRoot(env);
-            }
-        }
-    }
-    
     private static void handleSoapFault(Element soapFault, SOAPConnectorState state) throws ConnectorException {
         String strMessage = soapFault.getChildTextTrim("faultstring"); //$NON-NLS-1$
         Element detailElement = soapFault.getChild("detail");  //$NON-NLS-1$
@@ -316,7 +280,7 @@ public class SOAPDocBuilder {
         String strDetail = DocumentBuilder.outputDocToString(detailDoc);
         state.getLogger().logError(strMessage + " : \n" + strDetail);              //$NON-NLS-1$
         } else {
-        	state.getLogger().logError(strMessage); //$NON-NLS-1$
+        	state.getLogger().logError(strMessage); 
         }
         throw new ConnectorException(strMessage);                       
     }

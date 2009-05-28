@@ -35,17 +35,20 @@ public class PluggableInputStreamFilterImpl extends FilterInputStream {
 		super(in);
 	}
 
-    public int read() throws IOException
+    @Override
+	public int read() throws IOException
     {
         return in.read();
     }
     
-    public int read(byte[] b) throws IOException
+    @Override
+	public int read(byte[] b) throws IOException
     {
     	return in.read(b);
     }
 
-    public int read(byte[] b, int off, int len) throws IOException
+    @Override
+	public int read(byte[] b, int off, int len) throws IOException
     {
         return in.read(b, off, len);
     }

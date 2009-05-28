@@ -48,14 +48,16 @@ public class MockResponseServlet extends HttpServlet
     {
     }
 
-    public void doGet(HttpServletRequest req, HttpServletResponse resp)
+    @Override
+	public void doGet(HttpServletRequest req, HttpServletResponse resp)
         throws IOException
     {
         logRequest(req);
         handleRequestResponse(req, resp);
     }
 
-    public void doPost(HttpServletRequest req, HttpServletResponse resp)
+    @Override
+	public void doPost(HttpServletRequest req, HttpServletResponse resp)
         throws IOException
     {
         doGet(req, resp);

@@ -394,11 +394,7 @@ public class DocumentBuilder {
         String arrayNamespace = tokenizer.nextToken();
         start = arrayNamespace.indexOf(":");
         end = arrayNamespace.indexOf("=", start +1);
-        String arrayNamespacePrefixValue = arrayNamespace.substring(start +1, end);
-        
         start = arrayNamespace.indexOf("\"");
-        String arrayNamespaceURIValue = arrayNamespace.substring(start+1, arrayNamespace.length());
-        
         arrayTypeValue = arrayTypeValue + "[" + parmCriteria.getNumberOfValues() + "]";
         
         

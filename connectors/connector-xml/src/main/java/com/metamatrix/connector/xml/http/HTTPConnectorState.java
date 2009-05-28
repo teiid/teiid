@@ -43,10 +43,7 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 
 import com.metamatrix.connector.xml.CachingConnector;
-import com.metamatrix.connector.xml.DocumentProducer;
-import com.metamatrix.connector.xml.XMLExecution;
 import com.metamatrix.connector.xml.base.SecureConnectorStateImpl;
-import com.metamatrix.connector.xml.base.XMLConnectionImpl;
 
 public class HTTPConnectorState extends SecureConnectorStateImpl {
 
@@ -138,7 +135,8 @@ public class HTTPConnectorState extends SecureConnectorStateImpl {
         setHttpBasicAuthPwd(new String());
     }
 
-    public void setState(ConnectorEnvironment env) throws ConnectorException {
+    @Override
+	public void setState(ConnectorEnvironment env) throws ConnectorException {
         super.setState(env);
         Properties props = env.getProperties();
         setAccessMethod(props.getProperty(ACCESS_METHOD));
@@ -164,25 +162,6 @@ public class HTTPConnectorState extends SecureConnectorStateImpl {
 			}
         }
         initHttpClient();
-    }
-
-    public Properties getState() {
-        Properties props = super.getState();
-        props.setProperty(ACCESS_METHOD, decodeAccessMethod(m_accessMethod));
-        props.setProperty(PARAMETER_METHOD,
-                decodeParameterMethod(m_parameterMethod));
-        props.setProperty(URI, getUri());
-        props.setProperty(PROXY_URI, getProxyUri());
-        props.setProperty(REQUEST_TIMEOUT, Integer
-                .toString(getRequestTimeout()));
-        props.setProperty(XML_PARAMETER_NAME, getXmlParameterName());
-        props.setProperty(USE_HTTP_BASIC_AUTH, Boolean
-                .toString(useHttpBasicAuth()));
-        props.setProperty(HTTP_BASIC_USER, getHttpBasicAuthUser());
-        props.setProperty(HTTP_BASIC_PASSWORD, getHttpBasicAuthPwd());
-        props.setProperty(SECURITY_DESERIALIZER_CLASS,
-                getSecurityDeserializerClass());
-        return props;
     }
 
     /**
@@ -274,16 +253,6 @@ public class HTTPConnectorState extends SecureConnectorStateImpl {
      */
     public String getXmlParameterName() {
         return m_xmlParameterName;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorStateImpl#getExecutor(com.metamatrix.connector.xml.base.XMLExecutionImpl)
-     */
-    public DocumentProducer makeExecutor(XMLExecution execution)
-            throws ConnectorException {
-        return new HTTPExecutor(this, execution);
     }
 
     private int encodeAccessMethod(String method) {
@@ -441,7 +410,7 @@ public class HTTPConnectorState extends SecureConnectorStateImpl {
     public Connection getConnection(CachingConnector connector,
             ExecutionContext context, ConnectorEnvironment environment)
             throws ConnectorException {
-        return new XMLConnectionImpl(connector, context, environment);
+        return new HTTPConnectionImpl(connector, context, environment);
     }
     
     private void setHostnameVerifierClassName(String property) {

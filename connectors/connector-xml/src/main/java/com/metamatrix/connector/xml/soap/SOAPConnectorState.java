@@ -24,14 +24,13 @@
 
 package com.metamatrix.connector.xml.soap;
 
-import java.util.Properties;
-
+import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
+import org.teiid.connector.api.ExecutionContext;
 
-import com.metamatrix.connector.xml.DocumentProducer;
-import com.metamatrix.connector.xml.XMLExecution;
+import com.metamatrix.connector.xml.CachingConnector;
 import com.metamatrix.connector.xml.http.HTTPConnectorState;
 
 /**
@@ -51,28 +50,16 @@ public class SOAPConnectorState extends HTTPConnectorState implements
 	}
 
 	
-	public Properties getState() {
-		Properties props = super.getState(); 
-		props.putAll(soapState.getState());
-		return props;
-	}
-
-
+	@Override
 	public void setState(ConnectorEnvironment env) throws ConnectorException {
 		super.setState(env);
 		soapState.setState(env);
 	}
 
+	@Override
 	public void setLogger(ConnectorLogger logger) {
 		super.setLogger(logger);
 		soapState.setLogger(logger);
-	}
-
-	/* (non-Javadoc)
-	 * @see com.metamatrix.connector.xml.base.XMLConnectorStateImpl#getExecutor(com.metamatrix.connector.xml.base.XMLExecutionImpl)
-	 */
-	public DocumentProducer makeExecutor(XMLExecution execution) throws ConnectorException {
-		return new SOAPExecutor(this, execution);
 	}
 
 	/* (non-Javadoc)
@@ -95,4 +82,10 @@ public class SOAPConnectorState extends HTTPConnectorState implements
 	public boolean isExceptionOnFault() {
 		return soapState.isExceptionOnFault();
 	}
+	
+    public Connection getConnection(CachingConnector connector,
+            ExecutionContext context, ConnectorEnvironment environment)
+            throws ConnectorException {
+        return new SOAPConnectionImpl(connector, context, environment);
+    }
 }

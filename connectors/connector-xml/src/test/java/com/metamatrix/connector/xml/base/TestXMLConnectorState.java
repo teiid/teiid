@@ -24,23 +24,19 @@ package com.metamatrix.connector.xml.base;
 
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.Execution;
 import org.teiid.connector.api.ExecutionContext;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.connector.xml.CachingConnector;
-import com.metamatrix.connector.xml.DocumentProducer;
 import com.metamatrix.connector.xml.XMLConnectorState;
-import com.metamatrix.connector.xml.XMLExecution;
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestXMLConnectorState extends TestCase {
@@ -55,7 +51,8 @@ public class TestXMLConnectorState extends TestCase {
         super(arg0);
     }
     
-  public void setUp() {
+  @Override
+public void setUp() {
         m_testFileProps = new Properties();
         m_testFileProps.setProperty(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("5000"));
         m_testFileProps.setProperty(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("50"));
@@ -74,7 +71,7 @@ public class TestXMLConnectorState extends TestCase {
     }
 
     public void testSetGetState() {
-    	XMLConnectorStateImpl state = new TestXMLConnectorStateImpl();
+    	XMLConnectorState state = new TestXMLConnectorStateImpl();
         try {
         	state.setLogger(new SysLogger(false));
         	state.setState(EnvironmentUtility.createEnvironment(m_testFileProps));
@@ -99,30 +96,8 @@ public class TestXMLConnectorState extends TestCase {
     	TestXMLConnectorStateImpl() {
     		super();
     	}
-    	
-
-		/* (non-Javadoc)
-		 * @see com.metamatrix.connector.xml.base.XMLConnectorStateImpl#getExecutor(com.metamatrix.connector.xml.base.XMLExecutionImpl)
-		 */
-		public DocumentProducer makeExecutor(XMLExecutionImpl info) {
-			return null;
-		}
-
-
-		public DocumentProducer makeExecutor(Execution info) throws ConnectorException {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
-
-		public DocumentProducer makeExecutor(XMLExecution info) throws ConnectorException {
-			// TODO Auto-generated method stub
-			return null;
-		}
-
 
 		public Connection getConnection(CachingConnector connector, ExecutionContext context, ConnectorEnvironment environment) throws ConnectorException {
-			// TODO Auto-generated method stub
 			return null;
 		}
     }

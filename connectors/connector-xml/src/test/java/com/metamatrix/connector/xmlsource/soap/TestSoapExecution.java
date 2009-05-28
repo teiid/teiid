@@ -58,10 +58,12 @@ public class TestSoapExecution extends TestCase {
 		TestSuite suite = new TestSuite();
 		suite.addTestSuite(TestSoapExecution.class);
         return new TestSetup(suite){
-            protected void setUp() throws Exception{
+            @Override
+			protected void setUp() throws Exception{
             	TestSoapExecution.setUpOnce();
             }
-            protected void tearDown() throws Exception{
+            @Override
+			protected void tearDown() throws Exception{
             	TestSoapExecution.tearDownOnce();
             }
         };
@@ -317,7 +319,7 @@ public class TestSoapExecution extends TestCase {
         props.setProperty(SoapConnectorProperties.AUTHORIZATION_TYPE, SecurityToken.WS_SECURITY); 
         props.setProperty(SoapConnectorProperties.WS_SECURITY_TYPE, SecurityToken.USERNAME_TOKEN_PROFILE_DIGEST); 
         props.setProperty(SoapConnectorProperties.USERNAME, "foo"); //$NON-NLS-1$ 
-        props.setProperty(SoapConnectorProperties.PASSWORD, "badpass"); //$NON-NLS-1$ //$NON-NLS-2$                
+        props.setProperty(SoapConnectorProperties.PASSWORD, "badpass"); //$NON-NLS-1$ 
         helpTestSecurity(false, wsddFile, props);
     }
 

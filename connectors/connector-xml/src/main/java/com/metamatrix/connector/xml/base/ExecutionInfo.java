@@ -22,17 +22,29 @@
 
 package com.metamatrix.connector.xml.base;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
-/**
- * @author JChoate
- *
- */
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.JDOMException;
+import org.jdom.Namespace;
+import org.jdom.input.SAXBuilder;
+import org.teiid.connector.api.ConnectorException;
+
+import com.metamatrix.connector.xml.Constants;
+import com.metamatrix.connector.xml.http.Messages;
+
 public class ExecutionInfo {
-// TODO: Massivly refactor.  This class was defined when the multiple reqests to an XML service
+// TODO:Refactor.  This class was defined when the multiple reqests to an XML service
 // (read HTTP) to satisfy an IN clause were abstacted beneath a single call to Executor.getResult().
 // This case is now satified within the execute call by making a single call to Executor.getResult()
 // for each paramter of the IN clause.
@@ -42,6 +54,7 @@ public class ExecutionInfo {
     private List m_params;
     private List m_criteria;
     private Properties m_otherProps;
+    private Properties m_schemaProps;
     private String m_tablePath;
     private String m_location;
     
@@ -51,7 +64,8 @@ public class ExecutionInfo {
         m_params = new ArrayList();
         m_criteria = new ArrayList();
         m_otherProps = new Properties();
-        m_tablePath = new String(""); //$NON-NLS-1$
+        m_schemaProps = new Properties();
+        m_tablePath = ""; //$NON-NLS-1$
     }
     
     
@@ -143,5 +157,50 @@ public class ExecutionInfo {
 			}
 		}
 		return result;
+	}
+
+	public Map<String, String> getNamespaces() throws ConnectorException {
+		Map<String, String> result = new HashMap<String, String>();
+		String namespacePrefixes = getOtherProperties().getProperty(
+                Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
+		if (namespacePrefixes == null || namespacePrefixes.trim().length() == 0) {
+            return null;
+        }
+        String prefix = null;
+        String uri = null;
+        try {
+            String xml = "<e " + namespacePrefixes + "/>"; //$NON-NLS-1$ //$NON-NLS-2$
+            Reader reader = new StringReader(xml);
+            SAXBuilder builder = new SAXBuilder();
+            Document domDoc = builder.build(reader);
+            Element elem = domDoc.getRootElement();
+            List namespaces = elem.getAdditionalNamespaces();
+            for (Iterator iter = namespaces.iterator(); iter.hasNext();) {
+                Object o = iter.next();
+                Namespace namespace = (Namespace) o;
+                prefix = namespace.getPrefix();
+                uri = namespace.getURI();
+                result.put(prefix, uri);
+            }
+        } catch (JDOMException e) {
+            String rawMsg = Messages
+                    .getString("Executor.jaxen.error.on.namespace.pairs"); //$NON-NLS-1$
+            Object[] objs = new Object[2];
+            objs[0] = prefix;
+            objs[1] = uri;
+            String msg = MessageFormat.format(rawMsg, objs);
+            throw new ConnectorException(e, msg);
+        } catch (IOException e) {
+            throw new ConnectorException(e, e.getMessage());
+        }
+        return result;
+	}
+
+	public void setSchemaProperties(Properties schemaProperties) {
+		m_schemaProps = schemaProperties;
+	}
+	
+	public Properties getSchemaProperties() {
+		return m_schemaProps;
 	}    
 }

@@ -24,16 +24,15 @@ package com.metamatrix.connector.xml.http;
 
 import java.util.Properties;
 
-import org.teiid.connector.api.ConnectorException;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.api.ConnectorException;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.SysLogger;
 import com.metamatrix.connector.xml.base.ProxyObjectFactory;
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestHTTPConnectorState extends TestCase {
@@ -46,7 +45,8 @@ public class TestHTTPConnectorState extends TestCase {
         super(arg0);
     }
 
-    protected void setUp() throws Exception {
+    @Override
+	protected void setUp() throws Exception {
 		super.setUp();
 	}
 
@@ -54,53 +54,7 @@ public class TestHTTPConnectorState extends TestCase {
         HTTPConnectorState state = new HTTPConnectorState();
         assertNotNull(state);
     }
-
-    public void testHTTPConnectorStateProperties() {
-    	Properties props = ProxyObjectFactory.getDefaultXMLRequestProps();
-        Properties propOut = null;
-        try {
-        	HTTPConnectorState state = new HTTPConnectorState();
-        	state.setLogger(new SysLogger(false));
-        	state.setState(EnvironmentUtility.createEnvironment(props));
-            propOut = state.getState();
-        } catch (ConnectorException ce) {
-         ce.printStackTrace();
-         fail(ce.getMessage());
-        }
-    	assertNotNull(propOut);
-    	assertEquals(props.getProperty(HTTPConnectorState.ACCESS_METHOD), propOut.getProperty(HTTPConnectorState.ACCESS_METHOD));    	
-    	assertEquals(props.getProperty(HTTPConnectorState.PARAMETER_METHOD), propOut.getProperty(HTTPConnectorState.PARAMETER_METHOD));
-    	assertEquals(props.getProperty(HTTPConnectorState.PROXY_URI), propOut.getProperty(HTTPConnectorState.PROXY_URI));
-    	assertEquals(props.getProperty(HTTPConnectorState.URI), propOut.getProperty(HTTPConnectorState.URI));
-    	assertEquals(props.getProperty(HTTPConnectorState.REQUEST_TIMEOUT), propOut.getProperty(HTTPConnectorState.REQUEST_TIMEOUT));
-    	assertEquals(props.getProperty(HTTPConnectorState.XML_PARAMETER_NAME), 
-    			propOut.getProperty(HTTPConnectorState.XML_PARAMETER_NAME));	
-    }
-    
-    public void testGetSetProperties() {
-    	Properties props = ProxyObjectFactory.getDefaultXMLRequestProps();
-    	HTTPConnectorState state = new HTTPConnectorState();
-        Properties propOut = null;
-        try {
-        	state.setLogger(new SysLogger(false));
-        	state.setState(EnvironmentUtility.createEnvironment(props));
-        	propOut = state.getState();
-        } catch (ConnectorException ce) {
-         ce.printStackTrace();
-         fail(ce.getMessage());
-        }
-       
-    	assertNotNull(propOut);
-    	assertEquals(props.getProperty(HTTPConnectorState.ACCESS_METHOD), propOut.getProperty(HTTPConnectorState.ACCESS_METHOD));    	
-    	assertEquals(props.getProperty(HTTPConnectorState.PARAMETER_METHOD), propOut.getProperty(HTTPConnectorState.PARAMETER_METHOD));
-    	assertEquals(props.getProperty(HTTPConnectorState.PROXY_URI), propOut.getProperty(HTTPConnectorState.PROXY_URI));
-    	assertEquals(props.getProperty(HTTPConnectorState.URI), propOut.getProperty(HTTPConnectorState.URI));
-    	assertEquals(props.getProperty(HTTPConnectorState.REQUEST_TIMEOUT), 
-    			propOut.getProperty(HTTPConnectorState.REQUEST_TIMEOUT));
-    	assertEquals(props.getProperty(HTTPConnectorState.XML_PARAMETER_NAME), 
-    			propOut.getProperty(HTTPConnectorState.XML_PARAMETER_NAME));
-    }
-
+ 
     public void testSetGetAccessMethod() {
     	HTTPConnectorState state = new HTTPConnectorState();
     	state.setAccessMethod(HTTPConnectorState.GET);

@@ -105,7 +105,8 @@ public class FileExecution extends XMLSourceExecution {
         XMLSourcePlugin.logDetail(this.env.getLogger(), "executing_procedure", new Object[] {procedure.getProcedureName()}); //$NON-NLS-1$
     }
     
-    public Source getReturnValue() {
+    @Override
+	public Source getReturnValue() {
 		return returnValue;
 	}
 

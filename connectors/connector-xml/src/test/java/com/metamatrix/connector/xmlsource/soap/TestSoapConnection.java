@@ -25,10 +25,10 @@ package com.metamatrix.connector.xmlsource.soap;
 import java.io.File;
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.core.util.UnitTestUtil;

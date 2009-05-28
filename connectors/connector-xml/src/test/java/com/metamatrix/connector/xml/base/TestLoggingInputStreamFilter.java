@@ -26,9 +26,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.teiid.connector.api.ConnectorLogger;
-
 import junit.framework.TestCase;
+
+import org.teiid.connector.api.ConnectorLogger;
 
 
 public class TestLoggingInputStreamFilter extends TestCase {
@@ -37,6 +37,7 @@ public class TestLoggingInputStreamFilter extends TestCase {
 	TestLogger logger;
 	private static final String TEST_VAL = "The quick brown fox jumps over the lazy dog";
 	
+	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 		logger = new TestLogger();
@@ -82,6 +83,7 @@ public class TestLoggingInputStreamFilter extends TestCase {
 			byte[] res = new byte[TEST_VAL.length() + 1];
 			int len = filter.read(res);
 			assertEquals(TEST_VAL.length(), len);
+			filter.close();
 			assertEquals("XML Connector Framework: response body is: " + TEST_VAL, logger.getMessage());
 			assertEquals(TEST_VAL, new String(res).trim());
 		} catch (IOException e) {
@@ -152,18 +154,12 @@ public class TestLoggingInputStreamFilter extends TestCase {
 		}
 		
 		public void logDetail(String arg0) {
-			// TODO Auto-generated method stub
-			
 		}
 
 		public void logError(String arg0) {
-			// TODO Auto-generated method stub
-			
 		}
 
 		public void logError(String arg0, Throwable arg1) {
-			// TODO Auto-generated method stub
-			
 		}
 
 		public void logInfo(String arg0) {
@@ -172,66 +168,53 @@ public class TestLoggingInputStreamFilter extends TestCase {
 		}
 
 		public void logTrace(String arg0) {
-			// TODO Auto-generated method stub
-			
 		}
 
 		public void logWarning(String arg0) {
-			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
 		public boolean isDetailEnabled() {
-			// TODO Auto-generated method stub
 			return false;
 		}
 
 		@Override
 		public boolean isErrorEnabled() {
-			// TODO Auto-generated method stub
 			return false;
 		}
 
 		@Override
 		public boolean isInfoEnabled() {
-			// TODO Auto-generated method stub
 			return false;
 		}
 
 		@Override
 		public boolean isTraceEnabled() {
-			// TODO Auto-generated method stub
 			return false;
 		}
 
 		@Override
 		public boolean isWarningEnabled() {
-			// TODO Auto-generated method stub
 			return false;
 		}
 
 		@Override
 		public void logDetail(String message, Throwable error) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void logInfo(String message, Throwable error) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void logTrace(String message, Throwable error) {
-			// TODO Auto-generated method stub
 			
 		}
 
 		@Override
 		public void logWarning(String message, Throwable error) {
-			// TODO Auto-generated method stub
 			
 		}
 		

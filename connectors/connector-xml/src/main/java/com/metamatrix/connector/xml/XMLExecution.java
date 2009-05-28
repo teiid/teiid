@@ -22,20 +22,22 @@
 
 package com.metamatrix.connector.xml;
 
+import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.Execution;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.ResultSetExecution;
 
-import com.metamatrix.connector.xml.base.ExecutionInfo;
-import com.metamatrix.connector.xml.cache.IDocumentCache;
-
-public interface XMLExecution extends Execution {
-	
-	public ExecutionInfo getInfo();
+public interface XMLExecution extends Execution, ResultSetExecution {
 	
 	public XMLConnection getConnection();
 	
-	public IDocumentCache getCache();
-
 	public ExecutionContext getExeContext();
 
+	/**
+	 * Gets all the InputStreams for a single ExecutionInfo instance.
+	 * This could be any number or streams and is implementation dependent.
+	 * @return
+	 * @throws ConnectorException 
+	 */
+	public ResultProducer  getStreamProducer() throws ConnectorException;
 }

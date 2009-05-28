@@ -43,7 +43,6 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 
 /**
- * created by JChoate on Jun 27, 2005
  *
  */
 public class TestCriteriaDesc extends TestCase {

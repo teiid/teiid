@@ -23,29 +23,10 @@
 
 package com.metamatrix.connector.xml;
 
-import java.io.Serializable;
-
-import org.teiid.connector.api.ConnectorException;
-
-import com.metamatrix.connector.xml.base.Response;
-
 /**
- * @author mharris
- *
  * Implementations are responsible for implementing these functions and providing an appropriate getter
  * for the "Document" it will produce.
  */
 public interface DocumentProducer
 {
-    // Derived classes can consider the following call sequence to be guaranteed (i.e. part of the interface):
-    // 1) construction
-    // 2) call to getDocumentCount
-    // 3) calls to getCacheKey and the specific document getter (e.g. getDocumentStream) in that order,
-    //      once for each value of i (where i is less than the value returned by getDocuementCount)
-    // 4) the call sequence call be terminated at any time before the sequence is complete
-    
-    public int getDocumentCount() throws ConnectorException;
-    public String getCacheKey(int i) throws ConnectorException;
-    public Response getXMLResponse(int invocationNumber) throws ConnectorException;
-    public Serializable getRequestObject(int i) throws ConnectorException;
 }

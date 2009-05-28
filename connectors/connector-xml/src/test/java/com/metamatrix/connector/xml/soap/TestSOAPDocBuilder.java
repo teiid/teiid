@@ -2,17 +2,16 @@ package com.metamatrix.connector.xml.soap;
 
 import java.util.List;
 
+import junit.framework.TestCase;
+
 import org.jdom.Attribute;
 import org.jdom.Element;
-
-import com.metamatrix.connector.xml.soap.SOAPDocBuilder;
-
-import junit.framework.TestCase;
 
 public class TestSOAPDocBuilder extends TestCase {
 
 	private final String USERNAME = "moi";
 	private final String PASSWORD = "secret";
+	@Override
 	protected void setUp() throws Exception {
 		super.setUp();
 	}

@@ -35,7 +35,6 @@ import com.metamatrix.connector.xml.TrustedPayloadHandler;
 /**
  * Encapsulates the loading of the TrustDeserializerClass for connector 
  * implementations that require security.
- * @author Jdoyle
  *
  */
 public abstract class SecureConnectorStateImpl extends XMLConnectorStateImpl implements SecureConnectorState {
@@ -47,6 +46,7 @@ public abstract class SecureConnectorStateImpl extends XMLConnectorStateImpl imp
 		
 	}
 	
+	@Override
 	public void setState(ConnectorEnvironment env) throws ConnectorException {
 		super.setState(env);
 		
@@ -62,6 +62,7 @@ public abstract class SecureConnectorStateImpl extends XMLConnectorStateImpl imp
         getTrustDeserializerInstance();
 	}
 	
+	@Override
 	public Properties getState() {
 		Properties props = super.getState();
         props.setProperty(SECURITY_DESERIALIZER_CLASS, getSecurityDeserializerClass());

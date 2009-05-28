@@ -29,16 +29,6 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.metadata.runtime.Element;
 
-
-
-/**
- * @author BLotenberg
- *
- * To change this generated comment edit the template variable "typecomment":
- * Window>Preferences>Java>Templates.
- * To enable and disable the creation of type comments go to
- * Window>Preferences>Java>Code Generation.
- */
 public class OutputXPathDesc extends ParameterDescriptor {
 
 	// Describes an item in the xpath structure, and all the attributes of it
