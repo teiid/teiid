@@ -22,10 +22,6 @@
 
 package com.metamatrix.server;
 
-import java.util.Collection;
-import java.util.Properties;
-import java.util.StringTokenizer;
-
 import org.jboss.cache.Cache;
 import org.jgroups.mux.Multiplexer;
 import org.teiid.dqp.internal.cache.DQPContextCache;
@@ -38,7 +34,6 @@ import com.metamatrix.cache.jboss.JBossCacheFactory;
 import com.metamatrix.common.comm.platform.socket.SocketVMController;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.config.api.HostID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
