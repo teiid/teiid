@@ -38,7 +38,6 @@ import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicComponentType;
 import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;

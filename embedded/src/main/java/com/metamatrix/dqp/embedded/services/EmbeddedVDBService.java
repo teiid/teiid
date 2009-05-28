@@ -31,9 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.api.CacheScope;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.google.inject.Inject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -47,11 +45,7 @@ import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VDBStatus;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.dqp.service.BufferService;
-import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.vdb.runtime.BasicModelInfo;

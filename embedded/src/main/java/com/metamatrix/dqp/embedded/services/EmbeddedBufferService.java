@@ -26,14 +26,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.teiid.connector.api.CacheScope;
-import org.teiid.connector.api.ExecutionContext;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.google.inject.Inject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.cache.Cache;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
