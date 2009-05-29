@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="ASCII"?>
+<xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:jdbc="http://www.metamatrix.com/metamodels/JDBC" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:25983900-54a6-111b-9708-f3d85bed2dda" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="PHYSICAL" ProducerName="MetaMatrix" ProducerVersion="5.5">
+    <modelImports xmi:uuid="mmuuid:36d20340-54a6-111b-9708-f3d85bed2dda" name="XMLFileConnectorExtensions" modelLocation="../XMLExtensionsProject/XMLFileConnectorExtensions.xmi" uuid="mmuuid:61d94280-b86d-1ffe-bb3d-c715e2d4aaf4" modelType="EXTENSION" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Extension"/>
+    <modelImports xmi:uuid="mmuuid:35dddf40-54a6-111b-9708-f3d85bed2dda" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
+    <extensionPackage href="../XMLExtensionsProject/XMLFileConnectorExtensions.xmi#mmuuid/61d94286-b86d-1ffe-bb3d-c715e2d4aaf4"/>
+  </mmcore:ModelAnnotation>
+  <mmcore:AnnotationContainer xmi:uuid="mmuuid:2b9d5c41-54a6-111b-9708-f3d85bed2dda">
+    <annotations xmi:uuid="mmuuid:2b9d5c42-54a6-111b-9708-f3d85bed2dda" annotatedObject="mmuuid/2b7ed7c0-54a6-111b-9708-f3d85bed2dda">
+      <tags xmi:uuid="mmuuid:2bac9e80-54a6-111b-9708-f3d85bed2dda" key="NamespacePrefixes" value="xmlns:xsd='http://www.w3.org/2001/XMLSchema'"/>
+    </annotations>
+    <annotations xmi:uuid="mmuuid:2cce8942-54a6-111b-9708-f3d85bed2dda" annotatedObject="mmuuid/2cce8940-54a6-111b-9708-f3d85bed2dda">
+      <tags xmi:uuid="mmuuid:2cce8943-54a6-111b-9708-f3d85bed2dda" key="NamespacePrefixes" value="xmlns:xsd='http://www.w3.org/2001/XMLSchema'"/>
+    </annotations>
+  </mmcore:AnnotationContainer>
+  <relational:BaseTable xmi:uuid="mmuuid:2b7ed7c0-54a6-111b-9708-f3d85bed2dda" name="purchaseOrder" nameInSource="/purchaseOrder">
+    <columns xmi:uuid="mmuuid:2c547740-54a6-111b-9708-f3d85bed2dda" name="mmid" nameInSource="@com.metamatrix.xml.xpathpart" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="" uniqueKeys="mmuuid/2c918040-54a6-111b-9708-f3d85bed2dda">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c72fbc0-54a6-111b-9708-f3d85bed2dda" name="orderDate" nameInSource="@orderDate" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c72fbc1-54a6-111b-9708-f3d85bed2dda" name="shipTo_country" nameInSource="shipTo/@country" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c72fbc2-54a6-111b-9708-f3d85bed2dda" name="shipTo_name" nameInSource="shipTo/name/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c72fbc3-54a6-111b-9708-f3d85bed2dda" name="shipTo_street" nameInSource="shipTo/street/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e00-54a6-111b-9708-f3d85bed2dda" name="shipTo_city" nameInSource="shipTo/city/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e01-54a6-111b-9708-f3d85bed2dda" name="shipTo_state" nameInSource="shipTo/state/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e02-54a6-111b-9708-f3d85bed2dda" name="shipTo_zip" nameInSource="shipTo/zip/text()" nativeType="java.lang.String" length="20" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e03-54a6-111b-9708-f3d85bed2dda" name="billTo_country" nameInSource="billTo/@country" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e04-54a6-111b-9708-f3d85bed2dda" name="billTo_name" nameInSource="billTo/name/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e05-54a6-111b-9708-f3d85bed2dda" name="billTo_street" nameInSource="billTo/street/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e06-54a6-111b-9708-f3d85bed2dda" name="billTo_city" nameInSource="billTo/city/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e07-54a6-111b-9708-f3d85bed2dda" name="billTo_state" nameInSource="billTo/state/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e08-54a6-111b-9708-f3d85bed2dda" name="billTo_zip" nameInSource="billTo/zip/text()" nativeType="java.lang.String" length="20" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2c823e09-54a6-111b-9708-f3d85bed2dda" name="comment" nameInSource="comment/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <primaryKey xmi:uuid="mmuuid:2c918040-54a6-111b-9708-f3d85bed2dda" name="pkpurchaseOrder" nameInSource="pk_/purchaseOrder" columns="mmuuid/2c547740-54a6-111b-9708-f3d85bed2dda" foreignKeys="mmuuid/2d57dd80-54a6-111b-9708-f3d85bed2dda"/>
+  </relational:BaseTable>
+  <relational:BaseTable xmi:uuid="mmuuid:2cce8940-54a6-111b-9708-f3d85bed2dda" name="item" nameInSource="/purchaseOrder/items/item">
+    <columns xmi:uuid="mmuuid:2cddcb80-54a6-111b-9708-f3d85bed2dda" name="purchaseOrder_mmid" nameInSource="../../@com.metamatrix.xml.xpathpart" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="" foreignKeys="mmuuid/2d57dd80-54a6-111b-9708-f3d85bed2dda">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2cddcb81-54a6-111b-9708-f3d85bed2dda" name="mmid" nameInSource="@com.metamatrix.xml.xpathpart" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="" uniqueKeys="mmuuid/2cddcb88-54a6-111b-9708-f3d85bed2dda">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2cddcb82-54a6-111b-9708-f3d85bed2dda" name="partNum" nameInSource="@partNum" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2cddcb83-54a6-111b-9708-f3d85bed2dda" name="productName" nameInSource="productName/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2cddcb84-54a6-111b-9708-f3d85bed2dda" name="quantity" nameInSource="quantity/text()" nativeType="java.lang.String" length="20" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2cddcb85-54a6-111b-9708-f3d85bed2dda" name="USPrice" nameInSource="USPrice/text()" nativeType="java.lang.String" length="20" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2cddcb86-54a6-111b-9708-f3d85bed2dda" name="comment" nameInSource="comment/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:2cddcb87-54a6-111b-9708-f3d85bed2dda" name="shipDate" nameInSource="shipDate/text()" nativeType="java.lang.String" length="255" nullable="NULLABLE_UNKNOWN" defaultValue="">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
+    <foreignKeys xmi:uuid="mmuuid:2d57dd80-54a6-111b-9708-f3d85bed2dda" name="fk_item_purchaseOrder" nameInSource="fk_/purchaseOrder/items/item_/purchaseOrder" foreignKeyMultiplicity="UNSPECIFIED" primaryKeyMultiplicity="UNSPECIFIED" columns="mmuuid/2cddcb80-54a6-111b-9708-f3d85bed2dda" uniqueKey="mmuuid/2c918040-54a6-111b-9708-f3d85bed2dda"/>
+    <primaryKey xmi:uuid="mmuuid:2cddcb88-54a6-111b-9708-f3d85bed2dda" name="pkitem" nameInSource="pk_/purchaseOrder/items/item" columns="mmuuid/2cddcb81-54a6-111b-9708-f3d85bed2dda"/>
+  </relational:BaseTable>
+  <jdbc:JdbcSource xmi:uuid="mmuuid:2ff54189-54a2-111b-9708-f3d85bed2dda" driverName="com.metamatrix.modeler.modelgenerator.xml.wizards.jdbc.XmlImporterJdbcDriver" driverClass="com.metamatrix.modeler.modelgenerator.xml.wizards.jdbc.XmlImporterJdbcDriver" username="" url="xsd:file:/NotBackedUp/jdoyle/workspaces/XML.tests/po_orig.xsd">
+    <importSettings xmi:uuid="mmuuid:2ff5418a-54a2-111b-9708-f3d85bed2dda" createCatalogsInModel="false" includeApproximateIndexes="false">
+      <includedCatalogPaths>/Global</includedCatalogPaths>
+      <includedTableTypes>ELEMENT</includedTableTypes>
+      <includedTableTypes>RELATIONSHIP</includedTableTypes>
+    </importSettings>
+  </jdbc:JdbcSource>
+  <diagram:DiagramContainer xmi:uuid="mmuuid:4a9bee40-54a6-111b-9708-f3d85bed2dda">
+    <diagram xmi:uuid="mmuuid:4a9bee41-54a6-111b-9708-f3d85bed2dda" type="packageDiagramType" target="mmuuid/25983900-54a6-111b-9708-f3d85bed2dda">
+      <diagramEntity xmi:uuid="mmuuid:4b624b80-54a6-111b-9708-f3d85bed2dda" modelObject="mmuuid/2b7ed7c0-54a6-111b-9708-f3d85bed2dda" xPosition="343" yPosition="30"/>
+      <diagramEntity xmi:uuid="mmuuid:4b901240-54a6-111b-9708-f3d85bed2dda" modelObject="mmuuid/2cce8940-54a6-111b-9708-f3d85bed2dda" xPosition="30" yPosition="78"/>
+    </diagram>
+  </diagram:DiagramContainer>
+</xmi:XMI>

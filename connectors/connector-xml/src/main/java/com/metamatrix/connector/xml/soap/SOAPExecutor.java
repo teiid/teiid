@@ -42,8 +42,6 @@ import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
 import javax.xml.ws.soap.SOAPBinding;
 
-import net.sf.saxon.dom.DOMNodeList;
-
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.output.DOMOutputter;
@@ -151,9 +149,7 @@ public class SOAPExecutor extends HTTPExecutor {
 				requestNodes = dummyNode.getChildNodes().item(0).getChildNodes();
 			} else {
 				org.w3c.dom.Document document = domOutputter.output(doc);
-				List singleNode = new ArrayList();
-				singleNode.add(document.getFirstChild());
-				requestNodes = new DOMNodeList(singleNode);
+				requestNodes = document.getChildNodes();
 			}
 		} catch (Exception e) {
 			throw new ConnectorException(e);
