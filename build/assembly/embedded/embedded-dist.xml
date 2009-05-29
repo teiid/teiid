@@ -27,8 +27,17 @@
       </includes>
       <excludes>
       	<exclude>teiid-txn-jbossts-${version}.jar</exclude>
+      	<exclude>teiid-hibernate-dialect-${version}.jar</exclude>
       </excludes>
       <outputDirectory>lib</outputDirectory>      
+    </fileSet>
+    
+    <fileSet>
+      <directory>target/distribution/teiid-${version}-embedded-dependencies.dir</directory>
+      <includes>
+        <include>teiid-hibernate-dialect-${version}.jar</include>
+      </includes>
+      <outputDirectory>hibernate</outputDirectory>      
     </fileSet>
     
     <fileSet>

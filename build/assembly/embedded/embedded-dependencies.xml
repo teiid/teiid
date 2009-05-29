@@ -45,6 +45,15 @@
         </binaries>
       
     </moduleSet>
+    <moduleSet>
+      <includes>
+      	<include>org.jboss.teiid:teiid-hibernate-dialect</include>
+      </includes>
+      <binaries>
+		<includeDependencies>false</includeDependencies>
+		<unpack>false</unpack>
+      </binaries>
+    </moduleSet>
   </moduleSets>
     
 </assembly>
