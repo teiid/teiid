@@ -320,6 +320,7 @@ public class GroupingNode extends RelationalNode {
 
     private void sortPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
         this.sortedID = this.sortUtility.sort();
+        this.rowCount = this.getBufferManager().getFinalRowCount(this.sortedID);
         this.phase = GROUP;
     }
 

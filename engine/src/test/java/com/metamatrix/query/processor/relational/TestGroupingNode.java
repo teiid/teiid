@@ -178,20 +178,7 @@ public class TestGroupingNode extends TestCase {
     public void test2() throws Exception {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
 
-        // Set up
-        GroupingNode node = new GroupingNode(1);
-        List outputElements = new ArrayList();
-        ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
-        col1.setType(Integer.class);
-        ElementSymbol col2 = new ElementSymbol("col2"); //$NON-NLS-1$
-        col2.setType(Integer.class);
-        outputElements.add(col1);
-        outputElements.add(new AggregateSymbol("countDist", "COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-        node.setElements(outputElements);
-        
-        List groupingElements = new ArrayList();
-        groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
-        node.setGroupingElements(groupingElements);         
+        GroupingNode node = getExampleGroupingNode();         
         CommandContext context = new CommandContext("pid", "test", null, null, null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
         
@@ -214,20 +201,7 @@ public class TestGroupingNode extends TestCase {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         ((BufferManagerImpl)mgr).getConfig().setProcessorBatchSize(5);
 
-        // Set up
-        GroupingNode node = new GroupingNode(1);
-        List outputElements = new ArrayList();
-        ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
-        col1.setType(Integer.class);
-        ElementSymbol col2 = new ElementSymbol("col2"); //$NON-NLS-1$
-        col2.setType(Integer.class);
-        outputElements.add(col1);
-        outputElements.add(new AggregateSymbol("countDist", "COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-        node.setElements(outputElements);
-        
-        List groupingElements = new ArrayList();
-        groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
-        node.setGroupingElements(groupingElements);         
+        GroupingNode node = getExampleGroupingNode();         
         CommandContext context = new CommandContext("pid", "test", null, null,  null);               //$NON-NLS-1$ //$NON-NLS-2$
         node.initialize(context, mgr, null);
         
@@ -431,4 +405,44 @@ public class TestGroupingNode extends TestCase {
     public void testLookupFunctionMultipleBatches() throws Exception {
         helpTestLookupFunctionInAggregate(3);
     }
+    
+    public void testDupSort() throws Exception {
+        BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
+
+        GroupingNode node = getExampleGroupingNode();     
+        node.setRemoveDuplicates(true);
+        CommandContext context = new CommandContext("pid", "test", null, null,  null);               //$NON-NLS-1$ //$NON-NLS-2$
+        node.initialize(context, mgr, null);
+        
+        List[] expected = new List[] {
+            Arrays.asList(new Object[] { null, new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(0), new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(2), new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(3), new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(4), new Integer(2) }),
+            Arrays.asList(new Object[] { new Integer(5), new Integer(1) }),
+            Arrays.asList(new Object[] { new Integer(6), new Integer(2) })
+        };
+                
+        helpProcess(mgr, node, context, expected);
+    }
+
+	private GroupingNode getExampleGroupingNode() {
+		GroupingNode node = new GroupingNode(1);
+        List outputElements = new ArrayList();
+        ElementSymbol col1 = new ElementSymbol("col1"); //$NON-NLS-1$
+        col1.setType(Integer.class);
+        ElementSymbol col2 = new ElementSymbol("col2"); //$NON-NLS-1$
+        col2.setType(Integer.class);
+        outputElements.add(col1);
+        outputElements.add(new AggregateSymbol("countDist", "COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        node.setElements(outputElements);
+        
+        List groupingElements = new ArrayList();
+        groupingElements.add(new ElementSymbol("col1")); //$NON-NLS-1$
+        node.setGroupingElements(groupingElements);
+		return node;
+	}
+    
 }
