@@ -239,13 +239,12 @@ public class ConnectionInfo {
         if (user == null || user.trim().length() == 0) {
             throw new IllegalArgumentException(AdminPlugin.Util.getString(AdminMessages.ADMIN_0099));
         }
-        if (password == null || password.length == 0) {
-            throw new IllegalArgumentException(AdminPlugin.Util.getString(AdminMessages.ADMIN_0100));
-        }
         
         Properties properties = new Properties();
         properties.setProperty(MMURL.CONNECTION.USER_NAME, user);
-        properties.setProperty(MMURL.CONNECTION.PASSWORD, new String(password));
+        if (password != null) {
+            properties.setProperty(MMURL.CONNECTION.PASSWORD, new String(password));
+        }
         properties.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
         properties.setProperty(MMURL.CONNECTION.SERVER_URL, mmurl.getAppServerURL());
         connection = SocketServerConnectionFactory.getInstance().createConnection(properties);

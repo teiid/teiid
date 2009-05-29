@@ -202,14 +202,13 @@ public class ServerAdminFactory {
         if (userName == null || userName.trim().length() == 0) {
             throw new IllegalArgumentException(AdminPlugin.Util.getString("ERR.014.001.0099")); //$NON-NLS-1$
         }
-        if (password == null || password.length == 0) {
-            throw new IllegalArgumentException(AdminPlugin.Util.getString("ERR.014.001.00100")); //$NON-NLS-1$
-        }
         
     	final Properties p = new Properties();
     	p.setProperty(MMURL.CONNECTION.APP_NAME, applicationName);
     	p.setProperty(MMURL.CONNECTION.USER_NAME, userName);
-    	p.setProperty(MMURL.CONNECTION.PASSWORD, new String(password));
+        if (password != null) {
+        	p.setProperty(MMURL.CONNECTION.PASSWORD, new String(password));
+        }
     	p.setProperty(MMURL.CONNECTION.SERVER_URL, serverURL);
     	return createAdmin(p);
     }
