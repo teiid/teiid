@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
@@ -168,6 +169,10 @@ public class DQPCore extends Application implements ClientSideDQP {
 	@Override
     public void stop() throws ApplicationLifecycleException {
     	processWorkerPool.shutdown();
+    	try {
+			processWorkerPool.awaitTermination(10, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+		}
     	contextCache.shutdown();
     	super.stop();
     }
