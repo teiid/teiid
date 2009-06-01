@@ -43,6 +43,7 @@ import org.jboss.cache.jmx.CacheJmxWrapperMBean;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
@@ -57,11 +58,11 @@ public class JBossCacheFactory implements CacheFactory {
 	private ObjectName jmxName;
 	
 	@Inject
-	public JBossCacheFactory(org.jboss.cache.Cache cacheStore) {
+	public JBossCacheFactory(org.jboss.cache.Cache cacheStore, @Named("ProcessName") String processName) {
 		try {
 			CacheJmxWrapperMBean wrapper = new CacheJmxWrapper(cacheStore);			
 			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			this.jmxName = new ObjectName("Teiid:service=JBossCache,name=cache"); //$NON-NLS-1$
+			this.jmxName = new ObjectName("Teiid["+processName+"]:service=JBossCache,name=cache"); //$NON-NLS-1$ //$NON-NLS-2$
 			mbs.registerMBean(wrapper, this.jmxName);
 			wrapper.create();
 			wrapper.start();

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ASCII"?>
 <xmi:XMI xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:diagram="http://www.metamatrix.com/metamodels/Diagram" xmlns:mmcore="http://www.metamatrix.com/metamodels/Core" xmlns:relational="http://www.metamatrix.com/metamodels/Relational" xmlns:transformation="http://www.metamatrix.com/metamodels/Transformation">
-  <mmcore:ModelAnnotation xmi:uuid="mmuuid:0ed93040-daa2-1105-b511-c9cb83fb3e5e" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="VIRTUAL" ProducerName="MetaMatrix" ProducerVersion="5.5">
+  <mmcore:ModelAnnotation xmi:uuid="mmuuid:0ed93040-daa2-1105-b511-c9cb83fb3e5e" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational" modelType="VIRTUAL" ProducerName="Teiid Designer" ProducerVersion="6.1.0">
     <modelImports xmi:uuid="mmuuid:c22619c1-db7d-1105-b511-c9cb83fb3e5e" name="Accounts" modelLocation="Accounts.xmi" uuid="mmuuid:077908c0-da11-1105-b511-c9cb83fb3e5e" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
     <modelImports xmi:uuid="mmuuid:c3d158c0-db7d-1105-b511-c9cb83fb3e5e" name="XMLSchema" modelLocation="http://www.w3.org/2001/XMLSchema" modelType="TYPE" primaryMetamodelUri="http://www.eclipse.org/xsd/2002/XSD"/>
     <modelImports xmi:uuid="mmuuid:88b29fc1-db81-1105-b511-c9cb83fb3e5e" name="MarketData" modelLocation="MarketData.xmi" uuid="mmuuid:891f1b80-da34-1105-b511-c9cb83fb3e5e" modelType="PHYSICAL" primaryMetamodelUri="http://www.metamatrix.com/metamodels/Relational"/>
@@ -12,20 +12,20 @@
     </diagram>
     <diagram xmi:uuid="mmuuid:cbfb4d40-db7c-1105-b511-c9cb83fb3e5e" type="transformationDiagramType" target="mmuuid/9b93ab00-db79-1105-b511-c9cb83fb3e5e">
       <diagramEntity xmi:uuid="mmuuid:ccef7140-db7c-1105-b511-c9cb83fb3e5e" modelObject="mmuuid/9b93ab00-db79-1105-b511-c9cb83fb3e5e" xPosition="30" yPosition="50"/>
-      <diagramEntity xmi:uuid="mmuuid:ccfeb380-db7c-1105-b511-c9cb83fb3e5e" name="T" modelObject="mmuuid/fa592480-db79-1105-b511-c9cb83fb3e5e" xPosition="252" yPosition="50"/>
-      <diagramEntity xmi:uuid="mmuuid:c900dc80-db7d-1105-b511-c9cb83fb3e5e" xPosition="302" yPosition="50">
+      <diagramEntity xmi:uuid="mmuuid:ccfeb380-db7c-1105-b511-c9cb83fb3e5e" name="T" modelObject="mmuuid/fa592480-db79-1105-b511-c9cb83fb3e5e" xPosition="276" yPosition="50"/>
+      <diagramEntity xmi:uuid="mmuuid:c900dc80-db7d-1105-b511-c9cb83fb3e5e" xPosition="326" yPosition="50">
         <modelObject href="Accounts.xmi#mmuuid/08c8ba40-da11-1105-b511-c9cb83fb3e5e"/>
       </diagramEntity>
-      <diagramEntity xmi:uuid="mmuuid:55e8a380-db7e-1105-b511-c9cb83fb3e5e" xPosition="518" yPosition="50">
+      <diagramEntity xmi:uuid="mmuuid:55e8a380-db7e-1105-b511-c9cb83fb3e5e" xPosition="561" yPosition="50">
         <modelObject href="Accounts.xmi#mmuuid/0cf4d7c0-da11-1105-b511-c9cb83fb3e5e"/>
       </diagramEntity>
-      <diagramEntity xmi:uuid="mmuuid:f8271000-db7e-1105-b511-c9cb83fb3e5e" xPosition="734" yPosition="50">
+      <diagramEntity xmi:uuid="mmuuid:f8271000-db7e-1105-b511-c9cb83fb3e5e" xPosition="794" yPosition="50">
         <modelObject href="Accounts.xmi#mmuuid/0e078040-da11-1105-b511-c9cb83fb3e5e"/>
       </diagramEntity>
-      <diagramEntity xmi:uuid="mmuuid:fdc1e340-db7f-1105-b511-c9cb83fb3e5e" xPosition="967" yPosition="50">
+      <diagramEntity xmi:uuid="mmuuid:fdc1e340-db7f-1105-b511-c9cb83fb3e5e" xPosition="1053" yPosition="50">
         <modelObject href="Accounts.xmi#mmuuid/104b55c0-da11-1105-b511-c9cb83fb3e5e"/>
       </diagramEntity>
-      <diagramEntity xmi:uuid="mmuuid:8e993e80-db81-1105-b511-c9cb83fb3e5e" xPosition="1199" yPosition="50">
+      <diagramEntity xmi:uuid="mmuuid:8e993e80-db81-1105-b511-c9cb83fb3e5e" xPosition="1309" yPosition="50">
         <modelObject href="MarketData.xmi#mmuuid/c9bda180-da38-1105-b511-c9cb83fb3e5e"/>
       </diagramEntity>
     </diagram>
@@ -46,8 +46,8 @@
   <mmcore:AnnotationContainer xmi:uuid="mmuuid:d0d04840-daa8-1105-b511-c9cb83fb3e5e"/>
   <transformation:TransformationContainer xmi:uuid="mmuuid:d0df8a80-daa8-1105-b511-c9cb83fb3e5e">
     <transformationMappings xsi:type="transformation:SqlTransformationMappingRoot" xmi:uuid="mmuuid:fa592480-db79-1105-b511-c9cb83fb3e5e" outputs="mmuuid/9b93ab00-db79-1105-b511-c9cb83fb3e5e" target="mmuuid/9b93ab00-db79-1105-b511-c9cb83fb3e5e">
-      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:fa77a900-db79-1105-b511-c9cb83fb3e5e" selectSql="SELECT mmuuid:0afd4d80-da11-1105-b511-c9cb83fb3e5e, mmuuid:0d7e2c01-da11-1105-b511-c9cb83fb3e5e, mmuuid:0d7e2c02-da11-1105-b511-c9cb83fb3e5e, mmuuid:0e90d484-da11-1105-b511-c9cb83fb3e5e, mmuuid:10a6e341-da11-1105-b511-c9cb83fb3e5e, mmuuid:10a6e342-da11-1105-b511-c9cb83fb3e5e, mmuuid:022d57c0-da90-1105-b511-c9cb83fb3e5e, (mmuuid:0e90d484-da11-1105-b511-c9cb83fb3e5e * mmuuid:022d57c0-da90-1105-b511-c9cb83fb3e5e) AS CURRENT_VALUE FROM mmuuid:08c8ba40-da11-1105-b511-c9cb83fb3e5e, mmuuid:0cf4d7c0-da11-1105-b511-c9cb83fb3e5e, mmuuid:0e078040-da11-1105-b511-c9cb83fb3e5e, mmuuid:104b55c0-da11-1105-b511-c9cb83fb3e5e, mmuuid:c9bda180-da38-1105-b511-c9cb83fb3e5e WHERE (mmuuid:0b2b1440-da11-1105-b511-c9cb83fb3e5e = mmuuid:0d7e2c00-da11-1105-b511-c9cb83fb3e5e) AND (mmuuid:0afd4d80-da11-1105-b511-c9cb83fb3e5e = mmuuid:0e90d481-da11-1105-b511-c9cb83fb3e5e) AND (mmuuid:0e90d482-da11-1105-b511-c9cb83fb3e5e = mmuuid:10a6e340-da11-1105-b511-c9cb83fb3e5e) AND (mmuuid:10a6e341-da11-1105-b511-c9cb83fb3e5e = mmuuid:fa987b80-da89-1105-b511-c9cb83fb3e5e)">
-        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:fa77a901-db79-1105-b511-c9cb83fb3e5e" selectSql="SELECT Accounts.ACCOUNT.ID, Accounts.CUSTOMER.FIRSTNAME, Accounts.CUSTOMER.LASTNAME, Accounts.HOLDINGS.SHARES_COUNT, Accounts.PRODUCT.SYMBOL, Accounts.PRODUCT.COMPANY_NAME, MarketData.Price.PRICE, (Accounts.HOLDINGS.SHARES_COUNT * MarketData.Price.PRICE) AS CURRENT_VALUE FROM Accounts.ACCOUNT, Accounts.CUSTOMER, Accounts.HOLDINGS, Accounts.PRODUCT, MarketData.Price WHERE (Accounts.ACCOUNT.SSN = Accounts.CUSTOMER.SSN) AND (Accounts.ACCOUNT.ID = Accounts.HOLDINGS.ACCOUNT_ID) AND (Accounts.HOLDINGS.PRODUCT_ID = Accounts.PRODUCT.ID) AND (Accounts.PRODUCT.SYMBOL = MarketData.Price.SYMBOL)"/>
+      <helper xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:fa77a900-db79-1105-b511-c9cb83fb3e5e" selectSql="SELECT mmuuid:0afd4d80-da11-1105-b511-c9cb83fb3e5e AS ID, mmuuid:0d7e2c01-da11-1105-b511-c9cb83fb3e5e, mmuuid:0d7e2c02-da11-1105-b511-c9cb83fb3e5e, mmuuid:0e90d484-da11-1105-b511-c9cb83fb3e5e, mmuuid:10a6e341-da11-1105-b511-c9cb83fb3e5e, mmuuid:10a6e342-da11-1105-b511-c9cb83fb3e5e, mmuuid:022d57c0-da90-1105-b511-c9cb83fb3e5e, (mmuuid:0e90d484-da11-1105-b511-c9cb83fb3e5e * mmuuid:022d57c0-da90-1105-b511-c9cb83fb3e5e) AS CURRENT_VALUE FROM mmuuid:08c8ba40-da11-1105-b511-c9cb83fb3e5e, mmuuid:0cf4d7c0-da11-1105-b511-c9cb83fb3e5e, mmuuid:0e078040-da11-1105-b511-c9cb83fb3e5e, mmuuid:104b55c0-da11-1105-b511-c9cb83fb3e5e, mmuuid:c9bda180-da38-1105-b511-c9cb83fb3e5e WHERE (mmuuid:0b2b1440-da11-1105-b511-c9cb83fb3e5e = mmuuid:0d7e2c00-da11-1105-b511-c9cb83fb3e5e) AND (mmuuid:0afd4d80-da11-1105-b511-c9cb83fb3e5e = mmuuid:0e90d481-da11-1105-b511-c9cb83fb3e5e) AND (mmuuid:0e90d482-da11-1105-b511-c9cb83fb3e5e = mmuuid:10a6e340-da11-1105-b511-c9cb83fb3e5e) AND (mmuuid:10a6e341-da11-1105-b511-c9cb83fb3e5e = mmuuid:fa987b80-da89-1105-b511-c9cb83fb3e5e)">
+        <nested xsi:type="transformation:SqlTransformation" xmi:uuid="mmuuid:fa77a901-db79-1105-b511-c9cb83fb3e5e" selectSql="SELECT Accounts.ACCOUNT.ACCOUNT_ID AS ID, Accounts.CUSTOMER.FIRSTNAME, Accounts.CUSTOMER.LASTNAME, Accounts.HOLDINGS.SHARES_COUNT, Accounts.PRODUCT.SYMBOL, Accounts.PRODUCT.COMPANY_NAME, MarketData.Price.PRICE, (Accounts.HOLDINGS.SHARES_COUNT * MarketData.Price.PRICE) AS CURRENT_VALUE FROM Accounts.ACCOUNT, Accounts.CUSTOMER, Accounts.HOLDINGS, Accounts.PRODUCT, MarketData.Price WHERE (Accounts.ACCOUNT.SSN = Accounts.CUSTOMER.SSN) AND (Accounts.ACCOUNT.ACCOUNT_ID = Accounts.HOLDINGS.ACCOUNT_ID) AND (Accounts.HOLDINGS.PRODUCT_ID = Accounts.PRODUCT.ID) AND (Accounts.PRODUCT.SYMBOL = MarketData.Price.SYMBOL)"/>
         <aliases xmi:uuid="mmuuid:c22619c0-db7d-1105-b511-c9cb83fb3e5e" alias="ACCOUNT">
           <aliasedObject href="Accounts.xmi#mmuuid/08c8ba40-da11-1105-b511-c9cb83fb3e5e"/>
         </aliases>
@@ -115,7 +115,7 @@
     </transformationMappings>
   </transformation:TransformationContainer>
   <relational:BaseTable xmi:uuid="mmuuid:9b93ab00-db79-1105-b511-c9cb83fb3e5e" name="CustomerAccount" supportsUpdate="false">
-    <columns xmi:uuid="mmuuid:c3b2d440-db7d-1105-b511-c9cb83fb3e5e" name="ID" fixedLength="true" precision="10" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
+    <columns xmi:uuid="mmuuid:c3b2d440-db7d-1105-b511-c9cb83fb3e5e" name="ID" fixedLength="true" precision="10" caseSensitive="false" searchability="ALL_EXCEPT_LIKE" uniqueKeys="mmuuid/e433a0e2-2ac2-41e5-b53d-47a231754236">
       <type href="http://www.w3.org/2001/XMLSchema#int"/>
     </columns>
     <columns xmi:uuid="mmuuid:4f1d2300-db7e-1105-b511-c9cb83fb3e5e" name="FIRSTNAME" length="64">
@@ -139,6 +139,7 @@
     <columns xmi:uuid="mmuuid:16d3fbc0-dbd0-1105-b511-c9cb83fb3e5e" name="CURRENT_VALUE">
       <type href="http://www.w3.org/2001/XMLSchema#double"/>
     </columns>
+    <primaryKey xmi:uuid="mmuuid:e433a0e2-2ac2-41e5-b53d-47a231754236" name="CUSTOMERACCOUNT_PK" columns="mmuuid/c3b2d440-db7d-1105-b511-c9cb83fb3e5e"/>
   </relational:BaseTable>
   <relational:Procedure xmi:uuid="mmuuid:36ab0d84-ddbf-1105-b511-c9cb83fb3e5e" name="buyStock" updateCount="ZERO">
     <parameters xmi:uuid="mmuuid:3ee64340-ddc2-1105-b511-c9cb83fb3e5e" name="accountID">

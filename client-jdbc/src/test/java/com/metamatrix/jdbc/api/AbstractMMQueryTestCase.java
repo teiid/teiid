@@ -289,36 +289,22 @@ public class AbstractMMQueryTestCase {
         }    	
     }
     
+    static String read(BufferedReader r) throws IOException {
+    	StringBuffer result = new StringBuffer();
+    	String s = null;
+    	try {
+	    	while ((s = r.readLine()) != null) {
+	    		result.append(s.trim());
+	    		result.append("\n"); //$NON-NLS-1$
+	    	}
+    	} finally {
+    		r.close();
+    	}
+    	return result.toString();
+    }
 
-    int compareResults(BufferedReader resultReader, BufferedReader expectedReader) throws IOException {
-        int lineCount = 0;    
-        while(true) {
-            // Line count
-            lineCount++;
-                
-            String resultLine = resultReader.readLine();
-            String expectedLine = expectedReader.readLine();
-            
-            if (resultLine == null && expectedLine != null) {
-                // more results available
-                fail("More expected result lines available than actual results, line="+lineCount); //$NON-NLS-1$
-                return 1;
-            }
-            else if (resultLine != null && expectedLine == null) {
-                // less results available
-                fail("More actual results are available than expected results, line="+lineCount + "\n" + resultLine); //$NON-NLS-1$ //$NON-NLS-2$
-                return -1;
-            }
-            
-            if (resultLine == null && expectedLine == null) {
-                // matched
-                return 0;
-            }
-
-            resultLine = resultLine.trim();
-            expectedLine = expectedLine.trim();
-            Assert.assertEquals(expectedLine, resultLine);
-        }    
+    void compareResults(BufferedReader resultReader, BufferedReader expectedReader) throws IOException {
+    	assertEquals(read(expectedReader), read(resultReader));
     }
     
     public void printResults() {

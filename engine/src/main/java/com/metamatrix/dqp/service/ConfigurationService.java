@@ -99,12 +99,6 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
     public URL getUDFFile();
     
     /**
-     * URL to Log file name  
-     * @return URL or null if one not available
-     */
-    public URL getLogFile();
-
-    /**
      * Log Level 
      * @return configured log level or default one supplied.
      */

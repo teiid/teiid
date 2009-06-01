@@ -146,10 +146,6 @@
 							<name>java.io.tmpdir</name>
 							<value>${basedir}/target</value>
 						</property>
-						<property>
-							<name>metamatrix.xatxnmgr.txnstore_dir</name>
-							<value>${basedir}/target</value>
-						</property>
 					</systemProperties>
 				</configuration>
 			</plugin>

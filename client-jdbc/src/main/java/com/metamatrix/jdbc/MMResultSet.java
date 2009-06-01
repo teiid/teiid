@@ -30,20 +30,14 @@ import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
+import java.sql.NClob;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
+import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
-//## JDBC4.0-begin ##
-import java.sql.RowId;
-import java.sql.NClob;
 import java.sql.SQLXML;
-//## JDBC4.0-end ##
-
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -106,6 +100,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
     private TimeZone serverTimeZone;
     private Map updatedPlanDescription;
     private ResultsMessage resultsMsg;
+    private int maxFieldSize;
 
 	/**
 	 * Constructor.
@@ -146,6 +141,10 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		if (this.parameters > 0) {
 			rmetadata = FilteredResultsMetadata.newInstance(rmetadata, resultColumns);
 		}
+	}
+	
+	public void setMaxFieldSize(int maxFieldSize) {
+		this.maxFieldSize = maxFieldSize;
 	}
 	
     /**
@@ -304,12 +303,14 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
         }
         else if (currentValue instanceof XMLType) {
             currentValue = MMSQLXML.newInstance(new StreamingLobChunckProducer.Factory(this.statement.getDQP(), this.requestID, (Streamable)currentValue), (XMLType) currentValue);
-        }
-        
-        if (currentValue instanceof java.util.Date) {
+        } 
+        else if (currentValue instanceof java.util.Date) {
             return TimestampWithTimezone.create((java.util.Date)currentValue, serverTimeZone, getDefaultCalendar(), currentValue.getClass());
         }
-        
+        else if (maxFieldSize > 0 && currentValue instanceof String) {
+        	String val = (String)currentValue;
+        	currentValue = val.substring(0, Math.min(maxFieldSize/2, val.length()));
+        }
         return currentValue;
     }
 

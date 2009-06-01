@@ -286,16 +286,6 @@ public class TestEmbeddedConfigurationService extends TestCase {
         assertNull(service.getVDB("QT_Ora9DS", "1")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testGetLogFile() throws Exception{
-        Properties p = EmbeddedTestUtil.getProperties(); 
-        p.setProperty(DQPEmbeddedProperties.DQP_LOGFILE, "./log/dqp.log"); //$NON-NLS-1$ 
-        p.setProperty(DQPEmbeddedProperties.DQP_LOGLEVEL, "1"); //$NON-NLS-1$ 
-        service.setUserPreferences(p);
-        
-        assertTrue(service.getLogFile().toString().endsWith("/log/dqp.log")); //$NON-NLS-1$
-        assertEquals(service.getLogLevel(), "1");                         //$NON-NLS-1$
-    }
-    
     public void testGetSystemProperties() throws Exception {
         Properties p = EmbeddedTestUtil.getProperties(); 
         service.setUserPreferences(p);

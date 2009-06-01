@@ -53,6 +53,7 @@ public class TextConnector extends BasicConnector {
     private int srcFiles = 0;
     private int srcFileErrs = 0;
     Map metadataProps = new HashMap();
+    private String parentDirectory;
 
     /**
      * Initialization with environment.
@@ -215,7 +216,19 @@ public class TextConnector extends BasicConnector {
                     srcFileErrs++;
                     throw new ConnectorException(TextPlugin.Util.getString("TextConnection.Text_file_name_is_not_specified_for_the_group___{0}_2", new Object[] {groupName})); //$NON-NLS-1$
                 }
-                checkFile(propertyValue, props, groupName);
+                try {
+                	checkFile(propertyValue, props, groupName);
+                } catch (ConnectorException e) {
+                	if (this.parentDirectory == null) {
+                		throw e;
+                	}
+                	srcFileErrs--;
+            		try {
+            			checkFile(parentDirectory + "/" + propertyValue, props, groupName); //$NON-NLS-1$
+            		} catch (ConnectorException e1) {
+            			throw e;
+            		}
+                }
             } else if (propertyName.equals(TextPropertyNames.HEADER_LINES)) {
                 try {
                     Integer.parseInt(propertyValue);
@@ -310,7 +323,7 @@ public class TextConnector extends BasicConnector {
             } else if (!descfile.canRead()) {
                 throw new ConnectorException(TextPlugin.Util.getString("TextConnection.Descriptor_file_{0}_found_but_does_not_have_Read_permissions_10", new Object[] {fileLocation})); //$NON-NLS-1$
             }
-
+            this.parentDirectory = descfile.getParent();
             try {
                 br = new BufferedReader(new FileReader(descfile));
 

@@ -143,6 +143,7 @@ public class MMStatement extends WrapperImpl implements Statement {
     private Calendar defaultCalendar;
     /** Max rows to be returned by executing the statement */
     private int maxRows = NO_LIMIT;
+    private int maxFieldSize = NO_LIMIT;
     
     /** SPIN_TIMEOUT determines how responsive asynch operations will be to
      *  statement cancellation, closure, or execution timeouts.  
@@ -405,6 +406,7 @@ public class MMStatement extends WrapperImpl implements Statement {
 		}
 
 		resultSet = new MMResultSet(resultsMsg, this, null, outParamIndexMap.size());
+		resultSet.setMaxFieldSize(this.maxFieldSize);
 	}
     
     protected void executeSql(String[] commands, boolean isBatchedCommand, Boolean requiresResultSet)
@@ -486,7 +488,7 @@ public class MMStatement extends WrapperImpl implements Statement {
      * @throws SQLException should never occur.
      */
     public int getMaxFieldSize() throws SQLException {
-        return NO_LIMIT; //there is no maximum
+        return maxFieldSize;
     }
 
     /**
@@ -1086,6 +1088,10 @@ public class MMStatement extends WrapperImpl implements Statement {
 	}
 
 	public void setMaxFieldSize(int max) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		checkStatement();
+        if ( max < 0 ) {
+            throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_field_size")); //$NON-NLS-1$
+        }
+		this.maxFieldSize = max;
 	}
 }

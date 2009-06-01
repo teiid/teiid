@@ -48,6 +48,7 @@ public class LocalServerConnection implements ServerConnection {
 	private DQPWorkContext workContext;
 	private ClientSideDQP dqp;
 	private ServerConnectionListener listener;
+	private ClassLoader classLoader;
 
 	public LocalServerConnection(MetaMatrixSessionID sessionId, Properties connectionProperties, ClientSideDQP dqp, ServerConnectionListener listener) {
 		result = new LogonResult(new SessionToken(sessionId, connectionProperties.getProperty(MMURL.CONNECTION.USER_NAME)), connectionProperties, "local"); //$NON-NLS-1$
@@ -65,6 +66,8 @@ public class LocalServerConnection implements ServerConnection {
 		if (this.listener != null) {
 			this.listener.connectionAdded(this);
 		}
+		
+		this.classLoader = Thread.currentThread().getContextClassLoader();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -72,20 +75,22 @@ public class LocalServerConnection implements ServerConnection {
 		if (iface != ClientSideDQP.class) {
 			throw new IllegalArgumentException("unknown service"); //$NON-NLS-1$
 		}
-		return (T) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {ClientSideDQP.class}, new InvocationHandler() {
+		return (T) Proxy.newProxyInstance(this.classLoader, new Class[] {ClientSideDQP.class}, new InvocationHandler() {
 
 			public Object invoke(Object arg0, Method arg1, Object[] arg2)
 					throws Throwable {
-				
 				if (!isOpen()) {
 					throw ExceptionUtil.convertException(arg1, new MetaMatrixComponentException(JDBCPlugin.Util.getString("LocalTransportHandler.session_inactive"))); //$NON-NLS-1$
 				}
-				
+				ClassLoader current = Thread.currentThread().getContextClassLoader();
+				Thread.currentThread().setContextClassLoader(classLoader);
 				DQPWorkContext.setWorkContext(workContext);
 				try {
 					return arg1.invoke(dqp, arg2);
 				} catch (InvocationTargetException e) {
 					throw e.getTargetException();
+				} finally {
+					Thread.currentThread().setContextClassLoader(current);
 				}
 			}
 		});

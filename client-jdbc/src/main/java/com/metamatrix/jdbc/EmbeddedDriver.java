@@ -351,9 +351,8 @@ public final class EmbeddedDriver extends BaseDriver {
             String dqpId = getDQPIdentity();
             props.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, dqpId);
             // Create a temporary workspace directory
-            this.workspaceDirectory = createWorkspace(props.getProperty(DQPEmbeddedProperties.DQP_TMPDIR), dqpId);
-            
-            this.classLoader = this.getClass().getClassLoader();
+            this.workspaceDirectory = createWorkspace(props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR), dqpId);
+            props.setProperty(DQPEmbeddedProperties.DQP_WORKSPACE, this.workspaceDirectory);
             
             // a non-delegating class loader will be created from where all third party dependent jars can be loaded
             ArrayList<URL> runtimeClasspathList = new ArrayList<URL>();
@@ -369,7 +368,7 @@ public final class EmbeddedDriver extends BaseDriver {
             }
             
             URL[] dqpClassPath = runtimeClasspathList.toArray(new URL[runtimeClasspathList.size()]);
-            this.classLoader = new PostDelegatingClassLoader(dqpClassPath, Thread.currentThread().getContextClassLoader(), new MetaMatrixURLStreamHandlerFactory());
+            this.classLoader = new PostDelegatingClassLoader(dqpClassPath, this.getClass().getClassLoader(), new MetaMatrixURLStreamHandlerFactory());
             
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_classpath"); //$NON-NLS-1$
             DriverManager.println(logMsg);
@@ -483,7 +482,7 @@ public final class EmbeddedDriver extends BaseDriver {
             try {
                 current = Thread.currentThread().getContextClassLoader();             
                 Thread.currentThread().setContextClassLoader(classLoader);            
-                return connectionFactory.createConnection(url, info);            
+                return connectionFactory.createConnection(info);            
             } finally {
                 Thread.currentThread().setContextClassLoader(current);
             }            
@@ -494,10 +493,13 @@ public final class EmbeddedDriver extends BaseDriver {
          * @return a JVM level unique identifier
          */
         String getDQPIdentity() {
-            String id = System.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "0"); //$NON-NLS-1$
-            int identity = Integer.parseInt(id)+1;    
-            id = String.valueOf(identity);
-            return id;
+        	synchronized (System.class) {
+	            String id = System.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "1"); //$NON-NLS-1$
+	            int identity = Integer.parseInt(id);
+	            System.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, String.valueOf(identity + 1));
+	            id = String.valueOf(identity);
+	            return id;
+        	}
         }        
         
         /**
@@ -515,8 +517,8 @@ public final class EmbeddedDriver extends BaseDriver {
 					throw MMSQLException.create(e);
 				}
         	}
-        	String dir = baseDir + identity;
-            System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, dir); 
+        	String dir = baseDir + "/" + identity; //$NON-NLS-1$
+            System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, dir + "/temp"); //$NON-NLS-1$S 
 
             File f = new File(dir);
 

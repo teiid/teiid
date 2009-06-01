@@ -72,7 +72,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
     /** 
      * @see com.metamatrix.jdbc.EmbeddedConnectionFactory#createConnection()
      */
-    public Connection createConnection(URL bootstrapURL, Properties props) throws SQLException {
+    public Connection createConnection(Properties props) throws SQLException {
 
     	try {
         	// check for the valid connection properties

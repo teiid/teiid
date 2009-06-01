@@ -35,8 +35,12 @@ public interface DQPEmbeddedProperties {
     public static final String USER_DEFINED_FUNCTIONS = "dqp.userDefinedFunctionsFile"; //$NON-NLS-1$
     public static final String COMMON_EXTENSION_CLASPATH = "dqp.extension.CommonClasspath"; //$NON-NLS-1$
     public static final String DQP_KEYSTORE = "dqp.keystore"; //$NON-NLS-1$
+    public static final String DQP_WORKDIR = "dqp.workdir"; //$NON-NLS-1$
+    
+    //derived properties
     public static final String DQP_IDENTITY = "dqp.identity"; //$NON-NLS-1$
     public static final String DQP_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
+    public static final String DQP_WORKSPACE = "dqp.workspacedir"; //$NON-NLS-1$
     
     public interface BufferService {
         /**
@@ -49,14 +53,7 @@ public interface DQPEmbeddedProperties {
          * or mixed memory and disk access (if true).  Default value is false.
          */
         public static final String DQP_BUFFER_USEDISK = BUFFER_PREFIX + ".usedisk"; //$NON-NLS-1$
-    
-        /**
-         * Determines the directory to use if buffer management is using disk.
-         * This property is not used if DQP_BUFFER_USEDISK = true.  Default value
-         * is ".".
-         */
-        public static final String DQP_BUFFER_DIR = BUFFER_PREFIX + ".dir"; //$NON-NLS-1$
-        
+            
         /**
          * Determines amount of memory to use in-memory before buffering to 
          * disk.  This property is not used if DQP_BUFFER_USEDISK = true.  The 

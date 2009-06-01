@@ -37,12 +37,11 @@ public interface EmbeddedConnectionFactory {
 
     /**
      * Create a Connection to the DQP. This will load a DQP instance if one is not present 
-     * @param bootstrapURL
      * @param properties
      * @return Connection to DQP
      * @throws SQLException
      */
-    public Connection createConnection(URL bootstrapURL, Properties properties) throws SQLException;  
+    public Connection createConnection(Properties properties) throws SQLException;  
     
     /**
      * Shutdown the connection factory, including the DQP and all its existing connections 

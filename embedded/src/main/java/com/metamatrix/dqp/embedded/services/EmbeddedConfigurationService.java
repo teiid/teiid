@@ -259,18 +259,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 	}
     
     /** 
-     * @see com.metamatrix.dqp.service.ConfigurationService#getLogFile()
-     * @since 4.3
-     */
-    public URL getLogFile() {
-        String logFile = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_LOGFILE);
-        if (valid(logFile)) {
-            return getFullyQualifiedPath(logFile); 
-        }
-        return null;
-    }
-
-    /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#getLogLevel()
      * @since 4.3
      */
@@ -817,7 +805,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         	}
             return urlPaths.toArray(new URL[urlPaths.size()]);
         }
-        return null;
+        return new URL[0];
     }
     
     /**  
@@ -1445,28 +1433,23 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     public boolean useDiskBuffering() {
         return Boolean.valueOf(getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_USEDISK, "true")).booleanValue(); //$NON-NLS-1$        
     }
-
+    
+    public File getWorkDir() {
+        String workDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_WORKSPACE);
+        URL bufferURL = getFullyQualifiedPath(workDirectory);
+        File workDir = new File(bufferURL.getPath());
+        workDir.mkdirs();
+        return workDir;
+    }
     
     /**
      * Get the directory to use for the disk buffering  
      * @return must a return a location; and exist too.
      */
     public File getDiskBufferDirectory() {
-        File bufferDir = null;
-        String bufferDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_DIR);
-        if (valid(bufferDirectory)) {
-            if (!bufferDirectory.endsWith("/")) { //$NON-NLS-1$
-                bufferDirectory += "/"; //$NON-NLS-1$
-            }
-            bufferDirectory += getInstanceIdenifier();
-            URL bufferURL = getFullyQualifiedPath(bufferDirectory);
-            bufferDir = new File(bufferURL.getPath());
-        }
-        else {            
-            bufferDir = new File(getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_TMPDIR)); 
-        }
+        File bufferDir = new File(getWorkDir(), "buffer"); //$NON-NLS-1$
         
-        // create the buffer directory if not alread exists.
+        // create the buffer directory if not already exists.
         if (!bufferDir.exists()) {
             bufferDir.mkdirs();
         }        

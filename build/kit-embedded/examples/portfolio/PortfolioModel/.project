@@ -6,12 +6,12 @@
 	</projects>
 	<buildSpec>
 		<buildCommand>
-			<name>com.metamatrix.modeler.core.modelBuilder</name>
+			<name>org.teiid.designer.core.modelBuilder</name>
 			<arguments>
 			</arguments>
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>com.metamatrix.modeler.core.modelNature</nature>
+		<nature>org.teiid.designer.core.modelNature</nature>
 	</natures>
 </projectDescription>
