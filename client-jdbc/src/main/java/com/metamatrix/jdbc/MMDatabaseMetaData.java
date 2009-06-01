@@ -287,7 +287,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     
     private final static String QUERY_TABLES =
       new StringBuffer("SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, FullName AS TABLE_NAME") //$NON-NLS-1$
-        .append(", Type AS TABLE_TYPE, Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM") //$NON-NLS-1$
+        .append(", CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END AS TABLE_TYPE, Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM") //$NON-NLS-1$
         .append(", NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL") //$NON-NLS-1$
         .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Groups g CROSS JOIN ")  //$NON-NLS-1$ //$NON-NLS-2$
         .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v")  //$NON-NLS-1$
@@ -2025,15 +2025,16 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     public ResultSet getTableTypes() throws SQLException {
 
         // list which represent records containing Table Type info
-        List records = new ArrayList (4);
+        List records = new ArrayList (5);
         /********************************
         * HardCoding JDBC specific values
         *********************************/
 
-        records.add(Arrays.asList(new String[] {"Document"})); //$NON-NLS-1$
-        records.add(Arrays.asList(new String[] {"Table"})); //$NON-NLS-1$
-        records.add(Arrays.asList(new String[] {"View"})); //$NON-NLS-1$
-        records.add(Arrays.asList(new String[] {"XmlStagingTable"})); //$NON-NLS-1$
+        records.add(Arrays.asList(new String[] {"DOCUMENT"})); //$NON-NLS-1$
+        records.add(Arrays.asList(new String[] {"TABLE"})); //$NON-NLS-1$
+        records.add(Arrays.asList(new String[] {"VIEW"})); //$NON-NLS-1$
+        records.add(Arrays.asList(new String[] {"XMLSTAGINGTABLE"})); //$NON-NLS-1$
+        records.add(Arrays.asList(new String[] {"SYSTEM TABLE"})); //$NON-NLS-1$
 
         /***********************************************************************
         * Hardcoding JDBC column names for the columns returned in results object

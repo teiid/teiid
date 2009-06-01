@@ -2,7 +2,7 @@ ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	Schema
 TABLE_CAT	12	string	java.lang.String	1	null	PartsSupplier	null
 TABLE_SCHEM	12	string	java.lang.String	0	System.VirtualDatabases	PartsSupplier	null
 TABLE_NAME	12	string	java.lang.String	0	System.Groups	PartsSupplier	null
-TABLE_TYPE	12	string	java.lang.String	0	System.Groups	PartsSupplier	null
+TABLE_TYPE	12	string	java.lang.String	1	null	PartsSupplier	null
 REMARKS	12	string	java.lang.String	1	System.Groups	PartsSupplier	null
 TYPE_CAT	12	string	java.lang.String	1	null	PartsSupplier	null
 TYPE_SCHEM	12	string	java.lang.String	1	null	PartsSupplier	null
