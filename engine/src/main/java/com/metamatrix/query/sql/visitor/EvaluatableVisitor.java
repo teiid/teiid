@@ -37,6 +37,7 @@ import com.metamatrix.query.sql.lang.ExistsCriteria;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.lang.SubquerySetCriteria;
+import com.metamatrix.query.sql.navigator.DeepPreOrderNavigator;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Constant;
@@ -173,7 +174,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
     
     public static final boolean needsProcessingEvaluation(LanguageObject obj) {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
-        PreOrderNavigator.doVisit(obj, visitor);
+        DeepPreOrderNavigator.doVisit(obj, visitor);
         return visitor.levels.contains(EvaluationLevel.PROCESSING);
     }
 }
