@@ -25,8 +25,8 @@ package com.metamatrix.query.resolver.util;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -316,7 +316,7 @@ public class ResolverVisitor extends LanguageVisitor {
             resolveFunction(obj);
         } catch(QueryResolverException e) {
         	if (unresolvedFunctions == null) {
-        		unresolvedFunctions = new IdentityHashMap<Function, QueryResolverException>();
+        		unresolvedFunctions = new LinkedHashMap<Function, QueryResolverException>();
         	}
         	unresolvedFunctions.put(obj, e);
         } catch(MetaMatrixComponentException e) {
