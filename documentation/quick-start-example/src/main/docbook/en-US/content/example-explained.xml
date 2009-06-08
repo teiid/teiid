@@ -82,45 +82,19 @@
     <programlisting><![CDATA[      
           - -Contains the name and address of a Customer who owns portfolio account 
           CREATE TABLE CUSTOMER
-          (
-             SSN char(10),
-             FIRSTNAME varchar(64),
-             LASTNAME varchar(64),
-             ST_ADDRESS varchar(256),
-             APT_NUMBER varchar(32),
-             CITY varchar(64),
-             STATE varchar(32),
-             ZIPCODE varchar(10),
-             PHONE varchar(15)
-          );
+          ...
           
           --Contains Customer's account number and its current status
           CREATE TABLE ACCOUNT
-          (
-             ACCOUNT_ID integer,
-             SSN char(10),
-             STATUS char(10),
-             TYPE char(10),
-             DATEOPENED timestamp,
-             DATECLOSED timestamp
-          );
-          
+          ...
+                    
           --Contains information about stock symbol, company name etc.
-          CREATE TABLE PRODUCT (
-             ID integer,
-             SYMBOL varchar(16),
-             COMPANY_NAME varchar(256)
-          );
+          CREATE TABLE PRODUCT
+          ...
           
           --Contains each Account's holdings of Stocks   
           CREATE TABLE HOLDINGS
-          (
-             TRANSACTION_ID integer,
-             ACCOUNT_ID integer,
-             PRODUCT_ID integer,
-             PURCHASE_DATE timestamp,
-             SHARES_COUNT integer
-          );                  
+          ...
     ]]>
     </programlisting>
     <para>We need to start the Derby RDBMS and create the "accounts" database with the below schema. These

@@ -24,8 +24,8 @@
     <emphasis>Teiid Embedded Kit</emphasis>
     and extract this tar/zip file to a directory you can access.
   </para>
-  <para>In the expanded directory, you will find "Teiid-${version}-embedded.jar", which is the main binary jar
-    file for Teiid Embedded, and the "lib" and "extension" directories containing supporting 3rd party binaries
+  <para>In the expanded directory, you will find "teiid-${version}-client.jar", which is the main client binary jar
+    file for Teiid Embedded, and the "lib" and "extension" directories containing binaries either directly or indirectly
     required to execute Teiid Embedded. Later sections describe installing these artifacts.</para>
   <note>
     <para>

@@ -28,7 +28,7 @@
       list that will take you though all the steps involved.</para>
     <orderedlist>
       <listitem>
-        <para>Switch to the Designer Perspective, by opening the "Window->Open Prespective.."</para>
+        <para>Switch to the Designer Perspective, by opening the "Window->Open Perspective.."</para>
       </listitem>
       <listitem>
         <para>Create new "Model Project", using "File->New->ModelProject"</para>

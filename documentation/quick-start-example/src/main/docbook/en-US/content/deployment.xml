@@ -31,21 +31,12 @@
   <para />
   <sect1 id="stand-alone-deployment">
     <title>Stand-alone Application Deployment</title>
-    <para>Copy the "Teiid-${version}-embedded.jar" and all dependent jars in "lib" directory in your Java
-      application's classpath along with your VDB. If your application is already using the any of dependent jars
-      defined in "lib" directory you can safely ignore adding that jar file to the classpath. Make sure the that
-      the versions match</para>
     <orderedlist>
       <listitem>
-        <para>Add "Teiid-${version}-embedded.jar" to your application classpath</para>
+        <para>Add the "${embedded root}/teiid-${version}-client.jar" to your application classpath</para>
       </listitem>
       <listitem>
-        <para>Add all the dependent jar files in the "lib" directory to your application's classpath. If your
-          application is already using the any of the "lib" directory's dependent jars, you can safely ignore
-          adding that jar to the classpath. Make sure the versions match.</para>
-      </listitem>
-      <listitem>
-        <para>Place the VDB in a folder and add this folder to your application's classpath.
+        <para>Place your VDB in a the "${embedded root}/deploy" or another location referenced by the deploy.properties file. 
         </para>
       </listitem>
       <listitem>
