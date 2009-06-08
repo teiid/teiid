@@ -404,10 +404,13 @@ public class ConnectorManager implements ApplicationService {
 				} else {
 					try {
 						Class legacyConnector = classloader.loadClass("com.metamatrix.data.api.Connector"); //$NON-NLS-1$
+						if (!legacyConnector.isAssignableFrom(o.getClass())) {
+							throw new ApplicationLifecycleException(DQPPlugin.Util.getString("failed_legacy", connectorClassName)); //$NON-NLS-1$
+						}
 						c = (Connector)ReflectionHelper.create("com.metamatrix.dqp.internal.datamgr.ConnectorWrapper", new Object[] {o}, new Class[] {legacyConnector}, classloader); //$NON-NLS-1$
 						this.isXa = classloader.loadClass("com.metamatrix.data.xa.api.XAConnector").isAssignableFrom(o.getClass()); //$NON-NLS-1$
 					} catch (ClassNotFoundException e) {
-						throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_find_Connector_class", connectorClassName)); //$NON-NLS-1$
+						throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_legacy", connectorClassName)); //$NON-NLS-1$
 					} 
 				}
 			} catch (MetaMatrixCoreException e) {
