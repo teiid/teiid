@@ -22,7 +22,22 @@
           <groupId>org.jboss.teiid</groupId>
           <artifactId>teiid-common-core</artifactId>
           <scope>provided</scope>
-        </dependency>          
+        </dependency>
+        <dependency>
+		  <groupId>log4j</groupId>
+		  <artifactId>log4j</artifactId>
+		  <scope>provided</scope>
+		</dependency>
+	    <dependency>
+		  <groupId>jdom</groupId>
+		  <artifactId>jdom</artifactId>
+		  <scope>provided</scope>
+	    </dependency>
+	    <dependency>
+		  <groupId>commons-logging</groupId>
+		  <artifactId>commons-logging</artifactId>
+		  <scope>provided</scope>
+	    </dependency>          
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-xml-common</artifactId>

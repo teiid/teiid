@@ -49,14 +49,6 @@
     </fileSet>      
     
     <fileSet>
-      <directory>target/distribution/teiid-${version}-connector-dependencies.dir</directory>
-      <includes>
-        <include>*.jar</include>
-      </includes>
-      <outputDirectory>extensions</outputDirectory>      
-    </fileSet>      
-
-    <fileSet>
         <directory>build/target/kit-embedded</directory>
         <outputDirectory>/</outputDirectory>
         <excludes>
