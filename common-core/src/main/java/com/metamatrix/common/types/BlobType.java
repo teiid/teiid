@@ -29,7 +29,11 @@ import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialException;
+
 import com.metamatrix.core.CorePlugin;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
 
 /**
@@ -240,4 +244,16 @@ public final class BlobType implements Streamable, Blob {
 		return this.srcBlob.getBinaryStream(pos, length);
 	}
 	//## JDBC4.0-end ##
+	
+	public static SerialBlob createBlob(byte[] bytes) {
+		if (bytes == null) {
+			return null;
+		}
+		try {
+			return new SerialBlob(bytes);
+		} catch (SQLException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+	}
+	
 }

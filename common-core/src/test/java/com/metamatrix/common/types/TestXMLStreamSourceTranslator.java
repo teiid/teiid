@@ -33,6 +33,8 @@ import java.util.StringTokenizer;
 
 import javax.xml.transform.stream.StreamSource;
 
+import com.metamatrix.core.util.ObjectConverterUtil;
+
 import junit.framework.TestCase;
 
 
@@ -87,25 +89,13 @@ public class TestXMLStreamSourceTranslator extends TestCase {
     public void testGetReader() throws Exception {        
         XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(new StreamSource(new StringReader(sourceXML)),  new Properties());
         Reader reader = translator.getReader();
-        StringBuffer sb = readContents(reader);       
-        assertEquals(sourceXML, sb.toString());
-    }
-
-    private StringBuffer readContents(Reader reader) throws IOException {
-        StringBuffer sb = new StringBuffer();        
-        int chr = reader.read();
-        while(chr != -1) {
-            sb.append((char)chr);
-            chr = reader.read();
-        }
-        return sb;
+        assertEquals(sourceXML, ObjectConverterUtil.convertToString(reader));
     }
 
     public void testCharInput() throws Exception {        
         XMLStreamSourceTranslator translator = new XMLStreamSourceTranslator(sourceXML.toCharArray(),  new Properties());
         Reader reader = translator.getReader();
-        StringBuffer sb = readContents(reader);       
-        assertEquals(sourceXML, sb.toString());
+        assertEquals(sourceXML, ObjectConverterUtil.convertToString(reader));
     }
     
     public void testXMLReaderFactory() throws Exception {        
@@ -115,8 +105,7 @@ public class TestXMLStreamSourceTranslator extends TestCase {
             }            
         }, new Properties());
         Reader reader = translator.getReader();
-        StringBuffer sb = readContents(reader);       
-        assertEquals(sourceXML, sb.toString());
+        assertEquals(sourceXML, ObjectConverterUtil.convertToString(reader));
     }    
     
     /*
@@ -156,8 +145,7 @@ public class TestXMLStreamSourceTranslator extends TestCase {
         assertTrue(translator.getSource() instanceof StreamSource);
         StreamSource s = (StreamSource)translator.getSource();
         Reader reader = s.getReader();
-        StringBuffer sb = readContents(reader);  
-        assertEquals(sourceXML, sb.toString());
+        assertEquals(sourceXML, ObjectConverterUtil.convertToString(reader));
     }
 
     /*

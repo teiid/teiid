@@ -28,8 +28,9 @@ import java.io.OutputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 import com.metamatrix.common.lob.LobChunkInputStream;
-import com.metamatrix.common.types.BlobImpl;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.util.SqlUtil;
@@ -181,7 +182,7 @@ public class MMBlob implements Blob, StreamProvider {
     	if (pattern == null) {
     		return -1;
     	}
-        return position(new BlobImpl(pattern), start);
+        return position(new SerialBlob(pattern), start);
     }
         
 	public void free() throws SQLException {

@@ -31,9 +31,10 @@ import java.nio.charset.Charset;
 import java.sql.Clob;
 import java.sql.SQLException;
 
+import javax.sql.rowset.serial.SerialClob;
+
 import com.metamatrix.common.lob.LobChunkInputStream;
 import com.metamatrix.common.lob.ReaderInputStream;
-import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.util.SqlUtil;
@@ -194,7 +195,7 @@ public class MMClob implements Clob {
     	if (searchstr == null) {
             return -1;
         }
-    	return position(new ClobImpl(searchstr.toCharArray()), start);
+    	return position(new SerialClob(searchstr.toCharArray()), start);
     }
     	    
 	public void free() throws SQLException {

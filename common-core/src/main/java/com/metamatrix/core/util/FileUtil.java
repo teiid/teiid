@@ -118,10 +118,12 @@ public class FileUtil {
             reader = new FileReader(this.file);
             result = read(reader);
         } finally {
-            try {
-                reader.close();
-            } catch (Exception e) {                
-            }
+        	if (reader != null) {
+	            try {
+	                reader.close();
+	            } catch (Exception e) {                
+	            }
+        	}
         }
         
         return result;
@@ -140,10 +142,12 @@ public class FileUtil {
         } catch (IOException e) {
             throw new MetaMatrixRuntimeException(e);
         } finally {
-            try {
-                bufferedReader.close();
-            } catch (Exception e) {                
-            }
+        	if (bufferedReader != null) {
+	            try {
+	                bufferedReader.close();
+	            } catch (Exception e) {                
+	            }
+        	}
         }
         return writer.toString();
     }

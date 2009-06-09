@@ -23,7 +23,6 @@
 package com.metamatrix.common.types;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -35,6 +34,8 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import junit.framework.TestCase;
+
+import com.metamatrix.core.util.ObjectConverterUtil;
 
 /**
  * Basically we want to make sure that nobody has changed the fundamental contract
@@ -83,7 +84,7 @@ public class TestSQLXMLImpl extends TestCase {
 
     public void testGetBinaryStream() throws Exception {
         SQLXMLImpl xml = new SQLXMLImpl(translator);
-        assertEquals(testStr, getContents(xml.getBinaryStream()));
+        assertEquals(testStr, ObjectConverterUtil.convertToString(xml.getBinaryStream()));
 
     }
 
@@ -128,17 +129,6 @@ public class TestSQLXMLImpl extends TestCase {
         }
         reader.close();       
         return sb.toString();
-    }
-    
-    private String getContents(InputStream reader) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int chr = reader.read();
-        while(chr != -1) {
-            out.write((byte)chr);
-            chr = reader.read();
-        }
-        reader.close();       
-        return new String(out.toByteArray());
-    }    
+    } 
     
 }

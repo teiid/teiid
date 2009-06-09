@@ -22,31 +22,23 @@
 
 package com.metamatrix.jdbc;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-
-//## JDBC4.0-begin ##
-import java.sql.SQLXML;
-import java.sql.NClob;
 import java.sql.RowId;
-//## JDBC4.0-end ##
-
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
-
+import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -56,14 +48,16 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
 
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialClob;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
-import com.metamatrix.common.types.BlobImpl;
-import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.MMJDBCSQLTypeInfo;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.jdbc.api.ExecutionProperties;
@@ -282,7 +276,11 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
      */
     public void setAsciiStream (int parameterIndex, java.io.InputStream in, int length) throws SQLException {
         //create a clob from the ascii stream
-    	setObject(parameterIndex, new ClobImpl(in, Charset.forName("ASCII"), length)); //$NON-NLS-1$
+    	try {
+			setObject(parameterIndex, new SerialClob(ObjectConverterUtil.convertToCharArray(in, length, "ASCII"))); //$NON-NLS-1$
+		} catch (IOException e) {
+			throw MMSQLException.create(e);
+		} 
     }
 
     /**
@@ -305,7 +303,11 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
      */
     public void setBinaryStream(int parameterIndex, java.io.InputStream in, int length) throws SQLException {
     	//create a blob from the ascii stream
-    	setObject(parameterIndex, new BlobImpl(in, length));
+    	try {
+			setObject(parameterIndex, new SerialBlob(ObjectConverterUtil.convertToByteArray(in, length)));
+		} catch (IOException e) {
+			throw MMSQLException.create(e);
+		}
     }
 
     /**
@@ -347,18 +349,16 @@ public class MMPreparedStatement extends MMStatement implements PreparedStatemen
      */
     public void setBytes(int parameterIndex, byte bytes[]) throws SQLException {
     	//create a blob from the ascii stream
-    	setObject(parameterIndex, new BlobImpl(bytes));
+    	setObject(parameterIndex, new SerialBlob(bytes));
     }
 
-    /**
-     * <p>Sets the parameter in position parameterIndex to a Reader stream object.
-     * @param parameterIndex of the parameter whose value is to be set
-     * @param Reader object to which the parameter value is to be set.
-     * @param length indicating number of charachters to be read from the stream
-     */
     public void setCharacterStream (int parameterIndex, java.io.Reader reader, int length) throws SQLException {
     	//create a clob from the ascii stream
-    	setObject(parameterIndex, new ClobImpl(reader, length));
+    	try {
+			setObject(parameterIndex, new SerialClob(ObjectConverterUtil.convertToCharArray(reader, length)));
+		} catch (IOException e) {
+			throw MMSQLException.create(e);
+		}
     }
 
     /**

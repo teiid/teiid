@@ -993,7 +993,7 @@ public class DataTypeManager {
 			@Override
 			//## JDBC4.0-end ##
 			public ClobType transform(char[] value) {
-				return new ClobType(new ClobImpl(value));
+				return new ClobType(ClobType.createClob(value));
 			}
 		});
 		sourceConverters.put(Blob.class, new SourceTransform<Blob, BlobType>() {
@@ -1009,7 +1009,7 @@ public class DataTypeManager {
 			@Override
 			//## JDBC4.0-end ##
 			public BlobType transform(byte[] value) {
-				return new BlobType(new BlobImpl(value));
+				return new BlobType(BlobType.createBlob(value));
 			}
 		});
 		sourceConverters.put(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {

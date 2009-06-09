@@ -22,6 +22,7 @@
 
 package com.metamatrix.connector.metadata.internal;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,14 +32,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.rowset.serial.SerialClob;
+
 import org.teiid.connector.api.ConnectorException;
 
-import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.vdb.api.VDBFile;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.ResultsIterator;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.core.util.ObjectConverterUtil;
 
 
 /**
@@ -167,10 +170,12 @@ public class ObjectProcedureProcessor implements ResultsIterator.ResultsProcesso
                 if (value instanceof VDBFile) {
                     try {
                     	VDBFile record = (VDBFile)value;
-                        value = new ClobImpl(record.getContent(), Charset.defaultCharset(), (int)record.getFileLength());
+                        value = new SerialClob(ObjectConverterUtil.convertToCharArray(record.getContent(), (int)record.getFileLength(), null));
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
-                    }
+                    } catch (IOException e) {
+                    	throw new RuntimeException(e);
+					}
                 }
             }
             newRow.add(value);

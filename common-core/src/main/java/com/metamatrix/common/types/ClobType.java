@@ -31,6 +31,10 @@ import java.io.Writer;
 import java.sql.Clob;
 import java.sql.SQLException;
 
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialClob;
+import javax.sql.rowset.serial.SerialException;
+
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
@@ -304,4 +308,12 @@ public final class ClobType implements Streamable, Clob, Sequencable {
 		return this.srcClob.getCharacterStream(pos, length);
 	}
 	//## JDBC4.0-end ##
+	
+	public static SerialClob createClob(char[] chars) {
+		try {
+			return new SerialClob(chars);
+		} catch (SQLException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+	}
 }

@@ -30,7 +30,6 @@ import java.sql.Timestamp;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.SQLXMLImpl;
@@ -134,7 +133,7 @@ public class TestTransforms extends TestCase {
         /*timestamp-13*/{new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis())},
         /*object-14*/  {null, null, null},  
         /*blob-15*/    {null, null, null},
-        /*clob-16*/    {new ClobType(new ClobImpl("ClobData".toCharArray())), new ClobType(new ClobImpl("0".toCharArray())), new ClobType(new ClobImpl("123".toCharArray()))}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        /*clob-16*/    {new ClobType(ClobType.createClob("ClobData".toCharArray())), new ClobType(ClobType.createClob("0".toCharArray())), new ClobType(ClobType.createClob("123".toCharArray()))}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         /*xml-17*/     {new XMLType(new SQLXMLImpl("<foo>bar</foo>")), new XMLType(new SQLXMLImpl("<foo>bar</foo>")), new XMLType(new SQLXMLImpl("<foo>bar</foo>"))}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
      }; 
     

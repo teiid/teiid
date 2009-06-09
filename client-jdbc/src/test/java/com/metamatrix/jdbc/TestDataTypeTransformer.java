@@ -25,15 +25,15 @@ package com.metamatrix.jdbc;
 import java.sql.Clob;
 import java.sql.SQLException;
 
-import junit.framework.TestCase;
+import javax.sql.rowset.serial.SerialClob;
 
-import com.metamatrix.common.types.ClobImpl;
+import junit.framework.TestCase;
 
 public class TestDataTypeTransformer extends TestCase {
 	
 	public void testClobToStringConversion() throws Exception {
-		Clob clob = new ClobImpl("foo".toCharArray()); //$NON-NLS-1$
-		String value = DataTypeTransformer.getString(clob); //$NON-NLS-1$
+		Clob clob = new SerialClob("foo".toCharArray()); //$NON-NLS-1$
+		String value = DataTypeTransformer.getString(clob);
 		assertEquals("foo", value); //$NON-NLS-1$
 	}
 	

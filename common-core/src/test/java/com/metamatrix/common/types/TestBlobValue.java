@@ -28,6 +28,8 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 import com.metamatrix.core.util.UnitTestUtil;
 
 import junit.framework.TestCase;
@@ -37,7 +39,7 @@ public class TestBlobValue extends TestCase {
 
     public void testBlobValue() throws Exception {
         String testString = "this is test blob"; //$NON-NLS-1$
-        BlobImpl blob = new BlobImpl(testString.getBytes()); 
+        SerialBlob blob = new SerialBlob(testString.getBytes()); 
         
         BlobType bv = new BlobType(blob);
         assertEquals(testString, new String(bv.getBytes(1L, (int)bv.length())));
@@ -46,7 +48,7 @@ public class TestBlobValue extends TestCase {
     
     public void testClobValuePersistence() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
-        BlobImpl blob = new BlobImpl(testString.getBytes());
+        SerialBlob blob = new SerialBlob(testString.getBytes());
         
         String key = "keytodata"; //$NON-NLS-1$
         BlobType bv = new BlobType(blob);
@@ -74,12 +76,6 @@ public class TestBlobValue extends TestCase {
         }
         
         saved.delete();
-    }
-    
-    public void testEquals() {
-    	BlobType blob = new BlobType(new BlobImpl(new byte[3]));
-    	BlobType blob1 = new BlobType(new BlobImpl(new byte[3]));
-    	assertTrue(blob.equals(blob1));
     }
     
 }

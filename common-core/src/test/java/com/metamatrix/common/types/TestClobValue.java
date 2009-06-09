@@ -28,6 +28,8 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import javax.sql.rowset.serial.SerialClob;
+
 import com.metamatrix.core.util.UnitTestUtil;
 
 import junit.framework.TestCase;
@@ -37,7 +39,7 @@ public class TestClobValue extends TestCase {
 
     public void testClobValue() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
-        ClobImpl clob = new ClobImpl(testString.toCharArray()); 
+        SerialClob clob = new SerialClob(testString.toCharArray()); 
         
         ClobType cv = new ClobType(clob);
         assertEquals(testString, cv.getSubString(1L, (int)cv.length()));
@@ -46,7 +48,7 @@ public class TestClobValue extends TestCase {
     
     public void testClobValuePersistence() throws Exception {
         String testString = "this is test clob"; //$NON-NLS-1$
-        ClobImpl clob = new ClobImpl(testString.toCharArray());
+        SerialClob clob = new SerialClob(testString.toCharArray());
         
         String key = "keytodata"; //$NON-NLS-1$
         ClobType cv = new ClobType(clob);

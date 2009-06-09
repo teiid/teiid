@@ -26,6 +26,8 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.sql.rowset.serial.SerialBlob;
+
 import junit.framework.TestCase;
 
 public class TestDataTypeManager extends TestCase {
@@ -186,10 +188,10 @@ public class TestDataTypeManager extends TestCase {
         assertEquals(MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.TIMESTAMP), Types.TIMESTAMP);
     }
     
-    public void testRuntimeTypeConversion() {
+    public void testRuntimeTypeConversion() throws Exception {
     	assertNull(DataTypeManager.convertToRuntimeType(null));
     	
-    	assertTrue(DataTypeManager.convertToRuntimeType(new BlobImpl(new byte[0])) instanceof BlobType);
+    	assertTrue(DataTypeManager.convertToRuntimeType(new SerialBlob(new byte[0])) instanceof BlobType);
     
     	//unknown type should return as same
     	Object foo = new Object();

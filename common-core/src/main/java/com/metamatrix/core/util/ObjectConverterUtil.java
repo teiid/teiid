@@ -33,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.SQLException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -375,6 +376,18 @@ public class ObjectConverterUtil {
             }
         }
     }
+    
+    public static String convertToString(Reader reader) throws IOException {
+    	return new String(convertToCharArray(reader, Integer.MAX_VALUE));
+    }
 
+    public static char[] convertToCharArray(Reader reader, int length) throws IOException {
+        StringBuilder sb = new StringBuilder();        
+        int chr = -1;
+        for (int i = 0; i < length && (chr = reader.read()) != -1; i ++) {
+            sb.append((char)chr);
+        }
+        return sb.toString().toCharArray();
+    }
 
 } 

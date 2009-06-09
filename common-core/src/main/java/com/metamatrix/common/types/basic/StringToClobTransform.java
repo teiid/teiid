@@ -23,7 +23,6 @@
 package com.metamatrix.common.types.basic;
 
 import com.metamatrix.common.types.AbstractTransform;
-import com.metamatrix.common.types.ClobImpl;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.TransformationException;
 
@@ -43,7 +42,7 @@ public class StringToClobTransform extends AbstractTransform {
         }
         
         String contents = (String)value;                
-		return new ClobType(new ClobImpl(contents.toCharArray()));
+		return new ClobType(ClobType.createClob(contents.toCharArray()));
 	}
 
 	/**
