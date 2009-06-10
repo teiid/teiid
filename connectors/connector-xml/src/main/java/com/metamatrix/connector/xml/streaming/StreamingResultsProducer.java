@@ -48,7 +48,7 @@ public class StreamingResultsProducer {
     public StreamingResultsProducer(ExecutionInfo info, XMLConnectorState state) throws ConnectorException {
         this.info = info;
     	
-		Map<String, String> namespace = info.getNamespaces();
+		Map<String, String> namespace = info.getPrefixToNamespacesMap();
 		XMLReader reader;
 		try {
 			reader = ReaderFactory.getXMLReader(state);

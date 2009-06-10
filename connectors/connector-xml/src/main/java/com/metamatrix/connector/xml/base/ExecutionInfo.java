@@ -57,6 +57,8 @@ public class ExecutionInfo {
     private Properties m_schemaProps;
     private String m_tablePath;
     private String m_location;
+	private Map<String, String> m_prefixToNamespace;
+	private Map<String, String> m_namespaceToPrefix;
     
     public ExecutionInfo() { 
         m_columnCount = 0;
@@ -159,41 +161,57 @@ public class ExecutionInfo {
 		return result;
 	}
 
-	public Map<String, String> getNamespaces() throws ConnectorException {
-		Map<String, String> result = new HashMap<String, String>();
-		String namespacePrefixes = getOtherProperties().getProperty(
-                Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
-		if (namespacePrefixes == null || namespacePrefixes.trim().length() == 0) {
-            return null;
-        }
-        String prefix = null;
-        String uri = null;
-        try {
-            String xml = "<e " + namespacePrefixes + "/>"; //$NON-NLS-1$ //$NON-NLS-2$
-            Reader reader = new StringReader(xml);
-            SAXBuilder builder = new SAXBuilder();
-            Document domDoc = builder.build(reader);
-            Element elem = domDoc.getRootElement();
-            List namespaces = elem.getAdditionalNamespaces();
-            for (Iterator iter = namespaces.iterator(); iter.hasNext();) {
-                Object o = iter.next();
-                Namespace namespace = (Namespace) o;
-                prefix = namespace.getPrefix();
-                uri = namespace.getURI();
-                result.put(prefix, uri);
-            }
-        } catch (JDOMException e) {
-            String rawMsg = Messages
-                    .getString("Executor.jaxen.error.on.namespace.pairs"); //$NON-NLS-1$
-            Object[] objs = new Object[2];
-            objs[0] = prefix;
-            objs[1] = uri;
-            String msg = MessageFormat.format(rawMsg, objs);
-            throw new ConnectorException(e, msg);
-        } catch (IOException e) {
-            throw new ConnectorException(e, e.getMessage());
-        }
-        return result;
+	public Map<String, String> getNamespaceToPrefixMap() throws ConnectorException {
+		if(null != m_namespaceToPrefix) {
+			return m_namespaceToPrefix;
+		} else {
+			getPrefixToNamespacesMap();
+			return m_namespaceToPrefix;
+		}
+	}
+	
+	public Map<String, String> getPrefixToNamespacesMap() throws ConnectorException {
+		if (null != m_prefixToNamespace) {
+			return m_prefixToNamespace;
+		} else {
+			m_prefixToNamespace = new HashMap<String, String>();
+			m_namespaceToPrefix = new HashMap<String, String>();
+			String namespacePrefixes = getOtherProperties().getProperty(
+					Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
+			if (namespacePrefixes == null
+					|| namespacePrefixes.trim().length() == 0) {
+				return null;
+			}
+			String prefix = null;
+			String uri = null;
+			try {
+				String xml = "<e " + namespacePrefixes + "/>"; //$NON-NLS-1$ //$NON-NLS-2$
+				Reader reader = new StringReader(xml);
+				SAXBuilder builder = new SAXBuilder();
+				Document domDoc = builder.build(reader);
+				Element elem = domDoc.getRootElement();
+				List namespaces = elem.getAdditionalNamespaces();
+				for (Iterator iter = namespaces.iterator(); iter.hasNext();) {
+					Object o = iter.next();
+					Namespace namespace = (Namespace) o;
+					prefix = namespace.getPrefix();
+					uri = namespace.getURI();
+					m_prefixToNamespace.put(prefix, uri);
+					m_namespaceToPrefix.put(uri, prefix);
+				}
+			} catch (JDOMException e) {
+				String rawMsg = Messages
+						.getString("Executor.jaxen.error.on.namespace.pairs"); //$NON-NLS-1$
+				Object[] objs = new Object[2];
+				objs[0] = prefix;
+				objs[1] = uri;
+				String msg = MessageFormat.format(rawMsg, objs);
+				throw new ConnectorException(e, msg);
+			} catch (IOException e) {
+				throw new ConnectorException(e, e.getMessage());
+			}
+			return m_prefixToNamespace;
+		}
 	}
 
 	public void setSchemaProperties(Properties schemaProperties) {

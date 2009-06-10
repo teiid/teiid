@@ -31,10 +31,12 @@ public class ElementProcessor {
 	private Object[] row;
 	private Map<String, OutputXPathDesc> resultPaths;
 	private OutputXPathDesc cacheKeyColumn;
+	private Map<String, String> namespacesToPrefixMap;
     
 	public ElementProcessor(ExecutionInfo info) throws ConnectorException {
 		this.info = info;
 		resultPaths = generateXPaths();
+		namespacesToPrefixMap = info.getNamespaceToPrefixMap();
 	}
 	
 	/**
@@ -76,12 +78,16 @@ public class ElementProcessor {
 	 * @param path
 	 */
 	private void listChildren(Node current, String path) {
-		   
+		
+		if(current.getDocument().equals(current.getParent())) {
+			path = getLocalQName(current);
+		}
+		
 	    if (current instanceof Element) {
 	        Element temp = (Element) current;
 	        for (int i = 0; i < temp.getAttributeCount(); i++) {
 	          Attribute attribute = temp.getAttribute(i);
-	          String attrPath = path + '@' + attribute.getQualifiedName();
+	          String attrPath = path + "/@" + getLocalQName(attribute);
 	          if(resultPaths.containsKey(attrPath)) {
 	        	  getColumn(attribute, attrPath);
 	          }
@@ -108,15 +114,45 @@ public class ElementProcessor {
 	    	if (next instanceof Element) {
 		        Element temp = (Element) next;
 		        if(path.isEmpty()) {
-		        	childPath = temp.getQualifiedName();
+		        	childPath = getLocalQName(temp);
 		        } else {
-		        	childPath= path + '/' + temp.getQualifiedName();
+		        	childPath= path + '/' + getLocalQName(temp);
 		        }
 	    	}
 	    	listChildren(next, childPath);
 	    }
 	  }
 
+	/**
+	 * Get the qualified name for the Element, but replace the prefixes
+	 * from the actual doc with the matching prefix from the model.  Without
+	 * this prefix we can't do a proper path comparison.
+	 * @throws ConnectorException 
+	 */
+	private String getLocalQName(Node node) {
+		String namespaceURI = null;
+		String localName = null;
+		if(node instanceof Element) {
+			Element element = (Element)node;
+			namespaceURI = element.getNamespaceURI();
+			localName = element.getLocalName();
+		} else if (node instanceof Attribute) {
+			Attribute attribute = (Attribute)node;
+			namespaceURI = attribute.getNamespaceURI();
+			localName = attribute.getLocalName();
+		}
+		if(null == namespaceURI) {
+			throw new Error("namespce URI not found in model namespaces");
+		}
+		String prefix = namespacesToPrefixMap.get(namespaceURI);
+		String result;
+		if(null == prefix) {
+			result = localName;
+		} else {
+			result = prefix + ':' + localName;
+		}
+		return result;
+	}
 	
     private void getColumn(Node node, String path) {
 		OutputXPathDesc columnMetadata = resultPaths.get(path);

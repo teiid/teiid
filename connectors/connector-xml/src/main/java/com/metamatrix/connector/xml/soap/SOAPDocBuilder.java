@@ -258,18 +258,32 @@ public class SOAPDocBuilder {
 		return builder.buildDocument(params, "SOAP-ENV:Header", namespacePrefixes);
 	}
 
-	public Document createXMLRequestDoc(List params, SOAPConnectorState state, String namespacePrefixes, String inputParmsXPath) throws ConnectorException {
+	public Document createXMLRequestDoc(List params, SOAPConnectorState state,
+			String namespacePrefixes, String inputParmsXPath)
+			throws ConnectorException {
+		Document doc;
 		DocumentBuilder builder = new DocumentBuilder();
 		builder.setUseTypeAttributes(state.isEncoded());
-		//use dummy root if there is none
 		final String slash = "/";
 		final String dotSlash = "./";
-		if(inputParmsXPath.equals(dotSlash) || inputParmsXPath.equals(slash) || inputParmsXPath.equals("")) {
+		boolean hasDummy = false;
+		if (inputParmsXPath.equals(dotSlash) || inputParmsXPath.equals(slash)
+				|| inputParmsXPath.equals("")) {
 			inputParmsXPath = SOAPDocBuilder.DUMMY_NS_PREFIX + ":dummy";
-			namespacePrefixes = namespacePrefixes + " xmlns:" + SOAPDocBuilder.DUMMY_NS_PREFIX + "=\"" + SOAPDocBuilder.DUMMY_NS_NAME + "\"";
+			namespacePrefixes = namespacePrefixes + " xmlns:"
+					+ SOAPDocBuilder.DUMMY_NS_PREFIX + "=\""
+					+ SOAPDocBuilder.DUMMY_NS_NAME + "\"";
+			hasDummy = true;
 		}
-		return builder.buildDocument(params, inputParmsXPath, namespacePrefixes);
-    }
+		doc = builder.buildDocument(params, inputParmsXPath, namespacePrefixes);
+		if (hasDummy) {
+			// Since there is no real root - these should all be elements
+			Element element = (Element) doc.getRootElement().getChildren().get(0);
+			element.detach();
+			doc = new Document(element);
+		}
+		return doc;
+	}
 
     private static void handleSoapFault(Element soapFault, SOAPConnectorState state) throws ConnectorException {
         String strMessage = soapFault.getChildTextTrim("faultstring"); //$NON-NLS-1$
