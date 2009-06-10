@@ -24,13 +24,11 @@
 package com.metamatrix.connector.xml.soap;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
@@ -43,11 +41,9 @@ import javax.xml.ws.Service;
 import javax.xml.ws.soap.SOAPBinding;
 
 import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.output.DOMOutputter;
+import org.jdom.output.XMLOutputter;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
-import org.w3c.dom.NodeList;
 
 import com.metamatrix.connector.xml.Constants;
 import com.metamatrix.connector.xml.SOAPConnectorState;
@@ -58,13 +54,15 @@ import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.DocumentBuilder;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.base.RequestGenerator;
+import com.metamatrix.connector.xml.cache.CachingOutputStream;
 import com.metamatrix.connector.xml.http.HTTPExecutor;
 import com.metamatrix.connector.xmlsource.soap.SecurityToken;
 
 public class SOAPExecutor extends HTTPExecutor {
 	
 	SecurityToken secToken;
-	NodeList requestNodes;
+	XMLOutputter xmlOutputter = new XMLOutputter();
+	Document doc;
 	
 	public SOAPExecutor(SOAPConnectorState state, XMLExecution execution, ExecutionInfo exeInfo) throws ConnectorException {
         super((XMLConnectorState)state, execution, exeInfo);
@@ -74,16 +72,10 @@ public class SOAPExecutor extends HTTPExecutor {
 		try {
 			TrustedPayloadHandler handler = execution.getConnection().getTrustedPayloadHandler();
 			ConnectorEnvironment env = execution.getConnection().getConnectorEnv();
-			Properties schemaProperties = getExeInfo().getSchemaProperties();
 			secToken = SecurityToken.getSecurityToken(env, handler);
 			
-			
-            QName svcQname = new QName(
-            		schemaProperties.getProperty(Constants.SERVICE_NAMESPACE),
-            		schemaProperties.getProperty(Constants.SERVICE_NAME));
-            QName portQName = new QName(
-            		schemaProperties.getProperty(Constants.PORT_NAMESPACE),
-            		schemaProperties.getProperty(Constants.PORT_NAME));
+            QName svcQname = new QName("http://org.apache.cxf", "foo");
+            QName portQName = new QName("http://org.apache.cxf", "bar");
             Service svc = Service.create(svcQname);
             svc.addPort(
                     portQName, 
@@ -94,35 +86,24 @@ public class SOAPExecutor extends HTTPExecutor {
                     portQName, 
                     Source.class, 
                     Service.Mode.PAYLOAD);
-
-            StringBuffer buffer = new StringBuffer();
-            for (int j = 0; j < requestNodes.getLength(); j++) {
-    			org.w3c.dom.Element child = (org.w3c.dom.Element) requestNodes.item(j);
-    			buffer.append(child.getNodeValue());
-    		}
             
-            ByteArrayInputStream bais = new ByteArrayInputStream(buffer.toString().getBytes());
-            Source input = new StreamSource(bais);
+            StringReader reader = new StringReader(xmlOutputter.outputString(doc));
+            Source input = new StreamSource(reader);
             // Invoke the operation.
             Source output = dispatch.invoke(input);
-
+            
             // Process the response.
-            StreamResult result = new StreamResult(new ByteArrayOutputStream());
+            CachingOutputStream out = new CachingOutputStream(execution.getExeContext(), getCacheKey());
+            StreamResult result = new StreamResult(out);
             Transformer trans = TransformerFactory.newInstance().newTransformer();
             trans.transform(output, result);
-            ByteArrayOutputStream baos = (ByteArrayOutputStream) result.getOutputStream();
-
-            // Write out the response content.
-            String responseContent = new String(baos.toByteArray());
-            System.out.println(responseContent);
-
-			return null;
+            return out.getCachedXMLStream();
 		} catch (Exception e) {
 			throw new ConnectorException(e);
 		}
 	}
 
-	protected void createRequest(List params)
+	protected void setRequests(List params, String uriString)
 			throws ConnectorException {
 		
 		SOAPConnectorState state = (SOAPConnectorState) getState();
@@ -139,24 +120,10 @@ public class SOAPExecutor extends HTTPExecutor {
 		String namespacePrefixes = getExeInfo().getOtherProperties().getProperty(Constants.NAMESPACE_PREFIX_PROPERTY_NAME);
 		String inputParmsXPath = getExeInfo().getOtherProperties().getProperty(DocumentBuilder.PARM_INPUT_XPATH_TABLE_PROPERTY_NAME); 
 		SOAPDocBuilder builder = new SOAPDocBuilder();
-		Document doc = builder.createXMLRequestDoc(bodyParams, (SOAPConnectorState)getState(), namespacePrefixes, inputParmsXPath);
-		Element docRoot = doc.getRootElement();
-		DOMOutputter domOutputter = new DOMOutputter();
-		try {
-			if (docRoot.getNamespaceURI().equals(SOAPDocBuilder.DUMMY_NS_NAME)) {
-				// Since there is no real root - these should all be elements
-				org.w3c.dom.Document dummyNode = domOutputter.output(doc);
-				requestNodes = dummyNode.getChildNodes().item(0).getChildNodes();
-			} else {
-				org.w3c.dom.Document document = domOutputter.output(doc);
-				requestNodes = document.getChildNodes();
-			}
-		} catch (Exception e) {
-			throw new ConnectorException(e);
-		}
+		doc = builder.createXMLRequestDoc(bodyParams, (SOAPConnectorState)getState(), namespacePrefixes, inputParmsXPath);
 	}
 
-	protected String getCacheKey(int i) throws ConnectorException {
+	protected String getCacheKey() throws ConnectorException {
         StringBuffer cacheKey = new StringBuffer();
         cacheKey.append("|"); //$NON-NLS-1$
         cacheKey.append(execution.getConnection().getUser());
@@ -164,11 +131,8 @@ public class SOAPExecutor extends HTTPExecutor {
         cacheKey.append(execution.getConnection().getQueryId());
         cacheKey.append("|");
         cacheKey.append(buildUriString());
-        cacheKey.append("|"); //$NON-NLS-1$
-		for (int j = 0; j < requestNodes.getLength(); j++) {
-			org.w3c.dom.Element child = (org.w3c.dom.Element) requestNodes.item(j);
-			cacheKey.append(child.toString());
-		}
+        //cacheKey.append("|"); //$NON-NLS-1$
+		//cacheKey.append(xmlOutputter.outputString(doc));
         return cacheKey.toString();
 	}
 

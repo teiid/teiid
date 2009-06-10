@@ -70,4 +70,16 @@ public class TestElementCollector extends TestCase {
 			fail(e.getMessage());
 		}
 	}
+	
+	public void testGetRoot() {
+		String path = "/";
+		int itemCount = 1;
+		try {
+			Document doc = new DocumentImpl(new FileInputStream(filename), "foo");
+			List result = builder.getElements(doc, Arrays.asList(path));
+			assertEquals(itemCount, result.size());
+		} catch (Exception e) {
+			fail(e.getMessage());
+		}
+	}
 }

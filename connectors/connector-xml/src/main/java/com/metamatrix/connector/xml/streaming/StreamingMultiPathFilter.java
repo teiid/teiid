@@ -29,7 +29,6 @@ public class StreamingMultiPathFilter {
 	}
 	
 	private PathPackage getPathPackage(String locationPath, Map<String, String> prefixes) throws InvalidPathException {
-		// copied from nux.xom.xquery.StreamingPathFilter
 		if (locationPath == null) 
 			throw new InvalidPathException("locationPath must not be null");
 		if (locationPath.indexOf("//") >= 0)
@@ -76,10 +75,10 @@ public class StreamingMultiPathFilter {
 			} // end if
 			
 			localNames[i] = localNames[i].substring(k + 1).trim();
-			if (localNames[i].equals("*")) {
+			//if (localNames[i].equals("*")) {
 				// localName is irrelevant (does not matter)
-				localNames[i] = null;
-			}
+			//	localNames[i] = null;
+			//}
 		}
 		return new PathPackage(localNames, namespaceURIs);
 	}
@@ -141,6 +140,10 @@ public class StreamingMultiPathFilter {
 		@Override
 		public Nodes finishMakingElement(Element elem) {
 			if (level == 0) {
+				// check for / match
+				if (pathPackages.isMatch(level,elem.getQualifiedName(), elem.getNamespaceURI())) {
+					return transformMatch(elem);
+				} //causes nu.xom.WellformednessException: Factory attempted to remove the root element on the request
 				mismatch = null;
 				level--;
 				return super.finishMakingElement(elem);
@@ -165,10 +168,14 @@ public class StreamingMultiPathFilter {
 			level--;
 			if (transform == null) return super.finishMakingElement(elem);
 			Nodes results = transform.transform(elem);
-
-			for (int i = results.size(); --i >= 0; ) {
-				Node node = results.get(i);
-				if (node != elem) node.detach();
+			
+			if(results.size() == 0) {
+				results = new Nodes(elem);
+			} else {
+				for (int i = results.size(); --i >= 0; ) {
+					Node node = results.get(i);
+					if (node != elem) node.detach();
+				}
 			}
 			return results;
 		}
@@ -269,9 +276,13 @@ public class StreamingMultiPathFilter {
 		public boolean isRequired(int level, String localName, String namespaceURI) {
 			String name = localNames[level];
 			String uri = namespaceURIs[level];
+			if(level == 0 && name.equals("*")) {
+				return true;
+			} else {
 			return
 				(name == null || name.equals(localName)) && 
 				(uri == null || uri.equals(namespaceURI));
+			}
 		}
 
 		public boolean hasLevelMatch(int level) {
@@ -279,8 +290,10 @@ public class StreamingMultiPathFilter {
 		}
 
 		public boolean isMatch(int level, String localName, String namespaceURI) {
-			if(level == localNames.length -1) {
-				return isRequired(level, localName, namespaceURI);
+			if(level < getPathLength()) {
+				if(level == localNames.length -1) {
+					return isRequired(level, localName, namespaceURI);
+				}
 			}
 			return false;
 		}
@@ -303,7 +316,7 @@ public class StreamingMultiPathFilter {
 			Iterator<PathPackage> iter = packages.iterator();
 			while (iter.hasNext()) {
 				PathPackage pack = iter.next();
-				if(level < pack.getPathLength() && pack.isMatch(level, localName, namespaceURI)) {
+				if(pack.isMatch(level, localName, namespaceURI)) {
 					return true;
 				}
 			}

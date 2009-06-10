@@ -29,7 +29,7 @@
   <note>
     <para>
       Please read 
-      <ulink url="http://teiid.org/Documentation.html">Federation Basics</ulink>
+      <ulink url="http://www.jboss.org/teiid/basics.html">Federation Basics</ulink>
       and understand different terminologies used, resources needed and artifacts that need to be generated before
       developing a successful application. This example takes advantage of only a minimal set of features from
       Teiid Embedded for the sake of simplicity and time.

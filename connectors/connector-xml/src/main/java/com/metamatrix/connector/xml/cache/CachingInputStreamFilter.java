@@ -65,6 +65,7 @@ public class CachingInputStreamFilter extends FilterInputStream {
 	private void chunk() {
 		if(!idCached) {
 			context.put(requestId, Boolean.TRUE);
+			idCached = true;
 		}
 		
 		if(buff.length() >= 2560) {
