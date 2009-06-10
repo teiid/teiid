@@ -28,7 +28,9 @@
     file for Teiid Embedded, and the "lib" and "extension" directories containing binaries either directly or indirectly
     required to execute Teiid Embedded. Later sections describe installing these artifacts.</para>
   <note>
-    <para>
+    <para>Teiid Embedded requires <ulink url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.
+    </para>
+  	<para>
       Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Teiid relies upon
       the user supplying their own JDBC drivers in the deployment. Teiid Embedded
       has been tested extensively with
