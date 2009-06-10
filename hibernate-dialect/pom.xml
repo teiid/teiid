@@ -2,12 +2,12 @@
 	<parent>
 		<artifactId>teiid</artifactId>
 		<groupId>org.jboss.teiid</groupId>
-		<version>6.1.0</version>
+		<version>6.1.1-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-hibernate-dialect</artifactId>
 	<name>Hibernate Dialect</name>
-	<version>6.1.0</version>
+	<version>6.1.1-SNAPSHOT</version>
 	<description>Teiid Hibernate Dialect</description>
 	<dependencies>
 		<dependency>
