@@ -21,6 +21,8 @@
  */
 
 package com.metamatrix.admin.server;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.admin.api.exception.AdminException;
@@ -30,8 +32,10 @@ import com.metamatrix.admin.api.objects.Cache;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
+import com.metamatrix.platform.config.ConfigUpdateMgr;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.FakeRegistryUtil;
+import com.metamatrix.platform.registry.ProcessRegistryBinding;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
 import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
@@ -53,6 +57,9 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         FakeQueryService.clearState();
         FakeCacheAdmin.clearState();
         FakeRuntimeStateAdminAPIHelper.clearState();
+        
+        ConfigUpdateMgr.createSystemProperties("config_multihost.xml");        
+
         
         ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry();
         parent = new FakeServerAdminImpl(registry);
@@ -187,15 +194,14 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         String host = "2.2.2.2"; //$NON-NLS-1$
         String process = "process2"; //$NON-NLS-1$
         
-        try {
-			ServiceRegistryBinding binding = admin.registry.getServiceBinding(host, process, new ServiceID(2,host,process));
-			binding.updateState(ConnectorBinding.STATE_CLOSED);
-		} catch (ResourceNotBoundException e1) {
-		}
-        
-        admin.startConnectorBinding(AdminObject.WILDCARD + "connectorBinding2"); //$NON-NLS-1$
-        assertTrue(FakeRuntimeStateAdminAPIHelper.restartedServices.contains("Service<2|2.2.2.2|process2>")); //$NON-NLS-1$
-        
+    	List<ServiceRegistryBinding> svcbindings = admin.registry.getServiceBindings(host, process, "connectorType2");
+    	ServiceRegistryBinding binding = svcbindings.get(0);   	
+		binding.updateState(ConnectorBinding.STATE_CLOSED);
+		
+        admin.startConnectorBinding(AdminObject.WILDCARD + binding.getInstanceName());
+       // 		"connectorBinding2"); //$NON-NLS-1$
+        assertTrue(FakeRuntimeStateAdminAPIHelper.restartedServices.contains(binding.getServiceID().toString())); //$NON-NLS-1$
+      
         
         //failure case: unknown connectorBinding
         boolean success = false;
@@ -277,8 +283,12 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         //positive case
         assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedServices.isEmpty());
         
-        admin.stopConnectorBinding(AdminObject.WILDCARD + "connectorBinding2", true); //$NON-NLS-1$
-        assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedServices.contains("Service<2|2.2.2.2|process2>")); //$NON-NLS-1$
+       	List<ServiceRegistryBinding> svcbindings = admin.registry.getServiceBindings("2.2.2.2", "process2", "connectorType2");
+    	ServiceRegistryBinding binding = svcbindings.get(0);   	
+
+        
+        admin.stopConnectorBinding(AdminObject.WILDCARD + binding.getInstanceName(), true); //$NON-NLS-1$
+        assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedServices.contains(binding.getServiceID().toString())); //$NON-NLS-1$
         
 
         //failure case: unknown connectorBinding
@@ -332,9 +342,17 @@ public class TestServerRuntimeStateAdminImpl extends TestCase implements Identif
         //positive case
         assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedProcesses.isEmpty());
         
-        admin.stopProcess(AdminObject.WILDCARD + "process2", true, false); //$NON-NLS-1$
-        assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedProcesses.contains("2.2.2.2|process2")); //$NON-NLS-1$
+       	ProcessRegistryBinding binding=null;
+		try {
+			binding = admin.registry.getProcessBinding("2.2.2.2", "process2");
+		} catch (ResourceNotBoundException e1) {
+			// TODO Auto-generated catch block
+			fail(e1.getMessage());
+		}
+ 
         
+        admin.stopProcess(AdminObject.WILDCARD +  binding.getProcessName(), true, false); //$NON-NLS-1$
+        assertTrue(FakeRuntimeStateAdminAPIHelper.stoppedProcesses.contains(binding.getHostName() + "|" + binding.getProcessName()));
 
         //failure case: unknown process
         boolean failed = false;

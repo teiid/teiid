@@ -40,6 +40,7 @@ import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
+import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentDefn;
 import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentObject;
@@ -74,21 +75,37 @@ import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.PlatformPlugin;
+import com.metamatrix.platform.config.ConfigUpdateMgr;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.controller.ServiceData;
 
+
+/**
+ * Use the ConfigUpdateMgr to set the config.xml to use
+ * 
+ *  example:  ConfigUpdateMgr.createSystemProperties("config_multihost.xml");
+ *  
+ * @author vanhalbert
+ *
+ */
 public class FakeConfigurationService implements ConfigurationServiceInterface {
 
-    private String CONFIG_FILE_PATH = null;
+ //   private String CONFIG_FILE_PATH = null;
     private ConnectorBinding cb = null;
-    private ConfigurationModelContainerImpl config;
+ //   private ConfigurationModelContainerImpl config;
+    
+    private ConfigUpdateMgr mgr = new ConfigUpdateMgr();
 
     public FakeConfigurationService() {
         super();
-        CONFIG_FILE_PATH = UnitTestUtil.getTestDataPath() + "/config/" + "config.xml"; //$NON-NLS-1$ //$NON-NLS-2$
-        File configFile = new File(CONFIG_FILE_PATH);
-        config = (ConfigurationModelContainerImpl)importConfigurationModel(configFile, Configuration.NEXT_STARTUP_ID);
+        
+        CurrentConfiguration.reset();
+//        CONFIG_FILE_PATH = UnitTestUtil.getTestDataPath() + "/config/" + "config.xml"; //$NON-NLS-1$ //$NON-NLS-2$
+//        File configFile = new File(CONFIG_FILE_PATH);
+ //       config = (ConfigurationModelContainerImpl)importConfigurationModel(configFile, Configuration.NEXT_STARTUP_ID);
+        
+        
     }
     
     
@@ -106,22 +123,22 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @return
      * @since 5.0
      */
-    private ConfigurationModelContainer importConfigurationModel(File fileToImport, ConfigurationID configID) {
-        Collection configObjects = null;
-        ConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(false);
-        ConfigurationModelContainerImpl configModel = null;
-        try {
-            XMLConfigurationImportExportUtility io = new XMLConfigurationImportExportUtility();
-            FileInputStream inputStream = new FileInputStream(fileToImport);
-            configObjects = io.importConfigurationObjects(inputStream, editor, configID.getFullName());
-            configModel = new ConfigurationModelContainerImpl();
-            configModel.setConfigurationObjects(configObjects);            
-        } catch(Exception ioe) {
-            configModel = null;
-        }
-        
-        return configModel;
-    }
+//    private ConfigurationModelContainer importConfigurationModel(File fileToImport, ConfigurationID configID) {
+//        Collection configObjects = null;
+//        ConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(false);
+//        ConfigurationModelContainerImpl configModel = null;
+//        try {
+//            XMLConfigurationImportExportUtility io = new XMLConfigurationImportExportUtility();
+//            FileInputStream inputStream = new FileInputStream(fileToImport);
+//            configObjects = io.importConfigurationObjects(inputStream, editor, configID.getFullName());
+//            configModel = new ConfigurationModelContainerImpl();
+//            configModel.setConfigurationObjects(configObjects);            
+//        } catch(Exception ioe) {
+//            configModel = null;
+//        }
+//        
+//        return configModel;
+//    }
     
 //    private ProductServiceConfig getPSCByName(Configuration config,
 //            String pscName) throws InvalidArgumentException {
@@ -173,7 +190,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#createEditor()
      */
     public ConfigurationObjectEditor createEditor() throws ConfigurationException{
-        return new BasicConfigurationObjectEditor(true);
+        return mgr.getEditor();
     }
 
     /** 
@@ -187,14 +204,14 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getNextStartupConfigurationID()
      */
     public ConfigurationID getNextStartupConfigurationID() throws ConfigurationException{
-        return null;
+        return mgr.getConfigModel().getConfigurationID();
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getStartupConfigurationID()
      */
     public ConfigurationID getStartupConfigurationID() throws ConfigurationException{
-        return null;
+        return mgr.getConfigModel().getConfigurationID();
     }
 
     /** 
@@ -207,21 +224,21 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getCurrentConfiguration()
      */
     public Configuration getCurrentConfiguration() throws ConfigurationException {
-        return new FakeConfiguration();
+        return mgr.getConfigModel().getConfiguration();
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getNextStartupConfiguration()
      */
     public Configuration getNextStartupConfiguration() throws ConfigurationException{
-        return new FakeConfiguration();
+        return mgr.getConfigModel().getConfiguration();
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getStartupConfiguration()
      */
     public Configuration getStartupConfiguration() throws ConfigurationException{
-        return new FakeConfiguration();
+        return mgr.getConfigModel().getConfiguration();
     }
 
     /** 
@@ -229,7 +246,9 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public Configuration getConfiguration(String configName) throws InvalidConfigurationException,
                                                             ConfigurationException{
-        return new FakeConfiguration();
+    	
+    	// TODO:  need to change to use config.xml
+        return mgr.getConfigModel().getConfiguration();
     }
 
     /** 
@@ -237,21 +256,21 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public ConfigurationModelContainer getConfigurationModel(String configName) throws InvalidConfigurationException,
                                                                                ConfigurationException{
-        return this.config;
+		return mgr.getConfigModel();
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getConfigurationAndDependents(com.metamatrix.common.config.api.ConfigurationID)
      */
     public Collection getConfigurationAndDependents(ConfigurationID configID) throws ConfigurationException{
-        return null;
+        return mgr.getConfigModel().getAllObjects();
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllGlobalConfigObjects()
      */
     public Collection getAllGlobalConfigObjects() throws ConfigurationException {
-        return null;
+        return mgr.getConfigModel().getAllObjects();
     }
 
     /** 
@@ -265,14 +284,14 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentTypeDefinitions(com.metamatrix.common.config.api.ComponentTypeID)
      */
     public Collection getComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException{
-        return null;
+        return mgr.getConfigModel().getAllComponentTypeDefinitions(componentTypeID);
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllComponentTypeDefinitions(com.metamatrix.common.config.api.ComponentTypeID)
      */
     public Collection getAllComponentTypeDefinitions(ComponentTypeID componentTypeID) throws ConfigurationException{
-        return null;
+        return mgr.getConfigModel().getAllComponentTypeDefinitions(componentTypeID);
     }
 
     /** 
@@ -300,53 +319,59 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentType(com.metamatrix.common.config.api.ComponentTypeID)
      */
     public ComponentType getComponentType(ComponentTypeID id) throws ConfigurationException {
-        return null;
+        return mgr.getConfigModel().getComponentType(id.getFullName());
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getAllComponentTypes(boolean)
      */
     public Collection getAllComponentTypes(boolean includeDeprecated) throws ConfigurationException{
-        List results = new ArrayList();
-        
-        ComponentTypeID typeID1 = new ComponentTypeID("connectorType1"); //$NON-NLS-1$
-        BasicConnectorBindingType type1 = new BasicConnectorBindingType(typeID1, typeID1, typeID1, true, false, true);
-        type1.setComponentTypeCode(ComponentType.CONNECTOR_COMPONENT_TYPE_CODE);
-        results.add(type1);
-        
-        
-        ComponentTypeID typeID2 = new ComponentTypeID("connectorType2"); //$NON-NLS-1$
-        BasicConnectorBindingType type2 = new BasicConnectorBindingType(typeID2, typeID2, typeID2, true, false, true);
-        type2.setComponentTypeCode(ComponentType.CONNECTOR_COMPONENT_TYPE_CODE);
-        
-        results.add(type2);  
-        
-        return results;
+    	Collection types = new ArrayList();
+    	types.addAll(mgr.getConfigModel().getComponentTypes().values());
+    	return types;
+    	
+//        List results = new ArrayList();
+//        
+//        ComponentTypeID typeID1 = new ComponentTypeID("connectorType1"); //$NON-NLS-1$
+//        BasicConnectorBindingType type1 = new BasicConnectorBindingType(typeID1, typeID1, typeID1, true, false, true);
+//        type1.setComponentTypeCode(ComponentType.CONNECTOR_COMPONENT_TYPE_CODE);
+//        results.add(type1);
+//        
+//        
+//        ComponentTypeID typeID2 = new ComponentTypeID("connectorType2"); //$NON-NLS-1$
+//        BasicConnectorBindingType type2 = new BasicConnectorBindingType(typeID2, typeID2, typeID2, true, false, true);
+//        type2.setComponentTypeCode(ComponentType.CONNECTOR_COMPONENT_TYPE_CODE);
+//        
+//        results.add(type2);  
+//        
+//        return results;
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHost(com.metamatrix.common.config.api.HostID)
      */
     public Host getHost(HostID hostID) throws ConfigurationException {
-        return null;
+        return mgr.getConfigModel().getHost(hostID.getFullName());
     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getHosts()
      */
     public Collection getHosts() throws ConfigurationException {
-        List hosts = new ArrayList();
-        
-        HostID hostID1 = new HostID("1.1.1.1"); //$NON-NLS-1$
-        Host host1 = new BasicHost(Configuration.NEXT_STARTUP_ID, hostID1, new ComponentTypeID(HostType.COMPONENT_TYPE_NAME));
-        hosts.add(host1);
-        
-        HostID hostID2 = new HostID("2.2.2.2"); //$NON-NLS-1$
-        Host host2 = new BasicHost(Configuration.NEXT_STARTUP_ID, hostID2, new ComponentTypeID(HostType.COMPONENT_TYPE_NAME));
-        hosts.add(host2);
-        
-        
-        return hosts;
+    	return mgr.getConfigModel().getHosts();
+    	
+//        List hosts = new ArrayList();
+//        
+//        HostID hostID1 = new HostID("1.1.1.1"); //$NON-NLS-1$
+//        Host host1 = new BasicHost(Configuration.NEXT_STARTUP_ID, hostID1, new ComponentTypeID(HostType.COMPONENT_TYPE_NAME));
+//        hosts.add(host1);
+//        
+//        HostID hostID2 = new HostID("2.2.2.2"); //$NON-NLS-1$
+//        Host host2 = new BasicHost(Configuration.NEXT_STARTUP_ID, hostID2, new ComponentTypeID(HostType.COMPONENT_TYPE_NAME));
+//        hosts.add(host2);
+//        
+//        
+//        return hosts;
     }
 
     /** 
@@ -354,8 +379,8 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public ComponentDefn getComponentDefn(ConfigurationID configurationID,
                                           ComponentDefnID componentDefnID) throws ConfigurationException {
-        return null;
-    }
+        return this.getConfigurationModel(null).getConfiguration().getComponentDefn(componentDefnID);
+     }
 
     /** 
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getComponentDefns(java.util.Collection, com.metamatrix.common.config.api.ConfigurationID)
@@ -398,25 +423,26 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      * @see com.metamatrix.platform.config.api.service.ConfigurationServiceInterface#getResources()
      */
     public Collection getResources() throws ConfigurationException {
-        List results = new ArrayList();
-        
-        SharedResourceID resourceID1 = new SharedResourceID("resource1"); //$NON-NLS-1$
-        SharedResource resource1 = new BasicSharedResource(resourceID1, SharedResource.MISC_COMPONENT_TYPE_ID);
-        
-        BasicComponentObject target = (BasicComponentObject) resource1;
-
-        target.addProperty("prop1", "value1");
-        target.addProperty(Resource.RESOURCE_POOL, "pool");
-        
-        results.add(resource1);
-        
-        
-        SharedResourceID resourceID2 = new SharedResourceID("resource2"); //$NON-NLS-1$
-        SharedResource resource2 = new BasicSharedResource(resourceID2, SharedResource.MISC_COMPONENT_TYPE_ID);
-        results.add(resource2);
-
-        
-        return results;
+    	return mgr.getConfigModel().getResources();
+//        List results = new ArrayList();
+//        
+//        SharedResourceID resourceID1 = new SharedResourceID("resource1"); //$NON-NLS-1$
+//        SharedResource resource1 = new BasicSharedResource(resourceID1, SharedResource.MISC_COMPONENT_TYPE_ID);
+//        
+//        BasicComponentObject target = (BasicComponentObject) resource1;
+//
+//        target.addProperty("prop1", "value1");
+//        target.addProperty(Resource.RESOURCE_POOL, "pool");
+//        
+//        results.add(resource1);
+//        
+//        
+//        SharedResourceID resourceID2 = new SharedResourceID("resource2"); //$NON-NLS-1$
+//        SharedResource resource2 = new BasicSharedResource(resourceID2, SharedResource.MISC_COMPONENT_TYPE_ID);
+//        results.add(resource2);
+//
+//        
+//        return results;
     }
 
     /** 
@@ -431,6 +457,7 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public void saveResources(Collection resourceDescriptors,
                               String principalName) throws ConfigurationException {
+    	
     }
 
     /** 
@@ -445,6 +472,28 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
      */
     public Set executeTransaction(ActionDefinition action,
                                   String principalName) throws ConfigurationException {
+    	
+       if (action != null) {
+        	
+        	Set resultset = null;
+        	mgr.initTransactions(new Properties());
+        	
+        	List actions = new ArrayList(1);
+        	actions.add(action);
+			resultset = mgr.commit(actions);
+			
+			
+			return resultset;
+//            for (Iterator it=actions.iterator(); it.hasNext();) {
+//                Object o = it.next();
+//                if (o instanceof CreateObject) {
+//                  CreateObject co = (CreateObject) o;
+//                  Object[] objs = co.getArguments();
+//                  config.addObject(objs[0]);  
+//                }
+//            }
+        }
+
         return null;
     }
 
@@ -454,14 +503,22 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     public Set executeTransaction(List actions,
                                   String principalName) throws ConfigurationException {
         if (actions != null) {
-            for (Iterator it=actions.iterator(); it.hasNext();) {
-                Object o = it.next();
-                if (o instanceof CreateObject) {
-                  CreateObject co = (CreateObject) o;
-                  Object[] objs = co.getArguments();
-                  config.addObject(objs[0]);  
-                }
-            }
+        	
+        	Set resultset = null;
+        	mgr.initTransactions(new Properties());
+        	
+			resultset = mgr.commit(actions);
+			
+			
+			return resultset;
+//            for (Iterator it=actions.iterator(); it.hasNext();) {
+//                Object o = it.next();
+//                if (o instanceof CreateObject) {
+//                  CreateObject co = (CreateObject) o;
+//                  Object[] objs = co.getArguments();
+//                  config.addObject(objs[0]);  
+//                }
+//            }
         }
         return null;
     }
@@ -473,7 +530,12 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
                                         List actions,
                                         String principalName) throws ModificationException,
                                                              ConfigurationException {
-        return null;
+    	Set resultset = null;
+    	mgr.initTransactions(new Properties());
+    	resultset = mgr.commit(actions);	
+		
+		return resultset;
+
     }
 
     /** 
@@ -572,7 +634,14 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
     public Object modify(ComponentObject theObject,
                          Properties theProperties,
                          String principalName) throws ConfigurationException{
-        return null;
+    	
+    	ConfigurationObjectEditor editor = this.createEditor();
+    	
+    	theObject = editor.modifyProperties(theObject, theProperties, ConfigurationObjectEditor.SET);
+    	
+    	this.executeTransaction(editor.getDestination().popActions(), "FakeConfigurationService");
+    	
+        return theObject;
     }
 
 
@@ -662,7 +731,10 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 			String serviceName, String principalName)
 			throws ConfigurationException{
 		// TODO Auto-generated method stub
-		return null;
+    	
+    	ServiceComponentDefnID svcID = (ServiceComponentDefnID) this.getConfigurationModel(null).getConfiguration().getServiceComponentDefn(serviceName).getID();
+    	VMComponentDefn vm =  this.getConfigurationModel(null).getConfiguration().getVMComponentDefn(theProcessID);
+		return mgr.getConfigModel().getConfiguration().getDeployedServiceForVM(svcID, vm);
 	}
 
     /** 

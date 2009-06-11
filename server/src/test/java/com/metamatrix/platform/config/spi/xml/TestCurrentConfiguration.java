@@ -42,6 +42,7 @@ public class TestCurrentConfiguration extends BaseTest {
     
 	protected void init(String cfgFile) throws Exception {
 		CurrentConfigHelper.initXMLConfig(cfgFile, this.getPath(), PRINCIPAL);
+		
 	}    
     
     public void testValidateConfiguration() throws Exception {
@@ -88,7 +89,24 @@ public class TestCurrentConfiguration extends BaseTest {
         }
         
         printMsg("Completed testCurrentHost"); //$NON-NLS-1$        
-    }   
+    }  
+    
+    public void testMultiHostConfig() throws Exception {
+    	
+    	printMsg("Starting testMultiHostConfig");    	 //$NON-NLS-1$
+
+        init("config_multihost.xml");
+	    			    		    			    		
+        validConfigurationModel();
+
+		int hostcnt = CurrentConfiguration.getInstance().getConfiguration().getHosts().size();	
+		if (hostcnt <= 1 ) {
+			fail("Multiple hosts were not found " + hostcnt); //$NON-NLS-1$
+		}
+ 	
+		printMsg("Completed testMultiHostConfig"); //$NON-NLS-1$
+    	
+    }
     
      
  

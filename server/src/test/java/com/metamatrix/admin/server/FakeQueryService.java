@@ -35,7 +35,6 @@ import java.util.Set;
 import javax.transaction.xa.Xid;
 
 import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.api.exception.ComponentNotFoundException;

@@ -48,6 +48,7 @@ import com.metamatrix.admin.objects.MMService;
 import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.common.config.api.SharedResource;
+import com.metamatrix.platform.config.ConfigUpdateMgr;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.FakeRegistryUtil;
 import com.metamatrix.platform.registry.ResourceNotBoundException;
@@ -66,6 +67,10 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
     
     
     public void setUp() throws Exception {
+    	
+        ConfigUpdateMgr.createSystemProperties("config_multihost.xml");        
+
+        FakeRegistryUtil.clear();
         ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry();
         parent = new FakeServerAdminImpl(registry);
         admin = new ServerMonitoringAdminImpl(parent, registry);        
@@ -96,16 +101,10 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
      * Expects connectorBinding3 to be running, but not deployed. 
      * @since 4.3
      */
-    public void testGetConnectorBindings() throws AdminException {
+    @SuppressWarnings("unchecked")
+	public void testGetConnectorBindings() throws AdminException {
     	
-        try {
-			ServiceRegistryBinding binding = admin.registry.getServiceBinding("3.3.3.3","3", new ServiceID(3, "3.3.3.3", "3")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			binding.updateState(ConnectorBinding.STATE_CLOSED);
-		} catch (ResourceNotBoundException e1) {
-		}
-
-		
-        Collection results = admin.getConnectorBindings(AdminObject.WILDCARD);  
+        Collection<MMConnectorBinding> results = admin.getConnectorBindings(AdminObject.WILDCARD);  
         assertEquals(3, results.size());
         
         for (Iterator iter = results.iterator(); iter.hasNext(); ) {
@@ -115,23 +114,22 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
                 
                 assertEquals("Not Registered", binding.getStateAsString()); //$NON-NLS-1$
                 assertEquals(false, binding.isRegistered());
-                assertEquals(true, binding.isDeployed());
+                assertEquals(true, binding.isEnabled());
                 
                 
             } else if (HOST_2_2_2_2_PROCESS2_CONNECTOR_BINDING2.equals(binding.getIdentifier())){ 
             
-                assertEquals("connectorBinding2", binding.getDescription()); //$NON-NLS-1$
-                //assertEquals("Open", binding.getStateAsString()); //$NON-NLS-1$
+                assertEquals("Open", binding.getStateAsString()); //$NON-NLS-1$
                 assertEquals(true, binding.isRegistered());
-                assertEquals(true, binding.isDeployed());
+                assertEquals(true, binding.isEnabled());
                 Properties properties = binding.getProperties();
                 assertEquals("value1", properties.get("prop1")); //$NON-NLS-1$ //$NON-NLS-2$
                 assertEquals("value2", properties.get("prop2")); //$NON-NLS-1$ //$NON-NLS-2$            
             } else if (_3_3_3_3_PROCESS3_CONNECTOR_BINDING3.equals(binding.getIdentifier())) { 
                 
-            	//assertEquals("Closed", binding.getStateAsString()); //$NON-NLS-1$
+            	assertEquals("Open", binding.getStateAsString()); //$NON-NLS-1$
                 assertEquals(true, binding.isRegistered());
-                assertEquals(true, binding.isDeployed());            
+                assertEquals(true, binding.isEnabled());            
             } else {
                 fail("Unexpected d: "+binding.getIdentifier()); //$NON-NLS-1$
             }
@@ -162,14 +160,10 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
      */
     public void testGetServices() throws AdminException {
     	
-        try {
-			ServiceRegistryBinding binding = admin.registry.getServiceBinding("3.3.3.3","3", new ServiceID(3, "3.3.3.3", "3")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-			binding.updateState(ConnectorBinding.STATE_CLOSED);
-		} catch (ResourceNotBoundException e1) {
-		}
+
 
 		
-        Collection<MMService> results = admin.getServices(AdminObject.WILDCARD);  
+        Collection<MMService> results = admin.getServices(AdminObject.WILDCARD + "dqp*");  
         assertEquals(3, results.size());
         
         for (Iterator iter = results.iterator(); iter.hasNext(); ) {
@@ -177,13 +171,43 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         	MMService svc = (MMService) iter.next();
 
             if (HOST_2_2_2_2_PROCESS2_DQP2.equals(svc.getIdentifier())){ 
-            
+               	assertEquals("Open", svc.getStateAsString()); //$NON-NLS-1$
+
                 assertEquals(true, svc.isRegistered());
+
+                try {
+                	
+                	ServiceID id = new ServiceID(svc.getServiceID(), svc.getHostName(), svc.getProcessName());
+                	ServiceRegistryBinding binding = admin.registry.getServiceBinding(svc.getHostName(), svc.getProcessName(), id);
+       				binding.updateState(ConnectorBinding.STATE_CLOSED);
+                } catch (ResourceNotBoundException e1) {
+                } 
+                
              } else if (_3_3_3_3_PROCESS3_DQP3.equals(svc.getIdentifier())) { 
                 
-                  assertEquals(true, svc.isRegistered());
+                  assertEquals(false, svc.isRegistered());                                
+            }
+        }       
+        
+        results = admin.getServices(AdminObject.WILDCARD + "dqp*");  
+        assertEquals(3, results.size());
+        
+        for (Iterator iter = results.iterator(); iter.hasNext(); ) {
+            
+        	MMService svc = (MMService) iter.next();
+
+            if (HOST_2_2_2_2_PROCESS2_DQP2.equals(svc.getIdentifier())){ 
+              	assertEquals("Closed", svc.getStateAsString()); //$NON-NLS-1$
+
+                assertEquals(true, svc.isRegistered());
+                
+             } else if (_3_3_3_3_PROCESS3_DQP3.equals(svc.getIdentifier())) { 
+                
+                  assertEquals(false, svc.isRegistered());                                
             }
         }            
+
+        
         
         results = admin.getServices(HOST_2_2_2_2_PROCESS2_DQP2);  
         assertEquals(1, results.size());
@@ -204,12 +228,10 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
     public void testGetConnectorTypes() throws AdminException {
         Collection results = admin.getConnectorTypes(AdminObject.WILDCARD);  
         List resultsList = new ArrayList(results);
-        assertEquals(2, results.size());
+        assertEquals(26, results.size());
         
-        MMConnectorType type = (MMConnectorType) resultsList.get(0);
-        assertEquals("connectorType1", type.getIdentifier()); //$NON-NLS-1$
-        
-        
+        MMConnectorType type = (MMConnectorType) admin.getConnectorTypes("connectorType1").iterator().next();
+        assertEquals("connectorType1", type.getIdentifier()); //$NON-NLS-1$               
         
         results = admin.getConnectorTypes("connectorType1"); //$NON-NLS-1$
         assertEquals(1, results.size());        
@@ -229,7 +251,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
      * @since 4.3
      */
     public void testGetDQPs() throws AdminException {
-        Collection results = admin.getDQPs(AdminObject.WILDCARD);  
+        Collection<MMDQP> results = admin.getDQPs(AdminObject.WILDCARD);  
         assertEquals(3, results.size());
         
         for (Iterator iter = results.iterator(); iter.hasNext(); ) {
@@ -238,14 +260,13 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
             if (HOST_1_1_1_1_PROCESS1_DQP1.equals(dqp.getIdentifier())) { 
                 assertEquals("Not Registered", dqp.getStateAsString()); //$NON-NLS-1$
                 assertEquals(false, dqp.isRegistered());
-                assertEquals(true, dqp.isDeployed());
+                assertEquals(true, dqp.isEnabled());
             } else if (HOST_2_2_2_2_PROCESS2_DQP2.equals(dqp.getIdentifier())){ 
-                assertEquals("dqp2", dqp.getDescription()); //$NON-NLS-1$
                 assertEquals(true, dqp.isRegistered());
-                assertEquals(true, dqp.isDeployed());
+                assertEquals(true, dqp.isEnabled());
             } else if (_3_3_3_3_PROCESS3_DQP3.equals(dqp.getIdentifier())) { 
-                assertEquals(true, dqp.isRegistered());
-                assertEquals(true, dqp.isDeployed());            
+                assertEquals(false, dqp.isRegistered());
+                assertEquals(false, dqp.isEnabled());            
             } else {
                 fail("Unexpected dqp: "+dqp.getIdentifier()); //$NON-NLS-1$
             }
@@ -302,28 +323,26 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         assertEquals(3, results.size());
         
         
+        // host.enabled() is not a valid attribute and the Host implementation doesn't allow
+        // it to be set, the extended class ComponentDefn, defaults it to true
+        // therefore the .isEnabled() test have been removed
+        
         for (Iterator iter = results.iterator(); iter.hasNext(); ) {            
             MMHost host = (MMHost) iter.next();
-            if ("1.1.1.1".equals(host.getIdentifier())) { //$NON-NLS-1$
-                assertFalse(host.isRunning());
-                assertTrue(host.isDeployed());
-        
-            } else if ("2.2.2.2".equals(host.getIdentifier())) { //$NON-NLS-1$
+            if (HOST_1_1_1_1.equals(host.getIdentifier())) { //$NON-NLS-1$
                 assertTrue(host.isRunning());
-                assertTrue(host.isDeployed());
-
-            } else if ("3.3.3.3".equals(host.getIdentifier())) { //$NON-NLS-1$
+         
+            } else if (HOST_2_2_2_2.equals(host.getIdentifier())) { //$NON-NLS-1$
                 assertTrue(host.isRunning());
-                assertFalse(host.isDeployed());
-                
-            } else {
+ 
+            } else if (HOST_3_3_3_3.equals(host.getIdentifier())) { //$NON-NLS-1$
+                assertTrue(host.isRunning());
+             } else {
                 fail("Unexpected host "+host.getIdentifier()); //$NON-NLS-1$
             }
         }
-        
-        
-        
-        results = admin.getHosts("1.1.1.1"); //$NON-NLS-1$
+              
+        results = admin.getHosts(HOST_1_1_1_1); //$NON-NLS-1$
         assertEquals(1, results.size());        
     }
     
@@ -345,12 +364,12 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
             MMProcess process = (MMProcess) iter.next();
             if (HOST_1_1_1_1_PROCESS1.equals(process.getIdentifier())) { 
                 assertFalse(process.isRunning());
-                assertTrue(process.isDeployed());
+                assertFalse(process.isEnabled());
         
             } else if (HOST_2_2_2_2_PROCESS2.equals(process.getIdentifier())) { 
                 
                 assertTrue(process.isRunning());
-                assertTrue(process.isDeployed());
+                assertTrue(process.isEnabled());
                 assertEquals(2, process.getFreeMemory());
                 assertEquals(2, process.getThreadCount());
                 assertEquals(2, process.getSockets());
@@ -359,7 +378,7 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
 
             } else if (HOST_3_3_3_3_PROCESS3.equals(process.getIdentifier())) { 
                 assertTrue(process.isRunning());
-                assertFalse(process.isDeployed());
+                assertTrue(process.isEnabled());
                 
             } else {
                 fail("Unexpected process "+process.getIdentifier()); //$NON-NLS-1$
@@ -385,24 +404,65 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
      * @since 4.3
      */
     public void testGetQueueWorkerPools() throws AdminException {
+        try {
+			ConfigUpdateMgr.createSystemProperties("config_multihost_getWorkerPools.xml");
+			FakeRegistryUtil.clear();
+	        ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry();
+	        parent = new FakeServerAdminImpl(registry);
+	        admin = new ServerMonitoringAdminImpl(parent, registry);        
+
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail(e.getMessage());
+		}        
+
+    	
         Collection results = admin.getQueueWorkerPools(AdminObject.WILDCARD);  
         assertEquals(4, results.size());
         
         for (Iterator iter = results.iterator(); iter.hasNext(); ) {            
             MMQueueWorkerPool pool = (MMQueueWorkerPool) iter.next();
             
+            
             if (HOST_2_2_2_2_PROCESS2_CONNECTOR_BINDING2_POOL.equals(pool.getIdentifier())) { 
-                assertEquals(2, pool.getQueued());
-                assertEquals(2, pool.getTotalEnqueues());        
+                Collection<MMConnectorBinding> cbc = admin.getConnectorBindings(HOST_2_2_2_2_PROCESS2_CONNECTOR_BINDING2);    
+                if (cbc == null || cbc.size() != 1){
+                	fail("Didnt find the connector binding that corresponds to the worker pool");
+                }
+                MMConnectorBinding cb = cbc.iterator().next();
+
+            	
+                assertEquals(cb.getServiceID(), pool.getQueued());
+                assertEquals(cb.getServiceID(), pool.getTotalEnqueues());        
             } else if (HOST_3_3_3_3_PROCESS3_CONNECTOR_BINDING3_POOL.equals(pool.getIdentifier())) { 
-                assertEquals(3, pool.getQueued());
-                assertEquals(3, pool.getTotalEnqueues());        
+                Collection<MMConnectorBinding> cbc = admin.getConnectorBindings(_3_3_3_3_PROCESS3_CONNECTOR_BINDING3);    
+                if (cbc == null || cbc.size() != 1){
+                	fail("Didnt find the connector binding that corresponds to the worker pool");
+                }
+                MMConnectorBinding cb = cbc.iterator().next();
+
+                assertEquals(cb.getServiceID(), pool.getQueued());
+                assertEquals(cb.getServiceID(), pool.getTotalEnqueues());        
             } else if (HOST_2_2_2_2_PROCESS2_CONNECTOR_DQP2_POOL.equals(pool.getIdentifier())) { 
-                assertEquals(5, pool.getQueued());
-                assertEquals(5, pool.getTotalEnqueues());        
+            	Collection<MMDQP> dqps = admin.getDQPs(HOST_2_2_2_2_PROCESS2_DQP2); 
+                if (dqps == null || dqps.size() != 1){
+                	fail("Didnt find the dqp that corresponds to the worker pool");
+                }
+                MMDQP dqp = dqps.iterator().next();
+            	
+                assertEquals(dqp.getServiceID(), pool.getQueued());
+                assertEquals(dqp.getServiceID(), pool.getTotalEnqueues());        
             } else if (HOST_3_3_3_3_PROCESS3_CONNECTOR_DQP3_POOL.equals(pool.getIdentifier())) { 
-                assertEquals(6, pool.getQueued());
-                assertEquals(6, pool.getTotalEnqueues());  
+               	Collection<MMDQP> dqps = admin.getDQPs(_3_3_3_3_PROCESS3_DQP3); 
+                if (dqps == null || dqps.size() != 1){
+                	fail("Didnt find the dqp that corresponds to the worker pool");
+                }
+                MMDQP dqp = dqps.iterator().next();
+            	
+                assertEquals(dqp.getServiceID(), pool.getQueued());
+                assertEquals(dqp.getServiceID(), pool.getTotalEnqueues());        
+
             } else {
                 fail("unexpected pool "+pool.getIdentifier()); //$NON-NLS-1$
             }            
@@ -420,6 +480,8 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         
         results = admin.getQueueWorkerPools(HOST_2_2_2_2_PROCESS2_CONNECTOR_BINDING2_POOL);  
         assertEquals(1, results.size());
+        
+        FakeRegistryUtil.clear();
         
     }
     
@@ -457,13 +519,21 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
      */
     public void testGetResources() throws AdminException {
         Collection results = admin.getResources(AdminObject.WILDCARD);  
-        assertEquals(2, results.size());
+        assertEquals(5, results.size());
         
-        MMResource resource = (MMResource) results.iterator().next();
-        assertEquals("resource1", resource.getIdentifier()); //$NON-NLS-1$
-        assertEquals(SharedResource.MISC_COMPONENT_TYPE_NAME, resource.getResourceType());
-        assertEquals("pool", resource.getConnectionPoolIdentifier()); //$NON-NLS-1$
+        boolean matched = false;
+        Iterator it=results.iterator();
+        while(it.hasNext()) {
         
+	        MMResource resource = (MMResource) it.next();
+	        if (resource.getIdentifier().equalsIgnoreCase("resource1")) {
+		        assertEquals("resource1", resource.getIdentifier()); //$NON-NLS-1$
+		        assertEquals(SharedResource.MISC_COMPONENT_TYPE_NAME, resource.getResourceType());
+		        matched = true;
+	        }
+        }
+        
+        assertTrue(matched);
         
         
         results = admin.getResources("resource1");  //$NON-NLS-1$
@@ -481,14 +551,23 @@ public class TestServerMonitoringAdminImpl extends TestCase implements Identifie
         Collection results = admin.getSourceRequests(AdminObject.WILDCARD);  
         assertEquals(2, results.size());
         
-        Request request = (Request) results.iterator().next();
-        assertEquals(REQUEST_1_1_1_0, request.getIdentifier()); 
-        assertEquals("1", request.getSessionID()); //$NON-NLS-1$
-        assertEquals("1", request.getRequestID()); //$NON-NLS-1$ 
-        assertEquals("1", request.getNodeID()); //$NON-NLS-1$ 
-        assertEquals("connectorBinding1", request.getConnectorBindingName()); //$NON-NLS-1$
-        assertEquals("user1", request.getUserName()); //$NON-NLS-1$
+        boolean matched = false;
+        Iterator it=results.iterator();
+        while(it.hasNext()) {
         
+        
+	        Request request = (Request) it.next();
+	        if (request.getConnectorBindingName().equalsIgnoreCase("connectorBinding1")) {
+		        assertEquals(REQUEST_1_1_1_0, request.getIdentifier()); 
+		        assertEquals("1", request.getSessionID()); //$NON-NLS-1$
+		        assertEquals("1", request.getRequestID()); //$NON-NLS-1$ 
+		        assertEquals("1", request.getNodeID()); //$NON-NLS-1$ 
+		        assertEquals("connectorBinding1", request.getConnectorBindingName()); //$NON-NLS-1$
+		        assertEquals("user1", request.getUserName()); //$NON-NLS-1$
+		        matched = true;
+	        }
+        }
+        assertTrue(matched);
         
         results = admin.getSourceRequests(_1_WILDCARD);  
         assertEquals(1, results.size());

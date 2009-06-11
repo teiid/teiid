@@ -31,17 +31,29 @@ import junit.framework.TestCase;
 
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.exception.AdminProcessingException;
+import com.metamatrix.admin.api.objects.AdminObject;
 import com.metamatrix.admin.api.objects.AdminOptions;
 import com.metamatrix.admin.api.objects.ConnectorBinding;
 import com.metamatrix.admin.api.objects.Host;
+import com.metamatrix.admin.api.objects.ProcessObject;
 import com.metamatrix.admin.api.objects.Service;
+import com.metamatrix.admin.objects.MMConnectorBinding;
+import com.metamatrix.admin.objects.MMProcess;
+import com.metamatrix.common.application.DQPConfigSource;
+import com.metamatrix.common.config.CurrentConfiguration;
+import com.metamatrix.common.config.api.ConfigurationModelContainer;
+import com.metamatrix.common.config.api.DeployedComponent;
+import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
+import com.metamatrix.platform.config.ConfigUpdateMgr;
+import com.metamatrix.platform.config.util.CurrentConfigHelper;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.registry.FakeRegistryUtil;
+import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 
 
 /** 
@@ -53,12 +65,18 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     private static final String BOGUS_HOST = "slwxp120"; //$NON-NLS-1$
     private static final String BOGUS_HOST_IP = "192.168.10.157"; //$NON-NLS-1$
     private static final String BOGUS_HOST_FULLY_QUALIFIED = BOGUS_HOST + "quadrian.com"; //$NON-NLS-1$
+    
+    private static final String BOGUS_PROCESS = "MMProcess"; //$NON-NLS-1$
+    private static final String BOGUS_SERVICE = "MyService"; //$NON-NLS-1$
 
     private static String VDB_NAME1 = "myVdb1"; //$NON-NLS-1$
     private static String VDB_NAME2 = "myVdb2"; //$NON-NLS-1$
     private static String VERSION1 = "1"; //$NON-NLS-1$
     private static String PHYSICAL_MODEL_NAME1 = "PhysicalModel1"; //$NON-NLS-1$
     private static String PHYSICAL_MODEL_NAME2 = "PhysicalModel2"; //$NON-NLS-1$
+    
+    private static FakeConfigurationService configService = new FakeConfigurationService();
+    private static ConfigurationModelContainer configModelContainer = null;
     
     private ServerAdminImpl parent;
     private FakeServerConfigAdminImpl admin;
@@ -68,6 +86,8 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
         System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$ //$NON-NLS-2$
         System.setProperty("metamatrix.message.bus.type", "noop.message.bus"); //$NON-NLS-1$ //$NON-NLS-2$
         
+        ConfigUpdateMgr.createSystemProperties("config_multihost.xml");        
+        
         ClusteredRegistryState registry = FakeRegistryUtil.getFakeRegistry();
         parent = new FakeServerAdminImpl(registry);
         admin = new FakeServerConfigAdminImpl(parent, registry);        
@@ -75,7 +95,7 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
    
     
     
-    private void helpCheckBindings(Model model, Collection expectedBindingNames) throws Exception {
+    private void helpCheckBindings(Model model, Collection<String> expectedBindingNames) throws Exception {
     	Collection modelBindings = model.getConnectorBindingNames();
     	// Check sizes first
     	if(modelBindings.size()!=expectedBindingNames.size()) {
@@ -85,9 +105,9 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	}
     	
     	// Check whether names match
-    	Iterator expectedIter = expectedBindingNames.iterator();
+    	Iterator<String> expectedIter = expectedBindingNames.iterator();
     	while(expectedIter.hasNext()) {
-    		String expectedName = (String)expectedIter.next();
+    		String expectedName = expectedIter.next();
     		boolean found = false;
     		Iterator actualIter = modelBindings.iterator();
     		while(actualIter.hasNext()) {
@@ -165,30 +185,30 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     public void testAddHost() throws Exception {
         String hostIdentifier = BOGUS_HOST; 
         Properties hostProperties = new Properties();
-        hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
         admin.addHost(hostIdentifier, hostProperties);
     }
     
     public void testAddHostIP() throws Exception {
         String hostIdentifier = BOGUS_HOST_IP; 
         Properties hostProperties = new Properties();
-        hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
         admin.addHost(hostIdentifier, hostProperties);
     }
     
     public void testAddHostFullyQualifiedName() throws Exception {
         String hostIdentifier = BOGUS_HOST_FULLY_QUALIFIED; 
         Properties hostProperties = new Properties();
-        hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
-        hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.INSTALL_DIR, "D:\\MetaMatrix\\s43401\\"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.HOST_DIRECTORY, "D:\\MetaMatrix\\s43401\\host"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.LOG_DIRECTORY, "D:\\MetaMatrix\\s43401\\log"); //$NON-NLS-1$
+//        hostProperties.setProperty(Host.HOST_ENABLED, "true"); //$NON-NLS-1$
         admin.addHost(hostIdentifier, hostProperties);
     }
     
@@ -199,8 +219,8 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	admin.assignBindingToModel("connectorBinding2",VDB_NAME1,VERSION1,PHYSICAL_MODEL_NAME1); //$NON-NLS-1$ 
     	
     	// Check results
-    	Collection expectedBindingNames = new HashSet();
-    	expectedBindingNames.add("connectorBinding2uuid");  //$NON-NLS-1$
+    	Collection<String> expectedBindingNames = new HashSet<String>();
+    	expectedBindingNames.add("connectorBinding2");  //$NON-NLS-1$
     	
     	Model model = helpGetModel(VDB_NAME1,VERSION1,PHYSICAL_MODEL_NAME1);
     	
@@ -217,8 +237,8 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	
     	// Check results - Since the model is not multi-source binding enabled, 
     	// only the first binding was actually assigned
-    	Collection expectedBindingNames = new HashSet();
-    	expectedBindingNames.add("connectorBinding1uuid");  //$NON-NLS-1$
+    	Collection<String> expectedBindingNames = new HashSet<String>();
+    	expectedBindingNames.add("connectorBinding1");  //$NON-NLS-1$
     	
     	Model model = helpGetModel(VDB_NAME1,VERSION1,PHYSICAL_MODEL_NAME1);
     	
@@ -235,9 +255,9 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	
     	// Check results - Since the model is multi-source binding enabled, 
     	// both bindings should be assinged
-    	Collection expectedBindingNames = new HashSet();
-    	expectedBindingNames.add("connectorBinding1uuid");  //$NON-NLS-1$
-    	expectedBindingNames.add("connectorBinding2uuid");  //$NON-NLS-1$
+    	Collection<String> expectedBindingNames = new HashSet<String>();
+    	expectedBindingNames.add("connectorBinding1");  //$NON-NLS-1$
+    	expectedBindingNames.add("connectorBinding2");  //$NON-NLS-1$
     	
     	Model model = helpGetModel(VDB_NAME2,VERSION1,PHYSICAL_MODEL_NAME2);
     	
@@ -251,8 +271,8 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	admin.assignBindingToModel("connectorBinding2",VDB_NAME1,VERSION1,PHYSICAL_MODEL_NAME1); //$NON-NLS-1$ 
     	
     	// Check results
-    	Collection expectedBindingNames = new HashSet();
-    	expectedBindingNames.add("connectorBinding2uuid");  //$NON-NLS-1$
+    	Collection<String> expectedBindingNames = new HashSet<String>();
+    	expectedBindingNames.add("connectorBinding2");  //$NON-NLS-1$
     	
     	Model model = helpGetModel(VDB_NAME1,VERSION1,PHYSICAL_MODEL_NAME1);
     	
@@ -262,7 +282,7 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	admin.deassignBindingFromModel("connectorBinding2",VDB_NAME1,VERSION1,PHYSICAL_MODEL_NAME1); //$NON-NLS-1$ 
     	
     	// Check results - expect to be empty
-    	expectedBindingNames = new HashSet();
+    	expectedBindingNames = new HashSet<String>();
     	
     	helpCheckBindings(model,expectedBindingNames);
     	
@@ -278,10 +298,10 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	
     	// Check results - Since the model is multi-source binding enabled, 
     	// all bindings should be assinged
-    	Collection expectedBindingNames = new HashSet();
-    	expectedBindingNames.add("connectorBinding1uuid");  //$NON-NLS-1$
-    	expectedBindingNames.add("connectorBinding2uuid");  //$NON-NLS-1$
-    	expectedBindingNames.add("connectorBinding3uuid");  //$NON-NLS-1$
+    	Collection<String> expectedBindingNames = new HashSet<String>();
+    	expectedBindingNames.add("connectorBinding1");  //$NON-NLS-1$
+    	expectedBindingNames.add("connectorBinding2");  //$NON-NLS-1$
+    	expectedBindingNames.add("connectorBinding3");  //$NON-NLS-1$
     	
     	Model model = helpGetModel(VDB_NAME2,VERSION1,PHYSICAL_MODEL_NAME2);
     	
@@ -294,8 +314,8 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	admin.deassignBindingsFromModel(debindings,VDB_NAME2,VERSION1,PHYSICAL_MODEL_NAME2);  
     	
     	// Check results - expect to have one binding remaining
-    	expectedBindingNames = new HashSet();
-    	expectedBindingNames.add("connectorBinding2uuid");  //$NON-NLS-1$
+    	expectedBindingNames = new HashSet<String>();
+    	expectedBindingNames.add("connectorBinding2");  //$NON-NLS-1$
     	
     	helpCheckBindings(model,expectedBindingNames);
 
@@ -313,7 +333,7 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     	admin.deassignBindingsFromModel(debindings,VDB_NAME2,VERSION1,PHYSICAL_MODEL_NAME2);  
     	
     	// Check results - expect to have no bindings
-    	expectedBindingNames = new HashSet();
+    	expectedBindingNames = new HashSet<String>();
     	helpCheckBindings(model,expectedBindingNames);
     }
     
@@ -350,12 +370,12 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     
     public void testGetConnectorBindings() throws Exception {
     	Collection<ConnectorBinding> bindings = admin.getConnectorBindingsToConfigure("*");
-        assertEquals(2, bindings.size());
+        assertEquals(3, bindings.size());
         
-       	bindings = admin.getConnectorBindingsToConfigure("My Connector");
+       	bindings = admin.getConnectorBindingsToConfigure("connectorBinding2");
         assertEquals(1, bindings.size());
         
-       	bindings = admin.getConnectorBindingsToConfigure("My*");
+       	bindings = admin.getConnectorBindingsToConfigure("*2");
         assertEquals(1, bindings.size());
 
 
@@ -364,9 +384,9 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
     
     public void testGetServices() throws Exception {
     	Collection<Service> bindings = admin.getServicesToConfigure("*");
-        assertEquals(7, bindings.size());
+        assertEquals(10, bindings.size());
         
-        Service svc = (Service) bindings.iterator().next();
+        Service svc = bindings.iterator().next();
         
        	bindings = admin.getServicesToConfigure("QueryService");
         assertEquals(1, bindings.size());
@@ -374,9 +394,67 @@ public class TestServerConfigAdminImpl extends TestCase implements IdentifierCon
        	bindings = admin.getServicesToConfigure("Query*");
         assertEquals(1, bindings.size());
 
-
+    }
+    
+    public void testgetNodeCount() throws Exception {
+      
+    	assertEquals(1, admin.getNodeCount(BOGUS_HOST_FULLY_QUALIFIED));
+    	assertEquals(2, admin.getNodeCount(BOGUS_HOST_FULLY_QUALIFIED + AdminObject.DELIMITER + BOGUS_PROCESS));
+    	assertEquals(3, admin.getNodeCount(BOGUS_HOST_FULLY_QUALIFIED + AdminObject.DELIMITER + BOGUS_PROCESS + AdminObject.DELIMITER + BOGUS_SERVICE));
 
     }
+    
+    public void testUpdateProperties() throws Exception {
+        
+    	//Test update properties for deployed connector
+    	Properties properties = new Properties();
+    	properties.put(DQPConfigSource.PROCESS_POOL_MAX_THREADS, "11");
+    	admin.updateProperties(HOST_2_2_2_2_PROCESS2_CONNECTOR_BINDING2,com.metamatrix.admin.api.objects.ConnectorBinding.class.getName(), properties);
+    	//Verify results
+    	DeployedComponent dc = admin.getDeployedComponent(HOST_2_2_2_2_PROCESS2_CONNECTOR_BINDING2);
+    	String actualPropValue = dc.getProperty(DQPConfigSource.PROCESS_POOL_MAX_THREADS);
+    	assertEquals("11", actualPropValue);
+    	
+    	//Test update properties for a connector binding from configuration
+    	properties = new Properties();
+    	properties.put(DQPConfigSource.PROCESS_POOL_MAX_THREADS, "22");
+    	admin.updateProperties("connectorbinding2",com.metamatrix.admin.api.objects.ConnectorBinding.class.getName(), properties);
+    	//Verify results
+    	Collection<MMConnectorBinding> objs1 =  admin.getConnectorBindingsToConfigure("connectorBinding2");     		
+    	MMConnectorBinding binding = objs1.iterator().next();
+       	actualPropValue = binding.getPropertyValue(DQPConfigSource.PROCESS_POOL_MAX_THREADS);
+    	assertEquals("22", actualPropValue);    	    	
+    	    	
+    	//Test update properties for deployed service
+    	properties = new Properties();
+    	properties.put("ProcessPoolThreadTTL", "9");
+    	admin.updateProperties(HOST_2_2_2_2_PROCESS2_DQP2,com.metamatrix.admin.api.objects.Service.class.getName(), properties);
+    	//Verify results
+    	dc = admin.getDeployedComponent(HOST_2_2_2_2_PROCESS2_DQP2);
+    	actualPropValue = dc.getProperty("ProcessPoolThreadTTL");
+    	assertEquals("9", actualPropValue);
+    	
+    	//Test update properties for a service from configuration
+    	properties = new Properties();
+    	properties.put(MembershipServiceInterface.SECURITY_ENABLED, "false");
+    	admin.updateProperties(MembershipServiceInterface.NAME,com.metamatrix.admin.api.objects.Service.class.getName(), properties);
+    	//Verify results
+    	ServiceComponentDefn service =  admin.getServiceByName(MembershipServiceInterface.NAME);     		
+      	actualPropValue = service.getProperty(MembershipServiceInterface.SECURITY_ENABLED);
+    	assertEquals("false", actualPropValue);    
+    	
+    	//Test update properties for process
+    	properties = new Properties();
+    	properties.put(ProcessObject.TIMETOLIVE, "99");
+    	admin.updateProperties(HOST_2_2_2_2_PROCESS2,com.metamatrix.admin.api.objects.ProcessObject.class.getName(), properties);
+    	//Verify results
+    	Collection<MMProcess> processObjs = admin.getAdminObjects(HOST_2_2_2_2_PROCESS2,com.metamatrix.admin.api.objects.ProcessObject.class.getName());
+    	MMProcess process = processObjs.iterator().next();
+    	actualPropValue = process.getPropertyValue(ProcessObject.TIMETOLIVE);
+    	assertEquals("99", actualPropValue);
+    	
+    }
+    
     
 }
     

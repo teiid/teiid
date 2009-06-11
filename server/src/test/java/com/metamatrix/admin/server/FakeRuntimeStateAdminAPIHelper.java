@@ -24,10 +24,8 @@ package com.metamatrix.admin.server;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.admin.api.objects.AdminObject;
@@ -35,25 +33,17 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.ConnectorBindingType;
-import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogConfiguration;
-import com.metamatrix.common.messaging.NoOpMessageBus;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.platform.admin.api.runtime.HostData;
-import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;
+import com.metamatrix.platform.admin.api.runtime.SystemStateBuilder;
 import com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
-import com.metamatrix.platform.registry.ResourceNotBoundException;
-import com.metamatrix.platform.registry.ServiceRegistryBinding;
 import com.metamatrix.platform.service.api.ServiceID;
-import com.metamatrix.platform.service.api.ServiceState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.vm.controller.ProcessStatistics;
-import com.metamatrix.server.connector.service.ConnectorService;
-import com.metamatrix.server.query.service.QueryService;
+import com.metamatrix.server.HostManagement;
 
 
 /**
@@ -82,6 +72,8 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     protected static boolean shutdownSystem = false;
     protected static boolean synchronizeSystem = false;
     
+    private ClusteredRegistryState registry;
+    
     protected static void clearState() {
         stoppedServices.clear();
         restartedServices.clear();
@@ -98,14 +90,15 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     
     public FakeRuntimeStateAdminAPIHelper(ClusteredRegistryState registry) {
     	super(registry,null);
+    	this.registry = registry;
     }
 
     public void bounceServer() throws MetaMatrixComponentException {
     }
 
-    public List getHosts() throws MetaMatrixComponentException {
-        return null;
-    }
+//    public List getHosts() throws MetaMatrixComponentException {
+//        return null;
+//    }
 
     /**
      * Return fake ServiceRegistryBinding for testing, based on the specified ServiceID.
@@ -113,58 +106,58 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
      * @see com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper#getResourcePoolStatistics(com.metamatrix.platform.registry.MetaMatrixRegistry)
      * @since 4.3
      */
-    public ServiceRegistryBinding getServiceBinding(ServiceID serviceID) throws ResourceNotBoundException {
-
-        List deployedComponents = configuration.deployedComponents; 
-
-        
-        if (serviceID.getID() == 2) {
-            DeployedComponent deployedComponent = (DeployedComponent) deployedComponents.get(1);
-            
-            ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, ConnectorService.SERVICE_NAME,
-                                                                        "connectorBinding2", ConnectorBindingType.COMPONENT_TYPE_NAME, //$NON-NLS-1$
-                                                                        "connectorBinding2", "2.2.2.2", deployedComponent,    //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                        ServiceState.STATE_CLOSED,
-                                                                        new Date(), false, new NoOpMessageBus());
-            return binding;
-        } else if (serviceID.getID() == 3) {
-            DeployedComponent deployedComponent = (DeployedComponent) deployedComponents.get(2);
-
-            ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, ConnectorService.SERVICE_NAME,
-                                                                        "connectorBinding3", ConnectorBindingType.COMPONENT_TYPE_NAME, //$NON-NLS-1$
-                                                                        "connectorBinding3", "3.3.3.3", deployedComponent,   //$NON-NLS-1$ //$NON-NLS-2$
-                                                                        ServiceState.STATE_CLOSED,
-                                                                        new Date(), false, new NoOpMessageBus());                                                                        
-            return binding;
-            
-            
-        } else if (serviceID.getID() == 5) {
-            DeployedComponent deployedComponent = (DeployedComponent) deployedComponents.get(4);
-            
-            ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, QueryService.SERVICE_NAME,
-                                                                        "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                                                                        "dqp2", "2.2.2.2", deployedComponent,  //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                        ServiceState.STATE_CLOSED,
-                                                                        new Date(),  
-                                                                        false, new NoOpMessageBus()); 
-            return binding;
-        } else if (serviceID.getID() == 6) {
-            DeployedComponent deployedComponent = (DeployedComponent) deployedComponents.get(5);
-
-            ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, QueryService.SERVICE_NAME,
-                                                                        "dqp3", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
-                                                                        "dqp3", "3.3.3.3", deployedComponent, //$NON-NLS-1$ //$NON-NLS-2$ 
-                                                                        ServiceState.STATE_CLOSED,
-                                                                        new Date(),  
-                                                                        false, new NoOpMessageBus()); 
-            return binding;
-            
-            
-        }
-        
-        
-        return null;
-    }
+//    public ServiceRegistryBinding getServiceBindingx(ServiceID serviceID) throws ResourceNotBoundException {
+//
+//        List deployedComponents = configuration.deployedComponents; 
+//        ServiceRegistryBinding bindingx = this.getServiceBinding(serviceID);
+//        
+//        if (serviceID.getID() == 2) {
+//            DeployedComponent deployedComponent = (DeployedComponent) deployedComponents.get(1);
+//            
+//            ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, ConnectorService.SERVICE_NAME,
+//                                                                        "connectorBinding2", ConnectorBindingType.COMPONENT_TYPE_NAME, //$NON-NLS-1$
+//                                                                        "connectorBinding2", "2.2.2.2", deployedComponent,    //$NON-NLS-1$ //$NON-NLS-2$ 
+//                                                                        ServiceState.STATE_CLOSED,
+//                                                                        new Date(), false, new NoOpMessageBus());
+//            return binding;
+//        } else if (serviceID.getID() == 3) {
+//            DeployedComponent deployedComponent = (DeployedComponent) deployedComponents.get(2);
+//
+//            ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, ConnectorService.SERVICE_NAME,
+//                                                                        "connectorBinding3", ConnectorBindingType.COMPONENT_TYPE_NAME, //$NON-NLS-1$
+//                                                                        "connectorBinding3", "3.3.3.3", deployedComponent,   //$NON-NLS-1$ //$NON-NLS-2$
+//                                                                        ServiceState.STATE_CLOSED,
+//                                                                        new Date(), false, new NoOpMessageBus());                                                                        
+//            return binding;
+//            
+//            
+//        } else if (serviceID.getID() == 5) {
+//            DeployedComponent deployedComponent = (DeployedComponent) deployedComponents.get(4);
+//            
+//            ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, QueryService.SERVICE_NAME,
+//                                                                        "dqp2", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
+//                                                                        "dqp2", "2.2.2.2", deployedComponent,  //$NON-NLS-1$ //$NON-NLS-2$ 
+//                                                                        ServiceState.STATE_CLOSED,
+//                                                                        new Date(),  
+//                                                                        false, new NoOpMessageBus()); 
+//            return binding;
+//        } else if (serviceID.getID() == 6) {
+//            DeployedComponent deployedComponent = (DeployedComponent) deployedComponents.get(5);
+//
+//            ServiceRegistryBinding binding = new ServiceRegistryBinding(serviceID, null, QueryService.SERVICE_NAME,
+//                                                                        "dqp3", "QueryService", //$NON-NLS-1$ //$NON-NLS-2$
+//                                                                        "dqp3", "3.3.3.3", deployedComponent, //$NON-NLS-1$ //$NON-NLS-2$ 
+//                                                                        ServiceState.STATE_CLOSED,
+//                                                                        new Date(),  
+//                                                                        false, new NoOpMessageBus()); 
+//            return binding;
+//            
+//            
+//        }
+//        
+//        
+//        return null;
+//    }
 
     /**
      * Returns Collection of fake WorkerPoolStats for testing, based on the specified ServiceID. 
@@ -175,19 +168,23 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     public Collection getServiceQueueStatistics(ServiceID serviceID) throws MetaMatrixComponentException {
         
         long id = serviceID.getID();
-        
-        if (id == 2 || id == 3 || id == 5 || id == 6) {
-            List results = new ArrayList();
-            WorkerPoolStats stats = new WorkerPoolStats();
-            stats.name = "pool"; //$NON-NLS-1$
-            stats.queued = (int) id;
-            stats.totalSubmitted = (int) id;
-            
-            results.add(stats);
-            return results;
-        } 
-        
-        return null;
+        List results = new ArrayList();
+        WorkerPoolStats stats = new WorkerPoolStats();
+        stats.name = "pool"; //$NON-NLS-1$
+        stats.queued = (int) id;
+        stats.totalSubmitted = (int) id;
+        results.add(stats);
+        return results;
+
+//        if (serviceID.getHostName().equalsIgnoreCase(IdentifierConstants.HOST_1_1_1_1)) {
+//        	
+//        } else if (serviceID.getHostName().equalsIgnoreCase(IdentifierConstants.HOST_2_2_2_2)) {
+//        
+//        } else if (serviceID.getHostName().equalsIgnoreCase(IdentifierConstants.HOST_3_3_3_3) {
+//        
+//        }
+                
+ //       return null;
     }
 
     
@@ -197,25 +194,25 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
      * @see com.metamatrix.platform.admin.apiimpl.RuntimeStateAdminAPIHelper#getResourcePoolStatistics(com.metamatrix.platform.registry.MetaMatrixRegistry)
      * @since 4.3
      */
-    public List getServices() throws MetaMatrixComponentException {
-        List results = new ArrayList();
-        
-        ServiceID serviceID2 = new ServiceID(2, "2.2.2.2", "process2"); //$NON-NLS-1$ //$NON-NLS-2$
-        results.add(serviceID2);
-        
-        ServiceID serviceID3 = new ServiceID(3, "3.3.3.3", "process3");//$NON-NLS-1$ //$NON-NLS-2$
-        results.add(serviceID3);
-        
-        
-        ServiceID serviceID2A = new ServiceID(5, "2.2.2.2", "process2"); //$NON-NLS-1$ //$NON-NLS-2$
-        results.add(serviceID2A);
-        
-        ServiceID serviceID3A = new ServiceID(6, "3.3.3.3", "process3");//$NON-NLS-1$ //$NON-NLS-2$
-        results.add(serviceID3A);
-
-        
-        return results;
-    }
+//    public List getServices() throws MetaMatrixComponentException {
+//        List results = new ArrayList();
+//        
+//        ServiceID serviceID2 = new ServiceID(2, "2.2.2.2", "process2"); //$NON-NLS-1$ //$NON-NLS-2$
+//        results.add(serviceID2);
+//        
+//        ServiceID serviceID3 = new ServiceID(3, "3.3.3.3", "process3");//$NON-NLS-1$ //$NON-NLS-2$
+//        results.add(serviceID3);
+//        
+//        
+//        ServiceID serviceID2A = new ServiceID(5, "2.2.2.2", "process2"); //$NON-NLS-1$ //$NON-NLS-2$
+//        results.add(serviceID2A);
+//        
+//        ServiceID serviceID3A = new ServiceID(6, "3.3.3.3", "process3");//$NON-NLS-1$ //$NON-NLS-2$
+//        results.add(serviceID3A);
+//
+//        
+//        return results;
+//    }
 
     
     /**
@@ -225,23 +222,36 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
      * @since 4.3
      */
     public synchronized SystemState getSystemState() throws MetaMatrixComponentException {
-        
-        List hosts = new ArrayList();
-        
-        List processes2 = new ArrayList();   
-        ProcessData process2 = new ProcessData("2.2.2.2", "process2", "31000", null,  new ArrayList(), true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        processes2.add(process2);        
-        HostData host2 = new HostData("2.2.2.2", processes2, true, true, new Properties()); //$NON-NLS-1$
-        hosts.add(host2);
+    	
+        try {
+            SystemStateBuilder ssm = new FakeStateBuilder(registry, null);
+            return ssm.getSystemState();
+        } catch (MetaMatrixComponentException e) {
+        	e.printStackTrace();
+            throw e;
+        } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new MetaMatrixComponentException(e);
+		}
 
-        List processes3 = new ArrayList();        
-        ProcessData process3 = new ProcessData("3.3.3.3", "process3", "31001", null, new ArrayList(), true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        processes3.add(process3);        
-        HostData host3 = new HostData("3.3.3.3", processes3, true, true, new Properties()); //$NON-NLS-1$
-        hosts.add(host3);
         
-        
-        return new SystemState(hosts);
+//        List hosts = new ArrayList();
+//        
+//        List processes2 = new ArrayList();   
+//        ProcessData process2 = new ProcessData("2.2.2.2", "process2", "31000", null,  new ArrayList(), true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+//        processes2.add(process2);        
+//        HostData host2 = new HostData("2.2.2.2", processes2, true, true, new Properties()); //$NON-NLS-1$
+//        hosts.add(host2);
+//
+//        List processes3 = new ArrayList();        
+//        ProcessData process3 = new ProcessData("3.3.3.3", "process3", "31001", null, new ArrayList(), true, true); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+//        processes3.add(process3);        
+//        HostData host3 = new HostData("3.3.3.3", processes3, true, true, new Properties()); //$NON-NLS-1$
+//        hosts.add(host3);
+//        
+//        
+//        return new SystemState(hosts);
         
     }
     
@@ -334,6 +344,17 @@ public class FakeRuntimeStateAdminAPIHelper extends RuntimeStateAdminAPIHelper {
     }
 
     
+    class FakeStateBuilder extends SystemStateBuilder {
+    	
+    	FakeStateBuilder(ClusteredRegistryState registry, HostManagement hostManagement) throws Exception {
+    		super(registry, hostManagement);
+    	}
+    	
+        protected boolean isHostRunning(String hostName) {
+        	return true;
+        }
+    	
+    }
         
     
 }

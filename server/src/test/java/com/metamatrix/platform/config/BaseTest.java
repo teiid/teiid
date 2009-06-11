@@ -22,45 +22,31 @@
 
 package com.metamatrix.platform.config;
 
-import java.io.File;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
-import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
 import com.metamatrix.platform.config.spi.xml.XMLConfigurationConnector;
-import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
 
 public abstract class BaseTest extends TestCase {
 
-	private final static String path = UnitTestUtil.getTestScratchPath()
-			+ File.separator + "config"; //$NON-NLS-1$
-	// private static final String DEFAULT_PATH =".";
 	protected boolean printMessages = false;
 
 	// the resources in this config file are not set to JDBC
-	protected static final String CONFIG_FILE = "config.xml"; //$NON-NLS-1$
+	protected static final String CONFIG_FILE = ConfigUpdateMgr.CONFIG_FILE; //$NON-NLS-1$
 	// protected static final String CONFIG_FILE = "config_woresources.xml";
 	// //$NON-NLS-1$
 
-	private static BasicConfigurationObjectEditor editor = new BasicConfigurationObjectEditor(
-			true);
-	private XMLConfigurationConnector writer = null;
+	private ConfigUpdateMgr mgr = new ConfigUpdateMgr();
 
 	public BaseTest(String name) {
 		super(name);
-		initData();
 	}
 
 	public BaseTest(String name, boolean useNoOpConfig) {
 		super(name);
-		initData();
 		if (!useNoOpConfig) {
 			Properties sysProps = System.getProperties();
 			System.setProperties(sysProps);
@@ -68,7 +54,7 @@ public abstract class BaseTest extends TestCase {
 	}
 
 	protected String getPath() {
-		return path;
+		return mgr.getPath();
 	}
 
 	protected void printMsg(String msg) {
@@ -77,81 +63,33 @@ public abstract class BaseTest extends TestCase {
 		}
 	}
 
-	protected static Properties createSystemProperties(String fileName) {
-		Properties cfg_props = createProperties(fileName);
-
-		// these system props need to be set for the CurrentConfiguration call
-
-		Properties sysProps = System.getProperties();
-		sysProps.putAll(cfg_props);
-		System.setProperties(sysProps);
-
-		return cfg_props;
+	protected static void createSystemProperties(String fileName) throws Exception{
+		ConfigUpdateMgr.createSystemProperties(fileName);
 	}
 
-	public static Properties createProperties(String fileName) {
-
-		Properties props = new Properties();
-
-		if (fileName != null) {
-			props.setProperty(
-					FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY,
-					fileName);
-			props.setProperty(
-					PersistentConnectionFactory.PERSISTENT_FACTORY_NAME,
-					PersistentConnectionFactory.FILE_FACTORY_NAME);
-		}
-
-		if (path != null) {
-			props.setProperty(
-					FilePersistentConnection.CONFIG_FILE_PATH_PROPERTY, path);
-		}
-
-		return props;
-	}
 
 	// the following methods are used in conjunction when wanting to do
 	// configuration transactions.
 	public void initTransactions(Properties props) throws Exception {
-
-		writer = XMLConfigurationMgr.getInstance().getTransaction("test"); //$NON-NLS-1$
+		mgr.initTransactions(props);
 
 	}
 
 	public BasicConfigurationObjectEditor getEditor() {
-		return editor;
+		return mgr.getEditor();
 	}
 
 	public ConfigurationModelContainer getConfigModel() throws Exception {
-		ConfigurationModelContainer config = CurrentConfiguration.getInstance()
-				.getConfigurationModel();
-		return config;
+		return mgr.getConfigModel();
 
 	}
 
 	public void commit() throws Exception {
-		writer.executeActions(editor.getDestination().popActions());
-		writer.commit();
-
-		writer = XMLConfigurationMgr.getInstance().getTransaction("test"); //$NON-NLS-1$
+		mgr.commit();
 	}
 
 	protected XMLConfigurationConnector getWriter() {
-		return this.writer;
-	}
-	
-	private void initData() {
-		File scratch = new File(path);
-		if (scratch.exists()) {
-			FileUtils.removeDirectoryAndChildren(scratch);
-		}
-		scratch.mkdir();
-		try {
-			FileUtils.copyDirectoryContentsRecursively(UnitTestUtil
-					.getTestDataFile("config"), scratch); //$NON-NLS-1$
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		} 
+		return mgr.getWriter();
 	}
 
 }

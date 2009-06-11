@@ -193,7 +193,22 @@ public class HelperTestConfiguration {
     	
     	for (Iterator it=defns.iterator(); it.hasNext(); ) {
     		DeployedComponent t = (DeployedComponent) it.next(); 
-    		validateComponentObject(t);   				
+    		
+    	   	ArgCheck.isNotNull(t, "ComponentObject is null"); //$NON-NLS-1$
+        	ArgCheck.isNotNull(t.getID(), "ComponentObject ID is null"); //$NON-NLS-1$
+        	String fullName = t.getFullName();
+        	ArgCheck.isNotNull(t.getComponentTypeID(), "ComponentObject " + fullName + " does not have a valid component type id"); //$NON-NLS-1$ //$NON-NLS-2$
+        	ArgCheck.isNotNull(t.getDeployedComponentDefnID(), "ComponentObject " + fullName + " does not have a deployed component defn id"); //$NON-NLS-1$ //$NON-NLS-2$
+           	ArgCheck.isNotNull(t.getHostID(), "ComponentObject " + fullName + " does not have a host id"); //$NON-NLS-1$ //$NON-NLS-2$
+           	ArgCheck.isNotNull(t.getVMComponentDefnID(), "ComponentObject " + fullName + " does not have a vm id"); //$NON-NLS-1$ //$NON-NLS-2$
+          	ArgCheck.isNotNull(t.getServiceComponentDefnID(), "ComponentObject " + fullName + " does not have the service component defin id"); //$NON-NLS-1$ //$NON-NLS-2$
+
+        	//       	ArgCheck.isNotNull(c.getCreatedBy(), "ComponentObject " + fullName + " does not have a created by name"); //$NON-NLS-1$ //$NON-NLS-2$
+ //       	ArgCheck.isNotNull(c.getLastChangedBy(), "ComponentObject " + fullName + " does not have a last changed by name"); //$NON-NLS-1$ //$NON-NLS-2$
+ //       	ArgCheck.isNotNull(c.getCreatedDate(), "ComponentObject " + fullName + " does not have a created by date"); //$NON-NLS-1$ //$NON-NLS-2$
+ //       	ArgCheck.isNotNull(c.getLastChangedDate(), "ComponentObject " + fullName + " does not have a last changed by date"); //$NON-NLS-1$ //$NON-NLS-2$
+
+ //   		validateComponentObject(t);   				
     		
     	}
     	
