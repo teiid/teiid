@@ -112,7 +112,7 @@ public class TestURLHelper {
     @Test public void testMMROFileContext() throws Exception {
         URL context = URLHelper.buildURL("mmrofile:/metamatrix/bar.txt"); //$NON-NLS-1$
         assertEquals("mmfile:/d:/foo.txt", URLHelper.buildURL(context, "d:/foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("mmfile:/foo.txt", URLHelper.buildURL(context, "/foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("mmfile:/foo.txt?xyz=m", URLHelper.buildURL(context, "/foo.txt?xyz=m").toString()); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("mmfile:/metamatrix/foo.txt", URLHelper.buildURL(context, "foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("mmfile:/metamatrix/foo.txt", URLHelper.buildURL(context, "./foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("mmfile:/foo.txt", URLHelper.buildURL(context, "../foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
