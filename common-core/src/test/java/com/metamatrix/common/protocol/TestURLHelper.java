@@ -22,20 +22,22 @@
 
 package com.metamatrix.common.protocol;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import com.metamatrix.core.util.UnitTestUtil;
+import org.junit.Test;
 
-import junit.framework.TestCase;
+import com.metamatrix.core.util.UnitTestUtil;
 
 
 /** 
  * @since 4.3
  */
-public class TestURLHelper extends TestCase {
+public class TestURLHelper {
     
     private URL url;
     
@@ -46,7 +48,7 @@ public class TestURLHelper extends TestCase {
         return url;
     }
     
-    public void testBuildURL() throws Exception {
+    @Test public void testBuildURL() throws Exception {
         assertEquals(new URL("http://metamatrix.com/foo.txt"), URLHelper.buildURL("http://metamatrix.com/foo.txt")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(new URL("file:/c:/metamatrix/foo.txt"), URLHelper.buildURL("file:/c:/metamatrix/foo.txt")); //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -61,7 +63,7 @@ public class TestURLHelper extends TestCase {
         assertEquals(new URL("classpath", "", -1, "metamatrix/foo.txt"), URLHelper.buildURL("classpath:metamatrix/foo.txt")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$        
     }
 
-    public void testBuildURLWithContext() throws Exception{
+    @Test public void testBuildURLWithContext() throws Exception{
 
         URL context = new URL("http://metamatrix.com/bar.txt"); //$NON-NLS-1$
         
@@ -103,7 +105,20 @@ public class TestURLHelper extends TestCase {
         assertEquals("classpath:/foo.txt", URLHelper.buildURL(context, "../foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCreateFileFromUrl() throws Exception {
+    /**
+     * Note - this converts from mmrofile to mmfile
+     * @throws Exception
+     */
+    @Test public void testMMROFileContext() throws Exception {
+        URL context = URLHelper.buildURL("mmrofile:/metamatrix/bar.txt"); //$NON-NLS-1$
+        assertEquals("mmfile:/d:/foo.txt", URLHelper.buildURL(context, "d:/foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("mmfile:/foo.txt", URLHelper.buildURL(context, "/foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("mmfile:/metamatrix/foo.txt", URLHelper.buildURL(context, "foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("mmfile:/metamatrix/foo.txt", URLHelper.buildURL(context, "./foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("mmfile:/foo.txt", URLHelper.buildURL(context, "../foo.txt").toString()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testCreateFileFromUrl() throws Exception {
     	
     	// Test for creating File object for valid Http url 
 		File file = URLHelper.createFileFromUrl(getUrl(),"wsdlFile",".wsdl"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -111,7 +126,7 @@ public class TestURLHelper extends TestCase {
 		
     	// Test for creating File object for invalid (unavailable) url 
     	try {
-			file = URLHelper.createFileFromUrl(UnitTestUtil.getTestDataFile("foo").toURL(),"wsdlFile",".wsdl"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			file = URLHelper.createFileFromUrl(UnitTestUtil.getTestDataFile("foo").toURI().toURL(),"wsdlFile",".wsdl"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			fail("expected exception");
 		} catch (IOException e) {
 		}
@@ -125,15 +140,15 @@ public class TestURLHelper extends TestCase {
 		}
     }
     
-    public void testCreateFileFromUrl2() throws Exception {
+    @Test public void testCreateFileFromUrl2() throws Exception {
         
         // Test for creating File object for valid Http url 
-        File file = URLHelper.createFileFromUrl(getUrl(),"xsdFile.xsd",null,null, true); //$NON-NLS-1$ //$NON-NLS-2$ 
+        File file = URLHelper.createFileFromUrl(getUrl(),"xsdFile.xsd",null,null, true); //$NON-NLS-1$ 
         assertNotNull(file);
         
         // Test for creating File object for invalid (unavailable) url 
         try {
-            file = URLHelper.createFileFromUrl(UnitTestUtil.getTestDataFile("foo").toURL(),"xsdFile.xsd",null,null, true); //$NON-NLS-1$ //$NON-NLS-2$
+            file = URLHelper.createFileFromUrl(UnitTestUtil.getTestDataFile("foo").toURI().toURL(),"xsdFile.xsd",null,null, true); //$NON-NLS-1$ //$NON-NLS-2$
             fail("expected exception");
         } catch (IOException e) {
         }
@@ -147,10 +162,10 @@ public class TestURLHelper extends TestCase {
         }
     }
     
-    public void testResolveURL() throws Exception{
+    @Test public void testResolveURL() throws Exception{
 
     	// Test for valid HTTP URL
-		URLHelper.resolveUrl(getUrl()); //$NON-NLS-1$
+		URLHelper.resolveUrl(getUrl()); 
         
 		//Test for invalid HTTP URL
         try {
@@ -168,9 +183,9 @@ public class TestURLHelper extends TestCase {
 
     }
 
-    public void testResolveURL2() throws Exception{
+    @Test public void testResolveURL2() throws Exception{
         // Test for valid HTTP URL
-        URLHelper.resolveUrl(getUrl(), null, null, true); //$NON-NLS-1$
+        URLHelper.resolveUrl(getUrl(), null, null, true); 
         
         //Test for invalid HTTP URL
         try {

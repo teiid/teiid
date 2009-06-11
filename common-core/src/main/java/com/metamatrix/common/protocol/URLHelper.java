@@ -138,6 +138,8 @@ public class URLHelper {
 				return new URL(context, filename,new com.metamatrix.common.protocol.classpath.Handler()); 
 			} else if (contextURL.startsWith(MMFileURLConnection.PROTOCOL+ SEPARATOR)) {
 				return new URL(context, filename,new com.metamatrix.common.protocol.mmfile.Handler()); 
+			} else if (contextURL.startsWith(MMROFileURLConnection.PROTOCOL+ SEPARATOR)) {
+				return URLHelper.buildURL(new URL(context, filename,new com.metamatrix.common.protocol.mmfile.Handler()).getPath());
 			}
 		}
 		return new URL(context, url);
