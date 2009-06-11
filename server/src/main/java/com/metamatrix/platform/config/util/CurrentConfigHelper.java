@@ -36,6 +36,7 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.platform.config.persistence.api.PersistentConnection;
 import com.metamatrix.platform.config.persistence.api.PersistentConnectionFactory;
 import com.metamatrix.platform.config.persistence.impl.file.FilePersistentConnection;
+import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
 import com.metamatrix.platform.config.spi.xml.XMLCurrentConfigurationReader;
 
 /**
@@ -108,9 +109,13 @@ public class CurrentConfigHelper {
 		System.setProperties(sysProps);	
 		
 		cleanModelFile(principal, fileName, path);		
-		CurrentConfiguration.reset();
 		
 		createSystemProperties(fileName, path);
+		
+		CurrentConfiguration.reset();
+		
+		XMLConfigurationMgr.getInstance().reset();
+
 		
 		CurrentConfiguration.getInstance().getConfiguration();
 	}
