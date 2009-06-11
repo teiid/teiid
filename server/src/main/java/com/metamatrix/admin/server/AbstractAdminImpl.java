@@ -60,7 +60,9 @@ import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
+import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.object.PropertyDefinition;
@@ -474,6 +476,21 @@ public class AbstractAdminImpl {
         return results;
     }
     
+    protected DeployedComponent getDeployedComponent(String identifier) throws ConfigurationException {
+        Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
+        Collection components = config.getDeployedComponents();
+        for (Iterator iter = components.iterator(); iter.hasNext(); ) {
+            BasicDeployedComponent bdc = (BasicDeployedComponent)iter.next();
+            String[] identifierParts = new String[] {
+                bdc.getHostID().getName(), bdc.getVMComponentDefnID().getName(), bdc.getName()
+            };
+            if (identifierMatches(identifier, identifierParts)) {
+                return bdc;
+            }
+
+        }
+        return null;
+    }
     
     /**
      * Get admin objects of the specified className that match the specified identifier. 

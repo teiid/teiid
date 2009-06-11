@@ -67,6 +67,7 @@ import com.metamatrix.common.actions.ModificationActionQueue;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.AuthenticationProvider;
+import com.metamatrix.common.config.api.ComponentDefnID;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
@@ -75,6 +76,7 @@ import com.metamatrix.common.config.api.ConfigurationObjectEditor;
 import com.metamatrix.common.config.api.ConnectorArchive;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
+import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
@@ -88,9 +90,9 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
 import com.metamatrix.common.config.model.BasicConnectorArchive;
-import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.config.model.BasicExtensionModule;
 import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
+import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
 import com.metamatrix.common.config.util.ConfigObjectsNotResolvableException;
 import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
@@ -118,6 +120,7 @@ import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.vdb.defn.VDBCreation;
 import com.metamatrix.metadata.runtime.vdb.defn.VDBDefnFactory;
+import com.metamatrix.platform.config.spi.xml.XMLConfigurationMgr;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.server.admin.apiimpl.MaterializationLoadScriptsImpl;
@@ -1490,7 +1493,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
     
     /** 
-     * Supported classes are {@link com.metamatrix.admin.api.objects.Host}, {@link com.metamatrix.admin.api.objects.ConnectorBinding}, 
+     * Supported classes are {@link com.metamatrix.admin.api.objects.ConnectorBinding}, {@link com.metamatrix.admin.api.objects.Service}, 
      * {@link SystemObject}, {@link ProcessObject}
      * @see com.metamatrix.admin.api.core.CoreConfigAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
      * @since 4.3
@@ -1499,17 +1502,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                  String className,
                                  Properties properties) throws AdminException {
     
-        Collection adminObjects = getAdminObjects(identifier, className);        
-        if (adminObjects == null || adminObjects.size() == 0) {
-            throwProcessingException("ServerConfigAdminImpl.No_Objects_Found", new Object[] {identifier, className}); //$NON-NLS-1$
-        }
-        if (adminObjects.size() > 1) {
-            throwProcessingException("ServerConfigAdminImpl.Multiple_Objects_Found", new Object[] {identifier, className}); //$NON-NLS-1$
-        }
-        AdminObject adminObject = (AdminObject) adminObjects.iterator().next();
+    	int nodeCount = getNodeCount(identifier); 
+    	int type = MMAdminObject.getObjectType(className);
+    	
+    	AdminObject adminObject = null;
+    	String hostName;
         
-        String hostName;
-        int type = MMAdminObject.getObjectType(className);
         
         switch (type) {
             
@@ -1517,25 +1515,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 this.updateSystemProperties(properties);
                 break;
                 
-            case MMAdminObject.OBJECT_TYPE_HOST:
-                hostName = adminObject.getName();
-                Host host = getHostByName(hostName);
-                Properties hostProperties = host.getProperties();
-                hostProperties.putAll(properties);
-                
-                try {
-					Host updatedHost = (Host)getConfigurationServiceProxy().modify(host, hostProperties, getUserName());
-                    if (updatedHost == null) {
-                        throwProcessingException("ServerConfigAdminImpl.Host_was_null_when_updating_properties", new Object[] {hostName}); //$NON-NLS-1$
-                    }
-				} catch (ConfigurationException e) {
-					throw new AdminComponentException(e);
-				} catch (ServiceException e) {
-					throw new AdminComponentException(e);
-				}
-                break;
-
             case MMAdminObject.OBJECT_TYPE_PROCESS_OBJECT:
+            	adminObject = getAdminObject(identifier, className);
                 ProcessObject process = (ProcessObject)adminObject;
                 String processName = adminObject.getName();
                 hostName = process.getHostIdentifier();
@@ -1561,19 +1542,38 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 break;
                 
             case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
-                String connectorBindingName = adminObject.getName();
-                try {
+            	String connectorBindingName;
+            	if (nodeCount > 1) {
+            		adminObject = getAdminObject(identifier, className);
+            		connectorBindingName = adminObject.getName();
+            	}else{
+            		connectorBindingName = identifier;
+            	}
+             	
+            	try {
 					ConnectorBinding connectorBinding = this.getConnectorBindingByName(connectorBindingName);
-					Properties bindingProperties = connectorBinding.getProperties();
-					bindingProperties.putAll(properties);
+						
+					//If the node count in the identifier is greater than 1, then this connector binding is deployed.
+					if (nodeCount>1){
+						DeployedComponent updatedConnectorBinding = updateDeployedComponentProperties(
+								properties, identifier);
+						
+						if (updatedConnectorBinding == null) {
+						    throwProcessingException("ServerConfigAdminImpl.Connector_Binding_was_null_when_updating_properties", new Object[] {connectorBindingName}); //$NON-NLS-1$
+						}
+					}else{
 					
-					ConnectorBinding updatedConnectorBinding = 
-					    (ConnectorBinding)getConfigurationServiceProxy().modify(connectorBinding,
-					                                                            bindingProperties,
-					                                                            getUserName());
-					
-					if (updatedConnectorBinding == null) {
-					    throwProcessingException("ServerConfigAdminImpl.Connector_Binding_was_null_when_updating_properties", new Object[] {connectorBindingName}); //$NON-NLS-1$
+						Properties bindingProperties = connectorBinding.getProperties();
+						bindingProperties.putAll(properties);
+						
+						ConnectorBinding updatedConnectorBinding = 
+						    (ConnectorBinding)getConfigurationServiceProxy().modify(connectorBinding,
+						                                                            bindingProperties,
+						                                                            getUserName());
+						
+						if (updatedConnectorBinding == null) {
+						    throwProcessingException("ServerConfigAdminImpl.Connector_Binding_was_null_when_updating_properties", new Object[] {connectorBindingName}); //$NON-NLS-1$
+						}
 					}
 				} catch (ConfigurationException e) {
 					throw new AdminComponentException(e);
@@ -1583,20 +1583,40 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 break;
                 
             case MMAdminObject.OBJECT_TYPE_SERVICE:
-                String serviceName = adminObject.getName();
+            	String serviceName;
+            	if (nodeCount > 1) {
+            		adminObject = getAdminObject(identifier, className);
+            		serviceName = adminObject.getName();
+            	}else{
+            		serviceName = identifier;
+            	}
+            	
                 try {
 					ServiceComponentDefn serviceDefn = this.getServiceByName(serviceName);
+					
+					ComponentDefnID componentDefnID = (ComponentDefnID)serviceDefn.getID();
 
-					Properties svcProperties = serviceDefn.getProperties();
-					svcProperties.putAll(properties);
+					//If the node count in the identifier is greater than 1, then this service is deployed.
+					if (nodeCount>1){
+						DeployedComponent updatedServiceDefn = updateDeployedComponentProperties(
+								properties, identifier);
+						
+						if (updatedServiceDefn == null) {
+						    throwProcessingException("ServerConfigAdminImpl.Service_was_null_when_updating_properties", new Object[] {serviceName}); //$NON-NLS-1$
+						}
+					}else{
 					
-					ServiceComponentDefn updatedServiceDefn = 
-					    (ServiceComponentDefn)getConfigurationServiceProxy().modify(serviceDefn,
-					                                                            svcProperties,
-					                                                            getUserName());
-					
-					if (updatedServiceDefn == null) {
-					    throwProcessingException("ServerConfigAdminImpl.Service_was_null_when_updating_properties", new Object[] {serviceName}); //$NON-NLS-1$
+						Properties svcProperties = serviceDefn.getProperties();
+						svcProperties.putAll(properties);
+						
+						ServiceComponentDefn updatedServiceDefn = 
+						    (ServiceComponentDefn)getConfigurationServiceProxy().modify(serviceDefn,
+						                                                            svcProperties,
+						                                                            getUserName());
+						
+						if (updatedServiceDefn == null) {
+						    throwProcessingException("ServerConfigAdminImpl.Service_was_null_when_updating_properties", new Object[] {serviceName}); //$NON-NLS-1$
+						}
 					}
 				} catch (ConfigurationException e) {
 					throw new AdminComponentException(e);
@@ -1620,6 +1640,40 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         }
 
     }
+
+	/**
+	 * @param properties
+	 * @param componentDefnID
+	 * @return
+	 * @throws ConfigurationException
+	 */
+	private DeployedComponent updateDeployedComponentProperties(
+			Properties properties, String identifier)
+			throws ConfigurationException {
+		DeployedComponent dc = getDeployedComponent(identifier);
+
+		Properties bindingProperties = dc.getProperties();
+		bindingProperties.putAll(properties);
+		
+		DeployedComponent updatedConnectorBinding = 
+		    (DeployedComponent)getConfigurationServiceProxy().modify(dc,
+		                                                            bindingProperties,
+		                                                            getUserName());
+		return updatedConnectorBinding;
+	}
+
+	private AdminObject getAdminObject(String identifier, String className)
+			throws AdminException {
+		Collection adminObjects = getAdminObjects(identifier, className);        
+        if (adminObjects == null || adminObjects.size() == 0) {
+            throwProcessingException("ServerConfigAdminImpl.No_Objects_Found", new Object[] {identifier, className}); //$NON-NLS-1$
+        }
+        if (adminObjects.size() > 1) {
+            throwProcessingException("ServerConfigAdminImpl.Multiple_Objects_Found", new Object[] {identifier, className}); //$NON-NLS-1$
+        }
+        AdminObject adminObject = (AdminObject) adminObjects.iterator().next();
+		return adminObject;
+	}
 
     private ConnectorBinding getConnectorBindingByName(String name) throws ConfigurationException, ServiceException, AdminProcessingException {
         Configuration nextStartupConfig = getConfigurationServiceProxy().getNextStartupConfiguration();
@@ -2160,9 +2214,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                                                                    ConfigurationException,
                                                                                    MetaMatrixComponentException {
     	
-        return (ServiceComponentDefn)getConfigurationServiceProxy().getComponentDefn(Configuration.NEXT_STARTUP_ID,serviceID);
+         return (ServiceComponentDefn)getConfigurationServiceProxy().getComponentDefn(Configuration.NEXT_STARTUP_ID,serviceID);
     }
-
+    
+   
     /** 
      * @param properties
      * @param connectorBindingName
@@ -2352,6 +2407,20 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         }
         
         return buffer.toString();
+    }
+    
+    /**
+     * Will return the number of nodes in an identifier based on the
+     * delimiter {@link AdminObject.DELIMITER}
+     * @param identifier
+     * @return the number of nodes
+     */
+    protected int getNodeCount(String identifier) {
+    	int count = 0;
+    	
+    	count = identifier.split("\\"+AdminObject.DELIMITER).length;
+        
+        return count;
     }
 
     /** 

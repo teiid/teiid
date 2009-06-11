@@ -1258,7 +1258,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        config = getConfigurationServiceProxy().getCurrentConfiguration();
 			        ServiceComponentDefn svc = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));
 			        
-			        component = this.getDeployedComponent(objectIdentifier);
+			        component = getDeployedComponent(objectIdentifier);
 			        
 			        return convertPropertyDefinitions(component, svc.getProperties());
 
@@ -1383,21 +1383,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
     }
     
     
-    private ComponentObject getDeployedComponent(String identifier) throws ConfigurationException {
-        Configuration config = getConfigurationServiceProxy().getCurrentConfiguration();
-        Collection components = config.getDeployedComponents();
-        for (Iterator iter = components.iterator(); iter.hasNext(); ) {
-            BasicDeployedComponent bdc = (BasicDeployedComponent)iter.next();
-            String[] identifierParts = new String[] {
-                bdc.getHostID().getName(), bdc.getVMComponentDefnID().getName(), bdc.getName()
-            };
-            if (identifierMatches(identifier, identifierParts)) {
-                return bdc;
-            }
-
-        }
-        return null;
-    }
+    
     
     
     private ComponentType getConnectorTypeComponentType(String identifier) throws ConfigurationException {
