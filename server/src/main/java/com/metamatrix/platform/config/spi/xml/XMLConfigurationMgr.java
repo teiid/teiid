@@ -200,6 +200,11 @@ public class XMLConfigurationMgr {
     private synchronized void clearCache() {
     	this.readOnlyConfig = null;
     }
+    
+    // this method is need for testing so that the Mgr can be recreated with a different set of properties.
+    public void reset() {
+    	this.mgr = null;
+    }
 
 	/**
 	 * Returns ID of one of the well-known configuration.  Will
