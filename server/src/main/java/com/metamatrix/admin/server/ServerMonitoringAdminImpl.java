@@ -376,6 +376,8 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			            dqp.setProperties(defn.getProperties());
 			        }
 			        
+			        dqp.setEnabled(component.isEnabled());
+			        
 			        String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
 			        runtimeMap.put(key, dqp);
 			        results.add(dqp);
