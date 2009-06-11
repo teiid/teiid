@@ -137,7 +137,7 @@ public class SystemStateBuilder {
         HostID hostID =  new HostID(hostName);
         boolean deployed = config.getHostIDs().contains(hostID);
 
-        boolean running = this.hostManagement.ping(hostName);
+        boolean running = isHostRunning(hostName);
         return new HostData(hostName, processes, deployed, running, host.getProperties());
     }
 
@@ -162,8 +162,12 @@ public class SystemStateBuilder {
             processes.add(createProcessData(deployedComponent));
         }
 
-        boolean running = this.hostManagement.ping(hostID.getFullName());
+        boolean running = isHostRunning(hostID.getFullName());
         return new HostData(hostID.getFullName(), processes, true, running, new Properties());
+    }
+    
+    protected boolean isHostRunning(String hostName) {
+    	return this.hostManagement.ping(hostName);
     }
 
 
