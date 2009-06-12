@@ -53,7 +53,6 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
@@ -369,8 +368,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 		originalCommand = request.userCommand;
 		processor = request.processor;
 		processor.setBatchHandler(new BatchHandler() {
-			public void batchProduced(TupleBatch batch)
-					throws MetaMatrixCoreException {
+			public void batchProduced(TupleBatch batch) throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
 	            //if there is a cache, and it is a query, save it
 	            if(rsCache != null && requestMsg.useResultSetCache() && originalCommand.areResultsCachable() && transactionState == TransactionState.NONE && !rsCache.hasResults(cid)){
             		CacheResults cr = new CacheResults(batch.getAllTuples(), processor.getProcessorPlan().getOutputElements(), batch.getBeginRow(), !doneProducingBatches);
@@ -411,7 +409,7 @@ public class RequestWorkItem extends AbstractWorkItem {
 	 * Send results if they have been requested.  This should only be called from the processing thread.
 	 */
 	protected void sendResultsIfNeeded(TupleBatch batch) throws BlockedOnMemoryException,
-			MetaMatrixComponentException, TupleSourceNotFoundException, CommunicationException {
+			MetaMatrixComponentException, TupleSourceNotFoundException {
 		
 		synchronized (resultsCursor) {
 			if (!this.resultsCursor.resultsRequested

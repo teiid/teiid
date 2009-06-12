@@ -272,14 +272,6 @@ public class RuleRemoveOptionalJoins implements
 		return false;
 	}
 
-    private boolean isOptional(HashSet optionElements,
-                                          LanguageObject languageObject) {
-        Collection elementsUsed = ElementCollectorVisitor.getElements(languageObject, true);
-        elementsUsed.retainAll(optionElements);
-        return !elementsUsed.isEmpty();
-    }
-
-
     public String toString() {
         return "RuleRemoveOptionalJoins"; //$NON-NLS-1$
     }

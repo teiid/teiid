@@ -348,9 +348,6 @@ public class RelationalPlanner implements CommandPlanner {
             rules.push(RuleConstants.REMOVE_OPTIONAL_JOINS);
         }
         rules.push(RuleConstants.PLACE_ACCESS);
-        if(hints.hasSort) {
-            rules.push(RuleConstants.REMOVE_SORTS);
-        }
         return rules;
     }
 

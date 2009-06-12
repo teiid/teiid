@@ -33,7 +33,6 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
@@ -206,8 +205,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 
             processor.setBatchHandler(new QueryProcessor.BatchHandler() {
             	@Override
-            	public void batchProduced(TupleBatch batch)
-            			throws MetaMatrixCoreException {
+            	public void batchProduced(TupleBatch batch) throws MetaMatrixProcessingException {
     				// Determine whether the results should be added to code table cache
                 	// Depends on size of results and available memory and system parameters
 
@@ -221,12 +219,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	//process lookup as fully blocking
         	processor.process();
         	success = true;
-        } catch (MetaMatrixProcessingException e) {
-        	throw e;
-        } catch (MetaMatrixComponentException e) {
-        	throw e;
-        } catch (MetaMatrixCoreException e) {
-	        throw new MetaMatrixComponentException(e);
         } finally {
         	Collection requests = null;
         	if (success) {

@@ -52,7 +52,7 @@ public class QueryProcessor {
 	}
 	
 	public interface BatchHandler {
-		void batchProduced(TupleBatch batch) throws MetaMatrixCoreException;
+		void batchProduced(TupleBatch batch) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 	}
 
 	private TupleSourceID resultsID;
@@ -121,7 +121,7 @@ public class QueryProcessor {
 	 * @throws MetaMatrixCoreException 
 	 */
 	public void process()
-		throws BlockedException, MetaMatrixCoreException {
+		throws BlockedException, MetaMatrixProcessingException, MetaMatrixComponentException {
 
         while(true) {
         	try {
@@ -144,7 +144,7 @@ public class QueryProcessor {
 	 * @return
 	 */
 	public boolean process(long time)
-		throws BlockedException, MetaMatrixCoreException {
+		throws BlockedException, MetaMatrixProcessingException, MetaMatrixComponentException {
 		
 	    boolean done = false;
 		
@@ -173,7 +173,13 @@ public class QueryProcessor {
         	} catch (MetaMatrixException e1){
         		LogManager.logDetail(LogConstants.CTX_DQP, e1, "Error closing processor"); //$NON-NLS-1$
         	}
-            throw e;
+        	if (e instanceof MetaMatrixProcessingException) {
+        		throw (MetaMatrixProcessingException)e;
+        	}
+        	if (e instanceof MetaMatrixComponentException) {
+        		throw (MetaMatrixComponentException)e;
+        	}
+        	throw new MetaMatrixComponentException(e);
         } finally {
             bufferMgr.releasePinnedBatches();
         }
@@ -188,7 +194,7 @@ public class QueryProcessor {
     /**
      * Flush the batch by giving it to the buffer manager.
      */
-    private void flushBatch(TupleBatch batch) throws MetaMatrixCoreException {
+    private void flushBatch(TupleBatch batch) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		if(batch.getRowCount() > 0) {
 			this.bufferMgr.addTupleBatch(this.resultsID, batch);
 			this.highestRow = batch.getEndRow();

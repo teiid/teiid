@@ -28,7 +28,6 @@ public final class RuleConstants {
 
 	private RuleConstants() { }
 
-	public static final OptimizerRule REMOVE_SORTS = new RuleRemoveSorts();
 	public static final OptimizerRule PLACE_ACCESS = new RulePlaceAccess();
 	public static final OptimizerRule PUSH_SELECT_CRITERIA = new RulePushSelectCriteria();
 	public static final OptimizerRule ACCESS_PATTERN_VALIDATION = new RuleAccessPatternValidation();

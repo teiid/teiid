@@ -65,12 +65,12 @@ public abstract class Criteria implements LanguageObject {
 	 * @param crit Criteria to break apart
 	 * @return List of Criteria, empty list if crit is null
 	 */		
-	public static List separateCriteriaByAnd(Criteria crit) {
+	public static List<Criteria> separateCriteriaByAnd(Criteria crit) {
 		if(crit == null) { 
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 		
-		List parts = new ArrayList();
+		List<Criteria> parts = new ArrayList<Criteria>();
 		separateCriteria(crit, parts);
 		return parts;			
 	}
@@ -93,14 +93,12 @@ public abstract class Criteria implements LanguageObject {
 	 * @param crit Crit to break apart
 	 * @param parts Collection to add parts to
 	 */
-	private static void separateCriteria(Criteria crit, Collection parts) {
+	private static void separateCriteria(Criteria crit, Collection<Criteria> parts) {
 		if(crit instanceof CompoundCriteria) {
 			CompoundCriteria compCrit = (CompoundCriteria) crit;
 			if(compCrit.getOperator() == CompoundCriteria.AND) {
-				List subCrits = compCrit.getCriteria();
-				Iterator iter = subCrits.iterator();
-				while(iter.hasNext()) { 
-					separateCriteria((Criteria) iter.next(), parts);
+				for (Criteria conjunct : compCrit.getCriteria()) {
+					separateCriteria(conjunct, parts);
 				}
 			} else {
 				parts.add(crit);	

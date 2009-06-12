@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.SQLException;
@@ -38,7 +40,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -74,11 +76,8 @@ import com.metamatrix.query.processor.relational.RelationalPlan;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.BindVariableVisitor;
 import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.SPParameter;
-import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.VariableContext;
@@ -92,11 +91,7 @@ import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.validator.Validator;
 import com.metamatrix.query.validator.ValidatorReport;
 
-public class TestProcessor extends TestCase {
-
-	public TestProcessor(String name) { 
-		super(name);
-	}	
+public class TestProcessor {
 
 	// ################################## TEST HELPERS ################################
 
@@ -829,7 +824,7 @@ public class TestProcessor extends TestCase {
     	return result;
     }      
     
-    public void test1() { 
+    @Test public void test1() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1"; //$NON-NLS-1$
         
@@ -854,7 +849,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
 	}
 
-	public void test2() { 
+	@Test public void test2() { 
         // Create query 
         String sql = "SELECT COUNT(*) FROM pm1.g1"; //$NON-NLS-1$
         
@@ -874,7 +869,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
 	}
 
-	public void test3() { 
+	@Test public void test3() { 
         // Create query 
         String sql = "SELECT COUNT(*), COUNT(e1), COUNT(distinct e1), COUNT(distinct e2), COUNT(distinct e3), COUNT(distinct e4) FROM pm1.g1"; //$NON-NLS-1$
         
@@ -895,7 +890,7 @@ public class TestProcessor extends TestCase {
 	}
  
 	/** see also integer average defect 11682 */
-    public void test4() { 
+    @Test public void test4() { 
         // Create query 
         String sql = "SELECT MIN(e2), MAX(e2), SUM(e2), AVG(e2), SUM(distinct e2), AVG(distinct e2) FROM pm1.g1"; //$NON-NLS-1$
         
@@ -915,7 +910,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
 	}
     
-	public void test5() { 
+	@Test public void test5() { 
         // Create query 
         String sql = "SELECT MIN(e4), MAX(e4), SUM(e4), AVG(e4), SUM(distinct e4), AVG(distinct e4) FROM pm1.g1"; //$NON-NLS-1$
         
@@ -935,7 +930,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
 	}
 
-	public void test7() { 
+	@Test public void test7() { 
         // Create query 
         String sql = "SELECT * FROM vm1.g1"; //$NON-NLS-1$
         
@@ -960,7 +955,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
 	}
 
-	public void test8() { 
+	@Test public void test8() { 
         // Create query 
         String sql = "SELECT * FROM vm1.g2 order by 1, 2, 3"; //$NON-NLS-1$
         
@@ -990,7 +985,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
 	}
     
-	public void test9() { 
+	@Test public void test9() { 
         // Create query 
         String sql = "SELECT * FROM vm1.g4 order by e1"; //$NON-NLS-1$
         
@@ -1021,7 +1016,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
 	}
     
-	public void test10() { 
+	@Test public void test10() { 
         // Create query 
         String sql = "SELECT e1 FROM vm1.g4 where e1 = 'a'"; //$NON-NLS-1$
         
@@ -1043,7 +1038,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
 	}
 
-    public void testBooleanComparisonGT() { 
+    @Test public void testBooleanComparisonGT() { 
         // Create query 
         String sql = "SELECT pm1.g1.e3 FROM pm1.g1 WHERE e3 > {b'false'}"; //$NON-NLS-1$
         
@@ -1064,7 +1059,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testBooleanComparisonGE() { 
+    @Test public void testBooleanComparisonGE() { 
         // Create query 
         String sql = "SELECT pm1.g1.e3 FROM pm1.g1 WHERE e3 >= {b'false'}"; //$NON-NLS-1$
         
@@ -1089,7 +1084,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testBooleanComparisonLT() { 
+    @Test public void testBooleanComparisonLT() { 
         // Create query 
         String sql = "SELECT pm1.g1.e3 FROM pm1.g1 WHERE e3 < {b'true'}"; //$NON-NLS-1$
         
@@ -1112,7 +1107,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testBooleanComparisonLE() { 
+    @Test public void testBooleanComparisonLE() { 
         // Create query 
         String sql = "SELECT pm1.g1.e3 FROM pm1.g1 WHERE e3 <= {b'true'}"; //$NON-NLS-1$
         
@@ -1137,7 +1132,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
  
-    public void testConcatOperator() { 
+    @Test public void testConcatOperator() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1 || e2 AS x FROM pm1.g1"; //$NON-NLS-1$
         
@@ -1163,7 +1158,7 @@ public class TestProcessor extends TestCase {
     }
 
  	/** Duplicates defect #4841: SELECT e1 a, e1 b FROM pm1.g1 order by a */
- 	public void testDefect4841_1() { 
+ 	@Test public void testDefect4841_1() { 
         // Create query 
         String sql = "SELECT e1 a, e1 b FROM pm1.g1 order by a"; //$NON-NLS-1$
         
@@ -1189,7 +1184,7 @@ public class TestProcessor extends TestCase {
 	}
 
     /** Duplicates defect #4841: SELECT e1 a, e1 b FROM pm1.g1 order by a, b desc */
-    public void testDefect4841_2() { 
+    @Test public void testDefect4841_2() { 
         // Create query 
         String sql = "SELECT e1 a, e1 b FROM pm1.g1 order by a"; //$NON-NLS-1$
         
@@ -1215,7 +1210,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** Duplicates defect #5292: SELECT DISTINCT e1, e1 a FROM pm1.g1 */
-    public void testDefect5292_1() { 
+    @Test public void testDefect5292_1() { 
         // Create query 
         String sql = "SELECT DISTINCT e1, e1 a FROM pm1.g1"; //$NON-NLS-1$
         
@@ -1239,7 +1234,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** Duplicates defect #5292: SELECT DISTINCT e1, e1 a FROM pm1.g1 ORDER BY a */
-    public void testDefect5292_2() { 
+    @Test public void testDefect5292_2() { 
         // Create query 
         String sql = "SELECT DISTINCT e1, e1 a FROM pm1.g1 ORDER BY a"; //$NON-NLS-1$
         
@@ -1263,7 +1258,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** Duplicates defect #5004: SELECT COUNT(*) FROM pm1.g1 WHERE e1='xxxx' */
-    public void testDefect5004() { 
+    @Test public void testDefect5004() { 
         // Create query 
         String sql = "SELECT COUNT(*) FROM pm1.g1 WHERE e1='xxxx'"; //$NON-NLS-1$
         
@@ -1286,7 +1281,7 @@ public class TestProcessor extends TestCase {
     /**
      * Test to ensure that multiple empty batches are handled by the grouping node as well
      */
-    public void testDefect5004a() { 
+    @Test public void testDefect5004a() { 
         // Create query 
         String sql = "SELECT COUNT(*) FROM pm1.g1 WHERE e1='xxxx'"; //$NON-NLS-1$
         
@@ -1311,7 +1306,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** SELECT COUNT(e2), MIN(e2), MAX(e2), SUM(e2), AVG(e2) FROM pm1.g1 WHERE e2=-999999 */
-    public void test13() { 
+    @Test public void test13() { 
         // Create query 
         String sql = "SELECT COUNT(e2), MIN(e2), MAX(e2), SUM(e2), AVG(e2) FROM pm1.g1 WHERE e2=-999999"; //$NON-NLS-1$
         
@@ -1341,7 +1336,7 @@ public class TestProcessor extends TestCase {
      * (Alex says this wasn't previously a problem because aliased groups
      * did not previously get pushed down to the source.)
      */
-    public void testCriteriaAliasedGroup() {
+    @Test public void testCriteriaAliasedGroup() {
         String sql = "select e1, e2 FROM pm2.g1 Y WHERE 2.0 = e4"; //$NON-NLS-1$
 
         // Create expected results
@@ -1361,7 +1356,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** SELECT e1 FROM pm1.g1 WHERE 'abc' = 'xyz' */
-    public void testCriteriaComparesUnequalConstants() { 
+    @Test public void testCriteriaComparesUnequalConstants() { 
         // Create query 
         String sql = "SELECT e1 FROM pm1.g1 WHERE 'abc' = 'xyz'"; //$NON-NLS-1$
         
@@ -1381,7 +1376,7 @@ public class TestProcessor extends TestCase {
     }
     
      /** SELECT pm1.g1.e1, pm2.g1.e1 FROM pm1.g1 RIGHT OUTER JOIN pm2.g1 ON pm1.g1.e1=pm2.g1.e1 */
-     public void testRightOuterJoin1() { 
+     @Test public void testRightOuterJoin1() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1, pm2.g1.e1 FROM pm1.g1 RIGHT OUTER JOIN pm2.g1 ON pm1.g1.e1=pm2.g1.e1"; //$NON-NLS-1$
         
@@ -1404,7 +1399,7 @@ public class TestProcessor extends TestCase {
     }
 
      /** SELECT pm1.g1.e1, pm2.g1.e1 FROM pm1.g1 LEFT OUTER JOIN pm2.g1 ON pm1.g1.e1=pm2.g1.e1 */
-     public void testLeftOuterJoin1() { 
+     @Test public void testLeftOuterJoin1() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1, pm2.g1.e1 FROM pm1.g1 LEFT OUTER JOIN pm2.g1 ON pm1.g1.e1=pm2.g1.e1"; //$NON-NLS-1$
         
@@ -1427,7 +1422,7 @@ public class TestProcessor extends TestCase {
     }    
 
     /** SELECT pm1.g1.e1, pm2.g1.e1 FROM pm1.g1 FULL OUTER JOIN pm2.g1 ON pm1.g1.e1=pm2.g1.e1 */
-    public void testFullOuterJoin1() throws Exception { 
+    @Test public void testFullOuterJoin1() throws Exception { 
         // Create query 
         String sql = "SELECT pm1.g1.e1, pm2.g1.e1 FROM pm1.g1 FULL OUTER JOIN pm2.g1 ON pm1.g1.e1=pm2.g1.e1"; //$NON-NLS-1$
         
@@ -1451,7 +1446,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }   
     
-    public void testFullOuterJoin2() throws Exception { 
+    @Test public void testFullOuterJoin2() throws Exception { 
         // Create query 
         String sql = "SELECT a.e4 c0, b.e4 c1 FROM pm1.g1 a FULL OUTER JOIN pm1.g1 b ON a.e4=b.e4 order by c0"; //$NON-NLS-1$
         
@@ -1474,7 +1469,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }   
     
-    public void testFullOuterJoin3() throws Exception { 
+    @Test public void testFullOuterJoin3() throws Exception { 
         // Create query 
         String sql = "SELECT a.e4 c0, b.e4 c1 FROM pm1.g1 b FULL OUTER JOIN (select e4, 1 x from pm1.g1 union all select e4, 2 from pm1.g1) a ON a.e4=b.e4 and a.x = 2 order by c0"; //$NON-NLS-1$
         
@@ -1501,7 +1496,7 @@ public class TestProcessor extends TestCase {
     }   
 
      /** SELECT x.e1, pm2.g1.e1 FROM (SELECT e1 FROM pm1.g1) AS x LEFT OUTER JOIN pm2.g1 ON x.e1=pm2.g1.e1 */
-     public void testLeftOuterJoinWithInlineView() { 
+     @Test public void testLeftOuterJoinWithInlineView() { 
         // Create query 
         String sql = "SELECT x.e1, pm2.g1.e1 FROM (SELECT e1 FROM pm1.g1) AS x LEFT OUTER JOIN pm2.g1 ON x.e1=pm2.g1.e1"; //$NON-NLS-1$
         
@@ -1524,7 +1519,7 @@ public class TestProcessor extends TestCase {
     }  
     
     /** SELECT * FROM vm1.g5 ORDER BY expr */
-    public void testDefect5273_1() {
+    @Test public void testDefect5273_1() {
         // Create query 
         String sql = "SELECT expr FROM vm1.g5 ORDER BY expr"; //$NON-NLS-1$
         
@@ -1550,7 +1545,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** SELECT expr AS e FROM vm1.g5 ORDER BY e */
-    public void testDefect5273_2() {
+    @Test public void testDefect5273_2() {
         // Create query 
         String sql = "SELECT expr AS e FROM vm1.g5 ORDER BY e"; //$NON-NLS-1$
         
@@ -1576,7 +1571,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** SELECT e2 AS e FROM vm1.g5 ORDER BY e */
-    public void testDefect5273_3() {
+    @Test public void testDefect5273_3() {
         // Create query 
         String sql = "SELECT e2 AS e FROM vm1.g5 ORDER BY e"; //$NON-NLS-1$
         
@@ -1602,7 +1597,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** SELECT e AS f FROM vm1.g6 ORDER BY f */
-    public void testDefect5273_4() {
+    @Test public void testDefect5273_4() {
         // Create query 
         String sql = "SELECT e AS f FROM vm1.g6 ORDER BY f"; //$NON-NLS-1$
         
@@ -1628,7 +1623,7 @@ public class TestProcessor extends TestCase {
     }        
 
     /** SELECT e AS f FROM vm1.g7 ORDER BY f */
-    public void testDefect5273_5() {
+    @Test public void testDefect5273_5() {
         // Create query 
         String sql = "SELECT e AS f FROM vm1.g7 ORDER BY f"; //$NON-NLS-1$
         
@@ -1654,7 +1649,7 @@ public class TestProcessor extends TestCase {
     }        
 
     /** SELECT e AS f FROM vm1.g7 ORDER BY f */
-    public void testDefect5273_6() {
+    @Test public void testDefect5273_6() {
         // Create query 
         String sql = "SELECT e AS f FROM vm1.g8 ORDER BY f"; //$NON-NLS-1$
         
@@ -1679,7 +1674,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }        
 
-    public void testFalseCriteria1() { 
+    @Test public void testFalseCriteria1() { 
         // Create query 
         String sql = "SELECT 5 FROM pm1.g1 WHERE 0=1"; //$NON-NLS-1$
         
@@ -1698,7 +1693,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testFalseCriteria2() { 
+    @Test public void testFalseCriteria2() { 
         // Create query 
         String sql = "SELECT count(*) FROM pm1.g1 WHERE 0=1"; //$NON-NLS-1$
         
@@ -1718,7 +1713,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testTempGroup() { 
+    @Test public void testTempGroup() { 
         // Create query 
         String sql = "SELECT e1 FROM tm1.g1 WHERE e1 = 'a'"; //$NON-NLS-1$
         
@@ -1740,7 +1735,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testSubquery1() {
+    @Test public void testSubquery1() {
    		// Create query
    		String sql = "SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS x"; //$NON-NLS-1$
    		
@@ -1765,7 +1760,7 @@ public class TestProcessor extends TestCase {
    		helpProcess(plan, dataManager, expected);
     }
 
-	public void testSubquerySimple() {
+	@Test public void testSubquerySimple() {
 		// Create query
 		String sql = "SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS x"; //$NON-NLS-1$
 
@@ -1790,7 +1785,7 @@ public class TestProcessor extends TestCase {
 		helpProcess(plan, dataManager, expected);
 	}
 	
-	public void testCritInSubquery() {
+	@Test public void testCritInSubquery() {
 		// Create query
 		String sql = "SELECT e1 FROM (SELECT e1 FROM pm1.g1 WHERE e1 = 'a') AS x"; //$NON-NLS-1$
 
@@ -1812,7 +1807,7 @@ public class TestProcessor extends TestCase {
 		helpProcess(plan, dataManager, expected);
 	}
 	
-	public void testCritAboveSubquery() {
+	@Test public void testCritAboveSubquery() {
 		// Create query
 		String sql = "SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS x WHERE e1 = 'a'"; //$NON-NLS-1$
 
@@ -1834,7 +1829,7 @@ public class TestProcessor extends TestCase {
 		helpProcess(plan, dataManager, expected);
 	}    
 
-	public void testSubqueryInJoinPredicate() {
+	@Test public void testSubqueryInJoinPredicate() {
 		// Create query
 		String sql = "SELECT x.e1 FROM (SELECT e1 FROM pm1.g1) AS x JOIN (SELECT e1 FROM pm1.g1) y ON x.e1=y.e1"; //$NON-NLS-1$
 
@@ -1864,7 +1859,7 @@ public class TestProcessor extends TestCase {
 		helpProcess(plan, dataManager, expected);
 	}
 
-	public void testSubqueryWithRenaming() {
+	@Test public void testSubqueryWithRenaming() {
 		// Create query
 		String sql = "SELECT x.a FROM (SELECT e1 AS a FROM pm1.g1) AS x"; //$NON-NLS-1$
 
@@ -1889,7 +1884,7 @@ public class TestProcessor extends TestCase {
 		helpProcess(plan, dataManager, expected);
 	}
 
-    public void testNestedSubquery() {
+    @Test public void testNestedSubquery() {
         // Create query
         String sql = "SELECT x.a FROM (SELECT e1 AS a FROM (SELECT e1 FROM pm1.g1) AS y) AS x"; //$NON-NLS-1$
 
@@ -1917,7 +1912,7 @@ public class TestProcessor extends TestCase {
 	/**
 	 * Tests a single Subquery IN clause criteria
 	 */
-	public void testSubqueryINClause() {
+	@Test public void testSubqueryINClause() {
 		String sql = "SELECT e1 FROM pm1.g1 WHERE e2 IN (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
 
 		// Create expected results
@@ -1941,7 +1936,7 @@ public class TestProcessor extends TestCase {
 	 * Tests a single Subquery IN clause criteria with nulls
 	 * in sample data
 	 */
-	public void testSubqueryINClauseWithNulls() {
+	@Test public void testSubqueryINClauseWithNulls() {
 		String sql = "SELECT e1 FROM pm1.g1 WHERE e4 IN (SELECT e4 FROM pm2.g1)"; //$NON-NLS-1$
 
 
@@ -1965,7 +1960,7 @@ public class TestProcessor extends TestCase {
 	 * Tests a single Subquery IN clause criteria with nulls
 	 * in sample data
 	 */
-	public void testSubqueryINClauseWithNulls2() {
+	@Test public void testSubqueryINClauseWithNulls2() {
 		String sql = "SELECT e1 FROM pm1.g1 WHERE e2 IN (SELECT e4 FROM pm2.g1)"; //$NON-NLS-1$
 
 		// Create expected results
@@ -1987,7 +1982,7 @@ public class TestProcessor extends TestCase {
 	/**
 	 * Tests a compound criteria of two subqueries in IN clauses
 	 */
-	public void testSubqueryINClauses() {
+	@Test public void testSubqueryINClauses() {
 		String sql = "SELECT e1 FROM pm1.g1 WHERE e2 IN (SELECT e2 FROM pm2.g1) AND e1 IN (SELECT e1 FROM pm2.g1)"; //$NON-NLS-1$
 
 		// Create expected results
@@ -2010,7 +2005,7 @@ public class TestProcessor extends TestCase {
      * Tests a compound criteria of a subquery in IN clause and another type of
      * criteria
      */
-    public void testSubqueryINClauseMixedCriteria() {
+    @Test public void testSubqueryINClauseMixedCriteria() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 IN (SELECT e2 FROM pm2.g1) AND e1 IN ('b')"; //$NON-NLS-1$
 
         // Create expected results
@@ -2033,7 +2028,7 @@ public class TestProcessor extends TestCase {
 	 * Tests a compound criteria of a subquery in IN clause and another type of
 	 * criteria
 	 */
-	public void testSubqueryINClauseMixedCriteria2() {
+	@Test public void testSubqueryINClauseMixedCriteria2() {
 		String sql = "SELECT e1 FROM pm1.g1 WHERE e2 IN (SELECT e2 FROM pm2.g1) AND NOT (e1 = 'a')"; //$NON-NLS-1$
 
 		// Create expected results
@@ -2055,7 +2050,7 @@ public class TestProcessor extends TestCase {
 	/**
 	 * Tests nesting of Subquery IN clause criteria
 	 */
-	public void testNestedSubqueryINClauses() {
+	@Test public void testNestedSubqueryINClauses() {
 		String sql = "SELECT e1 FROM pm1.g1 WHERE e2 IN (SELECT e2 FROM pm2.g1 WHERE e1 IN (SELECT e1 FROM pm1.g1))"; //$NON-NLS-1$
 
 		// Create expected results
@@ -2074,7 +2069,7 @@ public class TestProcessor extends TestCase {
 		helpProcess(plan, dataManager, expected);
 	}	
 
-	public void testSubqueryXML() {
+	@Test public void testSubqueryXML() {
 		// Create query
 		String sql = "SELECT * FROM (SELECT * FROM xmltest.doc1) AS x"; //$NON-NLS-1$
 
@@ -2100,7 +2095,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a single Subquery EXISTS predicate criteria
      */
-    public void testSubqueryExistsPredicate() {
+    @Test public void testSubqueryExistsPredicate() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE EXISTS (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2125,7 +2120,7 @@ public class TestProcessor extends TestCase {
      * Tests a single Subquery EXISTS predicate criteria 
      * where the subquery returns no rows
      */
-    public void testSubqueryExistsPredicate2() {
+    @Test public void testSubqueryExistsPredicate2() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE EXISTS (SELECT e2 FROM pm2.g1 WHERE e1 = 'ZZTop')"; //$NON-NLS-1$
 
         // Create expected results
@@ -2145,7 +2140,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a single Subquery in compare predicate criteria
      */
-    public void testSubqueryComparePredicate() {
+    @Test public void testSubqueryComparePredicate() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 = ANY (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2168,7 +2163,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a single Subquery in compare predicate criteria
      */
-    public void testSubqueryComparePredicate2() {
+    @Test public void testSubqueryComparePredicate2() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 = SOME (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2191,7 +2186,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a single Subquery in compare predicate criteria
      */
-    public void testSubqueryComparePredicate3() {
+    @Test public void testSubqueryComparePredicate3() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 = ALL (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2211,7 +2206,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a single Subquery in compare predicate criteria
      */
-    public void testSubqueryComparePredicate4() {
+    @Test public void testSubqueryComparePredicate4() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 <= ALL (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2233,7 +2228,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a single Subquery in compare predicate criteria
      */
-    public void testSubqueryComparePredicate5() {
+    @Test public void testSubqueryComparePredicate5() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 < SOME (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2257,7 +2252,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a single Subquery in compare predicate criteria
      */
-    public void testSubqueryComparePredicate5a() {
+    @Test public void testSubqueryComparePredicate5a() {
         String sql = "SELECT e1 FROM pm2.g1 WHERE e2 < SOME (SELECT e2 FROM pm1.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2281,7 +2276,7 @@ public class TestProcessor extends TestCase {
      * Tests a single Subquery in compare predicate criteria
      * without predicate quantifier
      */
-    public void testSubqueryComparePredicate6() {
+    @Test public void testSubqueryComparePredicate6() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 < (SELECT e2 FROM pm2.g1 WHERE e1 = 'e')"; //$NON-NLS-1$
 
         // Create expected results
@@ -2303,7 +2298,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a single Subquery in compare predicate criteria
      */
-    public void testSubqueryComparePredicateNested() {
+    @Test public void testSubqueryComparePredicateNested() {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 < SOME (SELECT e2 FROM pm2.g1 WHERE EXISTS (SELECT e2 FROM pm2.g1))"; //$NON-NLS-1$
 
         // Plan query
@@ -2335,7 +2330,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a scalar subquery in the SELECT clause
      */
-    public void testSubqueryScalar() {
+    @Test public void testSubqueryScalar() {
         String sql = "SELECT e1, (SELECT e2 FROM pm2.g1 WHERE e1 = 'b') FROM pm1.g1"; //$NON-NLS-1$
 
         // Create expected results
@@ -2359,7 +2354,7 @@ public class TestProcessor extends TestCase {
     /**
      * Tests a scalar subquery which returns no rows in the SELECT clause
      */
-    public void testSubqueryScalar2() {
+    @Test public void testSubqueryScalar2() {
         String sql = "SELECT e1, (SELECT e2 FROM pm2.g1 WHERE e1 = 'a') FROM pm1.g1"; //$NON-NLS-1$
 
         // Create expected results
@@ -2384,7 +2379,7 @@ public class TestProcessor extends TestCase {
      * Tests a scalar subquery which returns more than one rows
      * causes the expected Exception
      */
-    public void testSubqueryScalarException() {
+    @Test public void testSubqueryScalarException() {
         String sql = "SELECT e1, (SELECT e2 FROM pm2.g1) FROM pm1.g1"; //$NON-NLS-1$
 
         // Construct data manager with data
@@ -2398,7 +2393,7 @@ public class TestProcessor extends TestCase {
         helpProcessException(plan, dataManager);
     }
     
-    public void testSubqueryScalarInTransformation() {
+    @Test public void testSubqueryScalarInTransformation() {
         String sql = "select * from vm1.g25"; //$NON-NLS-1$
 
         // Create expected results
@@ -2422,7 +2417,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }  
 
-    public void testSubqueryScalarInTransformation2() {
+    @Test public void testSubqueryScalarInTransformation2() {
         String sql = "select * from vm1.g25 where e5 = 0.0"; //$NON-NLS-1$
 
         // Create expected results
@@ -2553,7 +2548,7 @@ public class TestProcessor extends TestCase {
         return new FakeMetadataFacade(store);
 
     }
-    public void testCorrelatedSubquery_CASE2022() {
+    @Test public void testCorrelatedSubquery_CASE2022() {
         String sql = "select * from BQT2_V WHERE BQT2_V.IntKey < 50"; //$NON-NLS-1$
 
         // Create expected results
@@ -2586,7 +2581,7 @@ public class TestProcessor extends TestCase {
         // Run query
         helpProcess(plan, dataManager, expected);
     } 
-    public void testCorrelatedSubquery1() {
+    @Test public void testCorrelatedSubquery1() {
         String sql = "Select e1, e2, e4 from pm1.g1 where e2 in (select e2 FROM pm2.g1 WHERE pm1.g1.e4 = pm2.g1.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2612,7 +2607,7 @@ public class TestProcessor extends TestCase {
      * differently to distinguish between them.  The generated atomic query has screwed up
      * aliasing. 
      */
-    public void testCorrelatedSubqueryCase3667() {
+    @Test public void testCorrelatedSubqueryCase3667() {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         
@@ -2650,7 +2645,7 @@ public class TestProcessor extends TestCase {
     }    
     
     /** control query, this test passes */
-    public void testCorrelatedSubqueryCase3667a() {
+    @Test public void testCorrelatedSubqueryCase3667a() {
 
         HardcodedDataManager dataManager = new HardcodedDataManager();
         
@@ -2685,7 +2680,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }     
 
-    public void testCorrelatedSubquery2() {
+    @Test public void testCorrelatedSubquery2() {
         String sql = "Select e1, e2 from pm1.g1 where e2 in (select e2 FROM pm2.g1 WHERE pm1.g1.e4 = pm2.g1.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2705,7 +2700,7 @@ public class TestProcessor extends TestCase {
 
     }
 
-    public void testCorrelatedSubquery3() {
+    @Test public void testCorrelatedSubquery3() {
         String sql = "Select e1, (select e2 FROM pm2.g1 WHERE pm1.g1.e4 = pm2.g1.e4) from pm1.g1"; //$NON-NLS-1$
 
         // Create expected results
@@ -2726,7 +2721,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testCorrelatedSubquery3a() {
+    @Test public void testCorrelatedSubquery3a() {
         String sql = "Select e1, (select e2 FROM pm2.g1 WHERE X.e4 = e4) from pm1.g1 X"; //$NON-NLS-1$
 
         // Create expected results
@@ -2747,7 +2742,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }    
 
-    public void testCorrelatedSubquery3b() {
+    @Test public void testCorrelatedSubquery3b() {
         String sql = "Select e1, (select e2 FROM pm2.g1 Y WHERE X.e4 = e4) from pm1.g1 X"; //$NON-NLS-1$
 
         // Create expected results
@@ -2768,7 +2763,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubquery3c() {
+    @Test public void testCorrelatedSubquery3c() {
         String sql = "Select e1, (select e2 FROM pm2.g1 Y WHERE X.e4 = Y.e4) from pm1.g1 X"; //$NON-NLS-1$
 
         // Create expected results
@@ -2789,7 +2784,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testCorrelatedSubquery4() {
+    @Test public void testCorrelatedSubquery4() {
         String sql = "Select e1, e2 from pm1.g1 X where e2 in (select e2 FROM pm2.g1 WHERE X.e4 = pm2.g1.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2808,7 +2803,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }    
 
-    public void testCorrelatedSubquery4a() {
+    @Test public void testCorrelatedSubquery4a() {
         String sql = "Select e1, e2 from pm1.g1 X where e2 = some (select e2 FROM pm2.g1 WHERE X.e4 = pm2.g1.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2827,7 +2822,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }   
 
-    public void testCorrelatedSubquery_defect9968() {
+    @Test public void testCorrelatedSubquery_defect9968() {
         String sql = "Select e1, e2 from pm1.g1 X where e2 in (select max(X.e2) FROM pm2.g1 WHERE X.e4 = pm2.g1.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2846,7 +2841,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     } 
 
-    public void testCorrelatedSubquery_defect9968a() {
+    @Test public void testCorrelatedSubquery_defect9968a() {
         String sql = "Select e1, e2 from pm1.g1 X where e2 in (select ((X.e2)/2) as e FROM pm2.g1 WHERE X.e4 = pm2.g1.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2865,7 +2860,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     } 
 
-    public void testCorrelatedSubquery_defect9968b() {
+    @Test public void testCorrelatedSubquery_defect9968b() {
         String sql = "Select e1, e2 from pm1.g1 X where e2 in (select (select e2 as e FROM pm2.g1 WHERE X.e4 = pm2.g1.e4) as e FROM pm2.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2884,7 +2879,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     } 
 
-    public void testCorrelatedSubquery_defect10021() {
+    @Test public void testCorrelatedSubquery_defect10021() {
         String sql = "Select e1, e2 from table1 X where e4 in (select max(Y.e4) FROM table1 Y WHERE X.e4 = Y.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2908,7 +2903,7 @@ public class TestProcessor extends TestCase {
      * Note the subquery has a multi-column result - conceptually this is
      * legal for the EXISTS predicate
      */
-    public void testCorrelatedSubquery5() {
+    @Test public void testCorrelatedSubquery5() {
         String sql = "Select * from pm1.g1 where exists (select * FROM pm2.g1 WHERE pm1.g1.e1 = e1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -2930,7 +2925,7 @@ public class TestProcessor extends TestCase {
     /** 
      * Count the # of parent rows for which no child rows exist
      */
-    public void testCorrelatedSubquery6() {
+    @Test public void testCorrelatedSubquery6() {
         String sql = "Select count(*) from pm1.g1 where not (exists (select * FROM pm2.g1 WHERE pm1.g1.e1 = e1))"; //$NON-NLS-1$
 
         // Create expected results
@@ -2952,7 +2947,7 @@ public class TestProcessor extends TestCase {
     /** 
      * Select e2, e4, and the avg of e4 for each group of e1
      */
-    public void testCorrelatedSubquery7() {
+    @Test public void testCorrelatedSubquery7() {
         String sql = "select e2, e4, (select avg(e4) FROM pm1.g1 Y WHERE X.e1 = e1) from pm1.g1 X"; //$NON-NLS-1$
 
         // Create expected results
@@ -2979,7 +2974,7 @@ public class TestProcessor extends TestCase {
     /** 
      * Select e2, e4, and the avg of e4 for each group of e1
      */
-    public void testCorrelatedSubquery8() {
+    @Test public void testCorrelatedSubquery8() {
         String sql = "select X.e2, X.e4, (select avg(Y.e4) FROM pm1.g1 Y WHERE X.e1 = Y.e1) from pm1.g1 X"; //$NON-NLS-1$
 
         // Create expected results
@@ -3003,7 +2998,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }   
 
-    public void testCorrelatedSubqueryVirtualLayer1() {
+    @Test public void testCorrelatedSubqueryVirtualLayer1() {
         String sql = "Select e1, e2 from vm1.g1 X where e2 in (select e2 FROM vm1.g1 Y WHERE X.e4 = Y.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3027,7 +3022,7 @@ public class TestProcessor extends TestCase {
 
     }
 
-    public void testCorrelatedSubqueryVirtualLayer2() {
+    @Test public void testCorrelatedSubqueryVirtualLayer2() {
         String sql = "Select e1, e2 from vm1.g2 where e2 in (select e2 FROM vm1.g1 WHERE vm1.g2.e4 = vm1.g1.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3052,7 +3047,7 @@ public class TestProcessor extends TestCase {
 
     }
 
-    public void testCorrelatedSubqueryVirtualLayer3() {
+    @Test public void testCorrelatedSubqueryVirtualLayer3() {
         String sql = "Select e2 from vm1.g6 where e2 in (select e2 FROM vm1.g1 WHERE vm1.g6.e = e1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3069,7 +3064,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryVirtualLayer4() {
+    @Test public void testCorrelatedSubqueryVirtualLayer4() {
         String sql = "Select e2 from vm1.g7 where e2 in (select e2 FROM vm1.g1 WHERE vm1.g7.e = e1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3086,7 +3081,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryVirtualLayer5() {
+    @Test public void testCorrelatedSubqueryVirtualLayer5() {
         String sql = "Select e1 from vm1.g4 where not (e1 in (select e1 FROM vm1.g1 WHERE vm1.g4.e1 = e1)) order by e1"; //$NON-NLS-1$
 
         // Create expected results
@@ -3110,7 +3105,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryVirtualLayer6() {
+    @Test public void testCorrelatedSubqueryVirtualLayer6() {
         String sql = "Select e2 from vm1.g1 X where e2 in (select X.e2 FROM vm1.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3134,7 +3129,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryVirtualLayer6a() {
+    @Test public void testCorrelatedSubqueryVirtualLayer6a() {
         String sql = "Select e2 from vm1.g1 where e2 in (select vm1.g1.e2 FROM vm1.g5)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3159,7 +3154,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryVirtualLayer6b() {
+    @Test public void testCorrelatedSubqueryVirtualLayer6b() {
         String sql = "Select e2 from vm1.g1 where e2 in (select vm1.g1.e2 FROM vm1.g2)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3183,7 +3178,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryVirtualLayer6c() {
+    @Test public void testCorrelatedSubqueryVirtualLayer6c() {
         String sql = "Select e2 from vm1.g7 where e2 in (select vm1.g7.e FROM vm1.g1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3200,7 +3195,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryVirtualLayer6e() {
+    @Test public void testCorrelatedSubqueryVirtualLayer6e() {
         String sql = "Select e2 from vm1.g1 where e2 in (select vm1.g1.e2 FROM vm1.g2a)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3225,7 +3220,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryVirtualLayer7() {
+    @Test public void testCorrelatedSubqueryVirtualLayer7() {
         String sql = "Select e2 from vm1.g7 where e2 in (select vm1.g7.e FROM vm1.g1 WHERE vm1.g7.e = e1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3242,7 +3237,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryInTransformation() {
+    @Test public void testCorrelatedSubqueryInTransformation() {
         String sql = "Select * from vm1.g21"; //$NON-NLS-1$
 
         // Create expected results
@@ -3261,7 +3256,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     } 
     
-    public void testCorrelatedSubqueryInTransformation2() {
+    @Test public void testCorrelatedSubqueryInTransformation2() {
         String sql = "Select * from vm1.g20"; //$NON-NLS-1$
 
         // Create expected results
@@ -3284,7 +3279,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }    
 
-    public void testCorrelatedSubqueryInTransformation3() {
+    @Test public void testCorrelatedSubqueryInTransformation3() {
         String sql = "Select * from vm1.g19 order by e1"; //$NON-NLS-1$
 
         // Create expected results
@@ -3312,7 +3307,7 @@ public class TestProcessor extends TestCase {
      * User correlated subquery, and one of the virtual group transformations
      * also has a correlated subquery
      */
-    public void testCorrelatedSubqueryInTransformation4() {
+    @Test public void testCorrelatedSubqueryInTransformation4() {
         String sql = "Select * from vm1.g20 where exists (Select * from vm1.g19 where convert(vm1.g20.e2, string) = vm1.g19.e1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3339,7 +3334,7 @@ public class TestProcessor extends TestCase {
      * User correlated subquery, and one of the virtual group transformations
      * also has a correlated subquery
      */
-    public void testCorrelatedSubqueryInTransformation5() {
+    @Test public void testCorrelatedSubqueryInTransformation5() {
         String sql = "Select * from vm1.g19 where exists (Select e2 from vm1.g20 where convert(e2, string) = vm1.g19.e1) order by e1"; //$NON-NLS-1$
 
         // Create expected results
@@ -3363,7 +3358,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }   
 
-    public void testCorrelatedSubqueryInTransformation6() {
+    @Test public void testCorrelatedSubqueryInTransformation6() {
         String sql = "Select * from vm1.g21 where e2 = some (Select e2 from pm1.g1 where e1 = vm1.g21.e1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3382,7 +3377,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }   
 
-    public void testCorrelatedSubqueryInTransformation7() {
+    @Test public void testCorrelatedSubqueryInTransformation7() {
         String sql = "Select * from vm1.g21 where exists (Select e2 from pm1.g2 where e4 = convert(vm1.g21.e2, double))"; //$NON-NLS-1$
 
         // Create expected results
@@ -3404,7 +3399,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testCorrelatedSubqueryInTransformation8() {
+    @Test public void testCorrelatedSubqueryInTransformation8() {
         String sql = "Select * from vm1.g21 where exists (Select e2 from pm1.g1 where e4 = convert(vm1.g21.e2, double))"; //$NON-NLS-1$
 
         // Create expected results
@@ -3426,7 +3421,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }  
 
-    public void testCorrelatedSubqueryInTransformation9() {
+    @Test public void testCorrelatedSubqueryInTransformation9() {
         String sql = "Select * from vm1.g22"; //$NON-NLS-1$
 
         // Create expected results
@@ -3450,7 +3445,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }  
 
-    public void testCorrelatedSubqueryInTransformation10() {
+    @Test public void testCorrelatedSubqueryInTransformation10() {
         String sql = "Select * from vm1.g23"; //$NON-NLS-1$
 
         // Create expected results
@@ -3473,7 +3468,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }  
 
-    public void testCorrelatedSubqueryInTransformation11() {
+    @Test public void testCorrelatedSubqueryInTransformation11() {
         String sql = "Select * from vm1.g24"; //$NON-NLS-1$
 
         // Create expected results
@@ -3496,7 +3491,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }  
 
-    public void testCorrelatedSubqueryInTransformation12() {
+    @Test public void testCorrelatedSubqueryInTransformation12() {
         String sql = "Select * from vm1.g24 X where exists (Select * from vm1.g24 Y where X.e2 = Y.e2)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3519,7 +3514,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }  
 
-    public void testCorrelatedSubqueryInTransformation13() {
+    @Test public void testCorrelatedSubqueryInTransformation13() {
         String sql = "Select e1, e2, e3, e4, (select e4 from vm1.g25 where pm1.g1.e4 = e5 and e4=0.0) as e5 from pm1.g1"; //$NON-NLS-1$
 
         // Create expected results
@@ -3543,7 +3538,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     } 
     
-    public void testCorrelatedSubqueryInTransformation14() {
+    @Test public void testCorrelatedSubqueryInTransformation14() {
         String sql = "Select e1, e2, e3, e4, (select e4 from vm1.g26 where pm1.g1.e4 = e5 and e4=0.0) as e5 from pm1.g1"; //$NON-NLS-1$
 
         // Create expected results
@@ -3567,7 +3562,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }     
 
-    public void testCorrelatedSubqueryInTransformation15() {
+    @Test public void testCorrelatedSubqueryInTransformation15() {
         String sql = "Select e1, e2, e3, e4, (select e4 from vm1.g23 where vm1.g22.e4 = e5) as e5 from vm1.g22 where e1 = 'a'"; //$NON-NLS-1$
 
         // Create expected results
@@ -3589,7 +3584,7 @@ public class TestProcessor extends TestCase {
     }  
 
     /** Test selecting a virtual element (e5) which is defined by a scalar subquery in the virtual transformation */
-    public void testCorrelatedSubqueryInTransformation15a() {
+    @Test public void testCorrelatedSubqueryInTransformation15a() {
         String sql = "Select e1, e2, e3, e4 from pm1.g1 where exists (select * from vm1.g26 where pm1.g1.e3 = e3)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3613,7 +3608,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }  
 
-    public void testCorrelatedSubqueryInTransformation15b() {
+    @Test public void testCorrelatedSubqueryInTransformation15b() {
         String sql = "Select e1, e2, e3, e4, (select e4 from vm1.g23 where vm1.g22.e4 = e5) as e5 from vm1.g22 where e1 = 'a' and exists (select * from vm1.g23 where vm1.g22.e3 = e3)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3635,7 +3630,7 @@ public class TestProcessor extends TestCase {
     }  
 
     /** Test selecting a virtual element (e5) which is defined by a scalar subquery in the virtual transformation */
-    public void testCorrelatedSubqueryInTransformation15c() {
+    @Test public void testCorrelatedSubqueryInTransformation15c() {
         String sql = "Select e1, e2, e3, e4 from pm1.g1 where exists (select e1, e2, e3, e4, e5 as e from vm1.g26 where pm1.g1.e3 = e3)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3660,7 +3655,7 @@ public class TestProcessor extends TestCase {
     }   
 
     /** Test selecting a virtual element (e5) which is defined by a scalar subquery in the virtual transformation */
-    public void testCorrelatedSubqueryInTransformation15d() {
+    @Test public void testCorrelatedSubqueryInTransformation15d() {
         String sql = "Select e1, e2, e3, e4 from pm1.g1 where exists (select e1, e2, e3, e4, ((e4 + e5)/e4) as e from vm1.g26 where pm1.g1.e3 = e3)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3693,7 +3688,7 @@ public class TestProcessor extends TestCase {
 //  Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0),  null })
 
 
-    public void testCorrelatedSubqueryInTransformation16() {
+    @Test public void testCorrelatedSubqueryInTransformation16() {
 //        String sql = "Select e1, e2, e3, e4, (select e4 from vm1.g23 where vm1.g22.e4 = e5) as e5 from vm1.g22 where e1 = 'a'"/* and exists (select * from vm1.g23 where vm1.g22.e3 = e3)"*/;
         String sql = "select * from vm1.g26 where e5 = 0.0"; //$NON-NLS-1$
 
@@ -3718,7 +3713,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }  
 
-    public void testCorrelatedSubqueriesNested() {
+    @Test public void testCorrelatedSubqueriesNested() {
         String sql = 
                     "Select e1, e2, e4 from pm1.g1 where e2 < all (" + //$NON-NLS-1$
                     "select e2 from pm1.g2 where pm1.g1.e1 = e1 and exists("+ //$NON-NLS-1$
@@ -3744,7 +3739,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** defect 15124 */
-    public void testCorrelatedSubqueryAndInlineView() {
+    @Test public void testCorrelatedSubqueryAndInlineView() {
         String sql = "Select e1, (select e2 FROM pm2.g1 Y WHERE X.e4 = Y.e4) from (select * from pm1.g1) as X"; //$NON-NLS-1$
 
         // Create expected results
@@ -3766,7 +3761,7 @@ public class TestProcessor extends TestCase {
     }
     
     /** defect 15124 */
-    public void testCorrelatedSubqueryAndInlineView2() {
+    @Test public void testCorrelatedSubqueryAndInlineView2() {
         String sql = "Select e1 from (select * from pm1.g1) as X WHERE e2 IN (select e2 FROM pm2.g1 Y WHERE X.e4 = Y.e4)"; //$NON-NLS-1$
 
         // Create expected results
@@ -3786,7 +3781,7 @@ public class TestProcessor extends TestCase {
     }    
 
     /** defect 15124 */
-    public void testCorrelatedSubqueryAndInlineView3() {
+    @Test public void testCorrelatedSubqueryAndInlineView3() {
         String sql = "Select e1, (select e2 FROM pm2.g1 Y WHERE X.e4 = Y.e4) from (select * from pm1.g1 UNION ALL select * from pm1.g1) as X"; //$NON-NLS-1$
 
         // Create expected results
@@ -3811,7 +3806,7 @@ public class TestProcessor extends TestCase {
     }    
 
     /** defect 15124 */
-    public void testCorrelatedSubqueryAndInlineView4() {
+    @Test public void testCorrelatedSubqueryAndInlineView4() {
         String sql = "Select e1, (select e2 FROM pm2.g1 Y WHERE X.e4 = Y.e4) from (select pm1.g1.e1, (select pm1.g1.e2 from pm1.g1 Z where pm1.g1.e1 = Z.e1), pm1.g1.e3, pm1.g1.e4 from pm1.g1) as X"; //$NON-NLS-1$
 
         // Create expected results
@@ -3832,7 +3827,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }    
     
-    public void testXMLUnion_defect8373() {
+    @Test public void testXMLUnion_defect8373() {
         // Create query
         String sql = "SELECT * FROM xmltest.doc5"; //$NON-NLS-1$
 
@@ -3855,7 +3850,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testStoredQuery1() {
+    @Test public void testStoredQuery1() {
         // Create query
         String sql = "EXEC pm1.sq1()"; //$NON-NLS-1$
 
@@ -3880,7 +3875,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testStoredQuery2() {
+    @Test public void testStoredQuery2() {
         // Create query
         String sql = "EXEC pm1.sq2(\'a\')"; //$NON-NLS-1$
 
@@ -3902,7 +3897,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
         
-    public void testStoredQuery3() {
+    @Test public void testStoredQuery3() {
         // Create query
         String sql = "select x.e1 from (EXEC pm1.sq1()) as x"; //$NON-NLS-1$
 
@@ -3927,7 +3922,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testStoredQuery4() {
+    @Test public void testStoredQuery4() {
         // Create query
         String sql = "EXEC pm1.sq5('a')"; //$NON-NLS-1$
 
@@ -3949,7 +3944,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testStoredQuery5() {
+    @Test public void testStoredQuery5() {
         // Create query
         String sql = "EXEC pm1.sp1()"; //$NON-NLS-1$
 
@@ -3974,7 +3969,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testStoredQuery6() {
+    @Test public void testStoredQuery6() {
         // Create query
         String sql = "EXEC pm1.sqsp1()"; //$NON-NLS-1$
 
@@ -3999,7 +3994,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testStoredQuery7() {
+    @Test public void testStoredQuery7() {
         // Create query
         String sql = "EXEC pm1.sq17()"; //$NON-NLS-1$
 
@@ -4023,7 +4018,7 @@ public class TestProcessor extends TestCase {
     }    
 
     // implict type conversion of parameter
-    public void testStoredQuery8() {
+    @Test public void testStoredQuery8() {
         // Create query
         String sql = "EXEC pm1.sq5(5)"; //$NON-NLS-1$
 
@@ -4043,7 +4038,7 @@ public class TestProcessor extends TestCase {
     }
 
     // function for parameter
-    public void testStoredQuery9() {
+    @Test public void testStoredQuery9() {
         // Create query
         String sql = "EXEC pm1.sq5(concat('a', ''))"; //$NON-NLS-1$
 
@@ -4066,7 +4061,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** named parameters */
-    public void testStoredQuery10() {
+    @Test public void testStoredQuery10() {
         // Create query
         String sql = "EXEC pm1.sq3b(\"in\" = 'a', in3 = 'something')"; //$NON-NLS-1$
 
@@ -4088,7 +4083,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }    
     
-    public void testInsert() {
+    @Test public void testInsert() {
         // Create query
         String sql = "Insert into pm1.g1 (pm1.g1.e1, pm1.g1.e2) values (\"MyString\", 1)"; //$NON-NLS-1$
 
@@ -4109,7 +4104,7 @@ public class TestProcessor extends TestCase {
     }
 
      /** SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey FROM BQT1.SmallA FULL OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey WHERE (BQT1.SmallA.IntKey >= 0) AND (BQT1.SmallA.IntKey <= 15) AND (BQT2.MediumB.IntKey >= 5) AND (BQT2.MediumB.IntKey <= 20) */
-     public void testDefect7770_FullOuter() { 
+     @Test public void testDefect7770_FullOuter() { 
         // Create query 
         String sql = "SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey FROM BQT1.SmallA FULL OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey WHERE (BQT1.SmallA.IntKey >= 0) AND (BQT1.SmallA.IntKey <= 15) AND (BQT2.MediumB.IntKey >= 5) AND (BQT2.MediumB.IntKey <= 20)"; //$NON-NLS-1$
         
@@ -4140,7 +4135,7 @@ public class TestProcessor extends TestCase {
     }
 
      /** SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey FROM BQT1.SmallA RIGHT OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey WHERE (BQT1.SmallA.IntKey >= 0) AND (BQT1.SmallA.IntKey <= 15) AND (BQT2.MediumB.IntKey >= 5) AND (BQT2.MediumB.IntKey <= 20) */
-     public void testDefect7770_RightOuter() { 
+     @Test public void testDefect7770_RightOuter() { 
         // Create query 
         String sql = "SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey FROM BQT1.SmallA RIGHT OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey WHERE (BQT1.SmallA.IntKey >= 0) AND (BQT1.SmallA.IntKey <= 15) AND (BQT2.MediumB.IntKey >= 5) AND (BQT2.MediumB.IntKey <= 20)"; //$NON-NLS-1$
         
@@ -4171,7 +4166,7 @@ public class TestProcessor extends TestCase {
     }
     
      /** SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey FROM BQT1.SmallA LEFT OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey WHERE (BQT1.SmallA.IntKey >= 0) AND (BQT1.SmallA.IntKey <= 15) AND (BQT2.MediumB.IntKey >= 5) AND (BQT2.MediumB.IntKey <= 20) */
-     public void testDefect7770_LeftOuter() { 
+     @Test public void testDefect7770_LeftOuter() { 
         // Create query 
         String sql = "SELECT BQT1.SmallA.IntKey AS SmallA_IntKey, BQT2.MediumB.IntKey AS MediumB_IntKey FROM BQT1.SmallA LEFT OUTER JOIN BQT2.MediumB ON BQT1.SmallA.IntKey = BQT2.MediumB.IntKey WHERE (BQT1.SmallA.IntKey >= 0) AND (BQT1.SmallA.IntKey <= 15) AND (BQT2.MediumB.IntKey >= 5) AND (BQT2.MediumB.IntKey <= 20)"; //$NON-NLS-1$
         
@@ -4201,7 +4196,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testReorder1() {
+    @Test public void testReorder1() {
         // Create query
         String sql = "SELECT e1 AS x, {b'false'}, e2+e4, e3 FROM pm1.g1"; //$NON-NLS-1$
 
@@ -4226,7 +4221,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testTwoFullOuterJoins1() {
+    @Test public void testTwoFullOuterJoins1() {
         // Create query
         String sql = "SELECT A.IntKey AS A_IntKey, B.IntKey AS B_IntKey, C.IntKey AS C_IntKey " +  //$NON-NLS-1$
         "FROM (BQT1.SmallA AS A FULL OUTER JOIN BQT2.SmallA AS B ON A.IntKey = B.IntKey) FULL OUTER JOIN BQT3.SmallA AS C ON B.IntKey = C.IntKey " +  //$NON-NLS-1$
@@ -4255,7 +4250,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testSelectDistinctOnBQT() {
+    @Test public void testSelectDistinctOnBQT() {
        // Create query
        String sql = "SELECT DISTINCT IntKey FROM BQT1.SmallA"; //$NON-NLS-1$
 
@@ -4295,7 +4290,7 @@ public class TestProcessor extends TestCase {
    }
 
    // SELECT IntKey, SUM(IntNum) FROM BQT1.SmallA GROUP BY IntKey, IntNum HAVING IntNum > 10 ORDER BY IntKey
-   public void testAggregateOnBQT() {
+   @Test public void testAggregateOnBQT() {
        // Create query
        String sql = "SELECT IntKey, SUM(IntNum) FROM BQT1.SmallA GROUP BY IntKey, IntNum HAVING IntNum > 10 ORDER BY IntKey"; //$NON-NLS-1$
 
@@ -4324,7 +4319,7 @@ public class TestProcessor extends TestCase {
    }   
    
    // SELECT IntNum, IsNotNull FROM (SELECT IntNum, LongNum, COUNT(IntNum) AS IsNotNull FROM BQT2.SmallB GROUP BY IntNum, LongNum HAVING LongNum >= 0 ) AS x ORDER BY IntNum, IsNotNull
-   public void testAggregateOnBQT2() {
+   @Test public void testAggregateOnBQT2() {
        // Create query
        String sql = "SELECT IntNum, IsNotNull FROM (SELECT IntNum, LongNum, COUNT(IntNum) AS IsNotNull FROM BQT1.SmallA GROUP BY IntNum, LongNum HAVING LongNum IS NULL ) AS x ORDER BY IntNum, IsNotNull"; //$NON-NLS-1$
 
@@ -4362,7 +4357,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);
    }  
 
-   public void testAggregateOnBQT_defect9842(){
+   @Test public void testAggregateOnBQT_defect9842(){
        // Create query
        String sql = "SELECT IntKey, SUM((BigDecimalValue)*(ShortValue)-(BigDecimalValue)*(ShortValue)*(FloatNum)) " + //$NON-NLS-1$
                     "AS MySum FROM BQT1.SmallA GROUP BY IntKey ORDER BY IntKey"; //$NON-NLS-1$
@@ -4384,7 +4379,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);        
    }
    
-   public void testSelectWithNoFrom() { 
+   @Test public void testSelectWithNoFrom() { 
        // Create query 
        String sql = "SELECT 5"; //$NON-NLS-1$
         
@@ -4404,7 +4399,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);
    }
    
-   public void testBetween() { 
+   @Test public void testBetween() { 
        // Create query 
        String sql = "SELECT * FROM pm1.g1 WHERE e2 BETWEEN 1 AND 2"; //$NON-NLS-1$
         
@@ -4435,7 +4430,7 @@ public class TestProcessor extends TestCase {
     * <p>
     * SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1
     */
-   public void testBetweenInCase() { 
+   @Test public void testBetweenInCase() { 
        // Create query 
        final String sql = "SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
         
@@ -4470,7 +4465,7 @@ public class TestProcessor extends TestCase {
     * <p>
     * SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1
     */
-   public void testBetweenInCaseInSum() { 
+   @Test public void testBetweenInCaseInSum() { 
        // Create query 
        final String sql = "SELECT SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1"; //$NON-NLS-1$
         
@@ -4501,7 +4496,7 @@ public class TestProcessor extends TestCase {
     * SELECT e1, SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) 
     * FROM pm1.g1 GROUP BY e1 ORDER BY e1
     */
-   public void testBetweenInCaseInSumWithGroupBy() { 
+   @Test public void testBetweenInCaseInSumWithGroupBy() { 
        // Create query 
        final String sql = "SELECT e1, SUM(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END) FROM pm1.g1 GROUP BY e1 ORDER BY e1"; //$NON-NLS-1$
         
@@ -4534,7 +4529,7 @@ public class TestProcessor extends TestCase {
     * <p>
     * SELECT COUNT(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 END) FROM pm1.g1
     */
-   public void testBetweenInCaseInCount() { 
+   @Test public void testBetweenInCaseInCount() { 
        // Create query 
        final String sql = "SELECT COUNT(CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 END) FROM pm1.g1"; //$NON-NLS-1$
         
@@ -4554,7 +4549,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);
    }
 
-   public void testCase() { 
+   @Test public void testCase() { 
        // Create query 
        String sql = "SELECT e2, CASE e2 WHEN 1 THEN 2 ELSE 3 END FROM pm1.g1 WHERE e2 BETWEEN 1 AND 2"; //$NON-NLS-1$
         
@@ -4576,7 +4571,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);
    }
    
-   public void testSelectNoFrom1() { 
+   @Test public void testSelectNoFrom1() { 
        // Create query 
        String sql = "SELECT 1"; //$NON-NLS-1$
         
@@ -4596,7 +4591,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);
    }
    
-   public void testSelectNoFrom2() { 
+   @Test public void testSelectNoFrom2() { 
        // Create query 
        String sql = "SELECT 1, {b'true'}, 2.0 AS x, {d'2003-11-04'}"; //$NON-NLS-1$
         
@@ -4616,7 +4611,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);
    }
 
-   public void testCase1566() throws Exception {
+   @Test public void testCase1566() throws Exception {
        // Create query
        String sql = "SELECT x, COUNT(*) FROM (SELECT convert(TimestampValue, date) AS x FROM bqt1.smalla) as y GROUP BY x"; //$NON-NLS-1$
 
@@ -4646,7 +4641,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);
    }   
    
-    public void testDefect10976(){
+    @Test public void testDefect10976(){
         String sql = "SELECT * FROM vm1.g28"; //$NON-NLS-1$
 
 
@@ -4669,7 +4664,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);       
     }
          
-    public void testDefect10976_2(){
+    @Test public void testDefect10976_2(){
         String sql = "SELECT * FROM vm1.g29"; //$NON-NLS-1$
 
 
@@ -4692,7 +4687,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);       
     }         
     
-    public void testDefect10976_3(){
+    @Test public void testDefect10976_3(){
         String sql = "SELECT * FROM vm1.g30"; //$NON-NLS-1$
 
 
@@ -4715,7 +4710,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);       
     }
 
-    public void testDefect10976_4(){
+    @Test public void testDefect10976_4(){
         String sql = "SELECT * FROM vm1.g31 order by x"; //$NON-NLS-1$
 
 
@@ -4740,7 +4735,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);       
     }
 
-    public void testDefect10976_5(){
+    @Test public void testDefect10976_5(){
         String sql = "SELECT * FROM vm1.g32"; //$NON-NLS-1$
 
 
@@ -4763,7 +4758,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);       
     }
     
-    public void testDefect11236_MergeJoinWithFunctions() { 
+    @Test public void testDefect11236_MergeJoinWithFunctions() { 
        // Create query 
        String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e2 = (pm2.g1.e2+1)"; //$NON-NLS-1$
        boolean pushDown = false;
@@ -4783,7 +4778,7 @@ public class TestProcessor extends TestCase {
        helpTestMergeJoinWithExpression(sql, pushDown, dependent, expected);
     }
     
-    public void testMergeJoinWithFunctionsPushDown() { 
+    @Test public void testMergeJoinWithFunctionsPushDown() { 
         // Create query 
         String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e2 = (pm2.g1.e2+1)"; //$NON-NLS-1$
         boolean pushDown = true;
@@ -4803,7 +4798,7 @@ public class TestProcessor extends TestCase {
         helpTestMergeJoinWithExpression(sql, pushDown, dependent, expected);
     }
     
-    public void testMergeJoinWithFunctionsPushDownDependent() { 
+    @Test public void testMergeJoinWithFunctionsPushDownDependent() { 
         // Create query 
         String sql = "SELECT pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm1.g1.e2 = (pm2.g1.e2+1) option makedep pm1.g1"; //$NON-NLS-1$
         boolean pushDown = true;
@@ -4892,7 +4887,7 @@ public class TestProcessor extends TestCase {
            helpProcess(plan, dataManager, expected);
     }
     
-   public void testCase2() { 
+   @Test public void testCase2() { 
        // Create query 
        String sql = "SELECT e2, CASE e2 WHEN 1 THEN 2 END FROM pm1.g1 WHERE e2 BETWEEN 1 AND 2"; //$NON-NLS-1$
         
@@ -4914,7 +4909,7 @@ public class TestProcessor extends TestCase {
        helpProcess(plan, dataManager, expected);
    }
    
-   public void testCase3() { 
+   @Test public void testCase3() { 
        // Create query 
        String sql = "SELECT e2, CASE e2 WHEN 1 THEN 2 ELSE null END FROM pm1.g1 WHERE e2 BETWEEN 1 AND 2"; //$NON-NLS-1$
         
@@ -4937,7 +4932,7 @@ public class TestProcessor extends TestCase {
    }   
 
    /** nested scalar subquery */
-   public void testCase4() { 
+   @Test public void testCase4() { 
        // Create query 
        String nestedExpression = "(SELECT e1 FROM pm1.g2 WHERE e2 = 3)"; //$NON-NLS-1$
        String sql = "SELECT e2, CASE e2 WHEN 1 THEN " + nestedExpression + " ELSE null END FROM pm1.g1 WHERE e2 BETWEEN 1 AND 2"; //$NON-NLS-1$ //$NON-NLS-2$
@@ -4961,7 +4956,7 @@ public class TestProcessor extends TestCase {
    }  
 
     /** nested correlated scalar subquery */
-    public void testCase5() { 
+    @Test public void testCase5() { 
         // Create query 
         String nestedExpression = "(SELECT e2 FROM pm1.g2 WHERE pm1.g1.e2 = (e4 + 2))"; //$NON-NLS-1$
         String sql = "SELECT e2, CASE e2 WHEN " + nestedExpression + " THEN 1 ELSE null END FROM pm1.g1"; //$NON-NLS-1$ //$NON-NLS-2$
@@ -4992,7 +4987,7 @@ public class TestProcessor extends TestCase {
      * twice and reset in between, which currently is done in the 
      * helpProcess method  
      */
-    public void testDefect12135(){
+    @Test public void testDefect12135(){
         String sql = "SELECT pm1.g1.e1, pm1.g2.e1 FROM pm1.g1 LEFT OUTER JOIN pm1.g2 ON pm1.g1.e1=pm1.g2.e1"; //$NON-NLS-1$
 
 
@@ -5016,7 +5011,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);          
     }
     
-    public void testDefect12081(){
+    @Test public void testDefect12081(){
         String sql = "SELECT DISTINCT vm1.g1.e1, upper(vm1.g1.e1) as Nuge, pm1.g1.e1, upper(pm1.g1.e1) as Nuge FROM vm1.g1, pm1.g1"; //$NON-NLS-1$
 
 
@@ -5044,7 +5039,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);          
     }    
 
-    public void testDefect12081_2(){
+    @Test public void testDefect12081_2(){
         String sql = "SELECT DISTINCT vm1.g1b.e1, vm1.g1b.e1Upper, pm1.g1.e1, upper(pm1.g1.e1) as e1Upper FROM vm1.g1b, pm1.g1"; //$NON-NLS-1$
 
         // Create expected results
@@ -5071,7 +5066,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);          
     }  
     
-    public void testDefect12081_3(){
+    @Test public void testDefect12081_3(){
         String sql = "SELECT DISTINCT vm1.g1b.e1, vm1.g1b.e1Upper, pm1.g1.e1, vm1.g1b.e1Upper FROM vm1.g1b, pm1.g1"; //$NON-NLS-1$
 
         // Create expected results
@@ -5101,7 +5096,7 @@ public class TestProcessor extends TestCase {
     /**
      * Basically the same as above, but with a limit node between the dup removal and the project
      */
-    public void testDefect12081_4(){
+    @Test public void testDefect12081_4(){
         String sql = "SELECT DISTINCT e1, e1 FROM pm1.g1 where e1 = 'a' LIMIT 1"; //$NON-NLS-1$
 
         // Create expected results
@@ -5120,7 +5115,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);          
     }
     
-    public void testDefect12719(){
+    @Test public void testDefect12719(){
         String sql = "SELECT e1_, e2_, e2 FROM vm1.g34, pm1.g2 WHERE vm1.g34.e1_ = pm1.g2.e1 order by e1_, e2_"; //$NON-NLS-1$
 
         // Create expected results
@@ -5146,7 +5141,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }    
     
-    public void testDefect13034() {
+    @Test public void testDefect13034() {
 		String sql = "SELECT CONCAT('http://', CONCAT(CASE WHEN (HOST IS NULL) OR (HOST = '') THEN 'soap_host' ELSE HOST END, CASE WHEN (PORT IS NULL) OR (PORT = '') THEN '/metamatrix-soap/services/DataService' ELSE CONCAT(':', CONCAT(PORT, '/metamatrix-soap/services/DataService')) END)) AS location " + //$NON-NLS-1$
 			"FROM (SELECT env('soap_host') AS HOST, env('soap_port') AS PORT) AS props"; //$NON-NLS-1$
 			
@@ -5164,7 +5159,7 @@ public class TestProcessor extends TestCase {
     }
     
     /** see also integer average defect 11682 */
-    public void testIntAvgDefect11682() { 
+    @Test public void testIntAvgDefect11682() { 
         // Create query 
         String sql = "SELECT AVG(IntKey), AVG(IntNum), AVG(FloatNum), AVG(LongNum), AVG(DoubleNum), AVG(ByteNum), AVG(ShortValue), AVG(BigIntegerValue), AVG(BigDecimalValue) FROM BQT1.SmallA"; //$NON-NLS-1$
         
@@ -5184,7 +5179,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }    
     
-    public void testNonJoinCriteriaInFrom() {
+    @Test public void testNonJoinCriteriaInFrom() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm1.g1 a LEFT OUTER JOIN pm2.g1 b ON a.e1=b.e1 AND b.e2 = 0"; //$NON-NLS-1$
 
         // Create expected results
@@ -5205,7 +5200,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
         
-    public void testNonJoinCriteriaInWhere() {
+    @Test public void testNonJoinCriteriaInWhere() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm1.g1 a LEFT OUTER JOIN pm2.g1 b ON a.e1=b.e1 WHERE b.e2 = 0"; //$NON-NLS-1$
 
         // Create expected results
@@ -5224,7 +5219,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testNonJoinCriteriaInWhere2() {
+    @Test public void testNonJoinCriteriaInWhere2() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm1.g1 a LEFT OUTER JOIN pm1.g2 b ON a.e1=b.e1 WHERE (a.e2 + b.e2 = 1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -5244,7 +5239,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }    
     
-    public void testNonJoinCriteriaInWhere3() {
+    @Test public void testNonJoinCriteriaInWhere3() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm1.g1 a LEFT OUTER JOIN pm1.g2 b ON a.e1=b.e1 WHERE (a.e2 = 0) OR (b.e2 = 0)"; //$NON-NLS-1$
 
         // Create expected results
@@ -5264,7 +5259,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }     
         
-    public void testNonJoinCriteriaInFromNestedInVirtual() {
+    @Test public void testNonJoinCriteriaInFromNestedInVirtual() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm1.g1 a LEFT OUTER JOIN (SELECT c.e1, d.e2 FROM pm2.g1 c JOIN pm2.g1 d ON c.e1=d.e1 AND d.e2 >= 0) b ON a.e1=b.e1 AND b.e2 = 0"; //$NON-NLS-1$
 
         // Create expected results
@@ -5285,7 +5280,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testNonJoinCriteriaInFromUsingDependentJoin() {
+    @Test public void testNonJoinCriteriaInFromUsingDependentJoin() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm1.g1 a LEFT OUTER JOIN pm2.g1 b ON a.e1=b.e1 AND b.e2 = 0"; //$NON-NLS-1$
 
         // Create expected results
@@ -5313,7 +5308,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }          
     
-    public void testDefect13700() {
+    @Test public void testDefect13700() {
         // Create expected results
         List[] expected = new List[] { 
             Arrays.asList(new Object[] { new Integer(10) }), 
@@ -5327,7 +5322,7 @@ public class TestProcessor extends TestCase {
         
     }
     
-    public void testDefect13920() throws Exception {
+    @Test public void testDefect13920() throws Exception {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -5364,7 +5359,7 @@ public class TestProcessor extends TestCase {
     }
 
     /** RLM Case 2077 */
-    public void testComplexJoinExpressionsUsingDependentJoin() {
+    @Test public void testComplexJoinExpressionsUsingDependentJoin() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm1.g1 a, pm2.g1 b where rtrim(a.e1)=(b.e1 || b.e1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -5408,7 +5403,7 @@ public class TestProcessor extends TestCase {
     }     
 
     /** RLM Case 2077 */
-    public void testComplexJoinExpressionsUsingDependentJoinWithAccessPattern() {
+    @Test public void testComplexJoinExpressionsUsingDependentJoinWithAccessPattern() {
         String sql = "SELECT a.e1, b.e1, b.e2 FROM pm4.g1 a, pm2.g1 b where rtrim(a.e1)=(b.e1 || b.e1)"; //$NON-NLS-1$
 
         // Create expected results
@@ -5451,7 +5446,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }      
     
-    public void testPushingCriteriaUnderJoinButNotToSource() {
+    @Test public void testPushingCriteriaUnderJoinButNotToSource() {
         // Create query
         String sql = "SELECT A.IntKey AS A_IntKey, B.IntKey AS B_IntKey, C.IntKey AS C_IntKey " +  //$NON-NLS-1$
         "FROM (BQT1.SmallA AS A FULL OUTER JOIN BQT2.SmallA AS B ON A.IntKey = B.IntKey) LEFT OUTER JOIN BQT3.SmallA AS C ON B.IntKey = C.IntKey " +  //$NON-NLS-1$
@@ -5482,7 +5477,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }    
     
-    public void testPushdownLiteralInSelectUnderAggregate() {  
+    @Test public void testPushdownLiteralInSelectUnderAggregate() {  
         String sql = "SELECT COUNT(*) FROM (SELECT '' AS y, a.IntKey FROM BQT1.SmallA a union all select '', b.intkey from bqt1.smallb b) AS x"; //$NON-NLS-1$
 
         // Create expected results
@@ -5515,7 +5510,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }
 
-    public void testPushdownLiteralInSelectWithOrderBy() {  
+    @Test public void testPushdownLiteralInSelectWithOrderBy() {  
         String sql = "SELECT 1, concat('a', 'b' ) AS X FROM BQT1.SmallA where intkey = 0 " +  //$NON-NLS-1$
             "UNION ALL " +  //$NON-NLS-1$
             "select 2, 'Hello2' from BQT1.SmallA where intkey = 1 order by X desc"; //$NON-NLS-1$
@@ -5552,7 +5547,7 @@ public class TestProcessor extends TestCase {
     }
     
     /** defect 15348*/
-    public void testPreparedStatementDefect15348(){
+    @Test public void testPreparedStatementDefect15348(){
         FakeFunctionMetadataSource.setupFunctionLibrary();
         String sql = "SELECT e1 from pm1.g1 where myrtrim(?)=e1"; //$NON-NLS-1$
 
@@ -5589,7 +5584,7 @@ public class TestProcessor extends TestCase {
     }    
 
     /** defect 15348*/
-    public void testPreparedStatementDefect15348b(){
+    @Test public void testPreparedStatementDefect15348b(){
         FakeFunctionMetadataSource.setupFunctionLibrary();  
         
         String sql = "SELECT e1 from pm4.g1 where myrtrim(concat(?, 'a  '))=e1"; //$NON-NLS-1$
@@ -5628,7 +5623,7 @@ public class TestProcessor extends TestCase {
         
     }      
 
-    public void testSourceDoesntSupportGroupAlias() {  
+    @Test public void testSourceDoesntSupportGroupAlias() {  
         String sql = "SELECT a.IntKey, b.IntKey FROM BQT1.SmallA a, BQT1.SmallB b WHERE a.IntKey = 5 AND A.IntKey = b.IntKey"; //$NON-NLS-1$
         
         
@@ -5660,7 +5655,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }
 
-    public void testSourceDoesntSupportGroupAliasOrCriteria() {  
+    @Test public void testSourceDoesntSupportGroupAliasOrCriteria() {  
         String sql = "SELECT a.IntKey, b.IntKey FROM BQT1.SmallA a, BQT1.SmallB b WHERE a.StringKey = '5' AND A.IntKey = b.IntKey"; //$NON-NLS-1$
         
         
@@ -5706,7 +5701,7 @@ public class TestProcessor extends TestCase {
      * 
      * @since 4.2
      */
-    public void testSourceDoesntSupportGroupAliasInVirtual() {  
+    @Test public void testSourceDoesntSupportGroupAliasInVirtual() {  
         String sql = "SELECT x FROM (SELECT a.IntKey as x, b.IntKey as y FROM BQT1.SmallA a, BQT1.SmallB b WHERE a.IntKey = 5 AND A.IntKey = b.IntKey) AS z, BQT2.SmallA WHERE y = IntKey"; //$NON-NLS-1$
         
         
@@ -5751,7 +5746,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }
 
-    public void testCaseInGroupBy() {  
+    @Test public void testCaseInGroupBy() {  
         String sql = "SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
         "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end"; //$NON-NLS-1$
         
@@ -5787,7 +5782,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }
 
-    public void testCaseInGroupByAndHavingCantPush() {  
+    @Test public void testCaseInGroupByAndHavingCantPush() {  
         String sql = "SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
         "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
         "HAVING case when IntKey>=5000 then '5000 +' else '0-999' end = '5000 +'"; //$NON-NLS-1$
@@ -5826,7 +5821,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }
 
-    public void testCaseInGroupByAndHavingCantPush2() {  
+    @Test public void testCaseInGroupByAndHavingCantPush2() {  
         String sql = "SELECT sum (IntKey), case when IntKey>=5000 then '5000 +' else '0-999' end || 'x' " + //$NON-NLS-1$
         "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
         "HAVING length(case when IntKey>=5000 then '5000 +' else '0-999' end) > 5"; //$NON-NLS-1$
@@ -5864,7 +5859,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }
 
-    public void testCaseInGroupByAndHavingCantPush3() {  
+    @Test public void testCaseInGroupByAndHavingCantPush3() {  
         String sql = "SELECT s, c FROM (" + //$NON-NLS-1$
             "SELECT sum (IntKey) s, case when IntKey>=5000 then '5000 +' else '0-999' end || 'x' c " + //$NON-NLS-1$
             "FROM BQT1.SmallA GROUP BY case when IntKey>=5000 then '5000 +' else '0-999' end " + //$NON-NLS-1$
@@ -5903,7 +5898,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);        
     }
 
-    public void testFunctionOfAggregateCantPush() {  
+    @Test public void testFunctionOfAggregateCantPush() {  
         String sql = "SELECT StringKey || 'x', SUM(length(StringKey || 'x')) + 1 AS x FROM BQT1.SmallA GROUP BY StringKey || 'x' HAVING space(MAX(length((StringKey || 'x') || 'y'))) = '   '"; //$NON-NLS-1$
         
         // Plan query
@@ -5939,7 +5934,7 @@ public class TestProcessor extends TestCase {
     }
     
     
-    public void testCase2634() {
+    @Test public void testCase2634() {
         
         String sql = "SELECT x, IntKey FROM (SELECT IntKey, 'a' AS x FROM BQT1.SmallA UNION ALL SELECT IntKey, 'b' AS x FROM BQT1.SmallB) as Z"; //$NON-NLS-1$
         
@@ -5979,7 +5974,7 @@ public class TestProcessor extends TestCase {
         
     }
     
-    public void testQueryWithoutFromWithOrderBy() {
+    @Test public void testQueryWithoutFromWithOrderBy() {
         
         String sql = "select 'three' as x ORDER BY x"; //$NON-NLS-1$
 
@@ -5997,7 +5992,7 @@ public class TestProcessor extends TestCase {
         
     }
 
-    public void testQueryWithoutFromWithOrderBy2() {
+    @Test public void testQueryWithoutFromWithOrderBy2() {
         
         String sql = "select concat('three', ' sixteen') as x ORDER BY x"; //$NON-NLS-1$
 
@@ -6015,7 +6010,7 @@ public class TestProcessor extends TestCase {
         
     }    
 
-    public void testQueryWithoutFromWithOrderBy3() {
+    @Test public void testQueryWithoutFromWithOrderBy3() {
         
         String sql = "SELECT CONCAT('yy', 'z') as c1234567890123456789012345678901234567890, " + //$NON-NLS-1$
                      "CONCAT('21', '12') AS EXPR ORDER BY c1234567890123456789012345678901234567890"; //$NON-NLS-1$
@@ -6034,7 +6029,7 @@ public class TestProcessor extends TestCase {
         
     }     
     
-    public void testCase2507_3(){
+    @Test public void testCase2507_3(){
 
         String sql = "SELECT CONCAT('yy', 'z') AS c1234567890123456789012345678901234567890, " + //$NON-NLS-1$
                             "CONCAT('21', '12') AS EXPR ORDER BY c1234567890123456789012345678901234567890"; //$NON-NLS-1$
@@ -6087,7 +6082,7 @@ public class TestProcessor extends TestCase {
         
     }    
 
-    public void testMultiGroupJoinCriteria() {
+    @Test public void testMultiGroupJoinCriteria() {
         
         String sql = "SELECT X.NEWFIELD FROM " + //$NON-NLS-1$
                        "(SELECT SMALLA.STRINGNUM, " + //$NON-NLS-1$
@@ -6175,7 +6170,7 @@ public class TestProcessor extends TestCase {
      * 
      * @since 4.3
      */
-    public void testDefect18360(){
+    @Test public void testDefect18360(){
 
         String sql = "SELECT a.intkey, a.intnum FROM bqt1.smalla a join bqt2.mediumb b on a.stringkey = b.stringkey " + //$NON-NLS-1$
             "group by a.intkey, a.intnum"; //$NON-NLS-1$
@@ -6213,7 +6208,7 @@ public class TestProcessor extends TestCase {
 
     }    
     
-    public void testDefect17407(){
+    @Test public void testDefect17407(){
         String sql = "select pm1.g1.e1 from pm1.g1, g7 MAKEDEP WHERE pm1.g1.e2=g7.e2 order by e1"; //$NON-NLS-1$
 
         // Create expected results
@@ -6238,7 +6233,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected); 
     }
     
-    public void testDecodeAsCriteria() { 
+    @Test public void testDecodeAsCriteria() { 
         // Create query 
         String sql = "SELECT x.foo, e2 FROM (select decodestring(e1, 'a,q,b,w') as foo, e2 from vm1.g1) as x where x.foo = 'w'"; //$NON-NLS-1$
         
@@ -6258,7 +6253,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testInputParamInNestedExecParam() { 
+    @Test public void testInputParamInNestedExecParam() { 
         // Create query 
         String sql = "EXEC pm1.vsp48('a')"; //$NON-NLS-1$
         
@@ -6280,7 +6275,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testVariableInExecParam() { 
+    @Test public void testVariableInExecParam() { 
         // Create query 
         String sql = "EXEC pm1.vsp49()"; //$NON-NLS-1$
         
@@ -6300,7 +6295,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testVariableInNestedExecParam() { 
+    @Test public void testVariableInNestedExecParam() { 
         // Create query 
         String sql = "EXEC pm1.vsp50()"; //$NON-NLS-1$
         
@@ -6320,7 +6315,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testVariableInNestedExecParamInLoop() { 
+    @Test public void testVariableInNestedExecParamInLoop() { 
         // Create query 
         String sql = "EXEC pm1.vsp51()"; //$NON-NLS-1$
         
@@ -6340,7 +6335,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testVariableInNestedExecParamInAssignment() { 
+    @Test public void testVariableInNestedExecParamInAssignment() { 
         // Create query 
         String sql = "EXEC pm1.vsp52()"; //$NON-NLS-1$
         
@@ -6360,7 +6355,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testInputParamInNestedExecParamInLoop() { 
+    @Test public void testInputParamInNestedExecParamInLoop() { 
         // Create query 
         String sql = "EXEC pm1.vsp53('b')"; //$NON-NLS-1$
         
@@ -6380,7 +6375,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
 
-    public void testInputParamInNestedExecParamInAssignment() { 
+    @Test public void testInputParamInNestedExecParamInAssignment() { 
         // Create query 
         String sql = "EXEC pm1.vsp54('c')"; //$NON-NLS-1$
         
@@ -6400,7 +6395,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testBitwiseAggregateProc() { 
+    @Test public void testBitwiseAggregateProc() { 
         // Create query 
         String sql = "EXEC virt.agg()"; //$NON-NLS-1$
         
@@ -6449,7 +6444,7 @@ public class TestProcessor extends TestCase {
         }
     }  
     
-    public void testFunctionGroupByInJoinCriteria() {  
+    @Test public void testFunctionGroupByInJoinCriteria() {  
         // Create query  
         String sql = "SELECT lower(vm1.g1.e1) from vm1.g1, vm1.g2a where vm1.g1.e1 = vm1.g2a.e1 group by lower(vm1.g1.e1)"; //$NON-NLS-1$ 
          
@@ -6503,7 +6498,7 @@ public class TestProcessor extends TestCase {
         return new FakeMetadataFacade(store);
     }
     
-    public void testProjectionErrorOverUnionWithConvert() {  
+    @Test public void testProjectionErrorOverUnionWithConvert() {  
         // Create query  
         FakeMetadataFacade metadata = createProjectErrorMetadata();
         String sql = "SELECT COUNT(*) FROM v1.u1"; //$NON-NLS-1$ 
@@ -6530,7 +6525,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected); 
     }
     
-    public void testUpdatesInLoop() { 
+    @Test public void testUpdatesInLoop() { 
         String sql = "update vm1.g1 set vm1.g1.e2=3"; //$NON-NLS-1$ 
  
         // Plan query 
@@ -6551,7 +6546,7 @@ public class TestProcessor extends TestCase {
          
     }
     
-    public void testRand() { 
+    @Test public void testRand() { 
         // Create query 
         String sql = "SELECT RAND(E2) FROM pm1.g1 where pm1.g1.e2=3"; //$NON-NLS-1$
         
@@ -6576,7 +6571,7 @@ public class TestProcessor extends TestCase {
      *  Now they should both pass
      * 
      */    
-    public void testInsertTempTableCreation() {
+    @Test public void testInsertTempTableCreation() {
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
         QueryNode n1 = new QueryNode("v1.vp", "CREATE VIRTUAL PROCEDURE BEGIN insert into #temp (var1) values (1); select #temp.var1 from #temp; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs = FakeMetadataFactory.createResultSet("rs", v1, new String[] { "var1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$
@@ -6595,7 +6590,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, new FakeDataManager(), expected);
     }
     
-    public void testInsertTempTableCreation1() {
+    @Test public void testInsertTempTableCreation1() {
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
         QueryNode n1 = new QueryNode("v1.vp", "CREATE VIRTUAL PROCEDURE BEGIN insert into #temp (var1) values (1); select 2 as var1 into #temp; select #temp.var1 from #temp; END"); //$NON-NLS-1$ //$NON-NLS-2$
         FakeMetadataObject rs = FakeMetadataFactory.createResultSet("rs", v1, new String[] { "var1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER}); //$NON-NLS-1$ //$NON-NLS-2$
@@ -6615,7 +6610,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, new FakeDataManager(), expected);
     }    
         
-    public void testCase4531() { 
+    @Test public void testCase4531() { 
         String sql = "select intkey, intnum from (select intnum as intkey, 1 as intnum from bqt1.smalla union all select intkey, intnum from bqt1.smalla union all select intkey, intnum from bqt2.smalla) x"; //$NON-NLS-1$ 
  
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder(); 
@@ -6676,7 +6671,7 @@ public class TestProcessor extends TestCase {
         }
     }    
     
-    public void testDefect15355() throws Exception {
+    @Test public void testDefect15355() throws Exception {
         
         String sql = "SELECT e1, e1 FROM pm1.g1 "   //$NON-NLS-1$
         +"UNION ALL "   //$NON-NLS-1$
@@ -6714,7 +6709,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testDefect15355b() throws Exception {
+    @Test public void testDefect15355b() throws Exception {
         
         String sql = "SELECT StringKey, BigIntegerValue FROM BQT1.SmallA "   //$NON-NLS-1$
         +"UNION ALL "   //$NON-NLS-1$
@@ -6752,7 +6747,7 @@ public class TestProcessor extends TestCase {
         
     }    
 
-    public void testDefect15355c() throws Exception {
+    @Test public void testDefect15355c() throws Exception {
         
         String sql = "SELECT StringKey, BigIntegerValue FROM VQT.Defect15355 WHERE StringKey = '0'";  //$NON-NLS-1$
         
@@ -6782,7 +6777,7 @@ public class TestProcessor extends TestCase {
         
     }       
     
-    public void testDefect15355d() throws Exception {
+    @Test public void testDefect15355d() throws Exception {
         
         String sql = "SELECT StringKey, BigIntegerValue FROM VQT.Defect15355a WHERE StringKey = '0'";  //$NON-NLS-1$
         
@@ -6812,7 +6807,7 @@ public class TestProcessor extends TestCase {
         
     }     
 
-    public void testDefect15355e() throws Exception {
+    @Test public void testDefect15355e() throws Exception {
         
         String sql = "SELECT BigIntegerValue, StringKey FROM VQT.Defect15355 WHERE StringKey = '0'";  //$NON-NLS-1$
         
@@ -6842,7 +6837,7 @@ public class TestProcessor extends TestCase {
         
     }    
 
-    public void testDefect15355f() throws Exception {
+    @Test public void testDefect15355f() throws Exception {
         
         String sql = "SELECT BigIntegerValue FROM VQT.Defect15355 WHERE StringKey = '0'";  //$NON-NLS-1$
         
@@ -6872,7 +6867,7 @@ public class TestProcessor extends TestCase {
         
     }     
 
-    public void testDefect15355f2() throws Exception {
+    @Test public void testDefect15355f2() throws Exception {
         
         String sql = "SELECT BigIntegerValue FROM VQT.Defect15355 WHERE StringKey LIKE '%0' AND StringKey LIKE '0%'";  //$NON-NLS-1$
         
@@ -6902,7 +6897,7 @@ public class TestProcessor extends TestCase {
         
     }      
     
-    public void testDefect15355g() throws Exception {
+    @Test public void testDefect15355g() throws Exception {
         
         String sql = "SELECT BigIntegerValue AS a, BigIntegerValue AS b FROM VQT.Defect15355 WHERE StringKey = '0'";  //$NON-NLS-1$
         
@@ -6932,7 +6927,7 @@ public class TestProcessor extends TestCase {
         
     }     
 
-    public void testDefect15355h() throws Exception {
+    @Test public void testDefect15355h() throws Exception {
         
         String sql = "SELECT BigIntegerValue FROM VQT.Defect15355 WHERE BigIntegerValue = '0'";  //$NON-NLS-1$
                       
@@ -6962,7 +6957,7 @@ public class TestProcessor extends TestCase {
         
     }     
 
-    public void testDefect15355i() throws Exception {
+    @Test public void testDefect15355i() throws Exception {
         
         String sql = "SELECT BigIntegerValue FROM VQT.Defect15355b WHERE BigIntegerValue = '0'";  //$NON-NLS-1$
         
@@ -6995,7 +6990,7 @@ public class TestProcessor extends TestCase {
     /**
      * The inner most A.e1 was mistakenly getting transformed into pm1.g3.e1 
      */
-    public void testInnerCorrelatedReference() throws Exception {
+    @Test public void testInnerCorrelatedReference() throws Exception {
         
         String sql = "SELECT DISTINCT A.e1 FROM pm1.g3 AS A WHERE (A.e1 IN (SELECT A.e1 FROM pm1.g3))";  //$NON-NLS-1$
         
@@ -7026,7 +7021,7 @@ public class TestProcessor extends TestCase {
         
     }
     
-    public void testCase5413() {
+    @Test public void testCase5413() {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
@@ -7053,7 +7048,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     } 
     
-    public void testRaiseNullWithSelectInto() {
+    @Test public void testRaiseNullWithSelectInto() {
         String sql = "select pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 into pm1.g2 from pm1.g1 where (1=0)"; //$NON-NLS-1$
         ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder()); 
         
@@ -7085,7 +7080,7 @@ public class TestProcessor extends TestCase {
     /*
      * Test for Case6219
      */
-    public void testCase6219() {
+    @Test public void testCase6219() {
         String sql = "SELECT e1 FROM pm1.g1, (SELECT 'ACT' AS StateCode,'A' AS StateAbbrv UNION ALL SELECT 'NSW' AS StateCode, 'N' AS StateAbbrv) AS StateNames_Abbrvs WHERE (pm1.g1.e1 = StateCode) AND ((StateNames_Abbrvs.StateAbbrv || pm1.g1.e1) = 'VVIC')"; //$NON-NLS-1$
         ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder()); 
         
@@ -7115,7 +7110,7 @@ public class TestProcessor extends TestCase {
         
     }
     
-    public void testSortWithLimit() {
+    @Test public void testSortWithLimit() {
         String sql = "select e1 from (select pm1.g1.e1, pm1.g1.e2 from pm1.g1 order by pm1.g1.e1, pm1.g1.e2 limit 1) x"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7131,7 +7126,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testSortWithLimit1() {
+    @Test public void testSortWithLimit1() {
         String sql = "select c from (select pm1.g1.e1 a, pm1.g1.e2 b, pm1.g1.e3 c from pm1.g1 order by b limit 1) x"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7149,7 +7144,7 @@ public class TestProcessor extends TestCase {
         assertEquals("SELECT pm1.g1.e3, pm1.g1.e2 FROM pm1.g1", (String)manager.getQueries().iterator().next()); //$NON-NLS-1$
     }
     
-    public void testSortWithLimit2() {
+    @Test public void testSortWithLimit2() {
         String sql = "select a from (select max(e2) a from pm1.g1 group by e2 order by a limit 1) x where a = 0"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7165,7 +7160,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
 
-    public void testCountWithHaving() {
+    @Test public void testCountWithHaving() {
         String sql = "select e1, count(*) from pm1.g1 group by e1 having count(*) > 1"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7181,7 +7176,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testLimitZero() {
+    @Test public void testLimitZero() {
         String sql = "select e1 from pm1.g1 limit 0"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7198,7 +7193,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testLimitZero1() {
+    @Test public void testLimitZero1() {
         String sql = "select distinct vm1.g1.e1, y.e1 from vm1.g1 left outer join (select 1 x, e1 from vm1.g2 limit 0) y on vm1.g1.e1 = y.e1 where vm1.g1.e1 = 'a'"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7231,7 +7226,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testLimitZero2() {
+    @Test public void testLimitZero2() {
         String sql = "select vm1.g1.e1 from vm1.g1 union select e1 from pm1.g2 limit 0"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7246,7 +7241,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testLimitZero3() {
+    @Test public void testLimitZero3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -7266,7 +7261,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testUnionWithTypeConversion() {
+    @Test public void testUnionWithTypeConversion() {
         String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1 where e1 = 'b' union select e2, e1 from pm1.g2 where e1 = 'b' order by e1, e2"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7291,7 +7286,7 @@ public class TestProcessor extends TestCase {
      * 
      * If this function were deterministic, it would be evaluated during rewrite to a single value.
      */
-    public void testNonDeterministicEvaluation() throws Exception {
+    @Test public void testNonDeterministicEvaluation() throws Exception {
         String sql = "select e1, convert(rand()*1000, integer) as x from pm1.g1 where e1 = 'a'"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7312,7 +7307,7 @@ public class TestProcessor extends TestCase {
     /**
      * here the rand function is deterministic and should yield a single value
      */
-    public void testDeterministicEvaluation() throws Exception {
+    @Test public void testDeterministicEvaluation() throws Exception {
         String sql = "select e1, convert(rand(0)*1000, integer) as x from pm1.g1 where e1 = 'a'"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7330,7 +7325,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testEmptyAggregate() throws Exception {
+    @Test public void testEmptyAggregate() throws Exception {
         String sql = "select count(e1) from pm1.g1 where 1 = 0"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7346,7 +7341,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testNullAggregate() throws Exception {
+    @Test public void testNullAggregate() throws Exception {
         String sql = "select count(*), count(e1), sum(convert(e1, integer)) from pm1.g1 where e1 is null"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7365,7 +7360,7 @@ public class TestProcessor extends TestCase {
     /**
      * here the presence of a group by causes no rows to be returned 
      */
-    public void testNullAggregate1() throws Exception {
+    @Test public void testNullAggregate1() throws Exception {
         String sql = "select e1 from pm1.g1 where 1 = 0 group by e1"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7380,7 +7375,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, manager, expected);
     }
     
-    public void testReferenceReplacementWithExpression() throws Exception {
+    @Test public void testReferenceReplacementWithExpression() throws Exception {
         String sql = "select e1, e2 from (select e1, convert(e2, string) e2 from pm1.g1) x where exists (select e3 from pm1.g2 where x.e2 = e1)"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7398,7 +7393,7 @@ public class TestProcessor extends TestCase {
      * Here a merge join will be used since there is at least one equi join predicate.
      * TODO: this can be optimized further
      */
-    public void testCase6193_1() throws Exception { 
+    @Test public void testCase6193_1() throws Exception { 
         // Create query 
         String sql = "select a.INTKEY, b.intkey from bqt1.smalla a LEFT OUTER JOIN bqt2.SMALLA b on a.intkey=b.intkey and a.intkey=5 where a.intkey <10 "; //$NON-NLS-1$
         
@@ -7452,7 +7447,7 @@ public class TestProcessor extends TestCase {
     /**
      * Here a merge join will be used since there is at least one equi join predicate.
      */
-    public void testCase6193_2() throws Exception { 
+    @Test public void testCase6193_2() throws Exception { 
         // Create query 
         String sql = "select a.e2, b.e2 from pm1.g1 a LEFT OUTER JOIN pm1.g2 b on a.e4=b.e4 and (a.e2+b.e2)=4 order by a.e2"; //$NON-NLS-1$
         
@@ -7499,7 +7494,7 @@ public class TestProcessor extends TestCase {
      * Here a merge join will be used since there is at least one equi join predicate.
      * The inner merge join is also a dependent join
      */
-    public void testCase6193_3() throws Exception { 
+    @Test public void testCase6193_3() throws Exception { 
         // Create query 
         String sql = "select a.x, b.y from (select 4 x union select 1) a LEFT OUTER JOIN (select (a.e2 + b.e2) y from pm1.g1 a LEFT OUTER JOIN pm1.g2 b on a.e4=b.e4) b on (a.x = b.y)"; //$NON-NLS-1$
         
@@ -7542,7 +7537,7 @@ public class TestProcessor extends TestCase {
     /**
      * A control test to ensure that y will still exist for sorting
      */
-    public void testOrderByWithDuplicateExpressions() throws Exception {
+    @Test public void testOrderByWithDuplicateExpressions() throws Exception {
         String sql = "select e1 as x, e1 as y from pm1.g1 order by y ASC"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -7567,7 +7562,7 @@ public class TestProcessor extends TestCase {
      * This is a control test.  It should work regardless of whether the reference is aliased
      * since accessnodes are now fully positional
      */
-    public void testPushdownNonAliasedSelectLiteral() {
+    @Test public void testPushdownNonAliasedSelectLiteral() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
@@ -7595,7 +7590,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, context, manager, expected);
     }
     
-    public void testCase6486() { 
+    @Test public void testCase6486() { 
         // Create query 
         String sql = "select pm2.g1.e1 from pm1.g2, pm2.g1 where pm1.g2.e1=pm2.g1.e1 group by pm2.g1.e1"; //$NON-NLS-1$
         
@@ -7616,7 +7611,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);
     }
     
-    public void testNonPushedOffset() throws Exception {
+    @Test public void testNonPushedOffset() throws Exception {
         String sql = "SELECT e1 FROM pm1.g1 LIMIT 1, 5"; //$NON-NLS-1$
         
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -7636,7 +7631,7 @@ public class TestProcessor extends TestCase {
         helpProcess(plan, dataManager, expected);          
     }
     
-    public void testNonCorrelatedSubQueryExecution() throws Exception {
+    @Test public void testNonCorrelatedSubQueryExecution() throws Exception {
         String sql = "SELECT e1 FROM pm1.g1 WHERE e2 IN (SELECT e2 FROM pm2.g1)"; //$NON-NLS-1$
 
         // Construct data manager with data
@@ -7663,7 +7658,7 @@ public class TestProcessor extends TestCase {
     }
 
 
-    public void testCase186260() {
+    @Test public void testCase186260() {
         /*
          * This case revealed that an expression like "COUNT( DISTINCT e1 )", where the type of e1 is 
          * anything but integer, was not handled properly.  We tried to use "integer" (the type of the

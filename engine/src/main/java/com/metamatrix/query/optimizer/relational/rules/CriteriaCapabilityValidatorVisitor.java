@@ -284,7 +284,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
      */
     public void visit(SubqueryCompareCriteria crit) {
         // Check if quantification operator is allowed
-        Capability capability = null;
+        Capability capability = Capability.QUERY_SUBQUERIES_SCALAR;
         switch(crit.getPredicateQuantifier()) {
             case SubqueryCompareCriteria.ALL:
                 capability = Capability.CRITERIA_QUANTIFIED_ALL;

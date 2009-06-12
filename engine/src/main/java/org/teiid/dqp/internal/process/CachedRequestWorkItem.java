@@ -35,7 +35,6 @@ import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
-import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
@@ -66,7 +65,7 @@ public class CachedRequestWorkItem extends RequestWorkItem {
 	@Override
 	protected void sendResultsIfNeeded(TupleBatch batch)
 			throws BlockedOnMemoryException, MetaMatrixComponentException,
-			CommunicationException, TupleSourceNotFoundException {
+			TupleSourceNotFoundException {
 		synchronized (this.resultsCursor) {
 			if (!this.resultsCursor.resultsRequested) {
 				return;

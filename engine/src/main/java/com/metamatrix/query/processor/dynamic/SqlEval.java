@@ -76,15 +76,7 @@ public class SqlEval implements XQuerySQLEvaluator {
         }
         openTupleList.add(processor.getResultsID());
         
-        try {
-            processor.process();
-        } catch(MetaMatrixComponentException e) {
-            throw e;
-        } catch(MetaMatrixProcessingException e) {
-            throw e;
-        } catch (MetaMatrixCoreException e) {
-        	throw new MetaMatrixComponentException(e, e.getMessage());
-		}
+        processor.process();
         
         TupleSourceID tsID = processor.getResultsID();
         TupleSource src = this.bufferMgr.getTupleSource(tsID);

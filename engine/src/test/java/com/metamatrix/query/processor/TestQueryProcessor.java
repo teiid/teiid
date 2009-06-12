@@ -29,11 +29,13 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
+import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.util.CommandContext;
@@ -178,8 +180,7 @@ public class TestQueryProcessor extends TestCase {
         	
         	int count = 0;
         	
-			public void batchProduced(TupleBatch batch)
-					throws MetaMatrixCoreException {
+			public void batchProduced(TupleBatch batch) throws TupleSourceNotFoundException, MetaMatrixComponentException {
 		
 				assertEquals(++count, plan.batchIndex);
 				if (count == 2) {

@@ -546,7 +546,7 @@ public class TestSubqueryPushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", new BasicSourceCapabilities()); //$NON-NLS-1$
 
-        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT e1 FROM pm1.g2 ORDER BY e1)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (SELECT e1 FROM pm1.g2 ORDER BY e1 limit 2)", FakeMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
             new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {

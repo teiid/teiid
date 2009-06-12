@@ -1,6 +1,7 @@
 package com.metamatrix.query.processor;
 
 import static com.metamatrix.query.processor.TestProcessor.*;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;

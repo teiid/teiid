@@ -32,7 +32,6 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.query.eval.Evaluator;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -127,15 +126,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 					state.processor.getContext().pushVariableContext(currentContext);
 				}
 			}
-			try {
-				state.processor.process(Integer.MAX_VALUE);
-			} catch (MetaMatrixComponentException e) {
-				throw e;
-			} catch (MetaMatrixProcessingException e) {
-				throw e;
-			} catch (MetaMatrixCoreException e) {
-				throw new MetaMatrixComponentException(e);
-			}
+			state.processor.process(Integer.MAX_VALUE);
 			state.done = true;
 			state.processor.getProcessorPlan().reset();
 		}

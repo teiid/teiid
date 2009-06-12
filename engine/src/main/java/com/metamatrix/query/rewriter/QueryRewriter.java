@@ -174,7 +174,7 @@ public class QueryRewriter {
 	private QueryRewriter() { }
 
     public static Command rewrite(Command command, Command procCommand, QueryMetadataInterface metadata, CommandContext context) throws QueryValidatorException {
-        return rewriteCommand(command, procCommand, metadata, context);
+        return rewriteCommand(command, procCommand, metadata, context, false);
     }
 
     /**
@@ -184,10 +184,11 @@ public class QueryRewriter {
      * @param procCommand
      * @param metadata
      * @param context
+     * @param removeOrderBy
      * @return
      * @throws QueryValidatorException
      */
-	private static Command rewriteCommand(Command command, Command procCommand, final QueryMetadataInterface metadata, final CommandContext context) throws QueryValidatorException {
+	private static Command rewriteCommand(Command command, Command procCommand, final QueryMetadataInterface metadata, final CommandContext context, boolean removeOrderBy) throws QueryValidatorException {
 
         //TODO: this should be merged with the normal functioning of the rewriter
         CorrelatedVariableSubstitutionVisitor.substituteVariables(command);
@@ -204,6 +205,12 @@ public class QueryRewriter {
                     command = rewriteQuery((Query) command, procCommand, rewriteMetadata, context);
                 }else {
                     command = rewriteSetQuery((SetQuery) command, procCommand, rewriteMetadata, context);
+                }
+            	if (removeOrderBy) {
+                	QueryCommand queryCommand = (QueryCommand)command;
+                	if (queryCommand.getLimit() == null) {
+                		queryCommand.setOrderBy(null);
+                	}
                 }
                 break;
             case Command.TYPE_STORED_PROCEDURE:
@@ -245,7 +252,7 @@ public class QueryRewriter {
                     }
                 }
                 
-                subCommand = rewriteCommand(subCommand, procCommand, metadata, context);
+                subCommand = rewriteCommand(subCommand, procCommand, metadata, context, false);
                 subCommands.set(i, subCommand);
             }
         }
@@ -410,7 +417,7 @@ public class QueryRewriter {
     				expr = rewriteExpression(expr, procCommand, context, metadata);
                     assStmt.setExpression(expr);
                 } else if (assStmt.hasCommand()) {
-                    rewriteSubqueryContainer(assStmt, procCommand, context, metadata);
+                    rewriteSubqueryContainer(assStmt, procCommand, context, metadata, false);
                     
                     if(assStmt.getCommand().getType() == Command.TYPE_UPDATE) {
                         Update update = (Update)assStmt.getCommand();
@@ -422,7 +429,7 @@ public class QueryRewriter {
 				return assStmt;
 			case Statement.TYPE_COMMAND:
 				CommandStatement cmdStmt = (CommandStatement) statement;
-                rewriteSubqueryContainer(cmdStmt, procCommand, context, metadata);
+                rewriteSubqueryContainer(cmdStmt, procCommand, context, metadata, false);
                 
 				if(cmdStmt.getCommand().getType() == Command.TYPE_UPDATE) {
                     Update update = (Update)cmdStmt.getCommand();
@@ -434,7 +441,7 @@ public class QueryRewriter {
             case Statement.TYPE_LOOP: 
                 LoopStatement loop = (LoopStatement)statement; 
                 
-                rewriteSubqueryContainer(loop, procCommand, context, metadata);
+                rewriteSubqueryContainer(loop, procCommand, context, metadata, false);
                 
                 rewriteBlock(loop.getBlock(), procCommand, context, metadata);
                 
@@ -470,13 +477,14 @@ public class QueryRewriter {
      * @param procCommand
      * @param context
      * @param metadata
+     * @param removeOrderBy
      * @param assStmt
      * @throws QueryValidatorException
      */
     private static void rewriteSubqueryContainer(SubqueryContainer container, Command procCommand,
-                                                 CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+                                                 CommandContext context, QueryMetadataInterface metadata, boolean removeOrderBy) throws QueryValidatorException {
         if (container.getCommand() != null && container.getCommand().getProcessorPlan() == null && metadata != null) {
-            container.setCommand(rewriteCommand(container.getCommand(), procCommand, metadata, context));
+        	container.setCommand(rewriteCommand(container.getCommand(), procCommand, metadata, context, removeOrderBy));
         }
     }
     
@@ -679,7 +687,6 @@ public class QueryRewriter {
             from.setClauses(clauses);
         } else {
             query.setOrderBy(null);
-            //query.setGroupBy(null); -- TODO: validation exception
         }
 
         // Rewrite criteria
@@ -937,8 +944,8 @@ public class QueryRewriter {
             setQuery.setProjectedTypes(null);
         }
         
-        setQuery.setLeftQuery((QueryCommand)rewriteCommand(setQuery.getLeftQuery(), procCommand, metadata, context));
-        setQuery.setRightQuery((QueryCommand)rewriteCommand(setQuery.getRightQuery(), procCommand, metadata, context));
+        setQuery.setLeftQuery((QueryCommand)rewriteCommand(setQuery.getLeftQuery(), procCommand, metadata, context, true));
+        setQuery.setRightQuery((QueryCommand)rewriteCommand(setQuery.getRightQuery(), procCommand, metadata, context, true));
 
         if (setQuery.getOrderBy() != null) {
             makeSelectUnique(setQuery.getProjectedQuery(), true);
@@ -959,7 +966,7 @@ public class QueryRewriter {
         } else if (clause instanceof UnaryFromClause) {
             rewriteUnaryFromClause(parent, (UnaryFromClause)clause, metadata, context);
         } else if (clause instanceof SubqueryFromClause) {
-            rewriteSubqueryContainer((SubqueryFromClause)clause, procCommand, context, metadata);
+            rewriteSubqueryContainer((SubqueryFromClause)clause, procCommand, context, metadata, true);
         }
         return clause;
 	}
@@ -972,7 +979,7 @@ public class QueryRewriter {
             return;
         }
             
-        ufc.setExpandedCommand(rewriteCommand(nestedCommand, null, metadata, context));
+        ufc.setExpandedCommand(rewriteCommand(nestedCommand, null, metadata, context, true));
     }
 
 	private static JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate, Command procCommand,
@@ -1050,13 +1057,13 @@ public class QueryRewriter {
 		} else if(criteria instanceof TranslateCriteria) {
             criteria = rewriteCriteria((TranslateCriteria)criteria, procCommand, context, metadata);
 		} else if (criteria instanceof ExistsCriteria) {
-		    rewriteSubqueryContainer((SubqueryContainer)criteria, procCommand, context, metadata);
+		    rewriteSubqueryContainer((SubqueryContainer)criteria, procCommand, context, metadata, true);
 		} else if (criteria instanceof SubquerySetCriteria) {
 		    SubquerySetCriteria sub = (SubquerySetCriteria)criteria;
 		    if (isNull(sub.getExpression())) {
 		        return UNKNOWN_CRITERIA;
 		    }
-		    rewriteSubqueryContainer((SubqueryContainer)criteria, procCommand, context, metadata);
+		    rewriteSubqueryContainer((SubqueryContainer)criteria, procCommand, context, metadata, true);
         } else if (criteria instanceof DependentSetCriteria) {
             criteria = rewriteCriteria((AbstractSetCriteria)criteria, procCommand, context, metadata);
         }
@@ -1272,7 +1279,7 @@ public class QueryRewriter {
             criteria.setPredicateQuantifier(SubqueryCompareCriteria.SOME);
         }
         
-        rewriteSubqueryContainer(criteria, procCommand, context, metadata);
+        rewriteSubqueryContainer(criteria, procCommand, context, metadata, true);
 
         return criteria;
     }
@@ -1943,7 +1950,7 @@ public class QueryRewriter {
         } else if (expression instanceof SearchedCaseExpression) {
             return rewriteCaseExpression((SearchedCaseExpression)expression, procCommand, context, metadata);
         } else if (expression instanceof ScalarSubquery) {
-            rewriteSubqueryContainer((ScalarSubquery)expression, procCommand, context, metadata);
+            rewriteSubqueryContainer((ScalarSubquery)expression, procCommand, context, metadata, true);
             return expression;
         } else if (expression instanceof ExpressionSymbol && !(expression instanceof AggregateSymbol)) {
             return rewriteExpression(((ExpressionSymbol)expression).getExpression(), procCommand, context, metadata);
