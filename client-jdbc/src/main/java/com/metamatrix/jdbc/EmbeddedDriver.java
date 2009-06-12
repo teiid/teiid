@@ -33,11 +33,12 @@ import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -88,7 +89,7 @@ public final class EmbeddedDriver extends BaseDriver {
         } catch(SQLException e) {
             // Logging
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.MMDQP_DRIVER_could_not_be_registered"); //$NON-NLS-1$
-            DriverManager.println(logMsg);
+            logger.log(Level.SEVERE, logMsg);
         }                
     }
     
@@ -154,16 +155,15 @@ public final class EmbeddedDriver extends BaseDriver {
      */
     private synchronized static EmbeddedTransport getDQPTransport(URL dqpURL, Properties info) throws SQLException {      
         EmbeddedTransport transport = currentTransport;
-        if (transport != null && currentTransport.getURL().equals(dqpURL)) {
-            String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_existing_transport"); //$NON-NLS-1$
-            DriverManager.println(logMsg);    
-        } 
-        else {
+        if (transport == null || !currentTransport.getURL().equals(dqpURL)) {
         	// shutdown any previous instance; we do encourage single instance in a given VM
        		shutdown();
-            transport = new EmbeddedTransport(dqpURL, info);            
-            String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_new_transport"); //$NON-NLS-1$
-            DriverManager.println(logMsg);
+       		try {
+       			transport = new EmbeddedTransport(dqpURL, info);
+       		} catch (SQLException e) {
+                logger.log(Level.SEVERE, "Could not start the embedded engine", e); //$NON-NLS-1$
+       			throw e;
+       		}
         }
         currentTransport = transport;
         return transport;
@@ -182,7 +182,6 @@ public final class EmbeddedDriver extends BaseDriver {
     void parseURL(String url, Properties info) throws SQLException {
         if (url == null || url.trim().length() == 0) {
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.URL_must_be_specified"); //$NON-NLS-1$
-            DriverManager.println(logMsg);
             throw new SQLException(logMsg);
         }
                 
@@ -222,10 +221,7 @@ public final class EmbeddedDriver extends BaseDriver {
                 info.setProperty(BaseDataSource.APP_NAME, BaseDataSource.DEFAULT_APP_NAME);
             }
         } catch (Exception e) {
-            String logMsg = e.getClass() +": "+e.getMessage(); //$NON-NLS-1$
-            DriverManager.println(logMsg); 
-            DriverManager.println(e.getStackTrace().toString());
-            throw new SQLException(logMsg); 
+            throw new SQLException(e); 
         }        
     }
 
@@ -251,7 +247,6 @@ public final class EmbeddedDriver extends BaseDriver {
         value = info.getProperty(BaseDataSource.VDB_NAME);
         if (value == null || value.trim().length() == 0) {
             String logMsg = BaseDataSource.getResourceMessage("MMDataSource.Virtual_database_name_must_be_specified"); //$NON-NLS-1$
-            DriverManager.println(logMsg);
             throw new SQLException(logMsg);
         }
 
@@ -319,12 +314,8 @@ public final class EmbeddedDriver extends BaseDriver {
      */
     public static synchronized void shutdown() {
         if (currentTransport != null) {
-            try {
-            	currentTransport.shutdown();
-            	currentTransport = null;
-            } catch (SQLException e) {
-                DriverManager.println(e.getMessage());
-            }
+        	currentTransport.shutdown();
+        	currentTransport = null;
         }
     }
     
@@ -371,11 +362,8 @@ public final class EmbeddedDriver extends BaseDriver {
             this.classLoader = new PostDelegatingClassLoader(dqpClassPath, this.getClass().getClassLoader(), new MetaMatrixURLStreamHandlerFactory());
             
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_classpath"); //$NON-NLS-1$
-            DriverManager.println(logMsg);
-            for (int i = 0; i < dqpClassPath.length; i++) {
-                DriverManager.println(dqpClassPath[i].toString());
-            }
-            
+            logger.log(Level.FINER, logMsg + " " + Arrays.toString(dqpClassPath)); //$NON-NLS-1$
+
             // Now using this class loader create the connection factory to the dqp.            
             ClassLoader current = Thread.currentThread().getContextClassLoader();            
             try {
@@ -385,7 +373,6 @@ public final class EmbeddedDriver extends BaseDriver {
                 this.connectionFactory = (EmbeddedConnectionFactory)clazz.newInstance();
                 this.connectionFactory.initialize(dqpURL, props);
             } catch (Exception e) {
-                DriverManager.println(e.getClass() +": "+e.getMessage()); //$NON-NLS-1$
                 throw new EmbeddedSQLException(e);                
             } finally {
                 Thread.currentThread().setContextClassLoader(current);
@@ -438,16 +425,10 @@ public final class EmbeddedDriver extends BaseDriver {
                 props.load(in);
                 
                 String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.use_properties"); //$NON-NLS-1$
-                DriverManager.println(logMsg);
-                for (Iterator i = props.keySet().iterator(); i.hasNext();) {
-                    String key = (String)i.next();                    
-                    DriverManager.println(key+"="+props.getProperty(key)); //$NON-NLS-1$
-                }                
+                logger.log(Level.FINER, logMsg + props);
                 return props;
             }catch(IOException e) {
                 String logMsg = BaseDataSource.getResourceMessage("EmbeddedTransport.invalid_dqpproperties_path", new Object[] {dqpURL}); //$NON-NLS-1$
-                DriverManager.println(e.getClass() +": "+e.getMessage()); //$NON-NLS-1$
-                DriverManager.println(e.getStackTrace().toString());
                 throw new EmbeddedSQLException(e, logMsg);
             }finally {
                 if (in != null) {
@@ -459,7 +440,7 @@ public final class EmbeddedDriver extends BaseDriver {
         /**
          * Shutdown the current transport 
          */
-        void shutdown() throws SQLException{
+        void shutdown() {
             this.connectionFactory.shutdown();            
                         
             // remove any artifacts which are not cleaned-up
@@ -517,10 +498,9 @@ public final class EmbeddedDriver extends BaseDriver {
 					throw MMSQLException.create(e);
 				}
         	}
-        	String dir = baseDir + "/" + identity; //$NON-NLS-1$
-            System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, dir + "/temp"); //$NON-NLS-1$S 
+            System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, baseDir + "/temp"); //$NON-NLS-1$S 
 
-            File f = new File(dir);
+            File f = new File(baseDir, identity);
 
             // If directory already exists then try to delete it; because we may have
             // failed to delete at end of last run (JVM holds lock on jar files)
@@ -532,7 +512,7 @@ public final class EmbeddedDriver extends BaseDriver {
             if (!f.exists()) {
                 f.mkdirs();
             }  
-            return dir;
+            return f.getAbsolutePath();
         }
         
         /**

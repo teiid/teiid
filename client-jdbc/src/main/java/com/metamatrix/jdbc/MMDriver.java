@@ -30,6 +30,7 @@ import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -82,7 +83,7 @@ public final class MMDriver extends BaseDriver {
         } catch(SQLException e) {
             // Logging
             String logMsg = JDBCPlugin.Util.getString("MMDriver.Err_registering", e.getMessage()); //$NON-NLS-1$
-            DriverManager.println(logMsg);
+            logger.log(Level.SEVERE, logMsg);
         }
     }
 
@@ -125,7 +126,7 @@ public final class MMDriver extends BaseDriver {
 
             myConnection = createMMConnection(url, info);
         } catch (MetaMatrixCoreException e) {
-            DriverManager.println(e.getMessage());
+            logger.log(Level.SEVERE, "Could not create connection", e); //$NON-NLS-1$
             throw MMSQLException.create(e, e.getMessage());
         }
 

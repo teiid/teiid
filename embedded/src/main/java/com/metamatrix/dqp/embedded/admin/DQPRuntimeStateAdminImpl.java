@@ -22,7 +22,6 @@
 
 package com.metamatrix.dqp.embedded.admin;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -66,14 +65,10 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
      */
     public void stop(int millisToWait) throws AdminException {        
         // TODO: rreddy need to implement the time to wait.
-        try {
-            // First terminate all the sessions to the DQP currently have
-            terminateSession(AdminObject.WILDCARD);
-            
-            getManager().shutdown();
-        } catch (SQLException e) {
-        	throw new AdminComponentException(e);
-        }
+        // First terminate all the sessions to the DQP currently have
+        terminateSession(AdminObject.WILDCARD);
+        
+        getManager().shutdown();
     }
 
     /** 
@@ -81,16 +76,12 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
      * @since 4.3
      */
     public void restart() throws AdminException {
-        try {
-            // First terminate all the sessions to the DQP currently have
-            terminateSession(AdminObject.WILDCARD);
-            
-            // Now shutdown the DQP, it will automatically start next timea new connection is 
-            // requested.
-            getManager().shutdown();                        
-        } catch (SQLException e) {
-        	throw new AdminComponentException(e);
-        } 
+        // First terminate all the sessions to the DQP currently have
+        terminateSession(AdminObject.WILDCARD);
+        
+        // Now shutdown the DQP, it will automatically start next timea new connection is 
+        // requested.
+        getManager().shutdown();                        
     }
 
     /** 

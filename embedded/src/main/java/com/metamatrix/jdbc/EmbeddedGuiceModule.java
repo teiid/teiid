@@ -58,7 +58,6 @@ public class EmbeddedGuiceModule extends AbstractModule {
 		bindConstant().annotatedWith(Names.named("ProcessName")).to(props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY)); //$NON-NLS-1$
 		String workspaceDir = props.getProperty(DQPEmbeddedProperties.DQP_WORKSPACE);
 		bindConstant().annotatedWith(Names.named("WorkspaceDir")).to(workspaceDir); //$NON-NLS-1$
-		this.props.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, workspaceDir);
 		bind(Properties.class).annotatedWith(Names.named("DQPProperties")).toInstance(this.props); //$NON-NLS-1$
 		bind(DQPContextCache.class).in(Scopes.SINGLETON);
 		

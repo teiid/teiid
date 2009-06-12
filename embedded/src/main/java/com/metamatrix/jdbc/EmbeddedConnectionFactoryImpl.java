@@ -26,8 +26,6 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -67,8 +65,6 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
     private long starttime = -1L;
     private Thread shutdownThread;
 
-    private EmbeddedConnectionListener listener = new EmbeddedConnectionListener();    
-
     /** 
      * @see com.metamatrix.jdbc.EmbeddedConnectionFactory#createConnection()
      */
@@ -81,7 +77,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             ServerConnection serverConn = this.handler.createConnection(props);
                         
             // Should occur every time in class loader using existing attributes
-            return new EmbeddedConnection(this, serverConn, props, listener);            
+            return new EmbeddedConnection(this, serverConn, props, null);            
         } catch (ConnectionException e) {
             throw new EmbeddedSQLException(e);
 		}
@@ -130,11 +126,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
     	
 		@Override
 		public void run() {
-			try {
-				shutdown(false);
-			} catch (SQLException e) {
-				// ignore
-			}
+			shutdown(false);
 		}
     }
    
@@ -171,11 +163,11 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
      * 
      * @see com.metamatrix.jdbc.EmbeddedConnectionFactory#shutdown()
      */
-    public void shutdown() throws SQLException {
+    public void shutdown() {
     	shutdown(true);
     }
      
-    private synchronized void shutdown(boolean undoShutdownHook) throws SQLException {
+    private synchronized void shutdown(boolean undoShutdownHook) {
     	
     	if (undoShutdownHook) {
     		Runtime.getRuntime().removeShutdownHook(this.shutdownThread);
@@ -189,10 +181,6 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             // this will by pass, and only let shutdown called once.
             shutdownInProgress = true;
             
-            // First close any connections hanging around; this will only happen if 
-            // connections are not properly closed; or somebody called shutdown.
-            listener.closeConnections();
-                    
         	try {
 				this.dqp.stop();
 			} catch (ApplicationLifecycleException e) {
@@ -265,52 +253,4 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
         throw new EmbeddedSQLException(JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", new Object[] {vdbName, EmbeddedDataSource.USE_LATEST_VDB_VERSION})); //$NON-NLS-1$        
     }    
     
-    /**
-     * A internal connection listener for the connections; based on this 
-     * it manages the DQP instance. These are client side (JDBC) connections
-     */
-    private class EmbeddedConnectionListener implements ConnectionListener{
-
-        // List of connections created
-        HashMap connections = new HashMap();
-
-        public void connectionAdded(String id, Connection connection) {
-            // Add the connection to locol count
-            connections.put(id, connection);
-        }
-    
-        public void connectionRemoved(String id, Connection connection) {
-            // remove from local count 
-            connections.remove(id);
-        }
-        
-        /**
-         * Loop through all the connections and close the connections. 
-         * @throws EmbeddedSQLException
-         */
-        private void closeConnections() throws SQLException {
-            Exception firstException = null;
-            
-            // loop all the available connections and close them; make sure we avoid the
-            // concurrent modification of the list of connections.
-            while (this.connections.size() != 0) {
-                try {
-                    Iterator i = this.connections.keySet().iterator();
-                    if (i.hasNext()) {
-                        Connection connection = (Connection)this.connections.get(i.next());
-                        connection.close();
-                    }
-                } catch (Exception ex) {
-                    if (firstException == null) {
-                        firstException = ex;
-                    }
-                }                
-            }
-                        
-            // if there was any exception then let them know.
-            if (firstException != null) {
-                throw new EmbeddedSQLException(firstException);
-            }
-        }        
-    }
 }

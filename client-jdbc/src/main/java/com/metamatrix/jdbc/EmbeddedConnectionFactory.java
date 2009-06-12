@@ -46,5 +46,5 @@ public interface EmbeddedConnectionFactory {
     /**
      * Shutdown the connection factory, including the DQP and all its existing connections 
      */
-    public void shutdown() throws SQLException;
+    public void shutdown();
 }

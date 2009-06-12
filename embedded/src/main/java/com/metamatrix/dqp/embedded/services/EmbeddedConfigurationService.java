@@ -1436,8 +1436,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     
     public File getWorkDir() {
         String workDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_WORKSPACE);
-        URL bufferURL = getFullyQualifiedPath(workDirectory);
-        File workDir = new File(bufferURL.getPath());
+        File workDir = new File(workDirectory);
         workDir.mkdirs();
         return workDir;
     }
