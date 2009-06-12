@@ -452,7 +452,6 @@
 		<module>metadata</module>
 		<module>txn-jbossts</module>
 		<module>connector-sdk</module>
-		<module>console</module>
 		<module>server</module>
 		<module>soap</module>
 		<module>embedded</module>
