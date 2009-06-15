@@ -56,6 +56,7 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
@@ -67,8 +68,8 @@ import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
+import com.metamatrix.dqp.service.CommandLogMessage;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.spi.TrackerLogConstants;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.analysis.QueryAnnotation;
@@ -661,24 +662,12 @@ public class RequestWorkItem extends AbstractWorkItem {
      * Log the command to the MM cmd log. 
      */
     private void logCommandError() {
-        if ( dqpCore.getTracker() == null || !dqpCore.getTracker().willRecordMMCmd()) {
-            return;
-        }
         String transactionID = null;
         if (this.transactionContext != null && this.transactionContext.isInTransaction()) {
             transactionID = this.transactionContext.getTxnID();
         }
-        dqpCore.getTracker().log(requestID.toString(),
-                    transactionID == null ? null : transactionID,
-        		    TrackerLogConstants.CMD_POINT.END,
-                    TrackerLogConstants.CMD_STATUS.ERROR,
-                    requestID.getConnectionID(),
-                    dqpWorkContext.getAppName(),
-                    dqpWorkContext.getUserName(),
-                    dqpWorkContext.getVdbName(),
-                    dqpWorkContext.getVdbVersion(),
-                    requestMsg.getCommandString(),
-                    -1);
+        CommandLogMessage message = new CommandLogMessage(System.currentTimeMillis(), requestID.toString(), transactionID == null ? null : transactionID, requestID.getConnectionID(), dqpWorkContext.getUserName(), dqpWorkContext.getVdbName(), dqpWorkContext.getVdbVersion(), -1, false, true);
+        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_COMMANDLOGGING, message);
     }
 
 	boolean isCanceled() {

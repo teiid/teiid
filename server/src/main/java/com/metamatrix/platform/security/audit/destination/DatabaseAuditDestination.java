@@ -34,8 +34,8 @@ import com.metamatrix.common.config.JDBCConnectionPoolHelper;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.platform.PlatformPlugin;
-import com.metamatrix.platform.security.audit.AuditMessage;
 import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 
@@ -204,8 +204,7 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 			stmt = connection.prepareStatement(insertStr.toString());
 
 			// Timestamp column
-			stmt.setString(1, DateUtil.getDateAsString(new Timestamp(message
-					.getTimestamp())));
+			stmt.setString(1, DateUtil.getDateAsString(new Timestamp(System.currentTimeMillis())));
 
 			// Message context column
 			stmt.setString(2, StringUtil.truncString(message.getContext(),
@@ -224,11 +223,11 @@ public class DatabaseAuditDestination extends AbstractAuditDestination {
 					maxGeneralLength));
 
 			// Message hostname column
-			stmt.setString(6, StringUtil.truncString(message.getHostName(),
+			stmt.setString(6, StringUtil.truncString("n/a", //$NON-NLS-1$
 					maxGeneralLength));
 
 			// Message VM ID column
-			stmt.setString(7, StringUtil.truncString(message.getProcessName(),
+			stmt.setString(7, StringUtil.truncString("n/a", //$NON-NLS-1$
 					maxGeneralLength));
 
 			// Insert the row into the table

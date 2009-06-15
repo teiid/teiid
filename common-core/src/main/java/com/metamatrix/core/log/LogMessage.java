@@ -41,7 +41,7 @@ public class LogMessage implements Serializable{
 	public LogMessage(String context, int level, Object[] msgParts ) {
 	    this.context = context;
 	    this.level = level;
-	    this.msgParts = convertMsgParts(msgParts);
+	    this.msgParts = msgParts;
 	    this.timestamp = System.currentTimeMillis();
         this.threadName = Thread.currentThread().getName();
 	}
@@ -84,20 +84,8 @@ public class LogMessage implements Serializable{
 		return this.exception;
 	}
 
-
-
-    //do a toString() to the object array before adding to the worker
-	//to make sure the current state is recorded
-	private Object[] convertMsgParts(Object[] oriMsgParts){
-		if(oriMsgParts == null){
-			return oriMsgParts;
-		}
-		for(int i=0; i<oriMsgParts.length; i++){
-			if(oriMsgParts[i] != null){
-				oriMsgParts[i] = oriMsgParts[i].toString();
-			}
-		}
-		return oriMsgParts;
+	public Object[] getMessageParts() {
+		return this.msgParts;
 	}
 
 	public String getText() {

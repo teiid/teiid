@@ -41,7 +41,6 @@ import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.service.TrackingService;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.sql.lang.Command;
@@ -182,20 +181,4 @@ public class TestDQPCoreRequestHandling extends TestCase {
         DataTierTupleSource arInfo = workItem.getConnectorRequest(atomicReq.getAtomicRequestID());
         assertNull(arInfo);
     }
-    
-    public void testLogTxnID() {
-    	DQPCore rm = new DQPCore();
-    	TrackingService ts = Mockito.mock(TrackingService.class);
-    	Mockito.stub(ts.willRecordMMCmd()).toReturn(true);
-    	rm.setTracker(ts);
-        RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
-        RequestID requestID = new RequestID(SESSION_STRING, 1);
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
-        TransactionContext tc = Mockito.mock(TransactionContext.class);
-        Mockito.stub(tc.getTxnID()).toReturn("mytxnid"); //$NON-NLS-1$
-        workItem.setTransactionContext(tc);
-        rm.logMMCommand(workItem, true, true, -1);
-        Mockito.verify(ts, Mockito.times(1)).log("C.0", "mytxnid", (short)1, (short)1, null, null, null, null, null, null, -1); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
 }

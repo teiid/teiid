@@ -31,8 +31,8 @@ import java.util.Properties;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.platform.PlatformPlugin;
-import com.metamatrix.platform.security.audit.AuditMessage;
 import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 

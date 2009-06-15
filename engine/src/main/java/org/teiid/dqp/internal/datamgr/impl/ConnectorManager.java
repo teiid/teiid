@@ -68,8 +68,10 @@ import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.stats.ConnectionPoolStats;
+import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.core.util.StringUtil;
@@ -81,11 +83,10 @@ import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.service.BufferService;
+import com.metamatrix.dqp.service.CommandLogMessage;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.dqp.service.TrackingService;
 import com.metamatrix.dqp.service.TransactionService;
-import com.metamatrix.dqp.spi.TrackerLogConstants;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -117,7 +118,6 @@ public class ConnectorManager implements ApplicationService {
 
     //services acquired in start
     private MetadataService metadataService;
-    private TrackingService tracker;
     private TransactionService transactionService;
     private BufferService bufferService;
     
@@ -326,8 +326,6 @@ public class ConnectorManager implements ApplicationService {
             throw new ApplicationLifecycleException(DQPPlugin.Util.getString("Failed_to_find_service", new Object[]{DQPServiceNames.METADATA_SERVICE, connectorName})); //$NON-NLS-1$
         }
 
-        this.tracker = (TrackingService) env.findService(DQPServiceNames.TRACKING_SERVICE);
-
         this.maxResultRows = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_RESULT_ROWS, 0);
         this.exceptionOnMaxRows = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.EXCEPTION_ON_MAX_ROWS, false);
     	this.synchWorkers = PropertiesUtils.getBooleanProperty(props, ConnectorPropertyNames.SYNCH_WORKERS, true);
@@ -425,7 +423,7 @@ public class ConnectorManager implements ApplicationService {
                 }
 			}
             if (this.synchWorkers) {
-                SynchronousWorkers synchWorkerAnnotation = (SynchronousWorkers) c.getClass().getAnnotation(SynchronousWorkers.class);
+                SynchronousWorkers synchWorkerAnnotation = c.getClass().getAnnotation(SynchronousWorkers.class);
             	if (synchWorkerAnnotation != null) {
             		this.synchWorkers = synchWorkerAnnotation.enabled();
             	}
@@ -480,7 +478,7 @@ public class ConnectorManager implements ApplicationService {
     
     private Connector wrapPooledConnector(Connector c, ConnectorEnvironment connectorEnv) {
     	//the pooling annotation overrides the connector binding
-        ConnectionPooling connectionPooling = (ConnectionPooling) c.getClass().getAnnotation(ConnectionPooling.class);
+        ConnectionPooling connectionPooling = c.getClass().getAnnotation(ConnectionPooling.class);
     	boolean connectionPoolPropertyEnabled = PropertiesUtils.getBooleanProperty(connectorEnv.getProperties(), ConnectorPropertyNames.CONNECTION_POOL_ENABLED, true);
     	boolean propertySet = connectorEnv.getProperties().contains(ConnectorPropertyNames.CONNECTION_POOL_ENABLED);
     	boolean poolingEnabled = false;
@@ -595,11 +593,8 @@ public class ConnectorManager implements ApplicationService {
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
     void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, short cmdStatus, int finalRowCnt) {
-        if(tracker == null || !tracker.willRecordSrcCmd()){
-            return;
-        }
         String sqlStr = null;
-        if(cmdStatus == TrackerLogConstants.CMD_STATUS.NEW){
+        if(cmdStatus == CommandLogMessage.CMD_STATUS_NEW){
         	Command cmd = qr.getCommand();
             sqlStr = cmd != null ? cmd.toString() : null;
         }
@@ -611,11 +606,26 @@ public class ConnectorManager implements ApplicationService {
         
         String modelName = qr.getModelName();
         AtomicRequestID id = qr.getAtomicRequestID();
-                
-        tracker.log(qr.getRequestID().toString(), id.getNodeID(), transactionID,
-                cmdStatus, modelName == null ? "null" : modelName, connectorName, //$NON-NLS-1$
-                cmdStatus == TrackerLogConstants.CMD_STATUS.NEW ? TrackerLogConstants.CMD_POINT.BEGIN : TrackerLogConstants.CMD_POINT.END,
-                qr.getWorkContext().getConnectionID(), userName == null ? "unknown" : userName, sqlStr, finalRowCnt, context); //$NON-NLS-1$
+        
+        short cmdPoint = cmdStatus == CommandLogMessage.CMD_STATUS_NEW ? CommandLogMessage.CMD_POINT_BEGIN : CommandLogMessage.CMD_POINT_END;
+        String principal = userName == null ? "unknown" : userName; //$NON-NLS-1$
+        
+        CommandLogMessage message = null;
+        if (cmdPoint == CommandLogMessage.CMD_POINT_BEGIN) {
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getConnectionID(), principal, sqlStr, context);
+        } 
+        else {
+            boolean isCancelled = false;
+            boolean errorOccurred = false;
+
+            if (cmdStatus == CommandLogMessage.CMD_STATUS_CANCEL) {
+                isCancelled = true;
+            } else if (cmdStatus == CommandLogMessage.CMD_STATUS_ERROR) {
+                errorOccurred = true;
+            }
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getConnectionID(), principal, finalRowCnt, isCancelled, errorOccurred, context);
+        }         
+        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_COMMANDLOGGING, message);
     }
     
     /**

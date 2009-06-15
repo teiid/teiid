@@ -22,20 +22,31 @@
 
 package com.metamatrix.dqp.service;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.teiid.connector.api.ExecutionContext;
 
-import com.metamatrix.dqp.spi.CommandLoggerSPI;
 
 
-
-class CustomizableTrackingMessage implements Runnable {
+public class CommandLogMessage {
     
     static final int USER_COMMAND_START = 0;
     static final int USER_COMMAND_END = 1;
     static final int DATASOURCE_COMMAND_START = 2;
     static final int DATASOURCE_COMMAND_END = 3;
-    static final int TRANSACTION_START = 4;
-    static final int TRANSACTION_END = 5;
+
+	public static final short CMD_POINT_BEGIN = 1;
+	public static final short CMD_POINT_END = 2;
+
+	public static final short CMD_STATUS_NEW = 1;
+	public static final short CMD_STATUS_END = 2;
+	public static final short CMD_STATUS_CANCEL = 3;
+	public static final short CMD_STATUS_ERROR = 4;
+    
+    private static final String TIMESTAMP_FORMAT = "yyyy.MM.dd HH:mm:ss.SSS"; //$NON-NLS-1$
+    private static DateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat(TIMESTAMP_FORMAT);
     
     int type;
     long timestamp;
@@ -63,9 +74,8 @@ class CustomizableTrackingMessage implements Runnable {
     boolean errorOccurred;
     ExecutionContext executionContext;
     
-    CommandLoggerSPI commandLogger;
     
-    CustomizableTrackingMessage(long timestamp,
+    public CommandLogMessage(long timestamp,
                                 String requestID,
                                 String transactionID,
                                 String sessionID,
@@ -86,7 +96,7 @@ class CustomizableTrackingMessage implements Runnable {
         this.vdbVersion = vdbVersion;
         this.sql = sql;
     }
-    CustomizableTrackingMessage(long timestamp,
+    public CommandLogMessage(long timestamp,
                                 String requestID,
                                 String transactionID,
                                 String sessionID,
@@ -109,7 +119,7 @@ class CustomizableTrackingMessage implements Runnable {
         this.isCancelled = isCancelled;
         this.errorOccurred = errorOccurred;
     }
-    CustomizableTrackingMessage(long timestamp,
+    public CommandLogMessage(long timestamp,
                                 String requestID,
                                 long sourceCommandID,
                                 String subTransactionID,
@@ -132,7 +142,7 @@ class CustomizableTrackingMessage implements Runnable {
         this.sql = sql;
         this.executionContext = context;
     }
-    CustomizableTrackingMessage(long timestamp,
+    public CommandLogMessage(long timestamp,
                                 String requestID,
                                 long sourceCommandID,
                                 String subTransactionID,
@@ -159,92 +169,22 @@ class CustomizableTrackingMessage implements Runnable {
         this.errorOccurred = errorOccurred;
         this.executionContext = context;
     }
-    CustomizableTrackingMessage(long timestamp,
-                                String transactionID,
-                                String sessionID,
-                                String principal,
-                                String vdbName,
-                                String vdbVersion) {
-        // transactionStart
-        this.type = TRANSACTION_START;
-        this.timestamp = timestamp;
-        this.transactionID = transactionID;
-        this.sessionID = sessionID;
-        this.principal = principal;
-        this.vdbName = vdbName;
-        this.vdbVersion = vdbVersion;
-    }
-    CustomizableTrackingMessage(long timestamp,
-                                String transactionID,
-                                String sessionID,
-                                String principal,
-                                String vdbName,
-                                String vdbVersion,
-                                boolean isCommit) {
-        // transactionEnd
-        this.type = TRANSACTION_END;
-        this.timestamp = timestamp;
-        this.transactionID = transactionID;
-        this.sessionID = sessionID;
-        this.principal = principal;
-        this.vdbName = vdbName;
-        this.vdbVersion = vdbVersion;
-        this.isCommit = isCommit;
-    }
     
-	public void run() {
-		switch(type) {
-        case CustomizableTrackingMessage.USER_COMMAND_START:
-            commandLogger.userCommandStart(timestamp,
-                                           requestID,
-                                           transactionID,
-                                           sessionID,
-                                           applicationName,
-                                           principal,
-                                           vdbName,
-                                           vdbVersion,
-                                           sql);
-            break;
-        case CustomizableTrackingMessage.USER_COMMAND_END:
-            commandLogger.userCommandEnd(timestamp,
-                                         requestID,
-                                         transactionID,
-                                         sessionID,
-                                         principal,
-                                         vdbName,
-                                         vdbVersion,
-                                         rowCount,
-                                         isCancelled,
-                                         errorOccurred);
-            break;
-        case CustomizableTrackingMessage.DATASOURCE_COMMAND_START:
-            commandLogger.dataSourceCommandStart(timestamp,
-                                                 requestID,
-                                                 sourceCommandID,
-                                                 subTransactionID,
-                                                 modelName,
-                                                 connectorBindingName,
-                                                 sessionID,
-                                                 principal,
-                                                 sql,
-                                                 executionContext);
-                                                 
-            break;
-        case CustomizableTrackingMessage.DATASOURCE_COMMAND_END:
-            commandLogger.dataSourceCommandEnd(timestamp,
-                                               requestID,
-                                               sourceCommandID,
-                                               subTransactionID,
-                                               modelName,
-                                               connectorBindingName,
-                                               sessionID,
-                                               principal,
-                                               rowCount,
-                                               isCancelled,
-                                               errorOccurred,
-                                               executionContext);
-            break;
-		}
-	}
+    public String toString() {
+    	switch (this.type) {
+	    	case USER_COMMAND_START:
+	    		return getTimestampString(new Date()) + "\tSTART USER COMMAND:\tstartTime=" + getTimestampString(new Date(timestamp)) + "\trequestID=" + requestID + "\ttxID=" + transactionID + "\tsessionID=" + sessionID + "\tapplicationName=" + applicationName + "\tprincipal=" + principal + "\tvdbName=" + vdbName + "\tvdbVersion=" + vdbVersion + "\tsql=" + sql;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
+	    	case USER_COMMAND_END:
+	    		return getTimestampString(new Date()) + "\tEND USER COMMAND:\tendTime=" + getTimestampString(new Date(timestamp)) + "\trequestID=" + requestID + "\ttxID=" + transactionID + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tvdbName=" + vdbName + "\tvdbVersion=" + vdbVersion + "\tfinalRowCount=" + rowCount + "\tisCancelled=" + isCancelled + "\terrorOccurred=" + errorOccurred;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
+	    	case DATASOURCE_COMMAND_START:
+	    		return getTimestampString(new Date()) + "\tSTART DATA SRC COMMAND:\tstartTime=" + getTimestampString(new Date(timestamp)) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\tsubTxID=" + subTransactionID + "\tmodelName="+ modelName + "\tconnectorBindingName=" + connectorBindingName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tsql=" + sql;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
+	    	case DATASOURCE_COMMAND_END:
+	    		return getTimestampString(new Date()) + "\tEND DATA SRC COMMAND:\tendTime=" + getTimestampString(new Date(timestamp)) + "\trequestID=" + requestID + "\tsourceCommandID="+ sourceCommandID + "\tsubTxID=" + subTransactionID + "\tmodelName="+ modelName + "\tconnectorBindingName=" + connectorBindingName + "\tsessionID=" + sessionID + "\tprincipal=" + principal + "\tfinalRowCount=" + rowCount + "\tisCancelled=" + isCancelled + "\terrorOccurred=" + errorOccurred;  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$ //$NON-NLS-11$
+    	}
+    	return null;
+    }
 
+    private String getTimestampString(Date date) {
+        return TIMESTAMP_FORMATTER.format(date);
+    }    
 }

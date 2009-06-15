@@ -26,7 +26,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.metamatrix.platform.security.audit.AuditMessage;
+import com.metamatrix.dqp.service.AuditMessage;
 
 /**
  * This class formats AuditMessages using a format with delimiters that is easily parsed.
@@ -50,11 +50,11 @@ public class DelimitedAuditMessageFormat implements AuditMessageFormat {
             return DEFAULT_FORMATTED_MESSAGE;
         }
         StringBuffer msg = new StringBuffer();
-        msg.append( DATE_FORMATTER.format( new Date(message.getTimestamp()) ) );
+        msg.append( DATE_FORMATTER.format( new Date(System.currentTimeMillis()) ) );
         msg.append( DELIMITER_CHAR );
-        msg.append( message.getHostName() );
+        msg.append( "n/a"); //$NON-NLS-1$
         msg.append( DELIMITER_CHAR );
-        msg.append( message.getProcessName() );
+        msg.append( "n/a" ); //$NON-NLS-1$
         msg.append( DELIMITER_CHAR );
         msg.append( message.getPrincipal() );
         msg.append( DELIMITER_CHAR );

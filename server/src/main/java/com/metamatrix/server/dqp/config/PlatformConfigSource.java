@@ -35,7 +35,6 @@ import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.dqp.service.CustomizableTrackingService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.metadata.IndexMetadataService;
 import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
@@ -50,7 +49,6 @@ import com.metamatrix.server.dqp.service.PlatformBufferService;
 import com.metamatrix.server.dqp.service.PlatformDataService;
 import com.metamatrix.server.dqp.service.PlatformTransactionService;
 import com.metamatrix.server.dqp.service.PlatformVDBService;
-import com.metamatrix.server.dqp.service.tracker.DatabaseCommandLogger;
 
 /**
  */
@@ -76,10 +74,6 @@ public class PlatformConfigSource implements DQPConfigSource {
             dqpProps.setProperty(DQPConfigSource.STREAMING_BATCH_SIZE, streamingBatchSize);
         }
         
-        if (dqpProps.getProperty(DQPConfigSource.COMMAND_LOGGER_CLASSNAME) == null) {
-        	dqpProps.setProperty(DQPConfigSource.COMMAND_LOGGER_CLASSNAME, DatabaseCommandLogger.class.getName());
-        }
-        
         this.host = host;
         this.processName = processName;
     }
@@ -94,7 +88,6 @@ public class PlatformConfigSource implements DQPConfigSource {
 	@Override
 	public Map<String, Class<? extends ApplicationService>> getDefaultServiceClasses() {
 		Map<String, Class<? extends ApplicationService>> result = new HashMap<String, Class<? extends ApplicationService>>();
-		result.put(DQPServiceNames.TRACKING_SERVICE, CustomizableTrackingService.class);
 		result.put(DQPServiceNames.BUFFER_SERVICE, PlatformBufferService.class);
 		result.put(DQPServiceNames.VDB_SERVICE, PlatformVDBService.class);
 		result.put(DQPServiceNames.METADATA_SERVICE, IndexMetadataService.class);

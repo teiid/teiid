@@ -57,6 +57,7 @@ import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
+import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
@@ -75,14 +76,13 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.message.ResultsMessage;
 import com.metamatrix.dqp.service.BufferService;
+import com.metamatrix.dqp.service.CommandLogMessage;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.dqp.service.TrackingService;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.dqp.spi.TrackerLogConstants;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -135,7 +135,6 @@ public class DQPCore extends Application implements ClientSideDQP {
     private BufferManager bufferManager;
     private ProcessorDataManager dataTierMgr;
     private PreparedPlanCache prepPlanCache;
-    private TrackingService tracker;
     private TransactionService transactionService;
     private MetadataService metadataService;
     private ResultSetCache rsCache;
@@ -511,9 +510,6 @@ public class DQPCore extends Application implements ClientSideDQP {
 	}
     
     void logMMCommand(RequestWorkItem workItem, boolean isBegin, boolean isCancel, int rowCount) {
-        if(this.tracker == null || !tracker.willRecordMMCmd()){
-            return;
-        }
         RequestMessage msg = workItem.requestMsg;
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         RequestID rID = new RequestID(workContext.getConnectionID(), msg.getExecutionId());
@@ -528,26 +524,30 @@ public class DQPCore extends Application implements ClientSideDQP {
 		}
     	String appName = workContext.getAppName();
         // Log to request log
-        short point = isBegin? TrackerLogConstants.CMD_POINT.BEGIN:TrackerLogConstants.CMD_POINT.END;
-        short status = TrackerLogConstants.CMD_STATUS.NEW;
+        short point = isBegin? CommandLogMessage.CMD_POINT_BEGIN:CommandLogMessage.CMD_POINT_END;
+        short status = CommandLogMessage.CMD_STATUS_NEW;
         if(!isBegin){
         	if(isCancel){
-        		status = TrackerLogConstants.CMD_STATUS.CANCEL;
+        		status = CommandLogMessage.CMD_STATUS_CANCEL;
         	}else{
-        		status = TrackerLogConstants.CMD_STATUS.END;
+        		status = CommandLogMessage.CMD_STATUS_END;
         	}
         }
-        tracker.log(rID.toString(),
-                    txnID,
-                    point,
-                    status,
-                    workContext.getConnectionID(),
-                    appName,
-                    workContext.getUserName(),
-                    workContext.getVdbName(),
-                    workContext.getVdbVersion(),
-                    command,
-                    rowCount);
+        CommandLogMessage message = null;
+        if (point == CommandLogMessage.CMD_POINT_BEGIN) {
+            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), command);
+        } else {
+            boolean isCancelled = false;
+            boolean errorOccurred = false;
+
+            if (status == CommandLogMessage.CMD_STATUS_CANCEL) {
+                isCancelled = true;
+            } else if (status == CommandLogMessage.CMD_STATUS_ERROR) {
+                errorOccurred = true;
+            }
+            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, isCancelled, errorOccurred);
+        }
+        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_COMMANDLOGGING, message);
     }
     
     ProcessorDataManager getDataTierManager() {
@@ -560,14 +560,6 @@ public class DQPCore extends Application implements ClientSideDQP {
 
 	BufferManager getBufferManager() {
 		return bufferManager;
-	}
-
-	TrackingService getTracker() {
-		return tracker;
-	}
-	
-	void setTracker(TrackingService tracker) {
-		this.tracker = tracker;
 	}
 
 	public TransactionService getTransactionService() {
@@ -633,8 +625,6 @@ public class DQPCore extends Application implements ClientSideDQP {
         bufferManager = bufferService.getBufferManager();
         contextCache = bufferService.getContextCache();
 
-        //Get tracking service
-        tracker = (TrackingService) env.findService(DQPServiceNames.TRACKING_SERVICE);
         transactionService = (TransactionService )env.findService(DQPServiceNames.TRANSACTION_SERVICE);
         metadataService = (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE);
 

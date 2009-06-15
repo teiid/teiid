@@ -295,7 +295,7 @@ public final class LogManager {
      * @param message the individual parts of the log message; the message is
      * not logged if this parameter is null
      */
-    public static void log(int msgLevel, String context, String message) {
+    public static void log(int msgLevel, String context, Object message) {
         logMessage(msgLevel, context, message);
     }
 

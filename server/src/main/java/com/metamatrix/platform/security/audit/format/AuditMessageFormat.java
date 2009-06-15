@@ -22,7 +22,7 @@
 
 package com.metamatrix.platform.security.audit.format;
 
-import com.metamatrix.platform.security.audit.AuditMessage;
+import com.metamatrix.dqp.service.AuditMessage;
 
 public interface AuditMessageFormat {
 

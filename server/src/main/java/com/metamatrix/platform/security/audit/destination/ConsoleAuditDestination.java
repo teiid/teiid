@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.platform.security.audit.AuditMessage;
+import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.platform.security.audit.format.ReadableAuditMessageFormat;
 
 /**

@@ -53,7 +53,10 @@ import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.properties.UnmodifiableProperties;
+import com.metamatrix.common.util.LogContextsUtil;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.admin.api.EntitlementMigrationReport;
 import com.metamatrix.platform.admin.api.PermissionDataNode;
@@ -241,14 +244,17 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     public boolean checkAccess(SessionToken sessionToken, String contextName, AuthorizationPermission request)
             throws InvalidSessionException, AuthorizationMgmtException {
         LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"checkAccess(", sessionToken, ", ", contextName, ", ", request, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        
         // Audit - request
-        auditManager.record(contextName, "checkAccess-request", sessionToken.getUsername(), request.getResourceName()); //$NON-NLS-1$
-
+        AuditMessage msg = new AuditMessage(contextName, "checkAccess-request", sessionToken.getUsername(),  new Object[]{request.getResourceName()}); //$NON-NLS-1$
+        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_AUDITLOGGING, msg);
+        
         boolean hasAccess = checkAccess(sessionToken, contextName, request, false);
 
         if (!hasAccess) {
             // Audit - denied
-        	auditManager.record(contextName, "checkAccess-denied", sessionToken.getUsername(), request.getResourceName()); //$NON-NLS-1$
+            msg = new AuditMessage(contextName, "checkAccess-denied", sessionToken.getUsername(),  new Object[]{request.getResourceName()}); //$NON-NLS-1$
+            LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_AUDITLOGGING, msg);
         }
         return hasAccess;
     }
@@ -293,12 +299,23 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation
      */
-    public Collection getInaccessibleResources(SessionToken sessionToken, String contextName, Collection requests)
+    public Collection getInaccessibleResources(SessionToken sessionToken, String context, Collection requests)
             throws InvalidSessionException, AuthorizationMgmtException {
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", context, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        
+        List resources = new ArrayList();
+        if (requests != null && ! requests.isEmpty()) {            
+            Iterator permItr = requests.iterator();
+            while ( permItr.hasNext() ) {
+                resources.add(((AuthorizationPermission)permItr.next()).getResourceName());
+            }            
+        }
         
         // Audit - request
-        auditManager.record(contextName, "getInaccessibleResources-request", sessionToken.getUsername(), requests); //$NON-NLS-1$
+        if (!resources.isEmpty()) {
+        	AuditMessage msg = new AuditMessage( context, "getInaccessibleResources-request", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
+        	LogManager.log(MessageLevel.INFO, context, msg);
+        }
         
         if (isEntitled(sessionToken.getUsername())) {
             return Collections.EMPTY_LIST;
@@ -328,10 +345,17 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 
         if (results.isEmpty()) {
             // Audit - granted all requests
-        	auditManager.record(contextName, "getInaccessibleResources-granted all", sessionToken.getUsername(), requests); //$NON-NLS-1$
+            if (!resources.isEmpty()) {
+            	AuditMessage msg = new AuditMessage( context, "getInaccessibleResources-granted all", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
+            	LogManager.log(MessageLevel.INFO, context, msg);
+            }
+        	
         } else {
             // Audit - denied
-        	auditManager.record(contextName, "getInaccessibleResources-denied", sessionToken.getUsername(), results); //$NON-NLS-1$
+            if (!resources.isEmpty()) {
+            	AuditMessage msg = new AuditMessage( context, "getInaccessibleResources-denied", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
+            	LogManager.log(MessageLevel.INFO, context, msg);
+            }
         }
         return results;
     }
@@ -1529,8 +1553,9 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             return result;
         }
         // Audit - access modify
-        auditManager.record(SecurityAuditContexts.CTX_AUTHORIZATION, "executeTransaction-modify", administrator.getUsername(), this.printActions(actions)); //$NON-NLS-1$
-
+        AuditMessage logMsg = new AuditMessage(SecurityAuditContexts.CTX_AUTHORIZATION, "executeTransaction-modify", administrator.getUsername(),  new Object[]{this.printActions(actions)}); //$NON-NLS-1$
+        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_AUDITLOGGING, logMsg);
+        
         List actionsWithSameTarget = new ArrayList(7);   // guessing at an initial size, probably high
         Object currentTarget = null;
         ActionDefinition currentAction = null;

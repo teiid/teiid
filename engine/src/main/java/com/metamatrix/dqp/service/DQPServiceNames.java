@@ -45,9 +45,6 @@ public interface DQPServiceNames {
     /** VDB service - provides access to vdb information */
     public static final String VDB_SERVICE = "dqp.vdb"; //$NON-NLS-1$
 
-    /** Tracking service - provides access to vdb information */
-    public static final String TRACKING_SERVICE = "dqp.tracking"; //$NON-NLS-1$
-
     /** Transaction service - provides access to MMTtransactionManager */
     public static final String TRANSACTION_SERVICE = "dqp.transaction"; //$NON-NLS-1$
 
@@ -61,7 +58,6 @@ public interface DQPServiceNames {
      */
     public static final String[] ALL_SERVICES = new String[] {
         CONFIGURATION_SERVICE,
-        TRACKING_SERVICE,
         BUFFER_SERVICE,
         AUTHORIZATION_SERVICE,
         TRANSACTION_SERVICE,                                           
@@ -72,7 +68,6 @@ public interface DQPServiceNames {
     
     public static final Class[] ALL_SERVICE_CLASSES = new Class[] {
     	ConfigurationService.class,
-        TrackingService.class,
         BufferService.class,
         AuthorizationService.class,
         TransactionService.class,                                           

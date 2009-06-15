@@ -35,9 +35,13 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.LogContextsUtil.PlatformAdminConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.security.audit.AuditManager;
@@ -94,7 +98,8 @@ public class AdminAuthorizationInterceptor implements InvocationHandler {
         }
 
         boolean authorized = false;
-        AuditManager.getInstance().record(PlatformAdminConstants.CTX_ADMIN_API, Arrays.toString(allowed.value())+"-request", adminToken.getUsername(), method.getName()); //$NON-NLS-1$
+        AuditMessage msg = new AuditMessage(PlatformAdminConstants.CTX_ADMIN_API, Arrays.toString(allowed.value())+"-request", adminToken.getUsername(),  new Object[]{method.getName()}); //$NON-NLS-1$
+        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_AUDITLOGGING, msg);
 
         for (int i = 0; i < allowed.value().length; i++) {
         	String requiredRoleName = allowed.value()[i];
@@ -109,7 +114,9 @@ public class AdminAuthorizationInterceptor implements InvocationHandler {
             }
         }
         if (!authorized) {
-        	AuditManager.getInstance().record(PlatformAdminConstants.CTX_ADMIN_API, Arrays.toString(allowed.value())+"-denied", adminToken.getUsername(), method.getName()); //$NON-NLS-1$
+            msg = new AuditMessage(PlatformAdminConstants.CTX_ADMIN_API, Arrays.toString(allowed.value())+"-denied", adminToken.getUsername(),  new Object[]{method.getName()}); //$NON-NLS-1$
+            LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_AUDITLOGGING, msg);
+        	
         	Object[] msgParts = buildAuditMessage(adminToken, Arrays.toString(allowed.value()), method); 
             String errMsg = CommPlatformPlugin.Util.getString("AdminAuthorizationInterceptor.Admin_not_authorized", msgParts); //$NON-NLS-1$
             throw ExceptionUtil.convertException(method, new AuthorizationException(errMsg));

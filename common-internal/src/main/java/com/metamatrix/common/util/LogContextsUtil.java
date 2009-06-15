@@ -67,16 +67,8 @@ public class LogContextsUtil {
         public static final String CTX_EXTENSION_SOURCE = "EXTENSION_MODULE"; //$NON-NLS-1$
         public static final String CTX_EXTENSION_SOURCE_JDBC = "JDBC_EXT_MODULE_TRANSACTION"; //$NON-NLS-1$
         public static final String CTX_COMMUNICATION = "COMMUNICATION"; //$NON-NLS-1$
-        
-        
-
-        // Types
-        public static final String TYPE_INFO = "INFO"; //$NON-NLS-1$
-        public static final String TYPE_TRACE = "TRACE"; //$NON-NLS-1$
-        public static final String TYPE_ERROR = "ERROR"; //$NON-NLS-1$
-        public static final String TYPE_DEBUG = "DEBUG"; //$NON-NLS-1$
-        public static final String TYPE_EXCEPTION = "EXCEPTION"; //$NON-NLS-1$
-        public static final String TYPE_WARNING = "WARNING"; //$NON-NLS-1$
+        public static final String CTX_COMMANDLOGGING = "COMMAND_LOG"; //$NON-NLS-1$
+        public static final String CTX_AUDITLOGGING = "AUDIT_LOG"; //$NON-NLS-1$
     }
 
     public static class SecurityConstants {
@@ -139,12 +131,6 @@ public class LogContextsUtil {
 
         public static final String CTX_ROUTER = "ROUTER"; //$NON-NLS-1$
         public static final String CTX_QUERY_SERVICE = "QUERY_SERVICE"; //$NON-NLS-1$
-    }
-
-    public static class ODBCConstants {
-
-        public static final String ODBC_CONNECTION = "ODBC_CONNECTION"; //$NON-NLS-1$
-        public static final String ODBC_STATEMENT = "ODBC_STATEMENT"; //$NON-NLS-1$
     }
 
     /**
@@ -214,9 +200,6 @@ public class LogContextsUtil {
 
         allContexts.add(ServerConstants.CTX_ROUTER);
         allContexts.add(ServerConstants.CTX_QUERY_SERVICE);
-
-        allContexts.add(ODBCConstants.ODBC_CONNECTION);
-        allContexts.add(ODBCConstants.ODBC_STATEMENT);
 
         ALL_CONTEXTS = Collections.unmodifiableSet(allContexts);
     }

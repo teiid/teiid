@@ -25,7 +25,7 @@ package com.metamatrix.platform.security.audit.destination;
 import java.util.List;
 import java.util.Properties;
 
-import com.metamatrix.platform.security.audit.AuditMessage;
+import com.metamatrix.dqp.service.AuditMessage;
 
 /**
  * A log destination can be used to print messages - typical examples are

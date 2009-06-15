@@ -42,7 +42,6 @@ import com.metamatrix.dqp.embedded.services.EmbeddedBufferService;
 import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
 import com.metamatrix.dqp.embedded.services.EmbeddedDataService;
 import com.metamatrix.dqp.embedded.services.EmbeddedMetadataService;
-import com.metamatrix.dqp.embedded.services.EmbeddedTrackingService;
 import com.metamatrix.dqp.embedded.services.EmbeddedTransactionService;
 import com.metamatrix.dqp.embedded.services.EmbeddedVDBService;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -93,7 +92,6 @@ public class EmbeddedConfigSource implements DQPConfigSource {
 	public Map<String, Class<? extends ApplicationService>> getDefaultServiceClasses() {
 		Map<String, Class<? extends ApplicationService>> result = new HashMap<String, Class<? extends ApplicationService>>();
 		result.put(DQPServiceNames.CONFIGURATION_SERVICE, EmbeddedConfigurationService.class);
-		result.put(DQPServiceNames.TRACKING_SERVICE, EmbeddedTrackingService.class);
 		result.put(DQPServiceNames.BUFFER_SERVICE, EmbeddedBufferService.class);
 		result.put(DQPServiceNames.VDB_SERVICE, EmbeddedVDBService.class);
 		result.put(DQPServiceNames.METADATA_SERVICE, EmbeddedMetadataService.class);

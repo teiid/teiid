@@ -34,6 +34,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.AuthorizationPermission;
 import com.metamatrix.platform.security.audit.config.AuditConfigurationException;

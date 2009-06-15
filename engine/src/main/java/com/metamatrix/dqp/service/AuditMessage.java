@@ -20,16 +20,17 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.security.audit;
+package com.metamatrix.dqp.service;
 
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.Date;
 
 import com.metamatrix.common.config.CurrentConfiguration;
 
-public class AuditMessage implements Externalizable {
+public class AuditMessage {
     public static final String PROCESS_NAME = CurrentConfiguration.getInstance().getProcessName();
     public static final String HOST_NAME = CurrentConfiguration.getInstance().getConfigurationName();
 
@@ -38,26 +39,13 @@ public class AuditMessage implements Externalizable {
 	private String context;
 	private String activity;
 	private String principal;
-    //private int level;
 	private Object[] resources;
-	private long timestamp;
-    //private String threadName;
-    private String hostName;
-    private String processName;
-
-	public AuditMessage() {
-	}
 
 	public AuditMessage(String context, String activity, String principal, Object[] resources ) {
 	    this.context = context;
 	    this.activity = activity;
 	    this.principal = principal;
-	    //this.level = level;
 	    this.resources = resources;
-	    this.timestamp = System.currentTimeMillis();
-        //this.threadName = Thread.currentThread().getName();
-        this.hostName = HOST_NAME;
-        this.processName = PROCESS_NAME;
 	}
 
     public String getContext() {
@@ -70,18 +58,6 @@ public class AuditMessage implements Externalizable {
 
     public String getPrincipal() {
         return this.principal;
-    }
-
-    public String getProcessName() {
-        return this.processName;
-    }
-
-    public String getHostName() {
-        return this.hostName;
-    }
-
-    public long getTimestamp() {
-        return this.timestamp;
     }
 
 	public Object[] getResources() {
@@ -140,28 +116,18 @@ public class AuditMessage implements Externalizable {
 		return text.toString();
 	}
 
-	// implements Externalizable
-	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(context);
-		out.writeObject(activity);
-		out.writeObject(principal);
-		//out.writeInt(level);
-		out.writeObject(resources);
-		out.writeLong(timestamp);
-//		out.writeObject(threadName);
-		out.writeObject(processName);
-	}
+	public String toString() {
+        StringBuffer msg = new StringBuffer();
+        msg.append(" ["); //$NON-NLS-1$
+        msg.append( getPrincipal() );
+        msg.append("] <"); //$NON-NLS-1$
+        msg.append( getContext() );
+        msg.append('.');
+        msg.append( getActivity() );
+        msg.append("> "); //$NON-NLS-1$
+        msg.append( getText() );
 
-	// implements Externalizable
-	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		this.context = (String) in.readObject();
-		this.activity = (String) in.readObject();
-		this.principal = (String) in.readObject();
-		//this.level = in.readInt();
-		this.resources = (Object[]) in.readObject();
-		this.timestamp = in.readLong();
-//		this.threadName = (String) in.readObject();
-		this.processName = (String) in.readObject();
+        return msg.toString();
 	}
 
 }
