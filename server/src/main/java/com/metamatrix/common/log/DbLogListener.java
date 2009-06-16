@@ -49,9 +49,9 @@ public class DbLogListener implements LogListener {
         this.enabled = enable;
 	}
 
-    public void logMessage(LogMessage msg) {
+    public void logMessage(int level, String context, Object msg) {
         if (enabled) {
-            writer.logMessage(msg);
+            writer.logMessage(level, context, (LogMessage)msg);
         }
 	}
 

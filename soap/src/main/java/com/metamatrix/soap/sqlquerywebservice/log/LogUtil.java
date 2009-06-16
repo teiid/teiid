@@ -22,8 +22,9 @@
 
 package com.metamatrix.soap.sqlquerywebservice.log;
 
+import com.metamatrix.core.log.JavaLogWriter;
+import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
-import com.metamatrix.internal.core.log.PlatformLog;
 import com.metamatrix.soap.SOAPPlugin;
 
 /**
@@ -34,22 +35,14 @@ public class LogUtil {
 	// =========================================================================
 	// Static Members
 	// =========================================================================
-	private static final LogUtil INSTANCE = new LogUtil();
+	private static final LogListener log = new JavaLogWriter();
 
-	PlatformLog log = new PlatformLog("MetaMatrix SOAP log"); //$NON-NLS-1$
-
-	/**
-	 * Get an instance of this class.
-	 */
-	public static LogUtil getInstance() {
-		return INSTANCE;
-	}
 	
 	public static void log(int severity, String message) {
-		INSTANCE.log.logMessage(new LogMessage(SOAPPlugin.PLUGIN_ID, severity, new Object[] {message}));
+		log.logMessage(severity, SOAPPlugin.PLUGIN_ID, new LogMessage(null, new Object[] {message}));
 	}
 
 	public static void log(int severity, Throwable t, String message) {
-		INSTANCE.log.logMessage(new LogMessage(SOAPPlugin.PLUGIN_ID, severity, t, new Object[] {message}));
+		log.logMessage(severity, SOAPPlugin.PLUGIN_ID, new LogMessage( t, new Object[] {message}));
 	}	
 }

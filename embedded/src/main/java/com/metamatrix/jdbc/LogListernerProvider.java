@@ -22,9 +22,11 @@
 
 package com.metamatrix.jdbc;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -33,11 +35,10 @@ import com.google.inject.name.Named;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.log.FileLimitSizeLogWriter;
 import com.metamatrix.core.log.JavaLogWriter;
 import com.metamatrix.core.log.LogListener;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.internal.core.log.PlatformLog;
 
 @Singleton
 class LogListernerProvider implements Provider<LogListener> {
@@ -66,10 +67,12 @@ class LogListernerProvider implements Provider<LogListener> {
                     modifiedLogFileName = logFile+"_"+instanceId; //$NON-NLS-1$
                 }
                 URL logURL = URLHelper.buildURL(dqpURL, modifiedLogFileName);
-                File file = new File(logURL.getPath());
-                PlatformLog log = new PlatformLog();
-                log.addListener(new FileLimitSizeLogWriter(file, false));
-                return log;
+                
+                // TODO: The Log4j File appender needs to be created with the above name
+                // since we do not have handle on the Log4J configuration we come back to this issue.
+                // until then just manage on the properties file.
+                System.setProperty("dqp.log4jFile", logURL.getPath()); //$NON-NLS-1$ // hack
+                return new Log4jListener();
         	}
     		return new JavaLogWriter();
         } catch (MalformedURLException e) {
@@ -77,4 +80,36 @@ class LogListernerProvider implements Provider<LogListener> {
         }
 	}
 
+	/**
+	 * Log4J Listener
+	 */
+	static class Log4jListener implements LogListener{
+
+		@Override
+		public void logMessage(int level, String context, Object msg) {
+			Logger log4j = Logger.getLogger("org.teiid."+context); //$NON-NLS-1$
+			log4j.log(convertLevel(level), msg);
+		}
+
+		@Override
+		public void shutdown() {
+		}
+
+	    public Priority convertLevel(int level) {
+	    	switch (level) {
+	    	case MessageLevel.CRITICAL:
+	    		return Priority.FATAL;
+	    	case MessageLevel.ERROR:
+	    		return Priority.ERROR;
+	    	case MessageLevel.WARNING:
+	    		return Priority.WARN;
+	    	case MessageLevel.INFO:
+	    		return Priority.INFO;
+	    	case MessageLevel.DETAIL:
+	    	case MessageLevel.TRACE:
+	    		return Priority.DEBUG;
+	    	}
+	    	return Priority.DEBUG;
+	    }		
+	}
 }

@@ -32,7 +32,6 @@ import com.metamatrix.common.log.config.BasicLogConfiguration;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.internal.core.log.PlatformLog;
 
 /**
  * This test case tests the LogManager.
@@ -50,8 +49,6 @@ public class TestLogManager extends TestCase {
 	@Override
 	protected void setUp() throws Exception {
     	LogManager.configuration = new BasicLogConfiguration();
-    	LogManager.logListener = new PlatformLog();
-		
 	}    
     
     // =========================================================================
@@ -117,8 +114,8 @@ public class TestLogManager extends TestCase {
         /* (non-Javadoc)
          * @see com.metamatrix.core.log.LogListener#logMessage(org.eclipse.core.runtime.IStatus, long, java.lang.String, java.lang.String)
          */
-        public synchronized void logMessage(LogMessage msg){
-            this.messages.add(msg.getText());
+        public synchronized void logMessage(int level, String context, Object msg){
+            this.messages.add(((LogMessage)msg).getText());
             if (this.messages.size() == expectedMessages) {
             	this.notifyAll();
             }

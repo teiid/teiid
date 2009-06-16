@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -36,7 +37,6 @@ import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.MessagingException;
-import com.metamatrix.core.log.FileLimitSizeLogWriter;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
@@ -151,7 +151,7 @@ public class Main {
     	String configDir = host.getConfigDirectory();
     	File f = new File(configDir);
     	f.mkdirs();
-        FilePersistentUtil.writeModel(CONFIG_PREFIX+FileLimitSizeLogWriter.getDate()+".xml", configDir,  //$NON-NLS-1$ 
+        FilePersistentUtil.writeModel(CONFIG_PREFIX+new Date().toString()+".xml", configDir,  //$NON-NLS-1$ 
         CurrentConfiguration.getInstance().getConfigurationModel(), 
                         processName);
         //remove old instances

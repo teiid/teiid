@@ -23,7 +23,6 @@
 package com.metamatrix.core.commandshell;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
@@ -34,14 +33,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
-import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.log.FileLogWriter;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.MetaMatrixExceptionUtil;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.internal.core.log.PlatformLog;
 
 /**
  * Reads input from standard input and directs commands read to the underlying target object.
@@ -110,8 +106,6 @@ public class CommandShell implements Cloneable {
      * Start reading commands from standard input.
      */
     public void run(String[] args, String logFile) {
-        redirectLogging(logFile);
-        
         
         writeln(CorePlugin.Util.getString("CommandShell.Started")); //$NON-NLS-1$
         write(getCommandPrompt());
@@ -137,19 +131,7 @@ public class CommandShell implements Cloneable {
         writeln(CorePlugin.Util.getString("CommandShell.Finished")); //$NON-NLS-1$
     }
 
-    
-    private void redirectLogging(String logFile) {
-        //add a listener that writes to a file
-        File file = new File(logFile);
-		FileLogWriter flw = new FileLogWriter(file);
-
-        PlatformLog logger = new PlatformLog();
-		logger.addListener(flw);
-		LogManager.setLogListener(logger);
-    }
-    
-    
-    
+      
     public void writeln(String text) {
         if (!silent) {
             System.out.println(text);

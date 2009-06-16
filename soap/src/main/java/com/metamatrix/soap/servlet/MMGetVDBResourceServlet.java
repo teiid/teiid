@@ -22,7 +22,6 @@
 
 package com.metamatrix.soap.servlet;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
@@ -50,9 +49,6 @@ import org.apache.log4j.Logger;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.util.WSDLServletUtil;
 import com.metamatrix.core.CoreConstants;
-import com.metamatrix.core.log.FileLogWriter;
-import com.metamatrix.core.log.LogListener;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.soap.SOAPPlugin;
 import com.metamatrix.soap.util.ErrorMessageKeys;

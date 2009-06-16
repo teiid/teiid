@@ -36,7 +36,7 @@ public interface LogListener {
      * @param pluginID the identifier of the plugin that submitted the log message
      * @param threadName the name of the thread upon which the message was created
      */
-    void logMessage(LogMessage msg);
+    void logMessage(int level, String context, Object msg);
 
     /**
      * Shut down this listener, requesting it clean up and release any resources it

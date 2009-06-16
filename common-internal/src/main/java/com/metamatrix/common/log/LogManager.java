@@ -296,7 +296,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void log(int msgLevel, String context, Object message) {
-        logMessage(msgLevel, context, message);
+        logListener.logMessage(msgLevel, context, message);
     }
 
     /**
@@ -366,8 +366,8 @@ public final class LogManager {
 			return;
 		} 
 		
-		LogMessage msg = new LogMessage( context, level, e, msgParts);
-		logListener.logMessage(msg);
+		LogMessage msg = new LogMessage(e, msgParts);
+		logListener.logMessage(level, context, msg);
     }
 
 

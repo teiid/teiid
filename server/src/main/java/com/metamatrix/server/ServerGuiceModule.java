@@ -98,7 +98,7 @@ class ServerGuiceModule extends AbstractModule {
 		
         // Start the log file
 		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
-		bind(LogListener.class).toProvider(ServerLogListernerProvider.class).in(Scopes.SINGLETON);  
+		bind(LogListener.class).toProvider(FileLogListenerProvider.class).in(Scopes.SINGLETON);  
 		
 		// this needs to be removed.
 		binder().requestStaticInjection(LogManager.class);

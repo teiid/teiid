@@ -245,11 +245,11 @@ public class DbLogWriter {
 
 	}
 
-	public synchronized void logMessage(LogMessage msg) {
-		write(msg);	
+	public synchronized void logMessage(int level, String context,LogMessage msg) {
+		write(level, context, msg);	
 	}
 			
-	private void write(LogMessage message) {
+	private void write(int level, String context, LogMessage message) {
 		// put this in a while to so that as long a 
         int retrycnt = 0;
         if (isLogSuspended && System.currentTimeMillis() > resumeTime) {             
@@ -257,7 +257,7 @@ public class DbLogWriter {
         }
 		while (!isLogSuspended && !shutdown) {
 			try {
-				printMsg(message);
+				printMsg(level, context, message);
 				return;
 
 			} catch (Exception ex) {
@@ -301,12 +301,12 @@ public class DbLogWriter {
 		return this.insert;
 	}
 	
-	private void printMsg(LogMessage message) throws SQLException {
+	private void printMsg(int level, String context, LogMessage message) throws SQLException {
         if (this.shutdown) {
             return;
         }
         
-		long msgTimeStamp = message.getTimestamp();
+		long msgTimeStamp = System.currentTimeMillis();
 		if (lastSequenceStart != msgTimeStamp) {
 			lastSequenceStart = msgTimeStamp;
 			sequenceNumber = 0;
@@ -326,10 +326,10 @@ public class DbLogWriter {
 			stmt.setShort(2, sequenceNumber);
 
 			// Message context column
-			stmt.setString(3, StringUtil.truncString(message.getContext(), maxGeneralLength));
+			stmt.setString(3, StringUtil.truncString(context, maxGeneralLength));
 
 			// Message type column
-			stmt.setInt(4, message.getLevel());
+			stmt.setInt(4, level);
 
 			// Message text column
 			stmt.setString(5, StringUtil.truncString(message.getText(), maxMsgLength));
@@ -341,7 +341,7 @@ public class DbLogWriter {
 			stmt.setString(7, StringUtil.truncString(CurrentConfiguration.getInstance().getProcessName(), maxGeneralLength));
 
 			// Message thread name column
-			stmt.setString(8, StringUtil.truncString(message.getThreadName(), maxGeneralLength));
+			stmt.setString(8, StringUtil.truncString(Thread.currentThread().getName(), maxGeneralLength));
 
 			// Exception column
 			if(message.getException() != null) {

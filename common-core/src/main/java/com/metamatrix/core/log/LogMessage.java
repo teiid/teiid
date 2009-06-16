@@ -27,58 +27,14 @@ import java.io.Serializable;
 
 public class LogMessage implements Serializable{
 
-	private String context;
-    private int level;
 	private Object[] msgParts;
 	private Throwable exception;
-	private long timestamp;
-    private String threadName;
-    private int errorCode;
     
-    public LogMessage() {
-    }
 
-	public LogMessage(String context, int level, Object[] msgParts ) {
-	    this.context = context;
-	    this.level = level;
-	    this.msgParts = msgParts;
-	    this.timestamp = System.currentTimeMillis();
-        this.threadName = Thread.currentThread().getName();
-	}
-
-	public LogMessage(String context, int level, Throwable e, Object[] msgParts) {
-        this(context, level, msgParts);
+	public LogMessage(Throwable e, Object[] msgParts) {
+        this.msgParts = msgParts;
 	    this.exception = e;
 	}
-    
-    public LogMessage(String context, int level, Throwable e, Object[] msgParts, int errorCode) {
-        this(context, level, msgParts);
-        this.exception = e;
-        this.errorCode = errorCode;
-    }
-
-	
-    public LogMessage(String context, int level, Throwable e, Object[] msgParts, String threadname ) {
-        this(context, level, msgParts);
-        this.exception = e;
-        this.threadName = threadname;
-    }    
-
-    public String getContext() {
-        return this.context;
-    }
-
-    public int getLevel() {
-        return this.level;
-    }
-
-    public String getThreadName() {
-        return this.threadName;
-    }
-
-    public long getTimestamp() {
-        return this.timestamp;
-    }
 
 	public Throwable getException() {
 		return this.exception;
@@ -106,11 +62,8 @@ public class LogMessage implements Serializable{
         } 
         return text.toString();
 	}
-    
-    /** 
-     * @return Returns the errorCode.
-     */
-    public int getErrorCode() {
-        return this.errorCode;
-    }
+	
+	public String toString() {
+		return getText();
+	}
 }

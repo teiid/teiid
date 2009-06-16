@@ -23,7 +23,6 @@
 package com.metamatrix.dqp.config;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
 
 import junit.framework.TestCase;
@@ -33,13 +32,11 @@ import org.teiid.dqp.internal.process.DQPCore;
 
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.DQPConfigSource;
-import com.metamatrix.core.log.LogListener;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeAbstractService;
 import com.metamatrix.dqp.service.FakeBufferService;
 import com.metamatrix.dqp.service.FakeMetadataService;
-import com.metamatrix.internal.core.log.PlatformLog;
 
 /**
  */
@@ -66,12 +63,6 @@ public class TestDQPLauncher extends TestCase {
         DQPCore dqpCore = new DQPCore();
         dqpCore.start(configSource);
     	
-        PlatformLog log = new PlatformLog();
-    	List<LogListener> list = log.getLogListeners();
-    	for(LogListener l: list) {
-    		log.removeListener(l);
-    	}
-                
         DQPCore dqp = new DQPCore();
         dqp.start(configSource);
         assertNotNull("DQP should not be null", dqp); //$NON-NLS-1$

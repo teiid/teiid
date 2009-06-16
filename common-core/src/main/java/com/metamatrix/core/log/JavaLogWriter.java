@@ -30,11 +30,17 @@ import java.util.logging.Logger;
  */
 public class JavaLogWriter implements LogListener {
 
-    public void logMessage(LogMessage msg) {
-    	Logger logger = Logger.getLogger("org.teiid." + msg.getContext()); //$NON-NLS-1$
-    	Level level = convertLevel(msg.getLevel());
-    	if (logger.isLoggable(level)) {
-            logger.log(level, msg.getText(), msg.getException());
+    public void logMessage(int level, String context, Object msg) {
+    	Logger logger = Logger.getLogger("org.teiid." + context); //$NON-NLS-1$
+    	
+    	Level javaLevel = convertLevel(level);
+    	if (logger.isLoggable(javaLevel)) {
+    		if (msg instanceof LogMessage) {
+    			logger.log(javaLevel, ((LogMessage)msg).getText(), ((LogMessage)msg).getException());
+    		}
+    		else {
+    			logger.log(javaLevel, msg.toString());
+    		}
     	}
     }
     

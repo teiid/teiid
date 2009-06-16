@@ -22,20 +22,11 @@
 
 package com.metamatrix.server;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.util.Properties;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.log.FileLimitSizeLogWriter;
+import com.metamatrix.core.log.JavaLogWriter;
 import com.metamatrix.core.log.LogListener;
-import com.metamatrix.internal.core.log.PlatformLog;
 
 public class FileLogListenerProvider implements Provider<LogListener> {
 
@@ -49,45 +40,8 @@ public class FileLogListenerProvider implements Provider<LogListener> {
 	
 	@Override
 	public LogListener get() {
-		final PlatformLog log = new PlatformLog();
-		try {
-			FileLimitSizeLogWriter flw = buildFileLogger();		
-			log.addListener(flw);
-		} catch (FileNotFoundException e) {
-			throw new MetaMatrixRuntimeException(e);
-		}
-		return log;
+		return new JavaLogWriter();
 	}
 
-	
-	FileLimitSizeLogWriter buildFileLogger() throws FileNotFoundException {
-		File tmpFile = new File(path, logFile);
-		tmpFile.getParentFile().mkdirs();
-
-		// if log file exists then create a archive
-		if (tmpFile.exists()) {
-			int index = logFile.lastIndexOf("."); //$NON-NLS-1$
-			String archiveName = FileLimitSizeLogWriter.buildArchiveFileName(logFile.substring(0, index), logFile.substring(index));
-			tmpFile.renameTo(new File(path, archiveName));
-		}
-
-		FileOutputStream fos = new FileOutputStream(tmpFile);
-		PrintStream ps = new PrintStream(fos);
-
-		System.setOut(ps);
-		System.setErr(ps);
-
-		Properties logProps = new Properties();
-		Properties configProps = CurrentConfiguration.getInstance().getProperties();
-		if (configProps.containsKey(FileLimitSizeLogWriter.FILE_SIZE_LIMIT)) {
-			logProps.setProperty(FileLimitSizeLogWriter.FILE_SIZE_LIMIT,configProps.getProperty(FileLimitSizeLogWriter.FILE_SIZE_LIMIT));
-		}
-		if (configProps.containsKey(FileLimitSizeLogWriter.FILE_SIZE_MONITOR_TIME)) {
-			logProps.setProperty(FileLimitSizeLogWriter.FILE_SIZE_MONITOR_TIME,configProps.getProperty(FileLimitSizeLogWriter.FILE_SIZE_MONITOR_TIME));
-		}
-
-		FileLimitSizeLogWriter flw = new FileLimitSizeLogWriter(tmpFile,logProps, false);
-		return flw;
-	}
 	
 }
