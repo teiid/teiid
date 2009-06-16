@@ -356,18 +356,18 @@ public final class EmbeddedDriver extends BaseDriver {
             if (!EmbeddedDriver.getDefaultConnectionURL().equals(dqpURL.toString())) {
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation+"patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
-            }
             
-            try {
-	            String configLocation = props.getProperty(DQPEmbeddedProperties.VDB_DEFINITION, "./deploy/"); //$NON-NLS-1$ 
-	            if (!configLocation.endsWith("/")) { //$NON-NLS-1$
-	            	configLocation = configLocation + "/"; //$NON-NLS-1$
-	            }
-	            runtimeClasspathList.add(URLHelper.buildURL(dqpURL, configLocation));
-            } catch(IOException e) {
-            	// ignore..
+	            try {
+		            String configLocation = props.getProperty(DQPEmbeddedProperties.VDB_DEFINITION, "./deploy/"); //$NON-NLS-1$ 
+		            if (!configLocation.endsWith("/")) { //$NON-NLS-1$
+		            	configLocation = configLocation + "/"; //$NON-NLS-1$
+		            }
+		            runtimeClasspathList.add(URLHelper.buildURL(dqpURL, configLocation));
+	            } catch(IOException e) {
+	            	// ignore..
+	            }            
             }
-            
+                        
             URL[] dqpClassPath = runtimeClasspathList.toArray(new URL[runtimeClasspathList.size()]);
             this.classLoader = new PostDelegatingClassLoader(dqpClassPath, this.getClass().getClassLoader(), new MetaMatrixURLStreamHandlerFactory());
             
