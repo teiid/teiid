@@ -633,6 +633,10 @@ public class TestFunctionLibrary {
     @Test public void testInvokeDivide6() {
         helpInvokeMethod("/", new Object[] { new BigDecimal("3"), new BigDecimal("2") }, new BigDecimal("2"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
+    
+    @Test public void testInvokeDivideMod() {
+        helpInvokeMethod("mod", new Object[] { new BigDecimal("3.1"), new BigDecimal("2") }, new BigDecimal("1.1"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    }
 
     @Test public void testInvokeAbs1() {
         helpInvokeMethod("abs", new Object[] { new Integer(-3) }, new Integer(3)); //$NON-NLS-1$
@@ -674,6 +678,14 @@ public class TestFunctionLibrary {
 		helpInvokeMethod("atan2", new Object[] { new Double(0.05), new Double(0.07) }, new Double(0.6202494859828215)); //$NON-NLS-1$
 	}
 
+	@Test public void testInvokeAtanBigDecimal() {
+		helpInvokeMethod("atan", new Object[] { new BigDecimal(0.05) }, new Double(0.049958395721942765)); //$NON-NLS-1$
+	}
+
+	@Test public void testInvokeAtan2BigDecimal() {
+		helpInvokeMethod("atan2", new Object[] { new BigDecimal(0.05), new BigDecimal(0.07) }, new Double(0.6202494859828215)); //$NON-NLS-1$
+	}
+	
 	@Test public void testInvokeCos() {
 		helpInvokeMethod("cos", new Object[] { new Double(1.57) }, new Double(7.963267107332633E-4)); //$NON-NLS-1$
 	}

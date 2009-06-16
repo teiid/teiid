@@ -207,9 +207,9 @@ public class Evaluator {
 		// Compare two non-null values using specified operator
 		switch(criteria.getOperator()) {
 			case CompareCriteria.EQ:
-				return Boolean.valueOf(leftValue.equals(rightValue));
+				return Boolean.valueOf(compareValues(leftValue, rightValue) == 0);
 			case CompareCriteria.NE:
-				return Boolean.valueOf(! leftValue.equals(rightValue));
+				return Boolean.valueOf(compareValues(leftValue, rightValue) != 0);
 			case CompareCriteria.LT:
 				return Boolean.valueOf((compareValues(leftValue, rightValue) < 0));
 			case CompareCriteria.LE:

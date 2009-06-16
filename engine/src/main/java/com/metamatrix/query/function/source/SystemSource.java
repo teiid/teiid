@@ -62,11 +62,11 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         addArithmeticFunction(SourceSystemFunctions.SUBTRACT_OP, QueryPlugin.Util.getString("SystemSource.Subtract_desc"), "minus", QueryPlugin.Util.getString("SystemSource.Subtract_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addArithmeticFunction(SourceSystemFunctions.MULTIPLY_OP, QueryPlugin.Util.getString("SystemSource.Multiply_desc"), "multiply", QueryPlugin.Util.getString("SystemSource.Multiply_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addArithmeticFunction(SourceSystemFunctions.DIVIDE_OP, QueryPlugin.Util.getString("SystemSource.Divide_desc"), "divide", QueryPlugin.Util.getString("SystemSource.Divide_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        addArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         
         // numeric
         addAbsFunction();
         addRandFunction();
-        addModFunction();
         addPowerFunction();
         addRoundFunction();
         addSignFunction();
@@ -266,6 +266,11 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 				new FunctionParameter[] { 
 					new FunctionParameter("number", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Double_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, description) ) );                 //$NON-NLS-1$
+		functions.add(
+				new FunctionMethod(name, description, NUMERIC, FUNCTION_CLASS, name,
+					new FunctionParameter[] { 
+						new FunctionParameter("number", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Double_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+					new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, description) ) );                 //$NON-NLS-1$
 	}
 
 	private void addAtan2Function(String name, String description) {
@@ -275,6 +280,12 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 					new FunctionParameter("number1", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Atan_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("number2", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Atan_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, description) ) );                 //$NON-NLS-1$
+		functions.add(
+				new FunctionMethod(name, description, NUMERIC, FUNCTION_CLASS, name,
+					new FunctionParameter[] { 
+						new FunctionParameter("number1", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Atan_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+						new FunctionParameter("number2", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Atan_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+					new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, description) ) );                 //$NON-NLS-1$
 	}
 
 	private void addPiFunction(String name, String description) {
@@ -284,14 +295,6 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DOUBLE, description) ) );                 //$NON-NLS-1$
 	}
 			
-    private void addModFunction() {
-        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.LONG); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ 
-        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.FLOAT); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ 
-        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.DOUBLE); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ 
-        addTypedArithmeticFunction(SourceSystemFunctions.MOD, QueryPlugin.Util.getString("SystemSource.Mod_desc"), "mod", QueryPlugin.Util.getString("SystemSource.Mod_result_desc"), DataTypeManager.DefaultDataTypes.BIG_INTEGER); //$NON-NLS-1$ //$NON-NLS-3$ //$NON-NLS-2$ 
-    }
-    
     private void addPowerFunction() {
         addTypedPowerFunction(DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.DOUBLE);
         addTypedPowerFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.INTEGER);        
@@ -342,6 +345,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     private void addSqrtFunction() {
         addTypedSqrtFunction(DataTypeManager.DefaultDataTypes.LONG);
         addTypedSqrtFunction(DataTypeManager.DefaultDataTypes.DOUBLE);
+        addTypedSqrtFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
     }
     
     private void addTypedSqrtFunction(String type) {        

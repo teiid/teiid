@@ -197,34 +197,34 @@ public final class FunctionMethods {
 
 	// ================== Function = ceiling =====================
 
-	public static Object ceiling(Double x) {
-		return new Double(Math.ceil(x));
+	public static Object ceiling(Number x) {
+		return new Double(Math.ceil(x.doubleValue()));
 	}
 
 	// ================== Function = exp =====================
 
-	public static Object exp(Double x) {
-		return new Double(Math.exp(x));
+	public static Object exp(Number x) {
+		return new Double(Math.exp(x.doubleValue()));
 	}
 
 	// ================== Function = floor =====================
 
-	public static  Object floor(Double x) {
+	public static  Object floor(Number x) {
 		return new Double(Math.floor(x.doubleValue()));
 	}
 
 	// ================== Function = log =====================
 
-	public static  Object log(Double x) {
-		return new Double(Math.log(x));
+	public static  Object log(Number x) {
+		return new Double(Math.log(x.doubleValue()));
 	}
 
 	// ================== Function = log10 =====================
 
 	private static final double log10baseE = Math.log(10);
 
-	public static Object log10(Double x) {
-		return new Double( Math.log(x) / log10baseE);
+	public static Object log10(Number x) {
+		return new Double( Math.log(x.doubleValue()) / log10baseE);
 	}
     
     // ================== Function = rand=====================
@@ -271,6 +271,10 @@ public final class FunctionMethods {
 		} else if(x instanceof BigInteger) {
 			if(y instanceof BigInteger) {
 				return ((BigInteger)x).mod((BigInteger) y);
+			}
+		} else if(x instanceof BigDecimal) {
+			if(y instanceof BigDecimal) {
+				return ((BigDecimal)x).remainder((BigDecimal) y);
 			}
 		}
 
@@ -1263,37 +1267,37 @@ public final class FunctionMethods {
 	}
 
 	// ================== Function - ACOS =====================
-	public static Object acos(Double number) {
+	public static Object acos(Number number) {
 		return new Double(Math.acos(number.doubleValue()));
 	}
 
 	// ================== Function - ASIN =====================
-	public static Object asin(Double number) {
+	public static Object asin(Number number) {
 		return new Double(Math.asin(number.doubleValue()));
 	}
 
 	// ================== Function - ATAN =====================
-	public static Object atan(Double number) {
+	public static Object atan(Number number) {
 		return new Double(Math.atan(number.doubleValue()));
 	}
 
 	// ================== Function - ATAN2 =====================
-	public static Object atan2(Double number1, Double number2) {
+	public static Object atan2(Number number1, Number number2) {
 		return new Double(Math.atan2(number1.doubleValue(), number2.doubleValue()));
 	}
 
 	// ================== Function - COS =====================
-	public static Object cos(Double number) {
+	public static Object cos(Number number) {
 		return new Double(Math.cos(number.doubleValue()));
 	}
 
 	// ================== Function - COT =====================
-	public static Object cot(Double number) {
+	public static Object cot(Number number) {
 		return new Double(1/Math.tan(number.doubleValue()));
 	}
 
 	// ================== Function - DEGREES =====================
-	public static Object degrees(Double number) {
+	public static Object degrees(Number number) {
 		return new Double(Math.toDegrees(number.doubleValue()));
 	}
 
@@ -1303,17 +1307,17 @@ public final class FunctionMethods {
 	}
 
 	// ================== Function - RADIANS =====================
-	public static Object radians(Double number) {
+	public static Object radians(Number number) {
 		return new Double(Math.toRadians(number.doubleValue()));
 	}
 
 	// ================== Function - SIN =====================
-	public static Object sin(Double number) {
+	public static Object sin(Number number) {
 		return new Double(Math.sin(number.doubleValue()));
 	}
 
 	// ================== Function - TAN =====================
-	public static Object tan(Double number) {
+	public static Object tan(Number number) {
 		return new Double(Math.tan(number.doubleValue()));
 	}
 
