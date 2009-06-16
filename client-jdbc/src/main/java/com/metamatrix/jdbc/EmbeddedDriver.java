@@ -347,7 +347,7 @@ public final class EmbeddedDriver extends BaseDriver {
             
             // a non-delegating class loader will be created from where all third party dependent jars can be loaded
             ArrayList<URL> runtimeClasspathList = new ArrayList<URL>();
-            String libLocation = props.getProperty("dqp.lib", "./lib/"); //$NON-NLS-1$ //$NON-NLS-2$
+            String libLocation = props.getProperty(DQPEmbeddedProperties.DQP_LIBDIR, "./lib/"); //$NON-NLS-1$
             if (!libLocation.endsWith("/")) { //$NON-NLS-1$
             	libLocation = libLocation + "/"; //$NON-NLS-1$
             }
@@ -356,6 +356,16 @@ public final class EmbeddedDriver extends BaseDriver {
             if (!EmbeddedDriver.getDefaultConnectionURL().equals(dqpURL.toString())) {
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation+"patches/", MMURLConnection.REVERSEALPHA)); //$NON-NLS-1$
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
+            }
+            
+            try {
+	            String configLocation = props.getProperty(DQPEmbeddedProperties.VDB_DEFINITION, "./deploy/"); //$NON-NLS-1$ 
+	            if (!configLocation.endsWith("/")) { //$NON-NLS-1$
+	            	configLocation = configLocation + "/"; //$NON-NLS-1$
+	            }
+	            runtimeClasspathList.add(URLHelper.buildURL(dqpURL, configLocation));
+            } catch(IOException e) {
+            	// ignore..
             }
             
             URL[] dqpClassPath = runtimeClasspathList.toArray(new URL[runtimeClasspathList.size()]);
