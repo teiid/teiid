@@ -80,7 +80,6 @@ public interface DQPServiceNames {
     	null,
         null,
         null,
-        null,
         LogCommonConstants.CTX_TXN_LOG,                                           
         null,
         null,
