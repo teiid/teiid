@@ -46,7 +46,7 @@
         type="System"/>
       <property
         name="com.arjuna.common.util.logger"
-        value="log4j"
+        value="jakarta"
         type="System"/>
     </properties>
 </transaction-service>

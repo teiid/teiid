@@ -111,7 +111,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logCritical(String context, String message) {
-    	logMessage(MessageLevel.CRITICAL, context, message);
+    	logListener.log(MessageLevel.CRITICAL, context, message);
     }
 
     /**
@@ -130,7 +130,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logCritical(String context, Throwable e, String message) {
-        logMessage(MessageLevel.CRITICAL,context,e,message);
+    	logListener.log(MessageLevel.CRITICAL,context,e,message);
     }
 
     /**
@@ -146,7 +146,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logError(String context, String message) {
-        logMessage(MessageLevel.ERROR, context,message);
+    	logListener.log(MessageLevel.ERROR, context,message);
     }
 
     /**
@@ -163,7 +163,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logError(String context, Throwable e, String message) {
-        logMessage(MessageLevel.ERROR,context,e,message);
+    	logListener.log(MessageLevel.ERROR,context,e,message);
     }
     
     /**
@@ -179,7 +179,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logWarning(String context, String message) {
-        logMessage(MessageLevel.WARNING, context,message);
+    	logListener.log(MessageLevel.WARNING, context,message);
     }
 
     /**
@@ -196,7 +196,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logWarning(String context, Throwable e, String message) {
-        logMessage(MessageLevel.WARNING,context,e,message);
+    	logListener.log(MessageLevel.WARNING,context,e,message);
     }
     
     /**
@@ -213,7 +213,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void logInfo(String context, String message) {
-        logMessage(MessageLevel.INFO, context,message);
+    	logListener.log(MessageLevel.INFO, context,message);
     }
     
     /**
@@ -246,7 +246,7 @@ public final class LogManager {
      * @param message the log message (may be null)
      */
     public static void logDetail(String context, Throwable e, String message) {
-        logMessage(MessageLevel.DETAIL,context,e,message);
+    	logListener.log(MessageLevel.DETAIL,context,e,message);
     }
 
     /**
@@ -296,7 +296,7 @@ public final class LogManager {
      * not logged if this parameter is null
      */
     public static void log(int msgLevel, String context, Object message) {
-        logListener.logMessage(msgLevel, context, message);
+        logListener.log(msgLevel, context, message);
     }
 
     /**
@@ -311,8 +311,8 @@ public final class LogManager {
      * @param message the individual parts of the log message; the message is
      * not logged if this parameter is null
      */
-    public static void log(int msgLevel, String context, Throwable e, String message) {
-        logMessage(msgLevel, context, e, message);
+    public static void log(int msgLevel, String context, Throwable e, Object message) {
+    	logListener.log(msgLevel, context, e, message);
     }
 
     /**
@@ -358,19 +358,16 @@ public final class LogManager {
     }
 
     private static void logMessage(int level, String context, Object ... msgParts) {
-    	logMessage(level, context, null, msgParts);
-    }
-
-    private static void logMessage(int level, String context, Throwable e, Object ... msgParts) {
 		if (msgParts == null || msgParts.length == 0 || !isMessageToBeRecorded(context, level)) {
 			return;
 		} 
-		
-		LogMessage msg = new LogMessage(e, msgParts);
-		logListener.logMessage(level, context, msg);
+		logListener.log(level, context, new LogMessage(msgParts));
     }
 
-
+    
+    /**
+     * Create a logging proxy, that logs at entry and exit points of the method calls on the provided interfaces.  
+     */
     public static Object createLoggingProxy(final String loggingContext,
                                              final Object instance,
                                              final Class[] interfaces,

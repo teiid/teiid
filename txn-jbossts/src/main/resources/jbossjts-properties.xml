@@ -193,7 +193,7 @@
             type="System" value="0xffffffff"/>
         <property name="com.arjuna.common.util.logging.VisibilityLevel"
             type="System" value="0xffffffff"/>
-        <property name="com.arjuna.common.util.logger" type="System" value="log4j"/>
+        <property name="com.arjuna.common.util.logger" type="System" value="jakarta"/>
     </properties>
     <properties depends="arjuna" name="txoj">
         <!--

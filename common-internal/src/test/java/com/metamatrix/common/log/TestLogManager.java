@@ -114,12 +114,19 @@ public class TestLogManager extends TestCase {
         /* (non-Javadoc)
          * @see com.metamatrix.core.log.LogListener#logMessage(org.eclipse.core.runtime.IStatus, long, java.lang.String, java.lang.String)
          */
-        public synchronized void logMessage(int level, String context, Object msg){
-            this.messages.add(((LogMessage)msg).getText());
+        public synchronized void log(int level, String context, Object msg){
+            this.messages.add(msg);
             if (this.messages.size() == expectedMessages) {
             	this.notifyAll();
             }
         }
+        
+		public void log(int level, String context, Throwable t, Object msg) {
+            this.messages.add(msg);
+            if (this.messages.size() == expectedMessages) {
+            	this.notifyAll();
+            }			
+		}        
 
         /* (non-Javadoc)
          * @see com.metamatrix.core.log.LogListener#shutdown()

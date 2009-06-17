@@ -49,11 +49,17 @@ public class DbLogListener implements LogListener {
         this.enabled = enable;
 	}
 
-    public void logMessage(int level, String context, Object msg) {
+    public void log(int level, String context, Object msg) {
         if (enabled) {
-            writer.logMessage(level, context, (LogMessage)msg);
+            writer.logMessage(level, context, msg, null);
         }
 	}
+    
+    public void log(int level, String context, Throwable t, Object msg) {
+        if (enabled) {
+            writer.logMessage(level, context, msg, t);
+        }    	
+    }
 
 	public void shutdown() {
 		writer.shutdown();

@@ -32,17 +32,13 @@ import com.metamatrix.soap.SOAPPlugin;
  */
 public class LogUtil {
 
-	// =========================================================================
-	// Static Members
-	// =========================================================================
 	private static final LogListener log = new JavaLogWriter();
-
 	
 	public static void log(int severity, String message) {
-		log.logMessage(severity, SOAPPlugin.PLUGIN_ID, new LogMessage(null, new Object[] {message}));
+		log.log(severity, SOAPPlugin.PLUGIN_ID, message);
 	}
 
 	public static void log(int severity, Throwable t, String message) {
-		log.logMessage(severity, SOAPPlugin.PLUGIN_ID, new LogMessage( t, new Object[] {message}));
+		log.log(severity, SOAPPlugin.PLUGIN_ID, t, message);
 	}	
 }

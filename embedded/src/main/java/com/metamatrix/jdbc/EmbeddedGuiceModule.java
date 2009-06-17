@@ -52,19 +52,21 @@ public class EmbeddedGuiceModule extends AbstractModule {
 	
 	@Override
 	protected void configure() {
-		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
-		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
+		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
+		bind(LogListener.class).toProvider(LogListernerProvider.class).in(Scopes.SINGLETON);  
+		
+		bind(URL.class).annotatedWith(Names.named("BootstrapURL")).toInstance(bootstrapURL); //$NON-NLS-1$
 		bindConstant().annotatedWith(Names.named("HostName")).to("embedded"); //$NON-NLS-1$ //$NON-NLS-2$
 		bindConstant().annotatedWith(Names.named("ProcessName")).to(props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY)); //$NON-NLS-1$
 		String workspaceDir = props.getProperty(DQPEmbeddedProperties.DQP_WORKSPACE);
 		bindConstant().annotatedWith(Names.named("WorkspaceDir")).to(workspaceDir); //$NON-NLS-1$
 		bind(Properties.class).annotatedWith(Names.named("DQPProperties")).toInstance(this.props); //$NON-NLS-1$
-		bind(DQPContextCache.class).in(Scopes.SINGLETON);
+
+		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
+		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
 		
+		bind(DQPContextCache.class).in(Scopes.SINGLETON);
 		bind(DQPConfigSource.class).to(EmbeddedConfigSource.class);
-		bind(URL.class).annotatedWith(Names.named("BootstrapURL")).toInstance(bootstrapURL); //$NON-NLS-1$
-		bind(LogConfiguration.class).toProvider(LogConfigurationProvider.class).in(Scopes.SINGLETON);		
-		bind(LogListener.class).toProvider(LogListernerProvider.class).in(Scopes.SINGLETON);  
 		
 		// this needs to be removed.
 		binder().requestStaticInjection(LogManager.class);

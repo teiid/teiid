@@ -27,16 +27,10 @@ package com.metamatrix.core.log;
  * LogListener
  */
 public interface LogListener {
+
+    void log(int level, String context, Object msg);
     
-    /**
-     * Notifies this listener that given status has been logged.  
-     * The listener is free to retain or ignore this status.
-     * @param status the status being logged
-     * @param timestamp the time that the message was logged
-     * @param pluginID the identifier of the plugin that submitted the log message
-     * @param threadName the name of the thread upon which the message was created
-     */
-    void logMessage(int level, String context, Object msg);
+    void log(int level, String context, Throwable t, Object msg);
 
     /**
      * Shut down this listener, requesting it clean up and release any resources it

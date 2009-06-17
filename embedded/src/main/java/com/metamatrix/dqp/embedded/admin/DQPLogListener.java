@@ -36,9 +36,16 @@ public class DQPLogListener implements LogListener {
         this.logger = logger;
     }
 
-    public void logMessage(int level, String context, Object msg) {
-        
-        int logLevel = EmbeddedLogger.INFO;
+    public void log(int level, String context, Object msg) {
+        logger.log(convertLevel(level), System.currentTimeMillis(), context, Thread.currentThread().getName(), msg.toString(), null);        
+    }
+
+    public void log(int level, String context, Throwable t, Object msg) {
+    	logger.log(convertLevel(level), System.currentTimeMillis(), context, Thread.currentThread().getName(), msg.toString(), t);
+    }    
+    
+	private int convertLevel(int level) {
+		int logLevel = EmbeddedLogger.INFO;
         
         switch(level) {
             case MessageLevel.WARNING:
@@ -60,16 +67,9 @@ public class DQPLogListener implements LogListener {
             default:
                 logLevel = EmbeddedLogger.INFO;
         }
-        
-        if (msg instanceof LogMessage) {
-        	LogMessage lm = (LogMessage)msg;
-        	logger.log(logLevel, System.currentTimeMillis(), context, Thread.currentThread().getName(), lm.getText(), lm.getException());
-        }
-        else {
-        	logger.log(logLevel, System.currentTimeMillis(), context, Thread.currentThread().getName(), msg.toString(), null);
-        }
-    }
-
+		return logLevel;
+	}
+    
     public void shutdown() {
     }
 }

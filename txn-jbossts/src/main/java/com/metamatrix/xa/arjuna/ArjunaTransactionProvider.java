@@ -94,8 +94,6 @@ public class ArjunaTransactionProvider implements TransactionProvider {
         String baseDir = props.getProperty(TransactionService.TXN_STORE_DIR, System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
         Configuration.setObjectStoreRoot(baseDir + File.separator +  "TeiidTxnStore" + File.separator + txnMgrUniqueName); //$NON-NLS-1$        
         
-        configureLogging(txnMgrUniqueName, props);
-
         // common properties
         arjPropertyManager.propertyManager.setProperty(com.arjuna.ats.arjuna.common.Environment.XA_NODE_IDENTIFIER, txnMgrUniqueName);
         arjPropertyManager.propertyManager.setProperty("com.arjuna.ats.arjuna.recovery.transactionStatusManagerPort",  props.getProperty(TransactionService.TXN_STATUS_PORT, TransactionService.DEFAULT_TXN_STATUS_PORT)) ; //$NON-NLS-1$        
@@ -118,36 +116,6 @@ public class ArjunaTransactionProvider implements TransactionProvider {
             recoveryManager = RecoveryManager.manager();
             recoveryManager.startRecoveryManagerThread();
         }
-    }
-    
-    private void configureLogging(String uniqueName, Properties props) throws XATransactionException{
-        // depending upon the logging type either log to the MM log file or create separate file for
-        // transaction logging.
-        AppenderSkeleton appender = null;        
-        if (Boolean.valueOf(props.getProperty(TransactionService.SEPARATE_TXN_LOG, TransactionService.DEFAULT_SEPARATE_TXN_LOG)).booleanValue()){
-            RollingFileAppender fileAppender;
-            try {
-                String baseDir = props.getProperty(TransactionService.TXN_MGR_LOG_DIR);
-                File directory = new File(baseDir);
-                if (!directory.exists()) {
-                    directory.mkdirs();
-                }
-                String filename = baseDir + "/" + uniqueName + ".log"; //$NON-NLS-1$ //$NON-NLS-2$
-                fileAppender = new RollingFileAppender(new PatternLayout("%d [%t] %-5p %c - %m%n"), filename, true); //$NON-NLS-1$
-                fileAppender.setMaxFileSize(props.getProperty(TransactionService.MAX_FILESIZE_MB, TransactionService.DEFAULT_LOGFILE_SIZE)+"MB"); //$NON-NLS-1$
-                fileAppender.setMaxBackupIndex(Integer.parseInt(props.getProperty(TransactionService.MAX_ROLLINGFILES, TransactionService.DEFAULT_MAX_ROLLOVER_FILES)));
-            } catch (IOException e) {
-                throw new XATransactionException(e);
-            }            
-            appender = fileAppender;
-        }
-        else {
-            appender = new MMLogAppender();            
-        }
-        appender.setThreshold(Level.DEBUG);
-
-        Logger root = Logger.getLogger("com.arjuna"); //$NON-NLS-1$
-        root.addAppender(appender);
     }
     
     /** 
@@ -194,44 +162,5 @@ public class ArjunaTransactionProvider implements TransactionProvider {
     
     public void removeRecoverySource(String name) {
         XAConnectorRecovery.removeConnector(name);
-    }
-    
-    static class MMLogAppender extends AppenderSkeleton{
-
-        protected void append(LoggingEvent event) {
-            int level = MessageLevel.ERROR;
-            
-            switch(event.getLevel().toInt()) {
-                case Level.DEBUG_INT:
-                    level = MessageLevel.DETAIL;
-                    break;
-                case Level.INFO_INT:
-                    level = MessageLevel.INFO;
-                    break;                    
-                case Level.WARN_INT:
-                    level = MessageLevel.WARNING;
-                    break;
-                case Level.ERROR_INT:
-                    level = MessageLevel.ERROR;
-                    break;
-                case Level.FATAL_INT:
-                    level = MessageLevel.CRITICAL;
-                    break;
-            }
-            
-            if (event.getThrowableInformation() != null) {
-                LogManager.log(level, LogCommonConstants.CTX_XA_TXN, event.getThrowableInformation().getThrowable(), event.getRenderedMessage());
-            }
-            else {
-                LogManager.log(level, LogCommonConstants.CTX_XA_TXN, event.getRenderedMessage());              
-            }
-        }
-
-        public void close() {
-        }
-
-        public boolean requiresLayout() {
-            return false;
-        }
     }
 }

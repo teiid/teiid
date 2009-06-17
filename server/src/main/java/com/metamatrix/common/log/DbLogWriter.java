@@ -245,11 +245,11 @@ public class DbLogWriter {
 
 	}
 
-	public synchronized void logMessage(int level, String context,LogMessage msg) {
-		write(level, context, msg);	
+	public synchronized void logMessage(int level, String context,Object msg, Throwable t) {
+		write(level, context, msg, t);	
 	}
 			
-	private void write(int level, String context, LogMessage message) {
+	private void write(int level, String context, Object message, Throwable t) {
 		// put this in a while to so that as long a 
         int retrycnt = 0;
         if (isLogSuspended && System.currentTimeMillis() > resumeTime) {             
@@ -257,7 +257,7 @@ public class DbLogWriter {
         }
 		while (!isLogSuspended && !shutdown) {
 			try {
-				printMsg(level, context, message);
+				printMsg(level, context, message, t);
 				return;
 
 			} catch (Exception ex) {
@@ -301,7 +301,7 @@ public class DbLogWriter {
 		return this.insert;
 	}
 	
-	private void printMsg(int level, String context, LogMessage message) throws SQLException {
+	private void printMsg(int level, String context, Object message, Throwable t) throws SQLException {
         if (this.shutdown) {
             return;
         }
@@ -332,7 +332,7 @@ public class DbLogWriter {
 			stmt.setInt(4, level);
 
 			// Message text column
-			stmt.setString(5, StringUtil.truncString(message.getText(), maxMsgLength));
+			stmt.setString(5, StringUtil.truncString(message.toString(), maxMsgLength));
 
 			// Message hostname column
 			stmt.setString(6, StringUtil.truncString(CurrentConfiguration.getInstance().getConfigurationName(), maxGeneralLength)); 
@@ -344,8 +344,8 @@ public class DbLogWriter {
 			stmt.setString(8, StringUtil.truncString(Thread.currentThread().getName(), maxGeneralLength));
 
 			// Exception column
-			if(message.getException() != null) {
-				String eMsg = message.getException().getMessage();
+			if(t != null) {
+				String eMsg = t.getMessage();
 				if ( eMsg == null ) {
 					eMsg = NULL;
 				} else {

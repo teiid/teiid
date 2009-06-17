@@ -86,11 +86,27 @@ class LogListernerProvider implements Provider<LogListener> {
 	static class Log4jListener implements LogListener{
 
 		@Override
-		public void logMessage(int level, String context, Object msg) {
-			Logger log4j = Logger.getLogger("org.teiid."+context); //$NON-NLS-1$
+		public void log(int level, String context, Object msg) {
+			Logger log4j = getLogger(context);
 			log4j.log(convertLevel(level), msg);
 		}
 
+		public void log(int level, String context, Throwable t, Object msg) {
+			Logger log4j = getLogger(context);
+			log4j.log(convertLevel(level), msg, t);
+		}
+		
+		private Logger getLogger(String context) {
+			Logger log4j = null;
+			if (context.indexOf('.') == -1) {
+				log4j = Logger.getLogger("org.teiid."+context); //$NON-NLS-1$
+			}
+			else {
+				log4j = Logger.getLogger(context);
+			}
+			return log4j;
+		}
+				
 		@Override
 		public void shutdown() {
 		}

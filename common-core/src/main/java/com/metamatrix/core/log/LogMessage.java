@@ -28,16 +28,9 @@ import java.io.Serializable;
 public class LogMessage implements Serializable{
 
 	private Object[] msgParts;
-	private Throwable exception;
-    
 
-	public LogMessage(Throwable e, Object[] msgParts) {
+	public LogMessage(Object[] msgParts) {
         this.msgParts = msgParts;
-	    this.exception = e;
-	}
-
-	public Throwable getException() {
-		return this.exception;
 	}
 
 	public Object[] getMessageParts() {

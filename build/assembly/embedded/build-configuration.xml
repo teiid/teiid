@@ -30,6 +30,7 @@
 	  <loadfile property="connector-types-fragment"  srcFile="${extensions.dir}/unzipped/all-cdks.xml"/>
 	  <replace file="${kit.dir}/deploy/configuration.xml" token="${connector-types-fragment-fill-in}" value="${connector-types-fragment}"/>
 
+	  <mkdir dir="${kit.dir}/log"/>
 	</target>	
 	
 </project>
