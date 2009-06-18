@@ -34,7 +34,6 @@ import java.util.Set;
 
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.object.PropertiedObjectEditor;
-import com.metamatrix.common.transaction.UserTransaction;
 import com.metamatrix.common.tree.PassThroughTreeNodeFilter;
 import com.metamatrix.common.tree.TreeNode;
 import com.metamatrix.common.tree.TreeNodeEditor;
@@ -369,40 +368,6 @@ public class BasicTreeView implements TreeView {
             this.editor = (BasicTreeNodeEditor)this.source.createTreeNodeEditor();
         }
         return editor;
-    }
-
-	// ########################## UserTransactionFactory Methods ###################################
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * read information.  Read transactions do not have a source object
-     * associated with them (since they never directly modify data).
-     * @return the new transaction object
-     */
-    public UserTransaction createReadTransaction() {
-        return this.getTreeNodeEditor().createReadTransaction();
-    }
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information.  The transaction will <i>not</i> have a source object
-     * associated with it.
-     * @return the new transaction object
-     */
-    public UserTransaction createWriteTransaction() {
-        return this.getTreeNodeEditor().createWriteTransaction();
-    }
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information. The source object will be used for all events that are
-     * fired as a result of or as a product of this transaction.
-     * @param source the object that is considered to be the source of the transaction;
-     * may be null
-     * @return the new transaction object
-     */
-    public UserTransaction createWriteTransaction(Object source) {
-        return this.getTreeNodeEditor().createWriteTransaction(source);
     }
 
 	// ########################## Implementation Methods ###################################

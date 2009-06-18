@@ -24,40 +24,30 @@ package com.metamatrix.common.tree.basic;
 
 import java.util.List;
 
-import com.metamatrix.core.id.ObjectIDFactory;
 import com.metamatrix.common.object.DefaultPropertyAccessPolicy;
 import com.metamatrix.common.object.PropertyAccessPolicy;
-import com.metamatrix.common.transaction.UserTransactionFactory;
-import com.metamatrix.common.transaction.manager.SimpleUserTransactionFactory;
 import com.metamatrix.common.tree.TreeNode;
 import com.metamatrix.common.tree.TreeNodeEditor;
 import com.metamatrix.common.tree.TreeNodeSource;
+import com.metamatrix.core.id.ObjectIDFactory;
 import com.metamatrix.core.util.Assertion;
 
 /**
  * This interface defines an interface to a source of TreeNode information.
  */
 public class BasicTreeNodeSource implements TreeNodeSource {
-    private static UserTransactionFactory DEFAULT_TXN_FACTORY = new SimpleUserTransactionFactory();
     private ObjectIDFactory idFactory;
     private PropertyAccessPolicy policy;
-    private UserTransactionFactory txnFactory;
 
     public BasicTreeNodeSource(ObjectIDFactory idFactory) {
-        this(idFactory, new DefaultPropertyAccessPolicy(), DEFAULT_TXN_FACTORY);
+        this(idFactory, new DefaultPropertyAccessPolicy());
     }
 
-    public BasicTreeNodeSource(ObjectIDFactory idFactory, UserTransactionFactory txnFactory) {
-        this(idFactory, new DefaultPropertyAccessPolicy(), txnFactory);
-    }
-
-    public BasicTreeNodeSource(ObjectIDFactory idFactory, PropertyAccessPolicy policy, UserTransactionFactory txnFactory) {
+    public BasicTreeNodeSource(ObjectIDFactory idFactory, PropertyAccessPolicy policy) {
         Assertion.isNotNull(idFactory,"The ObjectIDFactory reference may not be null"); //$NON-NLS-1$
         Assertion.isNotNull(policy,"The PropertyAccessPolicy reference may not be null"); //$NON-NLS-1$
-        Assertion.isNotNull(txnFactory,"The UserTransactionFactory reference may not be null"); //$NON-NLS-1$
         this.idFactory  = idFactory;
         this.policy = policy;
-        this.txnFactory = txnFactory;
     }
 
     protected BasicTreeNode assertBasicTreeNode( TreeNode node ) {
@@ -100,7 +90,7 @@ public class BasicTreeNodeSource implements TreeNodeSource {
      * @return the new editor instance; never null
      */
     public TreeNodeEditor createTreeNodeEditor() {
-        return new BasicTreeNodeEditor(this.idFactory, this.policy, this.txnFactory);
+        return new BasicTreeNodeEditor(this.idFactory, this.policy);
     }
 
     /**
@@ -175,13 +165,6 @@ public class BasicTreeNodeSource implements TreeNodeSource {
      */
     public PropertyAccessPolicy getPropertyAccessPolicy() {
         return this.policy;
-    }
-
-    /**
-     * Return the UserTransactionFactory instance for this TreeNodeSource
-     */
-    public UserTransactionFactory getUserTransactionFactory() {
-        return this.txnFactory;
     }
 
 }

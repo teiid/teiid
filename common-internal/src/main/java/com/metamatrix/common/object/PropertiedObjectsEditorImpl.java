@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.metamatrix.common.transaction.UserTransactionFactory;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
 
@@ -36,22 +35,13 @@ public class PropertiedObjectsEditorImpl extends PropertiedObjectEditorImpl impl
 
     private List objects = new LinkedList();
 
-    public PropertiedObjectsEditorImpl( PropertyAccessPolicy policy, UserTransactionFactory txnFactory ) {
-        super(policy,txnFactory);
+    public PropertiedObjectsEditorImpl( PropertyAccessPolicy policy ) {
+        super(policy);
     }
 
     public PropertiedObjectsEditorImpl() {
         super();
     }
-
-    public PropertiedObjectsEditorImpl( PropertyAccessPolicy policy ) {
-        super(policy);
-    }
-
-    public PropertiedObjectsEditorImpl( UserTransactionFactory txnFactory ) {
-        super(txnFactory);
-    }
-
 
     public List getObjects() {
         return objects;

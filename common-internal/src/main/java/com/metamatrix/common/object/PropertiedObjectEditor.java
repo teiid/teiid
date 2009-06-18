@@ -24,14 +24,12 @@ package com.metamatrix.common.object;
 
 import java.util.List;
 
-import com.metamatrix.common.transaction.UserTransactionFactory;
-
 /**
  * This interface represents an object that can view and edit properties for
  * a PropertiedObject.  It is conceptually a stateless object that requires
  * in all methods the reference to the PropertiedObject.
  */
-public interface PropertiedObjectEditor extends PropertyAccessPolicy, UserTransactionFactory {
+public interface PropertiedObjectEditor extends PropertyAccessPolicy {
 
     /**
      * The value object that is returned by this interface's methods when

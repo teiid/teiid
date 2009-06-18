@@ -24,36 +24,22 @@ package com.metamatrix.common.object;
 
 import java.util.List;
 
-import com.metamatrix.common.transaction.UserTransaction;
-import com.metamatrix.common.transaction.UserTransactionFactory;
-import com.metamatrix.common.transaction.manager.SimpleUserTransactionFactory;
 import com.metamatrix.core.util.ArgCheck;
 
 public class PropertiedObjectEditorImpl implements PropertiedObjectEditor {
 
     private PropertyAccessPolicy policy;
-    private UserTransactionFactory txnFactory;
 
-    public PropertiedObjectEditorImpl( PropertyAccessPolicy policy, UserTransactionFactory txnFactory ) {
+    public PropertiedObjectEditorImpl( PropertyAccessPolicy policy ) {
     	ArgCheck.isNotNull(policy);
-    	ArgCheck.isNotNull(txnFactory);
         this.policy = policy;
-        this.txnFactory = txnFactory;
     }
 
     /**
      * Create an empty property definition object with all defaults.
      */
     public PropertiedObjectEditorImpl() {
-        this( new DefaultPropertyAccessPolicy(), new SimpleUserTransactionFactory() );
-    }
-
-    public PropertiedObjectEditorImpl( PropertyAccessPolicy policy ) {
-        this( policy, new SimpleUserTransactionFactory() );
-    }
-
-    public PropertiedObjectEditorImpl( UserTransactionFactory txnFactory ) {
-        this( new DefaultPropertyAccessPolicy(), txnFactory );
+        this( new DefaultPropertyAccessPolicy() );
     }
 
     protected PropertiedObjectImpl assertPropertiedObject( PropertiedObject obj ) {
@@ -200,42 +186,6 @@ public class PropertiedObjectEditorImpl implements PropertiedObjectEditor {
     	ArgCheck.isNotNull(obj);
         assertPropertiedObject(obj);
         this.policy.reset(obj);
-    }
-
-
-
-	// ########################## UserTransactionFactory Methods ###################################
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * read information.  Read transactions do not have a source object
-     * associated with them (since they never directly modify data).
-     * @return the new transaction object
-     */
-    public UserTransaction createReadTransaction() {
-        return this.txnFactory.createReadTransaction();
-    }
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information.  The transaction will <i>not</i> have a source object
-     * associated with it.
-     * @return the new transaction object
-     */
-    public UserTransaction createWriteTransaction() {
-        return this.txnFactory.createWriteTransaction();
-    }
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information. The source object will be used for all events that are
-     * fired as a result of or as a product of this transaction.
-     * @param source the object that is considered to be the source of the transaction;
-     * may be null
-     * @return the new transaction object
-     */
-    public UserTransaction createWriteTransaction(Object source) {
-        return this.txnFactory.createWriteTransaction(source);
     }
 
 }

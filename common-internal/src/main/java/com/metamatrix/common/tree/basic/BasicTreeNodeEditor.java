@@ -33,9 +33,6 @@ import com.metamatrix.common.object.ObjectDefinition;
 import com.metamatrix.common.object.PropertiedObject;
 import com.metamatrix.common.object.PropertyAccessPolicy;
 import com.metamatrix.common.object.PropertyDefinition;
-import com.metamatrix.common.transaction.UserTransaction;
-import com.metamatrix.common.transaction.UserTransactionFactory;
-import com.metamatrix.common.transaction.manager.SimpleUserTransactionFactory;
 import com.metamatrix.common.tree.TreeNode;
 import com.metamatrix.common.tree.TreeNodeEditor;
 import com.metamatrix.common.tree.directory.DirectoryEntry;
@@ -48,30 +45,19 @@ public class BasicTreeNodeEditor implements TreeNodeEditor {
 
     private ObjectIDFactory idFactory;
     private PropertyAccessPolicy policy;
-    private UserTransactionFactory txnFactory;
 
-    public BasicTreeNodeEditor( ObjectIDFactory idFactory, PropertyAccessPolicy policy, UserTransactionFactory txnFactory ) {
+    public BasicTreeNodeEditor( ObjectIDFactory idFactory, PropertyAccessPolicy policy ) {
         Assertion.isNotNull(idFactory,"The ObjectIDFactory reference may not be null"); //$NON-NLS-1$
         Assertion.isNotNull(policy,"The PropertyAccessPolicy reference may not be null"); //$NON-NLS-1$
-        Assertion.isNotNull(txnFactory,"The UserTransactionFactory reference may not be null"); //$NON-NLS-1$
         this.idFactory = idFactory;
         this.policy = policy;
-        this.txnFactory = txnFactory;
     }
 
     /**
      * Create an empty property definition object with all defaults.
      */
     public BasicTreeNodeEditor( ObjectIDFactory idFactory ) {
-        this(idFactory, new DefaultPropertyAccessPolicy(), new SimpleUserTransactionFactory() );
-    }
-
-    public BasicTreeNodeEditor( ObjectIDFactory idFactory, PropertyAccessPolicy policy ) {
-        this(idFactory, policy, new SimpleUserTransactionFactory() );
-    }
-
-    public BasicTreeNodeEditor( ObjectIDFactory idFactory, UserTransactionFactory txnFactory ) {
-        this(idFactory, new DefaultPropertyAccessPolicy(), txnFactory );
+        this(idFactory, new DefaultPropertyAccessPolicy() );
     }
 
     protected BasicTreeNode assertBasicTreeNode( PropertiedObject obj ) {
@@ -241,40 +227,6 @@ public class BasicTreeNodeEditor implements TreeNodeEditor {
     public void reset(PropertiedObject obj) {
         Assertion.isNotNull(obj,"The PropertiedObject reference may not be null"); //$NON-NLS-1$
         this.policy.reset(obj);
-    }
-
-	// ########################## UserTransactionFactory Methods ###################################
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * read information.  Read transactions do not have a source object
-     * associated with them (since they never directly modify data).
-     * @return the new transaction object
-     */
-    public UserTransaction createReadTransaction() {
-        return this.txnFactory.createReadTransaction();
-    }
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information.  The transaction will <i>not</i> have a source object
-     * associated with it.
-     * @return the new transaction object
-     */
-    public UserTransaction createWriteTransaction() {
-        return this.txnFactory.createWriteTransaction();
-    }
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information. The source object will be used for all events that are
-     * fired as a result of or as a product of this transaction.
-     * @param source the object that is considered to be the source of the transaction;
-     * may be null
-     * @return the new transaction object
-     */
-    public UserTransaction createWriteTransaction(Object source) {
-        return this.txnFactory.createWriteTransaction(source);
     }
 
 	// ########################## TreeEditor Methods ###################################

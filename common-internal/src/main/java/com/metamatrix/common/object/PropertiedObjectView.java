@@ -22,9 +22,7 @@
 
 package com.metamatrix.common.object;
 
-import com.metamatrix.common.transaction.UserTransactionFactory;
-
-public interface PropertiedObjectView extends UserTransactionFactory {
+public interface PropertiedObjectView {
 
     /**
      * Return the propertied object editor for this view.

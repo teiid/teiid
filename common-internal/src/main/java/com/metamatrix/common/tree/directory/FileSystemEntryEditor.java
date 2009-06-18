@@ -32,9 +32,6 @@ import com.metamatrix.common.object.ObjectDefinition;
 import com.metamatrix.common.object.PropertiedObject;
 import com.metamatrix.common.object.PropertyAccessPolicy;
 import com.metamatrix.common.object.PropertyDefinition;
-import com.metamatrix.common.transaction.TransactionException;
-import com.metamatrix.common.transaction.TransactionStatus;
-import com.metamatrix.common.transaction.UserTransaction;
 import com.metamatrix.common.tree.TreeNode;
 import com.metamatrix.common.tree.TreeNodeException;
 import com.metamatrix.common.util.ErrorMessageKeys;
@@ -582,38 +579,6 @@ public class FileSystemEntryEditor implements DirectoryEntryEditor {
         throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.TREE_ERR_0052));
     }
 
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * read information.  Read transactions do not have a source object
-     * associated with them (since they never directly modify data).
-     * @return the new transaction object
-     */
-    public UserTransaction createReadTransaction() {
-        return new EmptyUserTransaction(null);
-    }
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information.  The transaction will <i>not</i> have a source object
-     * associated with it.
-     * @return the new transaction object
-     */
-    public UserTransaction createWriteTransaction() {
-        return new EmptyUserTransaction(null);
-    }
-
-    /**
-     * Create a new instance of a UserTransaction that may be used to
-     * write and/or update information. The source object will be used for all events that are
-     * fired as a result of or as a product of this transaction.
-     * @param source the object that is considered to be the source of the transaction;
-     * may be null
-     * @return the new transaction object
-     */
-    public UserTransaction createWriteTransaction(Object source) {
-        return new EmptyUserTransaction(source);
-    }
-
 	// ########################## Implementation Methods ###################################
 
     protected FileSystemEntry assertFileSystemEntry( TreeNode obj ) {
@@ -670,32 +635,4 @@ public class FileSystemEntryEditor implements DirectoryEntryEditor {
     protected String getNewFileName() {
         throw new RuntimeException(CommonPlugin.Util.getString(ErrorMessageKeys.TREE_ERR_0052));
     }
-}
-
-
-class EmptyUserTransaction implements UserTransaction {
-
-    private int status;
-    private Object source;
-    EmptyUserTransaction(Object source) {
-        this.source = source;
-        this.status = TransactionStatus.STATUS_UNKNOWN;
-    }
-    public int getStatus() throws TransactionException {
-        return this.status;
-    }
-    public void begin() throws TransactionException {
-    }
-    public void setTransactionTimeout(int seconds) throws TransactionException {
-    }
-    public void setRollbackOnly() throws TransactionException {
-    }
-    public void commit() throws TransactionException {
-    }
-    public void rollback() throws TransactionException {
-    }
-    public Object getSource() throws TransactionException {
-        return this.source;
-    }
-
 }

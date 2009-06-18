@@ -47,7 +47,7 @@ import com.metamatrix.platform.config.spi.xml.XMLCurrentConfigurationReader;
 public class CurrentConfigHelper {
 
 	public void loadMetaMatrixPropertiesIntoSystem() throws Exception {
-		loadMetaMatrixPropertiesIntoSystem(CurrentConfiguration.BOOTSTRAP_FILE_NAME); //$NON-NLS-1$
+		loadMetaMatrixPropertiesIntoSystem(CurrentConfiguration.BOOTSTRAP_FILE_NAME);
 	}
 	
 	public void loadMetaMatrixPropertiesIntoSystem(String filename) throws Exception {
@@ -131,6 +131,8 @@ public class CurrentConfigHelper {
     
     protected static Properties createSystemProperties(String fileName, String path) {
         Properties props = new Properties();
+        
+        props.setProperty(CurrentConfiguration.CONFIGURATION_READER_CLASS_PROPERTY_NAME, XMLCurrentConfigurationReader.class.getName());
         
         if (fileName != null) {
         	props.setProperty(FilePersistentConnection.CONFIG_NS_FILE_NAME_PROPERTY,  fileName );
