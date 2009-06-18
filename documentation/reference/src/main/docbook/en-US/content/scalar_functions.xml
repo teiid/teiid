@@ -63,7 +63,7 @@
 							<para>Arc cosine of x</para>
 						</entry>
 						<entry>
-							<para>x in {double}, return type is double</para>
+							<para>x in {double, bigdecimal}, return type is double</para>
 						</entry>
 					</row>
 					<row>
@@ -74,7 +74,7 @@
 							<para>Arc sine of x</para>
 						</entry>
 						<entry>
-							<para>x in {double}, return type is double</para>
+							<para>x in {double, bigdecimal}, return type is double</para>
 						</entry>
 					</row>
 					<row>
@@ -85,7 +85,7 @@
 							<para>Arc tangent of x</para>
 						</entry>
 						<entry>
-							<para>x in {double}, return type is double</para>
+							<para>x in {double, bigdecimal}, return type is double</para>
 						</entry>
 					</row>
 					<row>
@@ -96,7 +96,7 @@
 							<para>Arc tangent of x and y</para>
 						</entry>
 						<entry>
-							<para>x, y in {double}, return type is double</para>
+							<para>x, y in {double, bigdecimal}, return type is double</para>
 						</entry>
 					</row>
 					<row>
@@ -118,7 +118,7 @@
 							<para>Cosine of x</para>
 						</entry>
 						<entry>
-							<para>x in {double}, return type is double</para>
+							<para>x in {double, bigdecimal}, return type is double</para>
 						</entry>
 					</row>
 					<row>
@@ -129,7 +129,7 @@
 							<para>Cotangent of x</para>
 						</entry>
 						<entry>
-							<para>x in {double}, return type is double</para>
+							<para>x in {double, bigdecimal}, return type is double</para>
 						</entry>
 					</row>
 					<row>
@@ -140,7 +140,7 @@
 							<para>Convert x degrees to radians</para>
 						</entry>
 						<entry>
-							<para>x in {double}, return type is double</para>
+							<para>x in {double, bigdecimal}, return type is double</para>
 						</entry>
 					</row>
 					<row>
@@ -261,7 +261,7 @@
 							<para>Modulus (remainder of x / y)</para>
 						</entry>
 						<entry>
-							<para>x in {integer, long, float, double, biginteger}, return
+							<para>x in {integer, long, float, double, biginteger, bigdecimal}, return
 								type is same as x</para>
 						</entry>
 					</row>
@@ -362,7 +362,7 @@
 							<para>Convert x radians to degrees</para>
 						</entry>
 						<entry>
-							<para>x in {double}, return type is double</para>
+							<para>x in {double, bigdecimal}, return type is double</para>
 						</entry>
 					</row>
 					<row>
@@ -423,7 +423,7 @@
               <para>Sine value of x</para>
             </entry>
             <entry>
-              <para>x in {double}, return type is double</para>
+              <para>x in {double, bigdecimal}, return type is double</para>
             </entry>
           </row>
           <row>
@@ -434,7 +434,7 @@
               <para>Square root of x</para>
             </entry>
             <entry>
-              <para>x in {double, float}, return type is double</para>
+              <para>x in {long, double, bigdecimal}, return type is double</para>
             </entry>
           </row>
           <row>
@@ -445,7 +445,7 @@
               <para>Tangent of x</para>
             </entry>
             <entry>
-              <para>x in {double}, return type is double</para>
+              <para>x in {double, bigdecimal}, return type is double</para>
             </entry>
           </row>
           <row>
