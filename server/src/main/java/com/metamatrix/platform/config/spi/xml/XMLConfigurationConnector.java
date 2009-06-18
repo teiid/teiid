@@ -23,33 +23,19 @@
 package com.metamatrix.platform.config.spi.xml;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.DestroyObject;
-import com.metamatrix.common.config.api.ComponentDefn;
-import com.metamatrix.common.config.api.ComponentDefnID;
-import com.metamatrix.common.config.api.ComponentType;
-import com.metamatrix.common.config.api.ComponentTypeID;
-import com.metamatrix.common.config.api.Configuration;
-import com.metamatrix.common.config.api.ConfigurationID;
-import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.SharedResource;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
-import com.metamatrix.common.config.api.exceptions.InvalidComponentException;
 import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.transaction.TransactionException;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.platform.config.ConfigMessages;
