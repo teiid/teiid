@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,6 +42,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.common.properties.UnmodifiableProperties;
+import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
@@ -439,6 +442,21 @@ public final class PropertiesUtils {
                 is.close();
             }
         }
+    }
+    
+    public static Properties loadFromURL(String url) throws MalformedURLException, IOException {
+        Properties result = new Properties();
+        InputStream is = null;
+        try {
+	        URL file = URLHelper.buildURL(url);
+	        is = file.openStream();
+        	result.load(is);
+        } finally {
+        	if (is != null) {
+        		is.close();
+        	}
+        }
+        return result;
     }
 
     public static Properties loadAsResource(Class clazz, String resourceName) throws IOException { 

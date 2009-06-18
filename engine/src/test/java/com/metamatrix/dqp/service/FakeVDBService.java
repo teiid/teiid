@@ -36,6 +36,7 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.ModelInfo;
+import com.metamatrix.common.vdb.api.VDBArchive;
 
 /**
  */
@@ -289,6 +290,17 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
      */
     public List getAvailableVDBs() throws MetaMatrixComponentException {
         return null;
+    }
+    
+    @Override
+    public String getActiveVDBVersion(String vdbName, String vdbVersion) {
+    	throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public VDBArchive getVDB(String vdbName, String vdbVersion)
+    		throws MetaMatrixComponentException {
+    	throw new UnsupportedOperationException();
     }
 
 }

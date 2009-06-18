@@ -22,6 +22,7 @@
 
 package com.metamatrix.dqp.embedded.services;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -93,7 +94,11 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
         if(qmi == null) {                        
             // First see if the vdbService can give the contents directly 
         	VDBService vdbService = ((VDBService)lookupService(DQPServiceNames.VDB_SERVICE));
-            return this.metadataCache.lookupMetadata(vdbName, vdbVersion, vdbService.getVDBResource(vdbName, vdbVersion));
+            try {
+				return this.metadataCache.lookupMetadata(vdbName, vdbVersion, vdbService.getVDB(vdbName, vdbVersion).getInputStream());
+			} catch (IOException e) {
+				throw new MetaMatrixComponentException(e);
+			}
         }
         return qmi;
     }

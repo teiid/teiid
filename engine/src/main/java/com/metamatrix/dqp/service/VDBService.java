@@ -22,13 +22,14 @@
 
 package com.metamatrix.dqp.service;
 
-import java.io.InputStream;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.VDBArchive;
+import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 
 /**
  * This interface defines methods which are specific to dealing with VDBs
@@ -70,15 +71,6 @@ public interface VDBService extends ApplicationService {
         throws MetaMatrixComponentException;    
     
     /**
-     * Get VDB resource contents
-     * @param vdbName VDB name
-     * @param vdbVersion VDB version
-     * @return VDB resource file name
-     */
-    public InputStream getVDBResource(String vdbName, String vdbVersion) 
-        throws MetaMatrixComponentException;
-    
-    /**
      * Get all multi-source model names (models that can be bound to multiple connector bindings) for this VDB
      * name and version. 
      * @param vdbName VDB name
@@ -98,16 +90,6 @@ public interface VDBService extends ApplicationService {
         throws MetaMatrixComponentException;
             
     /**
-     * Get the Status of VDB
-     * @param vdbName - Name of the VDB
-     * @param vdbVersion - Version of the VDB
-     * @return int Current status of VDB
-     * @since 4.3
-     */
-    public int getVDBStatus(String vdbName, String vdbVersion) 
-        throws MetaMatrixComponentException;
-    
-    /**
      * Change the status of the VDB  
      * @param vdbName - Name of the VDB
      * @param vdbVersion - Version of the VDB
@@ -119,4 +101,8 @@ public interface VDBService extends ApplicationService {
     
     // to be removed later..
     public String getConnectorName(String connectorBindingID) throws MetaMatrixComponentException;    
+    
+    public String getActiveVDBVersion(String vdbName, String vdbVersion) throws MetaMatrixComponentException, VirtualDatabaseException;
+    
+    public VDBArchive getVDB(String vdbName, String vdbVersion) throws MetaMatrixComponentException;
 }

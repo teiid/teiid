@@ -22,6 +22,7 @@
 
 package com.metamatrix.dqp.service.metadata;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import com.google.inject.Inject;
@@ -118,7 +119,11 @@ public class IndexMetadataService implements MetadataService {
         QueryMetadataInterface qmi = this.metadataCache.lookupMetadata(vdbName, vdbVersion);
         if(qmi == null) {
            LogManager.logTrace(LogConstants.CTX_DQP, new Object[] {"IndexMetadataService cache miss for VDB", vdbName, vdbVersion});  //$NON-NLS-1$
-	       return this.metadataCache.lookupMetadata(vdbName, vdbVersion, this.vdbService.getVDBResource(vdbName, vdbVersion));
+           try {
+        	   return this.metadataCache.lookupMetadata(vdbName, vdbVersion, this.vdbService.getVDB(vdbName, vdbVersion).getInputStream());
+           } catch (IOException e) {
+        	   throw new MetaMatrixComponentException(e);
+           }
         }
         return qmi;
     }

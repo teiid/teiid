@@ -33,6 +33,7 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.VDBService;
@@ -55,7 +56,7 @@ public class TestIndexMetadataService extends TestCase {
         IndexMetadataService metadataService = new IndexMetadataService(sharedCache);
         ApplicationEnvironment env = new ApplicationEnvironment();
         VDBService vdbService = Mockito.mock(VDBService.class);
-        Mockito.stub(vdbService.getVDBResource("PartsSupplier", "1")).toReturn(new FileInputStream(filePath)); //$NON-NLS-1$ //$NON-NLS-2$ 
+        Mockito.stub(vdbService.getVDB("PartsSupplier", "1")).toReturn(new VDBArchive(new FileInputStream(filePath))); //$NON-NLS-1$ //$NON-NLS-2$ 
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
         metadataService.start(env);
         metadata = metadataService.lookupMetadata("PartsSupplier", "1"); //$NON-NLS-1$ //$NON-NLS-2$ 

@@ -172,7 +172,7 @@ public class TestEmbeddedVDBService extends TestCase{
         Properties p = EmbeddedTestUtil.getProperties();         
         configService.setUserPreferences(p);
         configService.initializeService(p);                
-        assertNotNull(vdbService.getVDBResource("Admin", "1")); //$NON-NLS-1$ //$NON-NLS-2$              
+        assertNotNull(vdbService.getVDB("Admin", "1").getInputStream()); //$NON-NLS-1$ //$NON-NLS-2$              
     }
     
     public void testAvailableVDBs() throws Exception {

@@ -22,8 +22,6 @@
 
 package com.metamatrix.dqp.embedded.services;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -48,6 +46,9 @@ import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.jdbc.JDBCPlugin;
+import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
+import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
 
@@ -69,7 +70,7 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
      * @return vdb if one found; execption otherwise
      * @since 4.3
      */
-    VDBArchive getVDB(String vdbName, String vdbVersion) 
+    public VDBArchive getVDB(String vdbName, String vdbVersion) 
         throws MetaMatrixComponentException {        
         VDBArchive vdb = getConfigurationService().getVDB(vdbName, vdbVersion);
         // Make sure VDB is not null
@@ -195,19 +196,6 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
     }
 
     /** 
-     * @see com.metamatrix.dqp.service.VDBService#getVDBResource(java.lang.String, java.lang.String)
-     * @since 4.3
-     */
-    public InputStream getVDBResource(String vdbName, String vdbVersion) throws MetaMatrixComponentException {        
-        try {
-			VDBArchive vdb = getVDB(vdbName, vdbVersion);
-			return vdb.getInputStream();
-		} catch (IOException e) {
-			throw new MetaMatrixComponentException(e);
-		}
-    }
-
-    /** 
      * @see com.metamatrix.dqp.service.VDBService#getMultiSourceModels(java.lang.String, java.lang.String)
      * @since 4.3
      */
@@ -244,16 +232,6 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
         return activeList;
     }
     
-    /** 
-     * @see com.metamatrix.dqp.service.VDBService#getVDBStatus(java.lang.String, java.lang.String)
-     * @since 4.3
-     */
-    public int getVDBStatus(String vdbName, String vdbVersion) 
-        throws MetaMatrixComponentException {
-        VDBArchive vdb = getVDB(vdbName, vdbVersion);        
-        return vdb.getStatus();
-    }
-
     /** 
      * @see com.metamatrix.dqp.service.VDBService#changeVDBStatus(java.lang.String, java.lang.String, int)
      * @since 4.3
@@ -324,5 +302,34 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
 	@Override
 	public void unloaded(String vdbName, String vdbVersion) {
 		this.contextCache.removeVDBScopedCache(vdbName, vdbVersion);
-	}    
+	} 
+	
+    @Override
+    public String getActiveVDBVersion(String vdbName, String vdbVersion) throws MetaMatrixComponentException, VirtualDatabaseException {
+    	List<VDBArchive> vdbs = getAvailableVDBs();
+
+        // We are looking for the latest version find that now 
+        if (vdbVersion == null) {
+        	int latestVersion = 0;
+            for (VDBArchive vdb:vdbs) {
+                if(vdb.getName().equalsIgnoreCase(vdbName)) {
+                    // Make sure the VDB Name and version number are the only parts of this vdb key
+                    latestVersion = Math.max(latestVersion, Integer.parseInt(vdb.getVersion()));
+                }
+            }
+            if(latestVersion == 0) {
+                throw new VirtualDatabaseDoesNotExistException(DQPEmbeddedPlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, "latest")); //$NON-NLS-1$ //$NON-NLS-2$ 
+            }
+            vdbVersion = String.valueOf(latestVersion);
+        }
+        
+        // This below call will load the VDB from configuration into VDB service 
+        // if not already done so.
+        int status = getVDB(vdbName, vdbVersion).getStatus();
+        if (status != VDBStatus.ACTIVE) {
+            throw new VirtualDatabaseException(JDBCPlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
+        }
+        return vdbVersion;
+    }
+
 }

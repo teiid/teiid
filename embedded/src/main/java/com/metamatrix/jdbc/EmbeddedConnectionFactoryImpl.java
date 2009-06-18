@@ -207,14 +207,14 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
      */
     private void checkConnectionProperties(Properties props) throws SQLException {
         String vdbName = props.getProperty(BaseDataSource.VDB_NAME);
-        String vdbVersion = props.getProperty(BaseDataSource.VDB_VERSION, EmbeddedDataSource.USE_LATEST_VDB_VERSION);
+        String vdbVersion = props.getProperty(BaseDataSource.VDB_VERSION);
                         
         try {
             VDBService service = (VDBService)findService(DQPServiceNames.VDB_SERVICE);
             List<VDBArchive> vdbs = service.getAvailableVDBs();
 
             // We are looking for the latest version find that now 
-            if (vdbVersion.equals(EmbeddedDataSource.USE_LATEST_VDB_VERSION)) {
+            if (vdbVersion == null) {
                 vdbVersion = findLatestVersion(vdbName, vdbs);
             }
 
@@ -222,7 +222,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
             
             // This below call will load the VDB from configuration into VDB service 
             // if not already done so.
-            int status = service.getVDBStatus(vdbName, vdbVersion);
+            int status = service.getVDB(vdbName, vdbVersion).getStatus();
             if (status != ACTIVE) {
                 throw new EmbeddedSQLException(JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notactive", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$
             }
@@ -250,7 +250,7 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
         if(latestVersion != 0) {
             return String.valueOf(latestVersion);
         }
-        throw new EmbeddedSQLException(JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", new Object[] {vdbName, EmbeddedDataSource.USE_LATEST_VDB_VERSION})); //$NON-NLS-1$        
+        throw new EmbeddedSQLException(JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", vdbName)); //$NON-NLS-1$        
     }    
     
 }

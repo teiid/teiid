@@ -80,7 +80,7 @@ public class AuthorizationPolicyFactory {
         StandardAuthorizationActions.DATA_READ_LABEL,
     };
 
-    public static Collection buildPolicies(String vdbName, String vdbVersion, char[] xmlContents) 
+    public static Collection<AuthorizationPolicy> buildPolicies(String vdbName, String vdbVersion, char[] xmlContents) 
         throws SAXException, IOException, ParserConfigurationException {
 
         DOMBuilder builder = new DOMBuilder();
@@ -119,7 +119,7 @@ public class AuthorizationPolicyFactory {
         AuthorizationRealm realm = new AuthorizationRealm(vdbName, vdbVersion);
         BasicAuthorizationPermissionFactory bapf = new BasicAuthorizationPermissionFactory();
 
-        List result = new ArrayList();
+        List<AuthorizationPolicy> result = new ArrayList<AuthorizationPolicy>();
 
         for (final Iterator iter = dataRoles.iterator(); iter.hasNext();) {
             final Element role = (Element)iter.next();
@@ -179,15 +179,14 @@ public class AuthorizationPolicyFactory {
         return result;
     }
 
-    public static char[] exportPolicies(Collection roles) throws IOException {
+    public static char[] exportPolicies(Collection<AuthorizationPolicy> roles) throws IOException {
         Document doc = new Document(new Element(REALM));
 
         Element rolesElement = new Element(ROLES);
 
         doc.getRootElement().addContent(rolesElement);
 
-        for (final Iterator policiesIter = roles.iterator(); policiesIter.hasNext();) {
-            final AuthorizationPolicy policy = (AuthorizationPolicy)policiesIter.next();
+        for (AuthorizationPolicy policy : roles) {
             AuthorizationPolicyID policyId = policy.getAuthorizationPolicyID();
 
             Element roleElement = new Element(DATA_ROLE);

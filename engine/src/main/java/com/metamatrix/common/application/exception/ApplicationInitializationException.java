@@ -64,5 +64,13 @@ public class ApplicationInitializationException extends MetaMatrixCoreException 
         super(e, message);
     }
 
+	public ApplicationInitializationException(Throwable e, String errorCode, String msg) {
+		super(e, errorCode, msg);
+	}
+	
+	public ApplicationInitializationException(String errorCode, String msg) {
+		super(errorCode, msg);
+	}
+
 } // END CLASS
 

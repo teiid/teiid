@@ -46,6 +46,7 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.SystemVdbUtility;
+import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.event.EventObjectListener;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.service.VDBService;
@@ -336,6 +337,18 @@ public class PlatformVDBService implements VDBService, RuntimeMetadataListener {
      */
     public List getAvailableVDBs() throws MetaMatrixComponentException {
         throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public String getActiveVDBVersion(String vdbName, String vdbVersion)
+    		throws MetaMatrixComponentException, VirtualDatabaseException {
+    	throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public VDBArchive getVDB(String vdbName, String vdbVersion)
+    		throws MetaMatrixComponentException {
+    	throw new UnsupportedOperationException();
     }
     
 }

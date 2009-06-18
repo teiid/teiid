@@ -34,8 +34,6 @@ import com.metamatrix.common.protocol.URLHelper;
  */
 public class EmbeddedDataSource extends BaseDataSource {
 	
-    public static final String USE_LATEST_VDB_VERSION = "useLatestVDBVersion";  //$NON-NLS-1$
-
     //*************************** EmbeddedDataSource Specific Properties
     /**
      * configFile - 
