@@ -35,7 +35,6 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.util.LogContextsUtil.DQPConstants;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.message.RequestID;
@@ -143,7 +142,7 @@ public class LobWorkItem implements Runnable {
                 	dqpCore.getBufferManager().unpinTupleBatch(referenceStreamId, batch.getBeginRow(), batch.getEndRow());
                 }
             } catch (MetaMatrixComponentException e) {
-            	LogManager.logDetail(DQPConstants.CTX_DQP, e, "Call to unpin failed during lob stream creation"); //$NON-NLS-1$
+            	LogManager.logDetail(LogConstants.CTX_DQP, e, "Call to unpin failed during lob stream creation"); //$NON-NLS-1$
             } 
         }        
     }

@@ -46,7 +46,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
+import com.metamatrix.common.util.LogConstants;
 
 /**
  * The class build the Policies from the xml file or converts the policies to xml file for importing and exporting of the policy
@@ -93,7 +93,7 @@ public class AuthorizationPolicyFactory {
         docBuilder.setErrorHandler(new ErrorHandler() {
 
             public void warning(SAXParseException arg0) throws SAXException {
-                LogManager.logWarning(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logWarning(LogConstants.CTX_AUTHORIZATION,
                                       arg0,
                                       SecurityPlugin.Util.getString("AuthorizationPolicyFactory.parsing_warning", //$NON-NLS-1$
                                                                     arg0.getMessage()));

@@ -47,6 +47,7 @@ import com.metamatrix.common.application.exception.ApplicationInitializationExce
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
@@ -60,7 +61,6 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.AuthenticationToken;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.ProductInfoConstants;
@@ -96,14 +96,14 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		for (MetaMatrixSessionInfo info : sessionCache.values()) {
 			try {
     			if (currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
-    				LogManager.logInfo(LogSecurityConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionID())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionID())); //$NON-NLS-1$
     				closeSession(info.getSessionID());
     			} else if (sessionTimeLimit > 0 && currentTime - info.getTimeCreated() > sessionTimeLimit) {
-    				LogManager.logInfo(LogSecurityConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionID())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionID())); //$NON-NLS-1$
     				closeSession(info.getSessionID());
     			}
 			} catch (Exception e) {
-				LogManager.logDetail(LogSecurityConstants.CTX_SESSION, e, "error running session monitor, unable to monitor: " + info.getSessionID()); //$NON-NLS-1$
+				LogManager.logDetail(LogConstants.CTX_SESSION, e, "error running session monitor, unable to monitor: " + info.getSessionID()); //$NON-NLS-1$
 			}
 		}
 	}
@@ -111,7 +111,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	@Override
 	public void closeSession(MetaMatrixSessionID sessionID)
 			throws InvalidSessionException, SessionServiceException{
-		LogManager.logDetail(LogSecurityConstants.CTX_SESSION, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		MetaMatrixSessionInfo info = this.sessionCache.remove(sessionID);
 		if (info == null) {
 			throw new InvalidSessionException(ErrorMessageKeys.SEC_SESSION_0027, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0027, sessionID));
@@ -120,7 +120,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
             try {
     			dqpCore.terminateConnection(info.getSessionToken().getSessionIDValue());
             } catch (Exception e) {
-                LogManager.logWarning(LogSecurityConstants.CTX_SESSION,e,"Exception terminitating session"); //$NON-NLS-1$
+                LogManager.logWarning(LogConstants.CTX_SESSION,e,"Exception terminitating session"); //$NON-NLS-1$
             }
 		}
 	}
@@ -269,12 +269,12 @@ public class SessionServiceImpl implements SessionServiceInterface {
 			MetaMatrixSessionID adminSessionID) throws 
 			AuthorizationException, SessionServiceException {
 		Object[] params = {adminSessionID, terminatedSessionID};
-		LogManager.logInfo(LogSecurityConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
 		try {
 			closeSession(terminatedSessionID);
 			return true;
 		} catch (InvalidSessionException e) {
-			LogManager.logWarning(LogSecurityConstants.CTX_SESSION,e,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0034, new Object[] {e.getMessage()}));
+			LogManager.logWarning(LogConstants.CTX_SESSION,e,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0034, new Object[] {e.getMessage()}));
 			return false;
 		}
 	}

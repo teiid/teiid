@@ -1358,29 +1358,30 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * @since 4.3
      */
     public LogConfiguration getLogConfiguration() throws AdminException {
-        com.metamatrix.common.log.LogConfiguration logConfig = null;
-        try {
-            logConfig = getConfigurationServiceProxy().getNextStartupConfiguration().getLogConfiguration();
-        } catch (ConfigurationException e) {
-        	throw new AdminComponentException(e);
-        } catch (ServiceException e) {
-        	throw new AdminComponentException(e);
-        }
-        
-        MMLogConfiguration result = new MMLogConfiguration();
-        if (logConfig != null) {
-            result.setLogLevel(logConfig.getMessageLevel());
-            result.setDiscardedContexts(logConfig.getDiscardedContexts());
-
-            // get the Set of all contexts, remove the ones which are
-            // currently "discarded"
-            Set contextsSet = new HashSet(LogContextsUtil.ALL_CONTEXTS);
-            if (logConfig.getDiscardedContexts() != null) {
-                contextsSet.removeAll(logConfig.getDiscardedContexts());
-            }
-            result.setIncludedContexts(contextsSet);
-        } // if
-        return result;
+//        com.metamatrix.common.log.LogConfiguration logConfig = null;
+//        try {
+//            logConfig = getConfigurationServiceProxy().getNextStartupConfiguration().getLogConfiguration();
+//        } catch (ConfigurationException e) {
+//        	throw new AdminComponentException(e);
+//        } catch (ServiceException e) {
+//        	throw new AdminComponentException(e);
+//        }
+//        
+//        MMLogConfiguration result = new MMLogConfiguration();
+//        if (logConfig != null) {
+//            result.setLogLevel(logConfig.getMessageLevel());
+//            result.setDiscardedContexts(logConfig.getDiscardedContexts());
+//
+//            // get the Set of all contexts, remove the ones which are
+//            // currently "discarded"
+//            Set contextsSet = new HashSet(LogContextsUtil.ALL_CONTEXTS);
+//            if (logConfig.getDiscardedContexts() != null) {
+//                contextsSet.removeAll(logConfig.getDiscardedContexts());
+//            }
+//            result.setIncludedContexts(contextsSet);
+//        } // if
+//        return result;
+    	  return null;
     }
 
     /**
@@ -1388,55 +1389,55 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * @since 4.3
      */
     public void setLogConfiguration(LogConfiguration adminLogConfig) throws AdminException {
-        Configuration config = null;
-        try {
-            config = getConfigurationServiceProxy().getNextStartupConfiguration();
-        } catch (ConfigurationException e) {
-        	throw new AdminComponentException(e);
-        } catch (ServiceException e) {
-        	throw new AdminComponentException(e);
-        }
-        
-        if (config != null) {
-            Set discardedCtx = adminLogConfig.getDiscardedContexts();
-            Set includedCtx = adminLogConfig.getIncludedContexts();
-            
-            // if both include CTX_ALL, do nothing
-            if ( discardedCtx.contains(LogConfiguration.CTX_ALL) && 
-                 includedCtx.contains(LogConfiguration.CTX_ALL) ) {
-                return;
-            }
-            // if CTX_ALL flag is contained, all other contexts are ignored
-            if ( discardedCtx.contains(LogConfiguration.CTX_ALL) ) {
-                discardedCtx = new HashSet(LogContextsUtil.ALL_CONTEXTS);
-                includedCtx = Collections.EMPTY_SET;
-            } else if ( includedCtx.contains(LogConfiguration.CTX_ALL) ) {
-                includedCtx = new HashSet(LogContextsUtil.ALL_CONTEXTS);
-                discardedCtx = Collections.EMPTY_SET;
-            }
-            
-            com.metamatrix.common.log.LogConfiguration logConfig = config.getLogConfiguration();
-            
-            logConfig.setMessageLevel(adminLogConfig.getLogLevel());
-            logConfig.recordContexts(includedCtx);
-            logConfig.discardContexts(discardedCtx);
-            LogManager.setLogConfiguration(logConfig);
-
-            ConfigurationObjectEditor coe = null;
-            try {
-				coe = getConfigurationServiceProxy().createEditor();
-				coe.setLogConfiguration(config, logConfig);
-				ModificationActionQueue maq = coe.getDestination();
-				java.util.List actions = maq.popActions();
-				getRuntimeStateAdminAPIHelper().setLogConfiguration(config, logConfig, actions, getUserName());
-			} catch (ConfigurationException e) {
-				throw new AdminComponentException(e);
-			} catch (ServiceException e) {
-				throw new AdminComponentException(e);
-			} catch (MetaMatrixComponentException e) {
-				throw new AdminComponentException(e);
-			}
-        } // if
+//        Configuration config = null;
+//        try {
+//            config = getConfigurationServiceProxy().getNextStartupConfiguration();
+//        } catch (ConfigurationException e) {
+//        	throw new AdminComponentException(e);
+//        } catch (ServiceException e) {
+//        	throw new AdminComponentException(e);
+//        }
+//        
+//        if (config != null) {
+//            Set discardedCtx = adminLogConfig.getDiscardedContexts();
+//            Set includedCtx = adminLogConfig.getIncludedContexts();
+//            
+//            // if both include CTX_ALL, do nothing
+//            if ( discardedCtx.contains(LogConfiguration.CTX_ALL) && 
+//                 includedCtx.contains(LogConfiguration.CTX_ALL) ) {
+//                return;
+//            }
+//            // if CTX_ALL flag is contained, all other contexts are ignored
+//            if ( discardedCtx.contains(LogConfiguration.CTX_ALL) ) {
+//                discardedCtx = new HashSet(LogContextsUtil.ALL_CONTEXTS);
+//                includedCtx = Collections.EMPTY_SET;
+//            } else if ( includedCtx.contains(LogConfiguration.CTX_ALL) ) {
+//                includedCtx = new HashSet(LogContextsUtil.ALL_CONTEXTS);
+//                discardedCtx = Collections.EMPTY_SET;
+//            }
+//            
+//            com.metamatrix.common.log.LogConfiguration logConfig = config.getLogConfiguration();
+//            
+//            logConfig.setMessageLevel(adminLogConfig.getLogLevel());
+//            logConfig.recordContexts(includedCtx);
+//            logConfig.discardContexts(discardedCtx);
+//            LogManager.setLogConfiguration(logConfig);
+//
+//            ConfigurationObjectEditor coe = null;
+//            try {
+//				coe = getConfigurationServiceProxy().createEditor();
+//				coe.setLogConfiguration(config, logConfig);
+//				ModificationActionQueue maq = coe.getDestination();
+//				java.util.List actions = maq.popActions();
+//				getRuntimeStateAdminAPIHelper().setLogConfiguration(config, logConfig, actions, getUserName());
+//			} catch (ConfigurationException e) {
+//				throw new AdminComponentException(e);
+//			} catch (ServiceException e) {
+//				throw new AdminComponentException(e);
+//			} catch (MetaMatrixComponentException e) {
+//				throw new AdminComponentException(e);
+//			}
+//        } // if
 
     }
 

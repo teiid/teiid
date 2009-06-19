@@ -491,12 +491,6 @@ public interface ConfigurationObjectEditor extends ObjectEditor {
 
     Configuration setIsDeployed( Configuration t, boolean newValue );
 
-    /**
-     * Sets the LogConfiguration in effect for the Configuration 
-     */
-    Configuration setLogConfiguration( Configuration t, LogConfiguration logConfiguration );
-
-
 // ComponentObject methods
 
     /**

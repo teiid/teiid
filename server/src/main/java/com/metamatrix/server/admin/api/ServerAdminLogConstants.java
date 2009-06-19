@@ -22,9 +22,8 @@
 
 package com.metamatrix.server.admin.api;
 
-import com.metamatrix.platform.admin.api.PlatformAdminLogConstants;
 
-public interface ServerAdminLogConstants extends PlatformAdminLogConstants {
+public interface ServerAdminLogConstants {
 
 //**********************************************************************
 //PLEASE NOTE:!!!!!!!!!!!!!!!!!

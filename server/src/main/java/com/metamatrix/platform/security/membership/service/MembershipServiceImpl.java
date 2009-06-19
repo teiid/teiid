@@ -53,6 +53,7 @@ import com.metamatrix.common.config.api.AuthenticationProvider;
 import com.metamatrix.common.config.api.AuthenticationProviderType;
 import com.metamatrix.common.config.model.ComponentCryptoUtil;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.core.util.StringUtil;
@@ -64,7 +65,6 @@ import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.membership.spi.MembershipDomain;
 import com.metamatrix.platform.security.membership.spi.MembershipSourceException;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.service.controller.AbstractService;
@@ -148,13 +148,13 @@ public class MembershipServiceImpl extends AbstractService implements Membership
         }
         
         isSecurityEnabled = Boolean.valueOf(env.getProperty(SECURITY_ENABLED)).booleanValue();
-        LogManager.logDetail(LogSecurityConstants.CTX_MEMBERSHIP, "Security Enabled: " + isSecurityEnabled); //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, "Security Enabled: " + isSecurityEnabled); //$NON-NLS-1$
         
         try {
             //TODO: my caller should have already decrypted this for me
             adminCredentials = CryptoUtil.stringDecrypt(adminCredentials);
         } catch (CryptoException err) {
-            LogManager.logCritical(LogSecurityConstants.CTX_MEMBERSHIP, err, PlatformPlugin.Util.getString("MembershipServiceImpl.Root_password_decryption_failed")); //$NON-NLS-1$
+            LogManager.logCritical(LogConstants.CTX_MEMBERSHIP, err, PlatformPlugin.Util.getString("MembershipServiceImpl.Root_password_decryption_failed")); //$NON-NLS-1$
             throw new ServiceException(err);
         }
         
@@ -177,18 +177,18 @@ public class MembershipServiceImpl extends AbstractService implements Membership
                     Properties props = ComponentCryptoUtil.getDecryptedProperties(provider);
                     
                     if (!Boolean.valueOf(props.getProperty(DOMAIN_ACTIVE)).booleanValue()) {
-                        LogManager.logDetail(LogSecurityConstants.CTX_MEMBERSHIP, "Skipping initilization of inactive domain " + domainName); //$NON-NLS-1$
+                        LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, "Skipping initilization of inactive domain " + domainName); //$NON-NLS-1$
                         continue;
                     }
                 	newDomain = createDomain(domainName, props);
                 }
-                LogManager.logInfo(LogSecurityConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString(LogMessageKeys.SEC_MEMBERSHIP_0005, domainName));
+                LogManager.logInfo(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString(LogMessageKeys.SEC_MEMBERSHIP_0005, domainName));
                 if(newDomain!=null) {
                     this.domains.add(new MembershipDomainHolder(newDomain, domainName));
                 }
             } catch (Throwable e) {
                 String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_MEMBERSHIP_0021, domainName);
-                LogManager.logCritical(LogSecurityConstants.CTX_MEMBERSHIP, e, msg);
+                LogManager.logCritical(LogConstants.CTX_MEMBERSHIP, e, msg);
                 setInitException(new ServiceException(e, msg));
             }
         }
@@ -201,9 +201,9 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      */
     protected void closeService() throws Exception {
         String instanceName = this.getInstanceName();
-        LogManager.logInfo(LogSecurityConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString(LogMessageKeys.SEC_MEMBERSHIP_0001, instanceName));
+        LogManager.logInfo(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString(LogMessageKeys.SEC_MEMBERSHIP_0001, instanceName));
         this.shutdownDomains();
-        LogManager.logInfo(LogSecurityConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString(LogMessageKeys.SEC_MEMBERSHIP_0002, instanceName));
+        LogManager.logInfo(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString(LogMessageKeys.SEC_MEMBERSHIP_0002, instanceName));
     }
 
     /**
@@ -254,7 +254,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
                 try {
                     domainHolder.getMembershipDomain().shutdown();
                 } catch ( Exception e ) {
-                    LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, e, ErrorMessageKeys.SEC_MEMBERSHIP_0026);
+                    LogManager.logError(LogConstants.CTX_MEMBERSHIP, e, ErrorMessageKeys.SEC_MEMBERSHIP_0026);
                 }
             }
             this.domains.clear();
@@ -304,7 +304,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      */
     public AuthenticationToken authenticateUser(String username, Credentials credential, Serializable trustedPayload, String applicationName) {
         
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
         
         if (credential != null) {
             String password = new String(credential.getCredentialsAsCharArray());
@@ -314,7 +314,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
                 } catch (CryptoException err) {
                     //just log and allow the normal authentication flow
                     String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.Decrypt_failed", username); //$NON-NLS-1$
-                    LogManager.logWarning(LogSecurityConstants.CTX_MEMBERSHIP, err, msg);
+                    LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, err, msg);
                 }
             }
         }
@@ -327,11 +327,11 @@ public class MembershipServiceImpl extends AbstractService implements Membership
         	if (isSecurityEnabled && allowedAddresses != null) {
 	        	String address = DQPWorkContext.getWorkContext().getClientAddress();
 	        	if (address == null) {
-	        		LogManager.logWarning(LogSecurityConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("MembershipServiceImpl.unknown_host")); //$NON-NLS-1$
+	        		LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("MembershipServiceImpl.unknown_host")); //$NON-NLS-1$
 	        		return new FailedAuthenticationToken();
 	        	}
 	        	if (!allowedAddresses.matcher(address).matches() || address.equals(CurrentConfiguration.getInstance().getHostAddress().getHostAddress())) {
-	        		LogManager.logWarning(LogSecurityConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("MembershipServiceImpl.invalid_host", address, allowedAddresses.pattern())); //$NON-NLS-1$
+	        		LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("MembershipServiceImpl.invalid_host", address, allowedAddresses.pattern())); //$NON-NLS-1$
 	        		return new FailedAuthenticationToken();
 	        	}
         	}
@@ -368,26 +368,26 @@ public class MembershipServiceImpl extends AbstractService implements Membership
                     return new SuccessfulAuthenticationToken(auth.getPayload(), baseUsername + MembershipServiceInterface.AT + domain);
                 }
                 String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.Null_authentication", entry.getDomainName(), username ); //$NON-NLS-1$
-                LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, msg);
+                LogManager.logError(LogConstants.CTX_MEMBERSHIP, msg);
                 return new FailedAuthenticationToken();
             } catch (LogonException le) {
                 String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.Logon_failed", entry.getDomainName(), username ); //$NON-NLS-1$
-                LogManager.logWarning(LogSecurityConstants.CTX_MEMBERSHIP, le, msg);
+                LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, le, msg);
                 return new FailedAuthenticationToken();
             } catch (InvalidUserException e) {
                 String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.Invalid_user", entry.getDomainName(), username ); //$NON-NLS-1$
-                LogManager.logDetail(LogSecurityConstants.CTX_MEMBERSHIP, e, msg);
+                LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, e, msg);
             } catch (UnsupportedCredentialException e) {
                 String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.Unsupported_credentials", entry.getDomainName(), username ); //$NON-NLS-1$
-                LogManager.logDetail(LogSecurityConstants.CTX_MEMBERSHIP, e, msg);
+                LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, e, msg);
             } catch (MembershipSourceException e) {
                 //just skip this domain for now
                 String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.source_exception", entry.getDomainName()); //$NON-NLS-1$
-                LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, e, msg); 
+                LogManager.logError(LogConstants.CTX_MEMBERSHIP, e, msg); 
             }
         }
         String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.Failed_authentication", username ); //$NON-NLS-1$
-        LogManager.logDetail(LogSecurityConstants.CTX_MEMBERSHIP, msg);
+        LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, msg);
         return new FailedAuthenticationToken();
     }
     
@@ -491,7 +491,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      */
     public MetaMatrixPrincipal getPrincipal(MetaMatrixPrincipalName principal)
     		throws MembershipServiceException, InvalidPrincipalException {
-        LogManager.logTrace( LogSecurityConstants.CTX_MEMBERSHIP, new Object[] { "getPrincipal", principal }); //$NON-NLS-1$
+        LogManager.logTrace( LogConstants.CTX_MEMBERSHIP, new Object[] { "getPrincipal", principal }); //$NON-NLS-1$
 
     	String name = principal.getName();
 
@@ -524,7 +524,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
 	            // Get the principal from this domain
 	            BasicMetaMatrixPrincipal result = new BasicMetaMatrixPrincipal(name, MetaMatrixPrincipal.TYPE_USER, results);
 	            // If there is a result, then return the principal ...
-	            LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[]{"The user \"",name,"\" was obtained from domain \"",domain.getDomainName(),"\""} ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+	            LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[]{"The user \"",name,"\" was obtained from domain \"",domain.getDomainName(),"\""} ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	            return result;
         	} 
         	if (domain.getMembershipDomain().getGroupNames().contains(baseName)) {
@@ -532,11 +532,11 @@ public class MembershipServiceImpl extends AbstractService implements Membership
 	        }
         } catch ( InvalidPrincipalException e ) {
             String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.principal_does_not_exist", name, domain.getDomainName()); //$NON-NLS-1$
-            LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, e, msg); 
+            LogManager.logError(LogConstants.CTX_MEMBERSHIP, e, msg); 
             throw new InvalidPrincipalException(msg);
         } catch (Throwable e) {
             String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.source_exception", domain.getDomainName()); //$NON-NLS-1$
-            LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, e, msg); 
+            LogManager.logError(LogConstants.CTX_MEMBERSHIP, e, msg); 
             throw new MembershipServiceException(msg);
         } 
     	throw new InvalidPrincipalException(PlatformPlugin.Util.getString("MembershipServiceImpl.principal_does_not_exist", name, domain.getDomainName())); //$NON-NLS-1$
@@ -562,7 +562,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      */
     public Set getGroupsForUser(String userName)
     throws MembershipServiceException, InvalidPrincipalException {
-        LogManager.logTrace( LogSecurityConstants.CTX_MEMBERSHIP, new Object[] { "getGroupsForUser", userName}); //$NON-NLS-1$
+        LogManager.logTrace( LogConstants.CTX_MEMBERSHIP, new Object[] { "getGroupsForUser", userName}); //$NON-NLS-1$
         
         MetaMatrixPrincipal principal = getPrincipal(new MetaMatrixPrincipalName(userName, MetaMatrixPrincipal.TYPE_USER)); 
         
@@ -587,7 +587,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
      * @see com.metamatrix.platform.security.api.service.MembershipServiceInterface#getGroupNames()
      */
     public Set getGroupNames() throws MembershipServiceException {
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {"getGroupNames"}); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {"getGroupNames"}); //$NON-NLS-1$
         
         Set result = new HashSet();
         Iterator iter = this.domains.iterator();
@@ -597,7 +597,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
                 result.addAll( getDomainSpecificGroups(domain.getMembershipDomain().getGroupNames(), domain.getDomainName()) );
             } catch (Throwable e) {
                 String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.source_exception", domain.getDomainName()); //$NON-NLS-1$
-                LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, e, msg); 
+                LogManager.logError(LogConstants.CTX_MEMBERSHIP, e, msg); 
                 throw new MembershipServiceException(msg);
             }
         }
@@ -613,7 +613,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
     
     public List getDomainNames() {
         
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {"getDomainNames"}); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {"getDomainNames"}); //$NON-NLS-1$
         
     	List names = new ArrayList();
     	Iterator iter = this.domains.iterator();
@@ -629,7 +629,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
     
     public Set<String> getGroupsForDomain(String domainName) throws MembershipServiceException {
     	
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {"getGroupsForDomain", domainName}); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {"getGroupsForDomain", domainName}); //$NON-NLS-1$
         
         MembershipDomainHolder dHolder = null;
     	Iterator iter = this.domains.iterator();
@@ -647,7 +647,7 @@ public class MembershipServiceImpl extends AbstractService implements Membership
             return getDomainSpecificGroups(dHolder.getMembershipDomain().getGroupNames(), domainName);
         } catch (Throwable e) {
             String msg = PlatformPlugin.Util.getString("MembershipServiceImpl.source_exception", dHolder.getDomainName()); //$NON-NLS-1$
-            LogManager.logError(LogSecurityConstants.CTX_MEMBERSHIP, e, msg); 
+            LogManager.logError(LogConstants.CTX_MEMBERSHIP, e, msg); 
             throw new MembershipServiceException(msg);
         }
     }

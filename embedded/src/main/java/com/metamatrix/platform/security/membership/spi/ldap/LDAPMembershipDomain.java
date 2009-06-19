@@ -49,13 +49,13 @@ import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.api.exception.security.UnsupportedCredentialException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SuccessfulAuthenticationToken;
 import com.metamatrix.platform.security.membership.spi.MembershipDomain;
 import com.metamatrix.platform.security.membership.spi.MembershipSourceException;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 
 public class LDAPMembershipDomain implements
                                  MembershipDomain {
@@ -133,7 +133,7 @@ public class LDAPMembershipDomain implements
     public void initialize(Properties props) throws MembershipSourceException {
         this.domainName = props.getProperty(MembershipServiceInterface.DOMAIN_NAME);
 
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, "Initializing LDAP Domain: " + domainName); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, "Initializing LDAP Domain: " + domainName); //$NON-NLS-1$
 
         ldapTxnTimeoutInMillis = props.getProperty(TXN_TIMEOUT_IN_MILLIS);
 
@@ -164,7 +164,7 @@ public class LDAPMembershipDomain implements
         
         if (props.getProperty(USERS_MEMBER_OF_ATTRIBUTE, "").trim().length() == 0 //$NON-NLS-1$ 
                         && props.getProperty(GROUPS_GROUP_MEMBER_ATTRIBUTE, "").trim().length() == 0) { //$NON-NLS-1$
-        	LogManager.logWarning(LogSecurityConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("LDAPMembershipDomain.Require_memberof_property", domainName ) ); //$NON-NLS-1$
+        	LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("LDAPMembershipDomain.Require_memberof_property", domainName ) ); //$NON-NLS-1$
         }
         
         // Create the root context.
@@ -175,12 +175,12 @@ public class LDAPMembershipDomain implements
 
         // If password is blank, we will perform an anonymous bind.
         if (ldapAdminUserDN != null && ldapAdminUserPass != null) {
-            LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, domainName + ": Username was set to:" + ldapAdminUserDN); //$NON-NLS-1$
+            LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, domainName + ": Username was set to:" + ldapAdminUserDN); //$NON-NLS-1$
             adminContext.put(Context.SECURITY_AUTHENTICATION, LDAP_AUTH_TYPE);
             adminContext.put(Context.SECURITY_PRINCIPAL, this.ldapAdminUserDN);
             adminContext.put(Context.SECURITY_CREDENTIALS, this.ldapAdminUserPass);
         } else {
-            LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, domainName
+            LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, domainName
                                                                      + ": admin dn was blank; performing anonymous bind."); //$NON-NLS-1$
             adminContext.put(Context.SECURITY_AUTHENTICATION, "none"); //$NON-NLS-1$
         }
@@ -271,7 +271,7 @@ public class LDAPMembershipDomain implements
     }
 
     public void shutdown() {
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, domainName + ": shutdown()"); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, domainName + ": shutdown()"); //$NON-NLS-1$
     }
 
     public SuccessfulAuthenticationToken authenticateUser(String username,
@@ -282,7 +282,7 @@ public class LDAPMembershipDomain implements
                                                                                  LogonException,
                                                                                  MembershipSourceException {
 
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {
             domainName, "authenticateUser username", username, "applicationName", applicationName}); //$NON-NLS-1$ //$NON-NLS-2$
         
         if (username == null) {
@@ -314,7 +314,7 @@ public class LDAPMembershipDomain implements
                 try {
                     ctx.close();
                 } catch (NamingException ne) {
-                    LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, ne, domainName + ": error closing context"); //$NON-NLS-1$
+                    LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, ne, domainName + ": error closing context"); //$NON-NLS-1$
                 }
             }
         }
@@ -327,7 +327,7 @@ public class LDAPMembershipDomain implements
     }
 
     public Set getGroupNames() throws MembershipSourceException {
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {
             domainName, " getGroupNames() called"}); //$NON-NLS-1$
 
         DirContext ctx = null;
@@ -340,7 +340,7 @@ public class LDAPMembershipDomain implements
                 try {
                     ctx.close();
                 } catch (NamingException ne) {
-                    LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, ne, domainName + ": error closing context"); //$NON-NLS-1$
+                    LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, ne, domainName + ": error closing context"); //$NON-NLS-1$
                 }
             }
         }
@@ -359,7 +359,7 @@ public class LDAPMembershipDomain implements
     public Set getGroupNamesForUser(String username) throws InvalidUserException,
                                                     MembershipSourceException {
 
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "getGroupNamesForUser", username}); //$NON-NLS-1$ 
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "getGroupNamesForUser", username}); //$NON-NLS-1$ 
 
         if(username.length() == 0){
         	return Collections.EMPTY_SET;
@@ -403,7 +403,7 @@ public class LDAPMembershipDomain implements
 
         username = escapeLDAPSearchFilter(username);
         
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "getUserEntry", username, "getGroups", String.valueOf(getGroups)}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "getUserEntry", username, "getGroups", String.valueOf(getGroups)}); //$NON-NLS-1$ //$NON-NLS-2$
         
         DirContext ctx = null;
 
@@ -428,21 +428,21 @@ public class LDAPMembershipDomain implements
                     singleUserSearchFilter = "(&" + singleUserSearchFilter + context.searchFilter + ")"; //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 
-                LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "searching context", contextName, "with filter", singleUserSearchFilter, "and search scope", String.valueOf(context.searchScope)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "searching context", contextName, "with filter", singleUserSearchFilter, "and search scope", String.valueOf(context.searchScope)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 
                 // We expect to receive only one user from this search, since the username attribute must be unique.
                 NamingEnumeration usersEnumeration = ctx.search(contextName, singleUserSearchFilter, sControls);
                 if (!usersEnumeration.hasMore()) {
-                    LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "no user match found in context", contextName}); //$NON-NLS-1$
+                    LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "no user match found in context", contextName}); //$NON-NLS-1$
                     continue;
                 }
                 SearchResult foundUser = (SearchResult)usersEnumeration.next();
                 
-                LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "found user", username, "in context", contextName}); //$NON-NLS-1$ //$NON-NLS-2$
+                LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "found user", username, "in context", contextName}); //$NON-NLS-1$ //$NON-NLS-2$
                 
                 if (usersEnumeration.hasMore()) {
                     LogManager
-                              .logWarning(LogSecurityConstants.CTX_MEMBERSHIP,
+                              .logWarning(LogConstants.CTX_MEMBERSHIP,
                                           domainName
                                                           + ": Only expected one user when performing lookup. Check to ensure the display name is unique."); //$NON-NLS-1$
                 }
@@ -470,7 +470,7 @@ public class LDAPMembershipDomain implements
                                 }
                                 groupList.add(groupDN);
                                 LogManager
-                                          .logTrace(LogSecurityConstants.CTX_MEMBERSHIP, domainName
+                                          .logTrace(LogConstants.CTX_MEMBERSHIP, domainName
                                                                                          + "-----Adding user's group: " + groupDN); //$NON-NLS-1$
                             }
                         }
@@ -480,7 +480,7 @@ public class LDAPMembershipDomain implements
                 }
                 UserEntry ue = new UserEntry(dn, groupList);
                 
-                LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "UserEntry retrieved for username", username, ue.getDn()}); //$NON-NLS-1$
+                LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "UserEntry retrieved for username", username, ue.getDn()}); //$NON-NLS-1$
                 
                 return ue;
             }
@@ -491,12 +491,12 @@ public class LDAPMembershipDomain implements
                 try {
                     ctx.close();
                 } catch (NamingException ne) {
-                    LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, ne, domainName + ": error closing context"); //$NON-NLS-1$
+                    LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, ne, domainName + ": error closing context"); //$NON-NLS-1$
                 }
             }
         }
 
-        LogManager.logInfo(LogSecurityConstants.CTX_MEMBERSHIP,
+        LogManager.logInfo(LogConstants.CTX_MEMBERSHIP,
                            domainName + ": No user DN found for user: " + username + ", could not authenticate."); //$NON-NLS-1$ //$NON-NLS-2$
         throw new InvalidUserException(username);
     }
@@ -504,7 +504,7 @@ public class LDAPMembershipDomain implements
     private Map getGroupNames(DirContext ctx,
                                            String userDn, boolean mustMatchDn) throws MembershipSourceException {
 
-        LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "getGroupNames", userDn, "mustMatchDn", String.valueOf(mustMatchDn)}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "getGroupNames", userDn, "mustMatchDn", String.valueOf(mustMatchDn)}); //$NON-NLS-1$ //$NON-NLS-2$
         
         Map groupNames = new HashMap();
 
@@ -526,15 +526,15 @@ public class LDAPMembershipDomain implements
                 if (userDn != null && context.memberOfAttribute != null) {
                     searchFilter = "(&(" + context.memberOfAttribute  + "=" + userDn + ")" + searchFilter + ")"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 } else if (mustMatchDn) {
-                    LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "skipping group context"}); //$NON-NLS-1$
+                    LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "skipping group context"}); //$NON-NLS-1$
                     continue;
                 }
                 
-                LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "searching group context", contextName, "with filter", searchFilter, "and search scope", String.valueOf(context.searchScope)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "searching group context", contextName, "with filter", searchFilter, "and search scope", String.valueOf(context.searchScope)}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
                 NamingEnumeration groupsEnum = ctx.search(contextName, searchFilter, groupSC);
                 
-                LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "Parsing through groups search results."}); //$NON-NLS-1$
+                LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "Parsing through groups search results."}); //$NON-NLS-1$
 
                 while (groupsEnum.hasMore()) {
                     SearchResult curGroup = (SearchResult)groupsEnum.next();
@@ -562,7 +562,7 @@ public class LDAPMembershipDomain implements
 
                     groupNames.put(groupDN, groupDisplayName);
 
-                    LogManager.logTrace(LogSecurityConstants.CTX_MEMBERSHIP, new Object[] {domainName, "Found groupDN", groupDN, "with display name", groupDisplayName}); //$NON-NLS-1$ //$NON-NLS-2$
+                    LogManager.logTrace(LogConstants.CTX_MEMBERSHIP, new Object[] {domainName, "Found groupDN", groupDN, "with display name", groupDisplayName}); //$NON-NLS-1$ //$NON-NLS-2$
                 }
             }
         } catch (NamingException err) {

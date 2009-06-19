@@ -87,45 +87,18 @@ class LogListernerProvider implements Provider<LogListener> {
 
 		@Override
 		public void log(int level, String context, Object msg) {
-			Logger log4j = getLogger(context);
-			log4j.log(convertLevel(level), msg);
+			Logger log4j = Log4JUtil.getLogger(context);
+			log4j.log(Log4JUtil.convert2Log4JLevel(level), msg);
 		}
 
 		public void log(int level, String context, Throwable t, Object msg) {
-			Logger log4j = getLogger(context);
-			log4j.log(convertLevel(level), msg, t);
+			Logger log4j = Log4JUtil.getLogger(context);
+			log4j.log(Log4JUtil.convert2Log4JLevel(level), msg, t);
 		}
-		
-		private Logger getLogger(String context) {
-			Logger log4j = null;
-			if (context.indexOf('.') == -1) {
-				log4j = Logger.getLogger("org.teiid."+context); //$NON-NLS-1$
-			}
-			else {
-				log4j = Logger.getLogger(context);
-			}
-			return log4j;
-		}
-				
+						
 		@Override
 		public void shutdown() {
 		}
 
-	    public Priority convertLevel(int level) {
-	    	switch (level) {
-	    	case MessageLevel.CRITICAL:
-	    		return Priority.FATAL;
-	    	case MessageLevel.ERROR:
-	    		return Priority.ERROR;
-	    	case MessageLevel.WARNING:
-	    		return Priority.WARN;
-	    	case MessageLevel.INFO:
-	    		return Priority.INFO;
-	    	case MessageLevel.DETAIL:
-	    	case MessageLevel.TRACE:
-	    		return Priority.DEBUG;
-	    	}
-	    	return Priority.DEBUG;
-	    }		
 	}
 }

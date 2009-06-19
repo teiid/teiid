@@ -48,9 +48,9 @@ import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.Streamable;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 
 /**
@@ -184,7 +184,7 @@ public class BufferManagerImpl implements BufferManager {
                         case ManagedBatch.PINNED:
                             stats.numPinnedBatches++;
                             
-                            if ( LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.TRACE )) {
+                            if ( LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE )) {
                                 stats.pinnedManagedBatches.add(batch);
                             }
 
@@ -251,8 +251,8 @@ public class BufferManagerImpl implements BufferManager {
 		TupleSourceInfo info = new TupleSourceInfo(newID, schema, types, getGroupInfo(groupName), tupleSourceType);
 		tupleSourceMap.put(newID, info);
 
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogCommonConstants.CTX_BUFFER_MGR, new Object[]{"Creating TupleSource:", newID, "of type "+tupleSourceType}); //$NON-NLS-1$ //$NON-NLS-2$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Creating TupleSource:", newID, "of type "+tupleSourceType}); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         return newID;
@@ -270,8 +270,8 @@ public class BufferManagerImpl implements BufferManager {
             // this is a bogus tuple source ID
             return;
         }
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogCommonConstants.CTX_BUFFER_MGR, new Object[]{"Removing TupleSource:", tupleSourceID}); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Removing TupleSource:", tupleSourceID}); //$NON-NLS-1$
         }
 
         // Remove from main map first
@@ -326,8 +326,8 @@ public class BufferManagerImpl implements BufferManager {
     public void removeTupleSources(String groupName)
     throws MetaMatrixComponentException {
 
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogCommonConstants.CTX_BUFFER_MGR, new Object[]{"Removing TupleSources for group", groupName}); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Removing TupleSources for group", groupName}); //$NON-NLS-1$
         }
 
         // Get tuple sources to remove
@@ -418,8 +418,8 @@ public class BufferManagerImpl implements BufferManager {
     public void setStatus(TupleSourceID tupleSourceID, TupleSourceStatus status)
     throws TupleSourceNotFoundException, MetaMatrixComponentException {
 
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogCommonConstants.CTX_BUFFER_MGR, new Object[]{"Setting status for", tupleSourceID, "to", status}); //$NON-NLS-1$ //$NON-NLS-2$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Setting status for", tupleSourceID, "to", status}); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         TupleSourceInfo info = getTupleSourceInfo(tupleSourceID, true);
@@ -467,8 +467,8 @@ public class BufferManagerImpl implements BufferManager {
     public void addTupleBatch(TupleSourceID tupleSourceID, TupleBatch tupleBatch)
     throws TupleSourceNotFoundException, MetaMatrixComponentException {
 
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-            LogManager.logTrace(LogCommonConstants.CTX_BUFFER_MGR, new Object[]{"AddTupleBatch for", tupleSourceID, "with " + tupleBatch.getRowCount() + " rows"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, new Object[]{"AddTupleBatch for", tupleSourceID, "with " + tupleBatch.getRowCount() + " rows"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
         
         if (tupleBatch.getRowCount() == 0 && !tupleBatch.getTerminationFlag()) {
@@ -542,8 +542,8 @@ public class BufferManagerImpl implements BufferManager {
     public TupleBatch pinTupleBatch(TupleSourceID tupleSourceID, int beginRow, int maxEndRow)
         throws TupleSourceNotFoundException, MemoryNotAvailableException, MetaMatrixComponentException {
 
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-            LogManager.logTrace(LogCommonConstants.CTX_BUFFER_MGR, new Object[]{"Pinning tupleBatch for", tupleSourceID, "beginRow:", beginRow, "maxEndRow:", maxEndRow}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, new Object[]{"Pinning tupleBatch for", tupleSourceID, "beginRow:", beginRow, "maxEndRow:", maxEndRow}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
 
         this.pinRequests.incrementAndGet();
@@ -673,8 +673,8 @@ public class BufferManagerImpl implements BufferManager {
     public void unpinTupleBatch(TupleSourceID tupleSourceID, int beginRow, int endRow)
         throws TupleSourceNotFoundException, MetaMatrixComponentException {
 
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-            LogManager.logTrace(LogCommonConstants.CTX_BUFFER_MGR, new Object[]{"Unpinning tupleBatch for", tupleSourceID, "beginRow: " + beginRow}); //$NON-NLS-1$ //$NON-NLS-2$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, new Object[]{"Unpinning tupleBatch for", tupleSourceID, "beginRow: " + beginRow}); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         TupleSourceInfo info = getTupleSourceInfo(tupleSourceID, true);

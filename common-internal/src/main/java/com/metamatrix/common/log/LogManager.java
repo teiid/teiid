@@ -29,13 +29,11 @@ import java.lang.reflect.Proxy;
 
 import com.google.inject.Inject;
 import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.log.config.BasicLogConfiguration;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.log.JavaLogWriter;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.core.log.JavaLogWriter;
 
 
 /**
@@ -90,7 +88,7 @@ import com.metamatrix.core.log.JavaLogWriter;
 public final class LogManager {
 
     @Inject
-    static LogConfiguration configuration = new BasicLogConfiguration(MessageLevel.WARNING); // either injected or manually set using the set methods
+    static LogConfiguration configuration = new LogConfigurationImpl(); // either injected or manually set using the set methods
     
     @Inject
     static LogListener logListener = new JavaLogWriter(); // either injected or manually set using the set methods
@@ -325,13 +323,12 @@ public final class LogManager {
     	if (configuration == null) {
     		throw new MetaMatrixRuntimeException(CommonPlugin.Util.getString("LogManager_not_configured")); //$NON-NLS-1$
     	}
-    	return (LogConfiguration)configuration.clone(); 
+    	return LogConfigurationImpl.makeCopy(configuration); 
     }
-
-    public static void setLogConfiguration( LogConfiguration config ) {
+    
+    public static void setLogConfiguration(LogConfiguration config ) {
 		if ( config != null ) {
-        	logMessage(MessageLevel.INFO, LogCommonConstants.CTX_LOGGING, CommonPlugin.Util.getString("MSG.003.014.0015", config)); //$NON-NLS-1$
-            configuration = (LogConfiguration) config.clone();
+            configuration = LogConfigurationImpl.makeCopy(config);
         }
     }
     
@@ -354,7 +351,10 @@ public final class LogManager {
      * or false if it would be discarded by the LogManager.
      */
     public static boolean isMessageToBeRecorded(String context, int msgLevel) {
-    	return configuration.isMessageToBeRecorded(context, msgLevel);
+    	if (configuration != null) {
+    		return configuration.isEnabled(context, msgLevel);
+    	}
+    	return true;
     }
 
     private static void logMessage(int level, String context, Object ... msgParts) {

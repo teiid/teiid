@@ -29,12 +29,12 @@ import java.util.List;
 import java.util.Set;
 
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.platform.admin.api.AuthorizationEditor;
 import com.metamatrix.platform.admin.api.EntitlementMigrationReport;
 import com.metamatrix.platform.admin.api.PermissionDataNode;
 import com.metamatrix.platform.admin.api.PermissionTreeView;
 import com.metamatrix.platform.admin.apiimpl.PermissionDataNodeImpl;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 
 /**
  * Editor allows automatic creation of individual {@link com.metamatrix.common.actions.Actions}
@@ -124,7 +124,7 @@ public class AuthorizationObjectEditor extends AbstractAuthorizationObjectEditor
                     // They're all clonable but log anyway
                     final Object[] params = { originalPerm };
                     final String msg = SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_API_0005, params);
-                    LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg);
+                    LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, msg);
                 }
             } else {
                 if (rpt != null) {
@@ -138,7 +138,7 @@ public class AuthorizationObjectEditor extends AbstractAuthorizationObjectEditor
 
                 final Object[] params = { originalPerm };
                 final String msg = SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_API_0011, params);
-                LogManager.logWarning(LogSecurityConstants.CTX_AUTHORIZATION, msg);
+                LogManager.logWarning(LogConstants.CTX_AUTHORIZATION, msg);
             }
             
         }
@@ -175,11 +175,11 @@ public class AuthorizationObjectEditor extends AbstractAuthorizationObjectEditor
         // Create permissions for all modified nodes in tree
         BasicAuthorizationPermissionFactory permFactory = new BasicAuthorizationPermissionFactory();
 
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,"modifyPermissions: Starting..."); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,"modifyPermissions: Starting..."); //$NON-NLS-1$
         Iterator nodeItr = modifiedNodes.iterator();
         while ( nodeItr.hasNext() ) {
             PermissionDataNodeImpl aNode = (PermissionDataNodeImpl) nodeItr.next();
-            LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,"modifyPermissions: Effected node: " + aNode); //$NON-NLS-1$
+            LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,"modifyPermissions: Effected node: " + aNode); //$NON-NLS-1$
             AuthorizationActions theActions = aNode.getActions();
             String resourceName = aNode.getResourceName();
             AuthorizationPermission newPerm = null;
@@ -188,11 +188,11 @@ public class AuthorizationObjectEditor extends AbstractAuthorizationObjectEditor
             boolean isGroupNode = aNode.isGroupNode();
 
             if ( aNode.isLeafNode() || isGroupNode ) {
-                LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,"modifyPermissions: LEAF or GROUP - actions <" + theActions + ">"); //$NON-NLS-1$ //$NON-NLS-2$
+                LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,"modifyPermissions: LEAF or GROUP - actions <" + theActions + ">"); //$NON-NLS-1$ //$NON-NLS-2$
                 // Remove old permission on this node, if it exists
                 oldPerm = getExistingPermission(aNode, policy);
                 if ( oldPerm != null ) {
-                    LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+                    LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                                         "modifyPermissions: Removing permission: " + oldPerm); //$NON-NLS-1$
                     currentPerms.remove(oldPerm);
                     permissionsToRemove.add(oldPerm);
@@ -201,20 +201,20 @@ public class AuthorizationObjectEditor extends AbstractAuthorizationObjectEditor
                 if ( ! theActions.equals(StandardAuthorizationActions.NONE) ) {
 
                     if ( aNode.isLeafNode() ) {
-                        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,"modifyPermissions: Creating LEAF permission."); //$NON-NLS-1$
+                        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,"modifyPermissions: Creating LEAF permission."); //$NON-NLS-1$
 
                         // Create leaf permission
                         newPerm = permFactory.create(resourceName, realm, theActions);
-                        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,"modifyPermissions: Adding new ELEMENT perm: <" + newPerm.getResourceName() + " - " + newPerm.getActions() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,"modifyPermissions: Adding new ELEMENT perm: <" + newPerm.getResourceName() + " - " + newPerm.getActions() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
                         permissionsToAdd.add(newPerm);
 
                     } else if (isGroupNode) {
-                       	LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,"modifyPermissions: Creating GROUP " + theActions + " permission."); //$NON-NLS-1$ //$NON-NLS-2$
+                       	LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,"modifyPermissions: Creating GROUP " + theActions + " permission."); //$NON-NLS-1$ //$NON-NLS-2$
 
                        	// Create new permissions
                        	newPerm = permFactory.create(resourceName, realm, theActions);
-                       	LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,"modifyPermissions: Adding new GROUP perm: <" + newPerm.getResourceName() + " - " + newPerm.getActions() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                       	LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,"modifyPermissions: Adding new GROUP perm: <" + newPerm.getResourceName() + " - " + newPerm.getActions() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
                        	permissionsToAdd.add(newPerm);
                     }

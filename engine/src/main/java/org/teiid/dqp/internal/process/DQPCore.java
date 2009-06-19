@@ -57,7 +57,6 @@ import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
-import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
@@ -547,7 +546,7 @@ public class DQPCore extends Application implements ClientSideDQP {
             }
             message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getConnectionID(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, isCancelled, errorOccurred);
         }
-        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_COMMANDLOGGING, message);
+        LogManager.log(MessageLevel.INFO, LogConstants.CTX_COMMANDLOGGING, message);
     }
     
     ProcessorDataManager getDataTierManager() {

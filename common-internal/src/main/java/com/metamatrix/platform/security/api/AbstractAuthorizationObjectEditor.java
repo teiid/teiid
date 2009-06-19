@@ -30,9 +30,9 @@ import java.util.Set;
 
 import com.metamatrix.common.actions.AbstractObjectEditor;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.platform.admin.api.EntitlementMigrationReport;
 import com.metamatrix.platform.admin.api.PermissionTreeView;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
 
 public abstract class AbstractAuthorizationObjectEditor extends AbstractObjectEditor {
@@ -141,7 +141,7 @@ public abstract class AbstractAuthorizationObjectEditor extends AbstractObjectEd
             // They're all clonable but log anyway
             final Object[] params = { sourcePerm };
             final String msg = SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_API_0005,params);
-            LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg );
+            LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, msg );
         }
         newPerm.setRealm(newRealm);
 
@@ -192,7 +192,7 @@ public abstract class AbstractAuthorizationObjectEditor extends AbstractObjectEd
                 MetaMatrixPrincipalName principal = (MetaMatrixPrincipalName)i.next();
                 if (!allPrincipals.contains(principal.getName())) {
                     i.remove();
-                    LogManager.logWarning(LogSecurityConstants.CTX_AUTHORIZATION, SecurityPlugin.Util.getString("AbstractAuthorizationObjectEditor.missing_principal", new Object[] {sourcePolicy.getAuthorizationPolicyID().getDisplayName(), principal.getName()})); //$NON-NLS-1$
+                    LogManager.logWarning(LogConstants.CTX_AUTHORIZATION, SecurityPlugin.Util.getString("AbstractAuthorizationObjectEditor.missing_principal", new Object[] {sourcePolicy.getAuthorizationPolicyID().getDisplayName(), principal.getName()})); //$NON-NLS-1$
                 }
             }
         }

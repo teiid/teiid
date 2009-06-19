@@ -22,9 +22,7 @@
 
 package com.metamatrix.metadata.runtime.util;
 
-import com.metamatrix.common.util.LogCommonConstants;
-
-public interface LogRuntimeMetadataConstants extends LogCommonConstants{
+public interface LogRuntimeMetadataConstants {
 
 //**********************************************************************
 //PLEASE NOTE:!!!!!!!!!!!!!!!!!

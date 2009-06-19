@@ -52,7 +52,7 @@ import com.metamatrix.common.config.util.ConfigObjectsNotResolvableException;
 import com.metamatrix.common.config.util.InvalidConfigurationElementException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ByteArrayHelper;
-import com.metamatrix.common.util.LogContextsUtil;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.TempDirectory;
 import com.metamatrix.internal.core.xml.JdomHelper;
@@ -468,7 +468,7 @@ class ConnectorArchiveImportExportUtility {
                 // If an extension module not found then throw an exception
                 if (!found) {
                     //throw new ConfigObjectsNotResolvableException("Connector Archive is incomplete \""+moduleName+"\" not found for Connector Type \""+type.getName()+"\"", moduleName); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-                    LogManager.logWarning(LogContextsUtil.CommonConstants.CTX_CONFIG, CommonPlugin.Util.getString("ConnectorArchiveImportExportUtility.Invalid_archive_missing_jars", new Object[] {moduleName, type.getName()}));   //$NON-NLS-1$                 
+                    LogManager.logWarning(LogConstants.CTX_CONFIG, CommonPlugin.Util.getString("ConnectorArchiveImportExportUtility.Invalid_archive_missing_jars", new Object[] {moduleName, type.getName()}));   //$NON-NLS-1$                 
                 }
             }
         }

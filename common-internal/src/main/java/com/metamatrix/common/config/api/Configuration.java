@@ -429,11 +429,6 @@ public interface Configuration extends ComponentObject {
      */
     Collection getVMComponentDefns(); 
 
-    /**
-     *  Returns the <code>LogConfiguration</code>
-     *  @return LogConfiguration
-     */
-    LogConfiguration getLogConfiguration();
 
     /**
      *  Returns a boolean true if the configuration is deployed for current use.

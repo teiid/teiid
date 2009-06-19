@@ -48,7 +48,6 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.log.MessageLevel;
@@ -56,6 +55,7 @@ import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.AuthorizationActions;
 import com.metamatrix.platform.security.api.AuthorizationPermission;
@@ -70,7 +70,6 @@ import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.StandardAuthorizationActions;
 import com.metamatrix.platform.security.api.service.AuthorizationServicePropertyNames;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.server.util.ServerAuditContexts;
@@ -163,7 +162,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      */
     public Collection getInaccessibleResources(SessionToken sessionToken, String contextName, Collection requests)
             throws AuthorizationMgmtException {
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         List resources = new ArrayList();
         if (requests != null && ! requests.isEmpty()) {            
@@ -175,7 +174,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         
         // Audit - request
     	AuditMessage msg = new AuditMessage( contextName, "getInaccessibleResources-request", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
-    	LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_AUDITLOGGING, msg);
+    	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         
         if (isEntitled(sessionToken.getUsername())) {
             return Collections.EMPTY_LIST;
@@ -204,10 +203,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
         if (results.isEmpty()) {
         	msg = new AuditMessage( contextName, "getInaccessibleResources-granted all", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
-        	LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_AUDITLOGGING, msg);
+        	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         } else {
         	msg = new AuditMessage( contextName, "getInaccessibleResources-denied", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
-        	LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_AUDITLOGGING, msg);
+        	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         }
         return results;
     }
@@ -382,7 +381,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      */
     private Set<MetaMatrixPrincipalName> getGroupsForPrincipal(MetaMatrixPrincipalName principal)
             throws AuthorizationMgmtException, InvalidPrincipalException {
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION,
                 new Object[] {"getGroupsForPrincipal(", principal, ") - Getting all group memberships."}); //$NON-NLS-1$ //$NON-NLS-2$
         // Get the set of all groups this Principal is a member of
         Set<MetaMatrixPrincipalName> allPrincipals = new HashSet<MetaMatrixPrincipalName>();
@@ -402,7 +401,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
                 // HACK: Convert ALL member principals to MetaMatrixPrincipalName objs
                 // since Auth and Memb svcs don't speak the same language.
                 MetaMatrixPrincipalName member = new MetaMatrixPrincipalName((String) memberItr.next(), MetaMatrixPrincipal.TYPE_GROUP);
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION,
                         new Object[]{"getGroupsForPrincipal(", principal, ") - Adding membership <", member, ">"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 allPrincipals.add(member);
             }
@@ -420,13 +419,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     protected boolean isEntitled(String principal) {
         try {
             if (membershipServiceProxy.isSuperUser(principal) || !membershipServiceProxy.isSecurityEnabled()) {
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION,
                                      new Object[]{ "Automatically entitling principal", principal}); //$NON-NLS-1$ 
                 return true;
             }
         }  catch (MembershipServiceException e) {
             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0075);
-            LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg);
+            LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, e, msg);
         } 
         return false;
     }

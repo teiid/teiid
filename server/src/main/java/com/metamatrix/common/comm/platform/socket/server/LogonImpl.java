@@ -39,6 +39,7 @@ import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.platform.security.api.Credentials;
@@ -48,7 +49,6 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.service.api.exception.ServiceException;
 import com.metamatrix.platform.service.api.exception.ServiceStateException;
 import com.metamatrix.platform.util.ProductInfoConstants;
@@ -89,7 +89,7 @@ public class LogonImpl implements ILogon {
 					connProps);
 			// logon
 			MetaMatrixSessionID sessionID = updateDQPContext(sessionInfo);
-			LogManager.logDetail(LogSecurityConstants.CTX_SESSION, new Object[] {
+			LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {
 					"Logon successful for \"", user, "\" - created SessionID \"", "" + sessionID, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			return new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getProductInfo(), clusterName);
 		} catch (MetaMatrixAuthenticationException e) {

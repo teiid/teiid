@@ -45,6 +45,7 @@ public class LogContextsUtil {
     //
     // *******************************************************************
 
+	
     public static class CommonConstants {
 
         // Contexts
@@ -137,6 +138,7 @@ public class LogContextsUtil {
      * The Set of all String logging contexts of all parts of the server.
      */
     public static final Set ALL_CONTEXTS;
+	public static final String CTX_CONFIG = "CONFIG"; //$NON-NLS-1$
 
     // this will need to be updated as any new contexts are added to the
     // various "logging contants" interfaces of the different projects

@@ -20,19 +20,15 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.server.util;
+package com.metamatrix.common.util;
 
 public interface LogConstants {
-
-//**********************************************************************
-//PLEASE NOTE:!!!!!!!!!!!!!!!!!
-//All constants defined here should also be defined in
-//com.metamatrix.common.util.LogContextsUtil
-//**********************************************************************
-
-	// Server contexts
-	public static final String CTX_ROUTER = "ROUTER"; //$NON-NLS-1$
-
-	// Query phases
-	public static final String CTX_QUERY_SERVICE = "QUERY_SERVICE"; //$NON-NLS-1$
+	// add the new contexts to the Log4JUtil.java class, for configuration purpose
+	public static final String CTX_CONFIG = "CONFIG"; //$NON-NLS-1$
+	public static final String CTX_COMMUNICATION = "COMMUNICATION"; //$NON-NLS-1$
+    public static final String CTX_POOLING = "RESOURCE_POOLING"; //$NON-NLS-1$
+	public static final String CTX_SESSION = "SESSION"; //$NON-NLS-1$
+	public static final String CTX_MEMBERSHIP = "MEMBERSHIP"; //$NON-NLS-1$
+	public static final String CTX_AUTHORIZATION = "AUTHORIZATION"; //$NON-NLS-1$
+	public static final String CTX_AUTHORIZATION_ADMIN_API = "AUTHORIZATION_ADMIN_API"; //$NON-NLS-1$
 }

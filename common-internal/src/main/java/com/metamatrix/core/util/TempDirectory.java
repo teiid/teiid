@@ -26,7 +26,7 @@ import java.io.File;
 import java.util.Random;
 
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogContextsUtil;
+import com.metamatrix.common.util.LogConstants;
 
 /**
  * Creates and deletes temporary directories.
@@ -104,7 +104,7 @@ public class TempDirectory {
         
         TempDirectory tempDirectory = new TempDirectory(absolutePath, System.currentTimeMillis(), RANDOM.nextLong());
         while (new File(tempDirectory.getPath()).exists()) {
-            LogManager.logWarning(LogContextsUtil.CommonConstants.CTX_CONFIG, "Temporary Folder " + tempDirectory.getPath() + " already exists; Creating new folder..."); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logWarning(LogConstants.CTX_CONFIG, "Temporary Folder " + tempDirectory.getPath() + " already exists; Creating new folder..."); //$NON-NLS-1$ //$NON-NLS-2$
             try {
                 Thread.sleep(10);
             } catch (final InterruptedException ignored) {

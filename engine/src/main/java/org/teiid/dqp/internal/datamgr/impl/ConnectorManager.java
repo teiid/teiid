@@ -68,7 +68,6 @@ import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.stats.ConnectionPoolStats;
-import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
@@ -625,7 +624,7 @@ public class ConnectorManager implements ApplicationService {
             }
             message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, connectorName, qr.getWorkContext().getConnectionID(), principal, finalRowCnt, isCancelled, errorOccurred, context);
         }         
-        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_COMMANDLOGGING, message);
+        LogManager.log(MessageLevel.INFO, LogConstants.CTX_COMMANDLOGGING, message);
     }
     
     /**

@@ -23,7 +23,6 @@
 package com.metamatrix.xa.arjuna;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Properties;
 
 import javax.resource.spi.XATerminator;
@@ -31,12 +30,6 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAException;
 
-import org.apache.log4j.AppenderSkeleton;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-import org.apache.log4j.RollingFileAppender;
-import org.apache.log4j.spi.LoggingEvent;
 import org.teiid.dqp.internal.transaction.TransactionProvider;
 
 import com.arjuna.ats.arjuna.common.Configuration;
@@ -52,11 +45,8 @@ import com.arjuna.ats.internal.jta.transaction.arjunacore.jca.TxImporter;
 import com.arjuna.ats.internal.jta.transaction.arjunacore.jca.XATerminatorImple;
 import com.arjuna.ats.jta.common.Environment;
 import com.arjuna.ats.jta.common.jtaPropertyManager;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.service.TransactionService;
 
 public class ArjunaTransactionProvider implements TransactionProvider {

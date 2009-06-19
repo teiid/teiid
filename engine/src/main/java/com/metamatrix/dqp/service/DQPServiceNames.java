@@ -22,7 +22,7 @@
 
 package com.metamatrix.dqp.service;
 
-import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.dqp.util.LogConstants;
 
 
 /**
@@ -80,7 +80,7 @@ public interface DQPServiceNames {
     	null,
         null,
         null,
-        LogCommonConstants.CTX_TXN_LOG,                                           
+        LogConstants.CTX_TXN_LOG,                                           
         null,
         null,
         null,

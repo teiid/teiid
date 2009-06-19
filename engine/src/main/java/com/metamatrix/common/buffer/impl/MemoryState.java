@@ -22,12 +22,17 @@
 
 package com.metamatrix.common.buffer.impl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.dqp.util.LogConstants;
 
 /**
  * <p>This class represents the memory state of the BufferManagerImpl.  The 
@@ -159,7 +164,7 @@ class MemoryState {
             PINNED_BY_THREAD.set(theadPinned);
         }
         addPinnedInternal(theadPinned, batch);
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_BUFFER_MGR, MessageLevel.TRACE )) {
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE )) {
             batch.captureCallStack();
         }
     }

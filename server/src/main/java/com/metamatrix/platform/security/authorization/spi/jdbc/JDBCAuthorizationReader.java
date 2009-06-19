@@ -32,6 +32,7 @@ import java.util.Set;
 
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.AuthorizationActions;
 import com.metamatrix.platform.security.api.AuthorizationPermission;
@@ -44,7 +45,6 @@ import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.StandardAuthorizationActions;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceConnectionException;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceException;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 
 
@@ -71,7 +71,7 @@ public class JDBCAuthorizationReader {
         Set pRoles = new HashSet();
         String sql = JDBCNames.SELECT_ROLE_NAMES_FOR_PRINCIPAL_NAME;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getRoleNamesForPrincipal(", principal, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getRoleNamesForPrincipal(", principals, ")", "SQL: ", sql };
@@ -102,7 +102,7 @@ public class JDBCAuthorizationReader {
                 try {
                     statement.close();
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
                 statement = null;
             }
@@ -140,7 +140,7 @@ public class JDBCAuthorizationReader {
             // Get new copy of policy ID
             String sql = JDBCNames.SELECT_POLICYID_FOR_NAME;
             sql = sql.toUpperCase();
-            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
               new Object[] { "getPolicy-1(", policyID, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT2 =  new Object[] { "\ngetPolicy-1(", policyID, ")", sql };
@@ -167,7 +167,7 @@ public class JDBCAuthorizationReader {
             // Get the policy's principals
             sql = JDBCNames.SELECT_PRINCIPALS_FOR_POLICY_NAME;
             sql = sql.toUpperCase();
-            LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
               new Object[] { "getPolicy-2(", policyID, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT2 =  new Object[] { "\ngetPolicy-2(", policyID, ")", sql };
@@ -197,7 +197,7 @@ public class JDBCAuthorizationReader {
                     statement.close();
                   //  statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -227,7 +227,7 @@ public class JDBCAuthorizationReader {
             AuthorizationPermissionFactory permFactory = null;
             String sql = JDBCNames.SELECT_PERMISSIONS_FOR_POLICY_NAME;
             sql = sql.toUpperCase();
-            LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
               new Object[] { "getPermissionsForPolicy(", policyID, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] out =  new Object[] { "\ngetPermissionsForPolicy(", policyID, ")", sql };
@@ -282,7 +282,7 @@ public class JDBCAuthorizationReader {
                     statement.close();
                   //  statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }

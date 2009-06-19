@@ -45,9 +45,9 @@ import com.metamatrix.common.extensionmodule.spi.jdbc.JDBCExtensionModuleWriter;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
 import com.metamatrix.server.ResourceFinder;
 
@@ -117,7 +117,7 @@ public class ExtensionModuleManager {
      */
     public static final int SOURCE_CONTENTS_LENGTH_LIMIT = 1000000000;  //1Gb
 
-    private static final String LOG_CONTEXT = LogCommonConstants.CTX_EXTENSION_SOURCE;
+    private static final String LOG_CONTEXT = LogConstants.CTX_EXTENSION_SOURCE;
 
   /**
     * The transaction mgr for ManagedConnections.

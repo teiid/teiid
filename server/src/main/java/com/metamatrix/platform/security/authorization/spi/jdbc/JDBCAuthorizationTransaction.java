@@ -50,6 +50,7 @@ import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.common.id.dbid.DBIDGeneratorException;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.AuthorizationActions;
 import com.metamatrix.platform.security.api.AuthorizationModel;
@@ -65,7 +66,6 @@ import com.metamatrix.platform.security.api.StandardAuthorizationActions;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceConnectionException;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceException;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceTransaction;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 
@@ -119,7 +119,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         String sql = JDBCNames.SELECT_ACTIONS_PERM_FACTORY_AND_POLICYNAME_FOR_RESOURCE_IN_REALM;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "addPermissionsWithResourcesToParent(", parent, resources, realm,")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Get a Map of Permission->PolicyID for the Policies this new parent of these resources
@@ -192,7 +192,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 try {
                     statement.close();
                 } catch(SQLException e) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,e);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,e);
 
                 }
                 statement = null;
@@ -238,7 +238,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         String sql = JDBCNames.DELETE_PERMISSIONS_WITH_RESOURCES_IN;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "removePermissionsWithResources(", resources, realm,")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Collect the IN clause
@@ -254,7 +254,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
             inBuf.setLength(inBuf.length() - 2);
         }
         inBuf.append("))"); //$NON-NLS-1$
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                              "Removing permissions with resources: " + inBuf.toString() + "<->" + realm.getRealmName()); //$NON-NLS-1$ //$NON-NLS-2$
 
 
@@ -272,7 +272,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 try {
                     statement.close();
                 } catch ( SQLException e ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,e);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,e);
                 }
                 statement = null;
             }
@@ -297,7 +297,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         String sql = JDBCNames.SELECT_DEPENDANT_RESOURCES_FOR_RESOURCE_IN_REALM;
         sql = sql.toUpperCase();
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                             new Object[]{"getDependantPermissions(", request, ")", "SQL: ", sql}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         PreparedStatement statement = null;
@@ -321,7 +321,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 try {
                     statement.close();
                 } catch ( SQLException e ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,e);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,e);
                 }
                 statement = null;
             }
@@ -383,7 +383,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
      */
     public Map getGroupEntitlements(AuthorizationRealm realm, String fullyQualifiedGroupName)
     throws AuthorizationSourceConnectionException, AuthorizationSourceException {
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getGroupEntitlements(", realm, ", ", fullyQualifiedGroupName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Get SQL string and create PreparedStatement
@@ -434,7 +434,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
      */
     public Map getElementEntitlements(AuthorizationRealm realm, String elementNamePattern)
     throws AuthorizationSourceConnectionException, AuthorizationSourceException {
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getElementEntitlements(", realm, ", ", elementNamePattern, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Get SQL string and create PreparedStatement
@@ -467,7 +467,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
      */
     private Map getEntitlementsForResourceInRealm(PreparedStatement statement, boolean isGroup)
     throws AuthorizationSourceConnectionException, AuthorizationSourceException {
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getEntitlementsForResourceInRealm(", statement, ", isGroup=", new Boolean(isGroup) }); //$NON-NLS-1$ //$NON-NLS-2$
 
         Map resourceToEntitlementMap = new HashMap();
@@ -522,7 +522,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 try {
                     statement.close();
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
                 statement = null;
             }
@@ -542,7 +542,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         String sql = JDBCNames.SELECT_ALL_REALM_NAMES;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getRealmNames()", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getRealmNames()", "SQL: ", sql };
@@ -566,7 +566,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     statement.close();
                     statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -585,7 +585,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         Map roles = new HashMap();
         String sql = JDBCNames.SELECT_ALL_ROLES_AND_DESCRITPIONS;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getRoleDescriptions()", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$
 // DEBUG:
 //Object[] OUT = new Object[] { "getRoleDescriptions()", "SQL: ", sql };
@@ -614,7 +614,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 try {
                     statement.close();
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
                 statement = null;
             }
@@ -640,7 +640,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         Set principals = new HashSet();
         String sql = JDBCNames.SELECT_PRINCIPALS_FOR_ROLE_NAME;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getPrincipalsForRole(", roleName, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getPrincipalsForRole(", roleName, ")", "SQL: ", sql };
@@ -668,7 +668,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 try {
                     statement.close();
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
                 statement = null;
             }
@@ -695,7 +695,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         Set roleNames = new HashSet();
         String sql = JDBCNames.SELECT_ROLE_NAMES_FOR_PRINCIPAL_NAME;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getRoleNamesForPrincipal(", principals, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getRoleNamesForPrincipal(", principals, ")", "SQL: ", sql };
@@ -732,7 +732,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 try {
                     statement.close();
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
                 statement = null;
             }
@@ -784,7 +784,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         // select policyName from authPolicies
         String sql = JDBCNames.SELECT_ALL_POLICIES;
         sql = sql.toUpperCase();
-        LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "findAllPolicyIDs()", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$
 // DEBUG:
 //Object[] OUT =  new Object[] { "findAllPolicyIDs()", "SQL: ", sql };
@@ -804,7 +804,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     statement.close();
                     statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -834,7 +834,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         String sql = JDBCNames.SELECT_POLICY_NAMES_WITH_PERMISSIONS_IN_REALM;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getPolicyIDsWithPermissionsInRealm(", realm, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getPolicyIDsWithPermissionsInRealm(", realm, ")", sql };
@@ -857,7 +857,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                      statement.close();
                      statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -888,7 +888,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         String sql = JDBCNames.SELECT_POLICY_NAMES_FOR_REALM;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getPolicyIDsInRealm(", realm, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getPolicyIDsWithPermissionsInRealm(", realm, ")", sql };
@@ -910,7 +910,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                      statement.close();
                      statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -942,7 +942,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         String sql = JDBCNames.SELECT_POLICY_NAMES_FOR_REALM_STARTS_WITH;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getPolicyIDsInPartialRealm(", realm, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getPolicyIDsInPartialRealm(", realm, ")", sql };
@@ -963,7 +963,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                      statement.close();
                      statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -993,7 +993,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         // select policyName from authPolicies for each principal
         String sql = JDBCNames.SELECT_POLICY_NAMES_FOR_PRINCIPALS_IN_REALM;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "findPolicyIDs(", principals, realmName, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "findPolicyIDs(", principals, realmName, ")", sql };
@@ -1024,7 +1024,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                      statement.close();
                      statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -1053,7 +1053,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         // select policyName from authPolicies for each principal
         String sql = JDBCNames.SELECT_POLICY_NAMES_FOR_PRINCIPALS;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "findPolicyIDs(", principals, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "findPolicyIDs(", principals ")", sql };
@@ -1081,7 +1081,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                      statement.close();
                      statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -1110,7 +1110,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         String sql = JDBCNames.SELECT_POLICY_NAMES_WITH_RESOURCE_IN_REALM;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getPolicIDsForResourceInRealm(", realm, resourceName, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getPolicIDsForResourceInRealm(", realm, resourceName, ")", sql };
@@ -1132,7 +1132,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                      statement.close();
                      statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -1208,7 +1208,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         PreparedStatement statement = null;
 
         String sql = JDBCNames.DELETE_PRINCIPAL_FROM_ALL_POLICIES;
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "removePrincipalFromAllPolicies(", principal, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getPolicIDsForResourceInRealm(", realm, resourceName, ")", sql };
@@ -1219,7 +1219,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
            statement = jdbcConnection.prepareStatement(sql);
            statement.setString(1, principalName);
            statement.execute();
-           LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION, "Deleted principal " + principalName + " from policies."); //$NON-NLS-1$ //$NON-NLS-2$
+           LogManager.logDetail( LogConstants.CTX_AUTHORIZATION, "Deleted principal " + principalName + " from policies."); //$NON-NLS-1$ //$NON-NLS-2$
            removed = true;
         } catch ( SQLException e ) {
              throw new AuthorizationSourceException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0109,
@@ -1231,7 +1231,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                      statement.close();
                      statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -1274,7 +1274,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 //====================
                 if(action instanceof CreateObject) {
                     AuthorizationPolicy policy = (AuthorizationPolicy) args[DEFALT_ARRAY_INDEX];
-                    LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION, "Creating Policy: " + targetPolicyID); //$NON-NLS-1$
+                    LogManager.logDetail( LogConstants.CTX_AUTHORIZATION, "Creating Policy: " + targetPolicyID); //$NON-NLS-1$
                     if(policy != null){
 //                        table = JDBCNames.AuthPolicyUpdateView.TABLE;
                         this.addPolicyIntoAuthPolicies(policy);
@@ -1296,7 +1296,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                         MetaMatrixPrincipalName newPrincipal = (MetaMatrixPrincipalName) args[DEFALT_ARRAY_INDEX];
                         if( newPrincipal != null){
 
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Adding Principal " + newPrincipal + " to Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
                             this.addPrincipal(policyUID, newPrincipal, grantor);
                         }
@@ -1306,7 +1306,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                         Set newPrincipals = (Set) args[DEFALT_ARRAY_INDEX];
                         if ( (newPrincipals != null) && (!newPrincipals.isEmpty())){
 
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Adding Principals " + newPrincipals + " to Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
                             this.addPrincipals(policyUID, newPrincipals, grantor);
                         }
@@ -1317,7 +1317,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                         AuthorizationPermission newPerm= (AuthorizationPermission) args[DEFALT_ARRAY_INDEX];
                         if( newPerm != null){
 
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Adding Permission " + newPerm + " to Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
                             this.addPermission(policyUID, newPerm);
                         }
@@ -1327,7 +1327,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                         AuthorizationPermissions newPerms = (AuthorizationPermissions) args[DEFALT_ARRAY_INDEX];
                         if( newPerms != null){
 
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Adding Permissions " + newPerms + " to Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
                             this.addPermissions(policyUID, newPerms );
                         }
@@ -1344,7 +1344,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                         //
                         // Exchange description
                         String newDescription = (String) args[DEFALT_ARRAY_INDEX + 1];
-                        LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                        LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Setting description: " + newDescription + " on Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
 
                         updateAuthPolicy(policyUID, newDescription);
@@ -1368,7 +1368,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                         //newPermissions.removeAll(oldPermissions);
                         if( (permsToRemove != null) && (!permsToRemove.isEmpty())) {
 
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Removing Permissions: " + permsToRemove + " from Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
 
                             executeBatchRemovePermissions(policyUID, permsToRemove.iterator());
@@ -1381,7 +1381,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 //                        table = JDBCNames.AuthPermissionsUpdateView.TABLE;
                         if( permsToRemove != null){
 
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Removing Permissions: " + permsToRemove + " from Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
                             executeBatchRemovePermissions(policyUID, permsToRemove.iterator());
 
@@ -1394,7 +1394,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 //                        table = JDBCNames.AuthPermissionsUpdateView.TABLE;
                         if( permToRemove != null){
 
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Removing Permission: " + permToRemove + " from Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
                             this.removePermission( policyUID, permToRemove);
                         }
@@ -1404,7 +1404,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 //                        table = JDBCNames.AuthPrincipalsUpdateView.TABLE;
                         Set principalsToRemove = (Set) args[DEFALT_ARRAY_INDEX];
                         if( (principalsToRemove != null) && (!principalsToRemove.isEmpty())) {
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Removing Principals: " + principalsToRemove + " from Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
                             this.removePrincipals(policyUID, principalsToRemove);
                         }
@@ -1414,7 +1414,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                         MetaMatrixPrincipalName principalToRemove = (MetaMatrixPrincipalName) args[DEFALT_ARRAY_INDEX];
 //                        table = JDBCNames.AuthPrincipalsUpdateView.TABLE;
                         if( (principalToRemove != null) ) {
-                            LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                            LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                                 "Removing Principal: " + principalToRemove + " to Policy: " + targetPolicyID); //$NON-NLS-1$ //$NON-NLS-2$
 //                            boolean removed =
                             this.removePrincipal(policyUID, principalToRemove);
@@ -1428,12 +1428,12 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                         policyUID = this.getPolicyUID(targetPolicyID);
                     }
 
-                    LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                    LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                         "Destroying Policy: " + targetPolicyID); //$NON-NLS-1$
                     // Remove all permissions from policy
 //                    table = JDBCNames.AuthPermissionsUpdateView.TABLE;
 //                    String criteria = JDBCNames.AuthPermissionsUpdateView.Columns.POLICY_UID.getNameInSource();
-                    LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                    LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                         "Removing all Permissions from Policy: " + targetPolicyID); //$NON-NLS-1$
                     this.removeAll(JDBCNames.DELETE_ALL_PERMISSIONS_FOR_POLICY, policyUID);
                     //table, criteria, policyUID);
@@ -1441,7 +1441,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     // Remove all principals from policy
 //                    table = JDBCNames.AuthPrincipalsUpdateView.TABLE;
 //                    criteria = JDBCNames.AuthPrincipalsUpdateView.Columns.POLICY_UID.getNameInSource();
-                    LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                    LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                         "Removing all Principals from Policy: " + targetPolicyID); //$NON-NLS-1$
                     this.removeAll(JDBCNames.DELETE_ALL_PRINCIPALS_FOR_POLICY,policyUID);
 //                    table, criteria, policyUID);
@@ -1449,7 +1449,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     // Remove the policy
 //                    table = JDBCNames.AuthPolicyUpdateView.TABLE;
 //                    criteria = JDBCNames.AuthPolicyUpdateView.Columns.POLICY_UID.getNameInSource();
-                    LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION,
+                    LogManager.logDetail( LogConstants.CTX_AUTHORIZATION,
                         "Removing the Policy: " + targetPolicyID); //$NON-NLS-1$
                     this.removeAll(JDBCNames.DELETE_ALL_POLICIES_FOR_POLICY, policyUID);
 //                    table, criteria, policyUID);
@@ -1538,7 +1538,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
 
             statement.execute();
-           LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION, "Inserted permissions for policy " + perm.getResourceName()); //$NON-NLS-1$ 
+           LogManager.logDetail( LogConstants.CTX_AUTHORIZATION, "Inserted permissions for policy " + perm.getResourceName()); //$NON-NLS-1$ 
          } catch ( DBIDGeneratorException e ) {
              String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0108, perm.getResourceName(), perm.getRealmName());
              throw new AuthorizationSourceException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0111, msg);
@@ -1553,7 +1553,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                      statement.close();
                      statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -1606,7 +1606,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
       try{
           statement = jdbcConnection.prepareStatement(sql);
-          LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+          LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
               new Object[] { "removePermission(", policyUID, perm.getRealm(),")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
          statement.setLong(1, policyUID.longValue());
@@ -1614,7 +1614,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
           statement.execute();
 
-          LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+          LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                                "Removed permission: " + policyUID + "<->" + perm.getRealm()); //$NON-NLS-1$ //$NON-NLS-2$
 
 //       /DEBUG:
@@ -1630,7 +1630,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                    statement.close();
                    statement = null;
               } catch ( SQLException se ) {
-                  I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                  I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
               }
           }
       }
@@ -1669,7 +1669,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     statement.close();
                     statement = null;
                 } catch (SQLException se) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085, se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085, se);
                 }
             }
         }
@@ -1699,7 +1699,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
            statement.execute();
 //           policyIDs = this.populatePolicyIDs(results);
-          LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION, "Inserted principal " + principal.getName()); //$NON-NLS-1$ 
+          LogManager.logDetail( LogConstants.CTX_AUTHORIZATION, "Inserted principal " + principal.getName()); //$NON-NLS-1$ 
 //        } catch ( DBIDGeneratorException e ) {
 //            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0108, perm.getResourceName(), perm.getRealmName());
 
@@ -1709,7 +1709,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     statement.close();
                     statement = null;
                } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                }
            }
        }
@@ -1746,7 +1746,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
      try{
 
          statement = jdbcConnection.prepareStatement(sql);
-         LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+         LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
              new Object[] { "removePrincipal(", policyUID, principal,")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
          statement.setLong(1, policyUID.longValue());
@@ -1754,7 +1754,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
           statement.execute();
 
-         LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+         LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                               "Removed principal: " + policyUID + "<->" + principal); //$NON-NLS-1$ //$NON-NLS-2$
 
     //   /DEBUG:
@@ -1767,7 +1767,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                    statement.close();
                    statement = null;
               } catch ( SQLException se ) {
-                   I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                   I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
               }
           }
       }
@@ -1782,7 +1782,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         Iterator iter = principals.iterator();
         boolean allRemoved = true;
 
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "removePrincipals(", policyUID, ")" }); //$NON-NLS-1$ //$NON-NLS-2$ 
 
         while( iter.hasNext() ){
@@ -1838,13 +1838,13 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         try {
             statement = jdbcConnection.prepareStatement(sql);
-            LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[] {
+            LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[] {
                 "removePermissionsForRealm(", realmUID, ")", "SQL: ", sql}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
             statement.setLong(1, realmUID.longValue());
             statement.execute();
 
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Removed AUTHPERMISSIONS for realm: " + realmUID); //$NON-NLS-1$ 
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Removed AUTHPERMISSIONS for realm: " + realmUID); //$NON-NLS-1$ 
         } finally {
             close(statement);
         }
@@ -1862,13 +1862,13 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         try {
             statement = jdbcConnection.prepareStatement(sql);
-            LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[] {
+            LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[] {
                 "removeRealm(", realmUID, ")", "SQL: ", sql}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
             statement.setLong(1, realmUID.longValue());
             statement.execute();
 
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Removed AUTHREALM: " + realmUID); //$NON-NLS-1$ 
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Removed AUTHREALM: " + realmUID); //$NON-NLS-1$ 
         } finally {
             close(statement);
         }
@@ -1890,13 +1890,13 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         try {
             statement = jdbcConnection.prepareStatement(sql);
-            LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[] {
+            LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[] {
                 "removePrincipalsForRealm(", realm, ")", "SQL: ", sql}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
             statement.setString(1, policyName);
             statement.execute();
 
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Removed AUTHPRINCIPALS for realm: " + realm); //$NON-NLS-1$ 
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Removed AUTHPRINCIPALS for realm: " + realm); //$NON-NLS-1$ 
         } finally {
             close(statement);
         }
@@ -1917,13 +1917,13 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
         try {
             statement = jdbcConnection.prepareStatement(sql);
-            LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[] {
+            LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[] {
                 "removePoliciesForRealm(", realm, ")", "SQL: ", sql}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
             statement.setString(1, policyName);
             statement.execute();
 
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Removed AUTHPOLICIES for realm: " + realm); //$NON-NLS-1$ 
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Removed AUTHPOLICIES for realm: " + realm); //$NON-NLS-1$ 
         } finally {
             close(statement);
         }
@@ -1962,7 +1962,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
 
           statement.execute();
-         LogManager.logDetail( LogSecurityConstants.CTX_AUTHORIZATION, "Inserted policy " + nameValue); //$NON-NLS-1$ 
+         LogManager.logDetail( LogConstants.CTX_AUTHORIZATION, "Inserted policy " + nameValue); //$NON-NLS-1$ 
      } catch ( DBIDGeneratorException e ) {
          String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0116, nameValue);
          throw new AuthorizationSourceConnectionException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0116, msg);
@@ -1973,7 +1973,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                    statement.close();
                    statement = null;
               } catch ( SQLException se ) {
-                   I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                   I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
               }
           }
         }
@@ -1993,7 +1993,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
         // select policyID from AuthPolicies where name like ?
         String sql = JDBCNames.SELECT_POLICYUID_FOR_POLICY_NAME;
         sql = sql.toUpperCase();
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
             new Object[] { "getPolicyUID(", policyID, ")", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 // DEBUG:
 //Object[] OUT =  new Object[] { "getPolicyUID(", policyID, ")", "SQL: ", sql };
@@ -2020,7 +2020,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     statement.close();
                     statement = null;
                 } catch ( SQLException se ) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -2051,7 +2051,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
 
       String sql = JDBCNames.SELECT_AUTH_REALM_BY_NAME;
       sql = sql.toUpperCase();
-      LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION,
+      LogManager.logTrace( LogConstants.CTX_AUTHORIZATION,
           new Object[] { "getRealmUID()", "SQL: ", sql }); //$NON-NLS-1$ //$NON-NLS-2$
     
       try {
@@ -2104,7 +2104,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
               try {
                   statement.close();
               } catch ( SQLException e ) {
-                  I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0121,
+                  I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0121,
                           e);
               }
 
@@ -2139,7 +2139,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
               try {
                   statement.close();
               } catch ( SQLException e ) {
-                  I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0121,
+                  I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0121,
                           e);
               }
           }
@@ -2198,7 +2198,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     statement.close();
                     statement = null;
                 } catch(SQLException se) {
-                    I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                    I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
                 }
             }
         }
@@ -2261,7 +2261,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     prepStatement.close();
                 }
             } catch (SQLException se) {
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
 
             }
 
@@ -2343,7 +2343,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     prepStatement.close();
                 }
             } catch (SQLException se) {
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
             }
 
         }
@@ -2398,7 +2398,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                     prepStatement.close();
                 }
             } catch (SQLException se) {
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
+                I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085,se);
             }
 
         }
@@ -2412,7 +2412,7 @@ public class JDBCAuthorizationTransaction extends BaseTransaction implements Aut
                 statement.close();
                 statement = null;
             } catch (SQLException se) {
-                I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085, se);
+                I18nLogManager.logError(LogConstants.CTX_AUTHORIZATION, ErrorMessageKeys.SEC_AUTHORIZATION_0085, se);
             }
         }
     }

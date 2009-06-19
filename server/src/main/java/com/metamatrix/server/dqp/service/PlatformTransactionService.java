@@ -64,12 +64,7 @@ public class PlatformTransactionService extends TransactionServerImpl {
                 throw new ApplicationInitializationException(e);
             }
             
-            String hostLogDir = host.getLogDirectory();
-            String txnLogDir = env.getProperty(TransactionService.TXN_MGR_LOG_DIR, TransactionService.DEFAULT_TXN_MGR_LOG_DIR);
-            String logDir = FileUtils.buildDirectoryPath(new String[] {hostLogDir, txnLogDir});
-            
             props.putAll(env);
-            props.setProperty(TransactionService.TXN_MGR_LOG_DIR, logDir);
             props.setProperty(TransactionService.HOSTNAME, host.getFullName());
             props.setProperty(TransactionService.VMNAME, CurrentConfiguration.getInstance().getProcessName());
             props.setProperty(TransactionService.TXN_STORE_DIR, host.getDataDirectory()); 

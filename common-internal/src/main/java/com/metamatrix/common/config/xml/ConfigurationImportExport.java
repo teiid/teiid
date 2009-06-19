@@ -63,7 +63,7 @@ import com.metamatrix.common.config.util.InvalidConfigurationElementException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.namedobject.BaseObject;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.xml.XMLReaderWriter;
 import com.metamatrix.common.xml.XMLReaderWriterImpl;
 import com.metamatrix.core.MetaMatrixCoreException;
@@ -392,7 +392,7 @@ class ConfigurationImportExport implements ConfigurationPropertyNames {
          getXMLReaderWriter().writeDocument(doc, stream);
          stream.close();
 
-         LogManager.logInfo(LogCommonConstants.CTX_CONFIG, CommonPlugin.Util.getString("MSG.003.001.0003", cmc.getConfigurationID().getFullName())); //$NON-NLS-1$
+         LogManager.logInfo(LogConstants.CTX_CONFIG, CommonPlugin.Util.getString("MSG.003.001.0003", cmc.getConfigurationID().getFullName())); //$NON-NLS-1$
      }
     
     

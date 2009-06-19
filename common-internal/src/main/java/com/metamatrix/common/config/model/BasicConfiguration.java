@@ -31,7 +31,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.api.AuthenticationProvider;
 import com.metamatrix.common.config.api.AuthenticationProviderID;
 import com.metamatrix.common.config.api.ComponentDefn;
@@ -48,7 +47,6 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-
 import com.metamatrix.common.config.api.ResourceDescriptor;
 import com.metamatrix.common.config.api.ServiceComponentDefn;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
@@ -56,12 +54,7 @@ import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidArgumentException;
-import com.metamatrix.common.log.LogConfiguration;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.config.BasicLogConfiguration;
-import com.metamatrix.common.log.config.LogConfigurationException;
 import com.metamatrix.common.namedobject.BaseID;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.Assertion;
 
@@ -1008,32 +1001,6 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
     }
      
     
-
-    /**
-     * <p>Returns a clone of this Configuration's LogConfiguration
-     * (the LogConfiguration can only be changed through a
-     * {@link com.metamatrix.common.config.api.service.ConfigurationObjectEditor}).
-     * </p>
-     *
-     * @return <i>clone of</i> the LogConfiguration for this Configuration.
-     * The returned, cloned object will either be a
-     * LogConfiguration specified by the properties stored
-     * persistantly, or a default LogConfiguration if no properties
-     * are present.  A clone is returned to ensure that this
-     * Configuration's LogConfiguration is only edited through
-     * a {@link com.metamatrix.common.config.api.service.ConfigurationObjectEditor}
-     */
-    public LogConfiguration getLogConfiguration() {
-        LogConfiguration result = null;
-        try{
-            result = BasicLogConfiguration.createLogConfiguration(this.getProperties());
-        } catch (LogConfigurationException e){
-        	LogManager.logWarning(LogCommonConstants.CTX_CONFIG, CommonPlugin.Util.getString("MSG.003.001.0001")); //$NON-NLS-1$
-            result = new BasicLogConfiguration();
-        }
-        return result;
-    }
-
     public boolean isDeployed() {
 	      return info.isDeployed();
     }
@@ -1044,56 +1011,6 @@ public class BasicConfiguration extends BasicComponentObject implements Configur
 	      return info.isReleased();
     }
     
-//    public void accept(ConfigurationVisitor visitor) {
-//        // visit this configuration object
-//        visitor.visitConfiguration(this);
-        
-//        // now we must visit all of the Component Defns that this configuration
-//        // references.
-//        Map defns = getComponentDefns();
-//        Iterator iterator = defns.entrySet().iterator();
-//        while (iterator.hasNext()) {
-//            Map.Entry entry = (Map.Entry)iterator.next();
-//            ComponentDefn defn = (ComponentDefn)entry.getValue();
-//            switch(getComponentType(defn)){
-//                case VM_COMPONENT_DEFN_TYPE:
-//                    ((VMComponentDefn)defn).accept(visitor);
-//                    break;
-//                case PRODUCT_SERVICE_CONFIG_TYPE:
-//                    ((ProductServiceConfig)defn).accept(visitor);
-//                    break;
-//                case SERVICE_COMPONENT_DEFN_TYPE:
-//                    ((ServiceComponentDefn)defn).accept(visitor);
-//                    break;
-//                case RESOURCE_DESCRIPTOR_TYPE:
-//                    ((ResourceDescriptor)defn).accept(visitor);
-//                    break;
-//                case CONNECTOR_TYPE:
-//                // do not visit a connector, the export process
-//                // will add the connector at the root level
-//                    break;
-//                    
-//                    
-//                case COMPONENT_DEFN_TYPE:
-//                    // do nothing here...we dont know what this component
-//                    // defn is
-//                    break;
-//            }
-//        }
-        
-//        // now we must visit all of the deployed components that this configuration
-//        // references
-//        iterator = deployedComponents.entrySet().iterator();
-//        while (iterator.hasNext()) {
-//            Map.Entry entry = (Map.Entry)iterator.next();
-//            Object component = entry.getValue();
-//            ((DeployedComponent)component).accept(visitor);
-//        }
-        
-//        info.accept(visitor);
-//    }
-    
-
        
     void setInfo(ConfigurationInfo configInfo) {
         info = (BasicConfigurationInfo) configInfo;

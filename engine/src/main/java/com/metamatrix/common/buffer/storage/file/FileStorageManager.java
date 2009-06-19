@@ -47,10 +47,10 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 /**
  * This class stores batches in files on disk in a specified directory.  Every
@@ -157,8 +157,8 @@ public class FileStorageManager implements StorageManager {
      */
     private File createFile(TupleSourceID sourceID, int fileNumber) throws MetaMatrixComponentException {
         File storageFile = new File(this.directory, FILE_PREFIX + sourceID.getIDValue() + "_" + fileNumber); //$NON-NLS-1$
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_STORAGE_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogCommonConstants.CTX_STORAGE_MGR, "Creating temporary storage area file " + storageFile.getAbsoluteFile()); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_STORAGE_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_STORAGE_MGR, "Creating temporary storage area file " + storageFile.getAbsoluteFile()); //$NON-NLS-1$
         }
         try {
             boolean created = storageFile.createNewFile();
@@ -202,7 +202,7 @@ public class FileStorageManager implements StorageManager {
             }
             byte[] bytes = convertToBytes(batch, types);
             if (bytes.length > maxFileSize) {
-                LogManager.logWarning(LogCommonConstants.CTX_STORAGE_MGR, "Detected an attempt to save a batch (" + sourceID + ", begin=" + batch.getBeginRow()+ ", size=" + bytes.length + ") larger than the buffer max file size setting of " + maxFileSize + " bytes. The buffer manager will ignore the max file size setting for this batch, and create a buffer file dedicated to this batch. It may be necessary to reduce the buffer batch setting or increase the buffer max file size setting.");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+                LogManager.logWarning(LogConstants.CTX_STORAGE_MGR, "Detected an attempt to save a batch (" + sourceID + ", begin=" + batch.getBeginRow()+ ", size=" + bytes.length + ") larger than the buffer max file size setting of " + maxFileSize + " bytes. The buffer manager will ignore the max file size setting for this batch, and create a buffer file dedicated to this batch. It may be necessary to reduce the buffer batch setting or increase the buffer max file size setting.");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
             }
             FileInfo fileInfo = tsInfo.getMostRecentlyCreatedFile();
             if (fileInfo == null ||
@@ -213,8 +213,8 @@ public class FileStorageManager implements StorageManager {
             }
             long pointer = 0;
 
-            if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_STORAGE_MGR, MessageLevel.DETAIL)) {
-                LogManager.logDetail(LogCommonConstants.CTX_STORAGE_MGR, "Adding batch to storage area file " + fileInfo.file.getAbsoluteFile() + " [ sourceID: " + sourceID + "batch: " + batch + " ]"); //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$  //$NON-NLS-4$
+            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_STORAGE_MGR, MessageLevel.DETAIL)) {
+                LogManager.logDetail(LogConstants.CTX_STORAGE_MGR, "Adding batch to storage area file " + fileInfo.file.getAbsoluteFile() + " [ sourceID: " + sourceID + "batch: " + batch + " ]"); //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$  //$NON-NLS-4$
             }
             try {
                 // Get access to the file and remember whether we had to open it or not
@@ -343,8 +343,8 @@ public class FileStorageManager implements StorageManager {
             return;
         }
 
-        if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_STORAGE_MGR, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogCommonConstants.CTX_STORAGE_MGR, "Removing storage for " + sourceID); //$NON-NLS-1$
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_STORAGE_MGR, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_STORAGE_MGR, "Removing storage for " + sourceID); //$NON-NLS-1$
         }
 
         synchronized(info) {
@@ -369,7 +369,7 @@ public class FileStorageManager implements StorageManager {
      */
     public synchronized void shutdown() {
 
-	    LogManager.logDetail(LogCommonConstants.CTX_STORAGE_MGR, "Removing all storage area files "); //$NON-NLS-1$
+	    LogManager.logDetail(LogConstants.CTX_STORAGE_MGR, "Removing all storage area files "); //$NON-NLS-1$
 
 		Iterator tsIter = tupleSourceMap.keySet().iterator();
 
@@ -378,7 +378,7 @@ public class FileStorageManager implements StorageManager {
             try {
                 removeBatches(key);
             } catch (MetaMatrixComponentException e) {
-                LogManager.logWarning(LogCommonConstants.CTX_STORAGE_MGR, e, "Shutdown failed while removing batches for tuple source: " + key); //$NON-NLS-1$
+                LogManager.logWarning(LogConstants.CTX_STORAGE_MGR, e, "Shutdown failed while removing batches for tuple source: " + key); //$NON-NLS-1$
             }
 		}
 

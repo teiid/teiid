@@ -259,18 +259,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 	}
     
     /** 
-     * @see com.metamatrix.dqp.service.ConfigurationService#getLogLevel()
-     * @since 4.3
-     */
-    public String getLogLevel(){
-        String level = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_LOGLEVEL);
-        if (level == null) {
-            level = "3"; //$NON-NLS-1$
-        }
-        return level;
-    }
-    
-    /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#getVDBs()
      * @since 4.3
      */

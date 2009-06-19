@@ -56,7 +56,6 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
@@ -667,7 +666,7 @@ public class RequestWorkItem extends AbstractWorkItem {
             transactionID = this.transactionContext.getTxnID();
         }
         CommandLogMessage message = new CommandLogMessage(System.currentTimeMillis(), requestID.toString(), transactionID == null ? null : transactionID, requestID.getConnectionID(), dqpWorkContext.getUserName(), dqpWorkContext.getVdbName(), dqpWorkContext.getVdbVersion(), -1, false, true);
-        LogManager.log(MessageLevel.INFO, LogContextsUtil.CommonConstants.CTX_COMMANDLOGGING, message);
+        LogManager.log(MessageLevel.INFO, LogConstants.CTX_COMMANDLOGGING, message);
     }
 
 	boolean isCanceled() {

@@ -20,23 +20,24 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.admin.objects;
+package com.metamatrix.common.log;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.metamatrix.admin.api.objects.LogConfiguration;
+import com.metamatrix.core.log.MessageLevel;
 
-
-/** 
- * @since 4.3
- */
-public class MMLogConfiguration extends MMAdminObject implements LogConfiguration {
+public class LogConfigurationImpl implements LogConfiguration, Serializable {
 
 	Map<String, Integer> contextMap = null;
 	
-	public MMLogConfiguration(Map<String, Integer> contextMap) {
+	public LogConfigurationImpl() {
+		this.contextMap = new HashMap<String, Integer>();
+	}
+	
+	public LogConfigurationImpl(Map<String, Integer> contextMap) {
 		this.contextMap = contextMap;
 	}
 	
@@ -47,7 +48,11 @@ public class MMLogConfiguration extends MMAdminObject implements LogConfiguratio
 
 	@Override
 	public int getLogLevel(String context) {
-		return this.contextMap.get(context);
+		Integer level = this.contextMap.get(context);
+		if (level != null) {
+			return level;
+		}
+		return MessageLevel.NONE;
 	}
 
 	@Override
@@ -55,9 +60,17 @@ public class MMLogConfiguration extends MMAdminObject implements LogConfiguratio
 		this.contextMap.put(context, logLevel);
 	}
 
-
 	@Override
-	public String toString() {
-		return null;
+	public boolean isEnabled(String context, int msgLevel) {
+		int level = getLogLevel(context);
+		return level >= msgLevel;
+	}
+	
+	public static LogConfiguration makeCopy(LogConfiguration config) {
+    	Map<String, Integer> contextMap = new HashMap<String, Integer>();
+    	for(String context:config.getContexts()) {
+    		contextMap.put(context, config.getLogLevel(context));
+    	}
+    	return new LogConfigurationImpl(contextMap);
 	}
 }

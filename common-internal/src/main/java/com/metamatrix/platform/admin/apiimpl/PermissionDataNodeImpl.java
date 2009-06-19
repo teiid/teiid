@@ -30,13 +30,13 @@ import java.util.List;
 import com.metamatrix.admin.AdminMessages;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.tree.basic.BasicTreeNode;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.id.ObjectID;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.platform.admin.api.PermissionDataNode;
 import com.metamatrix.platform.admin.api.PermissionDataNodeDefinition;
 import com.metamatrix.platform.admin.api.PermissionDataNodeTreeView;
 import com.metamatrix.platform.admin.api.PermissionNode;
-import com.metamatrix.platform.admin.api.PlatformAdminLogConstants;
 import com.metamatrix.platform.admin.api.exception.PermissionNodeNotActionableException;
 import com.metamatrix.platform.security.api.AuthorizationActions;
 import com.metamatrix.platform.security.api.SecurityPlugin;
@@ -174,7 +174,7 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
      * accept <i>any</code> actions.
      */
     public void setActions(AuthorizationActions actions) throws PermissionNodeNotActionableException {
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
             "setActions(AuthoriztionActions): setting <" + actions + "> on <" + getType().getName() + //$NON-NLS-1$ //$NON-NLS-2$
             ">: Allowed actions: <" + this.allowedActions + ">"); //$NON-NLS-1$ //$NON-NLS-2$
         if ( ! this.allowedActions.implies(actions) ) {
@@ -187,7 +187,7 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
         // Set appropriate permission state, reveal state to ancestery and set modified.
 // FIXME: Not propagating actions on server for SP1
 //        setPermissionStateAndPropagate(actions, true);
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
             "setActions(AuthorizationActions): set <" + this.actions + "> on <" + getType().getName() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
@@ -201,7 +201,7 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
     public void setActions(int actions) throws PermissionNodeNotActionableException {
         // Validity checking performed here
         AuthorizationActions newActions = StandardAuthorizationActions.getAuthorizationActions(actions);
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
             "setActions(int): setting <" + newActions + "> on <" + getType().getName() + //$NON-NLS-1$ //$NON-NLS-2$
             ">: Allowed actions: <" + this.allowedActions + ">"); //$NON-NLS-1$ //$NON-NLS-2$
         if ( ! this.allowedActions.implies(newActions) ) {
@@ -213,7 +213,7 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
         // Set appropriate permission state, reveal state to ancestery and set modified.
 // FIXME: Not propagating actions on server for SP1
 //        setPermissionStateAndPropagate(actions, true);
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
             "setActions(int): set <" + this.actions + "> on <" + getType().getName() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
@@ -223,13 +223,13 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
      * @param actions The the actions to set on this data node.
      */
     private void privlegedSetActions(AuthorizationActions actions) {
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
             "privlegedSetActions(AuthoriztionActions): setting <" + actions + "> on <" + getType().getName() + //$NON-NLS-1$ //$NON-NLS-2$
             ">: Allowed actions: <" + this.allowedActions + ">"); //$NON-NLS-1$ //$NON-NLS-2$
         // Set the actions on the node to the given actions masked by the allowed actions.
          this.actions =
             StandardAuthorizationActions.getAuthorizationActions(actions.getValue() & this.allowedActions.getValue());
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
             "privlegedSetActions(AuthoriztionActions): Actions now: <" + this.actions + "> on <" + getType().getName() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
@@ -241,7 +241,7 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
      * @param actions The the actions to set on this data node.
      */
     void setInitialActions(AuthorizationActions initialActions) {
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
             "setInitialActions(AuthoriztionActions): setting <" + initialActions + "> on <" + getType().getName() + //$NON-NLS-1$ //$NON-NLS-2$
             ">: Allowed actions: <" + this.allowedActions + ">"); //$NON-NLS-1$ //$NON-NLS-2$
         this.actionsCreatedWith = initialActions.getValue();
@@ -558,11 +558,11 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
         this.setModified(modified, false);
 // DEBUG
 //System.out.println(" *** setPermissionStateAndPropagate: Propagating effected node: <" + this.toString() + "> Modified: <" + this.isModified() + ">");
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,"setPermissionStateAndPropagate: Propagating effected node: <" + this.toString() + "> Modified: <" + this.isModified() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,"setPermissionStateAndPropagate: Propagating effected node: <" + this.toString() + "> Modified: <" + this.isModified() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         propagateActionsToChildren(actions, modified);
 // DEBUG
 //System.out.println(" *** setPermissionStateAndPropagate: Done propagating node: <" + this.toString() + ">\n");
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,"setPermissionStateAndPropagate: Done propagating node: <" + this.toString() + ">\n"); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,"setPermissionStateAndPropagate: Done propagating node: <" + this.toString() + ">\n"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
@@ -586,7 +586,7 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
             node = (PermissionDataNodeImpl) nodeItr.next();
 // DEBUG
 //System.out.println("\n *** propActsToChildren: Setting <" + actions + "> on node: <" + node + ">");
-            LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,"propActsToChildren: Setting <" + actions + "> on node: <" + node + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,"propActsToChildren: Setting <" + actions + "> on node: <" + node + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
             AuthorizationActions theActions =
                 StandardAuthorizationActions.getAuthorizationActions(
@@ -595,11 +595,11 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
             node.setModified(modified, false);
 // DEBUG
 //System.out.println(" *** propActsToChildren: Set <" + node.getActions() + "> on node: <" + node + "> Modified: <" + node.isModified() + ">");
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,"propActsToChildren: Set <" + node.getActions() + "> on node: <" + node + "> Modified: <" + node.isModified() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,"propActsToChildren: Set <" + node.getActions() + "> on node: <" + node + "> Modified: <" + node.isModified() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         }
 // DEBUG
 //System.out.println(" *** propActsToChildren: Now setting descendant enabled with node: <" + node + ">");
-        LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,"propActsToChildren: Now setting descendant enabled with node: <" + node + ">"); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,"propActsToChildren: Now setting descendant enabled with node: <" + node + ">"); //$NON-NLS-1$ //$NON-NLS-2$
         // Now that all children's actions are set, propagate descendant actions to parents
         // starting with last child
         propagateDescendantEnabled(node);
@@ -622,7 +622,7 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
             parent.descendantActions = otherChildrensCompleteActionValues | child.getActions().getValue();
 // DEBUG
 //System.out.println("\n *** propagateDescendantEnabled: Set descendant actions for node: <" + parent + ">: <" + parent.getDescendantActions() + ">");
-            LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
                 "propagateDescendantEnabled: Descendant actions for node: <" + parent + ">: <" + parent.getDescendantActions() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
             // Set parent nodes actions to common actions of children. If children have no common
@@ -637,7 +637,7 @@ public class PermissionDataNodeImpl extends BasicTreeNode implements PermissionD
                 parent.privlegedSetActions(thisNodesActions);
 // DEBUG
 //System.out.println(" *** propagateDescendantEnabled: Set actions for node: <" + parent + ">: <" + parent.getActions() + ">");
-                LogManager.logDetail(PlatformAdminLogConstants.CTX_AUTHORIZATION_ADMIN_API,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION_ADMIN_API,
                     "Set actions for node: <" + parent + ">: <" + parent.getActions() + ">"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
 

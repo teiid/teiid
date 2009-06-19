@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
+import com.metamatrix.common.util.LogConstants;
 
 /**
  * This class represents a heterogeneous set of AuthorizationPermission instances.  Like the AuthorizationPermission
@@ -80,7 +80,7 @@ public final class AuthorizationPermissionsImpl implements AuthorizationPermissi
                         final Object[] params = { aPerm };
                         final String msg = SecurityPlugin.Util.getString(SecurityMessagesKeys.SEC_API_0005, params);
                         //I18nLogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION,SecurityMessagesKeys.SEC_API_0005,e,aPerm);
-                        LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg);
+                        LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, msg);
                     }
                 }
             }

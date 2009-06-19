@@ -23,7 +23,7 @@
 package com.metamatrix.platform.security.api;
 
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
+import com.metamatrix.common.util.LogConstants;
 
 /**
  * A BasicAuthorizationPermission defines access permissions for Metadata resources (i.e., MetadataID instances).
@@ -131,7 +131,7 @@ public class BasicAuthorizationPermission extends AuthorizationPermission implem
 //                    this.getRealm() + "] != that [" + request.getRealm() + "]");
             return false;
         }
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION, "implies(): Realms are equal"); //$NON-NLS-1$
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION, "implies(): Realms are equal"); //$NON-NLS-1$
 
         // -----------------------
         // Compare the actions ...
@@ -141,7 +141,7 @@ public class BasicAuthorizationPermission extends AuthorizationPermission implem
 //                    this.getActions() + "] != that [" + request.getActions() + "]");
             return false;
         }
-        LogManager.logTrace( LogSecurityConstants.CTX_AUTHORIZATION, "implies(): Actions are implied"); //$NON-NLS-1$
+        LogManager.logTrace( LogConstants.CTX_AUTHORIZATION, "implies(): Actions are implied"); //$NON-NLS-1$
 
 	    BasicAuthorizationPermission that = (BasicAuthorizationPermission) request;
         // ---------------------------

@@ -20,21 +20,17 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.admin.api;
+package com.metamatrix.platform.security.util;
 
-public interface PlatformAdminLogConstants {
 
-//**********************************************************************
-//PLEASE NOTE:!!!!!!!!!!!!!!!!!
-//All constants defined here should also be defined in
-//com.metamatrix.common.util.LogContextsUtil
-//**********************************************************************
+public interface LogSecurityConstants {
 
-	// Platform Admin logging contexts
-    public static final String CTX_ADMIN_API = "ADMIN_API"; //$NON-NLS-1$
-    public static final String CTX_ADMIN_API_CONNECTION = "ADMIN_API_CONNECTION"; //$NON-NLS-1$
-    public static final String CTX_AUTHORIZATION_ADMIN_API = "AUTHORIZATION_ADMIN_API"; //$NON-NLS-1$
-    public static final String CTX_CONFIGURATION_ADMIN_API = "CONFIGURATION_ADMIN_API"; //$NON-NLS-1$
-    public static final String CTX_RUNTIME_STATE_ADMIN_API = "RUNTIME_STATE_ADMIN_API"; //$NON-NLS-1$
-    public static final String CTX_EXTENSION_SOURCE_ADMIN_API = "EXTENSION_SOURCE_ADMIN_API"; //$NON-NLS-1$
+    // **********************************************************************
+    // PLEASE NOTE:!!!!!!!!!!!!!!!!!
+    // All constants defined here should also be defined in
+    // com.metamatrix.common.util.LogContextsUtil
+    // **********************************************************************
+
+    public static final String CTX_AUDIT = "AUDIT"; //$NON-NLS-1$
+
 }

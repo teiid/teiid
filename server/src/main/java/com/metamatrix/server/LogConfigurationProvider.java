@@ -21,10 +21,11 @@
  */
 package com.metamatrix.server;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EventObject;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.inject.Inject;
@@ -34,9 +35,8 @@ import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogConfiguration;
+import com.metamatrix.common.log.LogConfigurationImpl;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.config.BasicLogConfiguration;
-import com.metamatrix.common.log.config.LogConfigurationException;
 import com.metamatrix.common.messaging.MessageBus;
 import com.metamatrix.common.messaging.MessagingException;
 import com.metamatrix.common.util.LogContextsUtil;
@@ -58,8 +58,9 @@ class LogConfigurationProvider implements Provider<LogConfiguration> {
 	@Override
 	public LogConfiguration get() {
 		
-        try {
-            final LogConfiguration orig = (LogConfiguration)CurrentConfiguration.getInstance().getConfiguration().getLogConfiguration().clone();
+            //final LogConfiguration orig = CurrentConfiguration.getInstance().getConfiguration().getLogConfiguration();
+        	Map<String, Integer> contextMap = new HashMap<String, Integer>();
+        	final LogConfiguration orig = new LogConfigurationImpl(contextMap);
                         
             try {
 				this.messsgeBus.addListener(ConfigurationChangeEvent.class, new EventObjectListener() {
@@ -70,10 +71,13 @@ class LogConfigurationProvider implements Provider<LogConfiguration> {
 								int level = Integer.parseInt(currentConfig.getProperty(LOG_LEVEL_PROPERTY_NAME));
 								String[] contexts = getContext();
 								
-								BasicLogConfiguration newConfig = new BasicLogConfiguration(Arrays.asList(contexts), level);
-								if (!newConfig.equals(LogManager.getLogConfigurationCopy())) {
-									LogManager.setLogConfiguration(newConfig);
-								}
+						    	Map<String, Integer> contextMap = new HashMap<String, Integer>();
+						    	for(String context:contexts) {
+						    		contextMap.put(context, level);
+						    	}
+								
+								LogConfigurationImpl newConfig = new LogConfigurationImpl(contextMap);
+								LogManager.setLogConfiguration(newConfig);
 							} catch( ConfigurationException ce ) {
 								LogManager.logError(LogContextsUtil.CommonConstants.CTX_MESSAGE_BUS, ce, ce.getMessage());
 							}
@@ -103,14 +107,5 @@ class LogConfigurationProvider implements Provider<LogConfiguration> {
 				throw new MetaMatrixRuntimeException(e);
 			}
 			return orig;
-
-        } catch ( ConfigurationException e ) {
-            try {
-            	return BasicLogConfiguration.createLogConfiguration(System.getProperties());
-            } catch ( LogConfigurationException e1) {
-                throw new MetaMatrixRuntimeException(e1);
-            }
-        }		
-		
 	}
 }

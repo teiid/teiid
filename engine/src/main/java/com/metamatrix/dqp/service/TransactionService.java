@@ -44,10 +44,6 @@ import com.metamatrix.common.xa.XATransactionException;
  */
 public interface TransactionService extends ApplicationService {
     public static final String MAX_TIMEOUT = "metamatrix.xatxnmgr.max_timeout"; //$NON-NLS-1$
-    public static final String MAX_FILESIZE_MB= "metamatrix.xatxnmgr.max_log_filesize_in_mb"; //$NON-NLS-1$
-    public static final String MAX_ROLLINGFILES= "metamatrix.xatxnmgr.max_rolled_log_files"; //$NON-NLS-1$
-    public static final String TXN_MGR_LOG_DIR = "metamatrix.xatxnmgr.log_base_dir"; //$NON-NLS-1$
-    public static final String SEPARATE_TXN_LOG = "metamatrix.xatxnmgr.separate_log"; //$NON-NLS-1$
     public static final String TXN_STORE_DIR = "metamatrix.xatxnmgr.txnstore_dir"; //$NON-NLS-1$
     public static final String TXN_STATUS_PORT = "metamatrix.xatxnmgr.txnstatus_port"; //$NON-NLS-1$
     public static final String TXN_ENABLE_RECOVERY = "metamatrix.xatxnmgr.enable_recovery"; //$NON-NLS-1$
@@ -58,9 +54,6 @@ public interface TransactionService extends ApplicationService {
     
     public static final String DEFAULT_TXN_MGR_LOG_DIR = "txnlog"; //$NON-NLS-1$
     public static final String DEFAULT_TXN_TIMEOUT = "120"; //$NON-NLS-1$ //2 mins
-    public static final String DEFAULT_LOGFILE_SIZE= "10"; //$NON-NLS-1$ 
-    public static final String DEFAULT_MAX_ROLLOVER_FILES = "10"; //$NON-NLS-1$ 
-    public static final String DEFAULT_SEPARATE_TXN_LOG = "false"; //$NON-NLS-1$ 
     public static final String DEFAULT_TXN_STATUS_PORT = "0"; //$NON-NLS-1$
 
     // processor level methods

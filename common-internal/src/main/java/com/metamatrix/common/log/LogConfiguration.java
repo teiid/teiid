@@ -25,62 +25,38 @@ package com.metamatrix.common.log;
 import java.util.Set;
 import java.util.Collection;
 
-public interface LogConfiguration extends Comparable, Cloneable {
+public interface LogConfiguration {
 
     /**
-     * Obtain the set of contexts for messages that are to be discarded.
-     * If this method returns an empty set, then messages in all contexts
-     * are being recorded; if not empty, then messages with a context in the
-     * returned set are discarded and messages for all other contexts recorded.
-     * @return the set of contexts for messages that are to be discarded
+     * Get the current configured Log Level for supplied context
+     * @param context
+     * @return int value 
+     * @see com.metamatrix.core.log.MessageLevel
      */
-    Set getDiscardedContexts();
-
+    int getLogLevel(String context);
+    
     /**
-     * Specify that messages with the input context should be discarded
-     * and not recorded.
-     * @param context the context to add to the set; this method does nothing
-     * if the reference is null
+     * Obtain the set of message contexts that are currently used.
+     * @return the unmodifiable set of context Strings; never null
      */
-    void discardContext( String context );
-
-    /**
-	 * Get the level of detail of messages that are currently being recorded.
-	 * @return the level of detail
-	 */
-    int getMessageLevel();
-
-    /**
-     * Direct the log configuration to record all known logging contexts.
+    Set<String> getContexts(); 
+    
+    /** 
+     * Set the Log Level
+     * 
+     *  Note:  Must call setLogConfiguration(LogConfiguration) for log level to take
+     *  affect on the server. 
+     * 
+     * @param context log context name
+     * @param logLevel The logLevel to set.
      */
-    void recordAllContexts();
-
+    public void setLogLevel(String context, int logLevel);    
+    
     /**
-     * Clone the object.
+     * Is the logging for the given context at the specified message level enabled. 
+     * @param context
+     * @param msgLevel
      * @return
      */
-    Object clone();
-    
-    /**
-     * Direct the log configuration to discard the given contexts and
-     * not record them.
-     * @param contexts the collection of contexts that should be discarded.
-     */
-    void discardContexts(Collection contexts);
-
-    /**
-     * Direct the log configuration to record only these contexts.
-     * @param contexts the contexts that should be recorded.
-     */
-    void recordContexts(Collection contexts);
-
-    /**
-     * Direct the log configuration to record messages of the given level
-     * or above.
-     * @param level the lowest level to record.
-     */
-    void setMessageLevel(int level);
-    
-    
-    boolean isMessageToBeRecorded(String context, int msgLevel);
+    boolean isEnabled(String context, int msgLevel);
 }

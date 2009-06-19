@@ -65,14 +65,9 @@ import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidComponentException;
-import com.metamatrix.common.log.LogConfiguration;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.log.config.BasicLogConfiguration;
-import com.metamatrix.common.log.config.LogConfigurationException;
 import com.metamatrix.common.namedobject.BaseObject;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.util.ErrorMessageKeys;
-import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.core.id.ObjectIDFactory;
 import com.metamatrix.core.id.UUIDFactory;
 
@@ -1743,58 +1738,6 @@ public class BasicConfigurationObjectEditor extends AbstractObjectEditor impleme
         return deployedcomponent;
 
     }
-//
-//  public  DeployedComponent setEnabled(Configuration configuration, ServiceComponentDefn serviceComponentDefn, VMComponentDefn vm, boolean enabled)
-//    throws ConfigurationException {
-//        if ( configuration == null ) {
-//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, Configuration.class.getName()));
-//        }
-//        if ( serviceComponentDefn == null ) {
-//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, ServiceComponentDefn.class.getName()));
-//        }
-//        if ( vm == null ) {
-//            throw new IllegalArgumentException(CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0089, VMComponentDefn.class.getName()));
-//        }
-//
-//         ServiceComponentDefnID svcID = (ServiceComponentDefnID) serviceComponentDefn.getID();
-//
-//        DeployedComponent dc = configuration.getDeployedServiceForVM(svcID, vm);
-//        return this.setEnabled(dc, enabled);
-//
-//
-//
-//    }
-
-
-
-
-    /**
-     * Sets the LogConfiguration in effect for the Configuration
-     */
-    public Configuration setLogConfiguration( Configuration t, LogConfiguration logConfiguration ){
-        BasicConfiguration target = (BasicConfiguration) verifyTargetClass(t,BasicConfiguration.class);
-        try{
-            LogConfiguration oldLogConfig = t.getLogConfiguration();
-            Collection discardedContexts = oldLogConfig.getDiscardedContexts();
-
-            Properties props = BasicLogConfiguration.getLogConfigurationProperties(logConfiguration);
-
-            String contextValue = props.getProperty(BasicLogConfiguration.LOG_CONTEXT_PROPERTY_NAME);
-            if (contextValue == null && !discardedContexts.isEmpty()){
-                this.removeProperty(t, BasicLogConfiguration.LOG_CONTEXT_PROPERTY_NAME);
-            } else if (contextValue != null && discardedContexts.isEmpty()){
-                this.addProperty(t, BasicLogConfiguration.LOG_CONTEXT_PROPERTY_NAME, contextValue);
-            } else if (contextValue != null && !discardedContexts.isEmpty()){
-                this.setProperty(t, BasicLogConfiguration.LOG_CONTEXT_PROPERTY_NAME, contextValue);
-            }
-            this.setProperty(t, BasicLogConfiguration.LOG_LEVEL_PROPERTY_NAME, props.getProperty(BasicLogConfiguration.LOG_LEVEL_PROPERTY_NAME));
-
-        } catch (LogConfigurationException e){
-            LogManager.logError(LogCommonConstants.CTX_CONFIG, e, CommonPlugin.Util.getString(ErrorMessageKeys.CONFIG_ERR_0001));
-        }
-        return target;
-    }
-
 
     public ComponentObject addProperty( ComponentObject t, String name, String value ) {
         if ( t == null ) {

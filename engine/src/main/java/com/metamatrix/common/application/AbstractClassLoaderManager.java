@@ -34,7 +34,7 @@ import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.common.classloader.URLFilteringClassLoader;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
-import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.dqp.util.LogConstants;
 
 public abstract class AbstractClassLoaderManager implements ClassLoaderManager {
 	
@@ -104,7 +104,7 @@ public abstract class AbstractClassLoaderManager implements ClassLoaderManager {
 					urls.add(url);
 				}
 			} catch (MalformedURLException e) {
-				LogManager.logError(LogCommonConstants.CTX_EXTENSION_SOURCE, "Invalid extension classpath entry " + urlString); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_EXTENSION_SOURCE, "Invalid extension classpath entry " + urlString); //$NON-NLS-1$
 			}
         }
                 

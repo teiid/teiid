@@ -21,12 +21,16 @@
  */
 package com.metamatrix.jdbc;
 
+import java.util.Set;
+
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.log.LogConfiguration;
-import com.metamatrix.common.log.config.BasicLogConfiguration;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
@@ -40,16 +44,40 @@ class LogConfigurationProvider implements Provider<LogConfiguration> {
 		
 	@Override
 	public LogConfiguration get() {
-        String logLevel = configSource.getProperties().getProperty(DQPEmbeddedProperties.DQP_LOGLEVEL);
-        int level = MessageLevel.WARNING;
-        if(logLevel != null && logLevel.trim().length() > 0) {
-            try {
-                level = Integer.parseInt(logLevel);                        
-            } catch(NumberFormatException e) {
-                throw new MetaMatrixRuntimeException(DQPEmbeddedPlugin.Util.getString("DQPComponent.Unable_to_parse_level") + logLevel);      //$NON-NLS-1$
-            }            
-        }
-        return new BasicLogConfiguration(level);
+        return new Log4JLogConfiguration();
 	}
 
+	
+	static class Log4JLogConfiguration implements LogConfiguration {
+
+		@Override
+		public Set<String> getContexts() {
+			return Log4JUtil.getContexts();
+		}
+
+		@Override
+		public int getLogLevel(String context) {
+			Logger log = Log4JUtil.getLogger(context);
+			return Log4JUtil.convert2MessageLevel(log.getLevel());			
+		}
+
+		@Override
+		public boolean isEnabled(String context, int level) {
+	    	if ( context == null ) {
+	            return false;
+	        }
+	    	Level logLevel = Log4JUtil.convert2Log4JLevel(level);
+	        if ( logLevel == Level.OFF) {
+	            return false;
+	        }
+	        Logger log = Log4JUtil.getLogger(context);
+	        return log.isEnabledFor(logLevel);
+		}
+		
+		@Override
+		public void setLogLevel(String context, int level) {
+			Logger log = Log4JUtil.getLogger(context);
+			log.setLevel(Log4JUtil.convert2Log4JLevel(level));			
+		}
+	}
 }

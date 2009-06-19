@@ -99,12 +99,6 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
     public URL getUDFFile();
     
     /**
-     * Log Level 
-     * @return configured log level or default one supplied.
-     */
-    public String getLogLevel();
-
-    /**
      * Save the given vdb file into underlying persistent mechanism used by
      * this configuration service 
      * @param vdb - VDB to be saved

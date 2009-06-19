@@ -22,9 +22,8 @@
 
 package com.metamatrix.query.util;
 
-import com.metamatrix.common.util.LogCommonConstants;
 
-public interface LogConstants extends LogCommonConstants {
+public interface LogConstants {
 
 //**********************************************************************
 //PLEASE NOTE:!!!!!!!!!!!!!!!!!

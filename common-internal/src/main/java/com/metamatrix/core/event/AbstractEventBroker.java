@@ -27,7 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogContextsUtil;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.util.Assertion;
 
@@ -173,7 +173,7 @@ abstract public class AbstractEventBroker extends AbstractEventSource implements
                         		listener.processEvent(obj);
                         	}
                         } catch ( Throwable t ) {
-                            LogManager.logError(LogContextsUtil.CommonConstants.CTX_COMMUNICATION, t,CorePlugin.Util.getString("AbstractEventBroker.Error_during_event_processing",this.getName())); //$NON-NLS-1$
+                            LogManager.logError(LogConstants.CTX_COMMUNICATION, t,CorePlugin.Util.getString("AbstractEventBroker.Error_during_event_processing",this.getName())); //$NON-NLS-1$
                         }
                     }
 // RMH:           }
@@ -192,7 +192,7 @@ abstract public class AbstractEventBroker extends AbstractEventSource implements
                 
                 eventPerfMsg.append('\n');
                 
-                LogManager.logInfo(LogContextsUtil.CommonConstants.CTX_COMMUNICATION, eventPerfMsg.toString());
+                LogManager.logInfo(LogConstants.CTX_COMMUNICATION, eventPerfMsg.toString());
                 eventPerfMsg.setLength(0);
             }
         }

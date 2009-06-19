@@ -23,14 +23,14 @@
 package com.metamatrix.common.log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.log.config.BasicLogConfiguration;
 import com.metamatrix.core.log.LogListener;
-import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.MessageLevel;
 
 /**
@@ -38,6 +38,8 @@ import com.metamatrix.core.log.MessageLevel;
  */
 public class TestLogManager extends TestCase {
 
+	String context = "SomeContext"; //$NON-NLS-1$
+	
     /**
      * Constructor for TestLogManager.
      * @param name
@@ -48,7 +50,9 @@ public class TestLogManager extends TestCase {
     
 	@Override
 	protected void setUp() throws Exception {
-    	LogManager.configuration = new BasicLogConfiguration();
+    	Map<String, Integer> contextMap = new HashMap<String, Integer>();
+    	contextMap.put(context, MessageLevel.DETAIL);
+    	LogManager.configuration = new LogConfigurationImpl(contextMap);
 	}    
     
     // =========================================================================
@@ -58,13 +62,11 @@ public class TestLogManager extends TestCase {
     /*
      * Test for boolean isMessageToBeRecorded(String, int)
      */
-    public void testIsMessageToBeRecordedStringI() {
-    	String context = "SomeContext"; //$NON-NLS-1$
-    	
+    public void testIsMessageToBeRecordedString() {
     	assertTrue(LogManager.isMessageToBeRecorded(context, MessageLevel.CRITICAL) ); 
     	
     	LogConfiguration cfg = LogManager.getLogConfigurationCopy();
-        cfg.discardContext(context);
+        cfg.setLogLevel(context, MessageLevel.NONE);
         LogManager.setLogConfiguration(cfg);
         assertFalse(LogManager.isMessageToBeRecorded(context, MessageLevel.CRITICAL) );
     }
@@ -74,8 +76,9 @@ public class TestLogManager extends TestCase {
      */
     public void testLogMessage() throws Exception {
     	
+    	
         LogConfiguration cfg = LogManager.getLogConfigurationCopy();
-        cfg.setMessageLevel( MessageLevel.INFO );
+        cfg.setLogLevel(context, MessageLevel.INFO );
         LogManager.setLogConfiguration(cfg);
          
         ListLogger listener = new ListLogger(6);
@@ -91,7 +94,7 @@ public class TestLogManager extends TestCase {
 
         for (Iterator iter = sentMsgList.iterator(); iter.hasNext();) {
             String msg = (String) iter.next();
-            LogManager.logInfo("SomeContext", msg); //$NON-NLS-1$
+            LogManager.logInfo(context, msg); 
         }
         
         List recevedMsgList = listener.getLoggedMessages();

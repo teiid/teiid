@@ -25,8 +25,10 @@ package com.metamatrix.dqp.embedded.admin;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -56,7 +58,7 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ConnectorBinding;
-import com.metamatrix.common.log.config.BasicLogConfiguration;
+import com.metamatrix.common.log.LogConfigurationImpl;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
@@ -245,7 +247,7 @@ abstract class BaseAdmin {
     Object convertToNativeObjects(Object src) {
         if (src instanceof com.metamatrix.admin.api.objects.LogConfiguration) {
             com.metamatrix.admin.api.objects.LogConfiguration config = (com.metamatrix.admin.api.objects.LogConfiguration)src;
-            return covertLogConfiguration(config);
+            return covertToNativeLogConfiguration(config);
         }
         throw new UnsupportedOperationException(DQPEmbeddedPlugin.Util.getString("UnSupported_object_conversion"));  //$NON-NLS-1$            
     }
@@ -270,17 +272,22 @@ abstract class BaseAdmin {
      * Convert LogConfiguration to Admin Object 
      */
     private com.metamatrix.admin.api.objects.LogConfiguration covertLogConfiguration(final com.metamatrix.common.log.LogConfiguration src) {
-        MMLogConfiguration log = new MMLogConfiguration();
-        log.setDiscardedContexts(src.getDiscardedContexts());
-        log.setLogLevel(src.getMessageLevel());
-        return log;
+    	Map<String, Integer> contextMap = new HashMap<String, Integer>();
+    	for(String context:src.getContexts()) {
+    		contextMap.put(context, src.getLogLevel(context));
+    	}
+        return new MMLogConfiguration(contextMap);
     }
 
     /**
      * Convert LogConfiguration to Admin Object 
      */
-    private com.metamatrix.common.log.LogConfiguration covertLogConfiguration(final com.metamatrix.admin.api.objects.LogConfiguration src) {
-        return new BasicLogConfiguration(src.getDiscardedContexts(), src.getLogLevel());
+    private com.metamatrix.common.log.LogConfiguration covertToNativeLogConfiguration(final com.metamatrix.admin.api.objects.LogConfiguration src) {
+    	Map<String, Integer> contextMap = new HashMap<String, Integer>();
+    	for(String context:src.getContexts()) {
+    		contextMap.put(context, src.getLogLevel(context));
+    	}
+    	return new LogConfigurationImpl(contextMap);
     }
 
     /** 

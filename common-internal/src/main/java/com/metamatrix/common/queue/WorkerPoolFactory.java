@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.util.LogCommonConstants;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.NamedThreadFactory;
 
@@ -79,7 +79,7 @@ public class WorkerPoolFactory {
 		@Override
 		protected void afterExecute(Runnable r, Throwable t) {
 			if (t != null) {
-				LogManager.logError(LogCommonConstants.CTX_POOLING, t, CommonPlugin.Util.getString("WorkerPool.uncaughtException")); //$NON-NLS-1$
+				LogManager.logError(LogConstants.CTX_POOLING, t, CommonPlugin.Util.getString("WorkerPool.uncaughtException")); //$NON-NLS-1$
 			}
 		}
 	}; 
@@ -190,7 +190,7 @@ public class WorkerPoolFactory {
 			}
 			if (atMaxThreads) {
 				if (newMaxQueueSize && maximumPoolSize > 1) {
-					LogManager.logWarning(LogCommonConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize)); //$NON-NLS-1$
+					LogManager.logWarning(LogConstants.CTX_POOLING, CommonPlugin.Util.getString("WorkerPool.Max_thread", maximumPoolSize, poolName, highestQueueSize)); //$NON-NLS-1$
 				}
 				return;
 			}
@@ -201,8 +201,8 @@ public class WorkerPoolFactory {
 					threads.add(t);
 					String name = t.getName();
 					t.setName(name + "_" + poolName + threadCounter.getAndIncrement()); //$NON-NLS-1$
-					if (LogManager.isMessageToBeRecorded(LogCommonConstants.CTX_POOLING, MessageLevel.TRACE)) {
-						LogManager.logTrace(LogCommonConstants.CTX_POOLING, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$ 
+					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_POOLING, MessageLevel.TRACE)) {
+						LogManager.logTrace(LogConstants.CTX_POOLING, "Beginning work with virtual worker", t.getName()); //$NON-NLS-1$ 
 					}
 					Runnable r = command;
 					while (r != null) {

@@ -53,6 +53,7 @@ import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.TransactionMgr;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.properties.UnmodifiableProperties;
+import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.ResourceFinder;
@@ -83,7 +84,6 @@ import com.metamatrix.platform.security.authorization.cache.AuthorizationCache;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceConnectionException;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceException;
 import com.metamatrix.platform.security.authorization.spi.AuthorizationSourceTransaction;
-import com.metamatrix.platform.security.util.LogSecurityConstants;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
 import com.metamatrix.platform.service.api.exception.ServiceClosedException;
 import com.metamatrix.platform.service.api.exception.ServiceException;
@@ -152,7 +152,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 try {
                     this.retries = Integer.parseInt(retryValue);
                 } catch (Exception e) {
-                    LogManager.logWarning(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0001, retryValue, Integer.toString(this.retries)));
+                    LogManager.logWarning(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0001, retryValue, Integer.toString(this.retries)));
                 }
             }
 
@@ -192,12 +192,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     protected void closeService() throws Exception {
         if ( ! serviceClosed ) {
             String instanceName = this.getInstanceName();
-            LogManager.logInfo(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUTHORIZATION_0001, instanceName));
+            LogManager.logInfo(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUTHORIZATION_0001, instanceName));
 
             serviceClosed = true;
             auditManager.stop();
 
-            LogManager.logInfo(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUTHORIZATION_0002, instanceName));
+            LogManager.logInfo(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(LogMessageKeys.SEC_AUTHORIZATION_0002, instanceName));
         }
     }
 
@@ -209,7 +209,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         try {
             this.closeService();
         } catch (Exception e) {
-            LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e,
+            LogManager.logError(LogConstants.CTX_AUTHORIZATION, e,
                     PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0009));
         }
     }
@@ -222,7 +222,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         try {
             this.closeService();
         } catch (Exception e) {
-            LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e,
+            LogManager.logError(LogConstants.CTX_AUTHORIZATION, e,
                     PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0009));
         }
     }
@@ -243,7 +243,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public boolean checkAccess(SessionToken sessionToken, String contextName, AuthorizationPermission request)
             throws InvalidSessionException, AuthorizationMgmtException {
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"checkAccess(", sessionToken, ", ", contextName, ", ", request, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, new Object[]{"checkAccess(", sessionToken, ", ", contextName, ", ", request, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         // Audit - request
         AuditMessage msg = new AuditMessage(contextName, "checkAccess-request", sessionToken.getUsername(),  new Object[]{request.getResourceName()}); //$NON-NLS-1$
@@ -301,7 +301,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public Collection getInaccessibleResources(SessionToken sessionToken, String context, Collection requests)
             throws InvalidSessionException, AuthorizationMgmtException {
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", context, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", context, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         List resources = new ArrayList();
         if (requests != null && ! requests.isEmpty()) {            
@@ -422,7 +422,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public List getGroupEntitlements(AuthorizationRealm realm, String fullyQualifiedGroupName)
             throws AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"getGroupEntitlements(", realm, fullyQualifiedGroupName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         boolean success = false;
         Exception exception = null;
@@ -446,12 +446,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -460,7 +460,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -534,7 +534,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public List getElementEntitlements(AuthorizationRealm realm, String elementNamePattern)
             throws AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"getElementEntitlements(", realm, elementNamePattern, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         boolean success = false;
         Exception exception = null;
@@ -552,12 +552,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -566,7 +566,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -626,7 +626,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     private Collection getRealmNames()
             throws AuthorizationMgmtException {
 
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getRealmNames()"}); //$NON-NLS-1$
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[]{"getRealmNames()"}); //$NON-NLS-1$
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -643,12 +643,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0023, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0024);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0024, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -657,7 +657,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry getting entitlements for resource."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -683,7 +683,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public Collection getRealmNames(SessionToken caller)
             throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getRealmNames(", caller, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[]{"getRealmNames(", caller, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         return getRealmNames();
     }
 
@@ -698,7 +698,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public boolean containsPolicy(SessionToken caller, AuthorizationPolicyID policyID)
             throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"containsPolicy(", caller, ", ", policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         boolean success = false;
         Exception exception = null;
@@ -716,22 +716,22 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0029, policyID);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0029, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0029, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0030, policyID);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0030, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0030, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0031, policyID);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0031, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0031, e, exceptionMsg));
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0031, exceptionMsg);
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy ID."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy ID."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -750,7 +750,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public Collection findAllPolicyIDs(SessionToken caller)
             throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"findAllPolicyIDs(", caller, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[]{"findAllPolicyIDs(", caller, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -767,22 +767,22 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0032);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0032, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0032, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0033);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0033, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0033, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0034);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0034, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0034, e, exceptionMsg));
                 throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0034, exceptionMsg);
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for all policy IDs."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry search for all policy IDs."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -808,7 +808,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public Collection findPolicyIDs(SessionToken caller, Collection principals)
             throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"findPolicyIDs(", caller, ", ", principals, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Set allPolicyIDs = new HashSet();
         Iterator pItr = principals.iterator();
@@ -826,7 +826,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 }
             } catch (MetaMatrixSecurityException e) {
                 String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0035, principal);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0035, e, msg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0035, e, msg));
                 return Collections.EMPTY_SET;
             }
         }
@@ -846,7 +846,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public Collection getPolicies(SessionToken caller, Collection policyIDs)
             throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"getPolicies(", caller, ", ", policyIDs, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         return this.getPolicies(policyIDs);
     }
@@ -864,7 +864,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public AuthorizationPolicy getPolicy(SessionToken caller, AuthorizationPolicyID policyID)
             throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"getPolicy(", caller, ", ", policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[]{"getPolicy(", caller, ", ", policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         boolean success = false;
         Exception exception = null;
         String exceptionMsg = null;
@@ -881,12 +881,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0037, policyID);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0037, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0037, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0038, policyID);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0038, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0038, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -895,7 +895,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"Attempting to retry getting policy for ID (", policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, new Object[]{"Attempting to retry getting policy for ID (", policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -914,7 +914,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 		        }
 		        transaction.close();
 		    } catch (Exception e) {
-		    	LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015,e));
+		    	LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015,e));
 		    }
 		}
 	}
@@ -928,7 +928,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public boolean isCallerInRole(SessionToken caller, String roleName)
             throws AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"isCallerInRole(", caller, roleName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         try {
             return hasPolicy(caller, RolePermissionFactory.getRealm(), roleName);
@@ -963,12 +963,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0040);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0040, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0040, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0041);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0041, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0041, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -977,7 +977,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry getting role descriptions."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry getting role descriptions."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -1015,12 +1015,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0043, roleName.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0043, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0043, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0044, roleName.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0044, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0044, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1029,7 +1029,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting principals for role \"", roleName.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!success) {
@@ -1085,7 +1085,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     protected boolean isEntitled(String principal) {
         try {
             if (membershipServiceProxy.isSuperUser(principal) || !membershipServiceProxy.isSecurityEnabled()) {
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                                      new Object[]{ "Automatically entitling principal", principal}); //$NON-NLS-1$ 
                 return true;
             }
@@ -1121,11 +1121,11 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0050, principal.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0050, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0050, e, exceptionMsg));
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0051, principal.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0051, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0051, e, exceptionMsg));
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0052, principal.toString());
@@ -1138,7 +1138,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 	                        transaction.close();
 	                    } catch (Exception e) {
 	                        String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, principal.toString());
-	                        LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, e, msg));
+	                        LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0053, e, msg));
 	                        throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0053, msg);
 	                    }
                 	}
@@ -1153,7 +1153,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                             transaction.close();
                         } catch (Exception e) {
                             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0054, principal.toString());
-                            LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0054, e, msg));
+                            LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0054, e, msg));
                             throw new AuthorizationMgmtException(e, msg);
                         }
                     }
@@ -1161,7 +1161,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 transaction = null;                 // ensure the transaction is not retained
             }
             // Try again...
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{ "Attempting to retry removing principal \"", principal.toString(), "\" from ALL policies."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
@@ -1200,12 +1200,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0055, realm.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0055, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0055, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0056, realm.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0056, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0056, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1214,7 +1214,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             } finally {
                 completeTransaction(success, transaction);
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting Authorization PolicyIDs with permissions belonging to realm \"", realm.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!success) {
@@ -1257,12 +1257,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, realm.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, realm.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1272,7 +1272,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             	completeTransaction(success, transaction);
                 transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting Authorization Policies belonging to realm \"", realm.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!success) {
@@ -1336,12 +1336,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, realm.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, realm.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1351,7 +1351,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             	completeTransaction(success, transaction);
                 transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting Authorization Policies belonging to realm \"", realm.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!success) {
@@ -1406,12 +1406,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, realm.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0058, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, realm.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0059, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1421,7 +1421,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             	completeTransaction(success, transaction);
                 transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"Attempting to retry getting Authorization Policies belonging to realm \"", realm.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!success) {
@@ -1449,7 +1449,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public PermissionDataNode fillPermissionNodeTree(PermissionDataNode root, AuthorizationPolicyID policyID)
             throws AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"fillPermissionNodeTree(", root, policyID, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         Set permissions = this.getPermissionsForPolicy(policyID);
         Collection exceptions = Collections.EMPTY_LIST;
@@ -1499,12 +1499,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0061, policyID.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0061, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0061, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0062, policyID.toString());
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0062, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0062, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1514,7 +1514,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             	completeTransaction(success, transaction);
                 transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"Attempting to retry getting permissions for policy \"", policyID.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, new Object[]{"Attempting to retry getting permissions for policy \"", policyID.toString(), "\"."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -1538,7 +1538,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     public Set executeTransaction(SessionToken administrator, List actions)
             throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"executeTransaction(", administrator, actions, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION, new Object[]{"executeTransaction(", administrator, actions, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         if (administrator == null) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0064));
         }
@@ -1546,7 +1546,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         if (actions == null) {
             throw new IllegalArgumentException(PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0065));
         }
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"Executing transaction with ", new Integer(actions.size()), " action(s)"}); //$NON-NLS-1$ //$NON-NLS-2$
         Set result = new HashSet();
         if (actions.isEmpty()) {
@@ -1576,7 +1576,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 currentAction = (ActionDefinition) iter.next();
                 currentTarget = currentAction.getTarget();
                 actionsWithSameTarget.add(currentAction);
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                         new Object[]{"Target: <", currentTarget, "> First action: <", currentAction, ">"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             }
 
@@ -1612,7 +1612,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 // Add this next action ...
                 currentAction = nextAction;
                 actionsWithSameTarget.add(currentAction);
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[]{"Target: ", currentTarget, " action: ", currentAction}); //$NON-NLS-1$ //$NON-NLS-2$
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, new Object[]{"Target: ", currentTarget, " action: ", currentAction}); //$NON-NLS-1$ //$NON-NLS-2$
             }
             // Process the last set of actions ...
             if (actionsWithSameTarget.size() != 0) {
@@ -1628,11 +1628,11 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 
         } catch (AuthorizationMgmtException e) {
             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0066,printActions(actions));
-            LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg);
+            LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, msg);
             throw e;
         } catch (Exception e) {
             String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0066,printActions(actions));
-            LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg);
+            LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, msg);
             throw new AuthorizationMgmtException(e);
         } finally {
             if (transaction != null) {
@@ -1643,7 +1643,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                     } catch (ManagedConnectionException e) {
                         Object params = new Object[] {printActions(actions)};
                         String msg = PlatformPlugin.Util.getString("AuthorizationServiceImpl.Error_committing_transaction_after_executing_actions__{0}", params); //$NON-NLS-1$
-                        LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg);
+                        LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, msg);
                     }
                 } else {
                     // rollback the transaction
@@ -1651,7 +1651,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                         transaction.rollback();
                     } catch (ManagedConnectionException e) {
                         String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0067,printActions(actions));
-                        LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg);
+                        LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, msg);
                     }
                 }
 
@@ -1659,7 +1659,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                     transaction.close();
                 } catch (Exception e) {
                     String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0015,printActions(actions));
-                    LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, msg);
+                    LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, msg);
                 }
                 transaction = null;                     // ensure the transaction is not retained
             }
@@ -1701,12 +1701,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1719,7 +1719,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             	completeTransaction(success, transaction);
                 transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy IDs belonging to principal collection."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy IDs belonging to principal collection."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -1763,12 +1763,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0068, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch ( AuthorizationSourceConnectionException e ) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0069, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch ( AuthorizationSourceException e ) {
@@ -1781,7 +1781,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             	completeTransaction(success, transaction);
                 transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy IDs belonging to principal collection."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry search for policy IDs belonging to principal collection."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -1817,12 +1817,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 break;
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0072);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0072, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString( ErrorMessageKeys.SEC_AUTHORIZATION_0072, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0073);
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0073, e, exceptionMsg));
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0073, e, exceptionMsg));
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
@@ -1832,7 +1832,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             	completeTransaction(success, transaction);
                 transaction = null; // ensure the transaction is not retained
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "Attempting to retry search for policies with ID collection."); //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "Attempting to retry search for policies with ID collection."); //$NON-NLS-1$
         }
         if (!success) {
             // Let caller know that none of the calls were successful.
@@ -1890,7 +1890,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     private Collection getPoliciesForPrincipal(MetaMatrixPrincipalName user, SessionToken session, AuthorizationRealm realm)
             throws AuthorizationMgmtException, InvalidPrincipalException {
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, ") - Trying cache first."}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
         // Look for policYIDs... try the cache first.
@@ -1900,12 +1900,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             // If there are cached policies for this user, check if any are for given realm
             // if not, we have to check the store, so null out the applicablePolicyIDs ref.
             if ( ! hasPolicyIDsForRealm(applicablePolicyIDs, realm) ) {
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                         new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                                      ") - Principal has no policyIDs cached for the given realm."}); //$NON-NLS-1$
                 applicablePolicyIDs.clear();
             } else {
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                         new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                                      ") - Found poliyIDs cached for the principal in the given realm."}); //$NON-NLS-1$
             }
@@ -1913,7 +1913,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         }
         if ( applicablePolicyIDs == null || applicablePolicyIDs.size() == 0 ) {
             // If the cache result is null, then this principal's applicable policy IDs have not been cached ...
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                                  ") - No policyIDs found in cache, going to store."}); //$NON-NLS-1$
             // Go to the store
@@ -1922,7 +1922,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 
             // If there still aren't any applicable policyIDs, then principal is not authorized (to do anything)
             if ( applicablePolicyIDs == null || applicablePolicyIDs.size() == 0 ) {
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                         new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                                      ") - No policyIDs found for realm - no authorization."}); //$NON-NLS-1$
                 // Return empty set signifying principal has NO permissions
@@ -1930,7 +1930,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             }
 
             // Found some policyIDs for principal in store...
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                                  ") - Found policyIDs in store - caching: ", applicablePolicyIDs}); //$NON-NLS-1$
             // Cache this principal's policyIDs
@@ -1939,7 +1939,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 
         Collection policies = new HashSet();
         // Look for policies by policyID... Try the cache first
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                              ") - Looking up policies in cache by policyID."}); //$NON-NLS-1$
         policies = this.authorizationCache.findPolicies(applicablePolicyIDs);
@@ -1948,24 +1948,24 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         // of his policies.
         if ( policies == null || policies.size() == 0 || policies.size() < applicablePolicyIDs.size() ) {
             // Policies were not cached against PolicyIDs... Go to store
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                                  ") - No policies were found in cache, going to store."}); //$NON-NLS-1$
             policies = this.getPolicies(applicablePolicyIDs);
             if ( policies != null && policies.size() > 0 ) {
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                         new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                                      ") - Found policies in store - caching."}); //$NON-NLS-1$
                 // Cache retrieved policies, if any
                 this.authorizationCache.cachePoliciesWithIDs(policies);
             }
         } else {
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                                  ") - Found policies <", policies, "> in cache."}); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"getPoliciesForPrincipal(", user, ", ", realm, //$NON-NLS-1$ //$NON-NLS-2$
                              ") - Returning these Policies for principal: <", policies, ">"}); //$NON-NLS-1$ //$NON-NLS-2$
         return policies;
@@ -1984,15 +1984,15 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         while ( ID_itr.hasNext() ) {
             AuthorizationPolicyID id = (AuthorizationPolicyID) ID_itr.next();
             AuthorizationRealm aRealm = id.getRealm();
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                     new Object[] {"hasPolicyIDsForRealm() - Comparing realms: <", aRealm, "> <", theRealmOfInterest, ">"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             if ( aRealm.equals(theRealmOfInterest) ) {
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                         "hasPolicyIDsForRealm() - Realms are equal."); //$NON-NLS-1$
                 return true;
             }
         }
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                 "hasPolicyIDsForRealm() - No realms found to be equal."); //$NON-NLS-1$
         return false;
     }
@@ -2007,7 +2007,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
      */
     private Collection getGroupsForPrincipal(MetaMatrixPrincipalName principal)
             throws AuthorizationMgmtException, InvalidPrincipalException {
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                 new Object[] {"getGroupsForPrincipal(", principal, ") - Getting all group memberships."}); //$NON-NLS-1$ //$NON-NLS-2$
         // Get the set of all groups this Principal is a member of
         Set allPrincipals = new HashSet();
@@ -2027,7 +2027,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 // HACK: Convert ALL member principals to MetaMatrixPrincipalName objs
                 // since Auth and Memb svcs don't speak the same language.
                 MetaMatrixPrincipalName member = new MetaMatrixPrincipalName((String) memberItr.next(), MetaMatrixPrincipal.TYPE_GROUP);
-                LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+                LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                         new Object[]{"getGroupsForPrincipal(", principal, ") - Adding membership <", member, ">"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 allPrincipals.add(member);
             }
@@ -2071,19 +2071,19 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
             } catch (ManagedConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(
                         "AuthorizationServiceImpl.Exception_while_getting_dependant_permissions_for_request_{0}", request); //$NON-NLS-1$
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, exceptionMsg);
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, exceptionMsg);
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceConnectionException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(
                         "AuthorizationServiceImpl.Failure_communicating_with_authorization_source_while_getting_dependant_permissions_for_request_{0}", request); //$NON-NLS-1$
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, exceptionMsg);
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, exceptionMsg);
                 exception = e;
                 success = false;
             } catch (AuthorizationSourceException e) {
                 exceptionMsg = PlatformPlugin.Util.getString(
                         "AuthorizationServiceImpl.Unknown_exception_communicating_with_authorization_source_while_getting_dependant_permissions_for_request_{0}", request); //$NON-NLS-1$
-                LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, exceptionMsg);
+                LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, exceptionMsg);
                 throw new AuthorizationMgmtException(e, exceptionMsg);
             } finally {
                 if ( transaction != null ) {
@@ -2095,12 +2095,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                         }
                         transaction.close();
                     } catch (Exception e) {
-                    	LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, e, PlatformPlugin.Util.getString("AuthorizationServiceImpl.Unable_to_close_transaction.")); //$NON-NLS-1$
+                    	LogManager.logError(LogConstants.CTX_AUTHORIZATION, e, PlatformPlugin.Util.getString("AuthorizationServiceImpl.Unable_to_close_transaction.")); //$NON-NLS-1$
                     }
                     transaction = null;                     // ensure the transaction is not retained
                 }
             }
-            LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION,
+            LogManager.logDetail(LogConstants.CTX_AUTHORIZATION,
                                  "Attempting to retry search for policies with ID collection."); //$NON-NLS-1$
         }
         if ( !success ) {
@@ -2125,7 +2125,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
     private void executeTransactionsOnTarget(AuthorizationSourceTransaction transaction, List actions,
                                              Object target, SessionToken administrator, Set affectedObjects)
             throws AuthorizationMgmtException {
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"executeTransactionsOnTarget(", administrator, actions, target, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
         // Execute the action(s) ...
         Set results = null;
@@ -2133,7 +2133,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         String exceptionMsg = null;
         boolean success = false;
 
-        LogManager.logTrace(LogSecurityConstants.CTX_AUTHORIZATION,
+        LogManager.logTrace(LogConstants.CTX_AUTHORIZATION,
                 new Object[]{"Executing ", new Integer(actions.size()), " action(s) on target \"", target, "\""}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         if (target instanceof AuthorizationPolicyID) {
             AuthorizationPolicyID policyID = (AuthorizationPolicyID) target;
@@ -2156,12 +2156,12 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
 //                    break;
                 } catch (AuthorizationSourceConnectionException e) {
                     exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, target);
-                    LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, e, exceptionMsg));
+                    LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, e, exceptionMsg));
                     exception = e;
                     success = false;
                 } catch (AuthorizationSourceException e) {
                     exceptionMsg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, target);
-                    LogManager.logError(LogSecurityConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, e, exceptionMsg));
+                    LogManager.logError(LogConstants.CTX_AUTHORIZATION, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0076, e, exceptionMsg));
                     exception = e;
                     success = false;
                 }
@@ -2289,7 +2289,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                 // delete the current the one
                 if (options.containsOption(AdminOptions.OnConflict.OVERWRITE)) {
                     overWritten = true;
-                    LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[] {
+                    LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, new Object[] {
                         "overwriting existing role", sourcePolicyID.getDisplayName()}); //$NON-NLS-1$
                     aoe.remove(existingPolicy.getAuthorizationPolicyID());
                 }
@@ -2304,7 +2304,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
                                      StandardAuthorizationActions.NONE_LABEL,
                                      PlatformPlugin.Util.getString("AuthorizationServiceImpl.Ignored")); //$NON-NLS-1$
                     }
-                    LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, new Object[] {
+                    LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, new Object[] {
                         "ignoring existing role", sourcePolicyID.getDisplayName()}); //$NON-NLS-1$
                     continue;
                 }
@@ -2333,7 +2333,7 @@ public class AuthorizationServiceImpl extends AbstractService implements Authori
         // Commit the actions we've built up
         List actions = aoe.getDestination().getActions();
 
-        LogManager.logDetail(LogSecurityConstants.CTX_AUTHORIZATION, "migrateEntitlements(" //$NON-NLS-1$
+        LogManager.logDetail(LogConstants.CTX_AUTHORIZATION, "migrateEntitlements(" //$NON-NLS-1$
                                                                      + targetVDBName + " " + targetVDBVersion //$NON-NLS-1$
                                                                      + ") executing [" //$NON-NLS-1$
                                                                      + actions.size() + "] for [" //$NON-NLS-1$
