@@ -42,7 +42,7 @@ public class ShortToBigIntegerTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigInteger("" + value); //$NON-NLS-1$
+		return new BigInteger(String.valueOf(value));
 	}
 
 	/**

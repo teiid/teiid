@@ -42,7 +42,7 @@ public class LongToBigDecimalTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigDecimal(((Long)value).toString());
+		return new BigDecimal((Long)value);
 	}
 
 	/**

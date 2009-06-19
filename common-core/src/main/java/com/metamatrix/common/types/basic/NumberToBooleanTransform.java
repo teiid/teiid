@@ -23,46 +23,45 @@
 package com.metamatrix.common.types.basic;
 
 import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
+import com.metamatrix.core.CorePlugin;
+import com.metamatrix.core.ErrorMessageKeys;
 
-public class BooleanToByteTransform extends AbstractTransform {
-
-	private static final Byte FALSE = new Byte((byte)0);
-	private static final Byte TRUE = new Byte((byte)1);
+public class NumberToBooleanTransform extends AbstractTransform {
 	
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
-		if(value.equals(Boolean.FALSE)) {
-			return FALSE;
-		}
-		return TRUE;
+	private Object trueVal;
+	private Object falseVal;
+	private Class<?> sourceType;
+	
+	public NumberToBooleanTransform(Object trueVal, Object falseVal) {
+		this.trueVal = trueVal;
+		this.falseVal = falseVal;
+		this.sourceType = trueVal.getClass();
 	}
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
+	@Override
 	public Class getSourceType() {
-		return Boolean.class;
+		return sourceType;
 	}
-
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
+	
+	@Override
 	public Class getTargetType() {
-		return Byte.class;
+		return DataTypeManager.DefaultDataClasses.BOOLEAN;
+	}
+	
+	@Override
+	public Object transform(Object value) throws TransformationException {
+		if (value == null) {
+			return null;
+		}
+		if (value.equals(trueVal)) {
+			return Boolean.TRUE;
+		}
+		if (value.equals(falseVal)) {
+			return Boolean.FALSE;
+		}
+		throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0013, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0013, sourceType.getSimpleName(), value));
 	}
 
 }

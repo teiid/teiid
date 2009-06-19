@@ -23,9 +23,21 @@
 package com.metamatrix.common.types.basic;
 
 import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public class LongToDoubleTransform extends AbstractTransform {
+public class NumberToByteTransform extends AbstractTransform {
+	
+	private Class<?> sourceType;
+	
+	public NumberToByteTransform(Class<?> sourceType) {
+		this.sourceType = sourceType;
+	}
+	
+	@Override
+	public Class<?> getSourceType() {
+		return sourceType;
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -36,27 +48,18 @@ public class LongToDoubleTransform extends AbstractTransform {
 	 * the transformation fails
 	 */
 	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
+		if (value == null) {
+			return null;
 		}
-
-		return new Double(((Long)value).doubleValue());
-	}
-
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class getSourceType() {
-		return Long.class;
+		return Byte.valueOf(((Number)value).byteValue());
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return Double.class;
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.BYTE;
 	}
 	
 	@Override

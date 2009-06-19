@@ -23,14 +23,23 @@
 package com.metamatrix.common.types.basic;
 
 import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
-import com.metamatrix.core.CorePlugin;
-import com.metamatrix.core.ErrorMessageKeys;
 
-public class LongToBooleanTransform extends AbstractTransform {
-
-	private static final Long FALSE = new Long(0);
-	private static final Long TRUE = new Long(1);
+public class NumberToIntegerTransform extends AbstractTransform {
+	
+	private Class<?> sourceType;
+	private boolean isNarrowing;
+	
+	public NumberToIntegerTransform(Class<?> sourceType, boolean isNarrowing) {
+		this.sourceType = sourceType;
+		this.isNarrowing = isNarrowing;
+	}
+	
+	@Override
+	public Class<?> getSourceType() {
+		return sourceType;
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -41,41 +50,23 @@ public class LongToBooleanTransform extends AbstractTransform {
 	 * the transformation fails
 	 */
 	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
+		if (value == null) {
+			return null;
 		}
-
-		if(value.equals(FALSE)) {
-			return Boolean.FALSE;
-		} else if(value.equals(TRUE)) {
-			return Boolean.TRUE;
-		} else {
-			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0012, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0012, value));
-		}
-	}
-
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class getSourceType() {
-		return Long.class;
+		return Integer.valueOf(((Number)value).intValue());
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return Boolean.class;
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.INTEGER;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return isNarrowing;
 	}
 
-	/**
-	 * Flag if the transformation from source to target is
-	 * a narrowing transformation that may lose information.
-	 * @return True - this transformation is narrowing
-	 */
-	public boolean isNarrowing() {
-		return true;
-	}
 }

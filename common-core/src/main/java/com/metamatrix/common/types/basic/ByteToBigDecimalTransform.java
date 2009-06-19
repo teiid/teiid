@@ -42,7 +42,7 @@ public class ByteToBigDecimalTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigDecimal(((Byte) value).toString());
+		return BigDecimal.valueOf((Byte) value);
 	}
 
 	/**

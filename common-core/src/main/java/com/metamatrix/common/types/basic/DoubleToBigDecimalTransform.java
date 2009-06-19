@@ -42,11 +42,7 @@ public class DoubleToBigDecimalTransform extends AbstractTransform {
 			return value;
 		}
 
-		// case 3089 -- issue with converting 7.05 from double to bigdecimal
-        // loss of precision to 7.04999999999999982236431605997495353221893310546875
-		// to fix unexpected loss of precision  see sun java doc
-// http://java.sun.com/j2se/1.4.2/docs/api/java/math/BigDecimal.html#BigDecimal(double)
-        return new BigDecimal(((Double)value).toString());
+        return BigDecimal.valueOf((Double)value);
 	}
 
 	/**

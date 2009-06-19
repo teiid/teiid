@@ -42,7 +42,7 @@ public class IntegerToBigDecimalTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigDecimal(((Integer)value).toString());
+		return BigDecimal.valueOf((Integer)value);
 	}
 
 	/**

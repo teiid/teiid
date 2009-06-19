@@ -42,7 +42,7 @@ public class ByteToBigIntegerTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigInteger("" + value); //$NON-NLS-1$
+		return BigInteger.valueOf((Byte)value); 
 	}
 
 	/**

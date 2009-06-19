@@ -22,52 +22,38 @@
 
 package com.metamatrix.common.types.basic;
 
-import java.math.BigInteger;
-
 import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public class BigIntegerToLongTransform extends AbstractTransform {
+public class BooleanToNumberTransform extends AbstractTransform {
 
-	/**
-	 * This method transforms a value of the source type into a value
-	 * of the target type.
-	 * @param value Incoming value of source type
-	 * @return Outgoing value of target type
-	 * @throws TransformationException if value is an incorrect input type or
-	 * the transformation fails
-	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
-		return new Long(((BigInteger) value).longValue());
+	private Object trueVal;
+	private Object falseVal;
+	private Class<?> targetType;
+	
+	public BooleanToNumberTransform(Object trueVal, Object falseVal) {
+		this.trueVal = trueVal;
+		this.falseVal = falseVal;
+		this.targetType = trueVal.getClass();
 	}
 
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
+	@Override
 	public Class getSourceType() {
-		return BigInteger.class;
+		return DataTypeManager.DefaultDataClasses.BOOLEAN;
 	}
-
-	/**
-	 * Type of the outgoing value.
-	 * @return Target type
-	 */
+	
+	@Override
 	public Class getTargetType() {
-		return Long.class;
+		return targetType;
 	}
-
-	/**
-	 * Flag if the transformation from source to target is 
-	 * a narrowing transformation that may lose information.
-	 * @return True - this transformation is narrowing
-	 */
-	public boolean isNarrowing() {
-		return true;
+	
+	@Override
+	public Object transform(Object value) throws TransformationException {
+		if (value == null) {
+			return null;
+		}
+		return value.equals(Boolean.TRUE)?trueVal:falseVal;
 	}
-
+	
 }

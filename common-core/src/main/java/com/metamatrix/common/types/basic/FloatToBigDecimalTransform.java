@@ -42,7 +42,7 @@ public class FloatToBigDecimalTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigDecimal(((Float)value).toString());
+		return BigDecimal.valueOf((Float)value);
 	}
 
 	/**

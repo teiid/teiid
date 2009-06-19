@@ -42,7 +42,7 @@ public class ShortToBigDecimalTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigDecimal(((Short)value).toString());
+		return new BigDecimal((Short)value);
 	}
 
 	/**

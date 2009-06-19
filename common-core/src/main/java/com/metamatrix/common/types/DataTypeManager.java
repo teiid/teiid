@@ -22,16 +22,11 @@
 
 package com.metamatrix.common.types;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
-//## JDBC4.0-begin ##
 import java.sql.SQLXML;
-//## JDBC4.0-end ##
-
-/*## JDBC3.0-JDK1.5-begin ##
-import com.metamatrix.core.jdbc.SQLXML; 
-## JDBC3.0-JDK1.5-end ##*/
-
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,7 +42,15 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
 import com.metamatrix.common.types.basic.AnyToObjectTransform;
+import com.metamatrix.common.types.basic.BooleanToNumberTransform;
 import com.metamatrix.common.types.basic.NullToAnyTransform;
+import com.metamatrix.common.types.basic.NumberToBooleanTransform;
+import com.metamatrix.common.types.basic.NumberToByteTransform;
+import com.metamatrix.common.types.basic.NumberToDoubleTransform;
+import com.metamatrix.common.types.basic.NumberToFloatTransform;
+import com.metamatrix.common.types.basic.NumberToIntegerTransform;
+import com.metamatrix.common.types.basic.NumberToLongTransform;
+import com.metamatrix.common.types.basic.NumberToShortTransform;
 import com.metamatrix.common.types.basic.ObjectToAnyTransform;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
@@ -571,58 +574,56 @@ public class DataTypeManager {
 	static void loadBasicTransforms() {
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToBigIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToByteTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToDoubleTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToFloatTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToLongTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToShortTransform());
+		DataTypeManager.addTransform(new NumberToBooleanTransform(BigDecimal.valueOf(1), BigDecimal.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(
+				DefaultDataClasses.BIG_DECIMAL));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(
+				DefaultDataClasses.BIG_DECIMAL, true));
+		DataTypeManager.addTransform(new NumberToFloatTransform(
+				DefaultDataClasses.BIG_DECIMAL, true));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(
+				DefaultDataClasses.BIG_DECIMAL, true));
+		DataTypeManager.addTransform(new NumberToLongTransform(
+				DefaultDataClasses.BIG_DECIMAL, true));
+		DataTypeManager.addTransform(new NumberToShortTransform(
+				DefaultDataClasses.BIG_DECIMAL, true));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToStringTransform());
 		
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToBigDecimalTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToByteTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToDoubleTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToFloatTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToLongTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToShortTransform());
+		DataTypeManager.addTransform(new NumberToBooleanTransform(BigInteger.valueOf(1), BigInteger.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(
+				DefaultDataClasses.BIG_INTEGER));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(
+				DefaultDataClasses.BIG_INTEGER, true));
+		DataTypeManager.addTransform(new NumberToFloatTransform(
+				DefaultDataClasses.BIG_INTEGER, true));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(
+				DefaultDataClasses.BIG_INTEGER, true));
+		DataTypeManager.addTransform(new NumberToLongTransform(
+				DefaultDataClasses.BIG_INTEGER, true));
+		DataTypeManager.addTransform(new NumberToShortTransform(
+				DefaultDataClasses.BIG_INTEGER, true));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToStringTransform());
 
 		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToBigDecimalTransform());
+				.addTransform(new BooleanToNumberTransform(BigDecimal.valueOf(1), BigDecimal.valueOf(0)));
 		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToBigIntegerTransform());
+				.addTransform(new BooleanToNumberTransform(BigInteger.valueOf(1), BigInteger.valueOf(0)));
 		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToByteTransform());
+				.addTransform(new BooleanToNumberTransform(Double.valueOf(1), Double.valueOf(0)));
 		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToDoubleTransform());
+				.addTransform(new BooleanToNumberTransform(Float.valueOf(1), Float.valueOf(0)));
 		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToFloatTransform());
+				.addTransform(new BooleanToNumberTransform(Long.valueOf(1), Long.valueOf(0)));
 		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToIntegerTransform());
+				.addTransform(new BooleanToNumberTransform(Integer.valueOf(1), Integer.valueOf(0)));
 		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToLongTransform());
+				.addTransform(new BooleanToNumberTransform(Short.valueOf((short)1), Short.valueOf((short)0)));
 		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.BooleanToShortTransform());
+				.addTransform(new BooleanToNumberTransform(Byte.valueOf((byte)1), Byte.valueOf((byte)0)));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BooleanToStringTransform());
 
@@ -630,18 +631,17 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.ByteToBigDecimalTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ByteToBigIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ByteToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ByteToDoubleTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ByteToFloatTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ByteToIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ByteToLongTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ByteToShortTransform());
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Byte.valueOf((byte)1), Byte.valueOf((byte)0)));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(
+				DefaultDataClasses.BYTE, false));
+		DataTypeManager.addTransform(new NumberToFloatTransform(
+				DefaultDataClasses.BYTE, false));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(
+				DefaultDataClasses.BYTE, false));
+		DataTypeManager.addTransform(new NumberToLongTransform(
+				DefaultDataClasses.BYTE, false));
+		DataTypeManager.addTransform(new NumberToShortTransform(
+				DefaultDataClasses.BYTE, false));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ByteToStringTransform());
 
@@ -660,18 +660,17 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.DoubleToBigDecimalTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.DoubleToBigIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.DoubleToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.DoubleToByteTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.DoubleToFloatTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.DoubleToIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.DoubleToLongTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.DoubleToShortTransform());
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Double.valueOf(1), Double.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(
+				DefaultDataClasses.DOUBLE));
+		DataTypeManager.addTransform(new NumberToFloatTransform(
+				DefaultDataClasses.DOUBLE, true));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(
+				DefaultDataClasses.DOUBLE, true));
+		DataTypeManager.addTransform(new NumberToLongTransform(
+				DefaultDataClasses.DOUBLE, true));
+		DataTypeManager.addTransform(new NumberToShortTransform(
+				DefaultDataClasses.DOUBLE, true));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.DoubleToStringTransform());
 
@@ -679,18 +678,17 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.FloatToBigDecimalTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.FloatToBigIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.FloatToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.FloatToByteTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.FloatToDoubleTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.FloatToIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.FloatToLongTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.FloatToShortTransform());
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Float.valueOf(1), Float.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(
+				DefaultDataClasses.FLOAT));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(
+				DefaultDataClasses.FLOAT, false));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(
+				DefaultDataClasses.FLOAT, true));
+		DataTypeManager.addTransform(new NumberToLongTransform(
+				DefaultDataClasses.FLOAT, true));
+		DataTypeManager.addTransform(new NumberToShortTransform(
+				DefaultDataClasses.FLOAT, true));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.FloatToStringTransform());
 
@@ -698,18 +696,17 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.IntegerToBigDecimalTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.IntegerToBigIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.IntegerToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.IntegerToByteTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.IntegerToDoubleTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.IntegerToFloatTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.IntegerToLongTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.IntegerToShortTransform());
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Integer.valueOf(1), Integer.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(
+				DefaultDataClasses.INTEGER));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(
+				DefaultDataClasses.INTEGER, false));
+		DataTypeManager.addTransform(new NumberToFloatTransform(
+				DefaultDataClasses.INTEGER, false));
+		DataTypeManager.addTransform(new NumberToLongTransform(
+				DefaultDataClasses.INTEGER, false));
+		DataTypeManager.addTransform(new NumberToShortTransform(
+				DefaultDataClasses.INTEGER, true));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.IntegerToStringTransform());
 
@@ -717,18 +714,17 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.LongToBigDecimalTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.LongToBigIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.LongToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.LongToByteTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.LongToDoubleTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.LongToIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.LongToFloatTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.LongToShortTransform());
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Long.valueOf(1), Long.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(
+				DefaultDataClasses.LONG));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(
+				DefaultDataClasses.LONG, true));
+		DataTypeManager.addTransform(new NumberToFloatTransform(
+				DefaultDataClasses.LONG, true));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(
+				DefaultDataClasses.LONG, true));
+		DataTypeManager.addTransform(new NumberToShortTransform(
+				DefaultDataClasses.LONG, true));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.LongToStringTransform());
 				
@@ -736,18 +732,17 @@ public class DataTypeManager {
 				.addTransform(new com.metamatrix.common.types.basic.ShortToBigDecimalTransform());
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ShortToBigIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ShortToByteTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ShortToBooleanTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ShortToDoubleTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ShortToFloatTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ShortToIntegerTransform());
-		DataTypeManager
-				.addTransform(new com.metamatrix.common.types.basic.ShortToLongTransform());
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Short.valueOf((short)1), Short.valueOf((short)0)));
+		DataTypeManager.addTransform(new NumberToByteTransform(
+				DefaultDataClasses.SHORT));
+		DataTypeManager.addTransform(new NumberToDoubleTransform(
+				DefaultDataClasses.SHORT, false));
+		DataTypeManager.addTransform(new NumberToFloatTransform(
+				DefaultDataClasses.SHORT, false));
+		DataTypeManager.addTransform(new NumberToIntegerTransform(
+				DefaultDataClasses.SHORT, false));
+		DataTypeManager.addTransform(new NumberToLongTransform(
+				DefaultDataClasses.SHORT, false));
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.ShortToStringTransform());
 

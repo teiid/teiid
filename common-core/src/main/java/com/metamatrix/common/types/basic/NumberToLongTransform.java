@@ -23,9 +23,23 @@
 package com.metamatrix.common.types.basic;
 
 import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public class ByteToFloatTransform extends AbstractTransform {
+public class NumberToLongTransform extends AbstractTransform {
+	
+	private Class<?> sourceType;
+	private boolean isNarrowing;
+	
+	public NumberToLongTransform(Class<?> sourceType, boolean isNarrowing) {
+		this.sourceType = sourceType;
+		this.isNarrowing = isNarrowing;
+	}
+	
+	@Override
+	public Class<?> getSourceType() {
+		return sourceType;
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -36,27 +50,23 @@ public class ByteToFloatTransform extends AbstractTransform {
 	 * the transformation fails
 	 */
 	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
+		if (value == null) {
+			return null;
 		}
-
-		return new Float(((Byte) value).floatValue());
-	}
-
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class getSourceType() {
-		return Byte.class;
+		return Long.valueOf(((Number)value).longValue());
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return Float.class;
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.LONG;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return isNarrowing;
 	}
 
 }

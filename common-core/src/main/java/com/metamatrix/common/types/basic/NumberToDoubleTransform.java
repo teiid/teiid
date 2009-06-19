@@ -23,13 +23,24 @@
 package com.metamatrix.common.types.basic;
 
 import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public class BooleanToShortTransform extends AbstractTransform {
-
-	private static final Short FALSE = new Short((short)0);
-	private static final Short TRUE = new Short((short)1);
+public class NumberToDoubleTransform extends AbstractTransform {
 	
+	private Class<?> sourceType;
+	private boolean isNarrowing;
+	
+	public NumberToDoubleTransform(Class<?> sourceType, boolean isNarrowing) {
+		this.sourceType = sourceType;
+		this.isNarrowing = isNarrowing;
+	}
+	
+	@Override
+	public Class<?> getSourceType() {
+		return sourceType;
+	}
+
 	/**
 	 * This method transforms a value of the source type into a value
 	 * of the target type.
@@ -39,30 +50,23 @@ public class BooleanToShortTransform extends AbstractTransform {
 	 * the transformation fails
 	 */
 	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
+		if (value == null) {
+			return null;
 		}
-
-		if(value.equals(Boolean.FALSE)) {
-			return FALSE;
-		}
-		return TRUE;
-	}
-
-	/**
-	 * Type of the incoming value.
-	 * @return Source type
-	 */
-	public Class getSourceType() {
-		return Boolean.class;
+		return Double.valueOf(((Number)value).doubleValue());
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return Short.class;
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.DOUBLE;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return isNarrowing;
 	}
 
 }
