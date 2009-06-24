@@ -169,7 +169,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        binding.setConnectorTypeName(configBinding.getComponentTypeID().getFullName());
 			        binding.setRoutingUUID(configBinding.getRoutingUUID());
 			        binding.setEnabled(component.isEnabled()); // use the deployed component setting for being enabled.
-			        binding.setDeployed(true);
 			        binding.setRegistered(false);
 			        binding.setState(MMConnectorBinding.STATE_NOT_REGISTERED);
 			        binding.setProperties(configBinding.getProperties());
@@ -218,7 +217,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 				        	
 				            //not in config - create new MMConnectorBinding
 				            binding = new MMConnectorBinding(identifierParts);
-				            binding.setDeployed(false);
 				            binding.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
 
 	
@@ -367,7 +365,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 
 			        MMDQP dqp = new MMDQP(identifierParts);
 			        
-			        dqp.setDeployed(true);
 			        dqp.setRegistered(false);
 			        dqp.setState(MMDQP.STATE_NOT_REGISTERED);
 			        
@@ -407,7 +404,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        } else {
 			            //not in config - create new MMDQP
 			            dqp = new MMDQP(identifierParts);
-			            dqp.setDeployed(false);
 			            dqp.setState(MMDQP.STATE_NOT_DEPLOYED);
 			        }
 			            
@@ -522,7 +518,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        
 			        host.setRunning(hostData.isRegistered());
 			        host.setRegistered(hostData.isRegistered());
-			        host.setDeployed(false);
 			        host.setProperties(hostData.getProperties());
 
 			        runtimeMap.put(hostName.toUpperCase(), host);
@@ -566,7 +561,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        else {
 			        	host.setProperties(properties);
 			        }
-			        host.setDeployed(true);
 			        
 			        results.add(host);
 			    }
@@ -648,7 +642,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		                   }
 		               }
 		               
-		               process.setDeployed(false);  
 		               String key = MMAdminObject.buildIdentifier(identifierParts).toUpperCase();
 		               runtimeMap.put(key, process);
 		               results.add(process);
@@ -687,7 +680,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 		           process.setLastUpdatedBy(defn.getLastChangedBy());
 		           process.setProperties(defn.getProperties());
 		           process.setEnabled(defn.isEnabled());
-		           process.setDeployed(true);
 		           
 		           String portString = defn.getPort();
 		           if( portString != null ) {
@@ -754,7 +746,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			    	MMService mmservice = new MMService(identifierParts);
 			        mmservice.setComponentTypeName(service.getComponentTypeID().getFullName());
 			        mmservice.setEnabled(component.isEnabled());
-			        mmservice.setDeployed(true);
 			        mmservice.setRegistered(false);
 			        mmservice.setState(Service.STATE_NOT_REGISTERED);
 			        mmservice.setProperties(service.getProperties());
@@ -803,7 +794,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 				        	
 				            //not in config - create new MMConnectorBinding
 				            mmservice = new MMService(identifierParts);
-				            mmservice.setDeployed(false);
 				            mmservice.setState(MMConnectorBinding.STATE_NOT_DEPLOYED);
 
 	
