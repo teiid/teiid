@@ -29,7 +29,6 @@ public class Util {
 
 	public static MMQueueWorkerPool convertStats(final WorkerPoolStats src, String ... identifier) {        
 	    MMQueueWorkerPool pool = new MMQueueWorkerPool(identifier); 
-	    pool.setDeployed(true);
 	    pool.setRegistered(true);
 	    pool.setQueued(src.getQueued());
 	    pool.setThreads(src.getActiveThreads());
