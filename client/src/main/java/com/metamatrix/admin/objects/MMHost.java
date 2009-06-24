@@ -61,7 +61,6 @@ public final class MMHost extends MMAdminObject implements Host {
 		result.append(AdminPlugin.Util.getString("MMHost.Updated")).append(getLastChangedDate()); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMHost.Updated_By")).append(getLastChangedBy()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMHost.IsRunning")).append(isRegistered()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMHost.IsDeployed")).append(isDeployed()); //$NON-NLS-1$
 		return result.toString();
 	}
 

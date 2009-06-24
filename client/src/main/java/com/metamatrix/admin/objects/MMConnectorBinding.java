@@ -71,7 +71,6 @@ public class MMConnectorBinding extends MMAdminObject implements ConnectorBindin
         result.append(AdminPlugin.Util.getString("MMConnectorBinding.State")).append(getState()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMConnectorBinding.State_Changed")).append(getStateChangedTime()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMConnectorBinding.IsRegistered")).append(isRegistered()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMConnectorBinding.IsDeployed")).append(isDeployed()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMConnectorBinding.Properties")).append(getPropertiesAsString()); //$NON-NLS-1$
 		return result.toString();
 	}

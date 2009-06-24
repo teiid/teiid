@@ -69,7 +69,6 @@ public class MMService extends MMAdminObject implements Service {
         result.append(AdminPlugin.Util.getString("MMService.State")).append(getState()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMService.State_Changed")).append(getStateChangedTime()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMService.IsRegistered")).append(isRegistered()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMService.IsDeployed")).append(isDeployed()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMService.Properties")).append(getPropertiesAsString()); //$NON-NLS-1$
 		return result.toString();
 	}

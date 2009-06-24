@@ -70,7 +70,6 @@ public class MMDQP extends MMAdminObject implements DQP {
         result.append(AdminPlugin.Util.getString("MMDQP.Updated_By")).append(getLastChangedBy()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMDQP.State")).append(getStateAsString()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMDQP.IsRegistered")).append(isRegistered()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMDQP.IsDeployed")).append(isDeployed()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMDQP.State_Changed")).append(getStateChangedTime()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMDQP.Properties")).append(getPropertiesAsString()); //$NON-NLS-1$
 		return result.toString();

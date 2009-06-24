@@ -205,7 +205,6 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
 		result.append(AdminPlugin.Util.getString("MMProcess.Updated")).append(getLastChangedDate()); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMProcess.UpdatedBy")).append(getLastChangedBy()); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMProcess.IsRunning")).append(isRunning()); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMProcess.IsDeployed")).append(isDeployed()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMProcess.TotalMemory")).append(totalMemory); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMProcess.FreeMemory")).append(freeMemory); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMProcess.ThreadCount")).append(threadCount); //$NON-NLS-1$

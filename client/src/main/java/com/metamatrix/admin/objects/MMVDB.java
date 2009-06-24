@@ -185,7 +185,6 @@ public final class MMVDB extends MMAdminObject implements VDB, Comparable {
         this.status = status;
         
         //TODO: are these correct?
-        setDeployed(status == STATUS_ACTIVE || status == STATUS_INACTIVE);
         setEnabled(status == STATUS_ACTIVE);
         setRegistered(status == STATUS_ACTIVE || status == STATUS_INACTIVE || status == STATUS_INCOMPLETE);
     }

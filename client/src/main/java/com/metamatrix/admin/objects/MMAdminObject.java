@@ -390,13 +390,7 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
     public java.util.Date getCreated() {
         return this.created;
     }
-    /** 
-     * @return Returns the deployed.
-     * @since 4.3
-     */
-    public boolean isDeployed() {
-        return this.deployed;
-    }
+
     /** 
      * @return Returns the lastUpdated.
      * @since 4.3
@@ -424,14 +418,6 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
      */
     public boolean isRegistered() {
         return this.registered;
-    }
-    
-    /** 
-     * @param deployed The deployed to set.
-     * @since 4.3
-     */
-    public void setDeployed(boolean deployed) {
-        this.deployed = deployed;
     }
     
     /** 
