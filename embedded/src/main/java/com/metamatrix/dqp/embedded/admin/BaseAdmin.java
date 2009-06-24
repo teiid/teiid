@@ -301,7 +301,6 @@ abstract class BaseAdmin {
         binding.setConnectorTypeName(src.getComponentTypeID().getFullName());
         binding.setCreated(src.getCreatedDate());
         binding.setCreatedBy(src.getCreatedBy());
-        binding.setDeployed(src.isEnabled());
         binding.setDescription(src.getDescription());
         binding.setEnabled(src.isEnabled());
         binding.setLastUpdated(src.getLastChangedDate());
@@ -340,7 +339,6 @@ abstract class BaseAdmin {
         MMConnectorType type = new MMConnectorType(new String[] {src.getName()});
         type.setCreated(src.getCreatedDate());
         type.setCreatedBy(src.getCreatedBy());
-        type.setDeployed(src.isDeployable());
         type.setEnabled(true);
         type.setLastUpdated(src.getLastChangedDate());
         type.setRegistered(true);
@@ -358,7 +356,6 @@ abstract class BaseAdmin {
         MMVDB vdb = new MMVDB(new String[] {src.getName(), src.getVersion()});
         vdb.setCreated(src.getDateCreated());
         vdb.setCreatedBy(src.getCreatedBy());
-        vdb.setDeployed(src.isActiveStatus());
         vdb.setEnabled(src.isActiveStatus());
         vdb.setLastUpdated(src.getDateCreated());
         vdb.setLastUpdatedBy(src.getCreatedBy());
@@ -380,7 +377,6 @@ abstract class BaseAdmin {
         MMModel model = new MMModel(new String[] {src.getName()});
         model.setCreated(vdb.getDateCreated());
         model.setCreatedBy(vdb.getCreatedBy());
-        model.setDeployed(vdb.isActiveStatus());
         model.setEnabled(vdb.isActiveStatus());
         model.setLastUpdated(vdb.getDateCreated());
         model.setLastUpdatedBy(vdb.getCreatedBy());
