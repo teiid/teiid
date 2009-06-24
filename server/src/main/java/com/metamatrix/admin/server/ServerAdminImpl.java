@@ -991,20 +991,6 @@ public class ServerAdminImpl implements ServerAdmin {
 	}
 
 	@Override
-	public Collection getConnectorBindingsToConfigure(String resourceIdentfier)
-			throws AdminException {
-		// TODO Auto-generated method stub
-		return getConfigurationAdmin().getConnectorBindingsToConfigure(resourceIdentfier);
-	}
-
-	@Override
-	public Collection getServicesToConfigure(String resourceIdentfier)
-			throws AdminException {
-		// TODO Auto-generated method stub
-		return getConfigurationAdmin().getServicesToConfigure(resourceIdentfier);
-	}
-
-	@Override
 	public Collection getServices(String identifier) throws AdminException {
 		// TODO Auto-generated method stub
 		return getMonitoringAdmin().getServices(identifier);
