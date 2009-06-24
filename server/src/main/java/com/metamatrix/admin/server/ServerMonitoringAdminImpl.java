@@ -1053,7 +1053,6 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			            resource.setLastUpdated(sr.getLastChangedDate());
 			            resource.setLastUpdatedBy(sr.getLastChangedBy());
 			            resource.setProperties(sr.getProperties());
-			            resource.setConnectionPoolIdentifier(sr.getProperty(Resource.RESOURCE_POOL));
 			            results.add(resource);
 			        }
 			    }
