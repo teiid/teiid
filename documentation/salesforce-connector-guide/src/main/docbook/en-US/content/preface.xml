@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<preface>
+	<title>Preface</title>
+	<para> This document shows how to model the metadata of an hosted
+		Salesforce application with Teiid Designer, and details the SQL semantics
+		supported by the connector in Teiid Embedded. This document contains
+		an overview of the process, including:</para>
+	<itemizedlist>
+		<listitem>
+			<para>Using the Salesforce Importer to create relational models
+				representing your Salesforce application.</para>
+		</listitem>
+		<listitem>
+			<para>Querying the Salesforce application.</para>
+		</listitem>
+	</itemizedlist>
+	<para> Commercial development support, production support, and training
+		for Teiid is available through JBoss.
+		Teiid is a Professional Open
+		Source project and a critical component of the
+		JBoss Enterprise Data
+		Services
+		Platform.</para>
+	<note>
+		<para>
+			Please read
+			<ulink url="http://www.jboss.org/teiid/basics.html">Federation Basics</ulink>
+			and understand different terminologies used, resources needed and
+			artifacts that need to be generated before
+			developing a successful
+			application. This example takes advantage of only a
+			minimal set of
+			features from
+			Teiid Embedded for the sake of simplicity and time.
+		</para>
+	</note>
+</preface>
