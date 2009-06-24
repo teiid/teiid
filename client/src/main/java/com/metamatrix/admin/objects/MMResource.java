@@ -31,7 +31,6 @@ import com.metamatrix.admin.api.objects.Resource;
 public class MMResource extends MMAdminObject implements Resource {
 
     private String resourceType;
-    private String connectionPoolIdentifier;
 	    
     /**
      * Constructor
@@ -49,7 +48,6 @@ public class MMResource extends MMAdminObject implements Resource {
 		StringBuffer result = new StringBuffer();
 		result.append(AdminPlugin.Util.getString("MMResource.MMResource")).append(getIdentifier());  //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMResource.Type")).append(resourceType); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMResource.ConnectionPoolIdentifier")).append(connectionPoolIdentifier); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMResource.Created")).append(getCreatedDate()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMResource.Created_By")).append(getCreatedBy()); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMResource.Updated")).append(getLastChangedDate()); //$NON-NLS-1$
@@ -57,30 +55,6 @@ public class MMResource extends MMAdminObject implements Resource {
         result.append(AdminPlugin.Util.getString("MMResource.Properties")).append(getPropertiesAsString()); //$NON-NLS-1$
 		return result.toString();
 	}
-
-
-    
-    /** 
-     * Return the Identifier for the Connection Pool Assigned
-     * 
-     * @return Returns the String Identifier for the Assigned Connection Pool.
-     * @since 4.3
-     */
-    public String getConnectionPoolIdentifier() {
-        return this.connectionPoolIdentifier;
-    }
-
-
-    
-    /**
-     * Set the Connection Pool Assigned Identifier
-     *   
-     * @param connectionPoolIdentifier The Identifier of the Connection Pool to set.
-     * @since 4.3
-     */
-    public void setConnectionPoolIdentifier(String connectionPoolIdentifier) {
-        this.connectionPoolIdentifier = connectionPoolIdentifier;
-    }
 
 
     
