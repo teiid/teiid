@@ -85,7 +85,6 @@ public class PlatformConfigSource implements DQPConfigSource {
         return dqpProps;
     }
     
-	@Override
 	public Map<String, Class<? extends ApplicationService>> getDefaultServiceClasses() {
 		Map<String, Class<? extends ApplicationService>> result = new HashMap<String, Class<? extends ApplicationService>>();
 		result.put(DQPServiceNames.BUFFER_SERVICE, PlatformBufferService.class);
@@ -97,7 +96,6 @@ public class PlatformConfigSource implements DQPConfigSource {
 		return result;
 	}
 	
-	@Override
 	public void updateBindings(Binder binder) {
 		//TODO: this should really just be a child injector (guice 2)
 		binder.bind(AuthorizationServiceInterface.class).toInstance(PlatformProxyHelper.getAuthorizationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
@@ -109,6 +107,11 @@ public class PlatformConfigSource implements DQPConfigSource {
 		binder.bindConstant().annotatedWith(Names.named(Configuration.PROCESSNAME)).to(processName);
 		binder.bind(Host.class).annotatedWith(Names.named(Configuration.HOST)).toInstance(host);
 		binder.bind(DQPContextCache	.class).toInstance(ResourceFinder.getContextCache());
+	}
+
+	@Override
+	public ApplicationService getServiceInstance(Class<? extends ApplicationService> type) {
+		return null;
 	}
     
 }

@@ -34,7 +34,7 @@ import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
  */
 public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
 
-	private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath() + "/xml-vp/xmlvp.properties"; //$NON-NLS-1$
+	private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath() + "/xml-vp/xmlvp.properties;user=test"; //$NON-NLS-1$
     private static final String VDB = "xmlvp"; //$NON-NLS-1$
 
     public TestVirtualDocWithVirtualProc() {

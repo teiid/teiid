@@ -212,4 +212,11 @@ public class PlatformAuthorizationService implements AuthorizationService {
         }
     }
 
+	@Override
+	public boolean isCallerInRole(SessionToken caller, String roleName)
+			throws AuthorizationMgmtException {
+		// rameshTODO Auto-generated method stub
+		return false;
+	}
+
 }

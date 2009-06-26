@@ -1494,5 +1494,10 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 	Properties getUserPreferences() {
 		return userPreferences;
 	}
+
+	@Override
+	public String getClusterName() {
+		return getUserPreferences().getProperty(DQPEmbeddedProperties.CLUSTERNAME, "embedded"); //$NON-NLS-1$
+	}
 }
 

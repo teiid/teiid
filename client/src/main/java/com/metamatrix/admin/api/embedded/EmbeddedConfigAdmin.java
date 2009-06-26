@@ -22,13 +22,16 @@
 
 package com.metamatrix.admin.api.embedded;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.core.CoreConfigAdmin;
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.server.AdminRoles;
 
 
 /** 
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
 public interface EmbeddedConfigAdmin extends CoreConfigAdmin {
     /**
      * Indicates that an extension module has changed 

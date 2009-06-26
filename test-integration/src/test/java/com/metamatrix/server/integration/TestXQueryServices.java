@@ -48,7 +48,7 @@ public class TestXQueryServices extends TestCase {
      */
     public void testXQueryCall() throws Exception {
     	Class.forName(EmbeddedDriver.class.getName());
-    	Connection conn = DriverManager.getConnection("jdbc:metamatrix:xq@" + UnitTestUtil.getTestDataPath() + "/xquery/xquery.properties;txnAutoWrap=OFF" ); //$NON-NLS-1$ //$NON-NLS-2$
+    	Connection conn = DriverManager.getConnection("jdbc:metamatrix:xq@" + UnitTestUtil.getTestDataPath() + "/xquery/xquery.properties;txnAutoWrap=OFF;user=test" ); //$NON-NLS-1$ //$NON-NLS-2$
     	CallableStatement cs = conn.prepareCall("{? = call xqs.test}"); //$NON-NLS-1$
     	assertFalse(cs.execute());
     	SQLXML xml = cs.getSQLXML(1);

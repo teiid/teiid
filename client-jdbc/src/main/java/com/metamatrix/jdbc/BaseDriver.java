@@ -82,8 +82,8 @@ public abstract class BaseDriver implements Driver {
         return driverProps.toArray(propInfo);
     }
     
-    abstract List<DriverPropertyInfo> getAdditionalPropertyInfo(String url, Properties info);
+    protected abstract List<DriverPropertyInfo> getAdditionalPropertyInfo(String url, Properties info);
     
-    abstract void parseURL(String url, Properties info) throws SQLException;
+    protected abstract void parseURL(String url, Properties info) throws SQLException;
 
 }

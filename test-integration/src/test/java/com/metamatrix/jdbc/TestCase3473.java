@@ -47,7 +47,7 @@ import com.metamatrix.jdbc.util.ResultSetUtil;
 public class TestCase3473 extends TestCase {
 
     
-    private static final String DQP_CONFIG_FILE = UnitTestUtil.getTestDataPath() + "/3473/3473.properties"; //$NON-NLS-1$
+    private static final String DQP_CONFIG_FILE = UnitTestUtil.getTestDataPath() + "/3473/3473.properties;user=test"; //$NON-NLS-1$
 
     static Connection conn = null;
     static String primaryUrl = "jdbc:metamatrix:test@" + DQP_CONFIG_FILE + ";version=1"; //$NON-NLS-1$ //$NON-NLS-2$

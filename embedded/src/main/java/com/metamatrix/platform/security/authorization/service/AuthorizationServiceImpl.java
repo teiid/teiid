@@ -37,6 +37,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.xml.sax.SAXException;
 
+import com.google.inject.Inject;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.admin.api.server.AdminRoles;
@@ -68,7 +69,6 @@ import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.StandardAuthorizationActions;
-import com.metamatrix.platform.security.api.service.AuthorizationServicePropertyNames;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
 import com.metamatrix.platform.util.ErrorMessageKeys;
@@ -95,7 +95,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	/*
 	 * Injected state
 	 */
-	protected MembershipServiceInterface membershipServiceProxy;
+	protected MembershipServiceInterface membershipService;
 	protected VDBService vdbService;
 	protected LRUCache<VDBKey, Collection<AuthorizationPolicy>> policyCache = new LRUCache<VDBKey, Collection<AuthorizationPolicy>>();
 
@@ -106,7 +106,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
      */
     public void initialize(Properties env) throws ApplicationInitializationException {
-    	this.useEntitlements = PropertiesUtils.getBooleanProperty(env, AuthorizationServicePropertyNames.DATA_ACCESS_AUTHORIZATION_ENABLED, false);
+    	this.useEntitlements = PropertiesUtils.getBooleanProperty(env, ENTITELEMENTS_ENABLED, false);
     }
 
     /*
@@ -335,17 +335,19 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
         
         if (realm.getSubRealmName() != null) {
-        	VDBKey key = new VDBKey(realm.getRealmName(), realm.getSubRealmName());
+        	VDBKey key = new VDBKey(realm.getSuperRealmName(), realm.getSubRealmName());
         	Collection<AuthorizationPolicy> policies = null;
         	synchronized (this.policyCache) {
             	policies = this.policyCache.get(key);
 	        	if (policies == null) {
 					try {
-				        VDBArchive vdb = vdbService.getVDB(realm.getRealmName(), realm.getSubRealmName());
+				        VDBArchive vdb = vdbService.getVDB(realm.getSuperRealmName(), realm.getSubRealmName());
 				        if (vdb.getDataRoles() == null) {
 				        	policies = Collections.emptyList();
 				        }
-						policies = AuthorizationPolicyFactory.buildPolicies(vdb.getName(), vdb.getVersion(), vdb.getDataRoles());
+				        else {
+				        	policies = AuthorizationPolicyFactory.buildPolicies(vdb.getName(), vdb.getVersion(), vdb.getDataRoles());
+				        }
 					} catch (SAXException e) {
 						throw new AuthorizationMgmtException(e);
 					} catch (IOException e) {
@@ -381,17 +383,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      */
     private Set<MetaMatrixPrincipalName> getGroupsForPrincipal(MetaMatrixPrincipalName principal)
             throws AuthorizationMgmtException, InvalidPrincipalException {
-        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION,
-                new Object[] {"getGroupsForPrincipal(", principal, ") - Getting all group memberships."}); //$NON-NLS-1$ //$NON-NLS-2$
+        
+    	LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[] {"getGroupsForPrincipal(", principal, ") - Getting all group memberships."}); //$NON-NLS-1$ //$NON-NLS-2$
         // Get the set of all groups this Principal is a member of
         Set<MetaMatrixPrincipalName> allPrincipals = new HashSet<MetaMatrixPrincipalName>();
         try {
             Collection groups = Collections.EMPTY_SET;
-            if (principal.getType() == MetaMatrixPrincipal.TYPE_USER ||
-                    principal.getType() == MetaMatrixPrincipal.TYPE_ADMIN) {
-                groups = membershipServiceProxy.getGroupsForUser(principal.getName());
+            if (principal.getType() == MetaMatrixPrincipal.TYPE_USER || principal.getType() == MetaMatrixPrincipal.TYPE_ADMIN) {
+                groups = membershipService.getGroupsForUser(principal.getName());
             } else if (principal.getType() == MetaMatrixPrincipal.TYPE_GROUP) {
-            	MetaMatrixPrincipal groupPrincipal = membershipServiceProxy.getPrincipal(principal);
+            	MetaMatrixPrincipal groupPrincipal = membershipService.getPrincipal(principal);
             	groups = new HashSet();
             	groups.add(groupPrincipal.getName());
             }
@@ -401,8 +402,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
                 // HACK: Convert ALL member principals to MetaMatrixPrincipalName objs
                 // since Auth and Memb svcs don't speak the same language.
                 MetaMatrixPrincipalName member = new MetaMatrixPrincipalName((String) memberItr.next(), MetaMatrixPrincipal.TYPE_GROUP);
-                LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION,
-                        new Object[]{"getGroupsForPrincipal(", principal, ") - Adding membership <", member, ">"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"getGroupsForPrincipal(", principal, ") - Adding membership <", member, ">"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 allPrincipals.add(member);
             }
             // Add original Principal, now that we know he's been authenticated.
@@ -418,14 +418,12 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     protected boolean isEntitled(String principal) {
         try {
-            if (membershipServiceProxy.isSuperUser(principal) || !membershipServiceProxy.isSecurityEnabled()) {
-                LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION,
-                                     new Object[]{ "Automatically entitling principal", principal}); //$NON-NLS-1$ 
+            if (membershipService.isSuperUser(principal) || !membershipService.isSecurityEnabled()) {
+                LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION,new Object[]{ "Automatically entitling principal", principal}); //$NON-NLS-1$ 
                 return true;
             }
         }  catch (MembershipServiceException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0075);
-            LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, e, msg);
+            LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0075));
         } 
         return false;
     }
@@ -494,17 +492,23 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
     }
     
-	public void setMembershipServiceProxy(
-			MembershipServiceInterface membershipServiceProxy) {
-		this.membershipServiceProxy = membershipServiceProxy;
+    @Inject
+	public void setMembershipService(MembershipServiceInterface membershipService) {
+		this.membershipService = membershipService;
 	}
 
 	public void setUseEntitlements(boolean useEntitlements) {
 		this.useEntitlements = useEntitlements;
 	}
 
+	@Inject
 	public void setVdbService(VDBService vdbService) {
 		this.vdbService = vdbService;
 	}
-    
+
+	@Override
+	public boolean isCallerInRole(SessionToken caller, String roleName) throws AuthorizationMgmtException {
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"isCallerInRole(", caller, roleName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
+        return hasPolicy(caller, RolePermissionFactory.getRealm(), roleName);
+	}
 }

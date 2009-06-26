@@ -213,14 +213,12 @@ public class ServerAdminFactory {
     	return createAdmin(p);
     }
 
-	public ServerAdmin createAdmin(Properties p)
-			throws AdminComponentException, AdminException {
+	public ServerAdmin createAdmin(Properties p) {
 		p = PropertiesUtils.clone(p);
 		p.remove(MMURL.JDBC.VDB_NAME);
 		p.remove(MMURL.JDBC.VDB_VERSION);
     	p.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
-		ServerAdmin serverAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread()
-				.getContextClassLoader(), new Class[] { ServerAdmin.class }, new ReconnectingProxy(p));
+		ServerAdmin serverAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] { ServerAdmin.class }, new ReconnectingProxy(p));
     	
        return serverAdmin;
     }

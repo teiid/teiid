@@ -39,9 +39,6 @@ import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 @Singleton
 class LogConfigurationProvider implements Provider<LogConfiguration> {
 
-	@Inject
-	DQPConfigSource configSource;
-		
 	@Override
 	public LogConfiguration get() {
         return new Log4JLogConfiguration();

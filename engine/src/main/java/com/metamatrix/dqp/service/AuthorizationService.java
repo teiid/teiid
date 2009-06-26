@@ -25,8 +25,10 @@ package com.metamatrix.dqp.service;
 import java.util.Collection;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.core.CoreConstants;
+import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 
 /**
@@ -48,6 +50,8 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
     
     public static final String DEFAULT_WSDL_USERNAME = CoreConstants.DEFAULT_ANON_USERNAME;
     
+    public static final String ENTITELEMENTS_ENABLED = "entitlements.enabled"; //$NON-NLS-1$
+    
     /**
      * Determine which of a set of resources a connection does not have permission to
      * perform the specified action.
@@ -65,4 +69,7 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
      * @return <code>true</code> iff server-side entitlements checking is enabled.
      */
     boolean checkingEntitlements();
+    
+    boolean isCallerInRole( SessionToken caller, String roleName ) throws AuthorizationMgmtException;
+    
 }

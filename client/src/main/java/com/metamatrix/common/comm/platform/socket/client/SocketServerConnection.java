@@ -293,12 +293,15 @@ public class SocketServerConnection implements ServerConnection {
 		}
 	}
 	
-	public boolean isSameInstance(SocketServerConnection otherService) throws CommunicationException {
+	public boolean isSameInstance(ServerConnection otherService) throws CommunicationException {
+		if (!(otherService instanceof SocketServerConnection)) {
+			return false;
+		}
 		SocketAddress address = selectServerInstance().getRemoteAddress();
 		if (address == null) {
 			return false;
 		}
-		return address.equals(otherService.selectServerInstance().getRemoteAddress());
+		return address.equals(((SocketServerConnection)otherService).selectServerInstance().getRemoteAddress());
 	}
 	
 	public void selectNewServerInstance(Object service) {

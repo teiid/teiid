@@ -24,17 +24,18 @@ package com.metamatrix.common.comm.platform.socket;
 
 import java.util.Properties;
 
+import org.teiid.transport.SSLConfiguration;
+import org.teiid.transport.SocketListener;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.comm.platform.socket.server.SocketListener;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.VMComponentDefnType;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.messaging.MessageBus;
-import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
@@ -120,9 +121,9 @@ public class SocketVMController extends ProcessController {
         };
         
         logMessage(PlatformPlugin.Util.getString("SocketVMController.1", param)); //$NON-NLS-1$
-        ServerSocketConfiguration helper = new ServerSocketConfiguration();
+        SSLConfiguration helper = new SSLConfiguration();
         try {
-	        helper.init();
+	        helper.init(props);
 	        listener = new SocketListener(socketPort, bindaddress, this.clientServices, inputBufferSize, outputBufferSize, maxThreads, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled(), PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL));
         } catch (Exception e) {
         	LogManager.logCritical(LogCommonConstants.CTX_CONTROLLER, e, PlatformPlugin.Util.getString("SocketVMController.2",param)); //$NON-NLS-1$

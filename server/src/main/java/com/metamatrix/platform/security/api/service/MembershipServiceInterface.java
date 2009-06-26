@@ -45,13 +45,18 @@ import com.metamatrix.platform.service.api.ServiceInterface;
 public interface MembershipServiceInterface extends ServiceInterface {
     public static String NAME = ResourceNames.MEMBERSHIP_SERVICE;
     
+    public static final String MEMBERSHIP_ADMIN_PASSWORD = "security.membership.admin.password"; //$NON-NLS-1$
+    public static final String MEMBERSHIP_ADMIN_USERNAME = "security.membership.admin.username"; //$NON-NLS-1$
+    public static final String MEMBERSHIP_SECURITY_ENABLED = "security.membership.security.enabled"; //$NON-NLS-1$
+    public static final String MEMBERSHIP_DOMAIN_ORDER = "security.membership.DomainOrder"; //$NON-NLS-1$
+    
     /**
      * The environment property describing both the domain names and their required
      * order of search.  Domain names are assumed to be in preferred search order
      * and in the form "A,X,...,D" where A, X and D are domain names.
      * This property is required (there is no default).
      */
-    public static final String DOMAIN_ORDER = ConfigurationPropertyNames.MEMBERSHIP_DOMAIN_ORDER;
+    public static final String DOMAIN_ORDER = MEMBERSHIP_DOMAIN_ORDER;
     /**
      * The environment property name for the class that is to be used for the names of the domains.
      * This property is required (there is no default).
@@ -61,11 +66,11 @@ public interface MembershipServiceInterface extends ServiceInterface {
     public static final String DEFAULT_ADMIN_USERNAME = "metamatrixadmin"; //$NON-NLS-1$
     public static final String DEFAULT_WSDL_USERNAME = CoreConstants.DEFAULT_ANON_USERNAME;
     
-    public static final String ADMIN_PASSWORD = ConfigurationPropertyNames.MEMBERSHIP_ADMIN_PASSWORD;
-    public static final String ADMIN_USERNAME = ConfigurationPropertyNames.MEMBERSHIP_ADMIN_USERNAME;
+    public static final String ADMIN_PASSWORD = MEMBERSHIP_ADMIN_PASSWORD;
+    public static final String ADMIN_USERNAME = MEMBERSHIP_ADMIN_USERNAME;
     public static final String DOMAIN_ACTIVE = "activate"; //$NON-NLS-1$
     public static final String ADMIN_HOSTS = "metamatrix.security.admin.allowedHosts"; //$NON-NLS-1$
-    public static final String SECURITY_ENABLED = ConfigurationPropertyNames.MEMBERSHIP_SECURITY_ENABLED;
+    public static final String SECURITY_ENABLED = MEMBERSHIP_SECURITY_ENABLED;
     
     public static final String DOMAIN_PROPERTIES = "propertiesFile"; //$NON-NLS-1$
 

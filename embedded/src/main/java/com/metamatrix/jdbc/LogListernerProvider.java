@@ -24,34 +24,32 @@ package com.metamatrix.jdbc;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.JavaLogWriter;
 import com.metamatrix.core.log.LogListener;
-import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
 @Singleton
 class LogListernerProvider implements Provider<LogListener> {
-	@Inject
-	DQPConfigSource configSource;
+	@Inject @Named("DQPProperties")
+	Properties props;
 	
 	@Inject @Named("BootstrapURL")
 	URL dqpURL;
 	
 	@Override
 	public LogListener get() {
-        String logFile = configSource.getProperties().getProperty(DQPEmbeddedProperties.DQP_LOGFILE);
-        String instanceId = configSource.getProperties().getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "0"); //$NON-NLS-1$        
+        String logFile = this.props.getProperty(DQPEmbeddedProperties.DQP_LOGFILE);
+        String instanceId = this.props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "0"); //$NON-NLS-1$        
         
         // Configure Logging            
         try {

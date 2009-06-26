@@ -31,4 +31,6 @@ public interface LogConstants {
 	public static final String CTX_MEMBERSHIP = "MEMBERSHIP"; //$NON-NLS-1$
 	public static final String CTX_AUTHORIZATION = "AUTHORIZATION"; //$NON-NLS-1$
 	public static final String CTX_AUTHORIZATION_ADMIN_API = "AUTHORIZATION_ADMIN_API"; //$NON-NLS-1$
+	public static final String CTX_SERVER= "Server"; //$NON-NLS-1$
+	public static final String CTX_ADMIN = "ADMIN"; //$NON-NLS-1$	
 }

@@ -59,7 +59,7 @@ import com.metamatrix.jdbc.util.ResultSetUtil;
  */
 public class TestMMDatabaseMetaData {
 
-    private static final String DQP_CONFIG_FILE = UnitTestUtil.getTestDataPath() + "/bqt/bqt.properties"; //$NON-NLS-1$
+    private static final String DQP_CONFIG_FILE = UnitTestUtil.getTestDataPath() + "/bqt/bqt.properties;user=test"; //$NON-NLS-1$
 
     static Connection conn = null;
     static String primaryUrl = "jdbc:metamatrix:QT_Ora9DS@" + DQP_CONFIG_FILE + ";version=1"; //$NON-NLS-1$ //$NON-NLS-2$

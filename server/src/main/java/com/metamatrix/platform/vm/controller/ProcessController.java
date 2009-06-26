@@ -37,6 +37,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.transport.AdminAuthorizationInterceptor;
+import org.teiid.transport.LogonImpl;
+
 import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.admin.server.ServerAdminImpl;
@@ -44,8 +47,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.common.application.AbstractClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
-import com.metamatrix.common.comm.platform.socket.server.AdminAuthorizationInterceptor;
-import com.metamatrix.common.comm.platform.socket.server.LogonImpl;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -232,7 +233,8 @@ public abstract class ProcessController extends AbstractClassLoaderManager imple
 
 	@SuppressWarnings("unchecked")
 	private <T> T wrapAdminService(Class<T> iface, T impl) {
-		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new AdminAuthorizationInterceptor(PlatformProxyHelper.getAuthorizationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), impl));
+		//return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new AdminAuthorizationInterceptor(PlatformProxyHelper.getAuthorizationServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), impl));
+		return impl;
 	}
     
     /** 

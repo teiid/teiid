@@ -22,34 +22,66 @@
 
 package com.metamatrix.jdbc;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.transport.AdminAuthorizationInterceptor;
+import org.teiid.transport.LocalServerConnection;
+import org.teiid.transport.LogonImpl;
+import org.teiid.transport.SocketTransport;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.metamatrix.admin.api.core.Admin;
+import com.metamatrix.admin.api.embedded.EmbeddedAdmin;
+import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
-import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.api.ServerConnectionFactory;
+import com.metamatrix.common.comm.api.ServerConnectionListener;
+import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.protocol.URLHelper;
+import com.metamatrix.common.util.JMXUtil;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.MixinProxy;
 import com.metamatrix.dqp.ResourceFinder;
+import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+import com.metamatrix.dqp.embedded.admin.DQPConfigAdminImpl;
+import com.metamatrix.dqp.embedded.admin.DQPMonitoringAdminImpl;
+import com.metamatrix.dqp.embedded.admin.DQPRuntimeStateAdminImpl;
+import com.metamatrix.dqp.embedded.admin.DQPSecurityAdminImpl;
+import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.jdbc.transport.LocalTransportHandler;
+import com.metamatrix.platform.security.api.ILogon;
+import com.metamatrix.platform.security.api.MetaMatrixSessionID;
+import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 
 /** 
@@ -57,31 +89,47 @@ import com.metamatrix.jdbc.transport.LocalTransportHandler;
  * This is also responsible for initializing the DQP if the DQP instance is not
  * already alive.
  */
-public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory {
-    private static final int ACTIVE = 3;
-    private LocalTransportHandler handler = null;    
+public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     private volatile boolean shutdownInProgress = false;
     private DQPCore dqp;
     private long starttime = -1L;
     private Thread shutdownThread;
+    private ClientServiceRegistry clientServices;
+    private String workspaceDirectory;
+    private boolean init = false;
+    private ConnectionListenerList listenerList = new ConnectionListenerList();
+    private SocketTransport socketTransport;
+    private JMXUtil jmxServer;
+    
+	private final class ConnectionListenerList extends ArrayList<ServerConnectionListener> implements ServerConnectionListener{
 
-    /** 
-     * @see com.metamatrix.jdbc.EmbeddedConnectionFactory#createConnection()
-     */
-    public Connection createConnection(Properties props) throws SQLException {
-
-    	try {
-        	// check for the valid connection properties
-            checkConnectionProperties (props);
-
-            ServerConnection serverConn = this.handler.createConnection(props);
-                        
-            // Should occur every time in class loader using existing attributes
-            return new EmbeddedConnection(this, serverConn, props, null);            
-        } catch (ConnectionException e) {
-            throw new EmbeddedSQLException(e);
+		@Override
+		public void connectionAdded(ServerConnection connection) {
+			for (ServerConnectionListener l: this) {
+				l.connectionAdded(connection);
+			}
 		}
-    }
+
+		@Override
+		public void connectionRemoved(ServerConnection connection) {
+			for (ServerConnectionListener l: this) {
+				l.connectionRemoved(connection);
+			}			
+		}
+	}
+	
+	@Override
+	public ServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
+    	try {
+    	
+    		initialize(connectionProperties);
+            return new LocalServerConnection(connectionProperties, this.clientServices, listenerList);
+
+    	} catch (ApplicationInitializationException e) {
+            throw new ConnectionException(e.getCause());
+		}
+	}
+    
         
     /**
      * When the DQP is restarted using the admin API, it only shuts it down, it gets
@@ -92,34 +140,159 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
      * @throws ApplicationInitializationException 
      * @since 4.3
      */
-    public void initialize(URL bootstrapURL, Properties props) throws SQLException {
-		Injector injector = Guice.createInjector(new EmbeddedGuiceModule(bootstrapURL, props));
-		ResourceFinder.setInjector(injector); 
-		DQPConfigSource configSource = injector.getInstance(DQPConfigSource.class);
-
-		// start the DQP
-		this.dqp = new DQPCore();
+     public synchronized void initialize(Properties info) throws ApplicationInitializationException {
+    	if (this.init) {
+    		return;
+    	}
+        
+        String dqpId = getDQPIdentity(info);
+        info.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, dqpId);
+    	
+        URL bootstrapURL = null;
+        Properties props = info;
 		try {
-			this.dqp.start(configSource);
-		} catch (ApplicationInitializationException e) {
-			throw new EmbeddedSQLException(e);
+			bootstrapURL = URLHelper.buildURL(info.getProperty(DQPEmbeddedProperties.BOOTURL));
+			props = PropertiesUtils.loadFromURL(bootstrapURL);
+			props.putAll(info);
+			props = PropertiesUtils.resolveNestedProperties(props);
+		} catch (IOException e) {
+			throw new ApplicationInitializationException(e);
 		}
+		        	
+        // Create a temporary workspace directory
+        this.workspaceDirectory = createWorkspace(bootstrapURL, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR), dqpId);
+        props.setProperty(DQPEmbeddedProperties.DQP_WORKSPACE, this.workspaceDirectory);
+
+        this.jmxServer = new JMXUtil(dqpId);
+        
+        EmbeddedGuiceModule config = new EmbeddedGuiceModule(bootstrapURL, props);
+		Injector injector = Guice.createInjector(config);
+		ResourceFinder.setInjector(injector);
+		config.setInjector(injector);
+		
+		// start the DQP
+		this.dqp = injector.getInstance(DQPCore.class);
+		this.dqp.start(config);
 		
 		// make the configuration service listen for the connection life-cycle events
 		// used during VDB delete
         ConfigurationService configService = (ConfigurationService)findService(DQPServiceNames.CONFIGURATION_SERVICE);
 		
+        this.clientServices = createClientServices(configService);
+                
+    	// start socket transport
+        boolean enableSocketTransport = PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.ENABLE_SOCKETS, false);
+        if (enableSocketTransport) {
+	        this.socketTransport = new SocketTransport(props, this.clientServices, (SessionServiceInterface)findService(DQPServiceNames.SESSION_SERVICE));
+	        this.socketTransport.start();
+        }
+
         //in new class loader - all of these should be created lazily and held locally
-        this.handler = new LocalTransportHandler(this.dqp);
-    	this.handler.registerListener(configService.getConnectionListener());
+        listenerList.add(configService.getConnectionListener());
+        
     	this.shutdownThread = new ShutdownWork();
     	Runtime.getRuntime().addShutdownHook(this.shutdownThread);
         
         this.starttime = System.currentTimeMillis();
+        this.init = true;
         DQPEmbeddedPlugin.logInfo("DQPEmbeddedManager.start_dqp", new Object[] {new Date(System.currentTimeMillis()).toString()}); //$NON-NLS-1$
     }
     
-    class ShutdownWork extends Thread {
+    private ClientServiceRegistry createClientServices(ConfigurationService configService) {
+    	ClientServiceRegistry services  = new ClientServiceRegistry();
+    
+    	SessionServiceInterface sessionService = (SessionServiceInterface)this.dqp.getEnvironment().findService(DQPServiceNames.SESSION_SERVICE);
+    	services.registerClientService(ILogon.class, new LogonImpl(sessionService, configService.getClusterName()), com.metamatrix.common.util.LogConstants.CTX_SERVER);
+    	
+    	try {
+			EmbeddedAdmin roleCheckedServerAdmin = wrapAdminService(EmbeddedAdmin.class, (EmbeddedAdmin)getAdminAPI(null));
+			services.registerClientService(EmbeddedAdmin.class, roleCheckedServerAdmin, com.metamatrix.common.util.LogConstants.CTX_ADMIN);
+		} catch (AdminException e) {
+			// ignore; exception is not thrown in this case.
+		}
+    	
+    	services.registerClientService(ClientSideDQP.class, this.dqp, LogConstants.CTX_QUERY_SERVICE);
+    	
+		return services;
+	}
+    
+    /**
+     * Define an identifier for the DQP 
+     * @return a JVM level unique identifier
+     */
+    private String getDQPIdentity(Properties props) {
+    	
+    	String processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME);
+    	if (processName != null) {
+    		return processName;
+    	}
+    	
+    	synchronized (System.class) {
+            String id = System.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "1"); //$NON-NLS-1$
+            int identity = Integer.parseInt(id);
+            System.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, String.valueOf(identity + 1));
+            id = String.valueOf(identity);
+            return id;
+    	}
+    }        
+    
+    /**
+     * Create the temporary workspace directory for the dqp  
+     * @param identity - identity of the dqp
+     * @throws MMSQLException 
+     */
+    private String createWorkspace(URL bootstrapURL, String baseDir, String identity) throws ApplicationInitializationException {
+    	if (baseDir == null) {
+    		baseDir = System.getProperty("java.io.tmpdir")+"/teiid/"; //$NON-NLS-1$ //$NON-NLS-2$
+    	} else {
+			try {
+        		baseDir = URLHelper.buildURL(bootstrapURL, baseDir).getPath();
+			} catch (MalformedURLException e) {
+				throw new ApplicationInitializationException(e);
+			}
+    	}
+        System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, baseDir + "/temp"); //$NON-NLS-1$S 
+
+        File f = new File(baseDir, identity);
+
+        // If directory already exists then try to delete it; because we may have
+        // failed to delete at end of last run (JVM holds lock on jar files)
+        if (f.exists()) {
+            delete(f);
+        }
+        
+        // since we may have cleaned it up now , create the directory again
+        if (!f.exists()) {
+            f.mkdirs();
+        }  
+        return f.getAbsolutePath();
+    }
+    
+    /**
+     * delete the any directory including sub-trees 
+     * @param file
+     */
+    private void delete(File file) {
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                delete(files[i]);                    
+            } // for
+        }
+
+        // for saftey purpose only delete the jar files
+        if (file.getName().endsWith(".jar")) { //$NON-NLS-1$
+            file.delete();
+        }
+    }    
+    
+	@SuppressWarnings("unchecked")
+	private <T> T wrapAdminService(Class<T> iface, T impl) {
+		AuthorizationService authService = (AuthorizationService)this.dqp.getEnvironment().findService(DQPServiceNames.AUTHORIZATION_SERVICE);
+		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new AdminAuthorizationInterceptor(authService, impl));
+	}
+    
+	class ShutdownWork extends Thread {
     	ShutdownWork(){
     		super("embedded-shudown-thread"); //$NON-NLS-1$
     	}
@@ -169,6 +342,10 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
      
     private synchronized void shutdown(boolean undoShutdownHook) {
     	
+    	if (!isAlive()) {
+    		return;
+    	}
+    	
     	if (undoShutdownHook) {
     		Runtime.getRuntime().removeShutdownHook(this.shutdownThread);
     	}
@@ -187,70 +364,62 @@ public class EmbeddedConnectionFactoryImpl implements EmbeddedConnectionFactory 
 				LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
 			}
             
+            // remove any artifacts which are not cleaned-up
+            if (this.workspaceDirectory != null) {
+                File file = new File(this.workspaceDirectory);
+                if (file.exists()) {
+                    delete(file);
+                }
+            }
+            
             this.dqp = null;
             
-            this.handler = null;
-
+            // shutdown the socket transport.
+            if (this.socketTransport != null) {
+            	this.socketTransport.stop();
+            	this.socketTransport = null;
+            }
+            
             // shutdown the cache.
             ResourceFinder.getCacheFactory().destroy();
             
             shutdownInProgress = false;
+            
+            init = false;
         }    	
     }
-    
-    /**
-     * Are the connection properties supplied for connection match with those of the
-     * DQP   
-     * @param props
-     * @return
-     * @since 4.3
-     */
-    private void checkConnectionProperties(Properties props) throws SQLException {
-        String vdbName = props.getProperty(BaseDataSource.VDB_NAME);
-        String vdbVersion = props.getProperty(BaseDataSource.VDB_VERSION);
-                        
-        try {
-            VDBService service = (VDBService)findService(DQPServiceNames.VDB_SERVICE);
-            List<VDBArchive> vdbs = service.getAvailableVDBs();
 
-            // We are looking for the latest version find that now 
-            if (vdbVersion == null) {
-                vdbVersion = findLatestVersion(vdbName, vdbs);
-            }
-
-            props.setProperty(BaseDataSource.VDB_VERSION, vdbVersion);
-            
-            // This below call will load the VDB from configuration into VDB service 
-            // if not already done so.
-            int status = service.getVDB(vdbName, vdbVersion).getStatus();
-            if (status != ACTIVE) {
-                throw new EmbeddedSQLException(JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notactive", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$
-            }
-        } catch (MetaMatrixComponentException e) {
-            throw new EmbeddedSQLException(e, JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$
-        }
-    }
+	@Override   
+    public Admin getAdminAPI(Properties connectionProperties) throws AdminException {
         
-    /**
-     * Find the latest version of the VDB available in the deployment. 
-     * @param vdbName
-     * @param vdbs
-     * @return
-     * @throws EmbeddedSQLException
-     * @since 4.3
-     */
-    String findLatestVersion(String vdbName, List<VDBArchive> vdbs) throws EmbeddedSQLException{        
-        int latestVersion = 0;
-        for (VDBArchive vdb:vdbs) {
-            if(vdb.getName().equalsIgnoreCase(vdbName)) {
-                // Make sure the VDB Name and version number are the only parts of this vdb key
-                latestVersion = Math.max(latestVersion, Integer.parseInt(vdb.getVersion()));
-            }
-        }
-        if(latestVersion != 0) {
-            return String.valueOf(latestVersion);
-        }
-        throw new EmbeddedSQLException(JDBCPlugin.Util.getString("EmbeddedConnectionFactory.vdb_notavailable", vdbName)); //$NON-NLS-1$        
-    }    
-    
+        InvocationHandler handler = new MixinProxy(new Object[] {
+                new DQPConfigAdminImpl(this),                    
+                new DQPMonitoringAdminImpl(this), 
+                new DQPRuntimeStateAdminImpl(this), 
+                new DQPSecurityAdminImpl(this)
+        }) {
+            
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                // We we perform any DQP functions check if the DQP is still alive
+                if (!isAlive()) {
+                    throw new AdminProcessingException(JDBCPlugin.Util.getString("EmbeddedConnection.DQP_shutDown")); //$NON-NLS-1$
+                }
+                
+                ClassLoader callingClassLoader = Thread.currentThread().getContextClassLoader();
+                try {
+                    // Set the class loader to current class classloader so that the this classe's class loader gets used
+                    Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+                    return super.invoke(proxy, method, args);
+                }
+                finally {
+                    Thread.currentThread().setContextClassLoader(callingClassLoader);
+                }
+            }            
+        };
+        return (EmbeddedAdmin) Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class[] {EmbeddedAdmin.class}, handler);
+    }
+	
+	public JMXUtil getJMXServer() {
+		return this.jmxServer;
+	}
 }

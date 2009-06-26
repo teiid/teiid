@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.comm.api;
 
+import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.platform.security.api.LogonResult;
 
 public interface ServerConnection {
@@ -35,5 +36,7 @@ public interface ServerConnection {
 	boolean isOpen();
 	
 	LogonResult getLogonResult();
+	
+	boolean isSameInstance(ServerConnection conn) throws CommunicationException;
 	
 }

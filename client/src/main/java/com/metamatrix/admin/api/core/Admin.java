@@ -22,6 +22,9 @@
 
 package com.metamatrix.admin.api.core;
 
+import com.metamatrix.admin.RolesAllowed;
+import com.metamatrix.admin.api.server.AdminRoles;
+
 
 /**
  * Marker interface for all MetaMatrix administration - core.
@@ -29,5 +32,10 @@ package com.metamatrix.admin.api.core;
  * @since 4.3
  */
 public interface Admin extends CoreConfigAdmin, CoreMonitoringAdmin, CoreRuntimeStateAdmin, CoreSecurityAdmin {
-
+    /**
+     * Closes connection.
+     * @since 4.3
+     */
+	@RolesAllowed(value=AdminRoles.RoleName.ANONYMOUS)
+    void close(); 
 }

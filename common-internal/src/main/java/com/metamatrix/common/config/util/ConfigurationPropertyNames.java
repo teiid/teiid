@@ -35,11 +35,5 @@ public interface ConfigurationPropertyNames {
     // needs to be change, which will impact the importing of .DEF files.
     static final double CONFIG_CURR_VERSION_DBL = 6.0;
     static final String CONFIG_CURR_VERSION = "6.0";
-    
-    
-    public static final String MEMBERSHIP_ADMIN_PASSWORD = "security.membership.admin.password"; //$NON-NLS-1$
-    public static final String MEMBERSHIP_ADMIN_USERNAME = "security.membership.admin.username"; //$NON-NLS-1$
-    public static final String MEMBERSHIP_SECURITY_ENABLED = "security.membership.security.enabled"; //$NON-NLS-1$
-    public static final String MEMBERSHIP_DOMAIN_ORDER = "security.membership.DomainOrder"; //$NON-NLS-1$
-    
+        
 }

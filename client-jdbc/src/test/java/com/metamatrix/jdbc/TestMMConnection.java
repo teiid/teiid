@@ -31,6 +31,7 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
@@ -48,7 +49,7 @@ public class TestMMConnection extends TestCase {
         super(name);
     }
     
-    public static MMServerConnection getMMConnection() {
+    public static MMConnection getMMConnection() {
     	ServerConnection mock = mock(ServerConnection.class);
     	stub(mock.getService(ClientSideDQP.class)).toReturn(mock(ClientSideDQP.class));
     	Properties props = new Properties();
@@ -59,7 +60,7 @@ public class TestMMConnection extends TestCase {
     	productInfo.setProperty(ProductInfoConstants.VIRTUAL_DB, STD_DATABASE_NAME);
     	productInfo.setProperty(ProductInfoConstants.VDB_VERSION, STD_DATABASE_VERSION);
     	stub(mock.getLogonResult()).toReturn(new LogonResult(new SessionToken(new MetaMatrixSessionID(1), "metamatrixadmin"), productInfo, "fake")); //$NON-NLS-1$
-    	return new MMServerConnection(mock, props, serverUrl);
+    	return new MMConnection(mock, props, serverUrl, mock(ServerConnectionFactory.class));
     }
 
     public void testGetMetaData() throws Exception {

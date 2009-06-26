@@ -22,7 +22,6 @@
 
 package com.metamatrix.jdbc;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -44,6 +43,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.metamatrix.common.classloader.PostDelegatingClassLoader;
+import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.api.ServerConnectionFactory;
+import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.protocol.MMURLConnection;
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.common.protocol.URLHelper;
@@ -140,7 +143,7 @@ public final class EmbeddedDriver extends BaseDriver {
         // now create the connection
         EmbeddedTransport transport = getDQPTransport(dqpURL, info);                        
         
-        Connection conn = transport.createConnection(info);
+        Connection conn = transport.createConnection(dqpURL, info);
         
         return conn;
     }
@@ -179,7 +182,7 @@ public final class EmbeddedDriver extends BaseDriver {
      * @param The properties object which is to be updated with properties in the URL.
      * @throws SQLException if the URL is not in the expected format.
      */
-    void parseURL(String url, Properties info) throws SQLException {
+    protected void parseURL(String url, Properties info) throws SQLException {
         if (url == null || url.trim().length() == 0) {
             String logMsg = BaseDataSource.getResourceMessage("EmbeddedDriver.URL_must_be_specified"); //$NON-NLS-1$
             throw new SQLException(logMsg);
@@ -279,7 +282,7 @@ public final class EmbeddedDriver extends BaseDriver {
     }
 
 	@Override
-	List<DriverPropertyInfo> getAdditionalPropertyInfo(String url,
+	protected List<DriverPropertyInfo> getAdditionalPropertyInfo(String url,
 			Properties info) {
         return Collections.emptyList();
 	}    
@@ -324,9 +327,8 @@ public final class EmbeddedDriver extends BaseDriver {
      * @since 4.3
      */
     static class EmbeddedTransport {
-		private EmbeddedConnectionFactory connectionFactory;
+		private ServerConnectionFactory connectionFactory;
         private ClassLoader classLoader; 
-        private String workspaceDirectory;
         private URL url;
 
         public EmbeddedTransport(URL dqpURL, Properties info) throws SQLException {
@@ -338,13 +340,7 @@ public final class EmbeddedDriver extends BaseDriver {
             props.putAll(info);
             
             props = PropertiesUtils.resolveNestedProperties(props);
-            
-            String dqpId = getDQPIdentity();
-            props.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, dqpId);
-            // Create a temporary workspace directory
-            this.workspaceDirectory = createWorkspace(props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR), dqpId);
-            props.setProperty(DQPEmbeddedProperties.DQP_WORKSPACE, this.workspaceDirectory);
-            
+                        
             // a non-delegating class loader will be created from where all third party dependent jars can be loaded
             ArrayList<URL> runtimeClasspathList = new ArrayList<URL>();
             String libLocation = props.getProperty(DQPEmbeddedProperties.DQP_LIBDIR, "./lib/"); //$NON-NLS-1$
@@ -380,10 +376,9 @@ public final class EmbeddedDriver extends BaseDriver {
                 Thread.currentThread().setContextClassLoader(this.classLoader);            
                 String className = "com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl"; //$NON-NLS-1$
                 Class<?> clazz = this.classLoader.loadClass(className);            
-                this.connectionFactory = (EmbeddedConnectionFactory)clazz.newInstance();
-                this.connectionFactory.initialize(dqpURL, props);
+                this.connectionFactory = (ServerConnectionFactory)clazz.newInstance();                
             } catch (Exception e) {
-                throw new EmbeddedSQLException(e);                
+                throw MMSQLException.create(e);                
             } finally {
                 Thread.currentThread().setContextClassLoader(current);
             }                        
@@ -439,7 +434,7 @@ public final class EmbeddedDriver extends BaseDriver {
                 return props;
             }catch(IOException e) {
                 String logMsg = BaseDataSource.getResourceMessage("EmbeddedTransport.invalid_dqpproperties_path", new Object[] {dqpURL}); //$NON-NLS-1$
-                throw new EmbeddedSQLException(e, logMsg);
+                throw MMSQLException.create(e, logMsg);
             }finally {
                 if (in != null) {
                     try{in.close();}catch(IOException e) {}
@@ -451,15 +446,7 @@ public final class EmbeddedDriver extends BaseDriver {
          * Shutdown the current transport 
          */
         void shutdown() {
-            this.connectionFactory.shutdown();            
-                        
-            // remove any artifacts which are not cleaned-up
-            if (this.workspaceDirectory != null) {
-                File file = new File(this.workspaceDirectory);
-                if (file.exists()) {
-                    delete(file);
-                }
-            }
+            this.connectionFactory.shutdown();                                    
         }
         
         /**
@@ -468,80 +455,25 @@ public final class EmbeddedDriver extends BaseDriver {
          * @param info
          * @return Connection
          */
-        Connection createConnection(Properties info) throws SQLException {
+        Connection createConnection(URL url, Properties info) throws SQLException {
             ClassLoader current = null;            
             try {
                 current = Thread.currentThread().getContextClassLoader();             
-                Thread.currentThread().setContextClassLoader(classLoader);            
-                return connectionFactory.createConnection(info);            
+                Thread.currentThread().setContextClassLoader(classLoader);       
+                try {
+                	info.setProperty(DQPEmbeddedProperties.BOOTURL, url.toExternalForm());
+					ServerConnection conn = connectionFactory.createConnection(info);
+					return new MMConnection(conn, info, url.toExternalForm(), connectionFactory);
+				} catch (CommunicationException e) {
+					throw MMSQLException.create(e);
+				} catch (ConnectionException e) {
+					throw MMSQLException.create(e);
+				}
             } finally {
                 Thread.currentThread().setContextClassLoader(current);
             }            
         }
         
-        /**
-         * Define an identifier for the DQP 
-         * @return a JVM level unique identifier
-         */
-        String getDQPIdentity() {
-        	synchronized (System.class) {
-	            String id = System.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "1"); //$NON-NLS-1$
-	            int identity = Integer.parseInt(id);
-	            System.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, String.valueOf(identity + 1));
-	            id = String.valueOf(identity);
-	            return id;
-        	}
-        }        
-        
-        /**
-         * Create the temporary workspace directory for the dqp  
-         * @param identity - identity of the dqp
-         * @throws MMSQLException 
-         */
-        String createWorkspace(String baseDir, String identity) throws MMSQLException {
-        	if (baseDir == null) {
-        		baseDir = System.getProperty("java.io.tmpdir")+"/teiid/"; //$NON-NLS-1$ //$NON-NLS-2$
-        	} else {
-				try {
-	        		baseDir = URLHelper.buildURL(this.url, baseDir).getPath();
-				} catch (MalformedURLException e) {
-					throw MMSQLException.create(e);
-				}
-        	}
-            System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, baseDir + "/temp"); //$NON-NLS-1$S 
-
-            File f = new File(baseDir, identity);
-
-            // If directory already exists then try to delete it; because we may have
-            // failed to delete at end of last run (JVM holds lock on jar files)
-            if (f.exists()) {
-                delete(f);
-            }
-            
-            // since we may have cleaned it up now , create the directory again
-            if (!f.exists()) {
-                f.mkdirs();
-            }  
-            return f.getAbsolutePath();
-        }
-        
-        /**
-         * delete the any directory including sub-trees 
-         * @param file
-         */
-        private void delete(File file) {
-            if (file.isDirectory()) {
-                File[] files = file.listFiles();
-                for (int i = 0; i < files.length; i++) {
-                    delete(files[i]);                    
-                } // for
-            }
-
-            // for saftey purpose only delete the jar files
-            if (file.getName().endsWith(".jar")) { //$NON-NLS-1$
-                file.delete();
-            }
-        }
     }
 
 }

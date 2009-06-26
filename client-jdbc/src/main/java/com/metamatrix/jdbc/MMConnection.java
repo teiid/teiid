@@ -57,9 +57,15 @@ import java.util.logging.Logger;
 
 import javax.transaction.xa.Xid;
 
+import org.teiid.jdbc.TeiidDriver;
+
+import com.metamatrix.admin.api.core.Admin;
+import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
+import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.util.SqlUtil;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
@@ -81,9 +87,13 @@ import com.metamatrix.platform.util.ProductInfoConstants;
  * methods in the class throw SQLException.</p>
  */
 
-public abstract class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api.Connection {
+public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api.Connection {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-	
+
+	// constant value giving product name
+    private final static String SERVER_NAME = "Teiid Server"; //$NON-NLS-1$
+    private final static String EMBEDDED_NAME = "Teiid Embedded"; //$NON-NLS-1$
+
     // Unique request ID generator
     private long requestIDGenerator;
 
@@ -112,6 +122,9 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
     private boolean disableLocalTransactions = false;
     private ClientSideDQP dqp;
     protected ServerConnection serverConn;
+        
+    private Admin admin;
+    ServerConnectionFactory connFactory = null;
     
     /**
      * <p>MMConnection constructor, tring to establish connection to metamatrix with
@@ -120,10 +133,12 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
      * @param info contains properies needed to establish a MetaMatrix connection.
      * @throws SQLException if the driver cannot establish connection to metamatrix.
      */
-    public MMConnection(ServerConnection serverConn, Properties info, String url) {        
+    public MMConnection(ServerConnection serverConn, Properties info, String url, ServerConnectionFactory connFactory) {        
     	this.serverConn = serverConn;
         this.url = url;
         this.dqp = serverConn.getService(ClientSideDQP.class);
+        this.connFactory = connFactory;
+        
         // set default properties if not overridden
         String overrideProp = info.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
         if ( overrideProp == null || overrideProp.trim().length() == 0 ) {
@@ -224,6 +239,21 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         return this.url;
     }
    
+    /** 
+     * @see com.metamatrix.jdbc.api.Connection#getAdminAPI()
+     * @since 4.3
+     */
+    public synchronized Admin getAdminAPI() throws SQLException {
+        try {
+            if (admin == null) {
+                admin = connFactory.getAdminAPI(this.propInfo);
+            }
+        } catch(AdminException e) {
+        	throw MMSQLException.create(e);
+		} 
+        return admin;
+    }
+    
     /**
      * Connection identifier of this connection 
      * @return identifier
@@ -288,6 +318,11 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
             // set the status of the connection to closed
             closed = true;            
         }
+        
+        if (admin != null) {
+            admin.close();
+        }
+        
     }
 
     /**
@@ -507,7 +542,12 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
      * Get the database name that this connection is representing 
      * @return String name of the database
      */
-    public abstract String getDatabaseName();
+    public String getDatabaseName() {
+    	if (this.serverConn instanceof SocketServerConnection) {
+    		return SERVER_NAME;
+    	}
+    	return EMBEDDED_NAME;
+    }
     
     /**
      * Retrieves the current holdability of ResultSet objects created using this Connection object.
@@ -908,12 +948,24 @@ public abstract class MMConnection extends WrapperImpl implements com.metamatrix
         } catch (SQLException e) {
         	logger.log(Level.WARNING, JDBCPlugin.Util.getString("MMXAConnection.rolling_back_error"), e); //$NON-NLS-1$
         }
+        
+		//perform load balancing
+		if (this.serverConn instanceof SocketServerConnection) {
+			((SocketServerConnection)this.serverConn).selectNewServerInstance(this.getDQP());
+		}
 	}
 	
-	public abstract BaseDriver getBaseDriver();
+	public BaseDriver getBaseDriver() {
+		if (this.serverConn instanceof SocketServerConnection) {
+			return new TeiidDriver();
+		}
+		return new EmbeddedDriver();
+	}
 	
-	public abstract boolean isSameProcess(MMConnection conn) throws CommunicationException;
-    
+	public boolean isSameProcess(MMConnection conn) throws CommunicationException {
+		return this.serverConn.isSameInstance(conn.serverConn);
+	}
+	
 	//## JDBC4.0-begin ##
 	public void setClientInfo(Properties properties)
 		throws SQLClientInfoException {

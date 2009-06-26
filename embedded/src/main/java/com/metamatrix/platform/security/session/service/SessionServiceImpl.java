@@ -35,6 +35,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.dqp.internal.process.DQPCore;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -49,6 +51,7 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
@@ -295,7 +298,8 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		return info;
 	}
 	
-	void setMembershipService(MembershipServiceInterface membershipService) {
+	@Inject
+	public void setMembershipService(MembershipServiceInterface membershipService) {
 		this.membershipService = membershipService;
 	}
 	
@@ -315,14 +319,15 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		this.sessionTimeLimit = sessionTimeLimit;
 	}
 	
+	@Inject
 	public void setDqpCore(DQPCore dqpCore) {
 		this.dqpCore = dqpCore;
 	}
 
 	@Override
-	public void initialize(Properties props)
-			throws ApplicationInitializationException {
-		
+	public void initialize(Properties props) throws ApplicationInitializationException {
+		this.sessionMaxLimit = Long.parseLong(props.getProperty(MAX_SESSIONS, DEFAULT_MAX_SESSIONS));
+		this.sessionTimeLimit = Long.parseLong(props.getProperty(SESSION_TIMEOUT, DEFAULT_SESSION_TIMEOUT));
 	}
 
 	@Override
@@ -342,6 +347,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		this.sessionMonitor.cancel();
 	}
 
+	@Inject
 	public void setVdbService(VDBService vdbService) {
 		this.vdbService = vdbService;
 	}

@@ -22,18 +22,8 @@
 
 package com.metamatrix.dqp.service;
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Date;
-
-import com.metamatrix.common.config.CurrentConfiguration;
 
 public class AuditMessage {
-    public static final String PROCESS_NAME = CurrentConfiguration.getInstance().getProcessName();
-    public static final String HOST_NAME = CurrentConfiguration.getInstance().getConfigurationName();
-
     private static final String RESOURCE_DELIMITER = ", "; //$NON-NLS-1$
 
 	private String context;

@@ -22,14 +22,17 @@
 
 package com.metamatrix.admin.api.embedded;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.core.CoreRuntimeStateAdmin;
 import com.metamatrix.admin.api.exception.AdminException;
+import com.metamatrix.admin.api.server.AdminRoles;
 
 
 
 /**
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_PRODUCT)
 public interface EmbeddedRuntimeStateAdmin extends CoreRuntimeStateAdmin {
 
     /**

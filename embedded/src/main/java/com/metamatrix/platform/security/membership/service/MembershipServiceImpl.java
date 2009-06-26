@@ -24,7 +24,9 @@ package com.metamatrix.platform.security.membership.service;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,6 +40,8 @@ import java.util.regex.Pattern;
 
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
 import com.metamatrix.api.exception.security.InvalidUserException;
@@ -47,14 +51,15 @@ import com.metamatrix.api.exception.security.UnsupportedCredentialException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.AuthenticationProviderType;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.BasicMetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.Credentials;
@@ -114,15 +119,19 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
     private boolean isSecurityEnabled = true;
 	
     private List<MembershipDomainHolder> domains = new ArrayList<MembershipDomainHolder>();
+    private URL dqpURL;
+    private InetAddress hostAddress;
     
-    public MembershipServiceImpl() {
-        super();
+    @Inject
+    public MembershipServiceImpl(@Named("BootstrapURL") URL dqpURL, @Named(DQPEmbeddedProperties.HOST_ADDRESS) InetAddress hostAddress) {
+    	this.dqpURL = dqpURL;
+    	this.hostAddress = hostAddress;
     }
 
     // -----------------------------------------------------------------------------------
     //                 S E R V I C E - R E L A T E D    M E T H O D S
     // -----------------------------------------------------------------------------------
-
+    
     /**
      * Perform initialization and commence processing. This method is called only once.
      * <p>Note: In order to perform the chaining of membership domains, this method assumes
@@ -132,8 +141,14 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
      * @throws ApplicationInitializationException 
      */
     @Override
-    public void initialize(Properties env)
-    		throws ApplicationInitializationException {
+    public void initialize(Properties env) throws ApplicationInitializationException {
+        
+        isSecurityEnabled = Boolean.valueOf(env.getProperty(SECURITY_ENABLED)).booleanValue();
+        LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, "Security Enabled: " + isSecurityEnabled); //$NON-NLS-1$
+        
+        if (!isSecurityEnabled) {
+        	return;
+        }
 
         adminUsername = env.getProperty(ADMIN_USERNAME, DEFAULT_ADMIN_USERNAME); 
         
@@ -147,15 +162,14 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
         	this.allowedAddresses = Pattern.compile(property);
         }
         
-        isSecurityEnabled = Boolean.valueOf(env.getProperty(SECURITY_ENABLED)).booleanValue();
-        LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, "Security Enabled: " + isSecurityEnabled); //$NON-NLS-1$
-        
-        try {
-            //TODO: my caller should have already decrypted this for me
-            adminCredentials = CryptoUtil.stringDecrypt(adminCredentials);
-        } catch (CryptoException err) {
-            LogManager.logCritical(LogConstants.CTX_MEMBERSHIP, err, PlatformPlugin.Util.getString("MembershipServiceImpl.Root_password_decryption_failed")); //$NON-NLS-1$
-            throw new ApplicationInitializationException(err);
+        if (CryptoUtil.isValueEncrypted(adminCredentials)) {
+	        try {
+	            //TODO: my caller should have already decrypted this for me
+	            adminCredentials = CryptoUtil.stringDecrypt(adminCredentials);
+	        } catch (CryptoException err) {
+	            LogManager.logCritical(LogConstants.CTX_MEMBERSHIP, err, PlatformPlugin.Util.getString("MembershipServiceImpl.Root_password_decryption_failed")); //$NON-NLS-1$
+	            throw new ApplicationInitializationException(err);
+	        }
         }
         
         String domainNameOrder = env.getProperty(MembershipServiceInterface.DOMAIN_ORDER);
@@ -216,13 +230,17 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
         
         properties.setProperty(DOMAIN_NAME, domainName);
         
-        String propsString = properties.getProperty(DOMAIN_PROPERTIES);
+        String propsString = properties.getProperty(DOMAIN_PROPERTIES); 
         
         if (propsString != null) {
-            Properties customProps = PropertiesUtils.loadFromURL(propsString);
+        	URL url = URLHelper.buildURL(this.dqpURL, propsString);
+            Properties customProps = PropertiesUtils.loadFromURL(url);
             properties.putAll(customProps);
+            
+            // Using this URL the Membership providers can further define and files that are in relative context to this file
+            properties.put(DOMAIN_PROPERTIES, url);
         }
-        
+                
         domain.initialize(properties);
 
         return domain;
@@ -295,7 +313,7 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
 	        		LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("MembershipServiceImpl.unknown_host")); //$NON-NLS-1$
 	        		return new FailedAuthenticationToken();
 	        	}
-	        	if (!allowedAddresses.matcher(address).matches() || address.equals(CurrentConfiguration.getInstance().getHostAddress().getHostAddress())) {
+	        	if (!allowedAddresses.matcher(address).matches() && !address.equals(this.hostAddress.getHostAddress())) {
 	        		LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("MembershipServiceImpl.invalid_host", address, allowedAddresses.pattern())); //$NON-NLS-1$
 	        		return new FailedAuthenticationToken();
 	        	}

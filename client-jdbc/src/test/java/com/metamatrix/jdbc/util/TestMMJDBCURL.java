@@ -54,14 +54,14 @@ public class TestMMJDBCURL extends TestCase {
         String URL = "jdbc:metamatrix:bqt@mm://localhost:12345;version=1;user=xyz;password=***;logLevel=1;configFile=testdata/bqt/dqp_stmt_e2e.xmi;disableLocalTxn=true;autoFailover=false"; //$NON-NLS-1$
         
         Properties expectedProperties = new Properties();
-        expectedProperties.setProperty("version", "1");
-        expectedProperties.setProperty("user", "xyz");
-        expectedProperties.setProperty("password", "***");
-        expectedProperties.setProperty("logLevel", "1");
-        expectedProperties.setProperty("configFile", "testdata/bqt/dqp_stmt_e2e.xmi");
-        expectedProperties.setProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, "true");
-        expectedProperties.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, "false");
-        MMJDBCURL url = new MMJDBCURL(URL); //$NON-NLS-1$
+        expectedProperties.setProperty("version", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        expectedProperties.setProperty("user", "xyz"); //$NON-NLS-1$ //$NON-NLS-2$
+        expectedProperties.setProperty("password", "***"); //$NON-NLS-1$ //$NON-NLS-2$
+        expectedProperties.setProperty("logLevel", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        expectedProperties.setProperty("configFile", "testdata/bqt/dqp_stmt_e2e.xmi"); //$NON-NLS-1$ //$NON-NLS-2$
+        expectedProperties.setProperty(ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS, "true"); //$NON-NLS-1$
+        expectedProperties.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, "false"); //$NON-NLS-1$
+        MMJDBCURL url = new MMJDBCURL(URL); 
         assertEquals("bqt", url.getVDBName()); //$NON-NLS-1$
         assertEquals("mm://localhost:12345", url.getConnectionURL()); //$NON-NLS-1$
         assertEquals(expectedProperties, url.getProperties());
@@ -224,14 +224,14 @@ public class TestMMJDBCURL extends TestCase {
     
     public void testConstructor() {
         MMJDBCURL url = new MMJDBCURL("myVDB", "mm://myhost:12345",null); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("jdbc:metamatrix:myVDB@mm://myhost:12345", url.getJDBCURL()); //$NON-NLS-1$
+        assertEquals("jdbc:teiid:myVDB@mm://myhost:12345", url.getJDBCURL()); //$NON-NLS-1$
         
         Properties props = new Properties();
         props.setProperty(BaseDataSource.USER_NAME, "myuser"); //$NON-NLS-1$
         props.setProperty(BaseDataSource.PASSWORD, "mypassword"); //$NON-NLS-1$
         props.put("ClieNTtOKeN", new Integer(1)); //$NON-NLS-1$
         url = new MMJDBCURL("myVDB", "mm://myhost:12345", props); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("jdbc:metamatrix:myVDB@mm://myhost:12345;user=myuser;password=mypassword", url.getJDBCURL()); //$NON-NLS-1$
+        assertEquals("jdbc:teiid:myVDB@mm://myhost:12345;user=myuser;password=mypassword", url.getJDBCURL()); //$NON-NLS-1$
     }
     
     public void testConstructor_Exception() {
@@ -291,24 +291,6 @@ public class TestMMJDBCURL extends TestCase {
         assertEquals(password, p.getProperty("password"));  //$NON-NLS-1$
     }   
     
-    public void testDriverManagerException() {
-		//register the drivers -- MMDriver first to ensure it is not throwing an exception
-    	new MMDriver();
-		new EmbeddedDriver();
-
-		try {
-			DriverManager.getConnection("jdbc:metamatrix:QT_Ora9DS@somefile"); //$NON-NLS-1$
-		} catch (SQLException e) {
-			assertEquals("This Path: mmfile:somefile used to locate mm.properties is invalid.  Please check your file system and correct your JDBC URL. source:somefile", e.getMessage()); //$NON-NLS-1$
-		}
-		
-		try {
-			DriverManager.getConnection("jdbc:foo:QT_Ora9DS@mm://host:30000"); //$NON-NLS-1$
-		} catch (SQLException e) {
-			assertTrue(e.getMessage().startsWith("No suitable driver")); //$NON-NLS-1$
-		}
-
-    }
     
     public void testGetServerURL_NoProperties() {        
         String result = new MMJDBCURL("jdbc:metamatrix:designtimecatalog@mm://slwxp172:44401;user=ddifranco;password=mm").getConnectionURL(); //$NON-NLS-1$

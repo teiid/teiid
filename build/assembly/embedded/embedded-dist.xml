@@ -17,7 +17,7 @@
       <includes>
         <include>teiid-${version}-client.jar</include>
       </includes>
-      <outputDirectory>/</outputDirectory>      
+      <outputDirectory>client</outputDirectory>      
     </fileSet>
       
     <fileSet>
@@ -37,7 +37,7 @@
       <includes>
         <include>teiid-hibernate-dialect-${version}.jar</include>
       </includes>
-      <outputDirectory>hibernate</outputDirectory>      
+      <outputDirectory>client</outputDirectory>      
     </fileSet>
     
     <fileSet>

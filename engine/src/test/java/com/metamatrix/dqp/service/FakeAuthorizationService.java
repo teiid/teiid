@@ -25,9 +25,11 @@ package com.metamatrix.dqp.service;
 import java.util.*;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.platform.security.api.SessionToken;
 
 /**
  */
@@ -154,4 +156,11 @@ public class FakeAuthorizationService implements AuthorizationService {
                            String roleName) throws MetaMatrixComponentException {
         return false;
     }
+
+	@Override
+	public boolean isCallerInRole(SessionToken caller, String roleName)
+			throws AuthorizationMgmtException {
+		// rameshTODO Auto-generated method stub
+		return false;
+	}
 }

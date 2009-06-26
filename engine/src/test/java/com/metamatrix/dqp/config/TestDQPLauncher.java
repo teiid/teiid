@@ -33,10 +33,13 @@ import org.teiid.dqp.internal.process.DQPCore;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.dqp.service.AutoGenDataService;
+import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.FakeAbstractService;
 import com.metamatrix.dqp.service.FakeBufferService;
 import com.metamatrix.dqp.service.FakeMetadataService;
+import com.metamatrix.dqp.service.MetadataService;
 
 /**
  */
@@ -53,19 +56,17 @@ public class TestDQPLauncher extends TestCase {
     public void testLaunch() throws Exception {
         DQPConfigSource configSource = Mockito.mock(DQPConfigSource.class);
         Mockito.stub(configSource.getProperties()).toReturn(new Properties());
-        HashMap<String, Class<? extends ApplicationService>> defaults = new HashMap<String, Class<? extends ApplicationService>>();
-        Mockito.stub(configSource.getDefaultServiceClasses()).toReturn(defaults);
+        
         String[] services = new String[] {DQPServiceNames.BUFFER_SERVICE, DQPServiceNames.METADATA_SERVICE, DQPServiceNames.DATA_SERVICE};
-        defaults.put(DQPServiceNames.BUFFER_SERVICE, FakeBufferService.class);
-        defaults.put(DQPServiceNames.METADATA_SERVICE, FakeMetadataService.class);
-        defaults.put(DQPServiceNames.DATA_SERVICE, AutoGenDataService.class);
+        
+        Mockito.stub(configSource.getServiceInstance(BufferService.class)).toReturn(new FakeBufferService());
+        Mockito.stub(configSource.getServiceInstance(MetadataService.class)).toReturn(new FakeMetadataService());
+        Mockito.stub(configSource.getServiceInstance(DataService.class)).toReturn(new AutoGenDataService());
         
         DQPCore dqpCore = new DQPCore();
         dqpCore.start(configSource);
     	
-        DQPCore dqp = new DQPCore();
-        dqp.start(configSource);
-        assertNotNull("DQP should not be null", dqp); //$NON-NLS-1$
+        assertNotNull("DQP should not be null", dqpCore); //$NON-NLS-1$
         
         // Check that bootstrapping occurred
         for(int i=0; i<services.length; i++) {

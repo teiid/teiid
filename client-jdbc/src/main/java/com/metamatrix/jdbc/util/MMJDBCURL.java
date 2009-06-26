@@ -40,7 +40,8 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
  */
 public class MMJDBCURL {
     private static final String UTF_8 = "UTF-8"; //$NON-NLS-1$
-    private static final String JDBC_PROTOCOL = "jdbc:metamatrix:"; //$NON-NLS-1$
+    private static final String JDBC_PROTOCOL = "jdbc:teiid:"; //$NON-NLS-1$
+    private static final String OLD_JDBC_PROTOCOL = "jdbc:metamatrix:"; //$NON-NLS-1$
     
     private static final String[] KNOWN_PROPERTIES = {
         BaseDataSource.APP_NAME,
@@ -134,13 +135,22 @@ public class MMJDBCURL {
     }
 
     private void parseJDBCProtocol(String protocol) {
-        if (!protocol.startsWith(JDBC_PROTOCOL)) {
-            throw new IllegalArgumentException();
+        if (protocol.startsWith(JDBC_PROTOCOL)) {
+	        if (protocol.length() == JDBC_PROTOCOL.length()) {
+	            throw new IllegalArgumentException();
+	        }
+	        vdbName = protocol.substring(JDBC_PROTOCOL.length());
         }
-        if (protocol.length() == JDBC_PROTOCOL.length()) {
-            throw new IllegalArgumentException();
+        else if (protocol.startsWith(OLD_JDBC_PROTOCOL)) {
+	        if (protocol.length() == OLD_JDBC_PROTOCOL.length()) {
+	            throw new IllegalArgumentException();
+	        }
+	        vdbName = protocol.substring(OLD_JDBC_PROTOCOL.length());
         }
-        vdbName = protocol.substring(JDBC_PROTOCOL.length());
+        else {
+        	throw new IllegalArgumentException();
+        }
+        
     }
     
     private void parseConnectionPart(String connectionInfo) {

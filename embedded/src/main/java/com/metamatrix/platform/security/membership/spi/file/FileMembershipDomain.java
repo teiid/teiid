@@ -25,6 +25,7 @@ package com.metamatrix.platform.security.membership.spi.file;
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,8 +37,10 @@ import java.util.Set;
 import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.api.exception.security.UnsupportedCredentialException;
+import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.platform.security.api.Credentials;
+import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SuccessfulAuthenticationToken;
 import com.metamatrix.platform.security.membership.spi.MembershipDomain;
 import com.metamatrix.platform.security.membership.spi.MembershipSourceException;
@@ -71,14 +74,14 @@ public class FileMembershipDomain implements MembershipDomain {
             throw new MembershipSourceException("Required property " +USERS_FILE+ " was missing."); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
-        users = loadFile(userFile);
+        users = loadFile(env, userFile);
         
         if (groupFile == null) {
             throw new MembershipSourceException("Required property " +GROUPS_FILE+ " was missing."); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
         groups.clear();
-		groups.putAll(loadFile(groupFile));
+		groups.putAll(loadFile(env, groupFile));
         userGroups.clear();
         for (Iterator i = groups.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry)i.next();
@@ -98,9 +101,10 @@ public class FileMembershipDomain implements MembershipDomain {
         }
     }
 
-	private Properties loadFile(String file) throws MembershipSourceException {
+	private Properties loadFile(Properties env, String file) throws MembershipSourceException {
 		try {
-			return PropertiesUtils.loadFromURL(file);
+			URL baseURL = (URL)env.get(MembershipServiceInterface.DOMAIN_PROPERTIES);
+			return PropertiesUtils.loadFromURL(URLHelper.buildURL(baseURL, file));
 		} catch (MalformedURLException e) {
 			throw new MembershipSourceException(e, "Could not load file"); //$NON-NLS-1$
 		} catch (IOException e) {

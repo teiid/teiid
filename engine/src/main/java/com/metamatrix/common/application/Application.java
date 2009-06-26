@@ -34,6 +34,7 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.util.LogConstants;
 
@@ -43,35 +44,6 @@ public class Application {
 
     protected ApplicationEnvironment environment = new ApplicationEnvironment();
     private ArrayList<String> installedServices = new ArrayList<String>();
-    private ServiceLoader loader = new ServiceLoader();
-
-    /* 
-     * @see com.metamatrix.common.application.Application#initialize(java.util.Properties)
-     */
-    public void start(DQPConfigSource configSource) throws ApplicationInitializationException {
-        DQPGuiceModule module = new DQPGuiceModule(configSource);
-        
-        Injector injector = Guice.createInjector(module);
-        
-        // Load services into DQP
-        for(int i=0; i<DQPServiceNames.ALL_SERVICES.length; i++) {
-            final String serviceName = DQPServiceNames.ALL_SERVICES[i];
-            final Class<? extends ApplicationService> type = DQPServiceNames.ALL_SERVICE_CLASSES[i];
-            if(injector.getBinding(Key.get(type)) == null){
-                LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceIsNull", serviceName)); //$NON-NLS-1$
-            }else{
-            	ApplicationService appService = injector.getInstance(type);
-            	appService = loader.loadService(serviceName, appService);
-            	String loggingContext = DQPServiceNames.SERVICE_LOGGING_CONTEXT[i];
-				if (loggingContext != null) {
-					appService = (ApplicationService)LogManager.createLoggingProxy(loggingContext, appService, new Class[] {type}, MessageLevel.DETAIL);
-				}
-                appService.initialize(configSource.getProperties());
-            	installService(serviceName, appService);
-                LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceInstalled", serviceName)); //$NON-NLS-1$
-            }
-        }
-    }
 
     /* 
      * @see com.metamatrix.common.application.Application#installService(com.metamatrix.common.application.ApplicationService)

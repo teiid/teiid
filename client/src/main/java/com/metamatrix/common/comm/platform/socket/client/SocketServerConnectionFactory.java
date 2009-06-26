@@ -29,24 +29,28 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.metamatrix.admin.api.core.Admin;
+import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.common.comm.platform.client.ServerAdminFactory;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
@@ -286,6 +290,17 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	
 	public void setMaxCachedInstances(int maxCachedInstances) {
 		this.maxCachedInstances = maxCachedInstances;
+	}
+
+	@Override
+	public Admin getAdminAPI(Properties connectionProperties) throws AdminException {
+		ServerAdminFactory factory = ServerAdminFactory.getInstance();
+		return factory.createAdmin(connectionProperties);
+	}
+
+	@Override
+	public void shutdown() {
+		// only applies in the Embedded scenario.
 	}
 
 }

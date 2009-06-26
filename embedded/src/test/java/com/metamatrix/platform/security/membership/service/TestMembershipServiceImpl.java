@@ -22,6 +22,8 @@
 
 package com.metamatrix.platform.security.membership.service;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
@@ -47,7 +49,7 @@ public class TestMembershipServiceImpl extends TestCase {
         p.setProperty(MembershipServiceInterface.ADMIN_USERNAME, "metamatrixadmin"); //$NON-NLS-1$
         p.setProperty(MembershipServiceInterface.ADMIN_PASSWORD, CryptoUtil.getCryptor().encrypt("mm")); //$NON-NLS-1$
         p.setProperty(MembershipServiceInterface.SECURITY_ENABLED, Boolean.TRUE.toString());
-        MembershipServiceImpl membershipServiceImpl = new MembershipServiceImpl();
+        MembershipServiceImpl membershipServiceImpl = new MembershipServiceImpl(null, null);
         
         membershipServiceImpl.initialize(p);
         
@@ -60,7 +62,7 @@ public class TestMembershipServiceImpl extends TestCase {
         p.setProperty(MembershipServiceInterface.ADMIN_USERNAME, "metamatrixadmin"); //$NON-NLS-1$
         p.setProperty(MembershipServiceInterface.ADMIN_PASSWORD, CryptoUtil.getCryptor().encrypt("mm")); //$NON-NLS-1$
         p.setProperty(MembershipServiceInterface.SECURITY_ENABLED, Boolean.FALSE.toString());
-        MembershipServiceImpl membershipServiceImpl = new MembershipServiceImpl();
+        MembershipServiceImpl membershipServiceImpl = new MembershipServiceImpl(null,null);
         
         membershipServiceImpl.initialize(p);
         
@@ -81,8 +83,8 @@ public class TestMembershipServiceImpl extends TestCase {
         assertEquals("@", MembershipServiceImpl.getBaseUsername("@")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    private MembershipServiceImpl createMembershipService() throws MembershipSourceException {
-        MembershipServiceImpl membershipService = new MembershipServiceImpl();
+    private MembershipServiceImpl createMembershipService() throws Exception {
+        MembershipServiceImpl membershipService = new MembershipServiceImpl(null, InetAddress.getLocalHost());
         MembershipServiceImpl.MembershipDomainHolder membershipDomainHolder = new MembershipServiceImpl.MembershipDomainHolder(
                                                                                TestFileMembershipDomain
                                                                                                        .createFileMembershipDomain(),

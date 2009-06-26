@@ -32,4 +32,6 @@ public interface LogConstants {
     public static final String CTX_EXTENSION_SOURCE = "EXTENSION_MODULE"; //$NON-NLS-1$
 	public static final String CTX_COMMANDLOGGING = "COMMAND_LOG"; //$NON-NLS-1$
 	public static final String CTX_AUDITLOGGING = "AUDIT_LOG"; //$NON-NLS-1$
+	public static final String CTX_ADMIN_API = "ADMIN_API"; //$NON-NLS-1$
+	public static final String CTX_QUERY_SERVICE = "QUERY_SERVICE"; //$NON-NLS-1$
 }

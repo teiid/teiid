@@ -107,6 +107,7 @@ class Log4JUtil {
 		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_EXTENSION_SOURCE);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_COMMANDLOGGING);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_AUDITLOGGING);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_QUERY_SERVICE);
 
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_CONFIG);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_COMMUNICATION);
@@ -115,6 +116,8 @@ class Log4JUtil {
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_MEMBERSHIP);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION_ADMIN_API);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_SERVER);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_ADMIN);
 		contexts.add(ROOT_CONTEXT+LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA);
 		
 		contexts.add("com.arjuna"); //$NON-NLS-1$

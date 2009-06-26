@@ -55,6 +55,11 @@
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-txn-jbossts</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-embedded</artifactId>
+            <version>${pom.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-common-core</artifactId>

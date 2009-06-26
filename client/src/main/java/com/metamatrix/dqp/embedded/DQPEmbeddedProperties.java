@@ -36,11 +36,24 @@ public interface DQPEmbeddedProperties {
     public static final String DQP_KEYSTORE = "dqp.keystore"; //$NON-NLS-1$
     public static final String DQP_WORKDIR = "dqp.workdir"; //$NON-NLS-1$
     public static final String DQP_LIBDIR = "dqp.lib"; //$NON-NLS-1$
+    public static final String PROCESSNAME = "processName"; //$NON-NLS-1$
+    public static final String CLUSTERNAME = "clusterName"; //$NON-NLS-1$
+
+    // socket specific
+    public static final String BIND_ADDRESS = "server.bindAddress"; //$NON-NLS-1$
+    public static final String SERVER_PORT = "server.portNumber"; //$NON-NLS-1$
+    public static final String MAX_THREADS = "server.maxSocketThreads"; //$NON-NLS-1$
+    public static final String INPUT_BUFFER_SIZE = "server.inputBufferSize"; //$NON-NLS-1$       
+    public static final String OUTPUT_BUFFER_SIZE = "server.outputBufferSize"; //$NON-NLS-1$       
     
     //derived properties
     public static final String DQP_IDENTITY = "dqp.identity"; //$NON-NLS-1$
     public static final String DQP_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
     public static final String DQP_WORKSPACE = "dqp.workspacedir"; //$NON-NLS-1$
+    public static final String BOOTURL = "bootURL"; //$NON-NLS-1$
+    public static final String ENABLE_SOCKETS = "sockets.enabled"; //$NON-NLS-1$
+    public static final String HOST_ADDRESS = "hostAddress"; //$NON-NLS-1$
+	
     
     public interface BufferService {
         /**

@@ -30,7 +30,7 @@ import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 
 public class TestResultSetMetadata extends AbstractMMQueryTestCase {
 
-    private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath() + "/partssupplier/dqp.properties"; //$NON-NLS-1$
+    private static final String DQP_PROP_FILE = UnitTestUtil.getTestDataPath() + "/partssupplier/dqp.properties;user=test"; //$NON-NLS-1$
     private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
     
     public TestResultSetMetadata() {

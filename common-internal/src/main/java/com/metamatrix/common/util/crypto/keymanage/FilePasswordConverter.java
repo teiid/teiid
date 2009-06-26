@@ -37,7 +37,6 @@ import java.util.zip.ZipFile;
 import org.jdom.Document;
 import org.jdom.Element;
 
-import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.util.crypto.PasswordChangeUtility;
@@ -58,8 +57,7 @@ public class FilePasswordConverter {
     public static final int FILE_TYPE_PROPERTIES = 2;
     public static final int FILE_TYPE_VDB = 3;
     
-    private static String DEFAULT_KEY_FILE = System.getProperty(CommonPropertyNames.INSTALLATION_DIRECTORY) + File.separator 
-    + "config" + File.separator + CryptoUtil.KEY_NAME; //$NON-NLS-1$
+    private static String DEFAULT_KEY_FILE =  CryptoUtil.KEY_NAME;
     
     private static final String PASSWORD = "PASSWORD"; //$NON-NLS-1$
     

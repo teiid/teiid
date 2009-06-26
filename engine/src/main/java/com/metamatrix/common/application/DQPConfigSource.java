@@ -52,8 +52,5 @@ public interface DQPConfigSource {
      */
     public Properties getProperties();
     
-    public Map<String, Class<? extends ApplicationService>> getDefaultServiceClasses();
-    
-    public void updateBindings(Binder binder);
-    
+    public ApplicationService getServiceInstance(Class<? extends ApplicationService> type);
 }

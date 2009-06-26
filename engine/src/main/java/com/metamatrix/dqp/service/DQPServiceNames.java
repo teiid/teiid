@@ -23,6 +23,8 @@
 package com.metamatrix.dqp.service;
 
 import com.metamatrix.dqp.util.LogConstants;
+import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
+import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 
 /**
@@ -52,6 +54,11 @@ public interface DQPServiceNames {
     public static final String CONFIGURATION_SERVICE = "dqp.configuration"; //$NON-NLS-1$
     
     public static final String REGISTRY_SERVICE = "platform.registry"; //$NON-NLS-1$
+    
+    public static final String SESSION_SERVICE = "dqp.session"; //$NON-NLS-1$
+    
+    public static final String MEMBERSHIP_SERVICE = "dqp.membership"; //$NON-NLS-1$
+    
 
     /**
      * Array of all services a DQP may use.
@@ -64,6 +71,8 @@ public interface DQPServiceNames {
         VDB_SERVICE,
         METADATA_SERVICE,
         DATA_SERVICE,
+        SESSION_SERVICE,
+        MEMBERSHIP_SERVICE
     };
     
     public static final Class[] ALL_SERVICE_CLASSES = new Class[] {
@@ -74,6 +83,8 @@ public interface DQPServiceNames {
         VDBService.class,
         MetadataService.class,
         DataService.class,
+        SessionServiceInterface.class,
+        MembershipServiceInterface.class
     };
     
     public static final String[] SERVICE_LOGGING_CONTEXT = new String[] {
@@ -84,5 +95,7 @@ public interface DQPServiceNames {
         null,
         null,
         null,
+        null,
+        null
     };
 }

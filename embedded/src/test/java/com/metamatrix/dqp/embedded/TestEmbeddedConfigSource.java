@@ -28,12 +28,15 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.application.Application;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.FakeAbstractService;
 import com.metamatrix.dqp.service.FakeVDBService;
+import com.metamatrix.dqp.service.VDBService;
+import com.metamatrix.jdbc.EmbeddedGuiceModule;
 
 public class TestEmbeddedConfigSource extends TestCase {
     
@@ -49,11 +52,14 @@ public class TestEmbeddedConfigSource extends TestCase {
     	Properties p = new Properties();
     	URL url = buildDQPUrl(UnitTestUtil.getTestDataPath() + "/bqt/fakebqt.properties"); //$NON-NLS-1$
     	p.load(url.openStream());
-        EmbeddedConfigSource source = new EmbeddedConfigSource(url, p);        
-        Application application = new Application();
-        application.start(source);
-        assertTrue(application.getEnvironment().findService(DQPServiceNames.VDB_SERVICE) instanceof FakeVDBService);
-        assertTrue(application.getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE) instanceof FakeAbstractService);
+    	
+    	EmbeddedGuiceModule source = new EmbeddedGuiceModule(url, p);       
+		Injector injector = Guice.createInjector(source);
+		source.setInjector(injector);
+
+		
+        assertTrue(source.getServiceInstance(VDBService.class) instanceof FakeVDBService);
+        assertTrue(source.getServiceInstance(ConfigurationService.class) instanceof FakeAbstractService);
     }
     
 }

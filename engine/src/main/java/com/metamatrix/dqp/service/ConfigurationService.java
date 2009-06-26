@@ -401,4 +401,6 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
     void clearClassLoaderCache() throws MetaMatrixComponentException;
     
     boolean isFullyConfiguredVDB(VDBArchive vdb) throws MetaMatrixComponentException;
+    
+    String getClusterName();
 }

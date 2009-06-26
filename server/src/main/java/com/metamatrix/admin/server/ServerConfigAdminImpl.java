@@ -40,6 +40,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.teiid.transport.SSLConfiguration;
+
 import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.admin.api.exception.AdminComponentException;
 import com.metamatrix.admin.api.exception.AdminException;
@@ -102,7 +104,6 @@ import com.metamatrix.common.extensionmodule.exception.DuplicateExtensionModuleE
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.extensionmodule.exception.InvalidExtensionModuleTypeException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.util.LogContextsUtil;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -813,7 +814,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         ProcessObject hostProcess = (ProcessObject) hostProcesses.iterator().next();
         mmPort = hostProcess.getPropertyValue(ProcessObject.SERVER_PORT);
         
-        boolean useSSL = ServerSocketConfiguration.isSSLEnabled();
+        //boolean useSSL = SSLConfiguration.isSSLEnabled();
+        boolean useSSL = false;
             
         String mmDriver = "com.metamatrix.jdbc.MMDriver"; //$NON-NLS-1$
         

@@ -22,12 +22,15 @@
 
 package com.metamatrix.admin.api.embedded;
 
+import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.core.CoreSecurityAdmin;
+import com.metamatrix.admin.api.server.AdminRoles;
 
 
 /** 
  * @since 4.3
  */
+@RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
 public interface EmbeddedSecurityAdmin extends
                                  CoreSecurityAdmin {
 

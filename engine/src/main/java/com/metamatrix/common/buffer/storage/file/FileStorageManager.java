@@ -254,7 +254,7 @@ public class FileStorageManager implements StorageManager {
             return baos.toByteArray();
 
         } catch(IOException e) {
-        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.batch_error")); //$NON-NLS-1$
+        	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStorageManager.batch_error")); //$NON-NLS-1$
         } finally {
             if(oos != null) {
                 try {

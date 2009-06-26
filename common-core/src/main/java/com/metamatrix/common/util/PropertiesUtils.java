@@ -129,8 +129,11 @@ public final class PropertiesUtils {
         Enumeration propNameEnum = props.propertyNames();
         while ( propNameEnum.hasMoreElements() ) {
             String name = (String) propNameEnum.nextElement();
-            if ( name.startsWith(searchStr) || addAll ) {
-                results.put(name, props.get(name));
+            if ( name.startsWith(searchStr)) {
+                results.put(name.substring(searchStr.length()), props.get(name));
+            }
+            else if (addAll) {
+            	results.put(name, props.get(name));
             }
         }
 
@@ -444,12 +447,11 @@ public final class PropertiesUtils {
         }
     }
     
-    public static Properties loadFromURL(String url) throws MalformedURLException, IOException {
+    public static Properties loadFromURL(URL url) throws MalformedURLException, IOException {
         Properties result = new Properties();
         InputStream is = null;
         try {
-	        URL file = URLHelper.buildURL(url);
-	        is = file.openStream();
+	        is = url.openStream();
         	result.load(is);
         } finally {
         	if (is != null) {

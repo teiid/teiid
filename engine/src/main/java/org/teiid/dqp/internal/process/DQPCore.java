@@ -44,12 +44,17 @@ import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.cache.ResultSetCacheUtil;
 
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Singleton;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.common.application.Application;
 import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.DQPConfigSource;
+import com.metamatrix.common.application.ServiceLoader;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.buffer.BufferManager;
@@ -93,6 +98,7 @@ import com.metamatrix.vdb.runtime.VDBKey;
 /**
  * Implements the core DQP processing.
  */
+@Singleton
 public class DQPCore extends Application implements ClientSideDQP {
 	
 	static class ConnectorCapabilitiesCache  {
@@ -149,15 +155,8 @@ public class DQPCore extends Application implements ClientSideDQP {
 	private Map<RequestID, RequestWorkItem> requests = Collections.synchronizedMap(new HashMap<RequestID, RequestWorkItem>());			
 	private Map<String, List<RequestID>> requestsByClients = Collections.synchronizedMap(new HashMap<String, List<RequestID>>());
 	private DQPContextCache contextCache;
-	
-	public DQPCore() { 
-		
-	}
-	
-	public DQPCore(ApplicationEnvironment environment) {
-		this.environment = environment;
-	}
-	
+    private ServiceLoader loader = new ServiceLoader();
+
     /**
      * perform a graceful shutdown by allowing in process work to complete
      * TODO: this is not quite correct from a request perspective, since we need to re-queue in many instances,
@@ -584,17 +583,43 @@ public class DQPCore extends Application implements ClientSideDQP {
 		return chunkSize;
 	}
 
-	@Override
-	public void start(DQPConfigSource configSource)
-			throws ApplicationInitializationException {
-		super.start(configSource);
+	
+    /* 
+     * @see com.metamatrix.common.application.Application#initialize(java.util.Properties)
+     */
+    public void start(DQPConfigSource configSource) throws ApplicationInitializationException {
+        
+        // Load services into DQP
+        for(int i=0; i<DQPServiceNames.ALL_SERVICES.length; i++) {
+            
+        	final String serviceName = DQPServiceNames.ALL_SERVICES[i];
+            final Class<? extends ApplicationService> type = DQPServiceNames.ALL_SERVICE_CLASSES[i];
+
+            ApplicationService appService = configSource.getServiceInstance(type);
+        	if (appService == null) {
+        		LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceIsNull", serviceName)); //$NON-NLS-1$
+        		continue;
+        	}
+        	
+        	appService = loader.loadService(serviceName, appService);
+        	String loggingContext = DQPServiceNames.SERVICE_LOGGING_CONTEXT[i];
+			if (loggingContext != null) {
+				appService = (ApplicationService)LogManager.createLoggingProxy(loggingContext, appService, new Class[] {type}, MessageLevel.DETAIL);
+			}
+            
+			appService.initialize(configSource.getProperties());
+        	installService(serviceName, appService);
+            LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceInstalled", serviceName)); //$NON-NLS-1$
+        }
+        
 		ConfigurationService cs = (ConfigurationService)this.getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE);
 		Properties p = configSource.getProperties();
 		if (cs != null) {
 			p = cs.getSystemProperties();
 		}
 		start(p);
-	}
+    }
+    
 	
 	public void start(Properties props) {
 		ApplicationEnvironment env = this.getEnvironment();

@@ -197,11 +197,9 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
                 if (childException instanceof MMSQLException) {
                     super.setNextException(ex);
                     break;
-                } else {
-                    super.setNextException(new MMSQLException(childException, getMessage(childException, null),
-                                                              false));
-                    childException = childException.getNextException();
                 } 
+                super.setNextException(new MMSQLException(childException, getMessage(childException, null),false));
+                childException = childException.getNextException();
             }
         }
     }
@@ -210,7 +208,7 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
      * Constructor a MMSQLException object initialized with reason.
      * @param reason String object which is the description of the exception.
      */
-    MMSQLException(String reason) {
+    public MMSQLException(String reason) {
         super(reason, SQLStates.DEFAULT);
     }
 

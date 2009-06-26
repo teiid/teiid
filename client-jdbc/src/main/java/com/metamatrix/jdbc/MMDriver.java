@@ -137,13 +137,13 @@ public final class MMDriver extends BaseDriver {
         return myConnection;
     }
 
-    MMServerConnection createMMConnection(String url, Properties info)
+    MMConnection createMMConnection(String url, Properties info)
         throws ConnectionException, CommunicationException {
 
         ServerConnection serverConn = SocketServerConnectionFactory.getInstance().createConnection(info);
 
         // construct a MMConnection object.
-        MMServerConnection connection = MMServerConnection.newInstance(serverConn, info, url);
+        MMConnection connection = new MMConnection(serverConn, info, url, SocketServerConnectionFactory.getInstance());
         return connection;
     }
 
@@ -157,7 +157,7 @@ public final class MMDriver extends BaseDriver {
      * @param The properties object which is to be updated with properties in the URL.
      * @throws SQLException if the URL is not in the expected format.
      */
-    void parseURL(String url, Properties info) throws SQLException {
+    protected void parseURL(String url, Properties info) throws SQLException {
         if(url == null) {
             String msg = JDBCPlugin.Util.getString("MMDriver.urlFormat"); //$NON-NLS-1$
             throw new MMSQLException(msg);
@@ -230,7 +230,7 @@ public final class MMDriver extends BaseDriver {
     }
     
     @Override
-    List<DriverPropertyInfo> getAdditionalPropertyInfo(String url,
+    protected List<DriverPropertyInfo> getAdditionalPropertyInfo(String url,
     		Properties info) {
     	List<DriverPropertyInfo> dpis = new LinkedList<DriverPropertyInfo>();
         DriverPropertyInfo dpi = new DriverPropertyInfo(MMURL.CONNECTION.SERVER_URL, info.getProperty(MMURL.CONNECTION.SERVER_URL));

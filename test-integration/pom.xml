@@ -64,17 +64,6 @@
     <!-- internal dependencies that are only used by integration testing -->
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-server</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-server</artifactId>
-			<type>test-jar</type>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-embedded</artifactId>
 			<version>${project.version}</version>
 		</dependency>

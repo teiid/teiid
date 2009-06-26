@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.teiid.transport.SSLConfiguration;
+
 import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.AdminRoles;
@@ -41,7 +43,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.net.ServerSocketConfiguration;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
@@ -838,12 +839,12 @@ public class RuntimeMetadataAdminAPIImpl implements RuntimeMetadataAdminAPI {
         
         boolean useSSL = false;
         
-        try {
-            useSSL = ServerSocketConfiguration.isSSLEnabled();
-            
-        } catch (Exception err) {
-             throw new MetaMatrixRuntimeException(RuntimeMetadataPlugin.Util.getString("RuntimeMetadataAdminAPIImpl.Unable_to_determine_ssl_mode")); //$NON-NLS-1$
-        }         
+//        try {
+//            useSSL = SSLConfiguration.isSSLEnabled();
+//            
+//        } catch (Exception err) {
+//             throw new MetaMatrixRuntimeException(RuntimeMetadataPlugin.Util.getString("RuntimeMetadataAdminAPIImpl.Unable_to_determine_ssl_mode")); //$NON-NLS-1$
+//        }         
         
         // Encrypt connection props
         try {
