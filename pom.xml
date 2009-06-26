@@ -453,7 +453,6 @@
 		<module>txn-jbossts</module>
 		<module>connector-sdk</module>
 		<module>server</module>
-		<module>soap</module>
 		<module>embedded</module>
 		<module>adminshell</module>
 		<module>test-integration</module>
