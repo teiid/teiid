@@ -6231,13 +6231,10 @@ public class TestParser extends TestCase {
         Select s = new Select();
         s.addSymbol(new AllSymbol());
         From f = new From();
-        JoinPredicate jp = new JoinPredicate(new UnaryFromClause(new GroupSymbol("m.g1")), new UnaryFromClause(new GroupSymbol("m.g2")), JoinType.JOIN_INNER); //$NON-NLS-1$ //$NON-NLS-2$
         
         CompareCriteria c1 = new CompareCriteria(new ElementSymbol("e1"), CompareCriteria.EQ, new Constant(new Integer(0))); //$NON-NLS-1$
         CompoundCriteria cc1 = new CompoundCriteria(CompoundCriteria.AND, c1, predCrit);
-        List crits = new ArrayList();
-        crits.add(cc1);
-        jp.setJoinCriteria(crits);
+        JoinPredicate jp = new JoinPredicate(new UnaryFromClause(new GroupSymbol("m.g1")), new UnaryFromClause(new GroupSymbol("m.g2")), JoinType.JOIN_INNER, cc1); //$NON-NLS-1$ //$NON-NLS-2$
         f.addClause(jp);
         
         Query q = new Query();
@@ -6245,14 +6242,14 @@ public class TestParser extends TestCase {
         q.setFrom(f);
         
         helpTest("SELECT * FROM m.g1 JOIN m.g2 ON e1=0 AND " + sqlPred, //$NON-NLS-1$
-        "SELECT * FROM m.g1 INNER JOIN m.g2 ON e1 = 0 AND " + sqlPred, q);                          //$NON-NLS-1$
+        "SELECT * FROM m.g1 INNER JOIN m.g2 ON e1 = 0 AND " + sqlPred, q); //$NON-NLS-1$
 
     }
 
 
     public void testCompoundNonJoinCriteriaInFromWithComparisonCriteria() {        
         CompareCriteria c2 = new CompareCriteria(new ElementSymbol("e2"), CompareCriteria.EQ, new Constant(new Integer(1))); //$NON-NLS-1$
-        helpTestCompoundNonJoinCriteria("e2 IS NULL", c2);     //$NON-NLS-1$
+        helpTestCompoundNonJoinCriteria("e2 = 1", c2);     //$NON-NLS-1$
     }
     
     public void testCompoundNonJoinCriteriaInFromWithIsNull() {        

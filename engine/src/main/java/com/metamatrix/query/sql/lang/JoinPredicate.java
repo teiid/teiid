@@ -194,7 +194,7 @@ public class JoinPredicate extends FromClause {
 		if(thisCrit != null && thisCrit.size() == 0) { 
 			thisCrit = null;
 		}
-		List otherCrit = this.getJoinCriteria();
+		List otherCrit = other.getJoinCriteria();
 		if(otherCrit != null && otherCrit.size() == 0) {
 			otherCrit = null;
 		}	
