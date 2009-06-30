@@ -23,14 +23,15 @@
 package com.metamatrix.admin.server;
 import java.util.List;
 
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Cache;
+import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.Request;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.Cache;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
-import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.common.id.dbid.DBIDGenerator;
 import com.metamatrix.platform.config.ConfigUpdateMgr;
 import com.metamatrix.platform.registry.ClusteredRegistryState;

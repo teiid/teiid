@@ -32,7 +32,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.metamatrix.admin.api.objects.Cache;
+import org.teiid.adminapi.Cache;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;

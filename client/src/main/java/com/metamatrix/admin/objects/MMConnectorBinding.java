@@ -24,8 +24,9 @@ package com.metamatrix.admin.objects;
 
 import java.util.Date;
 
+import org.teiid.adminapi.ConnectorBinding;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
 
 
 /**
@@ -220,7 +221,7 @@ public class MMConnectorBinding extends MMAdminObject implements ConnectorBindin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.ConnectorBinding#getConnectorTypeName()
+     * @see org.teiid.adminapi.ConnectorBinding#getConnectorTypeName()
      * @since 4.3
      */
     public String getConnectorTypeName() {

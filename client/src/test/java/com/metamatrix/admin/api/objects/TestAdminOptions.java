@@ -22,9 +22,10 @@
 
 package com.metamatrix.admin.api.objects;
 
+import org.teiid.adminapi.AdminOptions;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.admin.api.objects.AdminOptions;
 
 
 /** 

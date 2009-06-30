@@ -163,7 +163,7 @@ public class BasicModelInfo implements ModelInfo, Serializable {
      * if the model has been flagged so that the user can
      * actually assign multi connector bindngs.
      * 
-     * @see com.metamatrix.metadata.runtime.api.Model#supportsMultiSourceBindings()
+     * @see org.teiid.adminapi.Model#supportsMultiSourceBindings()
      * @since 4.2
      */
     public boolean supportsMultiSourceBindings() {

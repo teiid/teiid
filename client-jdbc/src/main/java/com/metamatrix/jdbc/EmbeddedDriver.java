@@ -446,7 +446,7 @@ public final class EmbeddedDriver extends BaseDriver {
          * Shutdown the current transport 
          */
         void shutdown() {
-            this.connectionFactory.shutdown();                                    
+            this.connectionFactory.shutdown(false);                                    
         }
         
         /**

@@ -23,6 +23,7 @@
 package com.metamatrix.connector.object;
 
 
+import org.teiid.adminapi.AdminException;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
@@ -32,7 +33,6 @@ import org.teiid.connector.basic.BasicConnection;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
-import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.connector.object.extension.IObjectSource;
 import com.metamatrix.connector.object.extension.ISourceTranslator;
 import com.metamatrix.connector.object.util.ObjectConnectorUtil;

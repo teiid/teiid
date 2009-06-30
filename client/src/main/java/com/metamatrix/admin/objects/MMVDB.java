@@ -26,8 +26,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
+import org.teiid.adminapi.VDB;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.core.util.HashCodeUtil;
 
 /**
@@ -208,7 +209,7 @@ public final class MMVDB extends MMAdminObject implements VDB, Comparable {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.VDB#hasMaterializedViews()
+     * @see org.teiid.adminapi.VDB#hasMaterializedViews()
      * @since 4.3
      */
     public boolean hasMaterializedViews() {

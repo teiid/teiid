@@ -24,7 +24,8 @@ package com.metamatrix.platform.vm.api.controller;
 
 import java.net.InetAddress;
 
-import com.metamatrix.admin.api.exception.AdminException;
+import org.teiid.adminapi.AdminException;
+
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.platform.service.api.ServiceID;

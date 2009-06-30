@@ -32,9 +32,9 @@ import java.util.concurrent.ExecutionException;
 
 import javax.crypto.SealedObject;
 
+import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.ExceptionHolder;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;

@@ -28,7 +28,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.metamatrix.admin.api.objects.AdminObject;
+import org.teiid.adminapi.AdminObject;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;

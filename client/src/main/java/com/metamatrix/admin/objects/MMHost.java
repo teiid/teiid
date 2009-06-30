@@ -22,8 +22,9 @@
 
 package com.metamatrix.admin.objects;
 
+import org.teiid.adminapi.Host;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.Host;
 
 
 /**

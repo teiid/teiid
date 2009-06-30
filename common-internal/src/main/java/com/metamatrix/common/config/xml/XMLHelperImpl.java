@@ -34,8 +34,8 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jdom.Element;
+import org.teiid.adminapi.PropertyDefinition.RestartType;
 
-import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.config.api.AuthenticationProvider;
 import com.metamatrix.common.config.api.ComponentDefn;

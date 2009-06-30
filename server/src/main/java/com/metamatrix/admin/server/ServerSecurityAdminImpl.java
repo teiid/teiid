@@ -29,16 +29,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.AdminRoles;
+import org.teiid.adminapi.Group;
+import org.teiid.adminapi.Principal;
+
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.AdminOptions;
-import com.metamatrix.admin.api.objects.Group;
-import com.metamatrix.admin.api.objects.Principal;
-import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.admin.api.server.ServerSecurityAdmin;
 import com.metamatrix.admin.objects.MMGroup;
 import com.metamatrix.admin.objects.MMRole;
@@ -284,7 +285,7 @@ public class ServerSecurityAdminImpl extends AbstractAdminImpl implements Server
     }
        
     /**
-     * @see com.metamatrix.admin.api.server.ServerSecurityAdmin#importDataRoles(java.lang.String, java.lang.String, char[], com.metamatrix.admin.api.objects.AdminOptions)
+     * @see com.metamatrix.admin.api.server.ServerSecurityAdmin#importDataRoles(java.lang.String, java.lang.String, char[], org.teiid.adminapi.AdminOptions)
      */
     public String importDataRoles(String vdbName, String vdbVersion, char[] xmlContents, AdminOptions options) 
         throws AdminException{

@@ -22,7 +22,7 @@
 
 package com.metamatrix.admin.objects;
 
-import com.metamatrix.admin.api.objects.Principal;
+import org.teiid.adminapi.Principal;
 
 
 /** 
@@ -60,7 +60,7 @@ public class MMPrincipal extends MMAdminObject implements Principal {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.Principal#getType()
+     * @see org.teiid.adminapi.Principal#getType()
      * @since 4.3
      */
     public int getType() {
@@ -68,7 +68,7 @@ public class MMPrincipal extends MMAdminObject implements Principal {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.Principal#getTypeLabel()
+     * @see org.teiid.adminapi.Principal#getTypeLabel()
      * @since 4.3
      */
     public String getTypeLabel() {

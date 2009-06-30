@@ -37,10 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.adminapi.AdminException;
 import org.teiid.transport.AdminAuthorizationInterceptor;
 import org.teiid.transport.LogonImpl;
 
-import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.admin.server.ServerAdminImpl;
 import com.metamatrix.api.exception.MetaMatrixComponentException;

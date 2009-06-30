@@ -24,9 +24,10 @@ package com.metamatrix.admin.objects;
 
 import java.util.Date;
 
+import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.Service;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
-import com.metamatrix.admin.api.objects.Service;
 
 
 /**
@@ -199,7 +200,7 @@ public class MMService extends MMAdminObject implements Service {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.Service#getComponentTypeName()
+     * @see org.teiid.adminapi.Service#getComponentTypeName()
      * @since 6.1
      */
     public String getComponentTypeName() {

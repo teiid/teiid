@@ -28,9 +28,10 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.adminapi.AdminRoles;
+
 import com.metamatrix.admin.RolesAllowed;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.MultipleException;

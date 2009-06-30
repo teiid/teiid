@@ -24,7 +24,8 @@ package com.metamatrix.common.object;
 
 import java.util.List;
 
-import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
+import org.teiid.adminapi.PropertyDefinition.RestartType;
+
 
 /**
  * Defines the type of property that will be placed in a detail panel or table

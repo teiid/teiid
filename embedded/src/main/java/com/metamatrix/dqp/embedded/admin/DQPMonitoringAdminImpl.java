@@ -22,6 +22,8 @@
 
 package com.metamatrix.dqp.embedded.admin;
 
+import static org.teiid.dqp.internal.process.Util.convertStats;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -32,22 +34,29 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.metamatrix.admin.api.embedded.EmbeddedMonitoringAdmin;
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
-import com.metamatrix.admin.api.objects.SystemObject;
-import com.metamatrix.admin.api.objects.Transaction;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.MonitoringAdmin;
+import org.teiid.adminapi.ProcessObject;
+import org.teiid.adminapi.SystemObject;
+import org.teiid.adminapi.Transaction;
+
 import com.metamatrix.admin.objects.MMAdminObject;
+import com.metamatrix.admin.objects.MMProcess;
+import com.metamatrix.admin.objects.MMQueueWorkerPool;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.api.ComponentType;
+import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
+import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.server.serverapi.RequestInfo;
 
 
@@ -55,14 +64,14 @@ import com.metamatrix.server.serverapi.RequestInfo;
  * DQP implementation of the Monitoring API
  * @since 4.3
  */
-public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitoringAdmin {
+public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin {
 
     public DQPMonitoringAdminImpl(EmbeddedConnectionFactoryImpl manager) {
         super(manager);
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getConnectorTypes(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getConnectorTypes(java.lang.String)
      * @since 4.3
      */
     public Collection getConnectorTypes(String identifier) 
@@ -76,7 +85,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getVDBs(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getVDBs(java.lang.String)
      * @since 4.3
      */
     public Collection getVDBs(String identifier) 
@@ -107,7 +116,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getConnectorBindings(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getConnectorBindings(java.lang.String)
      * @since 4.3
      */
     public Collection getConnectorBindings(String identifier) 
@@ -121,7 +130,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getConnectorBindingsInVDB(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getConnectorBindingsInVDB(java.lang.String)
      * @since 4.3
      */
     public Collection getConnectorBindingsInVDB(String identifier)  throws AdminException{
@@ -154,7 +163,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }    
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getExtensionModules(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getExtensionModules(java.lang.String)
      * @since 4.3
      */
     public Collection getExtensionModules(String identifier) 
@@ -174,7 +183,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getQueueWorkerPools(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getQueueWorkerPools(java.lang.String)
      * @since 4.3
      */
     public Collection getQueueWorkerPools(String identifier) 
@@ -214,7 +223,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getCaches(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getCaches(java.lang.String)
      * @since 4.3
      */
     public Collection getCaches(String identifier) 
@@ -234,7 +243,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getSessions(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getSessions(java.lang.String)
      * @since 4.3
      */
     public Collection getSessions(String identifier) 
@@ -256,7 +265,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }
         
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getRequests(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getRequests(java.lang.String)
      * @since 4.3
      */
     public Collection getRequests(String identifier) 
@@ -278,7 +287,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getSourceRequests(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getSourceRequests(java.lang.String)
      * @since 4.3
      */
     public Collection getSourceRequests(String identifier) 
@@ -300,7 +309,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
 
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getSystem()
+     * @see org.teiid.adminapi.MonitoringAdmin#getSystem()
      * @since 4.3
      */
     public SystemObject getSystem(){
@@ -308,7 +317,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getPropertyDefinitions(java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getPropertyDefinitions(java.lang.String, java.lang.String)
      * @since 4.3
      */
     public Collection getPropertyDefinitions(String identifier, String className) throws AdminException {
@@ -378,7 +387,11 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements EmbeddedMonitor
 		}
 
 	}
-    
-    
-    
+
+	@Override
+	public Collection<ProcessObject> getProcesses(String processIdentifier) throws AdminException {
+		ArrayList<ProcessObject> list = new ArrayList<ProcessObject>();
+		list.add(this.manager.getProcess());
+		return list;
+	}
 }

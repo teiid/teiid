@@ -41,8 +41,8 @@ import java.sql.Statement;
 import junit.framework.Assert;
 
 import org.junit.After;
+import org.teiid.adminapi.Admin;
 
-import com.metamatrix.admin.api.core.Admin;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.jdbc.EmbeddedDriver;
 import com.metamatrix.script.io.MetadataReader;

@@ -24,9 +24,10 @@ package com.metamatrix.client;
 
 import java.lang.reflect.Method;
 
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.xa.XATransactionException;

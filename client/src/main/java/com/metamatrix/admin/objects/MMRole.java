@@ -24,7 +24,8 @@ package com.metamatrix.admin.objects;
 
 import java.util.Properties;
 
-import com.metamatrix.admin.api.objects.Role;
+import org.teiid.adminapi.Role;
+
 
 
 /** 
@@ -52,7 +53,7 @@ public class MMRole extends MMAdminObject implements Role {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.AdminObject#getIdentifier()
+     * @see org.teiid.adminapi.AdminObject#getIdentifier()
      * @since 4.3
      */
     public String getIdentifier() {
@@ -60,7 +61,7 @@ public class MMRole extends MMAdminObject implements Role {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.AdminObject#getName()
+     * @see org.teiid.adminapi.AdminObject#getName()
      * @since 4.3
      */
     public String getName() {
@@ -70,7 +71,7 @@ public class MMRole extends MMAdminObject implements Role {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.AdminObject#getProperties()
+     * @see org.teiid.adminapi.AdminObject#getProperties()
      * @since 4.3
      */
     public Properties getProperties() {
@@ -78,7 +79,7 @@ public class MMRole extends MMAdminObject implements Role {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.AdminObject#getPropertyValue(java.lang.String)
+     * @see org.teiid.adminapi.AdminObject#getPropertyValue(java.lang.String)
      * @since 4.3
      */
     public String getPropertyValue(String name) {

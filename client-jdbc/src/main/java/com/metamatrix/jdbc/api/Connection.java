@@ -24,7 +24,8 @@ package com.metamatrix.jdbc.api;
 
 import java.sql.SQLException;
 
-import com.metamatrix.admin.api.core.Admin;
+import org.teiid.adminapi.Admin;
+
 
 
 /**

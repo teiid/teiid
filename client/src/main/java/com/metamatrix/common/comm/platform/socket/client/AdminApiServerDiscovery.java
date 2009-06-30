@@ -30,9 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.objects.ProcessObject;
-import com.metamatrix.admin.api.server.ServerAdmin;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.ProcessObject;
+
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -79,7 +80,7 @@ public class AdminApiServerDiscovery extends UrlServerDiscovery {
 		synchronized (info) {
 			if (instance != null 
 					&& (info.lastDiscoveryTime < System.currentTimeMillis() - DISCOVERY_TIMEOUT || info.knownHosts.isEmpty())) {
-				ServerAdmin serverAdmin = instance.getService(ServerAdmin.class);
+				Admin serverAdmin = instance.getService(Admin.class);
 				try {
 					Collection<ProcessObject> processes = serverAdmin.getProcesses("*");
 					info.knownHosts.clear();

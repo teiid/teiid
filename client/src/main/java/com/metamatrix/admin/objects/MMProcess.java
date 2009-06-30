@@ -24,10 +24,11 @@
 
 import java.net.InetAddress;
 
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.ProcessObject;
+import org.teiid.adminapi.QueueWorkerPool;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.ProcessObject;
-import com.metamatrix.admin.api.objects.QueueWorkerPool;
 
 /**
  * Data holder for information about a Process.

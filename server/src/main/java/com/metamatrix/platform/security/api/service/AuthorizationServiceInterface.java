@@ -27,9 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.adminapi.AdminOptions;
+
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
-import com.metamatrix.admin.api.objects.AdminOptions;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;

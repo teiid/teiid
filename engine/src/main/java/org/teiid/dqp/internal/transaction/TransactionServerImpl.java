@@ -46,12 +46,12 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
 
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.TransactionImpl;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -630,13 +630,13 @@ public class TransactionServerImpl implements TransactionService {
     }
 
 	@Override
-	public Collection<com.metamatrix.admin.api.objects.Transaction> getTransactions() {
+	public Collection<org.teiid.adminapi.Transaction> getTransactions() {
 		Set<TransactionContextImpl> txnSet = Collections.newSetFromMap(new IdentityHashMap<TransactionContextImpl, Boolean>());
 		synchronized (this.transactions) {
 			txnSet.addAll(this.transactions.threadToTransactionContext.values());
 			txnSet.addAll(this.transactions.xidToTransactionContext.values());
 		}
-		Collection<com.metamatrix.admin.api.objects.Transaction> result = new ArrayList<com.metamatrix.admin.api.objects.Transaction>(txnSet.size());
+		Collection<org.teiid.adminapi.Transaction> result = new ArrayList<org.teiid.adminapi.Transaction>(txnSet.size());
 		for (TransactionContextImpl transactionContextImpl : txnSet) {
 			if (transactionContextImpl.getTxnID() == null) {
 				continue;

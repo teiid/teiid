@@ -24,10 +24,17 @@ package com.metamatrix.dqp.service;
 
 import java.util.Collection;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
+import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
+import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.core.CoreConstants;
+import com.metamatrix.platform.security.api.AuthorizationPolicy;
+import com.metamatrix.platform.security.api.AuthorizationRealm;
+import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 
@@ -70,6 +77,39 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
      */
     boolean checkingEntitlements();
     
-    boolean isCallerInRole( SessionToken caller, String roleName ) throws AuthorizationMgmtException;
+    boolean isCallerInRole(SessionToken session, String roleName ) throws AuthorizationMgmtException;
     
+    
+    /**
+     * Returns a Collection of String names of MetaMatrix roles to which the
+     * given principal is assigned.
+     * @param caller the session token of the principal that is attempting to access the roles.
+     * @param principal <code>MetaMatrixPrincipalName</code> for which roles are sought
+     * @return The <code>Collection</code> of role names the principal is assigned.
+     * @throws InvalidSessionException if the administrative session is invalid
+     * @throws MetaMatrixSecurityException if there is a problem internally with the MembershipService
+     * @throws AuthorizationException if administrator does not have the authority to see the requested information
+     * @throws ComponentNotFoundException if a component required by this method could not be found within the server
+     */
+    Collection<String> getRoleNamesForPrincipal(MetaMatrixPrincipalName principal)
+    throws InvalidSessionException, AuthorizationException, AuthorizationMgmtException;
+    
+    /**
+     * Returns a <code>Collection</code> of <code>AuthorizationPolicy</code>s
+     * that have <code>AuthorizationPermission</code>s in the given <code>AuthorizationRealm</code>.<br>
+     * <strong>NOTE:</strong> It is the responsibility of the caller to determine
+     * which of the <code>AuthorizationPolicy</code>'s <code>AuthorizationPermission</code>s
+     * are actually in the given <code>AuthorizationRealm</code>.  The <code>AuthorizationPolicy</code>
+     * may span <code>AuthorizationRealm</code>s.
+     * @param caller The session token of the principal that is attempting to retrieve the policies.
+     * @param realm The realm in which to search for <code>AuthorizationPermission</code>s.
+     * @return The collection of <code>AuthorizationPolicy</code>s that have permissions
+     * in the given realm - possibly empty but never null.
+     * @throws AuthorizationException if administrator does not have the authority to perform the action.
+     * @throws AuthorizationMgmtException if an error occurs in the Authorization store.
+     */
+    Collection<AuthorizationPolicy> getPoliciesInRealm(AuthorizationRealm realm)
+    throws AuthorizationException, AuthorizationMgmtException;    
+    
+    void updatePoliciesInRealm(AuthorizationRealm realm, Collection<AuthorizationPolicy> policies) throws AuthorizationMgmtException;
 }

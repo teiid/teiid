@@ -1,6 +1,6 @@
 package com.metamatrix.admin.objects;
 
-import com.metamatrix.admin.api.objects.ConnectionPool;
+import org.teiid.adminapi.ConnectionPool;
 
 public class MMConnectionPool extends MMAdminObject implements ConnectionPool {
 	

@@ -22,8 +22,9 @@
 
 package com.metamatrix.admin.objects;
 
+import org.teiid.adminapi.ConnectorType;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.ConnectorType;
 
 /**
  * Dataholder for a connector type.

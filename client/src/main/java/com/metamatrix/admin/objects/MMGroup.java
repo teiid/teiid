@@ -22,7 +22,7 @@
 
 package com.metamatrix.admin.objects;
 
-import com.metamatrix.admin.api.objects.Group;
+import org.teiid.adminapi.Group;
 
 
 /** 

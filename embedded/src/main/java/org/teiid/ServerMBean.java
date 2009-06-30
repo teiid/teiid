@@ -34,4 +34,6 @@ public interface ServerMBean {
 	void shutdown();
 	
 	void halt();
+	
+	void restart();
 }

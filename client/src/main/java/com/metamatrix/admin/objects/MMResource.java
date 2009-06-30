@@ -22,8 +22,9 @@
 
 package com.metamatrix.admin.objects;
 
+import org.teiid.adminapi.Resource;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.Resource;
 
 /**
  * Dataholder for a resource.

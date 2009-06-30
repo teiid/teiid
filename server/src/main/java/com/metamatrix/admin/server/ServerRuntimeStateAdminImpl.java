@@ -31,16 +31,17 @@ import java.util.Map;
 
 import javax.transaction.xa.Xid;
 
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Cache;
+import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.EmbeddedLogger;
+import org.teiid.adminapi.ProcessObject;
+import org.teiid.adminapi.Request;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.admin.api.objects.Cache;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
-import com.metamatrix.admin.api.objects.ProcessObject;
-import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.admin.api.server.ServerRuntimeStateAdmin;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMProcess;
@@ -395,7 +396,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
      * @param waitUntilDone Ignored: the waiting for this method is done in ServerAdminClientInterceptor on the client-side.
      * @since 4.3
      */
-    public void bounceSystem(boolean waitUntilDone) throws AdminException {   
+    public void restart() throws AdminException {   
         try {
             getRuntimeStateAdminAPIHelper().bounceServer();
         } catch (MetaMatrixComponentException e) {
@@ -432,7 +433,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
     
     
     /**
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#clearCache(java.lang.String)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#clearCache(java.lang.String)
      * @since 4.3
      */
     public void clearCache(String cacheIdentifier) throws AdminException {
@@ -743,6 +744,16 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
     public void terminateTransaction(Xid transactionId) throws AdminException {
     	this.getQueryServiceProxy().terminateTransaction(transactionId);
     }
-    
 
+	@Override
+	public void setLogListener(EmbeddedLogger listener) throws AdminException {
+	}
+
+	@Override
+	public void bounceSystem(boolean waitUntilDone) throws AdminException {
+	}
+
+	@Override
+	public void shutdown(int millisToWait) throws AdminException {
+	}
 }

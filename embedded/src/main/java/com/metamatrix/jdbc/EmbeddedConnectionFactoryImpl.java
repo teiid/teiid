@@ -22,21 +22,23 @@
 
 package com.metamatrix.jdbc;
 
+import static org.teiid.dqp.internal.process.Util.convertStats;
+
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.transport.AdminAuthorizationInterceptor;
 import org.teiid.transport.LocalServerConnection;
@@ -45,11 +47,8 @@ import org.teiid.transport.SocketTransport;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.metamatrix.admin.api.core.Admin;
-import com.metamatrix.admin.api.embedded.EmbeddedAdmin;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.admin.objects.MMProcess;
+import com.metamatrix.admin.objects.MMQueueWorkerPool;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -61,9 +60,9 @@ import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.protocol.URLHelper;
+import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.JMXUtil;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.MixinProxy;
 import com.metamatrix.dqp.ResourceFinder;
@@ -77,11 +76,11 @@ import com.metamatrix.dqp.embedded.admin.DQPSecurityAdminImpl;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.ILogon;
-import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
+import com.metamatrix.platform.vm.controller.ProcessStatistics;
+import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
 
 /** 
@@ -100,6 +99,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     private ConnectionListenerList listenerList = new ConnectionListenerList();
     private SocketTransport socketTransport;
     private JMXUtil jmxServer;
+    private boolean restart = false;
     
 	private final class ConnectionListenerList extends ArrayList<ServerConnectionListener> implements ServerConnectionListener{
 
@@ -205,8 +205,8 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     	services.registerClientService(ILogon.class, new LogonImpl(sessionService, configService.getClusterName()), com.metamatrix.common.util.LogConstants.CTX_SERVER);
     	
     	try {
-			EmbeddedAdmin roleCheckedServerAdmin = wrapAdminService(EmbeddedAdmin.class, (EmbeddedAdmin)getAdminAPI(null));
-			services.registerClientService(EmbeddedAdmin.class, roleCheckedServerAdmin, com.metamatrix.common.util.LogConstants.CTX_ADMIN);
+			Admin roleCheckedServerAdmin = wrapAdminService(Admin.class, getAdminAPI(null));
+			services.registerClientService(Admin.class, roleCheckedServerAdmin, com.metamatrix.common.util.LogConstants.CTX_ADMIN);
 		} catch (AdminException e) {
 			// ignore; exception is not thrown in this case.
 		}
@@ -299,7 +299,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     	
 		@Override
 		public void run() {
-			shutdown(false);
+			shutdown(false, false);
 		}
     }
    
@@ -336,11 +336,11 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
      * 
      * @see com.metamatrix.jdbc.EmbeddedConnectionFactory#shutdown()
      */
-    public void shutdown() {
-    	shutdown(true);
+    public void shutdown(boolean restart) {
+    	shutdown(true, restart);
     }
      
-    private synchronized void shutdown(boolean undoShutdownHook) {
+    private synchronized void shutdown(boolean undoShutdownHook, boolean restart) {
     	
     	if (!isAlive()) {
     		return;
@@ -356,7 +356,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         if (!this.shutdownInProgress) {
 
             // this will by pass, and only let shutdown called once.
-            shutdownInProgress = true;
+            this.shutdownInProgress = true;
             
         	try {
 				this.dqp.stop();
@@ -383,9 +383,11 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
             // shutdown the cache.
             ResourceFinder.getCacheFactory().destroy();
             
-            shutdownInProgress = false;
+            this.shutdownInProgress = false;
             
-            init = false;
+            this.init = false;
+            
+            this.restart = restart;
         }    	
     }
 
@@ -416,10 +418,54 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
                 }
             }            
         };
-        return (EmbeddedAdmin) Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class[] {EmbeddedAdmin.class}, handler);
+        return (Admin) Proxy.newProxyInstance(this.getClass().getClassLoader(),new Class[] {Admin.class}, handler);
     }
 	
 	public JMXUtil getJMXServer() {
 		return this.jmxServer;
+	}
+	
+	public MMProcess getProcess() {
+		
+		Properties props = getProperties();
+		
+		String hostName = ((InetAddress)props.get(DQPEmbeddedProperties.HOST_ADDRESS)).getHostName();
+		String processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME);
+
+		String[] identifierParts = new String[] {hostName, processName};
+		MMProcess process = new MMProcess(identifierParts);
+        
+		Runtime rt = Runtime.getRuntime();
+		
+		process.setEnabled(true);
+		process.setCreated(new Date(getStartTime()));
+		process.setInetAddress((InetAddress)props.get(DQPEmbeddedProperties.HOST_ADDRESS));
+		process.setFreeMemory(rt.freeMemory());
+		process.setTotalMemory(rt.totalMemory());
+		process.setProperties(PropertiesUtils.clone(props));
+		
+		if (this.socketTransport != null) {
+	        SocketListenerStats socketStats = this.socketTransport.getStats();
+	        if (socketStats != null) {
+	            process.setSockets(socketStats.sockets);
+	            process.setMaxSockets(socketStats.maxSockets);
+	            process.setObjectsRead(socketStats.objectsRead);
+	            process.setObjectsWritten(socketStats.objectsWritten);
+	        }
+	        
+	        WorkerPoolStats workerStats = this.socketTransport.getProcessPoolStats();
+	        if (workerStats != null) {
+	            MMQueueWorkerPool workerPool = convertStats(workerStats, hostName, processName, workerStats.name);
+	            
+	            process.setQueueWorkerPool(workerPool);
+	        }	        
+	        
+	        process.setPort(this.socketTransport.getPort());
+		}
+		return process;
+	}
+	
+	public boolean shouldRestart(){
+		return this.restart;
 	}
 }

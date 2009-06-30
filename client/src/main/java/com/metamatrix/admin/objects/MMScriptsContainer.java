@@ -30,12 +30,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.ScriptsContainer;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminOptions;
-import com.metamatrix.admin.api.objects.ScriptsContainer;
 import com.metamatrix.core.util.FileUtils;
 
 
@@ -58,7 +59,7 @@ public class MMScriptsContainer implements
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.ScriptsContainer#getFileNames()
+     * @see org.teiid.adminapi.ScriptsContainer#getFileNames()
      * @since 4.3
      */
     public Collection getFileNames() {
@@ -66,7 +67,7 @@ public class MMScriptsContainer implements
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.ScriptsContainer#saveAllToDirectory(java.lang.String, AdminOptions)
+     * @see org.teiid.adminapi.ScriptsContainer#saveAllToDirectory(java.lang.String, AdminOptions)
      * @since 4.3
      */
     public void saveAllToDirectory(String directoryLocation, AdminOptions options) throws AdminException {

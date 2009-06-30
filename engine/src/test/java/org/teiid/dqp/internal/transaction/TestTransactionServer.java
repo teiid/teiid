@@ -24,9 +24,10 @@ package org.teiid.dqp.internal.transaction;
 
 import javax.transaction.xa.XAResource;
 
+import org.teiid.adminapi.Transaction;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.util.SimpleMock;

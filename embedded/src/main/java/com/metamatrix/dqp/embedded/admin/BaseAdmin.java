@@ -32,16 +32,17 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Cache;
+import org.teiid.adminapi.ExtensionModule;
+import org.teiid.adminapi.Session;
+import org.teiid.adminapi.SystemObject;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.Util;
 
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.Cache;
-import com.metamatrix.admin.api.objects.ExtensionModule;
-import com.metamatrix.admin.api.objects.Session;
-import com.metamatrix.admin.api.objects.SystemObject;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorType;
@@ -64,12 +65,15 @@ import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
+import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
+import com.metamatrix.platform.security.api.SessionToken;
+import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -151,6 +155,14 @@ abstract class BaseAdmin {
     
     TransactionService getTransactionService() {
     	return (TransactionService)getManager().findService(DQPServiceNames.TRANSACTION_SERVICE);
+    }
+
+    MembershipServiceInterface getMembershipService() {
+    	return (MembershipServiceInterface)getManager().findService(DQPServiceNames.MEMBERSHIP_SERVICE);
+    }
+    
+    AuthorizationService getAuthorizationService() {
+    	return (AuthorizationService)getManager().findService(DQPServiceNames.AUTHORIZATION_SERVICE);
     }
     
     ConfigurationService getConfigurationService() {
@@ -245,8 +257,8 @@ abstract class BaseAdmin {
     }
 
     Object convertToNativeObjects(Object src) {
-        if (src instanceof com.metamatrix.admin.api.objects.LogConfiguration) {
-            com.metamatrix.admin.api.objects.LogConfiguration config = (com.metamatrix.admin.api.objects.LogConfiguration)src;
+        if (src instanceof org.teiid.adminapi.LogConfiguration) {
+            org.teiid.adminapi.LogConfiguration config = (org.teiid.adminapi.LogConfiguration)src;
             return covertToNativeLogConfiguration(config);
         }
         throw new UnsupportedOperationException(DQPEmbeddedPlugin.Util.getString("UnSupported_object_conversion"));  //$NON-NLS-1$            
@@ -271,7 +283,7 @@ abstract class BaseAdmin {
     /**
      * Convert LogConfiguration to Admin Object 
      */
-    private com.metamatrix.admin.api.objects.LogConfiguration covertLogConfiguration(final com.metamatrix.common.log.LogConfiguration src) {
+    private org.teiid.adminapi.LogConfiguration covertLogConfiguration(final com.metamatrix.common.log.LogConfiguration src) {
     	Map<String, Integer> contextMap = new HashMap<String, Integer>();
     	for(String context:src.getContexts()) {
     		contextMap.put(context, src.getLogLevel(context));
@@ -282,7 +294,7 @@ abstract class BaseAdmin {
     /**
      * Convert LogConfiguration to Admin Object 
      */
-    private com.metamatrix.common.log.LogConfiguration covertToNativeLogConfiguration(final com.metamatrix.admin.api.objects.LogConfiguration src) {
+    private com.metamatrix.common.log.LogConfiguration covertToNativeLogConfiguration(final org.teiid.adminapi.LogConfiguration src) {
     	Map<String, Integer> contextMap = new HashMap<String, Integer>();
     	for(String context:src.getContexts()) {
     		contextMap.put(context, src.getLogLevel(context));
@@ -295,7 +307,7 @@ abstract class BaseAdmin {
      * @return
      * @since 4.3
      */
-    private com.metamatrix.admin.api.objects.ConnectorBinding convertConnectorType(final com.metamatrix.common.config.api.ConnectorBinding src, final Object parent) {
+    private org.teiid.adminapi.ConnectorBinding convertConnectorType(final com.metamatrix.common.config.api.ConnectorBinding src, final Object parent) {
         MMConnectorBinding binding = new MMConnectorBinding(new String[] {src.getDeployedName()});
         
         binding.setConnectorTypeName(src.getComponentTypeID().getFullName());
@@ -315,13 +327,13 @@ abstract class BaseAdmin {
         try {
             Boolean status = getDataService().getConnectorBindingState(src.getDeployedName());            
             if (status == Boolean.TRUE) {
-                binding.setState(com.metamatrix.admin.api.objects.ConnectorBinding.STATE_OPEN);
+                binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_OPEN);
             }
             else if (status == Boolean.FALSE) {
-                binding.setState(com.metamatrix.admin.api.objects.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);
+                binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);
             }
             else {
-                binding.setState(com.metamatrix.admin.api.objects.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);
+                binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);
             }            
         }catch(Exception e) {
             binding.setState(MMConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);            
@@ -335,7 +347,7 @@ abstract class BaseAdmin {
      * @return
      * @since 4.3
      */
-    private com.metamatrix.admin.api.objects.ConnectorType convertConnectorType(final com.metamatrix.common.config.api.ConnectorBindingType src, final Object parent) {
+    private org.teiid.adminapi.ConnectorType convertConnectorType(final com.metamatrix.common.config.api.ConnectorBindingType src, final Object parent) {
         MMConnectorType type = new MMConnectorType(new String[] {src.getName()});
         type.setCreated(src.getCreatedDate());
         type.setCreatedBy(src.getCreatedBy());
@@ -351,7 +363,7 @@ abstract class BaseAdmin {
      * @return
      * @since 4.3
      */
-    private com.metamatrix.admin.api.objects.VDB convertVDB(final com.metamatrix.common.vdb.api.VDBDefn src, final Object parent) {
+    private org.teiid.adminapi.VDB convertVDB(final com.metamatrix.common.vdb.api.VDBDefn src, final Object parent) {
         
         MMVDB vdb = new MMVDB(new String[] {src.getName(), src.getVersion()});
         vdb.setCreated(src.getDateCreated());
@@ -372,7 +384,7 @@ abstract class BaseAdmin {
         return vdb;        
     }
     
-    private com.metamatrix.admin.api.objects.Model convertModel(final com.metamatrix.common.vdb.api.ModelInfo src, final Object parent) {
+    private org.teiid.adminapi.Model convertModel(final com.metamatrix.common.vdb.api.ModelInfo src, final Object parent) {
         final com.metamatrix.common.vdb.api.VDBDefn vdb = (com.metamatrix.common.vdb.api.VDBDefn)parent;
         MMModel model = new MMModel(new String[] {src.getName()});
         model.setCreated(vdb.getDateCreated());
@@ -400,7 +412,7 @@ abstract class BaseAdmin {
         return model;
     }
 
-    private com.metamatrix.admin.api.objects.Request convertRequest(final RequestInfo src) {
+    private org.teiid.adminapi.Request convertRequest(final RequestInfo src) {
         
         String connId = src.getRequestID().getConnectionID();
         
@@ -630,4 +642,9 @@ abstract class BaseAdmin {
                 
         }
     }
+    
+    protected SessionToken validateSession() {
+        return DQPWorkContext.getWorkContext().getSessionToken();
+    }
+    
 }

@@ -27,10 +27,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
+import org.teiid.adminapi.AdminRoles;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.RolesAllowed;
-import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.client.ExceptionUtil;

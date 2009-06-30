@@ -23,18 +23,22 @@ package org.teiid.transport;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.Properties;
 
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.queue.WorkerPoolStats;
+import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
+import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
 /**
  * This class starts a Socket for DQP connections and listens on the port and hands out the connections to the 
@@ -85,4 +89,16 @@ public class SocketTransport {
     public void stop() {
     	this.listener.stop();
     }
+    
+    public WorkerPoolStats getProcessPoolStats() {
+    	return listener.getProcessPoolStats();
+    }
+    
+    public int getPort() {
+    	return this.listener.getPort();
+    }
+       
+    public SocketListenerStats getStats() {
+    	return this.listener.getStats();
+    }    
 }

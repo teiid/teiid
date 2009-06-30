@@ -30,9 +30,9 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.ProcessObject;
 
-import com.metamatrix.admin.api.objects.ProcessObject;
-import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -50,7 +50,7 @@ public class TestAdminApiServerDiscovery extends TestCase {
 		assertEquals(1, discovery.getKnownHosts(null, null).size()); 
 		
 		SocketServerInstance instance = Mockito.mock(SocketServerInstance.class);
-		ServerAdmin serverAdmin = Mockito.mock(ServerAdmin.class);
+		Admin serverAdmin = Mockito.mock(Admin.class);
 		
 		List<ProcessObject> processes = new ArrayList<ProcessObject>();
 		ProcessObject p1 = Mockito.mock(ProcessObject.class);
@@ -63,7 +63,7 @@ public class TestAdminApiServerDiscovery extends TestCase {
 		Mockito.stub(p2.getInetAddress()).toReturn(InetAddress.getByName("0.0.0.0")); //$NON-NLS-1$
 		processes.add(p2);
 		Mockito.stub(serverAdmin.getProcesses("*")).toReturn(processes); //$NON-NLS-1$
-		Mockito.stub(instance.getService(ServerAdmin.class)).toReturn(serverAdmin);
+		Mockito.stub(instance.getService(Admin.class)).toReturn(serverAdmin);
 		Mockito.stub(instance.getHostInfo()).toReturn(knownHost);
 		
 		discovery.connectionSuccessful(knownHost);

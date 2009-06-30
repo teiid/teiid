@@ -43,8 +43,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.metamatrix.admin.api.core.Admin;
-import com.metamatrix.admin.api.exception.AdminException;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+
 import com.metamatrix.common.api.HostInfo;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
@@ -299,7 +300,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	}
 
 	@Override
-	public void shutdown() {
+	public void shutdown(boolean restart) {
 		// only applies in the Embedded scenario.
 	}
 

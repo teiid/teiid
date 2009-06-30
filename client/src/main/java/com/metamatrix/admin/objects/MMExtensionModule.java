@@ -22,8 +22,9 @@
 
 package com.metamatrix.admin.objects;
 
+import org.teiid.adminapi.ExtensionModule;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.ExtensionModule;
 
 /**
  * A simple Extension Modules for the Admin API

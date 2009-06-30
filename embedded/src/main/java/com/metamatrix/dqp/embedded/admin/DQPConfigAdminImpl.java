@@ -30,15 +30,16 @@ import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
-import com.metamatrix.admin.api.embedded.EmbeddedConfigAdmin;
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.AdminOptions;
-import com.metamatrix.admin.api.objects.AdminStatus;
-import com.metamatrix.admin.api.objects.LogConfiguration;
-import com.metamatrix.admin.api.objects.VDB;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.AdminStatus;
+import org.teiid.adminapi.ConfigurationAdmin;
+import org.teiid.adminapi.LogConfiguration;
+import org.teiid.adminapi.VDB;
+
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMAdminStatus;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -73,14 +74,14 @@ import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
  * DQP implementation of the Config Admin API
  * @since 4.3
  */
-public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin {
+public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin {
     
     public DQPConfigAdminImpl(EmbeddedConnectionFactoryImpl manager) {
         super(manager);
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#setSystemProperty(java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#setSystemProperty(java.lang.String, java.lang.String)
      * @since 4.3
      */
     public void setSystemProperty(String propertyName,String propertyValue) 
@@ -97,7 +98,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     
    
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#updateSystemProperties(java.util.Properties)
+     * @see org.teiid.adminapi.ConfigurationAdmin#updateSystemProperties(java.util.Properties)
      * @since 4.3
      */
     public void updateSystemProperties(Properties properties) throws AdminException {
@@ -112,7 +113,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#setProperty(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#setProperty(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      * @since 4.3
      */
     public void setProperty(String identifier, String className, String propertyName, String propertyValue) 
@@ -126,7 +127,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
+     * @see org.teiid.adminapi.ConfigurationAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
      * @since 4.3
      */
     public void updateProperties(String identifier, String className, Properties properties) throws AdminException {
@@ -186,7 +187,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
         }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addConnectorType(java.lang.String, char[])
+     * @see org.teiid.adminapi.ConfigurationAdmin#addConnectorType(java.lang.String, char[])
      * @since 4.3
      */
     public void addConnectorType(String deployName, char[] cdkFile) 
@@ -216,7 +217,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deleteConnectorType(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#deleteConnectorType(java.lang.String)
      * @since 4.3
      */
     public void deleteConnectorType(String deployName) 
@@ -232,10 +233,10 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addConnectorBinding(java.lang.String, java.lang.String, java.util.Properties, AdminOptions)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addConnectorBinding(java.lang.String, java.lang.String, java.util.Properties, AdminOptions)
      * @since 4.3
      */
-    public com.metamatrix.admin.api.objects.ConnectorBinding addConnectorBinding(String deployName, String type, Properties properties, AdminOptions options) 
+    public org.teiid.adminapi.ConnectorBinding addConnectorBinding(String deployName, String type, Properties properties, AdminOptions options) 
         throws AdminException {
         // if the options object is null treat as if it is IGNORE as default
         if (options == null) {
@@ -261,7 +262,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 }
                 else if (options.containsOption(AdminOptions.OnConflict.IGNORE)) {
                     binding = getDataService().getConnectorBinding(deployName);
-                    return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
+                    return (org.teiid.adminapi.ConnectorBinding) convertToAdminObjects(binding);
                 }
             }
             
@@ -287,7 +288,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
         }
-        return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
+        return (org.teiid.adminapi.ConnectorBinding) convertToAdminObjects(binding);
     }
 
     boolean bindingExists(String name) throws MetaMatrixComponentException {
@@ -301,10 +302,10 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addConnectorBinding(java.lang.String, char[], AdminOptions)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addConnectorBinding(java.lang.String, char[], AdminOptions)
      * @since 4.3
      */
-    public com.metamatrix.admin.api.objects.ConnectorBinding addConnectorBinding(String deployName, char[] xmlFile, AdminOptions options) 
+    public org.teiid.adminapi.ConnectorBinding addConnectorBinding(String deployName, char[] xmlFile, AdminOptions options) 
         throws AdminException {
         
         // if the options object is null treat as if it is IGNORE as default
@@ -330,7 +331,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
                 }
                 else if (options.containsOption(AdminOptions.OnConflict.IGNORE)) {
                     binding = getDataService().getConnectorBinding(deployName);
-                    return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
+                    return (org.teiid.adminapi.ConnectorBinding) convertToAdminObjects(binding);
                 }
             }
             
@@ -363,7 +364,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
         	throw new AdminComponentException(e);
         }
         
-        return (com.metamatrix.admin.api.objects.ConnectorBinding) convertToAdminObjects(binding);
+        return (org.teiid.adminapi.ConnectorBinding) convertToAdminObjects(binding);
     }
 
     /**
@@ -398,7 +399,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deleteConnectorBinding(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#deleteConnectorBinding(java.lang.String)
      * @since 4.3
      */
     public void deleteConnectorBinding(String identifier) 
@@ -414,7 +415,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addVDB(java.lang.String, byte[], char[], AdminOptions)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addVDB(java.lang.String, byte[], char[], AdminOptions)
      * @since 4.3
      */
     private VDB addVDB(String deployName, byte[] vdbFile, char[] defFile, AdminOptions options) 
@@ -585,7 +586,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }     
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addVDB(java.lang.String, byte[], AdminOptions)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addVDB(java.lang.String, byte[], AdminOptions)
      * @since 4.3
      */
     public VDB addVDB(String deployName, byte[] vdbFile, AdminOptions options) 
@@ -595,7 +596,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
         
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addExtensionModule(java.lang.String, java.lang.String, byte[], java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addExtensionModule(java.lang.String, java.lang.String, byte[], java.lang.String)
      * @since 4.3
      */
     public void addExtensionModule(String type, String sourceName, byte[] source, String description) 
@@ -632,7 +633,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deleteExtensionModule(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#deleteExtensionModule(java.lang.String)
      * @since 4.3
      */
     public void deleteExtensionModule(String sourceName) 
@@ -648,7 +649,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#assignBindingToModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#assignBindingToModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      * @since 4.3
      */
     public void assignBindingToModel(String deployedConnectorBindingName, String vdbName, String vdbVersion, String modelName) 
@@ -682,9 +683,45 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
         	throw new AdminComponentException(e);
         }                        
     }
+    
+    public void assignBindingsToModel(String[] deployedConnectorBindingName, String vdbName, String vdbVersion, String modelName) throws AdminException {
+        if (deployedConnectorBindingName == null || deployedConnectorBindingName.length == 0) {
+            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_cb_name")); //$NON-NLS-1$                
+        }
+        
+        if (vdbName == null || vdbVersion == null || !vdbName.matches(SINGLE_WORD_REGEX)) {
+            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_vdb_name")); //$NON-NLS-1$
+        }
+
+        if (modelName == null || !modelName.matches(MULTIPLE_WORDS_REGEX)) {
+            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_model_name")); //$NON-NLS-1$
+        }
+        
+        // find the connector binding if found in the configuration service
+        // add to the vdb binding.
+        try {
+        	List list = new ArrayList();
+        	for (int i = 0; i < deployedConnectorBindingName.length; i++) {
+        		ConnectorBinding binding = getDataService().getConnectorBinding(deployedConnectorBindingName[i]);
+                if (binding != null) {
+                    list.add(binding);
+                }
+        	}
+            
+            if (!list.isEmpty()) {
+                getConfigurationService().assignConnectorBinding(vdbName, vdbVersion, modelName, (ConnectorBinding[])list.toArray(new ConnectorBinding[list.size()]));
+            }
+            else {
+                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Vdb_or_Model_notfound")); //$NON-NLS-1$
+            }
+        } catch (MetaMatrixComponentException e) {
+        	throw new AdminComponentException(e);
+        }                        
+    	
+    }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#getLogConfiguration()
+     * @see org.teiid.adminapi.ConfigurationAdmin#getLogConfiguration()
      * @since 4.3
      */
     public LogConfiguration getLogConfiguration() 
@@ -693,7 +730,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#setLogConfiguration(com.metamatrix.admin.api.objects.LogConfiguration)
+     * @see org.teiid.adminapi.ConfigurationAdmin#setLogConfiguration(org.teiid.adminapi.LogConfiguration)
      * @since 4.3
      */
     public void setLogConfiguration(LogConfiguration config) 
@@ -702,7 +739,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportExtensionModule(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportExtensionModule(java.lang.String)
      * @since 4.3
      */
     public byte[] exportExtensionModule(String sourceName) throws AdminException {
@@ -719,7 +756,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConfiguration()
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConfiguration()
      * @since 4.3
      */
     public char[] exportConfiguration() throws AdminException {
@@ -732,7 +769,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorBinding(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorBinding(java.lang.String)
      * @since 4.3
      */
     public char[] exportConnectorBinding(String identifier) 
@@ -767,7 +804,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorType(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorType(java.lang.String)
      * @since 4.3
      */
     public char[] exportConnectorType(String identifier) 
@@ -797,7 +834,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /**  
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportVDB(java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportVDB(java.lang.String, java.lang.String)
      * @since 4.3
      */
     public byte[] exportVDB(String name, String version) 
@@ -819,7 +856,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addConnectorArchive(byte[], com.metamatrix.admin.api.objects.AdminOptions)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addConnectorArchive(byte[], org.teiid.adminapi.AdminOptions)
      * @since 4.3.2
      */
     public void addConnectorArchive(byte[] contents, AdminOptions options) throws AdminException {
@@ -938,7 +975,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements EmbeddedConfigAdmin
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorArchive(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorArchive(java.lang.String)
      * @since 4.3
      */
     public byte[] exportConnectorArchive(String identifier) throws AdminException {

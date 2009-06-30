@@ -28,13 +28,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.Request;
+import org.teiid.adminapi.Session;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
-import com.metamatrix.admin.api.objects.Request;
-import com.metamatrix.admin.api.objects.Session;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorType;
 import com.metamatrix.admin.objects.MMDQP;

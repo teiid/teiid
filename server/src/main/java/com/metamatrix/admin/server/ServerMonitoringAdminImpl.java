@@ -41,17 +41,18 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.Model;
-import com.metamatrix.admin.api.objects.Resource;
-import com.metamatrix.admin.api.objects.Service;
-import com.metamatrix.admin.api.objects.Session;
-import com.metamatrix.admin.api.objects.SystemObject;
-import com.metamatrix.admin.api.objects.Transaction;
-import com.metamatrix.admin.api.objects.VDB;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Model;
+import org.teiid.adminapi.Resource;
+import org.teiid.adminapi.Service;
+import org.teiid.adminapi.Session;
+import org.teiid.adminapi.SystemObject;
+import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.VDB;
+
 import com.metamatrix.admin.api.server.ServerMonitoringAdmin;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMConnectionPool;
@@ -243,7 +244,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getConnectorBindingsInVDB(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getConnectorBindingsInVDB(java.lang.String)
      * @since 4.3
      */
     public Collection getConnectorBindingsInVDB(String identifier) throws AdminException {
@@ -1201,7 +1202,7 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getPropertyDefinitions(java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getPropertyDefinitions(java.lang.String, java.lang.String)
      * @since 4.3
      */
     public Collection getPropertyDefinitions(String identifier, String className) throws AdminException {

@@ -26,8 +26,9 @@ import java.util.Collection;
 
 import javax.transaction.xa.Xid;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.objects.Transaction;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.Transaction;
+
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;

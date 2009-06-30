@@ -25,8 +25,9 @@ package com.metamatrix.admin.objects;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.teiid.adminapi.PropertyDefinition;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.PropertyDefinition;
 
 
 /** 
@@ -87,7 +88,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     
     
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getValue()
+     * @see org.teiid.adminapi.PropertyDefinition#getValue()
      * @since 4.3
      */
     public String getValue() {
@@ -95,7 +96,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getAllowedValues()
+     * @see org.teiid.adminapi.PropertyDefinition#getAllowedValues()
      * @since 4.3
      */
     public Collection getAllowedValues() {
@@ -103,7 +104,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
     
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getDefaultValue()
+     * @see org.teiid.adminapi.PropertyDefinition#getDefaultValue()
      * @since 4.3
      */
     public Object getDefaultValue() {
@@ -111,7 +112,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getDescription()
+     * @see org.teiid.adminapi.PropertyDefinition#getDescription()
      * @since 4.3
      */
     public String getDescription() {
@@ -119,7 +120,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getDisplayName()
+     * @see org.teiid.adminapi.PropertyDefinition#getDisplayName()
      * @since 4.3
      */
     public String getDisplayName() {
@@ -127,7 +128,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getPropertyType()
+     * @see org.teiid.adminapi.PropertyDefinition#getPropertyType()
      * @since 4.3
      */
     public String getPropertyType() {
@@ -135,7 +136,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
     
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getPropertyTypeClassName()
+     * @see org.teiid.adminapi.PropertyDefinition#getPropertyTypeClassName()
      * @since 4.3
      */
     public String getPropertyTypeClassName() {
@@ -144,7 +145,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
 
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#getRequiresRestart()
+     * @see org.teiid.adminapi.PropertyDefinition#getRequiresRestart()
      * @since 4.3
      */
     public RestartType getRequiresRestart() {
@@ -152,7 +153,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#isExpert()
+     * @see org.teiid.adminapi.PropertyDefinition#isExpert()
      * @since 4.3
      */
     public boolean isExpert() {
@@ -160,7 +161,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#isMasked()
+     * @see org.teiid.adminapi.PropertyDefinition#isMasked()
      * @since 4.3
      */
     public boolean isMasked() {
@@ -168,7 +169,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#isModifiable()
+     * @see org.teiid.adminapi.PropertyDefinition#isModifiable()
      * @since 4.3
      */
     public boolean isModifiable() {
@@ -176,7 +177,7 @@ public class MMPropertyDefinition extends MMAdminObject implements PropertyDefin
     }
 
     /** 
-     * @see com.metamatrix.admin.api.objects.PropertyDefinition#isRequired()
+     * @see org.teiid.adminapi.PropertyDefinition#isRequired()
      * @since 4.3
      */
     public boolean isRequired() {

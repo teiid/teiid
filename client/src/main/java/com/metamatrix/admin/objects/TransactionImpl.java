@@ -24,8 +24,9 @@ package com.metamatrix.admin.objects;
 
 import javax.transaction.xa.Xid;
 
+import org.teiid.adminapi.Transaction;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.common.xa.MMXid;
 
 public class TransactionImpl extends MMAdminObject implements Transaction {

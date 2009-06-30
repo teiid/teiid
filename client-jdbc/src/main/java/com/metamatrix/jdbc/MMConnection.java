@@ -57,10 +57,10 @@ import java.util.logging.Logger;
 
 import javax.transaction.xa.Xid;
 
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
 import org.teiid.jdbc.TeiidDriver;
 
-import com.metamatrix.admin.api.core.Admin;
-import com.metamatrix.admin.api.exception.AdminException;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;

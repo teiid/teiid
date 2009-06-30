@@ -26,8 +26,9 @@ import java.lang.reflect.Method;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.server.ServerAdmin;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.xa.XATransactionException;
@@ -38,7 +39,7 @@ public class TestSocketServiceRegistry extends TestCase {
 
 	public void testExceptionConversionNoException() throws Exception {
 		
-		Method m = ServerAdmin.class.getMethod("close", new Class[] {});
+		Method m = Admin.class.getMethod("close", new Class[] {});
 		
 		Throwable t = ExceptionUtil.convertException(m, new MetaMatrixComponentException());
 		
@@ -47,7 +48,7 @@ public class TestSocketServiceRegistry extends TestCase {
 	
 	public void testAdminExceptionConversion() throws Exception {
 		
-		Method m = ServerAdmin.class.getMethod("getHosts", new Class[] {String.class});
+		Method m = Admin.class.getMethod("getProcesses", new Class[] {String.class});
 		
 		Throwable t = ExceptionUtil.convertException(m, new MetaMatrixComponentException());
 		

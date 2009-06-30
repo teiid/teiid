@@ -34,7 +34,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.metamatrix.admin.api.objects.Resource;
+import org.teiid.adminapi.Resource;
+
 import com.metamatrix.common.actions.ActionDefinition;
 import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.ModificationException;

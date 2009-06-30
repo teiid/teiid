@@ -29,15 +29,16 @@ import java.util.Set;
 
 import javax.transaction.xa.Xid;
 
-import com.metamatrix.admin.api.embedded.EmbeddedLogger;
-import com.metamatrix.admin.api.embedded.EmbeddedRuntimeStateAdmin;
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.Cache;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
-import com.metamatrix.admin.api.objects.Request;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Cache;
+import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.EmbeddedLogger;
+import org.teiid.adminapi.Request;
+import org.teiid.adminapi.RuntimeStateAdmin;
+
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
@@ -53,7 +54,7 @@ import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 /** 
  * @since 4.3
  */
-public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRuntimeStateAdmin {
+public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements RuntimeStateAdmin {
 
     public DQPRuntimeStateAdminImpl(EmbeddedConnectionFactoryImpl manager) {
         super(manager);
@@ -63,12 +64,12 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
      * @see com.metamatrix.admin.api.embedded.EmbeddedRuntimeStateAdmin#stop(int)
      * @since 4.3
      */
-    public void stop(int millisToWait) throws AdminException {        
+    public void shutdown(int millisToWait) throws AdminException {        
         // TODO: rreddy need to implement the time to wait.
         // First terminate all the sessions to the DQP currently have
         terminateSession(AdminObject.WILDCARD);
         
-        getManager().shutdown();
+        getManager().shutdown(false);
     }
 
     /** 
@@ -81,11 +82,11 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
         
         // Now shutdown the DQP, it will automatically start next timea new connection is 
         // requested.
-        getManager().shutdown();                        
+        getManager().shutdown(true);                        
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#startConnectorBinding(java.lang.String)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#startConnectorBinding(java.lang.String)
      * @since 4.3
      */
     public void startConnectorBinding(String identifier) 
@@ -121,7 +122,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#stopConnectorBinding(java.lang.String, boolean)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#stopConnectorBinding(java.lang.String, boolean)
      * @since 4.3
      */
     public void stopConnectorBinding(String identifier, boolean stopNow) 
@@ -157,7 +158,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#clearCache(java.lang.String)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#clearCache(java.lang.String)
      * @since 4.3
      */
     public void clearCache(String identifier) 
@@ -201,7 +202,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#terminateSession(java.lang.String)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#terminateSession(java.lang.String)
      * @since 4.3
      */
     public void terminateSession(String identifier) 
@@ -233,7 +234,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#cancelRequest(java.lang.String)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#cancelRequest(java.lang.String)
      * @since 4.3
      */
     public void cancelRequest(String identifier) 
@@ -258,7 +259,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#cancelSourceRequest(java.lang.String)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#cancelSourceRequest(java.lang.String)
      * @since 4.3
      */
     public void cancelSourceRequest(String identifier) 
@@ -284,7 +285,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements EmbeddedRunt
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#changeVDBStatus(java.lang.String, java.lang.String, int)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#changeVDBStatus(java.lang.String, java.lang.String, int)
      * @since 4.3
      */
     public void changeVDBStatus(String name, String version, int status) 

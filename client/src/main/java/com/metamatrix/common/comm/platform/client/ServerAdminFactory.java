@@ -28,10 +28,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
 
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.api.MMURL;
@@ -54,7 +55,7 @@ public class ServerAdminFactory {
         
     private final class ReconnectingProxy implements InvocationHandler {
 
-    	private ServerAdmin target;
+    	private Admin target;
     	private ServerConnection registry;
     	private Properties p;
     	private boolean closed;
@@ -63,7 +64,7 @@ public class ServerAdminFactory {
     		this.p = p;
 		}
     	
-    	private synchronized ServerAdmin getTarget() throws AdminComponentException, CommunicationException {
+    	private synchronized Admin getTarget() throws AdminComponentException, CommunicationException {
     		if (closed) {
     			throw new AdminComponentException(CommPlatformPlugin.Util.getString("ERR.014.001.0001")); //$NON-NLS-1$
     		}
@@ -75,7 +76,7 @@ public class ServerAdminFactory {
     		} catch (ConnectionException e) {
     			throw new AdminComponentException(e.getMessage());
     		}
-    		target = registry.getService(ServerAdmin.class);
+    		target = registry.getService(Admin.class);
     		return target;
     	}
     	
@@ -93,8 +94,8 @@ public class ServerAdminFactory {
 				try {
 					return method.invoke(getTarget(), args);
 				} catch (InvocationTargetException e) {
-					if (method.getName().endsWith("bounceSystem") && ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) { //$NON-NLS-1$
-						bounceSystem(((Boolean)args[0]).booleanValue());
+					if (method.getName().endsWith("restart") && ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) { //$NON-NLS-1$
+						bounceSystem(true);
 						return null;
 					}
 					throw e.getTargetException();
@@ -174,7 +175,7 @@ public class ServerAdminFactory {
      * @throws LogonException 
      * @since 4.3
      */
-    public ServerAdmin createAdmin(String userName,
+    public Admin createAdmin(String userName,
                              char[] password,
                              String serverURL) throws AdminException {
         
@@ -194,7 +195,7 @@ public class ServerAdminFactory {
      * @throws LogonException 
      * @since 4.3
      */
-    public ServerAdmin createAdmin(String userName,
+    public Admin createAdmin(String userName,
                                    char[] password,
                                    String serverURL,
                                    String applicationName) throws AdminException {
@@ -213,12 +214,12 @@ public class ServerAdminFactory {
     	return createAdmin(p);
     }
 
-	public ServerAdmin createAdmin(Properties p) {
+	public Admin createAdmin(Properties p) {
 		p = PropertiesUtils.clone(p);
 		p.remove(MMURL.JDBC.VDB_NAME);
 		p.remove(MMURL.JDBC.VDB_VERSION);
     	p.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
-		ServerAdmin serverAdmin = (ServerAdmin)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] { ServerAdmin.class }, new ReconnectingProxy(p));
+		Admin serverAdmin = (Admin)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] { Admin.class }, new ReconnectingProxy(p));
     	
        return serverAdmin;
     }

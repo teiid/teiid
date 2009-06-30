@@ -28,16 +28,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.Host;
+import org.teiid.adminapi.ProcessObject;
+import org.teiid.adminapi.Service;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.AdminOptions;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
-import com.metamatrix.admin.api.objects.Host;
-import com.metamatrix.admin.api.objects.ProcessObject;
-import com.metamatrix.admin.api.objects.Service;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMProcess;
 import com.metamatrix.common.application.DQPConfigSource;

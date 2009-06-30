@@ -33,7 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.metamatrix.admin.api.objects.AdminOptions;
+import org.teiid.adminapi.AdminOptions;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.jdbc.JDBCPlatform;

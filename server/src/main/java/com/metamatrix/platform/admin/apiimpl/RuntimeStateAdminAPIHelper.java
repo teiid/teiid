@@ -32,7 +32,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.metamatrix.admin.api.exception.AdminException;
+import org.teiid.adminapi.AdminException;
+
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;

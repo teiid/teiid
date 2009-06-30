@@ -30,15 +30,17 @@ import java.util.Properties;
 
 import javax.transaction.xa.Xid;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.objects.AdminOptions;
-import com.metamatrix.admin.api.objects.ConnectorBinding;
-import com.metamatrix.admin.api.objects.Group;
-import com.metamatrix.admin.api.objects.LogConfiguration;
-import com.metamatrix.admin.api.objects.ScriptsContainer;
-import com.metamatrix.admin.api.objects.SystemObject;
-import com.metamatrix.admin.api.objects.Transaction;
-import com.metamatrix.admin.api.objects.VDB;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.EmbeddedLogger;
+import org.teiid.adminapi.Group;
+import org.teiid.adminapi.LogConfiguration;
+import org.teiid.adminapi.ScriptsContainer;
+import org.teiid.adminapi.SystemObject;
+import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.VDB;
+
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -94,7 +96,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addAuthorizationProvider(java.lang.String, java.lang.String, java.util.Properties)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addAuthorizationProvider(java.lang.String, java.lang.String, java.util.Properties)
      * @since 4.3
      */
     public void addAuthorizationProvider(String domainprovidername,
@@ -120,7 +122,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getConnectorBindingsInVDB(java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getConnectorBindingsInVDB(java.lang.String)
      * @since 4.3
      */
     public Collection getConnectorBindingsInVDB(String identifier) throws AdminException {
@@ -224,7 +226,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreMonitoringAdmin#getPropertyDefinitions(java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.MonitoringAdmin#getPropertyDefinitions(java.lang.String, java.lang.String)
      * @since 4.3
      */
     public Collection getPropertyDefinitions(String identifier, String className) throws AdminException {
@@ -273,7 +275,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }    
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addConnectorArchive(byte[], com.metamatrix.admin.api.objects.AdminOptions)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addConnectorArchive(byte[], org.teiid.adminapi.AdminOptions)
      * @since 4.3
      */
     public void addConnectorArchive(byte[] archiveContents, AdminOptions options) throws AdminException {
@@ -372,7 +374,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /**
-     * @see com.metamatrix.admin.api.server.ServerConfigAdmin#setLogConfiguration(com.metamatrix.admin.api.objects.LogConfiguration)
+     * @see com.metamatrix.admin.api.server.ServerConfigAdmin#setLogConfiguration(org.teiid.adminapi.LogConfiguration)
      * @since 4.3
      */
     public void setLogConfiguration(LogConfiguration config) throws AdminException {
@@ -389,7 +391,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#updateSystemProperties(java.util.Properties)
+     * @see org.teiid.adminapi.ConfigurationAdmin#updateSystemProperties(java.util.Properties)
      * @since 4.3
      */
     public void updateSystemProperties(Properties properties) throws AdminException {
@@ -496,7 +498,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreRuntimeStateAdmin#clearCache(java.lang.String)
+     * @see org.teiid.adminapi.RuntimeStateAdmin#clearCache(java.lang.String)
      * @since 4.3
      */
     public void clearCache(String cacheIdentifier) throws AdminException {
@@ -518,7 +520,7 @@ public class ServerAdminImpl implements ServerAdmin {
     
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
+     * @see org.teiid.adminapi.ConfigurationAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
      * @since 4.3
      */
     public void updateProperties(String identifier,
@@ -681,7 +683,7 @@ public class ServerAdminImpl implements ServerAdmin {
 
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#assignBindingToModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#assignBindingToModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      * @since 4.3
      */
     public void assignBindingToModel(String connectorBindingName,
@@ -692,7 +694,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deassignBindingsFromModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#deassignBindingsFromModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      * @since 5.0
      */
     public void deassignBindingFromModel(String connectorBindingName,
@@ -703,7 +705,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#assignBindingToModel(String[], java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#assignBindingToModel(String[], java.lang.String, java.lang.String, java.lang.String)
      * @since 5.0
      */
     public void assignBindingsToModel(String[] connectorBindingNames,
@@ -714,7 +716,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deassignBindingsFromModel(String[], java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#deassignBindingsFromModel(String[], java.lang.String, java.lang.String, java.lang.String)
      * @since 5.0
      */
     public void deassignBindingsFromModel(String[] connectorBindingNames,
@@ -725,7 +727,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /**
-     * @see com.metamatrix.admin.api.server.ServerSecurityAdmin#importDataRoles(java.lang.String, java.lang.String, char[], com.metamatrix.admin.api.objects.AdminOptions)
+     * @see com.metamatrix.admin.api.server.ServerSecurityAdmin#importDataRoles(java.lang.String, java.lang.String, char[], org.teiid.adminapi.AdminOptions)
      */
     public String importDataRoles(String vdbName, String vdbVersion, char[] data, AdminOptions options) throws AdminException {
         return getSecurityAdmin().importDataRoles(vdbName, vdbVersion, data, options);
@@ -740,7 +742,7 @@ public class ServerAdminImpl implements ServerAdmin {
 
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConfiguration()
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConfiguration()
      * @since 4.3
      */
     public char[] exportConfiguration() throws AdminException {
@@ -748,7 +750,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#importConfiguration()
+     * @see org.teiid.adminapi.ConfigurationAdmin#importConfiguration()
      * @since 4.3
      */
     public void importConfiguration(char[] fileData) throws AdminException {
@@ -756,7 +758,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }    
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorBinding(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorBinding(java.lang.String)
      * @since 4.3
      */
     public char[] exportConnectorBinding(String connectorBindingIdentifier) throws AdminException {
@@ -764,7 +766,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorType(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorType(java.lang.String)
      * @since 4.3
      */
     public char[] exportConnectorType(String connectorTypeIdentifier) throws AdminException {
@@ -772,7 +774,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorArchive(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorArchive(java.lang.String)
      * @since 4.3
      */
     public byte[] exportConnectorArchive(String connectorTypeIdentifier) throws AdminException {
@@ -780,7 +782,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportExtensionModule(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportExtensionModule(java.lang.String)
      * @since 4.3
      */
     public byte[] exportExtensionModule(String sourceName) throws AdminException {
@@ -788,7 +790,7 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /**  
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportVDB(java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportVDB(java.lang.String, java.lang.String)
      * @since 4.3
      */
     public byte[] exportVDB(String name, String version) throws AdminException {
@@ -932,14 +934,14 @@ public class ServerAdminImpl implements ServerAdmin {
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addUDF(byte[], java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addUDF(byte[], java.lang.String)
      */
     public void addUDF(byte[] modelFileContents,String classpath) throws AdminException {
         getConfigurationAdmin().addUDF(modelFileContents, classpath);
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deleteUDF()
+     * @see org.teiid.adminapi.ConfigurationAdmin#deleteUDF()
      */
     public void deleteUDF() throws AdminException {
         getConfigurationAdmin().deleteUDF();
@@ -1001,7 +1003,21 @@ public class ServerAdminImpl implements ServerAdmin {
 			throws AdminException {
 		return getMonitoringAdmin().getConnectionPoolStats(identifier);
 	}
-	
-	
-	
+
+	@Override
+	public void extensionModuleModified(String name) throws AdminException {
+	}
+
+	@Override
+	public void restart() throws AdminException {
+	}
+
+	@Override
+	public void setLogListener(EmbeddedLogger listener) throws AdminException {
+	}
+
+	@Override
+	public void shutdown(int millisToWait) throws AdminException {
+	}
+
 }

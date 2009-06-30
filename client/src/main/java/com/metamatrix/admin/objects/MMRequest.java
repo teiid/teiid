@@ -24,8 +24,9 @@ package com.metamatrix.admin.objects;
 
 import java.util.Date;
 
+import org.teiid.adminapi.Request;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.Request;
 import com.metamatrix.core.util.DateUtil;
 
 /**

@@ -24,11 +24,16 @@ package com.metamatrix.dqp.service;
 
 import java.util.*;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.platform.security.api.AuthorizationPolicy;
+import com.metamatrix.platform.security.api.AuthorizationRealm;
+import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
 
 /**
@@ -158,9 +163,28 @@ public class FakeAuthorizationService implements AuthorizationService {
     }
 
 	@Override
-	public boolean isCallerInRole(SessionToken caller, String roleName)
+	public boolean isCallerInRole(SessionToken session, String roleName)
 			throws AuthorizationMgmtException {
-		// rameshTODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public Collection<AuthorizationPolicy> getPoliciesInRealm(
+			AuthorizationRealm realm)
+			throws AuthorizationException, AuthorizationMgmtException {
+		return null;
+	}
+
+	@Override
+	public Collection<String> getRoleNamesForPrincipal(MetaMatrixPrincipalName principal) throws InvalidSessionException,
+			AuthorizationException, AuthorizationMgmtException {
+		return null;
+	}
+
+	@Override
+	public void updatePoliciesInRealm(AuthorizationRealm realm,
+			Collection<AuthorizationPolicy> policies)
+			throws AuthorizationMgmtException {
+		
 	}
 }

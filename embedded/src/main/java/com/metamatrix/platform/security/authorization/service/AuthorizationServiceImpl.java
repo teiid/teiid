@@ -29,19 +29,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.teiid.adminapi.AdminRoles;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.xml.sax.SAXException;
 
 import com.google.inject.Inject;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
-import com.metamatrix.admin.api.server.AdminRoles;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
@@ -125,14 +127,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      */
     public Collection getInaccessibleResources(String connectionID, int action, Collection resources, int context)
         throws MetaMatrixComponentException {
-        SessionToken token = DQPWorkContext.getWorkContext().getSessionToken();
         AuthorizationRealm realm = getRealm(DQPWorkContext.getWorkContext());
         AuthorizationActions actions = getActions(action);
         Collection permissions = createPermissions(realm, resources, actions);
         String auditContext = getAuditContext(context);
         Collection inaccessableResources = Collections.EMPTY_LIST;
         try {
-            inaccessableResources = getInaccessibleResources(token, auditContext, permissions);
+            inaccessableResources = getInaccessibleResources(getSession(), auditContext, permissions);
         } catch (AuthorizationMgmtException e) {
             throw new MetaMatrixComponentException(e);
         }
@@ -152,7 +153,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     /**
      * Of those resources specified, return the subset for which the specified account
      * does <emph>NOT</emph> have authorization to access.
-     * @param sessionToken the session token of the principal that is calling this method
+     * @param caller the session token of the principal that is calling this method
      * @param contextName the name of the context for the caller (@see AuditContext)
      * @param requests the permissions that detail the resources and the desired form of access
      * @return the subset of <code>requests</code> that the account does <i>not</i> have access to
@@ -160,9 +161,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      * @throws AuthorizationMgmtException if this service is unable to locate resources required
      * for this operation
      */
-    public Collection getInaccessibleResources(SessionToken sessionToken, String contextName, Collection requests)
+    private Collection getInaccessibleResources(SessionToken caller, String contextName, Collection requests)
             throws AuthorizationMgmtException {
-        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", sessionToken, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        LogManager.logDetail(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"getInaccessibleResources(", caller, ", ", contextName, ", ", requests, ")"}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         
         List resources = new ArrayList();
         if (requests != null && ! requests.isEmpty()) {            
@@ -173,16 +174,16 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
         
         // Audit - request
-    	AuditMessage msg = new AuditMessage( contextName, "getInaccessibleResources-request", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
+    	AuditMessage msg = new AuditMessage( contextName, "getInaccessibleResources-request", caller.getUsername(), resources.toArray()); //$NON-NLS-1$
     	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         
-        if (isEntitled(sessionToken.getUsername())) {
+        if (isEntitled(caller.getUsername())) {
             return Collections.EMPTY_LIST;
         }
 
         Collection results = new HashSet(requests);
         try {
-            Collection policies = this.getPoliciesForPrincipal(new MetaMatrixPrincipalName(sessionToken.getUsername(), MetaMatrixPrincipal.TYPE_USER), sessionToken, getRequestedRealm(requests));
+            Collection policies = this.getPoliciesForPrincipal(new MetaMatrixPrincipalName(caller.getUsername(), MetaMatrixPrincipal.TYPE_USER), getRequestedRealm(requests));
 
             Iterator policyIter = policies.iterator();
             
@@ -202,10 +203,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
 
         if (results.isEmpty()) {
-        	msg = new AuditMessage( contextName, "getInaccessibleResources-granted all", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
+        	msg = new AuditMessage( contextName, "getInaccessibleResources-granted all", caller.getUsername(), resources.toArray()); //$NON-NLS-1$
         	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         } else {
-        	msg = new AuditMessage( contextName, "getInaccessibleResources-denied", sessionToken.getUsername(), resources.toArray()); //$NON-NLS-1$
+        	msg = new AuditMessage( contextName, "getInaccessibleResources-denied", caller.getUsername(), resources.toArray()); //$NON-NLS-1$
         	LogManager.log(MessageLevel.INFO, LogConstants.CTX_AUDITLOGGING, msg);
         }
         return results;
@@ -243,7 +244,6 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     }
     
     public boolean hasRole(String connectionID, String roleType, String roleName) throws MetaMatrixComponentException {
-        SessionToken token = DQPWorkContext.getWorkContext().getSessionToken();
         
         AuthorizationRealm realm = null;
         
@@ -256,7 +256,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
         
         try {
-            return hasPolicy(token, realm, roleName);
+            return hasPolicy(getSession(), realm, roleName);
         } catch (AuthorizationMgmtException err) {
             throw new MetaMatrixComponentException(err);
         }
@@ -272,18 +272,15 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		return false;
 	}
     
-    public boolean hasPolicy(SessionToken caller, AuthorizationRealm realm,
-			String policyName) throws AuthorizationMgmtException {
+    private boolean hasPolicy(SessionToken session, AuthorizationRealm realm, String policyName) throws AuthorizationMgmtException {
 
-		if (isEntitled(caller.getUsername())) {
+		if (isEntitled(session.getUsername())) {
 			return true;
 		}
 
 		Collection policies;
 		try {
-			policies = getPoliciesForPrincipal(new MetaMatrixPrincipalName(
-					caller.getUsername(), MetaMatrixPrincipal.TYPE_USER),
-					caller, realm);
+			policies = getPoliciesForPrincipal(new MetaMatrixPrincipalName(session.getUsername(), MetaMatrixPrincipal.TYPE_USER), realm);
 		} catch (InvalidPrincipalException e) {
 			throw new AuthorizationMgmtException(e);
 		}
@@ -311,6 +308,24 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		return false;
 	}
     
+    public Collection<String> getRoleNamesForPrincipal(MetaMatrixPrincipalName principal) throws AuthorizationMgmtException {
+		Collection policies;
+		try {
+			policies = getPoliciesForPrincipal(principal, RolePermissionFactory.getRealm());
+		} catch (InvalidPrincipalException e) {
+			throw new AuthorizationMgmtException(e);
+		}
+
+		Collection<String> results = new HashSet<String>();
+
+		for (Iterator i = policies.iterator(); i.hasNext();) {
+			AuthorizationPolicy policy = (AuthorizationPolicy) i.next();
+			results.add(policy.getAuthorizationPolicyID().getDisplayName());
+		}
+
+		return results;
+	}
+    
     /**
      * Return a collection of all policies for which this principal has authorization, caching as needed.
      * Policies are returned for the principal and all groups in which the principal has membership.
@@ -323,7 +338,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      * @throws InvalidPrincipalException if the principal is invalid.
      * @throws MetaMatrixComponentException 
      */
-    private Collection<AuthorizationPolicy> getPoliciesForPrincipal(MetaMatrixPrincipalName user, SessionToken session, AuthorizationRealm realm)
+    private Collection<AuthorizationPolicy> getPoliciesForPrincipal(MetaMatrixPrincipalName user, AuthorizationRealm realm)
             throws AuthorizationMgmtException, InvalidPrincipalException {
 
     	Set<AuthorizationPolicy> result = new HashSet<AuthorizationPolicy>();
@@ -335,8 +350,27 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
         
         if (realm.getSubRealmName() != null) {
+        	Collection<AuthorizationPolicy> policies = getPoliciesInRealm(realm);
+        	for (AuthorizationPolicy policy : policies) {
+	        	if (matchesPrincipal(principals, policy)) {
+	        		result.add(policy);
+	        		continue;
+	        	}
+	        }
+        } else {
+        	//TODO: looking for admin roles
+        }
+
+        return result;
+    }
+    
+    @Override
+    public Collection<AuthorizationPolicy> getPoliciesInRealm(AuthorizationRealm realm) throws AuthorizationMgmtException {
+
+    	Collection<AuthorizationPolicy> policies = null;
+        
+    	if (realm.getSubRealmName() != null) {
         	VDBKey key = new VDBKey(realm.getSuperRealmName(), realm.getSubRealmName());
-        	Collection<AuthorizationPolicy> policies = null;
         	synchronized (this.policyCache) {
             	policies = this.policyCache.get(key);
 	        	if (policies == null) {
@@ -360,17 +394,32 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 					this.policyCache.put(key, policies);
 	        	}
         	}
-        	for (AuthorizationPolicy policy : policies) {
-	        	if (matchesPrincipal(principals, policy)) {
-	        		result.add(policy);
-	        		continue;
-	        	}
-	        }
-        } else {
-        	//TODO: looking for admin roles
         }
-
-        return result;
+    	
+    	return policies;
+    }
+    
+    public void updatePoliciesInRealm(AuthorizationRealm realm, Collection<AuthorizationPolicy> policies) throws AuthorizationMgmtException {
+        
+    	if (realm.getSubRealmName() != null) {
+        	VDBKey key = new VDBKey(realm.getSuperRealmName(), realm.getSubRealmName());
+        	synchronized (this.policyCache) {
+            	policies = this.policyCache.get(key);
+	        	if (policies != null) {
+	        		this.policyCache.remove(key);
+	        	}
+				try {
+			        VDBArchive vdb = vdbService.getVDB(realm.getSuperRealmName(), realm.getSubRealmName());
+			        char[] dataRoles = AuthorizationPolicyFactory.exportPolicies(policies);
+			        vdb.updateRoles(dataRoles);
+				} catch (IOException e) {
+					throw new AuthorizationMgmtException(e);
+				} catch (MetaMatrixComponentException e) {
+					throw new AuthorizationMgmtException(e);
+				}
+				this.policyCache.put(key, policies);
+        	}
+        }
     }
     
     /**
@@ -443,10 +492,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
      * @return Realm to use (based on vdb name and version)
      */
     private AuthorizationRealm getRealm(DQPWorkContext context) {
-        return
-            new AuthorizationRealm(
-                context.getVdbName(),
-                context.getVdbVersion());
+        return new AuthorizationRealm(context.getVdbName(),context.getVdbVersion());
     }
 
     private AuthorizationActions getActions(int actionCode) {
@@ -507,8 +553,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	}
 
 	@Override
-	public boolean isCallerInRole(SessionToken caller, String roleName) throws AuthorizationMgmtException {
-        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"isCallerInRole(", caller, roleName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
-        return hasPolicy(caller, RolePermissionFactory.getRealm(), roleName);
+	public boolean isCallerInRole(SessionToken session, String roleName) throws AuthorizationMgmtException {
+        LogManager.logTrace(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, new Object[]{"isCallerInRole(", session, roleName, ")"}); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        return hasPolicy(session, RolePermissionFactory.getRealm(), roleName);
+	}
+
+	
+	SessionToken getSession() {
+		return DQPWorkContext.getWorkContext().getSessionToken();
 	}
 }

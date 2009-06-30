@@ -40,21 +40,21 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.AdminStatus;
+import org.teiid.adminapi.LogConfiguration;
+import org.teiid.adminapi.ProcessObject;
+import org.teiid.adminapi.ScriptsContainer;
+import org.teiid.adminapi.SystemObject;
+import org.teiid.adminapi.VDB;
 import org.teiid.transport.SSLConfiguration;
 
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.AdminOptions;
-import com.metamatrix.admin.api.objects.AdminStatus;
-import com.metamatrix.admin.api.objects.LogConfiguration;
-import com.metamatrix.admin.api.objects.ProcessObject;
-import com.metamatrix.admin.api.objects.ScriptsContainer;
-import com.metamatrix.admin.api.objects.SystemObject;
-import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.api.server.ServerConfigAdmin;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMAdminStatus;
@@ -158,12 +158,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      *      java.util.Properties, AdminOptions)
      * @since 4.3
      */
-    public com.metamatrix.admin.api.objects.ConnectorBinding addConnectorBinding(String connectorBindingName,
+    public org.teiid.adminapi.ConnectorBinding addConnectorBinding(String connectorBindingName,
                                     String connectorTypeIdentifier,
                                     Properties properties,
                                     AdminOptions options) throws AdminException {
 
-        com.metamatrix.admin.api.objects.ConnectorBinding newBinding = null;
+        org.teiid.adminapi.ConnectorBinding newBinding = null;
         
         if (connectorBindingName == null) {
             throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.Name_can_not_be_null")); //$NON-NLS-1$
@@ -210,12 +210,12 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         
             Collection newBindings = 
                 parent.getConnectorBindings(AdminObject.WILDCARD + AdminObject.DELIMITER + connectorBindingName);
-            newBinding = (com.metamatrix.admin.api.objects.ConnectorBinding)newBindings.iterator().next();
+            newBinding = (org.teiid.adminapi.ConnectorBinding)newBindings.iterator().next();
         } else {
             // We didn't add the new connector binding. Return the existing.
             if (existingBindings != null && existingBindings.size() > 0) {
                 // Only expecting one existing binding
-                newBinding = (com.metamatrix.admin.api.objects.ConnectorBinding)existingBindings.iterator().next();
+                newBinding = (org.teiid.adminapi.ConnectorBinding)existingBindings.iterator().next();
             }
         }
         return newBinding;
@@ -228,9 +228,9 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
      * @see com.metamatrix.admin.api.server.ServerConfigAdmin#addConnectorBinding(java.lang.String, char[], AdminOptions)
      * @since 4.3
      */
-    public com.metamatrix.admin.api.objects.ConnectorBinding addConnectorBinding(String connectorBindingName,
+    public org.teiid.adminapi.ConnectorBinding addConnectorBinding(String connectorBindingName,
                                     char[] xmlFile, AdminOptions options) throws AdminException {
-        com.metamatrix.admin.api.objects.ConnectorBinding newBinding = null;
+        org.teiid.adminapi.ConnectorBinding newBinding = null;
 
         if (xmlFile == null) {
             throw new AdminProcessingException(AdminServerPlugin.Util.getString("ServerConfigAdminImpl.CDK_File_Name_can_not_be_null")); //$NON-NLS-1$
@@ -335,7 +335,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addConnectorArchive(byte[], com.metamatrix.admin.api.objects.AdminOptions)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addConnectorArchive(byte[], org.teiid.adminapi.AdminOptions)
      * @since 4.3
      */
     public void addConnectorArchive(byte[] contents, AdminOptions options) throws AdminException {
@@ -415,7 +415,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }    
 	
    /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addAuthroizationProvider(String, String, Properties)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addAuthroizationProvider(String, String, Properties)
      * @param domainname is the name to be assigned to the newly created {@link AuthenticationProvider}
      * @param provdertypename is the type of provider to create.  
      * @param properties are the settings specified by the providertype to be used
@@ -808,7 +808,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         String mmHost = null;
         String mmPort = null;
         Collection hosts = parent.getHosts(AdminObject.WILDCARD);
-        com.metamatrix.admin.api.objects.Host aHost = (com.metamatrix.admin.api.objects.Host) hosts.iterator().next();
+        org.teiid.adminapi.Host aHost = (org.teiid.adminapi.Host) hosts.iterator().next();
         mmHost = aHost.getName();
         Collection hostProcesses = parent.getProcesses(aHost.getIdentifier() + AdminObject.DELIMITER + AdminObject.WILDCARD);
         ProcessObject hostProcess = (ProcessObject) hostProcesses.iterator().next();
@@ -1000,7 +1000,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConfiguration()
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConfiguration()
      * @since 4.3
      */
     public char[] exportConfiguration() throws AdminException {
@@ -1040,7 +1040,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#importConfiguration(char[])
+     * @see org.teiid.adminapi.ConfigurationAdmin#importConfiguration(char[])
      * @since 4.3
      */
     public void importConfiguration(char[] fileData) throws AdminException {
@@ -1086,7 +1086,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorBinding(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorBinding(java.lang.String)
      * @since 4.3
      */
     public char[] exportConnectorBinding(String connectorBindingIdentifier) throws AdminException {
@@ -1167,7 +1167,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /**
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorType(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorType(java.lang.String)
      * @since 4.3
      */
     public char[] exportConnectorType(String connectorTypeIdentifier) throws AdminException {
@@ -1237,7 +1237,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportConnectorArchive(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportConnectorArchive(java.lang.String)
      * @since 4.3
      */
     public byte[] exportConnectorArchive(String connectorTypeIdentifier) throws AdminException {
@@ -1292,7 +1292,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportExtensionModule(java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportExtensionModule(java.lang.String)
      * @since 4.3
      */
     public byte[] exportExtensionModule(String identifier) throws AdminException {
@@ -1321,7 +1321,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /**  
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#exportVDB(java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#exportVDB(java.lang.String, java.lang.String)
      * @since 4.3
      */
     public byte[] exportVDB(String name, String version) throws AdminException {
@@ -1387,7 +1387,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /**
-     * @see com.metamatrix.admin.api.server.ServerConfigAdmin#setLogConfiguration(com.metamatrix.admin.api.objects.LogConfiguration)
+     * @see com.metamatrix.admin.api.server.ServerConfigAdmin#setLogConfiguration(org.teiid.adminapi.LogConfiguration)
      * @since 4.3
      */
     public void setLogConfiguration(LogConfiguration adminLogConfig) throws AdminException {
@@ -1462,7 +1462,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#updateSystemProperties(java.util.Properties)
+     * @see org.teiid.adminapi.ConfigurationAdmin#updateSystemProperties(java.util.Properties)
      * @since 4.3
      */
     public void updateSystemProperties(Properties properties) throws AdminException {
@@ -1477,7 +1477,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
 
     /**
-     * Supported classes are  {@link com.metamatrix.admin.api.objects.Host}, {@link com.metamatrix.admin.api.objects.ConnectorBinding}, 
+     * Supported classes are  {@link org.teiid.adminapi.Host}, {@link org.teiid.adminapi.ConnectorBinding}, 
      * {@link SystemObject}, {@link ProcessObject}
      * @see com.metamatrix.admin.api.server.ServerConfigAdmin#setProperty(java.lang.String, java.lang.String, java.lang.String)
      * @since 4.3
@@ -1496,9 +1496,9 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
     
     /** 
-     * Supported classes are {@link com.metamatrix.admin.api.objects.ConnectorBinding}, {@link com.metamatrix.admin.api.objects.Service}, 
+     * Supported classes are {@link org.teiid.adminapi.ConnectorBinding}, {@link org.teiid.adminapi.Service}, 
      * {@link SystemObject}, {@link ProcessObject}
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
+     * @see org.teiid.adminapi.ConfigurationAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
      * @since 4.3
      */
     public void updateProperties(String identifier,
@@ -1698,7 +1698,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#assignBindingToModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#assignBindingToModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      * @since 4.3
      */
     public void assignBindingToModel(String connectorBindingName,
@@ -1711,7 +1711,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deassignBindingFromModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#deassignBindingFromModel(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      * @since 5.0
      */
     public void deassignBindingFromModel(String connectorBindingName,
@@ -1724,7 +1724,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#assignBindingsToModel(String[], java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#assignBindingsToModel(String[], java.lang.String, java.lang.String, java.lang.String)
      * @since 5.0
      */
     public void assignBindingsToModel(String[] connectorBindingNames,
@@ -1804,7 +1804,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
     
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deassignBindingFromModel(String[], java.lang.String, java.lang.String, java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#deassignBindingFromModel(String[], java.lang.String, java.lang.String, java.lang.String)
      * @since 5.0
      */
     public void deassignBindingsFromModel(String[] connectorBindingNames,
@@ -1902,8 +1902,8 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         // Second, stop connector binding if running
         Collection binding = parent.getConnectorBindings(connectorBindingIdentifier);
         if ( binding != null && binding.size() > 0 ) {
-        com.metamatrix.admin.api.objects.ConnectorBinding theBinding = (com.metamatrix.admin.api.objects.ConnectorBinding)binding.iterator().next();
-            if ( theBinding != null && theBinding.getState() == com.metamatrix.admin.api.objects.ConnectorBinding.STATE_OPEN ) {
+        org.teiid.adminapi.ConnectorBinding theBinding = (org.teiid.adminapi.ConnectorBinding)binding.iterator().next();
+            if ( theBinding != null && theBinding.getState() == org.teiid.adminapi.ConnectorBinding.STATE_OPEN ) {
                 try {
                     shutDownConnectorBinding((MMConnectorBinding)theBinding, true);
                 } catch (final Exception err) {
@@ -2294,7 +2294,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                 aBindingName = ((ConnectorBinding)aBindingObj).getName();
             } else {
                 // instance of com.metamatrix.admin.api.objects.ConnectorBinding - or exception
-                aBindingName = ((com.metamatrix.admin.api.objects.ConnectorBinding)aBindingObj).getName();
+                aBindingName = ((org.teiid.adminapi.ConnectorBinding)aBindingObj).getName();
             }
             bindingNames.add(aBindingName);
         }
@@ -2329,7 +2329,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#addUDF(byte[], java.lang.String)
+     * @see org.teiid.adminapi.ConfigurationAdmin#addUDF(byte[], java.lang.String)
      */
     public void addUDF(byte[] modelFileContents, String classpath) throws AdminException {
     	classpath = classpath.trim();
@@ -2357,7 +2357,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     }
 
     /** 
-     * @see com.metamatrix.admin.api.core.CoreConfigAdmin#deleteUDF()
+     * @see org.teiid.adminapi.ConfigurationAdmin#deleteUDF()
      */
     public void deleteUDF() throws AdminException {
         deleteExtensionModule(FUNCTION_DEFINITIONS_MODEL);
@@ -2382,6 +2382,11 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 			return ((SymmetricCryptor)cryptor).getEncodedKey(); 
 		}
 		return null;
+	}
+
+	@Override
+	public void extensionModuleModified(String name) throws AdminException {
+		
 	}
     
 }

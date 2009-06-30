@@ -22,11 +22,11 @@
 
 package com.metamatrix.common.comm.api;
 
-import java.net.URL;
 import java.util.Properties;
 
-import com.metamatrix.admin.api.core.Admin;
-import com.metamatrix.admin.api.exception.AdminException;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 
@@ -49,6 +49,6 @@ public interface ServerConnectionFactory {
 	/**
      * Shutdown the connection factory, including the DQP and all its existing connections 
      */
-    public void shutdown();
+    public void shutdown(boolean restart);
 	
 }

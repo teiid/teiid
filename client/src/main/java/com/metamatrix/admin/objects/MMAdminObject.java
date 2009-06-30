@@ -28,11 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Transaction;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.StringUtil;
 
@@ -101,27 +102,27 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
     
     
     static {
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Cache.class.getName(), new Integer(OBJECT_TYPE_CACHE)); 
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Service.class.getName(), new Integer(OBJECT_TYPE_SERVICE));
-        objectTypeMap.put(com.metamatrix.admin.api.objects.ConnectorBinding.class.getName(), new Integer(OBJECT_TYPE_CONNECTOR_BINDING));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.ConnectorType.class.getName(), new Integer(OBJECT_TYPE_CONNECTOR_TYPE));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.DQP.class.getName(), new Integer(OBJECT_TYPE_DQP));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Entitlement.class.getName(), new Integer(OBJECT_TYPE_ENTITLEMENT));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.ExtensionModule.class.getName(), new Integer(OBJECT_TYPE_EXTENSION_MODULE));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Group.class.getName(), new Integer(OBJECT_TYPE_GROUP));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Host.class.getName(), new Integer(OBJECT_TYPE_HOST));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.LogConfiguration.class.getName(), new Integer(OBJECT_TYPE_LOG_CONFIGURATION));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Model.class.getName(), new Integer(OBJECT_TYPE_MODEL));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.ProcessObject.class.getName(), new Integer(OBJECT_TYPE_PROCESS_OBJECT));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.PropertyDefinition.class.getName(), new Integer(OBJECT_TYPE_PROPERTY_DEFINITION));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.QueueWorkerPool.class.getName(), new Integer(OBJECT_TYPE_QUEUE_WORKER_POOL));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Request.class.getName(), new Integer(OBJECT_TYPE_REQUEST));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Resource.class.getName(), new Integer(OBJECT_TYPE_RESOURCE));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Role.class.getName(), new Integer(OBJECT_TYPE_ROLE));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.Session.class.getName(), new Integer(OBJECT_TYPE_SESSION));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.SystemObject.class.getName(), new Integer(OBJECT_TYPE_SYSTEM_OBJECT));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.User.class.getName(), new Integer(OBJECT_TYPE_USER));        
-        objectTypeMap.put(com.metamatrix.admin.api.objects.VDB.class.getName(), new Integer(OBJECT_TYPE_VDB));        
+        objectTypeMap.put(org.teiid.adminapi.Cache.class.getName(), new Integer(OBJECT_TYPE_CACHE)); 
+        objectTypeMap.put(org.teiid.adminapi.Service.class.getName(), new Integer(OBJECT_TYPE_SERVICE));
+        objectTypeMap.put(org.teiid.adminapi.ConnectorBinding.class.getName(), new Integer(OBJECT_TYPE_CONNECTOR_BINDING));        
+        objectTypeMap.put(org.teiid.adminapi.ConnectorType.class.getName(), new Integer(OBJECT_TYPE_CONNECTOR_TYPE));        
+        objectTypeMap.put(org.teiid.adminapi.DQP.class.getName(), new Integer(OBJECT_TYPE_DQP));        
+        objectTypeMap.put(org.teiid.adminapi.Entitlement.class.getName(), new Integer(OBJECT_TYPE_ENTITLEMENT));        
+        objectTypeMap.put(org.teiid.adminapi.ExtensionModule.class.getName(), new Integer(OBJECT_TYPE_EXTENSION_MODULE));        
+        objectTypeMap.put(org.teiid.adminapi.Group.class.getName(), new Integer(OBJECT_TYPE_GROUP));        
+        objectTypeMap.put(org.teiid.adminapi.Host.class.getName(), new Integer(OBJECT_TYPE_HOST));        
+        objectTypeMap.put(org.teiid.adminapi.LogConfiguration.class.getName(), new Integer(OBJECT_TYPE_LOG_CONFIGURATION));        
+        objectTypeMap.put(org.teiid.adminapi.Model.class.getName(), new Integer(OBJECT_TYPE_MODEL));        
+        objectTypeMap.put(org.teiid.adminapi.ProcessObject.class.getName(), new Integer(OBJECT_TYPE_PROCESS_OBJECT));        
+        objectTypeMap.put(org.teiid.adminapi.PropertyDefinition.class.getName(), new Integer(OBJECT_TYPE_PROPERTY_DEFINITION));        
+        objectTypeMap.put(org.teiid.adminapi.QueueWorkerPool.class.getName(), new Integer(OBJECT_TYPE_QUEUE_WORKER_POOL));        
+        objectTypeMap.put(org.teiid.adminapi.Request.class.getName(), new Integer(OBJECT_TYPE_REQUEST));        
+        objectTypeMap.put(org.teiid.adminapi.Resource.class.getName(), new Integer(OBJECT_TYPE_RESOURCE));        
+        objectTypeMap.put(org.teiid.adminapi.Role.class.getName(), new Integer(OBJECT_TYPE_ROLE));        
+        objectTypeMap.put(org.teiid.adminapi.Session.class.getName(), new Integer(OBJECT_TYPE_SESSION));        
+        objectTypeMap.put(org.teiid.adminapi.SystemObject.class.getName(), new Integer(OBJECT_TYPE_SYSTEM_OBJECT));        
+        objectTypeMap.put(org.teiid.adminapi.User.class.getName(), new Integer(OBJECT_TYPE_USER));        
+        objectTypeMap.put(org.teiid.adminapi.VDB.class.getName(), new Integer(OBJECT_TYPE_VDB));        
         objectTypeMap.put(Transaction.class.getName(), Integer.valueOf(OBJECT_TYPE_TRANSACTION));
     }
     

@@ -32,18 +32,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.AdminRoles;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.transport.AdminAuthorizationInterceptor;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
-import com.metamatrix.admin.api.server.AdminRoles;
-import com.metamatrix.admin.api.server.ServerAdmin;
-import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.core.util.SimpleMock;
 import com.metamatrix.dqp.service.AuthorizationService;
-import com.metamatrix.platform.admin.api.ExtensionSourceAdminAPI;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
@@ -63,7 +61,7 @@ public class TestAdminAuthInterceptor {
     
     @Test(expected=AdminProcessingException.class) public void testAddUserUDF_fail() throws AdminException {
         Set<String> userRoles = new HashSet<String>();
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
+        Admin serverAdmin = getTestServerAdmin(userRoles, Admin.class);
     	serverAdmin.addUDF(null, null);
     }
     
@@ -96,27 +94,27 @@ public class TestAdminAuthInterceptor {
     @Test public void testAddUDF_succeed() throws Exception {
         Set<String> userRoles = new HashSet<String>();
         userRoles.add(AdminRoles.RoleName.ADMIN_SYSTEM);
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
+        Admin serverAdmin = getTestServerAdmin(userRoles, Admin.class);
         serverAdmin.addUDF(null, null);
     }
     
     @Test public void testGetVDBs() throws Exception {
         Set<String> userRoles = new HashSet<String>();
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
+        Admin serverAdmin = getTestServerAdmin(userRoles, Admin.class);
         serverAdmin.getVDBs("*"); //$NON-NLS-1$
     }
     
     @Test(expected=AdminProcessingException.class) public void testReadOnlyFails() throws Exception {
         Set<String> userRoles = new HashSet<String>();
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
+        Admin serverAdmin = getTestServerAdmin(userRoles, Admin.class);
     	serverAdmin.getSessions("*"); //$NON-NLS-1$
     }
     
     @Test public void testBounce_succeed() throws Exception {
         Set<String> userRoles = new HashSet<String>();
         userRoles.add(AdminRoles.RoleName.ADMIN_PRODUCT);
-        ServerAdmin serverAdmin = getTestServerAdmin(userRoles, ServerAdmin.class);
-        serverAdmin.bounceSystem(false);
+        Admin serverAdmin = getTestServerAdmin(userRoles, Admin.class);
+        serverAdmin.restart();
     }
 
     

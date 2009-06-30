@@ -34,10 +34,10 @@ import java.util.Properties;
 
 import javax.transaction.xa.Xid;
 
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.Transaction;
 import org.teiid.dqp.internal.process.DQPCore;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.server.InvalidRequestIDException;

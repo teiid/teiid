@@ -26,7 +26,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
+import org.teiid.adminapi.PropertyDefinition.RestartType;
+
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.util.ErrorMessageKeys;
 

@@ -22,8 +22,9 @@
 
 package com.metamatrix.admin.objects;
 
+import org.teiid.adminapi.QueueWorkerPool;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.QueueWorkerPool;
 
 /**
  * Dataholder for all the statistics gathered about a worker pool.

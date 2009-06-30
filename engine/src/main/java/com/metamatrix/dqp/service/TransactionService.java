@@ -31,11 +31,11 @@ import javax.transaction.SystemException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.Transaction;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.dqp.internal.transaction.TransactionProvider.XAConnectionSource;
 
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.objects.Transaction;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;

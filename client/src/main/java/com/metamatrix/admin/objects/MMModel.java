@@ -25,8 +25,9 @@ package com.metamatrix.admin.objects;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.adminapi.Model;
+
 import com.metamatrix.admin.AdminPlugin;
-import com.metamatrix.admin.api.objects.Model;
 
 /**
  */
@@ -69,7 +70,7 @@ public class MMModel extends MMAdminObject implements Model {
 	}
 
    /** 
- * @see com.metamatrix.admin.api.objects.Model#getConnectorBindingNames()
+ * @see org.teiid.adminapi.Model#getConnectorBindingNames()
  * @since 4.3
  */
 	public List getConnectorBindingNames() {
@@ -77,7 +78,7 @@ public class MMModel extends MMAdminObject implements Model {
 	}
 
 	/** 
-     * @see com.metamatrix.admin.api.objects.Model#isPhysical()
+     * @see org.teiid.adminapi.Model#isPhysical()
      * @since 4.3
      */
 	public boolean isPhysical() {
@@ -85,7 +86,7 @@ public class MMModel extends MMAdminObject implements Model {
 	}
 
 	/** 
-     * @see com.metamatrix.admin.api.objects.Model#isVisible()
+     * @see org.teiid.adminapi.Model#isVisible()
      * @since 4.3
      */ 
 	public boolean isVisible() {
@@ -93,7 +94,7 @@ public class MMModel extends MMAdminObject implements Model {
 	}
 
 	/** 
-     * @see com.metamatrix.admin.api.objects.Model#getModelType()
+     * @see org.teiid.adminapi.Model#getModelType()
      * @since 4.3
      */
 	public String getModelType() {
@@ -101,7 +102,7 @@ public class MMModel extends MMAdminObject implements Model {
 	}
 
 	/** 
-     * @see com.metamatrix.admin.api.objects.Model#getModelURI()
+     * @see org.teiid.adminapi.Model#getModelURI()
      * @since 4.3
      */
 	public String getModelURI() {
@@ -109,7 +110,7 @@ public class MMModel extends MMAdminObject implements Model {
 	}
 
     /** 
-     * @see com.metamatrix.admin.api.objects.Model#supportsMultiSourceBindings()
+     * @see org.teiid.adminapi.Model#supportsMultiSourceBindings()
      * @since 4.3
      */
     public boolean supportsMultiSourceBindings() {

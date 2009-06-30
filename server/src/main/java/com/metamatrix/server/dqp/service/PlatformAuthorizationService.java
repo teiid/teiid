@@ -34,6 +34,7 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 import com.google.inject.Inject;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidUserException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
@@ -44,9 +45,11 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.platform.security.api.AuthorizationActions;
 import com.metamatrix.platform.security.api.AuthorizationPermission;
+import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.BasicAuthorizationPermission;
 import com.metamatrix.platform.security.api.BasicAuthorizationPermissionFactory;
+import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.StandardAuthorizationActions;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
@@ -213,10 +216,29 @@ public class PlatformAuthorizationService implements AuthorizationService {
     }
 
 	@Override
-	public boolean isCallerInRole(SessionToken caller, String roleName)
+	public boolean isCallerInRole(SessionToken session, String roleName)
 			throws AuthorizationMgmtException {
-		// rameshTODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public Collection<AuthorizationPolicy> getPoliciesInRealm(
+			AuthorizationRealm realm)
+			throws AuthorizationException, AuthorizationMgmtException {
+		return null;
+	}
+
+	@Override
+	public Collection<String> getRoleNamesForPrincipal(
+			MetaMatrixPrincipalName principal) throws InvalidSessionException,
+			AuthorizationException, AuthorizationMgmtException {
+		return null;
+	}
+
+	@Override
+	public void updatePoliciesInRealm(AuthorizationRealm realm,
+			Collection<AuthorizationPolicy> policies)
+			throws AuthorizationMgmtException {
 	}
 
 }

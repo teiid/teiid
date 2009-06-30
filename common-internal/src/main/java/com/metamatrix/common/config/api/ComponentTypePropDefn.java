@@ -25,7 +25,8 @@ package com.metamatrix.common.config.api;
 import java.io.Serializable;
 import java.util.List;
 
-import com.metamatrix.admin.api.objects.PropertyDefinition.RestartType;
+import org.teiid.adminapi.PropertyDefinition.RestartType;
+
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.object.PropertyDefinitionImpl;
 import com.metamatrix.common.object.PropertyType;

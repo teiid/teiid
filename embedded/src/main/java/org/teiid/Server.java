@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.net.InetAddress;
 import java.nio.channels.FileChannel;
 import java.util.Properties;
 
@@ -36,10 +35,9 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 
-public class Server implements ServerMBean{
+public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean  {
 	
 	private Properties props;
-	private EmbeddedConnectionFactoryImpl engine;
 	
 	public Server(Properties props) {
 		this.props = props;
@@ -48,10 +46,9 @@ public class Server implements ServerMBean{
 	private void start() {
 		try {			
 			// start the engine.
-			this.engine = new EmbeddedConnectionFactoryImpl();
-			this.engine.initialize(this.props);
+			initialize(this.props);
 			
-			this.engine.getJMXServer().register(TYPE, NAME, this); 
+			getJMXServer().register(TYPE, NAME, this); 
 						
 		}  catch (ApplicationInitializationException e) {
 			throw new MetaMatrixRuntimeException(e);
@@ -60,13 +57,13 @@ public class Server implements ServerMBean{
 		} 
 	}
 	
-	private void stopS() {
- 		if (engine.isAlive()) {
-			engine.shutdown();
+	private void stopS(boolean restart) {
+ 		if (isAlive()) {
+			shutdown(restart);
 		}
  		
  		try {
-			this.engine.getJMXServer().unregister(TYPE, NAME);
+			getJMXServer().unregister(TYPE, NAME);
 		} catch (FailedToRegisterException e) {
 			// ignore
 		}
@@ -111,16 +108,11 @@ public class Server implements ServerMBean{
 	}
 	
 	@Override
-	public boolean isAlive() {
-		return engine.isAlive();
-	}
-
-	@Override
 	public void shutdown() {
 	      new Thread(){
 	         public void run(){
 	        	 System.out.println("Server being shutdown..."); //$NON-NLS-1$
-	        	 stopS();	        	 
+	        	 stopS(false);	        	 
 	         }
 	      }.start();		
 	}
@@ -133,7 +125,18 @@ public class Server implements ServerMBean{
 	            Runtime.getRuntime().halt(-4);
 	         }
 	      }.start();
-	}	
+	}
+	
+	@Override
+	public void restart() {
+	      new Thread(){
+		         public void run(){
+		        	 System.out.println("Server being shutdown..."); //$NON-NLS-1$
+		        	 stopS(true);	        	 
+		         }
+		      }.start();		
+		
+	}
 	/**
 	 * Start the Server Mode
 	 * @param args
@@ -162,7 +165,7 @@ public class Server implements ServerMBean{
 		String port = props.getProperty(DQPEmbeddedProperties.SERVER_PORT);
 		long time = System.currentTimeMillis() - startTime;
 		
-		System.out.println("Teiid Server started on port = "+port + "in "+time/1000+" Secs"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		System.out.println("Teiid Server started on port = "+ port + " in "+time/1000+" Secs"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		
 		// wait.
 		while(s.isAlive()) {
@@ -175,7 +178,12 @@ public class Server implements ServerMBean{
 
 		// if for some reason engine is still alive kill it.
 		if (s.isAlive()) {
-			s.stopS();
+			s.stopS(false);
+		}
+
+		// exit code to restart the process.
+		if (s.shouldRestart()) {
+			System.exit(10);
 		}
 	}
 }

@@ -22,8 +22,8 @@
 
 package com.metamatrix.admin.server;
 
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.Request;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.Request;
 
 
 /** 

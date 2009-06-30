@@ -36,16 +36,16 @@ import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.teiid.adminapi.AdminComponentException;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
+import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.VDB;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.xml.sax.SAXException;
 
-import com.metamatrix.admin.api.exception.AdminComponentException;
-import com.metamatrix.admin.api.exception.AdminException;
-import com.metamatrix.admin.api.exception.AdminProcessingException;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
-import com.metamatrix.admin.api.objects.AdminObject;
-import com.metamatrix.admin.api.objects.AdminOptions;
-import com.metamatrix.admin.api.objects.VDB;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMModel;
