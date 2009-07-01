@@ -378,7 +378,7 @@ public final class EmbeddedDriver extends BaseDriver {
                 Class<?> clazz = this.classLoader.loadClass(className);            
                 this.connectionFactory = (ServerConnectionFactory)clazz.newInstance();                
             } catch (Exception e) {
-                throw MMSQLException.create(e);                
+            	throw MMSQLException.create(e, "Could not load the embedded server, please ensure that your classpath is set correctly."); //$NON-NLS-1$                
             } finally {
                 Thread.currentThread().setContextClassLoader(current);
             }                        
