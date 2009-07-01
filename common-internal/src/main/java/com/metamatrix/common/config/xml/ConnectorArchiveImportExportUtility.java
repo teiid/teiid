@@ -31,7 +31,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -54,7 +53,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.ByteArrayHelper;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.TempDirectory;
 import com.metamatrix.internal.core.xml.JdomHelper;
 
 
@@ -78,7 +76,6 @@ class ConnectorArchiveImportExportUtility {
     private static final String SHARED = "Shared"; //$NON-NLS-1$
     private static final String MANIFEST_XML = "Manifest.xml"; //$NON-NLS-1$
     private static final String FWD_SLASH= "/"; //$NON-NLS-1$
-    static Random random = new Random();
     
     /**
      * The Zip file stream format is look like this.Also onlu used to 
@@ -102,12 +99,8 @@ class ConnectorArchiveImportExportUtility {
         
         BasicConnectorArchive archive = new BasicConnectorArchive();
         
-        // Create a temporary directory and write zip the zip as this may 
-        // be serveral mega bytes big
-        TempDirectory tempDir = new TempDirectory(System.currentTimeMillis(), random.nextLong());
-        tempDir.create();
+        File cafFile = File.createTempFile("ConnectorArchive", ".zip"); //$NON-NLS-1$ //$NON-NLS-2$            
         try {
-            File cafFile = new File(tempDir.getPath(), "ConnectorArchive_"+random.nextLong()+".zip"); //$NON-NLS-1$ //$NON-NLS-2$            
             FileUtils.write(stream, cafFile);
             
             // First extract all the Connector Types in the zip file
@@ -122,7 +115,7 @@ class ConnectorArchiveImportExportUtility {
             // finally extract the manifest file
             extractManifest(cafFile, archive);
         }finally {
-            tempDir.remove();
+            cafFile.delete();
         }        
         
         // before we return validate the archive
