@@ -64,7 +64,7 @@ echo.
 
 :RESTART
 "%JAVA%" %JAVA_OPTS% ^
-   -classpath "%JBOSS_CLASSPATH%" ^
+   -classpath "%TEIID_CLASSPATH%" ^
    -server ^
    org.teiid.Server %TEIID_HOME%\deploy.properties %*
 

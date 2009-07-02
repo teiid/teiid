@@ -1,6 +1,5 @@
 import java.io.*;
-import com.metamatrix.admin.api.core.*;
-import com.metamatrix.admin.api.objects.*;
+import org.teiid.adminapi.*;
 import com.metamatrix.core.util.*;
 
 debug=false;
@@ -136,10 +135,17 @@ debug(Object msg){
 
 String extractVDBName(url) {
     str = "jdbc:metamatrix:";
+    strteiid = "jdbc:teiid:";
     if (url.startsWith(str)) {
         int at = url.indexOf("@");
         if (at != -1) {
             return url.substring(str.length(), at);
+        }
+    }
+    else if (url.startsWith(strteiid)) {
+        int at = url.indexOf("@");
+        if (at != -1) {
+            return url.substring(strteiid.length(), at);
         }
     }
     return "";
@@ -147,7 +153,12 @@ String extractVDBName(url) {
 
 String extractHost(url) {
     str = "jdbc:metamatrix:";
+    strteiid = "jdbc:teiid:";
     if (url.startsWith(str)) {
+        int at = url.indexOf("@")+1;
+        return url.substring(at, url.indexOf(";", at));
+    }
+    else if (url.startsWith(strteiid)) {
         int at = url.indexOf("@")+1;
         return url.substring(at, url.indexOf(";", at));
     }

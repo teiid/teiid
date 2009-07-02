@@ -3,7 +3,7 @@
  */
 
 source(getResource("/scripts/jdbc.bsh"));
-source(getResource("/scripts/serveradmin.bsh"));
+source(getResource("/scripts/adminapi.bsh"));
 
 
 import java.sql.*;
@@ -12,12 +12,13 @@ import java.sql.*;
 // "connection.properties" those values will replace one below 
 String user_host = InetAddress.getLocalHost().getHostName();
 int user_port = 31000;
-String user_id = "metamatrixadmin";
-String user_pwd = "mm";
+String user_id = "admin";
+String user_pwd = "teiid";
 String user_protocol = "mm:"; // colon is important
-String user_driver = "com.metamatrix.jdbc.MMDriver";
-String user_vdb = "BQT";
+String user_driver = "org.teiid.jdbc.TeiidDriver";
+String user_vdb = "admin";
 user_optional_url="";
+String connection_prefix="conn";
 
 /**
  * Connect to the server using the properties specified in the connection.properties file.
@@ -40,7 +41,7 @@ Connection connect () {
 Connection connect (String host, int port, String vdb, String user, String password, String optional_url) {
     String contextName = genConnectionName(); 
     newContext(contextName);
-    String url = "jdbc:metamatrix:"+vdb+"@"+user_protocol+"//"+host+":"+port+";user="+user+";password="+password+";ApplicationName="+contextName;
+    String url = "jdbc:teiid:"+vdb+"@"+user_protocol+"//"+host+":"+port+";user="+user+";password="+password+";ApplicationName="+contextName;
     if (optional_url != null && optional_url.length() > 0) {
         url = url + ";" + optional_url;
     }
@@ -48,6 +49,12 @@ Connection connect (String host, int port, String vdb, String user, String passw
 	currentContext().internalAdmin = mmConn.getAdminAPI();
     currentContext().internalPrompt = contextName+"["+vdb+"@"+host+"] $ ";
 	return mmConn;
+}
+
+Connection connectEmbedded(String url) throws SQLException {
+    c = connectURL(url, "com.metamatrix.jdbc.EmbeddedDriver");
+    currentContext().internalPrompt = "embedded:["+extractVDBName(url)+"]$ ";
+    return c;
 }
 
 /**
@@ -69,10 +76,14 @@ void useConnection(name) {
  * @param url - complete url for connection
  */
 Connection connect (String url) {
-    if (url.startsWith("jdbc:metamatrix:")) {
+	return connectURL(url, user_driver);
+}
+
+private Connection connectURL (String url, String driver) {
+    if (url.startsWith("jdbc:metamatrix:") || url.startsWith("jdbc:teiid:")) {
         String contextName = genConnectionName();
         newContext(contextName);        
-		com.metamatrix.jdbc.api.Connection mmConn = connectDriver(user_driver, url);    
+		com.metamatrix.jdbc.api.Connection mmConn = connectDriver(driver, url);    
         currentContext().internalPrompt = contextName+"["+extractVDBName(url)+"@"+extractHost(url)+"] $ ";
         currentContext().internalAdmin = mmConn.getAdminAPI();
 		return mmConn;	
@@ -104,7 +115,7 @@ void connectAsAdmin(String username, String password, String url) {
         newContext(contextName);        
         
         //url is in "jdbc URL format": connect via MMServerConnection
-        currentContext().internalConnection = connectDriver("com.metamatrix.jdbc.MMDriver", url, username, password);
+        currentContext().internalConnection = connectDriver("org.teiid.jdbc.TeiidDriver", url, username, password);
         currentContext().internalAdmin = currentContext().internalConnection.getAdminAPI();
     }
 }
@@ -122,10 +133,13 @@ void connectAsAdmin() {
 void disconnect() {
     closeConnection();
     
-    if (currentContext().internalAdmin != void && currentContext().internalAdmin != null) {
-        currentContext().internalAdmin.close();
-        currentContext().internalAdmin=null;
-    }  
+    try {
+	    if (currentContext().internalAdmin != void && currentContext().internalAdmin != null) {
+	        currentContext().internalAdmin=null;
+	    }  
+    }catch(e) {
+    	//ignore..
+    }
     currentContext().internalPrompt = null;
 }
 
@@ -174,7 +188,6 @@ private loadConnectionProperties(String propsFile){
 void help() {
     java.util.List urls = new ArrayList();
     urls.add(getResource("/scripts/adminapi.bsh"));
-    urls.add(getResource("/scripts/serveradmin.bsh"));
     urls.add(getResource("/scripts/server.bsh"));
     urls.add(getResource("/scripts/jdbc.bsh"));
     help(urls);
@@ -189,7 +202,6 @@ void help() {
 void help(String methodName) {
     java.util.List urls = new ArrayList();
     urls.add(getResource("/scripts/adminapi.bsh"));
-    urls.add(getResource("/scripts/serveradmin.bsh"));
     urls.add(getResource("/scripts/server.bsh"));
     urls.add(getResource("/scripts/jdbc.bsh"));
     help(urls, methodName);

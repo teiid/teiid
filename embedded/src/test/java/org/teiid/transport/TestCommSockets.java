@@ -49,6 +49,7 @@ import com.metamatrix.common.comm.platform.socket.client.SocketServerConnection;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.comm.platform.socket.client.UrlServerDiscovery;
 import com.metamatrix.common.util.crypto.NullCryptor;
+import com.metamatrix.dqp.service.ServerConnectionListener;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
@@ -73,7 +74,7 @@ public class TestCommSockets {
 	@Test public void testFailedConnect() throws Exception {
 		ClientServiceRegistry csr = new ClientServiceRegistry();
 		SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
-		csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster"), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
+		csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster", mock(ServerConnectionListener.class)), "foo"); //$NON-NLS-1$ //$NON-NLS-2$
 		listener = new SocketListener(addr.getPort(), addr.getAddress().getHostAddress(),
 				csr, 1024, 1024, 1, null, true, sessionService);
 
@@ -144,7 +145,7 @@ public class TestCommSockets {
 		if (listener == null) {
 			SessionServiceInterface sessionService = mock(SessionServiceInterface.class);
 			ClientServiceRegistry csr = new ClientServiceRegistry();
-			csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster") { //$NON-NLS-1$
+			csr.registerClientService(ILogon.class, new LogonImpl(sessionService, "fakeCluster", mock(ServerConnectionListener.class)) { //$NON-NLS-1$
 				@Override
 				public LogonResult logon(Properties connProps)
 						throws LogonException, ComponentNotFoundException {

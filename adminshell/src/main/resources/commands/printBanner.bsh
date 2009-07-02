@@ -24,12 +24,13 @@ printBanner()
 	    jconsole.println();
 
 	} else {
-		print("**********************************************************************");
- 		print(" You are running Admin Shell in interactive mode. To see all ");
-		print(" the commands available type 'help();' or 'exit();' to exit the shell.");
-		print(" Note: Every comand MUST end with semi-colon [;] and are ");
-		print(" always in form 'command([param]*?);'");
-		print("**********************************************************************");
+		print("======================================================================");
+ 		print("  You are running AdminShell in interactive mode. To see all ");
+		print("  the available commands type 'help();' or 'exit();' to exit the shell.");
+		print("\n");
+		print("  Tip: All comands MUST end with semi-colon [;] and are in the form");
+		print("  'command([param]*?);' then followed by ENTER");
+		print("======================================================================");
 		print("\n\n");
 	}
 }

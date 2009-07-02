@@ -98,7 +98,7 @@ public class DQPSecurityAdminImpl  extends BaseAdmin implements SecurityAdmin {
      * @see com.metamatrix.admin.api.server.ServerSecurityAdmin#getGroupsForUser(java.lang.String, boolean)
      * @since 4.3
      */
-    public Collection getGroupsForUser(String userIdentifier) throws AdminException {
+    public Collection<Group> getGroupsForUser(String userIdentifier) throws AdminException {
         if (userIdentifier == null) {
             throwProcessingException("AdminImpl.requiredparameter", new Object[] {}); //$NON-NLS-1$
         }

@@ -123,9 +123,6 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
     private ClientSideDQP dqp;
     protected ServerConnection serverConn;
         
-    private Admin admin;
-    ServerConnectionFactory connFactory = null;
-    
     /**
      * <p>MMConnection constructor, tring to establish connection to metamatrix with
      * the given URL and properties.</p>
@@ -133,11 +130,10 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
      * @param info contains properies needed to establish a MetaMatrix connection.
      * @throws SQLException if the driver cannot establish connection to metamatrix.
      */
-    public MMConnection(ServerConnection serverConn, Properties info, String url, ServerConnectionFactory connFactory) {        
+    public MMConnection(ServerConnection serverConn, Properties info, String url) {        
     	this.serverConn = serverConn;
         this.url = url;
         this.dqp = serverConn.getService(ClientSideDQP.class);
-        this.connFactory = connFactory;
         
         // set default properties if not overridden
         String overrideProp = info.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
@@ -244,14 +240,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
      * @since 4.3
      */
     public synchronized Admin getAdminAPI() throws SQLException {
-        try {
-            if (admin == null) {
-                admin = connFactory.getAdminAPI(this.propInfo);
-            }
-        } catch(AdminException e) {
-        	throw MMSQLException.create(e);
-		} 
-        return admin;
+        return this.serverConn.getService(Admin.class);
     }
     
     /**
@@ -318,11 +307,6 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
             // set the status of the connection to closed
             closed = true;            
         }
-        
-        if (admin != null) {
-            admin.close();
-        }
-        
     }
 
     /**

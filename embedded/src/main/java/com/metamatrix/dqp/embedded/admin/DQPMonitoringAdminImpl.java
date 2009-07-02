@@ -22,8 +22,6 @@
 
 package com.metamatrix.dqp.embedded.admin;
 
-import static org.teiid.dqp.internal.process.Util.convertStats;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,20 +41,15 @@ import org.teiid.adminapi.MonitoringAdmin;
 import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.SystemObject;
 import org.teiid.adminapi.Transaction;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.objects.MMAdminObject;
-import com.metamatrix.admin.objects.MMProcess;
-import com.metamatrix.admin.objects.MMQueueWorkerPool;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.config.api.ComponentType;
-import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
-import com.metamatrix.platform.vm.controller.ProcessStatistics;
-import com.metamatrix.platform.vm.controller.SocketListenerStats;
 import com.metamatrix.server.serverapi.RequestInfo;
 
 
@@ -252,16 +245,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
         if (identifier == null || !identifier.matches(NUMBER_REGEX)) {
             throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_identifier")); //$NON-NLS-1$                
         }
-        
-        ArrayList goodConections = new ArrayList();
-        Set<ServerConnection> connections = getClientConnections();
-        for (Iterator i = connections.iterator(); i.hasNext();) {
-        	ServerConnection connection = (ServerConnection)i.next();
-            if (connection.isOpen()) {
-                goodConections.add(connection);
-            }
-        }
-        return matchedCollection(identifier, (List)convertToAdminObjects(goodConections));
+        return matchedCollection(identifier, (List)convertToAdminObjects(getClientConnections()));
     }
         
     /** 

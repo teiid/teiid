@@ -8,7 +8,7 @@
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
-  <baseDirectory>teiid-embedded-client</baseDirectory>
+  <baseDirectory>teiid-client</baseDirectory>
     
   <moduleSets>
     <moduleSet>

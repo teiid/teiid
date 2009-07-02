@@ -38,6 +38,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -45,8 +47,6 @@ import com.metamatrix.common.application.AbstractClassLoaderManager;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.api.ServerConnectionListener;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -74,9 +74,9 @@ import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationWriter;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.ConnectorBindingLifeCycleListener;
+import com.metamatrix.dqp.service.ServerConnectionListener;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
@@ -113,7 +113,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     private ArrayList<VDBLifeCycleListener> vdbLifeCycleListeners = new ArrayList<VDBLifeCycleListener>();
     private ArrayList<ConnectorBindingLifeCycleListener> connectorBindingLifeCycleListeners = new ArrayList<ConnectorBindingLifeCycleListener>();
     private UDFSource udfSource;
-    private HashSet<ServerConnection> clientConnections = new HashSet<ServerConnection>();
+    private HashSet<DQPWorkContext> clientConnections = new HashSet<DQPWorkContext>();
     
     private AbstractClassLoaderManager classLoaderManager = new AbstractClassLoaderManager(Thread.currentThread().getContextClassLoader(), true, true) {
     	
@@ -1239,15 +1239,13 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             /**
              * A Client Connection to DQP has been added  
              */
-            public void connectionAdded(ServerConnection connection) {
+            public void connectionAdded(DQPWorkContext connection) {
                 // Add to parent's collection
                 clientConnections.add(connection);
                 
-                String vdbName = connection.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB);
-                String vdbVersion = connection.getLogonResult().getProductInfo(ProductInfoConstants.VDB_VERSION);
-                String key = vdbId(vdbName, vdbVersion);
+                String key = vdbId(connection.getVdbName(), connection.getVdbVersion());
                 
-                DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connectionAdded", new Object[] {vdbName, vdbVersion, connection.getLogonResult().getSessionID()}); //$NON-NLS-1$
+                DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connectionAdded", new Object[] {connection.getVdbName(), connection.getVdbVersion(), connection.getSessionId()}); //$NON-NLS-1$
                 
                 Integer useCount = inuseVDBs.get(key);
                 if (useCount == null) {
@@ -1261,15 +1259,13 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             /**
              * A Client Connection to DQP has been removed  
              */
-            public void connectionRemoved(ServerConnection connection) {
+            public void connectionRemoved(DQPWorkContext connection) {
                 // remove from the collection
                 clientConnections.remove(connection);
                 
-                String vdbName = connection.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB);
-                String vdbVersion = connection.getLogonResult().getProductInfo(ProductInfoConstants.VDB_VERSION);
-                String key = vdbId(vdbName, vdbVersion);
+                String key = vdbId(connection.getVdbName(), connection.getVdbVersion());
                 
-                DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connectionRemoved", new Object[] {vdbName, vdbVersion, connection.getLogonResult().getSessionID()}); //$NON-NLS-1$
+                DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connectionRemoved", new Object[] {connection.getVdbName(), connection.getVdbVersion(), connection.getSessionId()}); //$NON-NLS-1$
                 
                 Integer useCount = inuseVDBs.get(key);
                 if (useCount == null) {
@@ -1279,7 +1275,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                     // after decrementing if use count comes to zero we can 
                     // see if there are any VDBs to delete
                     if ((useCount.intValue()-1) == 0) {
-                        runVDBCleanUp(vdbName, vdbVersion);
+                        runVDBCleanUp(connection.getVdbName(), connection.getVdbVersion());
                         inuseVDBs.remove(key);
                     }
                     else {
@@ -1288,15 +1284,12 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                     }
                 }
             }
-
         };
     }
     
-    /**  
-     * @see com.metamatrix.dqp.service.ConfigurationService#getClientConnections()
-     */
-    public Set<ServerConnection> getClientConnections() {
-        return new HashSet<ServerConnection>(clientConnections);
+    @Override
+    public Set<DQPWorkContext> getClientConnections() {
+        return new HashSet<DQPWorkContext>(clientConnections);
     }
     
     /**

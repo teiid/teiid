@@ -20,9 +20,10 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.comm.api;
+package com.metamatrix.dqp.service;
 
-import com.metamatrix.common.comm.api.ServerConnection;
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 
 
 /** 
@@ -34,12 +35,12 @@ public interface ServerConnectionListener {
      * A connection has been added to DQP
      * @param connection The client connection instance, never null
      */
-    void connectionAdded(ServerConnection connection);
+    void connectionAdded(DQPWorkContext context);
     
     /**
      * A connection has been removed for DQP
      * @param connection The client connection instance, never null
      */
-    void connectionRemoved(ServerConnection connection);
+    void connectionRemoved(DQPWorkContext context);
     
 }

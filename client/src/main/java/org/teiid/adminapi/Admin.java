@@ -31,10 +31,4 @@ import com.metamatrix.admin.RolesAllowed;
  * @since 4.3
  */
 public interface Admin extends ConfigurationAdmin, MonitoringAdmin, RuntimeStateAdmin, SecurityAdmin {
-    /**
-     * Closes connection.
-     * @since 4.3
-     */
-	@RolesAllowed(value=AdminRoles.RoleName.ANONYMOUS)
-    void close(); 
 }

@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import org.teiid.dqp.internal.process.DQPWorkContext;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.ClassLoaderManager;
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.api.ServerConnectionListener;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorBinding;
@@ -371,7 +371,7 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
      * This returns the active client connections that have been made to the DQP 
      * @return list of connections which are currently available;never null
      */
-    public Set<ServerConnection> getClientConnections();
+    public Set<DQPWorkContext> getClientConnections();
     
     /**
      * Gets the processor batch size 

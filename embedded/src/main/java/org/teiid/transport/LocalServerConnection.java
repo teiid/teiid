@@ -36,7 +36,6 @@ import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.api.ServerConnectionListener;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
@@ -51,12 +50,11 @@ public class LocalServerConnection implements ServerConnection {
 	private final LogonResult result;
 	private boolean shutdown;
 	private DQPWorkContext workContext;
-	private ServerConnectionListener listener;
 	private ClassLoader classLoader;
 	ClientServiceRegistry clientServices;
 	
 
-	public LocalServerConnection(Properties connectionProperties, ClientServiceRegistry clientServices,  ServerConnectionListener listener) throws CommunicationException, ConnectionException{
+	public LocalServerConnection(Properties connectionProperties, ClientServiceRegistry clientServices) throws CommunicationException, ConnectionException{
 	
 		this.clientServices = clientServices;		
 		
@@ -65,12 +63,6 @@ public class LocalServerConnection implements ServerConnection {
 		DQPWorkContext.setWorkContext(workContext);
 		
 		this.result = authenticate(connectionProperties);
-		
-		this.listener = listener;
-		
-		if (this.listener != null) {
-			this.listener.connectionAdded(this);
-		}
 		
 		this.classLoader = Thread.currentThread().getContextClassLoader();
 	}
@@ -123,9 +115,6 @@ public class LocalServerConnection implements ServerConnection {
 	public void shutdown() {
 		if (shutdown) {
 			return;
-		}
-		if (this.listener != null) {
-			this.listener.connectionRemoved(this);
 		}
 		this.shutdown = true;
 	}

@@ -1,0 +1,44 @@
+<!--This script builds a JAR for the CDK -->
+<assembly>
+  
+  <id>adminshell-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>teiid-adminshell-${version}</baseDirectory>
+
+
+  <fileSets>
+  
+    <fileSet>
+      <directory>target/distribution/teiid-${version}-adminshell-dependencies.dir</directory>
+      <includes>
+        <include>*.jar</include>
+      </includes>
+      <outputDirectory>lib</outputDirectory>      
+    </fileSet>
+      
+    <fileSet>
+        <directory>build/kit-adminshell</directory>
+        <outputDirectory>/</outputDirectory>      
+        <excludes>
+          <exclude>**/*.foo</exclude>
+        </excludes>        
+    </fileSet>      
+    
+    <fileSet>
+      <directory>target/distribution</directory>
+      <includes>
+        <include>teiid-${version}-client.jar</include>
+      </includes>
+      <outputDirectory>lib</outputDirectory>      
+    </fileSet>
+        
+  </fileSets>
+
+
+    
+</assembly>

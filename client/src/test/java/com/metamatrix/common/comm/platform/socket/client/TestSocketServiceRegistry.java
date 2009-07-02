@@ -34,12 +34,17 @@ import com.metamatrix.client.ExceptionUtil;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.client.ClientSideDQP;
+import com.metamatrix.platform.security.api.ILogon;
 
 public class TestSocketServiceRegistry extends TestCase {
 
+	interface Foo{
+		void somemethod();
+	}
+	
 	public void testExceptionConversionNoException() throws Exception {
-		
-		Method m = Admin.class.getMethod("close", new Class[] {});
+				
+		Method m = Foo.class.getMethod("somemethod", new Class[] {});
 		
 		Throwable t = ExceptionUtil.convertException(m, new MetaMatrixComponentException());
 		

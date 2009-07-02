@@ -1,0 +1,44 @@
+<!--This script builds a JAR for the CDK -->
+<assembly>
+  
+  <id>adminshell-dependencies</id>
+  
+  <formats>
+    <format>dir</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>teiid-adminshell</baseDirectory>
+    
+  <moduleSets>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+               
+        <includes>
+        	<include>org.jboss.teiid:teiid-adminshell</include>
+        </includes>
+                        
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+                                    
+          <dependencySets>
+            <dependencySet>
+              <useProjectArtifact>true</useProjectArtifact>
+              <unpack>false</unpack>
+              <useTransitiveDependencies>true</useTransitiveDependencies>
+              <useDefaultExcludes>true</useDefaultExcludes>
+              <excludes>
+                    <exclude>org.jboss.teiid:teiid-client</exclude>
+                    <exclude>org.jboss.teiid:teiid-client-jdbc</exclude>    
+                    <exclude>org.jboss.teiid:teiid-common-core</exclude>    
+              </excludes>              
+            </dependencySet>
+          </dependencySets>
+          
+        </binaries>
+      
+    </moduleSet>
+  </moduleSets>
+    
+</assembly>

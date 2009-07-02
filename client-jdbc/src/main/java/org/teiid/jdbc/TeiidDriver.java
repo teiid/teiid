@@ -147,7 +147,7 @@ public final class TeiidDriver extends BaseDriver {
         ServerConnection serverConn = SocketServerConnectionFactory.getInstance().createConnection(info);
 
         // construct a MMConnection object.
-        MMConnection connection = new MMConnection(serverConn, info, url, SocketServerConnectionFactory.getInstance());
+        MMConnection connection = new MMConnection(serverConn, info, url);
         return connection;
     }
 

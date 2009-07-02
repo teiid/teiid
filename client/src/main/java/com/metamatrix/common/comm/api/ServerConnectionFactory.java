@@ -44,8 +44,6 @@ public interface ServerConnectionFactory {
 	ServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException;
 
 	
-	public Admin getAdminAPI(Properties connectionProperties) throws AdminException;
-	
 	/**
      * Shutdown the connection factory, including the DQP and all its existing connections 
      */

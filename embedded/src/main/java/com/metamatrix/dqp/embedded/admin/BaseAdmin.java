@@ -243,8 +243,8 @@ abstract class BaseAdmin {
             com.metamatrix.common.queue.WorkerPoolStats stats = (com.metamatrix.common.queue.WorkerPoolStats)src;
             return Util.convertStats(stats, stats.getQueueName());
         }
-        else if (src != null && src instanceof ServerConnection) {
-        	ServerConnection conn = (ServerConnection)src;
+        else if (src != null && src instanceof DQPWorkContext) {
+        	DQPWorkContext conn = (DQPWorkContext)src;
             return convertConnection(conn);
         }
         else if (src != null && src instanceof com.metamatrix.common.config.api.ExtensionModule) {
@@ -273,10 +273,14 @@ abstract class BaseAdmin {
         return module;
     }
     
-    private Session convertConnection(ServerConnection src) {
-        MMSession session = new MMSession(new String[] {src.getLogonResult().getSessionID().toString()});
-        session.setVDBName(src.getLogonResult().getProductInfo(ProductInfoConstants.VIRTUAL_DB));
-        session.setVDBVersion(src.getLogonResult().getProductInfo(ProductInfoConstants.VDB_VERSION));        
+    private Session convertConnection(DQPWorkContext src) {
+        MMSession session = new MMSession(new String[] {src.getSessionId().toString()});
+        session.setVDBName(src.getVdbName());
+        session.setVDBVersion(src.getVdbVersion()); 
+        session.setApplicationName(src.getAppName());
+        session.setIPAddress(src.getClientAddress());
+        session.setHostName(src.getClientHostname());
+        session.setUserName(src.getUserName());
         return session;
     }
     
@@ -404,7 +408,7 @@ abstract class BaseAdmin {
             if (bindings != null && !bindings.isEmpty()) {
                 List names = new ArrayList();
                 for (int i=0; i<bindings.size();i++) {
-                    names.add(vdb.getConnectorBindingByName((String)bindings.get(i)));
+                    names.add(convertToAdminObject(vdb.getConnectorBindingByName((String)bindings.get(i)), parent));
                 }
                 model.setConnectorBindingNames(names);
             }
@@ -441,12 +445,11 @@ abstract class BaseAdmin {
      * @return
      * @since 4.3
      */
-    ServerConnection getClientConnection(String identifier) {
-        Collection<ServerConnection> connections = getConfigurationService().getClientConnections();
-        for (Iterator i = connections.iterator(); i.hasNext();) {
-        	ServerConnection clientConnection = (ServerConnection)i.next();
-            if (clientConnection.getLogonResult().getSessionID().toString().equals(identifier)) {
-                return clientConnection;
+    DQPWorkContext getClientConnection(String identifier) {
+        Collection<DQPWorkContext> connections = getConfigurationService().getClientConnections();
+        for (DQPWorkContext context:connections) {
+            if (context.getSessionId().toString().equals(identifier)) {
+                return context;
             }
         }
         return null;
@@ -457,7 +460,7 @@ abstract class BaseAdmin {
      * @return
      * @throws AdminException
      */
-    Set<ServerConnection> getClientConnections() throws AdminException{
+    Set<DQPWorkContext> getClientConnections() {
         return getConfigurationService().getClientConnections();
     }
 

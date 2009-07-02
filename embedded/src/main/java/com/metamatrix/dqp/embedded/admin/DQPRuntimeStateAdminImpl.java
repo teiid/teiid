@@ -38,6 +38,7 @@ import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.EmbeddedLogger;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.RuntimeStateAdmin;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -208,28 +209,23 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements RuntimeState
     public void terminateSession(String identifier) 
         throws AdminException {
         
-        Set<ServerConnection> connections = getClientConnections();
-        ArrayList matchedConnections = new ArrayList();
+        Set<DQPWorkContext> connections = getClientConnections();
+        ArrayList<DQPWorkContext> matchedConnections = new ArrayList<DQPWorkContext>();
         
-        for (ServerConnection clientConnection:connections) {
-            String id = clientConnection.getLogonResult().getSessionID().toString();
+        for (DQPWorkContext clientConnection:connections) {
+            String id = clientConnection.getSessionId().toString();
             if (matches(identifier, id)) {
                 matchedConnections.add(clientConnection);
             }
         }
 
         // Double iteration because to avoid concurrent modification of underlying map.
-        for (Iterator i = matchedConnections.iterator(); i.hasNext();) {
-        	ServerConnection clientConnection = (ServerConnection)i.next();
-        
+        for (DQPWorkContext clientConnection: matchedConnections) {
         	try {
-				this.manager.getDQP().terminateConnection(clientConnection.getLogonResult().getSessionID().toString());
+				this.manager.getDQP().terminateConnection(clientConnection.getSessionId().toString());
 			} catch (MetaMatrixComponentException e) {
 				throw new AdminComponentException(e);
 			}
-			
-            // Shutdown the connection
-            clientConnection.shutdown();
         }
     }
     

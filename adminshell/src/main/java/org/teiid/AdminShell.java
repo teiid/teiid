@@ -20,8 +20,9 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.script.shell;
+package org.teiid;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -30,25 +31,37 @@ import bsh.Capabilities;
 import bsh.EvalError;
 import bsh.Interpreter;
 
+import com.metamatrix.script.shell.FilePrintStream;
+import com.metamatrix.script.shell.ReaderInterceptor;
+import com.metamatrix.script.shell.SimpleParser;
+
 
 /** 
  * Invokes the BeanShell window, specifically designed for the metamatrix purposes.
  * The difference with this shell is, it will plug in a customer parser on top the
  * BeanShell, and load up all the MetaMatrix commands.
  */
-public class MMAdmin {
+public class AdminShell {
     
     public static void main( String args[] ) throws IOException {
         
         boolean gui = Boolean.getBoolean("gui"); //$NON-NLS-1$
-        System.setProperty("metamatrix.config.none", "true"); //$NON-NLS-1$ //$NON-NLS-2$
         
         if (args.length == 0) {
             if ( !Capabilities.classExists( "bsh.util.Util" ) ) //$NON-NLS-1$
                 System.out.println("Can't find the BeanShell utilities..."); //$NON-NLS-1$
         
-            FileWriter logger = new FileWriter("adminscript.txt", true); //$NON-NLS-1$
-            PrintStream out = new FilePrintStream(System.out, "mmadmin.log"); //$NON-NLS-1$
+            String teiidHome = System.getenv("TEIID_HOME"); //$NON-NLS-1$
+            if (teiidHome == null) {
+            	teiidHome = System.getProperty("user.dir");  //$NON-NLS-1$
+            }
+            File logDir = new File(teiidHome, "log"); //$NON-NLS-1$
+            if (!logDir.exists()) {
+            	logDir.mkdirs();
+            }
+            
+            FileWriter logger = new FileWriter(teiidHome+"/log/adminscript.txt", true); //$NON-NLS-1$
+            PrintStream out = new FilePrintStream(System.out, teiidHome+"/log/adminshell.log"); //$NON-NLS-1$
             
             try {
                 SimpleParser p = new SimpleParser();

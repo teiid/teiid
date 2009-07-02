@@ -100,6 +100,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	protected MembershipServiceInterface membershipService;
 	protected VDBService vdbService;
 	protected LRUCache<VDBKey, Collection<AuthorizationPolicy>> policyCache = new LRUCache<VDBKey, Collection<AuthorizationPolicy>>();
+	private Collection<AuthorizationPolicy> adminPolicies;
 
     // Permission factory is reusable and threadsafe
     private static final BasicAuthorizationPermissionFactory PERMISSION_FACTORY = new BasicAuthorizationPermissionFactory();
@@ -420,6 +421,9 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 				this.policyCache.put(key, policies);
         	}
         }
+    	else {
+    		// update admin roles.
+    	}
     }
     
     /**
@@ -542,6 +546,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	public void setMembershipService(MembershipServiceInterface membershipService) {
 		this.membershipService = membershipService;
 	}
+    
+//    @Inject
+//    public void setAdminPolicies(Collection<AuthorizationPolicy> adminPolicies) {
+//    	this.adminPolicies = adminPolicies;
+//    }
 
 	public void setUseEntitlements(boolean useEntitlements) {
 		this.useEntitlements = useEntitlements;

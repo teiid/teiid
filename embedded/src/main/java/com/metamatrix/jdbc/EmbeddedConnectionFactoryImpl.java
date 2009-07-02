@@ -55,7 +55,6 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
-import com.metamatrix.common.comm.api.ServerConnectionListener;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.log.LogManager;
@@ -76,6 +75,7 @@ import com.metamatrix.dqp.embedded.admin.DQPSecurityAdminImpl;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.dqp.service.ServerConnectionListener;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
@@ -96,35 +96,15 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     private ClientServiceRegistry clientServices;
     private String workspaceDirectory;
     private boolean init = false;
-    private ConnectionListenerList listenerList = new ConnectionListenerList();
     private SocketTransport socketTransport;
     private JMXUtil jmxServer;
     private boolean restart = false;
     
-	private final class ConnectionListenerList extends ArrayList<ServerConnectionListener> implements ServerConnectionListener{
-
-		@Override
-		public void connectionAdded(ServerConnection connection) {
-			for (ServerConnectionListener l: this) {
-				l.connectionAdded(connection);
-			}
-		}
-
-		@Override
-		public void connectionRemoved(ServerConnection connection) {
-			for (ServerConnectionListener l: this) {
-				l.connectionRemoved(connection);
-			}			
-		}
-	}
-	
 	@Override
 	public ServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
     	try {
-    	
     		initialize(connectionProperties);
-            return new LocalServerConnection(connectionProperties, this.clientServices, listenerList);
-
+            return new LocalServerConnection(connectionProperties, this.clientServices);
     	} catch (ApplicationInitializationException e) {
             throw new ConnectionException(e.getCause());
 		}
@@ -177,7 +157,8 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 		// make the configuration service listen for the connection life-cycle events
 		// used during VDB delete
         ConfigurationService configService = (ConfigurationService)findService(DQPServiceNames.CONFIGURATION_SERVICE);
-		
+        
+        //in new class loader - all of these should be created lazily and held locally
         this.clientServices = createClientServices(configService);
                 
     	// start socket transport
@@ -186,9 +167,6 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 	        this.socketTransport = new SocketTransport(props, this.clientServices, (SessionServiceInterface)findService(DQPServiceNames.SESSION_SERVICE));
 	        this.socketTransport.start();
         }
-
-        //in new class loader - all of these should be created lazily and held locally
-        listenerList.add(configService.getConnectionListener());
         
     	this.shutdownThread = new ShutdownWork();
     	Runtime.getRuntime().addShutdownHook(this.shutdownThread);
@@ -202,14 +180,10 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     	ClientServiceRegistry services  = new ClientServiceRegistry();
     
     	SessionServiceInterface sessionService = (SessionServiceInterface)this.dqp.getEnvironment().findService(DQPServiceNames.SESSION_SERVICE);
-    	services.registerClientService(ILogon.class, new LogonImpl(sessionService, configService.getClusterName()), com.metamatrix.common.util.LogConstants.CTX_SERVER);
+    	services.registerClientService(ILogon.class, new LogonImpl(sessionService, configService.getClusterName(), configService.getConnectionListener()), com.metamatrix.common.util.LogConstants.CTX_SERVER);
     	
-    	try {
-			Admin roleCheckedServerAdmin = wrapAdminService(Admin.class, getAdminAPI(null));
-			services.registerClientService(Admin.class, roleCheckedServerAdmin, com.metamatrix.common.util.LogConstants.CTX_ADMIN);
-		} catch (AdminException e) {
-			// ignore; exception is not thrown in this case.
-		}
+		Admin roleCheckedServerAdmin = wrapAdminService(Admin.class, getAdminAPI());
+		services.registerClientService(Admin.class, roleCheckedServerAdmin, com.metamatrix.common.util.LogConstants.CTX_ADMIN);
     	
     	services.registerClientService(ClientSideDQP.class, this.dqp, LogConstants.CTX_QUERY_SERVICE);
     	
@@ -391,8 +365,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         }    	
     }
 
-	@Override   
-    public Admin getAdminAPI(Properties connectionProperties) throws AdminException {
+    private Admin getAdminAPI() {
         
         InvocationHandler handler = new MixinProxy(new Object[] {
                 new DQPConfigAdminImpl(this),                    

@@ -1,8 +1,4 @@
-import com.metamatrix.admin.api.core.*;
-import com.metamatrix.admin.api.objects.*;
-import com.metamatrix.admin.api.embedded.*;
-import com.metamatrix.admin.api.exception.*;
-import com.metamatrix.admin.objects.*;
+import org.teiid.adminapi.*;
 
 import com.metamatrix.core.util.ObjectConverterUtil;
 
@@ -552,9 +548,9 @@ void exportConnectorArchive(String connectorTypeIdentifier, String fileName) {
  *            The unique identifier for for an {@link AdminObject}.
  * @param className
  *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
- *            All of these sub-interfaces are in package <code>com.metamatrix.admin.api.objects</code>.
+ *            All of these sub-interfaces are in package <code>org.teiid.adminapi</code>.
  *            You may specify either the fully-qualified or unqualified classname. 
- *            For example "ConnectorBinding" or "com.metamatrix.admin.api.objects.ConnectorBinding".
+ *            For example "ConnectorBinding" or "org.teiid.adminapi.ConnectorBinding".
  * @param propertyName
  *            String Property key
  * @param propertyValue
@@ -576,9 +572,9 @@ void setProperty(String identifier, String className, String propertyName, Strin
  *            The unique identifier for for an {@link AdminObject}.
  * @param className
  *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
- *            All of these sub-interfaces are in package <code>com.metamatrix.admin.api.objects</code>.
+ *            All of these sub-interfaces are in package <code>org.teiid.adminapi</code>.
  *            You may specify either the fully-qualified or unqualified classname. 
- *            For example "ConnectorBinding" or "com.metamatrix.admin.api.objects.ConnectorBinding".
+ *            For example "ConnectorBinding" or "org.teiid.adminapi.ConnectorBinding".
  * @param properties
  *            Properties to set.
  * @throws AdminException
@@ -680,7 +676,27 @@ void setLogConfiguration(LogConfiguration config) {
 }
 
 
-
+/**
+ * Assign {@link ConnectorBinding}s to a {@link VDB}'s Model.  If the supplied model does not 
+ * support MultiSource bindings, then only the first binding in the supplied array is assigned and
+ * the remainder are ignored.
+ *
+ * @param connectorBindingNames
+ *            Names of the ConnectorBindings
+ * @param vdbName
+ *            Name of the VDB
+ * @param vdbVersion
+ *            Version of the VDB
+ * @param modelName
+ *            Name of the Model to map Connector Bindings
+ * @throws AdminException
+ *             if there's a system error or if there's a user input error.
+ */
+void assignBindingsToModel(String[] connectorBindingNames, String vdbName, String vdbVersion, String modelName) {
+	debug("Assigning the bindings to model");
+    checkAdmin();    
+    currentContext().internalAdmin.assignBindingsToModel(connectorBindingNames, vdbName, vdbVersion, modelName);
+}
 
 // *********************************************************************************************
 //  Monitor Methods
@@ -937,6 +953,22 @@ Collection getPropertyDefinitions(String identifier, String className) {
     return result;
 }
 
+/**
+ * Get the processes that correspond to the specified identifier pattern.
+ *
+ * @param processIdentifier the unique identifier for for a {@link org.teiid.adminapi.ProcessObject ProcessObject}
+ * in the system or "{@link org.teiid.adminapi.AdminObject#DELIMITER DELIMITER}"
+ * if all Processes are desired.
+ * @return Collection of {@link org.teiid.adminapi.ProcessObject ProcessObject}
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+Collection getProcesses(String processIdentifier) {
+    checkAdmin();
+    result =currentContext().internalAdmin.getProcesses(processIdentifier);
+    debug(result);
+    return result;
+}
 
 
 
@@ -949,7 +981,7 @@ Collection getPropertyDefinitions(String identifier, String className) {
 /**
  * Start Connector Binding
  *
- * @param connectorBindingIdentifier  identifier for {@link com.metamatrix.admin.api.objects.ConnectorBinding}
+ * @param connectorBindingIdentifier  identifier for {@link org.teiid.adminapi.ConnectorBinding}
  * <ul>
  *      <li> <code>"*"</code> - for all connector bindings in the system
  *      <li> <code>"name*"</code> - for all connector bindings that begin with given name
@@ -967,7 +999,7 @@ void startConnectorBinding(String connectorBindingIdentifier) {
 /**
  * Stop Connector Binding
  *
- * @param connectorBindingIdentifier  identifier for {@link com.metamatrix.admin.api.objects.ConnectorBinding}
+ * @param connectorBindingIdentifier  identifier for {@link org.teiid.adminapi.ConnectorBinding}
  * <ul>
  *      <li> <code>"*"</code> - for all connector bindings in the system
  *      <li> <code>"name*"</code> - for all connector bindings that begin with given name
@@ -984,7 +1016,7 @@ void stopConnectorBinding(String connectorBindingIdentifier) {
 
 /**
  * Clear the cache or caches specified by the cacheIdentifier.
- * @param cacheIdentifier  Cache name identifier {@link com.metamatrix.admin.api.objects.Cache}.
+ * @param cacheIdentifier  Cache name identifier {@link org.teiid.adminapi.Cache}.
  * No wild cards currently supported, must be explicit
  * @throws AdminException  if there's a system error.
  * @since 4.3
@@ -997,7 +1029,7 @@ void clearCache(String cacheIdentifier) {
 /**
  * Terminate the Session
  *
- * @param identifier  Session Idenitfier {@link com.metamatrix.admin.api.objects.Session}.
+ * @param identifier  Session Idenitfier {@link org.teiid.adminapi.Session}.
  * No wild cards currently supported, must be explicit
  * @throws AdminException  if there's a system error.
  * @since 4.3
@@ -1011,7 +1043,7 @@ void terminateSession(String identifier) {
 /**
  * Cancel Request
  *
- * @param identifier  The request identifer defined by {@link com.metamatrix.admin.api.objects.Request}
+ * @param identifier  The request identifer defined by {@link org.teiid.adminapi.Request}
  * No wild cards currently supported, must be explicit
  * @throws AdminException  if there's a system error.
  * @since 4.3
@@ -1025,7 +1057,7 @@ void cancelRequest(String identifier) {
 /**
  * Cancel Source Request
  *
- * @param identifier  The request identifer defined by {@link com.metamatrix.admin.api.objects.Request}
+ * @param identifier  The request identifer defined by {@link org.teiid.adminapi.Request}
  * No wild cards currently supported, must be explicit
  * @throws AdminException  if there's a system error.
  * @since 4.3
@@ -1085,6 +1117,241 @@ void deleteVDBAndConnectorBindings(String name, String version) {
         } 
     }
 }
+
+/**
+ * Set the log listener to install into MM Query.  This log listener will receive all log messages
+ * written by the MM Query at it's current log level and log contexts.
+ *
+ * @param listener The listener component
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void setLogListener(EmbeddedLogger listener) {
+    checkAdmin();
+    currentContext().internalAdmin.setLogListener(listener);
+}
+
+/**
+ * Stop the MM Query.  If millisToWait is >0, then close to incoming queries, wait the time period
+ * for work to stop, then stop the MM Query.  Otherwise, stop immediately, aborting all running queries.
+ * the current connection will be disconnected.
+ * @param millisToWait Milliseconds to wait (if >0) or <=0 for no wait before stopping
+ * @throws AdminException
+ * @since 4.3
+ */
+void shutdown(int millisToWait) {
+    checkAdmin();
+    currentContext().internalAdmin.shutdown(millisToWait);	
+    disconnect();
+}
+
+/**
+ * Restart System; the current connection will be disconnected.
+ * @throws AdminException if there's a system error.
+ * @since 4.3
+ */
+void restart() {
+    checkAdmin();
+   	currentContext().internalAdmin.restart();	
+    disconnect();
+}
+
+//*********************************************************************************************
+// Security Methods
+//
+//*********************************************************************************************
+
+/**
+ * Get the Collection of administrative role names possessed by the given group, if any.
+ *
+ * @param groupIdentifier
+ *            The unique identifier for the {@link Group}. This is group name. A user is a {@link Principal} and a
+ *            Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains.
+ *             The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @return The Collection of {@link Role}s.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+Collection getRolesForGroup(String groupIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getRolesForGroup(groupIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the group memberships for the given user. 
+ *
+ * @param userIdentifier
+ *            The unique identifier for the {@link User}. This is generally a user name. A user is a {@link Principal} and a
+ *            Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains.
+ *             The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @return The collection of groups in which the given user has membership.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+Collection getGroupsForUser(String userIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getGroupsForUser(userIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Get the group denoted by the given <code>groupIdentifier</code>.
+ *
+ * @param groupIdentifier
+ *            The unique identifier for the {@link Group}. This is generally a group name. A group is a {@link Principal} and
+ *            a Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains. <br>
+ *            Note that by supplying the {@link AdminObject#WILDCARD WILDCARD} identifier, all all users in the system will
+ *            retrieved.</br>
+ * @return The Collection of users.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+Collection getGroups(String groupIdentifier) {
+    checkAdmin();
+    result = currentContext().internalAdmin.getGroups(groupIdentifier);
+    debug(result);
+    return result;
+}
+
+/**
+ * Assign to the given {@link Group} the given Administrative Role.
+ *
+ * @param roleIdentifier
+ *            one of {@link AdminRoles}.
+ * @param groupIdentifier
+ *            the unique identifier for the Principal. The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void assignRoleToGroup(String roleIdentifier, String groupIdentifier) {
+    checkAdmin();
+    currentContext().internalAdmin.assignRoleToGroup(roleIdentifier, groupIdentifier);
+}
+
+/**
+ * Remove an administrative role from the given {@link Group}.
+ *
+ * @param roleIdentifier
+ *            one of {@link AdminRoles}
+ * @param groupIdentifier
+ *            the unique identifier for the Principal. The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 4.3
+ */
+void removeRoleFromGroup(String roleIdentifier, String groupIdentifier) {
+    checkAdmin();
+    currentContext().internalAdmin.removeRoleFromGroup(roleIdentifier, groupIdentifier);
+}
+
+
+/**
+ * Import the data Roles for given vdb and version into the connected server
+ * @param vdbName - target name of the VDB, the roles to be imported under
+ * @param vdbVersion - target version of the vdb, the roles to be imported under
+ * @param filename - character data array containing the XML file which defines the roles 
+ * @param options - options to overwrite in case the matching roles already exist.
+ * @throws AdminException
+ */
+void importDataRoles(String vdbName, String vdbVersion, String filename, int options) {
+    checkAdmin();    
+    currentContext().internalAdmin.importDataRoles(vdbName, vdbVersion, readTextFile(filename), new AdminOptions(options));    
+}
+
+/**
+ * Import the data Roles for given vdb and version into the connected server
+ * @param vdbName - target name of the VDB, the roles to be imported under
+ * @param vdbVersion - target version of the vdb, the roles to be imported under
+ * @param filename - character data array containing the XML file which defines the roles 
+ * @throws AdminException
+ */
+void importDataRoles(String vdbName, String vdbVersion, String filename) {
+    checkAdmin();    
+    currentContext().internalAdmin.importDataRoles(vdbName, vdbVersion, readTextFile(filename), null);    
+}
+
+
+/**
+ * Export the data roles defined for the given vdb fromthe current system
+ * @param vdbName - Name of the vdb
+ * @param vdbVersion - version of the vdb
+ * @param filename - name of the file to export the contents under.
+ * @return - char[] stream containing the XML contents of the roles.
+ * @throws AdminException
+ */
+void exportDataRoles(String vdbName, String vdbVersion, String fileName) {
+    checkAdmin();
+    contents = currentContext().internalAdmin.exportDataRoles(vdbName, vdbVersion);  
+    if (contents != null) {
+    	ObjectConverterUtil.write(contents, fileName);
+    }
+    else {
+    	throw new AdminProcessingException("Data roles not found for VDB "+ vdbName + " with version "+ vdbVersion);
+    }
+}
+
+
+/** 
+ * @param domainprovidername is the name to be assigned to the newly created {@link AuthenticationProvider}
+ * @param providertypename is the type of provider to create.  
+ * There are 3 installed provider types and they are: 
+ * <ul>
+ *      <li> <code>File Membership Domain Provider</code>
+ *      <li> <code>LDAP Membership Domain Provider</code> 
+ *      <li><code>Custom Membership Domain Provider</code>
+ * </ul>
+ * @param properties are the settings specified by the providertype to be used
+ * @throws AdminException
+ *             if there's a system error.
+ * @since 5.5.2
+
+void addAuthorizationProvider(String domainprovidername, String providertypename, Properties properties) {
+    checkAdmin();
+    currentContext().internalAdmin.addAuthorizationProvider(domainprovidername, providertypename, properties);       
+}
+ */
+
+/**
+ * Returns the active authorization provider domain names, in authentication order.
+ * @return List<String>
+ * @throws AdminException
+ */
+List getDomainNames() {
+    checkAdmin();
+    result = currentContext().internalAdmin.getDomainNames();
+    debug(result);
+    return result;	
+}
+
+
+
+/**
+ * Return the {@link Group}s for a given domain.  The domain name must be an specified
+ * exactly.  See {@link #getActiveDomainNames()} for possible domain names.
+ * @param domainName
+ * @return
+ * @throws AdminException
+ */
+Collection getGroupsForDomain(String domainName){
+    checkAdmin();
+    result = currentContext().internalAdmin.getGroupsForDomain(domainName);
+    debug(result);
+    return result;		
+}
+
+
+//*********************************************************************************************
+// Utility Methods
+//
+//*********************************************************************************************
+
 
 /**
  * Checks to make sure the given VDB exists in the system

@@ -293,11 +293,6 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		this.maxCachedInstances = maxCachedInstances;
 	}
 
-	@Override
-	public Admin getAdminAPI(Properties connectionProperties) throws AdminException {
-		ServerAdminFactory factory = ServerAdminFactory.getInstance();
-		return factory.createAdmin(connectionProperties);
-	}
 
 	@Override
 	public void shutdown(boolean restart) {

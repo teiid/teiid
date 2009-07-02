@@ -463,7 +463,7 @@ public final class EmbeddedDriver extends BaseDriver {
                 try {
                 	info.setProperty(DQPEmbeddedProperties.BOOTURL, url.toExternalForm());
 					ServerConnection conn = connectionFactory.createConnection(info);
-					return new MMConnection(conn, info, url.toExternalForm(), connectionFactory);
+					return new MMConnection(conn, info, url.toExternalForm());
 				} catch (CommunicationException e) {
 					throw MMSQLException.create(e);
 				} catch (ConnectionException e) {

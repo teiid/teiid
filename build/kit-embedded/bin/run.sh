@@ -6,7 +6,6 @@
 ### ====================================================================== ###
 
 DIRNAME=`dirname $0`
-PROGNAME=`basename $0`
 
 # OS specific support (must be 'true' or 'false').
 cygwin=false;
@@ -26,7 +25,7 @@ JMX_PORT=9999
 JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=$JMX_PORT -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 
 # JPDA options. Uncomment and modify as appropriate to enable remote debugging.
-# JAVA_OPTS=$JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y
+# JAVA_OPTS="$JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n"
 
 # Force IPv4 on Linux systems since IPv6 doesn't work correctly with jdk5 and lower
 if [ "$linux" = "true" ]; then
