@@ -23,18 +23,14 @@
 
 package org.teiid.transport;
 
-import static org.mockito.Mockito.mock;
-
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.dqp.service.ServerConnectionListener;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
@@ -59,22 +55,16 @@ public class TestLogonImpl extends TestCase {
 		Mockito.stub(ssi.createSession(userName, null, null, applicationName,
 								p)).toReturn(resultInfo);
 
-		ServerConnectionListener listener = mock(ServerConnectionListener.class);
-		LogonImpl impl = new LogonImpl(ssi, "fakeCluster", listener); //$NON-NLS-1$
+		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 
 		LogonResult result = impl.logon(p);
 		assertEquals(userName, result.getUserName());
 		assertEquals(new MetaMatrixSessionID(1), result.getSessionID());
-		Mockito.verify(listener, Mockito.times(1)).connectionAdded((DQPWorkContext)Mockito.anyObject());
-		Mockito.verify(listener, Mockito.times(0)).connectionRemoved((DQPWorkContext)Mockito.anyObject());
-		
-		impl.logoff();
-		Mockito.verify(listener, Mockito.times(1)).connectionRemoved((DQPWorkContext)Mockito.anyObject());
 	}
 	
 	public void testCredentials() throws Exception {
 		SessionServiceInterface ssi = Mockito.mock(SessionServiceInterface.class);
-		LogonImpl impl = new LogonImpl(ssi, "fakeCluster", mock(ServerConnectionListener.class)); //$NON-NLS-1$
+		LogonImpl impl = new LogonImpl(ssi, "fakeCluster"); //$NON-NLS-1$
 		Properties p = new Properties();
 		p.put(MMURL.CONNECTION.CLIENT_TOKEN_PROP, new Object());
 		//invalid credentials

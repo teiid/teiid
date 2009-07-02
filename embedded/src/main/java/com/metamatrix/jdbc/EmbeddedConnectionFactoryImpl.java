@@ -32,12 +32,10 @@ import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
 
 import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.transport.AdminAuthorizationInterceptor;
@@ -75,11 +73,9 @@ import com.metamatrix.dqp.embedded.admin.DQPSecurityAdminImpl;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.ServerConnectionListener;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.vm.controller.ProcessStatistics;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
 
@@ -158,6 +154,9 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 		// used during VDB delete
         ConfigurationService configService = (ConfigurationService)findService(DQPServiceNames.CONFIGURATION_SERVICE);
         
+    	SessionServiceInterface sessionService = (SessionServiceInterface)this.dqp.getEnvironment().findService(DQPServiceNames.SESSION_SERVICE);
+    	sessionService.register(configService.getSessionListener());
+    	
         //in new class loader - all of these should be created lazily and held locally
         this.clientServices = createClientServices(configService);
                 
@@ -180,7 +179,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     	ClientServiceRegistry services  = new ClientServiceRegistry();
     
     	SessionServiceInterface sessionService = (SessionServiceInterface)this.dqp.getEnvironment().findService(DQPServiceNames.SESSION_SERVICE);
-    	services.registerClientService(ILogon.class, new LogonImpl(sessionService, configService.getClusterName(), configService.getConnectionListener()), com.metamatrix.common.util.LogConstants.CTX_SERVER);
+    	services.registerClientService(ILogon.class, new LogonImpl(sessionService, configService.getClusterName()), com.metamatrix.common.util.LogConstants.CTX_SERVER);
     	
 		Admin roleCheckedServerAdmin = wrapAdminService(Admin.class, getAdminAPI());
 		services.registerClientService(Admin.class, roleCheckedServerAdmin, com.metamatrix.common.util.LogConstants.CTX_ADMIN);

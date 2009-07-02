@@ -243,7 +243,7 @@ public abstract class ProcessController extends AbstractClassLoaderManager imple
      * @throws ConfigurationException 
      */
     private void registerILogonAPI() throws ConfigurationException, ServiceException {
-    	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getInstance().getClusterName(), null), LogCommonConstants.CTX_LOGON);
+    	this.clientServices.registerClientService(ILogon.class, new LogonImpl(PlatformProxyHelper.getSessionServiceProxy(PlatformProxyHelper.ROUND_ROBIN_LOCAL), CurrentConfiguration.getInstance().getClusterName()), LogCommonConstants.CTX_LOGON);
     }    
     
     /**

@@ -30,19 +30,16 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.StringTokenizer;
-
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.application.AbstractClassLoaderManager;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
@@ -74,9 +71,13 @@ import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationWriter;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.ConnectorBindingLifeCycleListener;
-import com.metamatrix.dqp.service.ServerConnectionListener;
+import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.util.LogConstants;
+import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
+import com.metamatrix.platform.security.api.service.SessionListener;
+import com.metamatrix.platform.security.api.service.SessionServiceInterface;
+import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
@@ -109,11 +110,9 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     // load time constructs
     private Map<String, URL> availableVDBFiles = new HashMap<String, URL>();
     ConfigurationModelContainer configurationModel;
-    private Map<String, Integer> inuseVDBs = new HashMap<String, Integer>(); 
     private ArrayList<VDBLifeCycleListener> vdbLifeCycleListeners = new ArrayList<VDBLifeCycleListener>();
     private ArrayList<ConnectorBindingLifeCycleListener> connectorBindingLifeCycleListeners = new ArrayList<ConnectorBindingLifeCycleListener>();
     private UDFSource udfSource;
-    private HashSet<DQPWorkContext> clientConnections = new HashSet<DQPWorkContext>();
     
     private AbstractClassLoaderManager classLoaderManager = new AbstractClassLoaderManager(Thread.currentThread().getContextClassLoader(), true, true) {
     	
@@ -329,7 +328,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     public void saveVDB(VDBArchive srcVdb, String version) throws MetaMatrixComponentException{
         
         // if the vdb version being saved is DELETED then if nobody using it 
-        if (srcVdb.getStatus() == VDBStatus.DELETED && canDeleteVDB(srcVdb)) {
+        if (srcVdb.getStatus() == VDBStatus.DELETED && canDeleteVDB(srcVdb.getName(), srcVdb.getVersion())) {
             deleteVDB(srcVdb);
             return;
         }
@@ -1231,65 +1230,29 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
     
     /** 
-     * @see com.metamatrix.dqp.service.ConfigurationService#getConnectionListener()
+     * @see com.metamatrix.dqp.service.ConfigurationService#getSessionListener()
      * @since 4.3.2
      */
-    public ServerConnectionListener getConnectionListener() {
-        return new ServerConnectionListener() {
+    public SessionListener getSessionListener() {
+        return new SessionListener() {
             /**
              * A Client Connection to DQP has been added  
              */
-            public void connectionAdded(DQPWorkContext connection) {
-                // Add to parent's collection
-                clientConnections.add(connection);
-                
-                String key = vdbId(connection.getVdbName(), connection.getVdbVersion());
-                
-                DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connectionAdded", new Object[] {connection.getVdbName(), connection.getVdbVersion(), connection.getSessionId()}); //$NON-NLS-1$
-                
-                Integer useCount = inuseVDBs.get(key);
-                if (useCount == null) {
-                    inuseVDBs.put(key, new Integer(1));
-                }
-                else {
-                    inuseVDBs.put(key, new Integer(useCount.intValue()+1));
-                }
+            public void sessionCreated(MetaMatrixSessionInfo connection) {
             }
             
             /**
              * A Client Connection to DQP has been removed  
              */
-            public void connectionRemoved(DQPWorkContext connection) {
-                // remove from the collection
-                clientConnections.remove(connection);
+            public void sessionClosed(MetaMatrixSessionInfo session) {
                 
-                String key = vdbId(connection.getVdbName(), connection.getVdbVersion());
-                
-                DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connectionRemoved", new Object[] {connection.getVdbName(), connection.getVdbVersion(), connection.getSessionId()}); //$NON-NLS-1$
-                
-                Integer useCount = inuseVDBs.get(key);
-                if (useCount == null) {
-                    // not sure how this got in here..
-                }
-                else {  
-                    // after decrementing if use count comes to zero we can 
-                    // see if there are any VDBs to delete
-                    if ((useCount.intValue()-1) == 0) {
-                        runVDBCleanUp(connection.getVdbName(), connection.getVdbVersion());
-                        inuseVDBs.remove(key);
-                    }
-                    else {
-                        // if there more users on this vdb then just decrement the counter.
-                        inuseVDBs.put(key, new Integer((useCount.intValue()-1)));
-                    }
-                }
+            	String vdbName = session.getProductInfo(ProductInfoConstants.VIRTUAL_DB);
+            	String vdbVersion = session.getProductInfo(ProductInfoConstants.VDB_VERSION);
+            	if (canDeleteVDB(vdbName, vdbVersion)) {
+            		runVDBCleanUp(vdbName, vdbVersion);
+            	}
             }
         };
-    }
-    
-    @Override
-    public Set<DQPWorkContext> getClientConnections() {
-        return new HashSet<DQPWorkContext>(clientConnections);
     }
     
     /**
@@ -1297,9 +1260,15 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @param vdb
      * @return true vdb can be deleted; false otherwise
      */
-    boolean canDeleteVDB(VDBArchive vdb) {
-        Integer useCount = inuseVDBs.get(vdbId(vdb));
-        return (useCount == null || useCount.intValue() == 0);
+    private boolean canDeleteVDB(String vdbName, String vdbVersion) {
+       	try {
+			SessionServiceInterface ssi = (SessionServiceInterface)lookupService(DQPServiceNames.SESSION_SERVICE);
+			Collection<MetaMatrixSessionInfo> active = ssi.getSessionsLoggedInToVDB(vdbName, vdbVersion);
+			return active.isEmpty();
+		} catch (SessionServiceException e) {
+			LogManager.logError(LogConstants.CTX_DQP, e, e.getMessage());
+		}
+		return false;
     }
 
     /**

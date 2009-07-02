@@ -25,7 +25,6 @@ package com.metamatrix.dqp.embedded.admin;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 import javax.transaction.xa.Xid;
 
@@ -38,18 +37,17 @@ import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.EmbeddedLogger;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.RuntimeStateAdmin;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
+import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 
 
 /** 
@@ -209,20 +207,20 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements RuntimeState
     public void terminateSession(String identifier) 
         throws AdminException {
         
-        Set<DQPWorkContext> connections = getClientConnections();
-        ArrayList<DQPWorkContext> matchedConnections = new ArrayList<DQPWorkContext>();
+        Collection<MetaMatrixSessionInfo> sessions = getClientConnections();
+        ArrayList<MetaMatrixSessionInfo> matchedConnections = new ArrayList<MetaMatrixSessionInfo>();
         
-        for (DQPWorkContext clientConnection:connections) {
-            String id = clientConnection.getSessionId().toString();
+        for (MetaMatrixSessionInfo info:sessions) {
+            String id = info.getSessionID().toString();
             if (matches(identifier, id)) {
-                matchedConnections.add(clientConnection);
+                matchedConnections.add(info);
             }
         }
 
         // Double iteration because to avoid concurrent modification of underlying map.
-        for (DQPWorkContext clientConnection: matchedConnections) {
+        for (MetaMatrixSessionInfo info: matchedConnections) {
         	try {
-				this.manager.getDQP().terminateConnection(clientConnection.getSessionId().toString());
+				this.manager.getDQP().terminateConnection(info.getSessionID().toString());
 			} catch (MetaMatrixComponentException e) {
 				throw new AdminComponentException(e);
 			}

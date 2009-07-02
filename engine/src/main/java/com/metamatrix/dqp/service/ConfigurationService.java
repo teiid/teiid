@@ -26,9 +26,6 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
-
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
@@ -39,6 +36,7 @@ import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.vdb.api.VDBArchive;
+import com.metamatrix.platform.security.api.service.SessionListener;
 
 
 
@@ -286,7 +284,7 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
      * @throws MetaMatrixComponentException
      * @since 4.3.2
      */
-    public ServerConnectionListener getConnectionListener(); 
+    public SessionListener getSessionListener(); 
      
  
     /**
@@ -367,12 +365,6 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
     public String getInstanceIdenifier();    
     
 
-    /**
-     * This returns the active client connections that have been made to the DQP 
-     * @return list of connections which are currently available;never null
-     */
-    public Set<DQPWorkContext> getClientConnections();
-    
     /**
      * Gets the processor batch size 
      * @return

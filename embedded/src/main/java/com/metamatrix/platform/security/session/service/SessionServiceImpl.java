@@ -36,7 +36,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.teiid.dqp.internal.process.DQPCore;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -51,7 +50,6 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.ArgCheck;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
@@ -63,6 +61,7 @@ import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.AuthenticationToken;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
+import com.metamatrix.platform.security.api.service.SessionListener;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.platform.util.LogMessageKeys;
@@ -89,6 +88,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
     private Map<MetaMatrixSessionID, MetaMatrixSessionInfo> sessionCache = new HashMap<MetaMatrixSessionID, MetaMatrixSessionInfo>();
     private Timer sessionMonitor;
     private AtomicLong idSequence = new AtomicLong();
+    private SessionListener sessionListener;
         
     // -----------------------------------------------------------------------------------
     // S E R V I C E - R E L A T E D M E T H O D S
@@ -126,6 +126,9 @@ public class SessionServiceImpl implements SessionServiceInterface {
                 LogManager.logWarning(LogConstants.CTX_SESSION,e,"Exception terminitating session"); //$NON-NLS-1$
             }
 		}
+        if (this.sessionListener != null) {
+        	this.sessionListener.sessionClosed(info);
+        }		
 	}
 	
 	@Override
@@ -188,6 +191,9 @@ public class SessionServiceImpl implements SessionServiceInterface {
                                                 properties.getProperty(MMURL.CONNECTION.CLIENT_HOSTNAME));
         newSession.setTrustedToken(trustedToken);
         this.sessionCache.put(newSession.getSessionID(), newSession);
+        if (this.sessionListener != null) {
+        	this.sessionListener.sessionCreated(newSession);
+        }
         return newSession;
 	}
 	
@@ -354,6 +360,11 @@ public class SessionServiceImpl implements SessionServiceInterface {
 
 	public VDBService getVdbService() {
 		return vdbService;
+	}
+
+	@Override
+	public void register(SessionListener listener) {
+		this.sessionListener = listener;
 	}
 
 }

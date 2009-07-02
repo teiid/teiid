@@ -105,7 +105,7 @@ public interface SessionServiceInterface extends ApplicationService {
      * @return The collection of MetaMatrixSessionInfo objects of active users on
      * the system - possibly empty, never null.
      */
-    Collection getActiveSessions() throws SessionServiceException;
+    Collection<MetaMatrixSessionInfo> getActiveSessions() throws SessionServiceException;
 
     /**
      * Get the number of active user sessions on the system.
@@ -142,7 +142,7 @@ public interface SessionServiceInterface extends ApplicationService {
      * @param VDBVersion The version of the VDB.
      * @throws SessionServiceException when transaction with database fails or unexpected exception happens
      */
-    Collection getSessionsLoggedInToVDB(String VDBName, String VDBVersion)
+    Collection<MetaMatrixSessionInfo> getSessionsLoggedInToVDB(String VDBName, String VDBVersion)
     throws SessionServiceException;
 
     /**
@@ -151,5 +151,11 @@ public interface SessionServiceInterface extends ApplicationService {
      * @param sessionID - identifies the client
      */
     public void pingServer(MetaMatrixSessionID sessionID) throws InvalidSessionException;
+    
+    /**
+     * Register a session listener
+     * @param listener
+     */
+    public void register(SessionListener listener);
     
 }

@@ -10,6 +10,7 @@ import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
+import com.metamatrix.platform.security.api.service.SessionListener;
 import com.metamatrix.platform.security.api.service.SuccessfulAuthenticationToken;
 
 public class TestSessionServiceImpl extends TestCase {
@@ -19,6 +20,8 @@ public class TestSessionServiceImpl extends TestCase {
 		MembershipServiceInterface msi = Mockito.mock(MembershipServiceInterface.class);
 		Mockito.stub(msi.authenticateUser("steve", null, null, "foo")).toReturn(new SuccessfulAuthenticationToken(null, "steve@somedomain")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		ssi.setMembershipService(msi);
+		SessionListener listener = Mockito.mock(SessionListener.class);
+		ssi.register(listener);
 		
 		MetaMatrixSessionID id1 = new MetaMatrixSessionID(1);
 		try {
@@ -34,6 +37,7 @@ public class TestSessionServiceImpl extends TestCase {
 		
 		assertEquals(1, ssi.getActiveSessionsCount());
 		assertEquals(0, ssi.getSessionsLoggedInToVDB("a", "1").size()); //$NON-NLS-1$ //$NON-NLS-2$
+		Mockito.verify(listener, Mockito.times(1)).sessionCreated(info);
 		
 		ssi.closeSession(id1);
 		
@@ -50,6 +54,7 @@ public class TestSessionServiceImpl extends TestCase {
 		} catch (InvalidSessionException e) {
 			
 		}
+		Mockito.verify(listener, Mockito.times(1)).sessionClosed(info);
 	}
 
 }

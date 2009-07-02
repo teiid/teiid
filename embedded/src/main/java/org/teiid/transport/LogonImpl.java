@@ -41,7 +41,6 @@ import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.dqp.service.ServerConnectionListener;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.Credentials;
@@ -57,12 +56,10 @@ public class LogonImpl implements ILogon {
 	
 	private SessionServiceInterface service;
 	private String clusterName;
-	private ServerConnectionListener connListener;
 
-	public LogonImpl(SessionServiceInterface service, String clusterName, ServerConnectionListener connListener) {
+	public LogonImpl(SessionServiceInterface service, String clusterName) {
 		this.service = service;
 		this.clusterName = clusterName;
-		this.connListener = connListener;
 	}
 
 	public LogonResult logon(Properties connProps) throws LogonException,
@@ -87,7 +84,6 @@ public class LogonImpl implements ILogon {
 		try {
 			MetaMatrixSessionInfo sessionInfo = service.createSession(user,credential, (Serializable) payload, applicationName, connProps);
 			MetaMatrixSessionID sessionID = updateDQPContext(sessionInfo);
-			this.connListener.connectionAdded(DQPWorkContext.getWorkContext());
 			LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"Logon successful for \"", user, "\" - created SessionID \"", "" + sessionID, "\"" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			return new LogonResult(sessionInfo.getSessionToken(), sessionInfo.getProductInfo(), clusterName);
 		} catch (MetaMatrixAuthenticationException e) {
@@ -150,7 +146,6 @@ public class LogonImpl implements ILogon {
 	public ResultsFuture<?> logoff() throws InvalidSessionException, MetaMatrixComponentException {
 		try {
 			this.service.closeSession(DQPWorkContext.getWorkContext().getSessionId());
-			this.connListener.connectionRemoved(DQPWorkContext.getWorkContext());
 		} catch (SessionServiceException e) {
 			throw new MetaMatrixComponentException(e);
 		} 

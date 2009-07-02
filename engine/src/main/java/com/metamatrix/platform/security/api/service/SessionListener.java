@@ -20,27 +20,13 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.dqp.service;
+package com.metamatrix.platform.security.api.service;
 
-import org.teiid.dqp.internal.process.DQPWorkContext;
+import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 
+public interface SessionListener {
 
-
-/** 
- * An implementor of this interface, when registered with the ServerConnection will
- * receive notifications about the connection life cycle events.
- */
-public interface ServerConnectionListener {
-    /**
-     * A connection has been added to DQP
-     * @param connection The client connection instance, never null
-     */
-    void connectionAdded(DQPWorkContext context);
-    
-    /**
-     * A connection has been removed for DQP
-     * @param connection The client connection instance, never null
-     */
-    void connectionRemoved(DQPWorkContext context);
-    
+	void sessionCreated(MetaMatrixSessionInfo info);
+	
+	void sessionClosed(MetaMatrixSessionInfo info);
 }

@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
@@ -55,7 +54,7 @@ import com.metamatrix.admin.objects.MMSession;
 import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.admin.objects.MMVDB;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.comm.api.ServerConnection;
+import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ConnectorBinding;
@@ -72,8 +71,10 @@ import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
+import com.metamatrix.platform.security.api.MetaMatrixSessionInfo;
 import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
+import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.util.ProductInfoConstants;
 import com.metamatrix.server.serverapi.RequestInfo;
 
@@ -168,6 +169,10 @@ abstract class BaseAdmin {
     ConfigurationService getConfigurationService() {
         return (ConfigurationService)getManager().findService(DQPServiceNames.CONFIGURATION_SERVICE);
     }
+    
+    SessionServiceInterface getSessionService() {
+        return (SessionServiceInterface)getManager().findService(DQPServiceNames.SESSION_SERVICE);
+    }
         
     protected Object convertToAdminObjects(Object src) {
         return convertToAdminObjects(src,null);
@@ -243,8 +248,8 @@ abstract class BaseAdmin {
             com.metamatrix.common.queue.WorkerPoolStats stats = (com.metamatrix.common.queue.WorkerPoolStats)src;
             return Util.convertStats(stats, stats.getQueueName());
         }
-        else if (src != null && src instanceof DQPWorkContext) {
-        	DQPWorkContext conn = (DQPWorkContext)src;
+        else if (src != null && src instanceof MetaMatrixSessionInfo) {
+        	MetaMatrixSessionInfo conn = (MetaMatrixSessionInfo)src;
             return convertConnection(conn);
         }
         else if (src != null && src instanceof com.metamatrix.common.config.api.ExtensionModule) {
@@ -273,14 +278,16 @@ abstract class BaseAdmin {
         return module;
     }
     
-    private Session convertConnection(DQPWorkContext src) {
-        MMSession session = new MMSession(new String[] {src.getSessionId().toString()});
-        session.setVDBName(src.getVdbName());
-        session.setVDBVersion(src.getVdbVersion()); 
-        session.setApplicationName(src.getAppName());
-        session.setIPAddress(src.getClientAddress());
+    private Session convertConnection(MetaMatrixSessionInfo src) {
+        MMSession session = new MMSession(new String[] {src.getSessionID().toString()});
+        session.setVDBName(src.getProductInfo(ProductInfoConstants.VIRTUAL_DB));
+        session.setVDBVersion(src.getProductInfo(ProductInfoConstants.VDB_VERSION)); 
+        session.setApplicationName(src.getApplicationName());
+        session.setIPAddress(src.getClientIp());
         session.setHostName(src.getClientHostname());
         session.setUserName(src.getUserName());
+        session.setLastPingTime(src.getLastPingTime());
+        session.setCreated(new Date(src.getTimeCreated()));
         return session;
     }
     
@@ -445,11 +452,11 @@ abstract class BaseAdmin {
      * @return
      * @since 4.3
      */
-    DQPWorkContext getClientConnection(String identifier) {
-        Collection<DQPWorkContext> connections = getConfigurationService().getClientConnections();
-        for (DQPWorkContext context:connections) {
-            if (context.getSessionId().toString().equals(identifier)) {
-                return context;
+    MetaMatrixSessionInfo getClientConnection(String identifier) throws AdminException {
+        Collection<MetaMatrixSessionInfo> sessions = getClientConnections();
+        for (MetaMatrixSessionInfo info:sessions) {
+            if (info.getSessionID().toString().equals(identifier)) {
+                return info;
             }
         }
         return null;
@@ -460,8 +467,13 @@ abstract class BaseAdmin {
      * @return
      * @throws AdminException
      */
-    Set<DQPWorkContext> getClientConnections() {
-        return getConfigurationService().getClientConnections();
+    Collection<MetaMatrixSessionInfo> getClientConnections() throws AdminException {
+        try {
+			return getSessionService().getActiveSessions();
+		} catch (SessionServiceException e) {
+			// SessionServiceException not in the client known exception (in common-internal)
+			throw new AdminComponentException(e.getMessage(), e.getCause());
+		}
     }
 
     boolean matches(String regEx, String value) {
