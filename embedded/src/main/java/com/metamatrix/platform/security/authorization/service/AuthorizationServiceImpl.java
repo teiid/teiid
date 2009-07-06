@@ -40,6 +40,7 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.xml.sax.SAXException;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -100,10 +101,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 	protected MembershipServiceInterface membershipService;
 	protected VDBService vdbService;
 	protected LRUCache<VDBKey, Collection<AuthorizationPolicy>> policyCache = new LRUCache<VDBKey, Collection<AuthorizationPolicy>>();
-	private Collection<AuthorizationPolicy> adminPolicies;
 
-    // Permission factory is reusable and threadsafe
+    // Permission factory is reusable and thread safe
     private static final BasicAuthorizationPermissionFactory PERMISSION_FACTORY = new BasicAuthorizationPermissionFactory();
+    
+    Collection<AuthorizationPolicy> adminPolicies;
     
     /*
      * @see com.metamatrix.common.application.ApplicationService#initialize(java.util.Properties)
@@ -263,8 +265,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         }
     }
     
-	private boolean matchesPrincipal(Set<MetaMatrixPrincipalName> principals,
-			AuthorizationPolicy policy) {
+	private boolean matchesPrincipal(Set<MetaMatrixPrincipalName> principals, AuthorizationPolicy policy) {
 		for (MetaMatrixPrincipalName principal : principals) {
 			if (policy.getPrincipals().contains(principal)) {
 				return true;
@@ -279,7 +280,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			return true;
 		}
 
-		Collection policies;
+		Collection<AuthorizationPolicy> policies;
 		try {
 			policies = getPoliciesForPrincipal(new MetaMatrixPrincipalName(session.getUsername(), MetaMatrixPrincipal.TYPE_USER), realm);
 		} catch (InvalidPrincipalException e) {
@@ -298,14 +299,11 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 			}
 		}
 
-		for (Iterator i = policies.iterator(); i.hasNext();) {
-			AuthorizationPolicy policy = (AuthorizationPolicy) i.next();
-			if (applicablePolicies.contains(policy.getAuthorizationPolicyID()
-					.getDisplayName())) {
+		for (AuthorizationPolicy policy:policies) {
+			if (applicablePolicies.contains(policy.getAuthorizationPolicyID().getDisplayName())) {
 				return true;
 			}
 		}
-
 		return false;
 	}
     
@@ -350,18 +348,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
             return result;
         }
         
-        if (realm.getSubRealmName() != null) {
-        	Collection<AuthorizationPolicy> policies = getPoliciesInRealm(realm);
-        	for (AuthorizationPolicy policy : policies) {
-	        	if (matchesPrincipal(principals, policy)) {
-	        		result.add(policy);
-	        		continue;
-	        	}
-	        }
-        } else {
-        	//TODO: looking for admin roles
+        Collection<AuthorizationPolicy> policies = getPoliciesInRealm(realm);
+        
+    	for (AuthorizationPolicy policy : policies) {
+        	if (matchesPrincipal(principals, policy)) {
+        		result.add(policy);
+        		continue;
+        	}
         }
-
         return result;
     }
     
@@ -370,35 +364,51 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     	Collection<AuthorizationPolicy> policies = null;
         
-    	if (realm.getSubRealmName() != null) {
-        	VDBKey key = new VDBKey(realm.getSuperRealmName(), realm.getSubRealmName());
-        	synchronized (this.policyCache) {
-            	policies = this.policyCache.get(key);
-	        	if (policies == null) {
-					try {
-				        VDBArchive vdb = vdbService.getVDB(realm.getSuperRealmName(), realm.getSubRealmName());
-				        if (vdb.getDataRoles() == null) {
-				        	policies = Collections.emptyList();
-				        }
-				        else {
-				        	policies = AuthorizationPolicyFactory.buildPolicies(vdb.getName(), vdb.getVersion(), vdb.getDataRoles());
-				        }
-					} catch (SAXException e) {
-						throw new AuthorizationMgmtException(e);
-					} catch (IOException e) {
-						throw new AuthorizationMgmtException(e);
-					} catch (ParserConfigurationException e) {
-						throw new AuthorizationMgmtException(e);
-					} catch (MetaMatrixComponentException e) {
-						throw new AuthorizationMgmtException(e);
-					}
-					this.policyCache.put(key, policies);
-	        	}
-        	}
-        }
+    	VDBKey key = null;
     	
+    	if (realm.getSubRealmName() != null) {
+    		// get data roles for the user
+        	key = new VDBKey(realm.getSuperRealmName(), realm.getSubRealmName());
+	    	synchronized (this.policyCache) {
+	        	policies = this.policyCache.get(key);
+	        	if (policies == null ) {
+					policies = getDataPolicies(realm);				
+	        	}
+	        	this.policyCache.put(key, policies);
+	    	}
+    	}
+    	else {
+    		// get admin roles
+    		policies = getAdminPolicies();
+    	}
     	return policies;
     }
+
+	private Collection<AuthorizationPolicy> getDataPolicies(AuthorizationRealm realm) throws AuthorizationMgmtException {
+		Collection<AuthorizationPolicy> policies = null;
+		try {
+		    VDBArchive vdb = vdbService.getVDB(realm.getSuperRealmName(), realm.getSubRealmName());
+		    if (vdb.getDataRoles() == null) {
+		    	policies = Collections.emptyList();
+		    }
+		    else {
+		    	policies = AuthorizationPolicyFactory.buildPolicies(vdb.getName(), vdb.getVersion(), vdb.getDataRoles());
+		    }
+		} catch (SAXException e) {
+			throw new AuthorizationMgmtException(e);
+		} catch (IOException e) {
+			throw new AuthorizationMgmtException(e);
+		} catch (ParserConfigurationException e) {
+			throw new AuthorizationMgmtException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AuthorizationMgmtException(e);
+		}
+		return policies;
+	}
+	
+	private Collection<AuthorizationPolicy> getAdminPolicies() {
+		return adminPolicies;
+	}
     
     public void updatePoliciesInRealm(AuthorizationRealm realm, Collection<AuthorizationPolicy> policies) throws AuthorizationMgmtException {
         
@@ -422,7 +432,8 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         	}
         }
     	else {
-    		// update admin roles.
+    		// there is no admin API way to update the Admin Roles.
+    		this.adminPolicies = policies;
     	}
     }
     
@@ -547,10 +558,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 		this.membershipService = membershipService;
 	}
     
-//    @Inject
-//    public void setAdminPolicies(Collection<AuthorizationPolicy> adminPolicies) {
-//    	this.adminPolicies = adminPolicies;
-//    }
+    @Inject
+    public void setAdminPolicies(@Named("AdminRoles") Collection<AuthorizationPolicy> adminPolicies) {
+    	this.adminPolicies = adminPolicies;
+    }
 
 	public void setUseEntitlements(boolean useEntitlements) {
 		this.useEntitlements = useEntitlements;

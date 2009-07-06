@@ -25,6 +25,7 @@ package com.metamatrix.jdbc;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -36,6 +37,7 @@ import org.teiid.dqp.internal.process.DQPCore;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.jboss.JBossCacheFactory;
@@ -54,9 +56,9 @@ import com.metamatrix.dqp.embedded.services.EmbeddedDataService;
 import com.metamatrix.dqp.embedded.services.EmbeddedMetadataService;
 import com.metamatrix.dqp.embedded.services.EmbeddedTransactionService;
 import com.metamatrix.dqp.embedded.services.EmbeddedVDBService;
-import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
+import com.metamatrix.platform.security.api.AuthorizationPolicy;
+import com.metamatrix.platform.security.authorization.service.AdminAuthorizationPolicyProvider;
 import com.metamatrix.platform.security.authorization.service.AuthorizationServiceImpl;
 import com.metamatrix.platform.security.membership.service.MembershipServiceImpl;
 import com.metamatrix.platform.security.session.service.SessionServiceImpl;
@@ -93,6 +95,7 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 		
 		bind(DQPContextCache.class).in(Scopes.SINGLETON);
 		bind(DQPCore.class).in(Scopes.SINGLETON);
+		bind(new TypeLiteral<Collection<AuthorizationPolicy>>(){}).annotatedWith(Names.named("AdminRoles")).toProvider(AdminAuthorizationPolicyProvider.class).in(Scopes.SINGLETON); //$NON-NLS-1$
 		
 		configureServices();
 		

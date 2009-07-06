@@ -33,6 +33,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 import junit.framework.TestCase;
 
@@ -89,10 +91,10 @@ public final class TestAuthorizationPolicyFactory extends TestCase {
         
         //add doc to test against
         char[] result = AuthorizationPolicyFactory.exportPolicies(policies);
-        String expected = FileUtil.read(new FileReader(UnitTestUtil.getTestDataPath()+File.separator+"permissions.xml"));
-        String actual = new String(result).replaceAll("\r\n", "\n");
+        String expected = FileUtil.read(new FileReader(UnitTestUtil.getTestDataPath()+File.separator+"permissions.xml")); //$NON-NLS-1$
+        String actual = new String(result).replaceAll("\r\n", "\n"); //$NON-NLS-1$ //$NON-NLS-2$
         
-        assertEquals(expected, actual); //$NON-NLS-1$
+        assertEquals(expected, actual); 
     }
     
     public void testImport() throws Exception {
@@ -119,9 +121,9 @@ public final class TestAuthorizationPolicyFactory extends TestCase {
         }
 
         char[] result = AuthorizationPolicyFactory.exportPolicies(roles);
-        String expected = FileUtil.read(new FileReader(UnitTestUtil.getTestDataPath() + "/permissions2.xml"));
-        String actual = new String(result).replaceAll("\r\n", "\n");
-        assertEquals(expected, actual); //$NON-NLS-1$
+        String expected = FileUtil.read(new FileReader(UnitTestUtil.getTestDataPath() + "/permissions2.xml")); //$NON-NLS-1$
+        String actual = new String(result).replaceAll("\r\n", "\n"); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals(expected, actual); 
     }
     
     public void testParsingFails() throws Exception {
@@ -133,6 +135,29 @@ public final class TestAuthorizationPolicyFactory extends TestCase {
             assertEquals("Error during parsing authorizations: cvc-elt.1: Cannot find the declaration of element 'notvalid'.", e.getMessage()); //$NON-NLS-1$
         }
         
+    }
+    
+    public void testAdminRoles() {
+    	Properties p = new Properties();
+    	p.setProperty("Admin.SystemAdmin", "GroupA, GroupB"); //$NON-NLS-1$ //$NON-NLS-2$
+    	p.setProperty("Admin.ProductAdmin", "GroupB"); //$NON-NLS-1$ //$NON-NLS-2$
+    	p.setProperty("Admin.ReadOnlyAdmin", "");//$NON-NLS-1$ //$NON-NLS-2$
+    	
+    	Collection<AuthorizationPolicy> policies = AuthorizationPolicyFactory.buildAdminPolicies(p);
+    	
+    	assertEquals(3, policies.size());
+    	
+    	for (AuthorizationPolicy policy: policies) {
+    		if (policy.getAuthorizationPolicyID().getName().equalsIgnoreCase("Admin.SystemAdmin")) { //$NON-NLS-1$
+    			Set<MetaMatrixPrincipalName> principals = policy.getPrincipals();
+    			assertEquals(2, principals.size());
+    		}
+    		else if (policy.getAuthorizationPolicyID().getName().equalsIgnoreCase("Admin.ProductAdmin")) { //$NON-NLS-1$
+    			Set<MetaMatrixPrincipalName> principals = policy.getPrincipals();
+    			assertEquals(1, principals.size());
+    			assertEquals(new MetaMatrixPrincipalName("GroupB", MetaMatrixPrincipal.TYPE_GROUP), principals.iterator().next()); //$NON-NLS-1$
+    		}
+    	}
     }
     
 }

@@ -29,7 +29,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -47,6 +49,7 @@ import org.xml.sax.SAXParseException;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
+import com.metamatrix.platform.security.util.RolePermissionFactory;
 
 /**
  * The class build the Policies from the xml file or converts the policies to xml file for importing and exporting of the policy
@@ -93,20 +96,15 @@ public class AuthorizationPolicyFactory {
         docBuilder.setErrorHandler(new ErrorHandler() {
 
             public void warning(SAXParseException arg0) throws SAXException {
-                LogManager.logWarning(LogConstants.CTX_AUTHORIZATION,
-                                      arg0,
-                                      SecurityPlugin.Util.getString("AuthorizationPolicyFactory.parsing_warning", //$NON-NLS-1$
-                                                                    arg0.getMessage()));
+                LogManager.logWarning(LogConstants.CTX_AUTHORIZATION,arg0,SecurityPlugin.Util.getString("AuthorizationPolicyFactory.parsing_warning", arg0.getMessage())); //$NON-NLS-1$
             }
 
             public void error(SAXParseException arg0) throws SAXException {
-                throw new SAXException(SecurityPlugin.Util.getString("AuthorizationPolicyFactory.parsing_error", //$NON-NLS-1$
-                                                                     arg0.getMessage()), arg0);
+                throw new SAXException(SecurityPlugin.Util.getString("AuthorizationPolicyFactory.parsing_error", arg0.getMessage()), arg0); //$NON-NLS-1$
             }
 
             public void fatalError(SAXParseException arg0) throws SAXException {
-                throw new SAXException(SecurityPlugin.Util.getString("AuthorizationPolicyFactory.parsing_error", //$NON-NLS-1$
-                                                                     arg0.getMessage()), arg0);
+                throw new SAXException(SecurityPlugin.Util.getString("AuthorizationPolicyFactory.parsing_error", arg0.getMessage()), arg0); //$NON-NLS-1$
             }
         });
         
@@ -242,4 +240,33 @@ public class AuthorizationPolicyFactory {
 
         return baos.toString().toCharArray();
     }
+
+    /**
+     * The properties will have format of 
+     *  role1 = group1, group2
+     *  role2 = group3
+     *  
+     * @param roles
+     * @return
+     */
+	public static Collection<AuthorizationPolicy> buildAdminPolicies(Properties roleMap) {
+		List<AuthorizationPolicy> result = new ArrayList<AuthorizationPolicy>();
+        Set keys = roleMap.keySet();
+
+        for(Object key:keys) {
+        	String role = (String)key;
+            AuthorizationPolicyID policyID = new AuthorizationPolicyID(role, role);
+            AuthorizationPolicy policy = new AuthorizationPolicy(policyID);
+
+            // allowed groups
+            StringTokenizer st = new StringTokenizer(roleMap.getProperty(role), ","); //$NON-NLS-1$
+            while (st.hasMoreTokens()) {
+            	String group = st.nextToken();
+            	MetaMatrixPrincipalName member = new MetaMatrixPrincipalName(group, MetaMatrixPrincipal.TYPE_GROUP);
+            	policy.addPrincipal(member);
+            }            
+            result.add(policy);
+        }
+		return result;
+	}
 }

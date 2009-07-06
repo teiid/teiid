@@ -58,6 +58,7 @@ public interface AuthorizationService extends ApplicationService, SecurityFuncti
     public static final String DEFAULT_WSDL_USERNAME = CoreConstants.DEFAULT_ANON_USERNAME;
     
     public static final String ENTITELEMENTS_ENABLED = "entitlements.enabled"; //$NON-NLS-1$
+    public static final String ADMIN_ROLES_FILE = "entitlements.adminRolesFile"; //$NON-NLS-1$
     
     /**
      * Determine which of a set of resources a connection does not have permission to
