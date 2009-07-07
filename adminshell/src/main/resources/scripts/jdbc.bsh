@@ -134,11 +134,11 @@ protected void closeConnection() {
 private checkConnection() {
     context = currentContext();
     if (context == void || context == null) {
-        throw new Exception("Not connected.  You must call a \"connect\" method");
+        throw new Exception("Not connected.  You must call a \"connect\" method first");
     }    
     
     if (context.internalConnection == void || context.internalConnection == null) {
-        throw new Exception ("Not connected.  You must call a \"connect\" method");
+        throw new Exception ("Not connected.  You must call a \"connect\" method first");
     }
 }
 /**
