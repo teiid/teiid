@@ -1910,9 +1910,9 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             for(int i=0; i < types.length; i++) {
                 if (types[i] != null && types[i].length() > 0) {
                     if (i > 0) {
-                        typesString.append(" OR UCASE(Type) LIKE ?"); //$NON-NLS-1$
+                        typesString.append(" OR CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END LIKE ?"); //$NON-NLS-1$
                     } else {
-                        typesString.append("(UCASE(Type) LIKE ?"); //$NON-NLS-1$
+                        typesString.append("(CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END LIKE ?"); //$NON-NLS-1$
                     }
                 }
             }
