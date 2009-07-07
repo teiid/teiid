@@ -38,8 +38,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import junit.framework.Assert;
-
 import org.junit.After;
 import org.teiid.adminapi.Admin;
 

@@ -35,7 +35,6 @@ import java.sql.SQLXML;
 /*## JDBC3.0-JDK1.5-begin ##
 import com.metamatrix.core.jdbc.SQLXML; 
 ## JDBC3.0-JDK1.5-end ##*/
-import java.io.UnsupportedEncodingException;
 import java.util.Properties;
 
 import javax.xml.transform.Result;
