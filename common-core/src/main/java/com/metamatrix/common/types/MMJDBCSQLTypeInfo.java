@@ -110,8 +110,12 @@ public final class MMJDBCSQLTypeInfo {
     public static final String OBJECT_CLASS = DataTypeManager.DefaultDataClasses.OBJECT.getName();
     public static final String CLOB_CLASS = Clob.class.getName();
     public static final String BLOB_CLASS = Blob.class.getName();
+    //## JDBC4.0-begin ##
     public static final String XML_CLASS = SQLXML.class.getName();
-
+    //## JDBC4.0-begin ##
+    /*## JDBC3.0-JDK1.5-begin ##
+    public static final String XML_CLASS = DataTypeManager.DefaultDataClasses.OBJECT.getName(); 
+    ## JDBC3.0-JDK1.5-end ##*/
     private static Map<String, Integer> CLASSNAME_TO_TYPE_MAP = new HashMap<String, Integer>();
     
     static {
@@ -265,6 +269,11 @@ public final class MMJDBCSQLTypeInfo {
             case Types.BLOB:
                  javaClassName = BLOB_CLASS;
                  break;
+            //## JDBC4.0-begin ##     
+            case Types.SQLXML:
+                javaClassName = XML_CLASS;
+                break;
+            //## JDBC4.0-end ##
             default:
                 javaClassName = null;
                 break;
