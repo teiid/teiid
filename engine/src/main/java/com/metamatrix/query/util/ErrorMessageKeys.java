@@ -31,7 +31,6 @@ package com.metamatrix.query.util;
  *
  * <p>Error messages for query project (015) to address internationalization.</p>
  *
- * @author <a href="mailto:jcunningham@metamatrix.com">Jeff Cunningham</a>
  */
 public class ErrorMessageKeys {
 

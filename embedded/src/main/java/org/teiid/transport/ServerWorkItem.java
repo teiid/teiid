@@ -47,7 +47,7 @@ import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.dqp.client.ResultsFuture;
-import com.metamatrix.platform.PlatformPlugin;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
@@ -86,7 +86,7 @@ public class ServerWorkItem implements Runnable {
 			final ServiceInvocationStruct serviceStruct = (ServiceInvocationStruct)message.getContents();
 			Object instance = server.getClientService(serviceStruct.targetClass);
 			if (instance == null) {
-				throw new ComponentNotFoundException(PlatformPlugin.Util.getString("ServerWorkItem.Component_Not_Found", serviceStruct.targetClass)); //$NON-NLS-1$
+				throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("ServerWorkItem.Component_Not_Found", serviceStruct.targetClass)); //$NON-NLS-1$
 			}
 			if (!(instance instanceof ILogon)) {
 				DQPWorkContext workContext = this.socketClientInstance.getWorkContext();
@@ -161,7 +161,7 @@ public class ServerWorkItem implements Runnable {
 		} else if (e instanceof AdminProcessingException) {
 			logProcessingException(e, context);
 		} else {
-			LogManager.logError(context, e, PlatformPlugin.Util.getString("ServerWorkItem.Received_exception_processing_request", this.socketClientInstance.getWorkContext().getConnectionID())); //$NON-NLS-1$
+			LogManager.logError(context, e, DQPEmbeddedPlugin.Util.getString("ServerWorkItem.Received_exception_processing_request", this.socketClientInstance.getWorkContext().getConnectionID())); //$NON-NLS-1$
 		}
 
 		return new ExceptionHolder(e);
@@ -174,7 +174,7 @@ public class ServerWorkItem implements Runnable {
 		}
 		StackTraceElement elem = cause.getStackTrace()[0];
 		LogManager.logDetail(context, e, "Processing exception for session", this.socketClientInstance.getWorkContext().getConnectionID()); //$NON-NLS-1$ 
-		LogManager.logWarning(context, PlatformPlugin.Util.getString("ServerWorkItem.processing_error", e.getMessage(), this.socketClientInstance.getWorkContext().getConnectionID(), e.getClass().getName(), elem)); //$NON-NLS-1$
+		LogManager.logWarning(context, DQPEmbeddedPlugin.Util.getString("ServerWorkItem.processing_error", e.getMessage(), this.socketClientInstance.getWorkContext().getConnectionID(), e.getClass().getName(), elem)); //$NON-NLS-1$
 	}
 
 }

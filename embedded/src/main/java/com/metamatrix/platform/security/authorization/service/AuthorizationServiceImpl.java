@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -44,7 +43,6 @@ import com.google.inject.name.Named;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
 import com.metamatrix.api.exception.security.InvalidPrincipalException;
 import com.metamatrix.api.exception.security.MembershipServiceException;
@@ -56,11 +54,11 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.LRUCache;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.AuditMessage;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.AuthorizationActions;
 import com.metamatrix.platform.security.api.AuthorizationPermission;
 import com.metamatrix.platform.security.api.AuthorizationPolicy;
@@ -74,7 +72,6 @@ import com.metamatrix.platform.security.api.SessionToken;
 import com.metamatrix.platform.security.api.StandardAuthorizationActions;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.util.RolePermissionFactory;
-import com.metamatrix.platform.util.ErrorMessageKeys;
 import com.metamatrix.server.util.ServerAuditContexts;
 import com.metamatrix.vdb.runtime.VDBKey;
 
@@ -202,7 +199,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
                 }
             }
         } catch (InvalidPrincipalException e) {
-            throw new AuthorizationMgmtException(e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0020));
+            throw new AuthorizationMgmtException(e, DQPEmbeddedPlugin.Util.getString("AuthorizationServiceImpl.invalid_session")); //$NON-NLS-1$
         }
 
         if (results.isEmpty()) {
@@ -233,15 +230,14 @@ public class AuthorizationServiceImpl implements AuthorizationService {
             AuthorizationRealm aRealm = aPerm.getRealm();
             if ( theRealm != null ) {
                 if ( ! theRealm.equals(aRealm) ) {
-                    throw new AuthorizationMgmtException(ErrorMessageKeys.SEC_AUTHORIZATION_0078,
-                            PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0078));
+                    throw new AuthorizationMgmtException(DQPEmbeddedPlugin.Util.getString("AuthorizationServiceImpl.wrong_realms ")); //$NON-NLS-1$
                 }
             } else {
                 theRealm = aRealm;
             }
         }
         if ( theRealm == null ) {
-            throw new AuthorizationMgmtException(PlatformPlugin.Util.getString("AuthorizationServiceImpl.Authorization_Realm_is_null")); //$NON-NLS-1$
+            throw new AuthorizationMgmtException(DQPEmbeddedPlugin.Util.getString("AuthorizationServiceImpl.Authorization_Realm_is_null")); //$NON-NLS-1$
         }
         return theRealm;
     }
@@ -474,8 +470,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
         } catch (InvalidPrincipalException e) {
         	throw e;
         } catch (MetaMatrixSecurityException e) {
-            String msg = PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0035);
-            throw new AuthorizationMgmtException(e, ErrorMessageKeys.SEC_AUTHORIZATION_0035, msg);
+            throw new AuthorizationMgmtException(e, DQPEmbeddedPlugin.Util.getString("AuthorizationServiceImpl.error_seraching_policies")); //$NON-NLS-1$
         }
         return allPrincipals;
     }
@@ -487,7 +482,7 @@ public class AuthorizationServiceImpl implements AuthorizationService {
                 return true;
             }
         }  catch (MembershipServiceException e) {
-            LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, e, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_AUTHORIZATION_0075));
+            LogManager.logError(com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION, e, DQPEmbeddedPlugin.Util.getString("AuthorizationServiceImpl.failed_to_get_groups")); //$NON-NLS-1$
         } 
         return false;
     }

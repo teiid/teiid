@@ -41,8 +41,8 @@ import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.dqp.client.ResultsFuture;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.jdbc.api.ConnectionProperties;
-import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
@@ -97,7 +97,7 @@ public class LogonImpl implements ILogon {
 
 		// Check if both credentials AND session token are used - if so, this is an error
 		if(connProps.containsKey(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD)) {
-		    throw new LogonException(PlatformPlugin.Util.getString("LogonImpl.Invalid_use_of_credentials_and_token"));                //$NON-NLS-1$
+		    throw new LogonException(DQPEmbeddedPlugin.Util.getString("LogonImpl.Invalid_use_of_credentials_and_token"));                //$NON-NLS-1$
 		} 
 		
 		// Parse credentials and store CredentialMap as session token

@@ -50,10 +50,10 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.util.ArgCheck;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
-import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
@@ -63,8 +63,6 @@ import com.metamatrix.platform.security.api.service.AuthenticationToken;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SessionListener;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.util.ErrorMessageKeys;
-import com.metamatrix.platform.util.LogMessageKeys;
 import com.metamatrix.platform.util.ProductInfoConstants;
 
 /**
@@ -99,10 +97,10 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		for (MetaMatrixSessionInfo info : sessionCache.values()) {
 			try {
     			if (currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
-    				LogManager.logInfo(LogConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionID())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionID())); //$NON-NLS-1$
     				closeSession(info.getSessionID());
     			} else if (sessionTimeLimit > 0 && currentTime - info.getTimeCreated() > sessionTimeLimit) {
-    				LogManager.logInfo(LogConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionID())); //$NON-NLS-1$
+    				LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionID())); //$NON-NLS-1$
     				closeSession(info.getSessionID());
     			}
 			} catch (Exception e) {
@@ -117,7 +115,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		MetaMatrixSessionInfo info = this.sessionCache.remove(sessionID);
 		if (info == null) {
-			throw new InvalidSessionException(ErrorMessageKeys.SEC_SESSION_0027, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0027, sessionID));
+			throw new InvalidSessionException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
 		}
 		if (info.getProductInfo(ProductInfoConstants.VIRTUAL_DB) != null) {
             try {
@@ -161,9 +159,9 @@ public class SessionServiceImpl implements SessionServiceInterface {
                 throw new SessionServiceException(e);
             } catch (VirtualDatabaseException e) {
                 if (vdbVersion == null) {
-                    throw new SessionServiceException(e,PlatformPlugin.Util.getString("SessionServiceImpl.Unexpected_error_finding_latest_version_of_Virtual_Database", new Object[] {vdbName})); //$NON-NLS-1$
+                    throw new SessionServiceException(e,DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.Unexpected_error_finding_latest_version_of_Virtual_Database", new Object[] {vdbName})); //$NON-NLS-1$
                 }
-                throw new SessionServiceException(e,PlatformPlugin.Util.getString("SessionServiceImpl.Unexpected_error_finding_latest_version_of_Virtual_Database_{0}_of_version_{1}", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$
+                throw new SessionServiceException(e,DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.Unexpected_error_finding_latest_version_of_Virtual_Database_{0}_of_version_{1}", new Object[] {vdbName, vdbVersion})); //$NON-NLS-1$
             } catch (MetaMatrixComponentException e) {
 				throw new SessionServiceException(e);
 			}
@@ -173,7 +171,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
         }
 
         if (sessionMaxLimit > 0 && getActiveSessionsCount() >= sessionMaxLimit) {
-            throw new SessionServiceException(LogMessageKeys.SEC_SESSION_0067,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0067, new Object[] {new Long(sessionMaxLimit)}));
+            throw new SessionServiceException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.reached_max_sessions", new Object[] {new Long(sessionMaxLimit)})); //$NON-NLS-1$
         }
         
         long creationTime = System.currentTimeMillis();
@@ -207,9 +205,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 			authenticatedToken = this.membershipService.authenticateUser(userName,
 							credentials, trustedToken, applicationName);
 		}catch (MetaMatrixSecurityException e) {
-			String msg = PlatformPlugin.Util
-					.getString(
-							"SessionServiceImpl.Membership_service_could_not_authenticate_user", new Object[] { userName }); //$NON-NLS-1$
+			String msg = DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.Membership_service_could_not_authenticate_user", new Object[] { userName }); //$NON-NLS-1$
 			SessionServiceException se = new SessionServiceException(e, msg);
 			throw se;
 		}
@@ -220,7 +216,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		// level issue.
 		if (!authenticatedToken.isAuthenticated()) {
 			Object[] params = new Object[] { userName };
-			String msg = PlatformPlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", params); //$NON-NLS-1$
+			String msg = DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", params); //$NON-NLS-1$
 			throw new MetaMatrixAuthenticationException(msg);
 		}
 
@@ -246,7 +242,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
         try {
             return membershipService.getPrincipal(new MetaMatrixPrincipalName(sessionInfo.getUserName(), MetaMatrixPrincipal.TYPE_USER));
         } catch (MetaMatrixSecurityException e) {
-            throw new SessionServiceException(e, LogMessageKeys.SEC_SESSION_0043,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0043,sessionInfo.getUserName()));
+            throw new SessionServiceException(e, DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.failed_to_getprincipal",sessionInfo.getUserName())); //$NON-NLS-1$
         }
 	}
 
@@ -274,16 +270,14 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	}
 
 	@Override
-	public boolean terminateSession(MetaMatrixSessionID terminatedSessionID,
-			MetaMatrixSessionID adminSessionID) throws 
-			AuthorizationException, SessionServiceException {
+	public boolean terminateSession(MetaMatrixSessionID terminatedSessionID,MetaMatrixSessionID adminSessionID) throws AuthorizationException, SessionServiceException {
 		Object[] params = {adminSessionID, terminatedSessionID};
-		LogManager.logInfo(LogConstants.CTX_SESSION, PlatformPlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
+		LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
 		try {
 			closeSession(terminatedSessionID);
 			return true;
 		} catch (InvalidSessionException e) {
-			LogManager.logWarning(LogConstants.CTX_SESSION,e,PlatformPlugin.Util.getString(LogMessageKeys.SEC_SESSION_0034, new Object[] {e.getMessage()}));
+			LogManager.logWarning(LogConstants.CTX_SESSION,e,DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", new Object[] {e.getMessage()})); //$NON-NLS-1$
 			return false;
 		}
 	}
@@ -299,7 +293,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 			throws InvalidSessionException {
 		MetaMatrixSessionInfo info = this.sessionCache.get(sessionID);
 		if (info == null) {
-			throw new InvalidSessionException(ErrorMessageKeys.SEC_SESSION_0027, PlatformPlugin.Util.getString(ErrorMessageKeys.SEC_SESSION_0027, sessionID));
+			throw new InvalidSessionException(DQPEmbeddedPlugin.Util.getString("SessionServiceImpl.invalid_session", sessionID)); //$NON-NLS-1$
 		}
 		return info;
 	}

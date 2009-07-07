@@ -50,7 +50,7 @@ import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.api.exception.security.UnsupportedCredentialException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
-import com.metamatrix.platform.PlatformPlugin;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.platform.security.api.Credentials;
 import com.metamatrix.platform.security.api.service.MembershipServiceInterface;
 import com.metamatrix.platform.security.api.service.SuccessfulAuthenticationToken;
@@ -143,7 +143,7 @@ public class LDAPMembershipDomain implements
         
         ldapURL = getPropertyValue(props, LDAP_URL, null);
         if (ldapURL == null) {
-            throw new MembershipSourceException(PlatformPlugin.Util.getString("LDAPMembershipDomain.Required_property", LDAP_URL)); //$NON-NLS-1$
+            throw new MembershipSourceException(DQPEmbeddedPlugin.Util.getString("LDAPMembershipDomain.Required_property", LDAP_URL)); //$NON-NLS-1$
         }
 
         usersRootContexts = buildContexts(USERS_ROOT_CONTEXT,
@@ -164,7 +164,7 @@ public class LDAPMembershipDomain implements
         
         if (props.getProperty(USERS_MEMBER_OF_ATTRIBUTE, "").trim().length() == 0 //$NON-NLS-1$ 
                         && props.getProperty(GROUPS_GROUP_MEMBER_ATTRIBUTE, "").trim().length() == 0) { //$NON-NLS-1$
-        	LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, PlatformPlugin.Util.getString("LDAPMembershipDomain.Require_memberof_property", domainName ) ); //$NON-NLS-1$
+        	LogManager.logWarning(LogConstants.CTX_MEMBERSHIP, DQPEmbeddedPlugin.Util.getString("LDAPMembershipDomain.Require_memberof_property", domainName ) ); //$NON-NLS-1$
         }
         
         // Create the root context.
@@ -198,7 +198,7 @@ public class LDAPMembershipDomain implements
         
         String rootContextsStr = props.getProperty(rootContextsProp, null);
         if (rootContextsStr == null) {
-            throw new MembershipSourceException(PlatformPlugin.Util.getString("LDAPMembershipDomain.Required_property", rootContextsProp)); //$NON-NLS-1$
+            throw new MembershipSourceException(DQPEmbeddedPlugin.Util.getString("LDAPMembershipDomain.Required_property", rootContextsProp)); //$NON-NLS-1$
         }
         
         String searchFilterStr = props.getProperty(searchFilterProp);
@@ -286,13 +286,13 @@ public class LDAPMembershipDomain implements
             domainName, "authenticateUser username", username, "applicationName", applicationName}); //$NON-NLS-1$ //$NON-NLS-2$
         
         if (username == null) {
-            throw new UnsupportedCredentialException(PlatformPlugin.Util.getString("LDAPMembershipDomain.No_annonymous", domainName)); //$NON-NLS-1$
+            throw new UnsupportedCredentialException(DQPEmbeddedPlugin.Util.getString("LDAPMembershipDomain.No_annonymous", domainName)); //$NON-NLS-1$
         }
 
         UserEntry ue = getUserEntry(username, false);
         
         if (credential == null) {
-            throw new UnsupportedCredentialException(PlatformPlugin.Util.getString("LDAPMembershipDomain.No_annonymous", domainName)); //$NON-NLS-1$
+            throw new UnsupportedCredentialException(DQPEmbeddedPlugin.Util.getString("LDAPMembershipDomain.No_annonymous", domainName)); //$NON-NLS-1$
         }
 
         Hashtable connenv = new Hashtable();
@@ -350,7 +350,7 @@ public class LDAPMembershipDomain implements
         try {
             return new InitialDirContext((Hashtable)adminContext.clone());
         } catch (AuthenticationException err) {
-            throw new MembershipSourceException(err, PlatformPlugin.Util.getString("LDAPMembershipDomain.Admin_credentials", domainName)); //$NON-NLS-1$
+            throw new MembershipSourceException(err, DQPEmbeddedPlugin.Util.getString("LDAPMembershipDomain.Admin_credentials", domainName)); //$NON-NLS-1$
         } catch (NamingException err) {
             throw new MembershipSourceException(err);
         }

@@ -23,7 +23,6 @@ package org.teiid.transport;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.Properties;
@@ -31,12 +30,11 @@ import java.util.Properties;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
-import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
@@ -74,15 +72,15 @@ public class SocketTransport {
 			SSLConfiguration helper = new SSLConfiguration();
 			helper.init(this.props);
 			
-			LogManager.logDetail(LogConstants.CTX_SERVER, PlatformPlugin.Util.getString("SocketVMController.1", new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_SERVER, DQPEmbeddedPlugin.Util.getString("SocketTransport.1", new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
 			this.listener = new SocketListener(socketPort, bindAddress, this.clientServices, inputBufferSize, outputBufferSize, maxThreads, helper.getServerSSLEngine(), helper.isClientEncryptionEnabled(), this.sessionSerice);
 			
 		} catch (UnknownHostException e) {
-			throw new MetaMatrixRuntimeException(e, PlatformPlugin.Util.getString("SocketVMController.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
+			throw new MetaMatrixRuntimeException(e, DQPEmbeddedPlugin.Util.getString("SocketTransport.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
 		} catch (IOException e) {
-			throw new MetaMatrixRuntimeException(e, PlatformPlugin.Util.getString("SocketVMController.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
+			throw new MetaMatrixRuntimeException(e, DQPEmbeddedPlugin.Util.getString("SocketTransport.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
 		} catch (GeneralSecurityException e) {
-			throw new MetaMatrixRuntimeException(e, PlatformPlugin.Util.getString("SocketVMController.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
+			throw new MetaMatrixRuntimeException(e, DQPEmbeddedPlugin.Util.getString("SocketTransport.2",new Object[] {bindAddress, String.valueOf(socketPort)})); //$NON-NLS-1$
 		}        
     }
     
