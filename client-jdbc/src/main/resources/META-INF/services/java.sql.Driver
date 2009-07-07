@@ -1,2 +1,1 @@
-com.metamatrix.jdbc.MMDriver
-com.metamatrix.jdbc.EmbeddedDriver
+org.teiid.jdbc.TeiidDriver

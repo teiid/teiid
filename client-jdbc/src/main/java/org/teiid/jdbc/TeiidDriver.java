@@ -52,13 +52,11 @@ import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
- * <p> The java.sql.DriverManager class uses this class to connect to MetaMatrix.
- * The Driver Manager maintains a pool of TeiidDriver objects, which it could use
- * to connect to MetaMatrix. The TeiidDriver class has a static initializer, which
- * is used to instantiate and register itsef with java.sql.DriverManager. The
+ * <p> The java.sql.DriverManager class uses this class to connect to Teiid Server or Teiid Embedded.
+ * The TeiidDriver class has a static initializer, which
+ * is used to instantiate and register itself with java.sql.DriverManager. The
  * DriverManager's <code>getConnection</code> method calls <code>connect</code>
- * method on available registered drivers. The first driver to recognise the given
- * url is used to obtain a connection.</p>
+ * method on available registered drivers. </p>
  */
 
 public final class TeiidDriver extends BaseDriver {
