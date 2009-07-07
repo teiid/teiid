@@ -1,8 +1,10 @@
 import java.io.*;
 import org.teiid.adminapi.*;
 import com.metamatrix.core.util.*;
+import java.lang.reflect.*;
 
 debug=false;
+
 
 getBshPrompt() { 
     if (currentContext().internalPrompt == void || currentContext().internalPrompt == null) {
@@ -163,6 +165,37 @@ String extractHost(url) {
         return url.substring(at, url.indexOf(";", at));
     }
     return "";
+}
+
+class ExceptionHandler implements InvocationHandler{
+	Object impl;
+	ExceptionHandler(Object obj){
+		impl=obj;
+	}
+	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		try {
+			return method.invoke(impl, args);
+		} catch (InvocationTargetException e) {
+			Throwable ex = e;
+			while (ex instanceof InvocationTargetException) {
+				ex = e.getTargetException();
+			}
+			if (ex instanceof AdminException) {
+				print("Error:"+ex.getMessage());
+			}
+		} catch(AdminComponentException e) {
+			print(e.getClass().getName() +" Error:"+e.getMessage());
+		} catch (AdminProcessingException e) {
+			print(e.getClass().getName() +" Error:"+e.getMessage());
+		} catch(Throwable t) {
+			print(t.getClass().getName() +" Error:"+e.getMessage());
+		}
+		return null;
+	}	
+}
+
+Object createExceptionHandlingProxy(Object obj) {
+	return Proxy.newProxyInstance(obj.getClass().getClassLoader(), obj.getClass().getInterfaces(), new ExceptionHandler(obj));	
 }
 
 quit(){

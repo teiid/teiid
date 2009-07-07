@@ -46,7 +46,7 @@ Connection connect (String host, int port, String vdb, String user, String passw
         url = url + ";" + optional_url;
     }
 	com.metamatrix.jdbc.api.Connection mmConn = connectDriver(user_driver, url);
-	currentContext().internalAdmin = mmConn.getAdminAPI();
+	currentContext().internalAdmin = createExceptionHandlingProxy(mmConn.getAdminAPI());
     currentContext().internalPrompt = contextName+"["+vdb+"@"+host+"] $ ";
 	return mmConn;
 }
@@ -85,7 +85,7 @@ private Connection connectURL (String url, String driver) {
         newContext(contextName);        
 		com.metamatrix.jdbc.api.Connection mmConn = connectDriver(driver, url);    
         currentContext().internalPrompt = contextName+"["+extractVDBName(url)+"@"+extractHost(url)+"] $ ";
-        currentContext().internalAdmin = mmConn.getAdminAPI();
+        currentContext().internalAdmin = createExceptionHandlingProxy(mmConn.getAdminAPI());
 		return mmConn;	
     }
     else {
@@ -107,7 +107,7 @@ void connectAsAdmin(String username, String password, String url) {
         newContext(contextName);        
 
         //url is in "server URL format": connect via ServerAdminFactory
-        currentContext().internalAdmin = ServerAdminFactory.getInstance().createAdmin(username, password.toCharArray(), url);
+        currentContext().internalAdmin = createExceptionHandlingProxy(ServerAdminFactory.getInstance().createAdmin(username, password.toCharArray(), url));
         currentContext().internalPrompt = currentConnectionName()+"["+url+"] $ ";
         
     } else {
@@ -116,7 +116,7 @@ void connectAsAdmin(String username, String password, String url) {
         
         //url is in "jdbc URL format": connect via MMServerConnection
         currentContext().internalConnection = connectDriver("org.teiid.jdbc.TeiidDriver", url, username, password);
-        currentContext().internalAdmin = currentContext().internalConnection.getAdminAPI();
+        currentContext().internalAdmin = createExceptionHandlingProxy(currentContext().internalConnection.getAdminAPI());
     }
 }
 

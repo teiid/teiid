@@ -12,7 +12,7 @@ String mparse() {
         mmstr="execute(\""+orig_str.substring(0,orig_str.length()-1)+"\");";
         record = true;
     }
-    else if (str.matches("(help|exit|dir|pwd)\\(?\\)?")) {
+    else if (str.matches("(help|exit|quit|dir|pwd)\\(?\\)?")) {
     	idx = str.indexOf("(");
     	if (idx == -1) {
     		mmstr = str+"();";	
