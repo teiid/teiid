@@ -23,7 +23,6 @@
 package com.metamatrix.common.log;
 
 import java.util.Set;
-import java.util.Collection;
 
 public interface LogConfiguration {
 
