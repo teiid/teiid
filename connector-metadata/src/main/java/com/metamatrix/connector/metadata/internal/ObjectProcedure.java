@@ -35,13 +35,13 @@ import org.teiid.connector.language.IMetadataReference;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.metadata.MetadataConnectorConstants;
+import org.teiid.connector.metadata.MetadataLiteralCriteria;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.MetadataObject;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
-import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
-import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.StringUtil;

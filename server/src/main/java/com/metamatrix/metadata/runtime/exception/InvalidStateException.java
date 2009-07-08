@@ -22,6 +22,8 @@
 
 package com.metamatrix.metadata.runtime.exception;
 
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
+
 /**
  * Thrown when an update is requested on the VirtualDatabase and the VirtualDatabase is not in the proper state to allow it. 
  */

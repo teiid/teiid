@@ -28,7 +28,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 
 /**
  * This interface defines methods which are specific to dealing with VDBs

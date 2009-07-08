@@ -22,8 +22,9 @@
 
 package com.metamatrix.metadata.runtime.model;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.metadata.QueryMetadataCache;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -38,7 +39,6 @@ import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 

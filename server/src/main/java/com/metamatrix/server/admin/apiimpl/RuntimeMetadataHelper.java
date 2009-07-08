@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.adminapi.AdminOptions;
+import org.teiid.metadata.RuntimeMetadataPlugin;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationMgmtException;
@@ -49,14 +50,13 @@ import com.metamatrix.core.id.ObjectIDFactory;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.VDBTreeUtility;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseDoesNotExistException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseMetadata;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 import com.metamatrix.platform.admin.api.EntitlementMigrationReport;
 import com.metamatrix.platform.admin.api.PermissionDataNode;

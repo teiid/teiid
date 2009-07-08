@@ -37,6 +37,7 @@ import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.IMetadataReference;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.metadata.IObjectQuery;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.MetadataObject;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
@@ -86,12 +87,8 @@ public class ObjectQuery implements IObjectQuery {
     /* (non-Javadoc)
 	 * @see com.metamatrix.connector.metadata.internal.IObjectQuery#getTableNameInSource()
 	 */
-    public String getTableNameInSource() throws MetadataException {
-        try {
-			return getMetadataObjectName(getGroup());
-		} catch (ConnectorException e) {
-			throw new MetadataException(e); 
-		}
+    public String getTableNameInSource() throws ConnectorException {
+		return getMetadataObjectName(getGroup());
     }
     
     private IGroup getGroup() {
@@ -205,12 +202,8 @@ public class ObjectQuery implements IObjectQuery {
     /* (non-Javadoc)
 	 * @see com.metamatrix.connector.metadata.internal.IObjectQuery#getCriteria()
 	 */
-    public Map getCriteria() throws MetadataException {
-        try {
-			initCriteria();
-		} catch (ConnectorException e) {
-			throw new MetadataException(e); 
-		}        
+    public Map getCriteria() throws ConnectorException {
+		initCriteria();
         return this.criteriaMap;            
     }
     

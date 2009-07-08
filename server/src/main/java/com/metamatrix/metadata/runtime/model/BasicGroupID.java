@@ -22,9 +22,10 @@
 
 package com.metamatrix.metadata.runtime.model;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.GroupID;
 import com.metamatrix.metadata.runtime.api.ModelID;
 import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;

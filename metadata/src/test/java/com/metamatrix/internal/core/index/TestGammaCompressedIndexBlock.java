@@ -22,6 +22,11 @@
 
 package com.metamatrix.internal.core.index;
 
+import org.teiid.internal.core.index.GammaCompressedIndexBlock;
+import org.teiid.internal.core.index.IIndexConstants;
+import org.teiid.internal.core.index.IndexBlock;
+import org.teiid.internal.core.index.WordEntry;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

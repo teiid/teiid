@@ -44,11 +44,11 @@ import org.teiid.dqp.internal.datamgr.language.TestProcedureImpl;
 import org.teiid.dqp.internal.datamgr.language.TestSelectImpl;
 import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
+import org.teiid.metadata.index.VDBMetadataFactory;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.metadata.runtime.VDBMetadataFactory;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.rewriter.QueryRewriter;

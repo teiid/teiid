@@ -45,7 +45,7 @@ import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.core.vdb.ModelType;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.server.admin.api.MaterializationLoadScripts;
 import com.metamatrix.vdb.materialization.DatabaseDialect;
 import com.metamatrix.vdb.materialization.ScriptType;

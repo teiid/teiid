@@ -35,28 +35,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.metadata.IObjectQuery;
+import org.teiid.connector.metadata.ObjectQueryProcessor;
 import org.teiid.connector.metadata.runtime.MetadataConstants;
+import org.teiid.metadata.RuntimeMetadataPlugin;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.connector.metadata.internal.IObjectQuery;
-import com.metamatrix.connector.metadata.internal.MetadataException;
-import com.metamatrix.connector.metadata.internal.ObjectQueryProcessor;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.vdb.ModelType;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.GroupID;
 import com.metamatrix.metadata.runtime.api.MetadataSourceAPI;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.ModelID;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseDoesNotExistException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 
 /**
@@ -88,11 +88,11 @@ public class MetadataCache implements MetadataSourceAPI, Serializable {
 			return columnNames;
 		}
 
-		public Map getCriteria() throws MetadataException {
+		public Map getCriteria() throws ConnectorException {
 			return criteria;
 		}
 
-		public String getTableNameInSource() throws MetadataException {
+		public String getTableNameInSource() throws ConnectorException {
 			return tableNameInSource;
 		}
 	}
@@ -251,7 +251,7 @@ public class MetadataCache implements MetadataSourceAPI, Serializable {
 			buildGroupObjects(getObjectQueryProcessor().process(new MetadataQuery(GROUP_COLUMNS, GROUPS_NAME_IN_SOURCE)));
 			buildColumnObjects(getObjectQueryProcessor().process(new MetadataQuery(ELEMENT_COLUMNS, COLUMNS_NAME_IN_SOURCE)));
 			buildProcedureObjects(getObjectQueryProcessor().process(new MetadataQuery(PROCEDURE_COLUMNS, PROCEDURES_NAME_IN_SOURCE)));
-		} catch (MetadataException e) {
+		} catch (ConnectorException e) {
 			throw new VirtualDatabaseException(e);
 		}
     }

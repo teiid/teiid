@@ -25,6 +25,9 @@ package com.metamatrix.connector.metadata;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.teiid.connector.metadata.PropertyFileObjectSource;
+
 import junit.framework.TestCase;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 

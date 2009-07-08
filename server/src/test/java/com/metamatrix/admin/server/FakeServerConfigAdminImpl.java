@@ -25,8 +25,8 @@ package com.metamatrix.admin.server;
 import java.util.Collection;
 import java.util.Map;
 
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.platform.registry.ClusteredRegistryState;
 
 /**

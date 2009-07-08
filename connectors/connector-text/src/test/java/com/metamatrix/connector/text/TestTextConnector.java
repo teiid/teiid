@@ -77,8 +77,6 @@ public class TestTextConnector {
         assertEquals("SUMMITDATA", group.getName()); //$NON-NLS-1$
         assertEquals("SummitData.SUMMITDATA", group.getFullName()); //$NON-NLS-1$
         assertEquals(14, group.getColumns().size());
-        group = tableIter.next();
-        
         assertNotNull(group.getUUID());
     }
 

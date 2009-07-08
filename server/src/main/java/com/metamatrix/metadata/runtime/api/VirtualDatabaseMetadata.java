@@ -25,7 +25,6 @@ package com.metamatrix.metadata.runtime.api;
 import java.util.Collection;
 import java.util.List;
 
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 
 /**
  * A VirtualDatabaseMetadata represent a virtual database in the repository.

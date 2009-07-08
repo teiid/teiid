@@ -36,11 +36,11 @@ import org.teiid.connector.language.ILikeCriteria;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.ICompareCriteria.Operator;
+import org.teiid.connector.metadata.MetadataConnectorConstants;
+import org.teiid.connector.metadata.MetadataLiteralCriteria;
 
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
-import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
-import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;

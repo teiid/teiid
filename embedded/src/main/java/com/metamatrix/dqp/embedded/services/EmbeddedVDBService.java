@@ -47,8 +47,8 @@ import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.jdbc.JDBCPlugin;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseDoesNotExistException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
 

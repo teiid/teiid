@@ -28,11 +28,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.teiid.connector.metadata.runtime.MetadataConstants;
+import org.teiid.metadata.RuntimeMetadataPlugin;
 
 import com.metamatrix.common.namedobject.IDVerifier;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.ElementID;
 import com.metamatrix.metadata.runtime.api.KeyID;
 import com.metamatrix.metadata.runtime.api.MetadataID;

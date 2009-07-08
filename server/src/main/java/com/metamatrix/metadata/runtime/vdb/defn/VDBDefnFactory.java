@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ComponentType;
@@ -36,7 +38,6 @@ import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBStreamImpl;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;

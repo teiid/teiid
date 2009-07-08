@@ -24,7 +24,6 @@ package com.metamatrix.metadata.runtime.api;
 
 import java.util.Properties;
 
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 
 public interface MetadataObject extends java.io.Serializable{
 

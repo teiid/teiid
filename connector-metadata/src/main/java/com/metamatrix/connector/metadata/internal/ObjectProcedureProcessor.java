@@ -34,11 +34,12 @@ import java.util.Map;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.metadata.MetadataConnectorConstants;
+import org.teiid.connector.metadata.ReflectionWrapper;
+import org.teiid.connector.metadata.ResultsIterator;
 
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.vdb.api.VDBFile;
-import com.metamatrix.connector.metadata.MetadataConnectorConstants;
-import com.metamatrix.connector.metadata.ResultsIterator;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.ObjectConverterUtil;
 

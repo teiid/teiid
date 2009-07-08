@@ -22,6 +22,8 @@
 
 package com.metamatrix.core.util;
 
+import org.teiid.metadata.index.CharOperation;
+
 import junit.framework.TestCase;
 
 

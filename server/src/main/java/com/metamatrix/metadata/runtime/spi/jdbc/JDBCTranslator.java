@@ -31,12 +31,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.common.jdbc.JDBCReservedWords;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.vdb.VDBStatus;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.MetadataID;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.ModelID;

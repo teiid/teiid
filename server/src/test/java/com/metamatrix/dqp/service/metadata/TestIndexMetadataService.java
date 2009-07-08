@@ -30,6 +30,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
+import org.teiid.metadata.QueryMetadataCache;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.vdb.api.VDBArchive;

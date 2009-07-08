@@ -42,12 +42,12 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.language.BatchedUpdatesImpl;
+import org.teiid.metadata.index.VDBMetadataFactory;
 
 import com.metamatrix.cdk.IConnectorHost;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.metadata.runtime.VDBMetadataFactory;
 
 /**
  * A simple test environment to execute commands on a connector.

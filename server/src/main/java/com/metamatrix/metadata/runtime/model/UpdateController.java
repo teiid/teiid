@@ -32,6 +32,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.connection.ManagedConnectionException;
 import com.metamatrix.common.connection.TransactionMgr;
@@ -51,13 +53,12 @@ import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.ModelID;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.exception.InvalidStateException;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.spi.MetaBaseConnector;
 import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;
 import com.metamatrix.metadata.util.ErrorMessageKeys;

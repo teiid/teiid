@@ -90,7 +90,7 @@ import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.ZipFileUtil;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.platform.admin.api.runtime.HostData;
 import com.metamatrix.platform.admin.api.runtime.ProcessData;
 import com.metamatrix.platform.admin.api.runtime.SystemState;

@@ -35,6 +35,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.teiid.adminapi.AdminRoles;
+import org.teiid.metadata.RuntimeMetadataPlugin;
 import org.teiid.transport.SSLConfiguration;
 
 import com.metamatrix.admin.RolesAllowed;
@@ -53,12 +54,11 @@ import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.RuntimeVDBDeleteUtility;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.vdb.defn.VDBCreation;
 import com.metamatrix.metadata.runtime.vdb.defn.VDBDefnFactory;
 import com.metamatrix.metadata.util.ErrorMessageKeys;

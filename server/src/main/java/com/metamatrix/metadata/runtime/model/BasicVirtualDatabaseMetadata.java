@@ -35,9 +35,9 @@ import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.ModelID;
 import com.metamatrix.metadata.runtime.api.Procedure;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseMetadata;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 
 public class BasicVirtualDatabaseMetadata implements VirtualDatabaseMetadata{
     

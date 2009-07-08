@@ -25,13 +25,14 @@ import java.sql.SQLXML;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.metadata.index.VDBMetadataFactory;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.metadata.runtime.VDBMetadataFactory;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.QueryOptimizer;

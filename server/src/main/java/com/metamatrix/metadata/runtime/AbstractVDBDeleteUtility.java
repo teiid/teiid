@@ -26,13 +26,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;

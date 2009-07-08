@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.metadata.QueryMetadataCache;
 
 import com.google.inject.Inject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;

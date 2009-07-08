@@ -29,8 +29,8 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.model.BasicModel;
 import com.metamatrix.metadata.runtime.model.BasicModelID;
 import com.metamatrix.metadata.runtime.model.BasicVirtualDatabase;

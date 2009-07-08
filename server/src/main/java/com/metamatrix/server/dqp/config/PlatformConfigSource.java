@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.dqp.internal.cache.DQPContextCache;
+import org.teiid.metadata.QueryMetadataCache;
 
 import com.google.inject.Binder;
 import com.google.inject.name.Names;
@@ -37,9 +38,8 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.metadata.IndexMetadataService;
-import com.metamatrix.dqp.service.metadata.QueryMetadataCache;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.platform.security.api.service.AuthorizationServiceInterface;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.server.Configuration;

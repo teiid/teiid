@@ -25,6 +25,9 @@ package com.metamatrix.connector.metadata.index;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.connector.metadata.MetadataLiteralCriteria;
+import org.teiid.connector.metadata.MetadataResultsPostProcessor;
+import org.teiid.connector.metadata.VdbMetadataContext;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
 import org.teiid.connector.metadata.runtime.ModelRecordImpl;

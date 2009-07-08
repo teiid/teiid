@@ -32,18 +32,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.common.config.CurrentConfiguration;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.jdbc.JDBCReservedWords;
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.core.util.DateUtil;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.ModelID;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.exception.InvalidStateException;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.model.BasicModelID;
 import com.metamatrix.metadata.runtime.model.BasicVirtualDatabase;
 import com.metamatrix.metadata.runtime.model.BasicVirtualDatabaseID;

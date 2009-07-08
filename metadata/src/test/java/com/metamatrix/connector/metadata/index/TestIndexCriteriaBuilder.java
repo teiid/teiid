@@ -25,13 +25,15 @@ package com.metamatrix.connector.metadata.index;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.connector.metadata.IndexCriteriaBuilder;
+import org.teiid.connector.metadata.MetadataLiteralCriteria;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
 import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
+import org.teiid.metadata.index.IndexConstants;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.modeler.internal.core.index.IndexConstants;
 
 
 /** 

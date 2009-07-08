@@ -22,6 +22,8 @@
 
 package com.metamatrix.connector.metadata.index;
 
+import org.teiid.connector.metadata.MetadataLiteralCriteria;
+
 import junit.framework.TestCase;
 
 

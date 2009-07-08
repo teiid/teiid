@@ -30,13 +30,12 @@ import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ResultSetExecution;
 import org.teiid.connector.basic.BasicExecution;
 import org.teiid.connector.language.IQuery;
+import org.teiid.connector.metadata.IObjectQuery;
+import org.teiid.connector.metadata.ObjectQueryProcessor;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
-import com.metamatrix.connector.metadata.internal.IObjectQuery;
-import com.metamatrix.connector.metadata.internal.MetadataException;
 import com.metamatrix.connector.metadata.internal.ObjectQuery;
-import com.metamatrix.connector.metadata.internal.ObjectQueryProcessor;
 
 /**
  * Adapter to expose the object processing logic via the standard connector API.
@@ -63,12 +62,7 @@ public class ObjectSynchExecution extends BasicExecution implements ResultSetExe
         this.processor = new ObjectQueryProcessor(connection.getMetadataObjectSource());
         
         this.query = new ObjectQuery(metadata, command);
-        try {
-			queryResults = processor.process(this.query);
-		} catch (MetadataException e) {
-			throw new ConnectorException(e);
-		}              
-    	
+		queryResults = processor.process(this.query);
     }
     
     @Override

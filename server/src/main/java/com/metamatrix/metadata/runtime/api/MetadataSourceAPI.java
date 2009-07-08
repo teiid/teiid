@@ -25,8 +25,6 @@ package com.metamatrix.metadata.runtime.api;
 import java.util.Collection;
 import java.util.List;
 
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 
 /**
  * The DataAccessAPI is the common interface to access runtime metadata.

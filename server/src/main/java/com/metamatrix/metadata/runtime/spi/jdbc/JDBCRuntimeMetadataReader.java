@@ -35,16 +35,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.common.log.I18nLogManager;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.CorePlugin;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.MetadataConstants;
 import com.metamatrix.metadata.runtime.api.MetadataID;
 import com.metamatrix.metadata.runtime.api.VirtualDatabase;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseDoesNotExistException;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.model.BasicMetadataID;
 import com.metamatrix.metadata.runtime.model.BasicModelID;
 import com.metamatrix.metadata.runtime.model.BasicVirtualDatabaseID;

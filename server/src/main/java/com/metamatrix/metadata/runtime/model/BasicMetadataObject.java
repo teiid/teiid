@@ -25,12 +25,13 @@ package com.metamatrix.metadata.runtime.model;
 import java.io.Serializable;
 import java.util.Properties;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.metadata.runtime.RuntimeMetadataPlugin;
 import com.metamatrix.metadata.runtime.api.MetadataID;
 import com.metamatrix.metadata.runtime.api.MetadataObject;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 
 /**

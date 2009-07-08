@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.connector.language.ICommand;
+import org.teiid.connector.metadata.ObjectQueryProcessor;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 

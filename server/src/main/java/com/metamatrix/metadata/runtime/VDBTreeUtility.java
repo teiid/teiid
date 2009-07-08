@@ -31,6 +31,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.tree.basic.BasicTreeNode;
 import com.metamatrix.core.id.ObjectID;
@@ -43,8 +45,8 @@ import com.metamatrix.metadata.runtime.api.MetadataObject;
 import com.metamatrix.metadata.runtime.api.Model;
 import com.metamatrix.metadata.runtime.api.ModelID;
 import com.metamatrix.metadata.runtime.api.Procedure;
+import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseMetadata;
-import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
 import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;
 import com.metamatrix.metadata.util.ErrorMessageKeys;
 import com.metamatrix.platform.admin.api.PermissionDataNodeDefinition;

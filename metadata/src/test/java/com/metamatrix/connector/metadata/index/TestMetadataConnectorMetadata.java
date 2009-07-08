@@ -28,20 +28,23 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.connector.metadata.FileRecordImpl;
+import org.teiid.connector.metadata.MetadataConnectorMetadata;
+import org.teiid.connector.metadata.MetadataLiteralCriteria;
+import org.teiid.connector.metadata.RuntimeVdbRecord;
+import org.teiid.connector.metadata.VdbMetadataContext;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.ModelRecordImpl;
+import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.index.IndexConstants;
+import org.teiid.metadata.index.IndexMetadataStore;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.connector.metadata.FileRecordImpl;
-import com.metamatrix.connector.metadata.RuntimeVdbRecord;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.dqp.service.metadata.CompositeMetadataStore;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
-import com.metamatrix.modeler.internal.core.index.IndexConstants;
-import com.metamatrix.modeler.internal.core.index.IndexMetadataStore;
 
 
 /** 

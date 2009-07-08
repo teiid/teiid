@@ -25,6 +25,8 @@ package com.metamatrix.metadata.runtime;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.teiid.metadata.RuntimeMetadataPlugin;
+
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.AuthorizationException;

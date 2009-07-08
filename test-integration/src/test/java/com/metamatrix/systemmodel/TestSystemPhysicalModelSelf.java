@@ -25,6 +25,8 @@ package com.metamatrix.systemmodel;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.metadata.index.VDBMetadataFactory;
+
 import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -36,7 +38,6 @@ import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.metadata.IndexConnector;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.metadata.runtime.FakeMetadataService;
-import com.metamatrix.metadata.runtime.VDBMetadataFactory;
 
 public class TestSystemPhysicalModelSelf extends TestCase {
 

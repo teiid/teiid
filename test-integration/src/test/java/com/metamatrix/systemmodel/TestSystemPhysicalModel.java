@@ -30,13 +30,13 @@ import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.metadata.index.VDBMetadataFactory;
 
 import com.metamatrix.cdk.api.ConnectorHost;
 import com.metamatrix.cdk.api.TranslationUtility;
 import com.metamatrix.connector.metadata.IndexConnector;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.metadata.runtime.FakeMetadataService;
-import com.metamatrix.metadata.runtime.VDBMetadataFactory;
 
 public class TestSystemPhysicalModel {
 	static FakeMetadataService metadataService = null;

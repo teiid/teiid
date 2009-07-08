@@ -28,7 +28,14 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.connector.metadata.IndexFile;
+import org.teiid.connector.metadata.MetadataConnectorConstants;
+import org.teiid.connector.metadata.MultiObjectSource;
+import org.teiid.connector.metadata.PropertyFileObjectSource;
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.TransformationMetadata;
+import org.teiid.metadata.index.IndexMetadataStore;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -36,18 +43,11 @@ import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.connector.metadata.IndexFile;
-import com.metamatrix.connector.metadata.MetadataConnectorConstants;
-import com.metamatrix.connector.metadata.MultiObjectSource;
-import com.metamatrix.connector.metadata.PropertyFileObjectSource;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.core.util.TempDirectoryMonitor;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.dqp.service.metadata.CompositeMetadataStore;
-import com.metamatrix.dqp.service.metadata.TransformationMetadata;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
-import com.metamatrix.modeler.internal.core.index.IndexMetadataStore;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 
