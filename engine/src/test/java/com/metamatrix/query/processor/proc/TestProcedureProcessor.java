@@ -53,7 +53,10 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.optimizer.QueryOptimizer;
+import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
+import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -83,7 +86,10 @@ public class TestProcedureProcessor extends TestCase {
     }
 	
     public static ProcessorPlan getProcedurePlan(String userQuery, FakeMetadataFacade metadata) throws Exception {
-
+    	return getProcedurePlan(userQuery, metadata, /*capabilitiesFinder*/null);
+    }
+    
+    public static ProcessorPlan getProcedurePlan(String userQuery, FakeMetadataFacade metadata, CapabilitiesFinder capabilitiesFinder) throws Exception {
         Command userCommand = QueryParser.getQueryParser().parseCommand(userQuery);
         QueryResolver.resolveCommand(userCommand, metadata);
         ValidatorReport report = Validator.validate(userCommand, metadata);
@@ -96,7 +102,8 @@ public class TestProcedureProcessor extends TestCase {
 
         AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
         try {
-        	ProcessorPlan plan = QueryOptimizer.optimizePlan(userCommand, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
+        	if ( capabilitiesFinder == null ) capabilitiesFinder = new DefaultCapabilitiesFinder();
+        	ProcessorPlan plan = QueryOptimizer.optimizePlan(userCommand, metadata, null, capabilitiesFinder, analysisRecord, null);
 
             // verify we can get child plans for any plan with no problem
             plan.getChildPlans();
@@ -233,6 +240,68 @@ public class TestProcedureProcessor extends TestCase {
                 } );
 
         groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
+        elementIDs = metadata.getElementIDsInGroupID(groupID);
+        elementSymbols = createElements(elementIDs);
+    
+        dataMgr.registerTuples(
+            groupID,
+            elementSymbols,
+            
+            new List[] { 
+                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+                } );
+        
+        return dataMgr;
+    }    
+    
+    private FakeDataManager exampleDataManager2(FakeMetadataFacade metadata) throws QueryMetadataException, MetaMatrixComponentException {
+        FakeDataManager dataMgr = new FakeDataManager();
+    
+        FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g1"); //$NON-NLS-1$
+        List elementIDs = metadata.getElementIDsInGroupID(groupID);
+        List elementSymbols = createElements(elementIDs);
+    
+        dataMgr.registerTuples(
+            groupID,
+            elementSymbols,
+            
+            new List[] { 
+                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+                } );
+
+        groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
+        elementIDs = metadata.getElementIDsInGroupID(groupID);
+        elementSymbols = createElements(elementIDs);
+    
+        dataMgr.registerTuples(
+            groupID,
+            elementSymbols,
+            
+            new List[] { 
+                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+                } );
+        
+        groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g1"); //$NON-NLS-1$
+        elementIDs = metadata.getElementIDsInGroupID(groupID);
+        elementSymbols = createElements(elementIDs);
+    
+        dataMgr.registerTuples(
+            groupID,
+            elementSymbols,
+            
+            new List[] { 
+                Arrays.asList( new Object[] { "First", new Integer(5), new Boolean(true), new Double(1.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Second", new Integer(15), new Boolean(true), new Double(2.003)} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", new Integer(51), new Boolean(true), new Double(3.003)} ) //$NON-NLS-1$
+                } );
+        
+        groupID = (FakeMetadataObject) metadata.getGroupID("pm2.g2"); //$NON-NLS-1$
         elementIDs = metadata.getElementIDsInGroupID(groupID);
         elementSymbols = createElements(elementIDs);
     
@@ -2632,6 +2701,162 @@ public class TestProcedureProcessor extends TestCase {
 		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
 		helpTestProcess(plan, 8, dataMgr);									 
     }
+
+    /**
+     * Test the use of a procedure variable in the criteria of a LEFT OUTER
+     * JOIN which will be optimized out as non-JOIN criteria.
+     * <p>
+     * This test case verifies that the procedure variable will not be pushed 
+     * to the data manager when a federated source JOIN is performed. 
+     *  
+     * @throws Exception
+     */
+    public void testRomvalOfNonJoinCritWithReference() throws Exception {
+    	String proc = ""; //$NON-NLS-1$
+    	
+        String sql = ""; //$NON-NLS-1$
+        sql += "SELECT " +  //$NON-NLS-1$
+        		"	pm1.g1.e1 AS pm1g1e1, " +  //$NON-NLS-1$
+        		"	pm2.g2.e1 AS pm2g2e1, " +  //$NON-NLS-1$
+        		"	pm1.g1.e2 AS pm1g1e2, " +  //$NON-NLS-1$
+        		"	pm2.g2.e2 AS pm2g2e2 " +  //$NON-NLS-1$
+        		"FROM " +  //$NON-NLS-1$
+        		"	pm1.g1	" +  //$NON-NLS-1$
+        		"LEFT OUTER JOIN pm2.g2 " +  //$NON-NLS-1$
+        		"	ON pm1.g1.e1 = pm2.g2.e1 " +  //$NON-NLS-1$ 
+        		"	AND pm2.g2.e2 = VARIABLES.myVar ";  //$NON-NLS-1$
         
+        proc += "CREATE VIRTUAL PROCEDURE " + //$NON-NLS-1$
+        		"BEGIN " + //$NON-NLS-1$
+        		"   declare integer myVar = 5;" + //$NON-NLS-1$
+        		"   " + sql + ";" + //$NON-NLS-1$ //$NON-NLS-2$
+        		"END"; //$NON-NLS-1$
+        	
+        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
+        FakeDataManager dataMgr = exampleDataManager2(metadata);
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
+
+        List[] expected = new List[] {
+                Arrays.asList( new Object[] { "First", "First", new Integer(5), new Integer(5)} ), //$NON-NLS-1$ //$NON-NLS-2$
+                Arrays.asList( new Object[] { "Second", null, new Integer(15), null} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
+        };
+        helpTestProcess(plan, expected, dataMgr);
+    }
+    
+    /**
+     * Test the use of a procedure variable in the criteria of a LEFT OUTER
+     * JOIN which will be optimized out as non-JOIN criteria.
+     * <p>
+     * This test case verifies that the procedure variable will not be pushed 
+     * to the data manager when a federated source JOIN is performed and the 
+     * physical source supports all capabilities. 
+     *  
+     * @throws Exception
+     */
+    public void testRomvalOfNonJoinCritWithReference2() throws Exception {
+    	String proc = ""; //$NON-NLS-1$
+    	
+        String sql = ""; //$NON-NLS-1$
+        sql += "SELECT " +  //$NON-NLS-1$
+        		"	pm1.g1.e1 AS pm1g1e1, " +  //$NON-NLS-1$
+        		"	pm2.g2.e1 AS pm2g2e1, " +  //$NON-NLS-1$
+        		"	pm1.g1.e2 AS pm1g1e2, " +  //$NON-NLS-1$
+        		"	pm2.g2.e2 AS pm2g2e2 " +  //$NON-NLS-1$
+        		"FROM " +  //$NON-NLS-1$
+        		"	pm1.g1	" +  //$NON-NLS-1$
+        		"LEFT OUTER JOIN pm2.g2 " +  //$NON-NLS-1$
+        		"	ON pm1.g1.e1 = pm2.g2.e1 " +  //$NON-NLS-1$ 
+        		"	AND pm2.g2.e2 = VARIABLES.myVar ";  //$NON-NLS-1$
+        
+        proc += "CREATE VIRTUAL PROCEDURE " + //$NON-NLS-1$
+        		"BEGIN " + //$NON-NLS-1$
+        		"   declare integer myVar = 5;" + //$NON-NLS-1$
+        		"   " + sql + ";" + //$NON-NLS-1$ //$NON-NLS-2$
+        		"END"; //$NON-NLS-1$
+        	
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities() {
+            public boolean supportsCapability(String capability) {
+                return true;
+            }
+            public boolean supportsFunction(String functionName) {
+                return true;
+            }
+        };
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
+        FakeDataManager dataMgr = exampleDataManager2(metadata);
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata, capFinder);
+
+        List[] expected = new List[] {
+                Arrays.asList( new Object[] { "First", "First", new Integer(5), new Integer(5)} ), //$NON-NLS-1$ //$NON-NLS-2$
+                Arrays.asList( new Object[] { "Second", null, new Integer(15), null} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
+        };
+        helpTestProcess(plan, expected, dataMgr);
+    }
+    
+    /**
+     * Test the use of a procedure variable in the criteria of a LEFT OUTER
+     * JOIN which will be optimized out as non-JOIN criteria.
+     * <p>
+     * This test case verifies that the procedure variable will not be pushed 
+     * to the data manager when a JOIN of a temporary table and source are 
+     * performed and the physical source supports all capabilities. 
+     *  
+     * @throws Exception
+     */
+    public void testRomvalOfNonJoinCritWithReference3() throws Exception {
+    	String proc = ""; //$NON-NLS-1$
+    	
+        String sql = ""; //$NON-NLS-1$
+        sql += "SELECT " +  //$NON-NLS-1$
+        		"	#temp1.e1 AS pm1g1e1, " +  //$NON-NLS-1$
+        		"	pm2.g2.e1 AS pm2g2e1, " +  //$NON-NLS-1$
+        		"	#temp1.e2 AS pm1g1e2, " +  //$NON-NLS-1$
+        		"	pm2.g2.e2 AS pm2g2e2 " +  //$NON-NLS-1$
+        		"FROM " +  //$NON-NLS-1$
+        		"	#temp1	" +  //$NON-NLS-1$
+        		"LEFT OUTER JOIN pm2.g2 " +  //$NON-NLS-1$
+        		"	ON #temp1.e1 = pm2.g2.e1 " +  //$NON-NLS-1$ 
+        		"	AND pm2.g2.e2 = VARIABLES.myVar ";  //$NON-NLS-1$
+        
+        proc += "CREATE VIRTUAL PROCEDURE " + //$NON-NLS-1$
+        		"BEGIN " + //$NON-NLS-1$
+        		"   declare integer myVar = 5;" + //$NON-NLS-1$
+        		"	SELECT * INTO #temp1 FROM pm1.g1;" + //$NON-NLS-1$
+        		"   " + sql + ";" + //$NON-NLS-1$ //$NON-NLS-2$
+        		"END"; //$NON-NLS-1$
+        	
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities() {
+            public boolean supportsCapability(String capability) {
+                return true;
+            }
+            public boolean supportsFunction(String functionName) {
+                return true;
+            }
+        };
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
+        FakeDataManager dataMgr = exampleDataManager2(metadata);
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata, capFinder);
+
+        List[] expected = new List[] {
+                Arrays.asList( new Object[] { "First", "First", new Integer(5), new Integer(5)} ), //$NON-NLS-1$ //$NON-NLS-2$
+                Arrays.asList( new Object[] { "Second", null, new Integer(15), null} ), //$NON-NLS-1$
+                Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
+        };
+        helpTestProcess(plan, expected, dataMgr);
+    }
+    
     private static final boolean DEBUG = false;
 }
