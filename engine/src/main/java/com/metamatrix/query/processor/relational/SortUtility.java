@@ -360,9 +360,8 @@ public class SortUtility {
 	        	} catch (MetaMatrixProcessingException e) {
 	        		throw new MetaMatrixComponentException(e);
 	        	}
-			} catch (BlockedOnMemoryException e) {
+			} finally {
 				tc.saveBatch();
-				throw e;
 			}
         	outTs = null;
         }

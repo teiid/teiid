@@ -32,12 +32,19 @@ import java.util.List;
 import java.util.Set;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleBatch;
+import com.metamatrix.common.buffer.TupleSource;
+import com.metamatrix.common.buffer.TupleSourceID;
+import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
+import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.buffer.impl.SizeUtility;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.processor.relational.NodeTestUtil.TestableBufferManagerImpl;
@@ -312,6 +319,27 @@ public class TestSortNode {
      */
     @Test public void testBiggerSortLowMemory2() throws Exception {
         helpTestBiggerSort(5, 2);
+    }
+    
+    @Test public void testDupRemove() throws Exception {
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+        TupleSourceID tsid = bm.createTupleSource(Arrays.asList(es1), new String[] {DataTypeManager.DefaultDataTypes.INTEGER}, "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        bm.addTupleBatch(tsid, new TupleBatch(1, new List[] {Arrays.asList(1)}));
+    	SortUtility su = new SortUtility(tsid, Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test", true); //$NON-NLS-1$
+    	TupleSourceID out = su.sort();
+    	TupleSource ts = bm.getTupleSource(out);
+    	assertEquals(Arrays.asList(1), ts.nextTuple());
+    	try {
+    		ts.nextTuple();
+    		fail();
+    	} catch (BlockedException e) {
+    		
+    	}
+    	bm.addTupleBatch(tsid, new TupleBatch(2, new List[] {Arrays.asList(2)}));
+    	su.sort();
+    	assertEquals(Arrays.asList(2), ts.nextTuple());
     }
     
 }
