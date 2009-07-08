@@ -22,18 +22,17 @@
 
 package com.metamatrix.connector.metadata.index;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
+import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
+
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.modeler.core.index.IndexConstants;
-import com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord;
-import com.metamatrix.modeler.core.metadata.runtime.MetadataRecord;
-import com.metamatrix.modeler.core.metadata.runtime.PropertyRecord;
+import com.metamatrix.modeler.internal.core.index.IndexConstants;
 import com.metamatrix.modeler.internal.core.index.SimpleIndexUtil;
 
 
@@ -144,11 +143,11 @@ public class IndexCriteriaBuilder {
 
         final Map tmp = new HashMap(criteria.size());        
         // based on the indexName try to derive the recordtype and make it part of criteria
-        if(getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD) == null) {
+        if(getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD) == null) {
             String record_type = SimpleIndexUtil.getRecordTypeForIndexFileName(indexName);
             if(record_type != null) {
-                MetadataLiteralCriteria literalCriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, record_type);
-                tmp.put(MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD.toUpperCase(), literalCriteria);
+                MetadataLiteralCriteria literalCriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, record_type);
+                tmp.put(AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD.toUpperCase(), literalCriteria);
             }
         }        
         // Copy the map so that the keys, corresponding to field names in the
@@ -164,58 +163,6 @@ public class IndexCriteriaBuilder {
     }
     
     /**
-     * Return a collection of criteria maps with MetadataLiteralCriteria's, any
-     * compound criteria are broken down into a collection of MetadataLiteralCriteria. 
-     * @param criteria The criteria built from metadata query
-     * @return Collection of maps with literal criteria
-     * @since 4.3
-     */
-    public static Collection getLiteralCriteria(Map criteria) {
-        // traverse criteria map and colect different criteria
-        Collection inCriteriaCollect = new ArrayList();
-        Map criteriaCopy = new HashMap(criteria);
-        for (Iterator iter = criteria.entrySet().iterator(); iter.hasNext();) {
-            final Map.Entry entry = (Map.Entry)iter.next();
-            final String key = (String)entry.getKey();
-            final Object value = entry.getValue();
-            if(value instanceof MetadataInCriteria) {
-                inCriteriaCollect.add(value);
-                criteriaCopy.remove(key);
-            }
-        }
-        
-        Collection criteriaCollect = new ArrayList();
-        criteriaCollect.add(criteriaCopy);
-        // breat down InCriteria to Literal criteria
-        for(Iterator iter2 = inCriteriaCollect.iterator(); iter2.hasNext();) {
-            criteriaCollect = getLiteralCriteria((MetadataInCriteria) iter2.next(), criteriaCollect);
-        }
-        
-        return criteriaCollect;
-    }
-
-    /**
-     * MetadataInCriteria objects are broken down into collection MetadataLiteralCriteria objects 
-     * @param inCriteria MetadataInCriteria object
-     * @param criteriaCollect Collection of maps of literal criteria
-     * @return Collection of maps of literal criteria
-     * @since 4.3
-     */
-    private static Collection getLiteralCriteria(MetadataInCriteria inCriteria, Collection criteriaCollect) {
-        Collection critCollection = new ArrayList();
-        Collection litCriteria = inCriteria.getLiteralCriteria();
-        for(Iterator iter1 = criteriaCollect.iterator(); iter1.hasNext();) {  
-            Map criteria = (Map) iter1.next();
-            for(final Iterator critIter = litCriteria.iterator(); critIter.hasNext();) {
-                Map copyCriteria = new HashMap(criteria);
-                copyCriteria.put(inCriteria.getFieldName().toUpperCase(), critIter.next());
-                critCollection.add(copyCriteria);
-            }
-        }
-        return critCollection;
-    }
-
-    /**
      * Construct a prefix string based on the values found in the map
      * Every index records contain a header portion of the form:  
      * Header : recordType|
@@ -225,7 +172,7 @@ public class IndexCriteriaBuilder {
      */
     private static String getRecordDefaultMatchPrefix(final Map criteria) {
 
-        String recordTypeCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
+        String recordTypeCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
         if(isPrefixCriteriaString(recordTypeCriteria)) {
             final StringBuffer sb = new StringBuffer(2);
             // record type
@@ -248,7 +195,7 @@ public class IndexCriteriaBuilder {
     private static String getRecordDefaultMatchPattern(final Map criteria) {
         final StringBuffer sb = new StringBuffer(2);
         // record type
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, sb);
         return sb.toString();
     }    
 
@@ -264,28 +211,28 @@ public class IndexCriteriaBuilder {
 
         final StringBuffer sb = new StringBuffer(100);
         // record type
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, sb);
         // name matching is already done in fourth field, just a wild card
         appendMultiMatchField(sb);
         // uuid
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, sb);
         // fullName or ModelName and/or Name
         // if fullName is not available in the criteria, use the ModerName and/or Name in criteria
-        String fullNameCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD);
+        String fullNameCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD);
         if(fullNameCriteria == null) {
-            String recordTypeCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
+            String recordTypeCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
             // if its a model or vdb record only criteria possible is on Name
             if(recordTypeCriteria != null &&
                 (recordTypeCriteria.equalsIgnoreCase(StringUtil.Constants.EMPTY_STRING+IndexConstants.RECORD_TYPE.MODEL))) {
-                appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, sb);
+                appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, sb);
             } else {
-                String modelNameCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD);
+                String modelNameCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD);
                 if(modelNameCriteria != null) {
                     sb.append(modelNameCriteria);
                     sb.append(IndexConstants.NAME_DELIM_CHAR);
                 }
                 sb.append(IndexConstants.RECORD_STRING.MATCH_CHAR);            
-                String nameCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD);
+                String nameCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD);
                 if(nameCriteria != null) {
                     sb.append(IndexConstants.NAME_DELIM_CHAR);
                     sb.append(nameCriteria);
@@ -296,9 +243,9 @@ public class IndexCriteriaBuilder {
             appendFieldValue(fullNameCriteria, sb);            
         }        
         // name in source
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD,sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD,sb);
         // parent uuid
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, sb);
         
         return sb.toString();
     }
@@ -313,8 +260,8 @@ public class IndexCriteriaBuilder {
      */
     private static String getRecordHeaderMatchPrefix(final Map criteria) {
 
-        String recordTypeCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
-        String fullNameCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD);        
+        String recordTypeCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
+        String fullNameCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD);        
         if(isPrefixCriteriaString(recordTypeCriteria) && isPrefixCriteriaString(fullNameCriteria)) {
             final StringBuffer sb = new StringBuffer(30);
             sb.append(recordTypeCriteria.toUpperCase());
@@ -444,8 +391,8 @@ public class IndexCriteriaBuilder {
      * @since 4.3
      */
     private static String getModelRecordMatchPrefix(final Map criteria) {
-        String recordTypeCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
-        String nameCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD);        
+        String recordTypeCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
+        String nameCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD);        
         if(isPrefixCriteriaString(recordTypeCriteria) && isPrefixCriteriaString(nameCriteria)) {
             final StringBuffer sb = new StringBuffer(30);
             // uuidCriteria
@@ -470,10 +417,10 @@ public class IndexCriteriaBuilder {
      */
     private static String getPropertiesRecordMatchPattern(final Map criteria) {
         final StringBuffer sb = new StringBuffer(100);
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, sb);
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, sb);
-        appendCriteriaValue(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_NAME_FIELD, sb);
-        appendCriteriaValue(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_VALUE_FIELD, sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, sb);
+        appendCriteriaValue(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD, sb);
+        appendCriteriaValue(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD, sb);
         
         return sb.toString();        
     }
@@ -487,8 +434,8 @@ public class IndexCriteriaBuilder {
      * @since 4.3
      */
     private static String getPropertiesRecordMatchPrefix(final Map criteria) {
-        String recordTypeCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
-        String uuidCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD);        
+        String recordTypeCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
+        String uuidCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD);        
         if(isPrefixCriteriaString(recordTypeCriteria) && isPrefixCriteriaString(uuidCriteria)) {            
             final StringBuffer sb = new StringBuffer(100);
             // record type
@@ -514,15 +461,15 @@ public class IndexCriteriaBuilder {
      */
     private static String getDatatypeRecordMatchPattern(final Map criteria) {
         final StringBuffer sb = new StringBuffer(100);
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, sb);
-        appendCriteriaValue(criteria, DatatypeRecord.MetadataFieldNames.DATA_TYPE_UUID, sb);
-        appendCriteriaValue(criteria, DatatypeRecord.MetadataFieldNames.BASE_TYPE_UUID, sb);
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD,sb);        
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, sb);
-        appendCriteriaValue(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD,sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, sb);
+        appendCriteriaValue(criteria, DatatypeRecordImpl.MetadataFieldNames.DATA_TYPE_UUID, sb);
+        appendCriteriaValue(criteria, DatatypeRecordImpl.MetadataFieldNames.BASE_TYPE_UUID, sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD,sb);        
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, sb);
+        appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD,sb);
         appendMultiMatchField(sb);
         appendMultiMatchField(sb);        
-        appendCriteriaValue(criteria, DatatypeRecord.MetadataFieldNames.RUN_TYPE_NAME, sb);
+        appendCriteriaValue(criteria, DatatypeRecordImpl.MetadataFieldNames.RUN_TYPE_NAME, sb);
         
         return sb.toString();    
     }
@@ -538,8 +485,8 @@ public class IndexCriteriaBuilder {
      * @since 4.3
      */
     private static String getDatatypeRecordMatchPrefix(final Map criteria) {
-        String recordTypeCriteria = getValueInCriteria(criteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
-        String uuidCriteria = getValueInCriteria(criteria, DatatypeRecord.MetadataFieldNames.DATA_TYPE_UUID);
+        String recordTypeCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
+        String uuidCriteria = getValueInCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.DATA_TYPE_UUID);
         if(isPrefixCriteriaString(recordTypeCriteria) && isPrefixCriteriaString(uuidCriteria)) {
             final StringBuffer sb = new StringBuffer(100);
             // record type

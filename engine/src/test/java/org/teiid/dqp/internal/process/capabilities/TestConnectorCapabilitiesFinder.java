@@ -28,10 +28,9 @@ import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.capabilities.ConnectorCapabilitiesFinder;
 
+import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.RequestMessage;
-import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -64,7 +63,13 @@ public class TestConnectorCapabilitiesFinder extends TestCase {
         
         VDBService vdbService = Mockito.mock(VDBService.class); 
         Mockito.stub(vdbService.getConnectorBindingNames(vdbName, vdbVersion, modelName)).toReturn(Arrays.asList(modelName));
-        DataService dataService = new AutoGenDataService(caps);
+        DataService dataService = Mockito.mock(DataService.class);
+        ConnectorID id = new ConnectorID("foo"); //$NON-NLS-1$
+        Mockito.stub(dataService.selectConnector(modelName)).toReturn(id);
+        BasicSourceCapabilities basicSourceCapabilities = new BasicSourceCapabilities();
+        basicSourceCapabilities.setFunctionSupport(functionName, true);
+        Mockito.stub(dataService.getCapabilities(request, workContext, id)).toReturn(basicSourceCapabilities);
+        
         ConnectorCapabilitiesFinder finder = new ConnectorCapabilitiesFinder(vdbService, dataService, request, workContext);
         
         // Test

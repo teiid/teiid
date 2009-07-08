@@ -27,12 +27,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.MetaDataProcessor;
-import org.teiid.dqp.internal.process.PreparedPlanCache;
-
 import junit.framework.TestCase;
+
+import org.mockito.Mockito;
 
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.types.DataTypeManager;
@@ -67,7 +64,8 @@ public class TestMetaDataProcessor extends TestCase {
         QueryResolver.resolveCommand(command, Collections.EMPTY_MAP, false, metadata, AnalysisRecord.createNonRecordingRecord());
         
         // Create components
-        MetadataService mdSvc = new MockSingleMetadataService(metadata);
+        MetadataService mdSvc = Mockito.mock(MetadataService.class);
+        Mockito.stub(mdSvc.lookupMetadata(Mockito.anyString(), Mockito.anyString())).toReturn(metadata);
         PreparedPlanCache prepPlanCache = new PreparedPlanCache();
         DQPCore requestMgr = new DQPCore();
 
@@ -79,7 +77,7 @@ public class TestMetaDataProcessor extends TestCase {
         // Initialize components
         RequestID requestID = workContext.getRequestID(1);  
         RequestMessage requestMsg = new RequestMessage(sql);
-        TestDQPCoreRequestHandling.addRequest(requestMgr, requestMsg, requestID, command, null); //$NON-NLS-1$
+        TestDQPCoreRequestHandling.addRequest(requestMgr, requestMsg, requestID, command, null); 
         
         ApplicationEnvironment env = new ApplicationEnvironment();
         FakeVDBService vdbService = new FakeVDBService();
@@ -146,7 +144,8 @@ public class TestMetaDataProcessor extends TestCase {
         vdbService.addModel("MyVDB", "1", "pm1", ModelInfo.PRIVATE, false);  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
         
         // Create components
-        MetadataService mdSvc = new MockSingleMetadataService(metadata);
+        MetadataService mdSvc = Mockito.mock(MetadataService.class);
+        Mockito.stub(mdSvc.lookupMetadata(Mockito.anyString(), Mockito.anyString())).toReturn(metadata);
         PreparedPlanCache prepPlanCache = new PreparedPlanCache();
         
         // Initialize components
@@ -170,7 +169,7 @@ public class TestMetaDataProcessor extends TestCase {
     }
 
     public void testDefect16629_moneyType() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); //$NON-NLS-1$
+        QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); 
         String sql = "SELECT e1 FROM pm1.g2"; //$NON-NLS-1$
         
         MetadataResult response = helpTestQuery(metadata, sql);
@@ -179,7 +178,7 @@ public class TestMetaDataProcessor extends TestCase {
     }
 
     public void testDefect16629_aggregatesOnMoneyType() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); //$NON-NLS-1$
+        QueryMetadataInterface metadata = FakeMetadataFactory.examplePrivatePhysicalModel(); 
         String sql = "SELECT min(e1), max(e1), sum(e1), avg(e1) FROM pm1.g2"; //$NON-NLS-1$
         
         MetadataResult response = helpTestQuery(metadata, sql);

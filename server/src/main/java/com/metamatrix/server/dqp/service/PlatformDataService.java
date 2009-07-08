@@ -32,6 +32,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -229,6 +230,12 @@ public class PlatformDataService implements DataService {
     public void clearConnectorBindingCache(String connectorBindingName) 
         throws MetaMatrixComponentException {
         throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public ConnectorMetadata getConnectorMetadata(String vdbName,
+    		String vdbVersion, String modelName) {
+    	throw new UnsupportedOperationException();
     }
 
 }

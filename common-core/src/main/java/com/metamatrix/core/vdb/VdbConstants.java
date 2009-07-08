@@ -49,6 +49,9 @@ public interface VdbConstants {
         public static final short INACTIVE = 2;
         public static final short ACTIVE = 3;
         public static final short DELETED = 4;
-    }    
+    }
+
+	public static final String VDB = ".vdb"; //$NON-NLS-1$
+	public static final String DEF = ".def"; //$NON-NLS-1$    
     
 }

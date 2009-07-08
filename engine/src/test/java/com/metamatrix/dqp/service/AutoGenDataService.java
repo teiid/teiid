@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWorkItem;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
@@ -245,5 +246,11 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
 			throws MetaMatrixComponentException {
 		
 	}
+	
+    @Override
+    public ConnectorMetadata getConnectorMetadata(String vdbName,
+    		String vdbVersion, String modelName) {
+    	throw new UnsupportedOperationException();
+    }
 
 }

@@ -49,6 +49,8 @@ import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
 import org.teiid.connector.api.ConnectorAnnotations.SynchronousWorkers;
+import org.teiid.connector.metadata.runtime.ConnectorMetadata;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.cache.DQPContextCache;
@@ -58,6 +60,7 @@ import org.teiid.dqp.internal.pooling.connector.PooledConnector;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.transaction.TransactionProvider;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.ClassLoaderManager;
@@ -143,6 +146,23 @@ public class ConnectorManager implements ApplicationService {
 		return classloader;
 	}
     
+    public ConnectorMetadata getMetadata(String modelName) throws ConnectorException {
+    	MetadataFactory factory;
+		try {
+			factory = new MetadataFactory(modelName, this.metadataService.getBuiltinDatatypes());
+		} catch (MetaMatrixComponentException e) {
+			throw new ConnectorException(e);
+		}
+		Thread currentThread = Thread.currentThread();
+		ClassLoader threadContextLoader = currentThread.getContextClassLoader();
+		try {
+			currentThread.setContextClassLoader(classloader);
+			this.connector.getConnectorMetadata(factory);
+		} finally {
+			currentThread.setContextClassLoader(threadContextLoader);
+		}
+		return factory;
+	}
     
     public SourceCapabilities getCapabilities(RequestID requestID, Serializable executionPayload, DQPWorkContext message) throws ConnectorException {
         Connection conn = null;

@@ -23,6 +23,7 @@
 package com.metamatrix.dqp.embedded.configuration;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -36,6 +37,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.util.ObjectConverterUtil;
+import com.metamatrix.core.vdb.VdbConstants;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
 
@@ -50,9 +52,6 @@ import com.metamatrix.vdb.runtime.BasicVDBDefn;
  * @since 4.3
  */
 public class VDBConfigurationReader {
-
-    private static final String VDB = ".vdb"; //$NON-NLS-1$
-    private static final String DEF = ".def"; //$NON-NLS-1$
 
     /**
      *  Load the VDB from the contents given.
@@ -119,42 +118,22 @@ public class VDBConfigurationReader {
      * @throws MetaMatrixComponentException
      * @since 4.3
      */
-    public static VDBArchive loadVDB(URL vdbURL) throws MetaMatrixComponentException{        
-
-        String vdblocation = vdbURL.toString().toLowerCase();
-        if (vdblocation.endsWith(VDB) || vdblocation.endsWith(DEF)) {
-            try {
-                
-            	BasicVDBDefn def = null;
-                if (vdblocation.endsWith(DEF)) {
-                	
-                	def = VDBArchive.readFromDef(vdbURL.openStream());
-                	
-                    String vdbName = def.getFileName();
-                    
-                    vdbURL = URLHelper.buildURL(vdbURL, vdbName);
-                }
-                
-                // now load the VDB
-                VDBArchive vdb = new VDBArchive(vdbURL.openStream());
-                if (def != null) {
-                	vdb.updateConfigurationDef(def);
-                }
-                
-                if (vdb.getVDBValidityErrors() != null) {                    
-                    String[] errors = vdb.getVDBValidityErrors();
-                    StringBuffer sb = new StringBuffer();
-                    for (int i = 0; i < errors.length; i++) {
-                        sb.append("-").append(errors[i]).append(";"); //$NON-NLS-1$ //$NON-NLS-2$                
-                    } // for            
-                    DQPEmbeddedPlugin.logError("VDBReader.validityErrors", new Object[] {vdbURL, sb}); //$NON-NLS-1$
-                }
-                return vdb;
-            } catch (Exception e) {
-                throw new MetaMatrixComponentException(e, DQPEmbeddedPlugin.Util.getString("VDBReader.Archive_not_Found", vdbURL)); //$NON-NLS-1$
+    public static VDBArchive loadVDB(URL vdbURL, File deployDirectory) throws MetaMatrixComponentException{        
+        try {
+            VDBArchive vdb = VDBArchive.loadVDB(vdbURL, deployDirectory);
+            
+            if (vdb.getVDBValidityErrors() != null) {                    
+                String[] errors = vdb.getVDBValidityErrors();
+                StringBuffer sb = new StringBuffer();
+                for (int i = 0; i < errors.length; i++) {
+                    sb.append("-").append(errors[i]).append(";"); //$NON-NLS-1$ //$NON-NLS-2$                
+                } // for            
+                DQPEmbeddedPlugin.logError("VDBReader.validityErrors", new Object[] {vdbURL, sb}); //$NON-NLS-1$
             }
+            return vdb;
+        } catch (IOException e) {
+            throw new MetaMatrixComponentException(e, DQPEmbeddedPlugin.Util.getString("VDBReader.Archive_not_Found", vdbURL)); //$NON-NLS-1$
         }
-        throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("VDBReader.Invalid_location", vdbURL)); //$NON-NLS-1$        
     }
         
     
@@ -164,14 +143,14 @@ public class VDBConfigurationReader {
      * @param vdbURLs
      * @return HashMap map of objects with (URL, VDBDefn)
      */
-    public static HashMap<URL, VDBArchive> loadVDBS(URL[] urls) throws MetaMatrixComponentException{
+    public static HashMap<URL, VDBArchive> loadVDBS(URL[] urls, File deployDirectory) throws MetaMatrixComponentException{
         
         HashMap vdbs = new HashMap();
         ArrayList vdbURLs = new ArrayList();
         // First get a comprehensive list of all the VDBs at the given URL lists
         for (int i = 0; i < urls.length; i++) {
             String vdblocation = urls[i].toString().toLowerCase();
-            if (vdblocation.endsWith(VDB) || vdblocation.endsWith(DEF)) {
+            if (vdblocation.endsWith(VdbConstants.VDB) || vdblocation.endsWith(VdbConstants.DEF)) {
                 vdbURLs.add(urls[i]);
             }
             else {
@@ -185,7 +164,7 @@ public class VDBConfigurationReader {
         // load all of them.
         for (Iterator i = vdbURLs.iterator(); i.hasNext();) {
             URL vdbURL = (URL)i.next();
-            VDBArchive vdb = loadVDB(vdbURL);
+            VDBArchive vdb = loadVDB(vdbURL, deployDirectory);
 
             // Only valid vdb files get loaded into dqp engine.
             if (vdb.getVDBValidityErrors() == null) {

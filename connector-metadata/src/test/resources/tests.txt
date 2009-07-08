@@ -99,11 +99,5 @@ partssupplier.partssupplier.parts.part_color
 
 select LCASE(FullName) from columns where UCASE(FULLNAME) = LOWER("partssupplier.partssupplier.parts.part_color")
 
-select FullName, supportsUpdate from tables where fullname is null
-
 select LCASE(FullName) from columns where LCASE(FULLNAME) LIKE "%.parts.part_color"
 partssupplier.partssupplier.parts.part_color
-
-select LCASE(FullName) from columns where LCASE(FULLNAME) IN ("partssupplier.partssupplier.parts.part_color", "partssupplier.partssupplier.parts.part_name")
-partssupplier.partssupplier.parts.part_color
-partssupplier.partssupplier.parts.part_name

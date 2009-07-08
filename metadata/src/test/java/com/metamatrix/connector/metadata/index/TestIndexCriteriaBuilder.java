@@ -22,17 +22,16 @@
 
 package com.metamatrix.connector.metadata.index;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
+import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.modeler.core.index.IndexConstants;
-import com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord;
-import com.metamatrix.modeler.core.metadata.runtime.MetadataRecord;
-import com.metamatrix.modeler.core.metadata.runtime.PropertyRecord;
+import com.metamatrix.modeler.internal.core.index.IndexConstants;
 
 
 /** 
@@ -57,14 +56,9 @@ public class TestIndexCriteriaBuilder extends TestCase {
         criteria.put(fieldName.toUpperCase(), literalCriteria);
     }
     
-    public void helpAddToInCriteria(Map criteria, String fieldName, Collection fieldValues) {
-        MetadataInCriteria literalCriteria = new MetadataInCriteria(fieldName, fieldValues);        
-        criteria.put(fieldName.toUpperCase(), literalCriteria);        
-    }
-    
     public void testDataTypeCriteriaPrefix1() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.DATA_TYPE_UUID, "dataTypeUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.DATA_TYPE_UUID, "dataTypeUUID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
         String expectedPrefix = ""+IndexConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"datatypeuuid"+ //$NON-NLS-1$
@@ -76,33 +70,33 @@ public class TestIndexCriteriaBuilder extends TestCase {
 
     public void testDataTypeCriteriaPrefix2() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.BASE_TYPE_UUID, "baseTypeUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.BASE_TYPE_UUID, "baseTypeUUID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
         assertNull(matchPrefix);
     }
     
     public void testDataTypeCriteriaPrefix3() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.DATA_TYPE_UUID, "dataType?UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.DATA_TYPE_UUID, "dataType?UUID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
         assertNull(matchPrefix);
     }
 
     public void testDataTypeCriteriaPrefix4() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.DATA_TYPE_UUID, "dataType*UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.DATA_TYPE_UUID, "dataType*UUID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
         assertNull(matchPrefix);
     }
 
     public void testDataTypeCriteria1() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.DATA_TYPE_UUID, "dataTypeUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.BASE_TYPE_UUID, "baseTypeUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.RUN_TYPE_NAME, "runtTypeName"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.DATA_TYPE_UUID, "dataTypeUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.BASE_TYPE_UUID, "baseTypeUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.RUN_TYPE_NAME, "runtTypeName"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"dataTypeUUID"+ //$NON-NLS-1$
@@ -120,11 +114,11 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testDataTypeCriteria2() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.BASE_TYPE_UUID, "baseTypeUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, DatatypeRecord.MetadataFieldNames.RUN_TYPE_NAME, "runtTypeName"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.BASE_TYPE_UUID, "baseTypeUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.RUN_TYPE_NAME, "runtTypeName"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -142,9 +136,9 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testPropertyCriteriaPrefix1() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
         String expectedPrefix = ""+IndexConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"uuid"+ //$NON-NLS-1$
@@ -156,35 +150,35 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testPropertyCriteriaPrefix2() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
         assertNull(matchPrefix);
     }
     
     public void testPropertyCriteriaPrefix3() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UU?ID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UU?ID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
         assertNull(matchPrefix);       
     }
     
     public void testPropertyCriteriaPrefix4() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UU*ID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UU*ID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
         assertNull(matchPrefix);      
     }    
 
     public void testPropertyCriteria1() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
@@ -197,8 +191,8 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testPropertyCriteria2() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, PropertyRecord.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
@@ -211,9 +205,9 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testModelCriteriaPrefix1() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         String expectedPrefix = ""+IndexConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"NAME"+ //$NON-NLS-1$
@@ -225,37 +219,37 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testModelCriteriaPrefix2() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         assertNull(matchPrefix);       
     }
     
     public void testModelCriteriaPrefix3() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Na?me"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Na?me"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         assertNull(matchPrefix);       
     }
     
     public void testModelCriteriaPrefix4() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Nam*e"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Nam*e"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         assertNull(matchPrefix);      
     }    
     
     public void testModelCriteria1() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -270,10 +264,10 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testModelCriteria2() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "MyModel"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "MyModel"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -288,10 +282,10 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testModelCriteria3() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "MyModel"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "MyModel"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -306,12 +300,12 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testHeaderCriteriaPrefix1() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel.Name"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel.Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         String expectedPrefix = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"MYMODEL.NAME"+ //$NON-NLS-1$
@@ -323,47 +317,47 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testHeaderCriteriaPrefix2() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         assertNull(matchPrefix);       
     }
     
     public void testHeaderCriteriaPrefix3() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "*"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "*"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         assertNull(matchPrefix);        
     }
     
     public void testHeaderCriteriaPrefix4() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "?"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "?"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         assertNull(matchPrefix);       
     }    
 
     public void testHeaderCriteria1() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel.Name"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel.Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -379,11 +373,11 @@ public class TestIndexCriteriaBuilder extends TestCase {
     public void testHeaderCriteria2() {
         Map criteria = new HashMap();
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel.Name"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -400,10 +394,10 @@ public class TestIndexCriteriaBuilder extends TestCase {
         Map criteria = new HashMap();
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel.Name"); //$NON-NLS-1$
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -419,10 +413,10 @@ public class TestIndexCriteriaBuilder extends TestCase {
     public void testHeaderCriteria4() {
         Map criteria = new HashMap();
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel.Name"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
@@ -440,9 +434,9 @@ public class TestIndexCriteriaBuilder extends TestCase {
         Map criteria = new HashMap();
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "MyModel.Name"); //$NON-NLS-1$
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
@@ -474,7 +468,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
     
     public void testNullCriteriaPrefix() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, null);
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, null);
         String matchPattern = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+IndexConstants.RECORD_STRING.SPACE+
@@ -484,7 +478,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
 
     public void testNullCriteriaPattern() {
         Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, null);
+        helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, null);
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
         String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -496,59 +490,4 @@ public class TestIndexCriteriaBuilder extends TestCase {
         assertEquals(matchPattern, expectedPattern);        
     }
     
-    public void testGetMetadataLiteralCriteria1() {
-        Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, "parentUUID"); //$NON-NLS-1$
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        Collection criteriaValues = new ArrayList();
-        criteriaValues.add("uuid1"); //$NON-NLS-1$
-        criteriaValues.add("uuid2"); //$NON-NLS-1$
-        criteriaValues.add("uuid3"); //$NON-NLS-1$
-        helpAddToInCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, criteriaValues);
-        Collection criteriaMaps = IndexCriteriaBuilder.getLiteralCriteria(criteria);
-        assertEquals(3, criteriaMaps.size());
-    }
-    
-    public void testGetMetadataLiteralCriteria2() {
-        Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, "nameInSource"); //$NON-NLS-1$
-        Collection criteriaValues = new ArrayList();
-        criteriaValues.add("uuid1"); //$NON-NLS-1$
-        criteriaValues.add("uuid2"); //$NON-NLS-1$
-        criteriaValues.add("uuid3"); //$NON-NLS-1$
-        helpAddToInCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, criteriaValues);
-        Collection criteriaValues2 = new ArrayList();
-        criteriaValues2.add("parentUUID1"); //$NON-NLS-1$
-        criteriaValues2.add("parentUUID2"); //$NON-NLS-1$
-        criteriaValues2.add("parentUUID3"); //$NON-NLS-1$
-        helpAddToInCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, criteriaValues);
-        
-        
-        Collection criteriaMaps = IndexCriteriaBuilder.getLiteralCriteria(criteria);
-        assertEquals(9, criteriaMaps.size());
-    }
-    
-    public void testGetMetadataLiteralCriteria3() {
-        Map criteria = new HashMap();
-        helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD, "MyModel"); //$NON-NLS-1$        
-        Collection criteriaValues = new ArrayList();
-        criteriaValues.add("uuid1"); //$NON-NLS-1$
-        criteriaValues.add("uuid2"); //$NON-NLS-1$
-        criteriaValues.add("uuid3"); //$NON-NLS-1$
-        helpAddToInCriteria(criteria, MetadataRecord.MetadataFieldNames.UUID_FIELD, criteriaValues);
-        Collection criteriaValues2 = new ArrayList();
-        criteriaValues2.add("parentUUID1"); //$NON-NLS-1$
-        criteriaValues2.add("parentUUID2"); //$NON-NLS-1$
-        criteriaValues2.add("parentUUID3"); //$NON-NLS-1$
-        helpAddToInCriteria(criteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD, criteriaValues);
-        Collection criteriaValues3 = new ArrayList();
-        criteriaValues3.add("nameInSource1"); //$NON-NLS-1$
-        criteriaValues3.add("nameInSource2"); //$NON-NLS-1$
-        helpAddToInCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD, criteriaValues3);        
-        
-        Collection criteriaMaps = IndexCriteriaBuilder.getLiteralCriteria(criteria);
-        assertEquals(18, criteriaMaps.size());
-    }     
 }

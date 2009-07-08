@@ -36,6 +36,7 @@ import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.vdb.runtime.VDBKey;
 
 
 /** 
@@ -117,12 +118,12 @@ public abstract class EmbeddedBaseDQPService implements ApplicationService {
         return started;
     }
     
-    protected String vdbId(VDBArchive vdb) {
-        return vdbId(vdb.getName(),vdb.getVersion());
+    protected VDBKey vdbId(VDBArchive vdb) {
+        return new VDBKey(vdb.getName(),vdb.getVersion());
     }
     
-    protected String vdbId(String name, String version) {
-        return name.toUpperCase()+"_"+version; //$NON-NLS-1$
+    protected VDBKey vdbId(String name, String version) {
+        return new VDBKey(name, version);
     }    
    
     /** 

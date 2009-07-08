@@ -22,7 +22,7 @@
 
 package com.metamatrix.dqp.embedded.services;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -34,11 +34,11 @@ import com.metamatrix.common.application.Application;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.vdb.api.VDBArchive;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
 import com.metamatrix.dqp.embedded.configuration.ConnectorConfigurationReader;
-import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.service.DQPServiceNames;
 
 
@@ -61,6 +61,7 @@ public class TestEmbeddedVDBService extends TestCase{
     protected void tearDown() throws Exception {
     	vdbService.stop();
         configService.stop();
+        FileUtils.removeDirectoryAndChildren(configService.getDeployDir());
     }
 
     public void testGetTestVDB() throws Exception {        
@@ -172,7 +173,7 @@ public class TestEmbeddedVDBService extends TestCase{
         Properties p = EmbeddedTestUtil.getProperties();         
         configService.setUserPreferences(p);
         configService.initializeService(p);                
-        assertNotNull(vdbService.getVDB("Admin", "1").getInputStream()); //$NON-NLS-1$ //$NON-NLS-2$              
+        assertNotNull(vdbService.getVDB("Admin", "1").getDeployDirectory()); //$NON-NLS-1$ //$NON-NLS-2$              
     }
     
     public void testAvailableVDBs() throws Exception {
@@ -194,18 +195,17 @@ public class TestEmbeddedVDBService extends TestCase{
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
         assertEquals(3, configService.getConnectorBindings().size());
         
-        File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/TestEmpty.vdb"); //$NON-NLS-1$
-        VDBArchive vdb = VDBConfigurationReader.loadVDB(f.toURL());
+        VDBArchive vdb = new VDBArchive(new FileInputStream(UnitTestUtil.getTestDataPath()+"/dqp/TestEmpty.vdb")); //$NON-NLS-1$
         configService.addVDB(vdb, true);
         
         assertEquals(3, vdbService.getAvailableVDBs().size()); 
-        vdb = vdbService.getVDB("TestEmpty", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("TestEmpty", vdb.getName()); //$NON-NLS-1$
+        vdb = vdbService.getVDB("Empty", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("Empty", vdb.getName()); //$NON-NLS-1$
         assertEquals("1", vdb.getVersion()); //$NON-NLS-1$
         
         // no bindings should be added because this function only worries 
         // about the vdb not bindings. Adding is for the Data service and the admin API
-        assertEquals(4, configService.getConnectorBindings().size());
+        assertEquals(3, configService.getConnectorBindings().size());
     }
    
     // when we deploy the already deployed VDB it should take on the next version
@@ -217,8 +217,7 @@ public class TestEmbeddedVDBService extends TestCase{
         assertEquals(2, vdbService.getAvailableVDBs().size()); 
         assertEquals(3, configService.getConnectorBindings().size());
         
-        File f = new File(UnitTestUtil.getTestDataPath()+"/dqp/config/QT_Ora9DS.vdb"); //$NON-NLS-1$
-        VDBArchive vdb = VDBConfigurationReader.loadVDB(f.toURL());
+        VDBArchive vdb = new VDBArchive(new FileInputStream(UnitTestUtil.getTestDataPath()+"/dqp/config/QT_Ora9DS.vdb")); //$NON-NLS-1$
         configService.addVDB(vdb, true);
         
         assertEquals(3, vdbService.getAvailableVDBs().size()); 

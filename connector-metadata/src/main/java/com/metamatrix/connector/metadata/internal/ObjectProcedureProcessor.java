@@ -23,7 +23,6 @@
 package com.metamatrix.connector.metadata.internal;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -170,7 +169,7 @@ public class ObjectProcedureProcessor implements ResultsIterator.ResultsProcesso
                 if (value instanceof VDBFile) {
                     try {
                     	VDBFile record = (VDBFile)value;
-                        value = new SerialClob(ObjectConverterUtil.convertToCharArray(record.getContent(), (int)record.getFileLength(), null));
+                        value = new SerialClob(ObjectConverterUtil.convertToCharArray(record.getContent(), -1, null));
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     } catch (IOException e) {

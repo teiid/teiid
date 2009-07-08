@@ -320,28 +320,4 @@ public class TestJoinPredicate extends TestCase {
         UnitTestUtil.helpTestEquivalence(equals, jp1, jp2);
     }
     
-    
-	// ################################## TEST SUITE ################################
-
-
-	/**
-	 * This suite of all tests could be defined in another class but it seems easier to 
-	 * maintain it here.
-	 */
-	public static Test suite() {
-		TestSuite suite = new TestSuite("TestJoinPredicate"); //$NON-NLS-1$
-		suite.addTestSuite(TestJoinPredicate.class);
-		return suite;
-	}
-
-	// ################################## MAIN ################################
-		
-	/**
-	 * This is a handy main that will run the suite defined in this class.  It has no code specific
-	 * to this class and can be copied into any class that has a method "public static Test suite()".
-	 */
-	public static void main(String arg[]) { 
-        junit.textui.TestRunner.run(suite());
-	}
-	
 }

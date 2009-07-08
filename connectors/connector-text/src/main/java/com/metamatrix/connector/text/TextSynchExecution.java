@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
@@ -120,8 +119,8 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      * @param cmd
      * @param txtConn
      */
-    public TextSynchExecution(IQuery query, Connection txtConn, RuntimeMetadata metadata) {
-        this.txtConn = (TextConnection)txtConn;
+    public TextSynchExecution(IQuery query, TextConnection txtConn, RuntimeMetadata metadata) {
+        this.txtConn = txtConn;
         this.rm = metadata;
         this.logger = this.txtConn.env.getLogger();
         this.metadataProps = this.txtConn.metadataProps;
@@ -438,7 +437,6 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
      */
     protected Object submitRequest(Object req) {
         Properties connprops = txtConn.env.getProperties();
-        metadataProps.put(TextPropertyNames.CONNECTOR_PROPERTIES, connprops);
         
         String cnt_edit = (String) connprops.get(TextPropertyNames.COLUMN_CNT_MUST_MATCH_MODEL);
         if (cnt_edit != null && cnt_edit.equalsIgnoreCase(Boolean.TRUE.toString())) {
@@ -468,7 +466,7 @@ public class TextSynchExecution extends BasicExecution implements ResultSetExecu
         String groupName = group.getFullName();
 
         Map metadataMap = (Map) response;
-        Properties connProps = (Properties) metadataMap.get(TextPropertyNames.CONNECTOR_PROPERTIES);
+        Properties connProps = this.txtConn.env.getProperties();
 
         if(connProps.get(TextPropertyNames.DATE_RESULT_FORMATS)  != null) {
             stringToDateTranslator = new StringToDateTranslator(connProps, logger);

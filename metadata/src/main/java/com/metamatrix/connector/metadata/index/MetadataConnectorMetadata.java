@@ -23,47 +23,48 @@
 package com.metamatrix.connector.metadata.index;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.connector.metadata.FileRecordImpl;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
+import com.metamatrix.connector.metadata.RuntimeVdbRecord;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.index.IEntryResult;
 import com.metamatrix.core.util.CharOperation;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.internal.core.index.Index;
-import com.metamatrix.metadata.runtime.impl.FileRecordImpl;
-import com.metamatrix.metadata.runtime.impl.RecordFactory;
-import com.metamatrix.modeler.core.index.IndexConstants;
-import com.metamatrix.modeler.core.metadata.runtime.FileRecord;
-import com.metamatrix.modeler.core.metadata.runtime.MetadataRecord;
-import com.metamatrix.modeler.internal.core.index.SimpleIndexUtil;
-import com.metamatrix.modeler.transformation.metadata.ServerRuntimeMetadata;
+import com.metamatrix.dqp.service.metadata.CompositeMetadataStore;
+import com.metamatrix.modeler.internal.core.index.IndexConstants;
 
 /**
  * Extends the ServerRuntimeMetadata class with additional methods for querying the indexes.
  */
-public class MetadataConnectorMetadata extends ServerRuntimeMetadata {
+public class MetadataConnectorMetadata {
 
     // processor for postprocessing metadata results
     private final MetadataResultsPostProcessor processor;
-    
+    private final CompositeMetadataStore metadataStore;
     private boolean needSearchPostProcess = false;
+    private VdbMetadataContext context;
     
     /**
      * Constructor MetadataConnectorMetadata.
      * @param context The context object used to pass in info needed by metadata
      * @since 4.3
      */
-    public MetadataConnectorMetadata(final VdbMetadataContext context) {
-        super(context);
+    public MetadataConnectorMetadata(final VdbMetadataContext context, CompositeMetadataStore metadataStore) {
+    	this.context = context;
         this.processor = new MetadataResultsPostProcessor(context);
+        this.metadataStore = metadataStore;
     }
 
     /**
@@ -86,16 +87,16 @@ public class MetadataConnectorMetadata extends ServerRuntimeMetadata {
             // get the record type
             char recordType = tableName.substring(separatorLocation+1).charAt(0);
             // build a search criteria
-            MetadataSearchCriteria recordTypeCriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, new Character(recordType));
+            MetadataSearchCriteria recordTypeCriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD, new Character(recordType));
             // update the criteria map
-            criteria.put(MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD.toUpperCase(), recordTypeCriteria);
+            criteria.put(AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD.toUpperCase(), recordTypeCriteria);
         }
 
         // search for metadata records given the indexFileName and criteria
         try {
             // initialize the post processing flag to false before very search
             this.needSearchPostProcess = false;
-            Collection results = findMetadataRecords(indexFileName, criteria, false);
+            Collection results = findMetadataRecords(indexFileName, criteria);
             // post process results
             if(!results.isEmpty()) {
                 return processor.processMetadataRecords(indexFileName, results, criteria, this.needSearchPostProcess);
@@ -111,82 +112,65 @@ public class MetadataConnectorMetadata extends ServerRuntimeMetadata {
      * Return all index records in the index file that match the given critera.
      * @param indexName The name of the index file to be searched
      * @param criteria Map of fieldNames to MetadataSearchCriteria objects used to search
-     * @param returnFirstMatch Boolean indicating if first match is to be returned
      * @return Collection of metadata records
      * @throws QueryMetadataException
      */
-    protected Collection findMetadataRecords(final String indexName, final Map criteria, boolean returnFirstMatch) throws MetaMatrixComponentException {
+    private Collection findMetadataRecords(final String indexName, final Map criteria) throws MetaMatrixComponentException {
         
         // if file records are needed no need to query index files, these are
         // based on paths of files in vdbs
         if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.FILES_INDEX)) {
-            return getFileRecords(criteria, returnFirstMatch);
+            return getFileRecords(criteria, false);
+        } else if (indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.VDBS_INDEX)) {
+        	return Arrays.asList(new RuntimeVdbRecord(context.getVdbName(), context.getVdbVersion()));
         }
 
         try {
-            // get indexes for the given index name
-            Index[] indexes = SimpleIndexUtil.getIndexes(indexName, super.getIndexSelector());
-            // if there are indexes search them            
-            if(indexes != null && indexes.length > 0) {
-                Collection criteriaCollection = IndexCriteriaBuilder.getLiteralCriteria(criteria);
-                // collect prefixes or patterns based on criteria
-                Collection prefixes = null, patterns = null;
-                for(final Iterator critIter = criteriaCollection.iterator(); critIter.hasNext();) {
-                    Map literalCriteria = (Map) critIter.next();
-                    // short circuit if there is a false criteria
-                    if(!hasFalseCriteria(criteria)) {
-                        // get a prefix from the criteria if possible
-                        String prefixPattern = IndexCriteriaBuilder.getMatchPrefix(indexName, literalCriteria);
-                        // if cannot build a prefix, build a match pattern instead
-                        if(prefixPattern == null) {
-                            if(patterns == null) {
-                                patterns = new ArrayList(criteriaCollection.size());
-                            }
-                            String matchPattern = IndexCriteriaBuilder.getMatchPattern(indexName, literalCriteria);
-                            patterns.add(matchPattern);
-                        } else {
-                            if(prefixes == null) {
-                                prefixes = new ArrayList(criteriaCollection.size());
-                            }
-                            prefixes.add(prefixPattern);
-                        }
-                    }
+            // collect prefixes or patterns based on criteria
+            String prefix = null, pattern = null;
+            // short circuit if there is a false criteria
+            if(!hasFalseCriteria(criteria)) {
+                // get a prefix from the criteria if possible
+                String prefixPattern = IndexCriteriaBuilder.getMatchPrefix(indexName, criteria);
+                // if cannot build a prefix, build a match pattern instead
+                if(prefixPattern == null) {
+                    pattern = IndexCriteriaBuilder.getMatchPattern(indexName, criteria);
+                } else {
+                    prefix = prefixPattern;
                 }
-                // find results from the collection of prefix match patterns
-                // or pattern match patterns
-                IEntryResult[] results = null;
-                // check if any case functions are used
-                boolean hasCaseFunctions = hasCaseFunctions(criteria);
-                // no prefixes
-                if(patterns != null) {
-                    // if no case functions involved do a case sensitive match
-                    if(!hasCaseFunctions) {
-                        results = SimpleIndexUtil.queryIndex(null, indexes, patterns, false, true, returnFirstMatch);
-                    } else {
-                        // do case insensitive match
-                        results = SimpleIndexUtil.queryIndex(null, indexes, patterns, false, false, returnFirstMatch);
-                    }
-                } else if(prefixes != null) {
-                    // prefix match is always case insensitive (since names in our prefixes are upper cased)
-                    // filter case mismatches in post processing
-                    results = SimpleIndexUtil.queryIndex(null, indexes, prefixes, true, true, returnFirstMatch);
-                    if(!hasCaseFunctions) {
-                        // need post processign since prefix search is case insensitive
-                        // if only criteria is record type criteria no post processing needed
-                        if(!criteria.isEmpty()) {                        
-                            if(criteria.size() == 1 &&  criteria.get(MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD.toUpperCase()) != null) {                        
-                                needSearchPostProcess = false;
-                            } else { 
-                                needSearchPostProcess = true;
-                            }
-                        }
-                    }
-                }
-                // if there are results get records
-                if (results != null && results.length > 0) {
-                    return getMetadataRecords(results, criteria, hasCaseFunctions);
-                }                
             }
+            // find results from the collection of prefix match patterns
+            // or pattern match patterns
+            Collection<AbstractMetadataRecord> records= null;
+            // check if any case functions are used
+            boolean hasCaseFunctions = hasCaseFunctions(criteria);
+            // no prefixes
+            if(pattern != null) {
+                // if no case functions involved do a case sensitive match
+                records = metadataStore.findMetadataRecords(indexName, pattern, false, !hasCaseFunctions); 
+                	
+            } else if(prefix != null) {
+            	// prefix match is always case insensitive (since names in our prefixes are upper cased)
+                // filter case mismatches in post processing
+            	records = metadataStore.findMetadataRecords(indexName, prefix, true, true);
+
+            	if(!hasCaseFunctions) {
+                    // need post processing since prefix search is case insensitive
+                    // if only criteria is record type criteria no post processing needed
+                    if(!criteria.isEmpty()) {                        
+                        if(criteria.size() == 1 &&  criteria.get(AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD.toUpperCase()) != null) {                        
+                            needSearchPostProcess = false;
+                        } else { 
+                            needSearchPostProcess = true;
+                        }
+                    }
+                }
+            }
+            needSearchPostProcess |= (!criteria.isEmpty() && this.metadataStore.postProcessFindMetadataRecords());
+            // if there are results get records
+            if (records != null && records.size() > 0) {
+                return getMetadataRecords(records, criteria, hasCaseFunctions);
+            }                
         } catch (MetaMatrixCoreException e) {
             throw new MetaMatrixComponentException(e, e.getMessage());
         }
@@ -202,49 +186,38 @@ public class MetadataConnectorMetadata extends ServerRuntimeMetadata {
      * @return Collection of metadata records
      * @throws QueryMetadataException
      */
-    protected Collection getMetadataRecords(final IEntryResult[] results, 
-                                            final Map criteria, 
-                                            final boolean hasCaseFunctions) throws MetaMatrixComponentException {
-        if (results != null && results.length > 0) {
-            Collection records = RecordFactory.getMetadataRecord(results, null);
+    private Collection getMetadataRecords(Collection records, final Map criteria, 
+                                            final boolean hasCaseFunctions) {
             
-            // Filter the records according to the specified criteria
-            Collection criteriaCollection = IndexCriteriaBuilder.getLiteralCriteria(criteria);
-            for (Iterator i = criteriaCollection.iterator(); i.hasNext();) {
-                final Map literalCriteria = (Map)i.next();
-                
-                // Map a copy of the criteria map converting all keys in the map to be upper-cased
-                final Map updatedCriteria = new HashMap(literalCriteria.size());        
-                for (Iterator j = criteria.entrySet().iterator(); j.hasNext();) {
-                    final Map.Entry entry = (Map.Entry)j.next();
-                    final String key = (String)entry.getKey();
-                    updatedCriteria.put(key.toUpperCase(),entry.getValue());
-                }
+        // Filter the records according to the specified criteria
+            
+        // Map a copy of the criteria map converting all keys in the map to be upper-cased
+        final Map updatedCriteria = new HashMap(criteria.size());        
+        for (Iterator j = criteria.entrySet().iterator(); j.hasNext();) {
+            final Map.Entry entry = (Map.Entry)j.next();
+            final String key = (String)entry.getKey();
+            updatedCriteria.put(key.toUpperCase(),entry.getValue());
+        }
 
-                // Filter based on name criteria ...
-                String nameCriteria = IndexCriteriaBuilder.getValueInCriteria(updatedCriteria, MetadataRecord.MetadataFieldNames.NAME_FIELD);
-                if (!StringUtil.isEmpty(nameCriteria)) {
-                    for (Iterator j = records.iterator(); j.hasNext();) {
-                        MetadataRecord record = (MetadataRecord)j.next();
-                        if (!StringUtil.isEmpty(record.getName())) {
-                            String recordName = record.getName();
-                            if (hasCaseFunctions) {
-                                nameCriteria = nameCriteria.toUpperCase();
-                                recordName   = recordName.toUpperCase();
-                            }
-                            //System.out.println("Matching "+nameCriteria+" to "+record.getName());
-                            if (!CharOperation.match(nameCriteria.toCharArray(), recordName.toCharArray(), true)) {
-                                //System.out.println("--> Removing record");
-                                j.remove();
-                            }
-                        }
+        // Filter based on name criteria ...
+        String nameCriteria = IndexCriteriaBuilder.getValueInCriteria(updatedCriteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD);
+        if (!StringUtil.isEmpty(nameCriteria)) {
+            for (Iterator j = records.iterator(); j.hasNext();) {
+            	AbstractMetadataRecord record = (AbstractMetadataRecord)j.next();
+                if (!StringUtil.isEmpty(record.getName())) {
+                    String recordName = record.getName();
+                    if (hasCaseFunctions) {
+                        nameCriteria = nameCriteria.toUpperCase();
+                        recordName   = recordName.toUpperCase();
+                    }
+                    if (!CharOperation.match(nameCriteria.toCharArray(), recordName.toCharArray(), true)) {
+                        j.remove();
                     }
                 }
             }
-            
-            return records;
         }
-        return Collections.EMPTY_LIST;
+        
+        return records;
     }
     
     /**
@@ -283,12 +256,7 @@ public class MetadataConnectorMetadata extends ServerRuntimeMetadata {
                 if(caserFunctions) {
                     break;
                 }
-            } else if(criteriaObj instanceof MetadataInCriteria) {
-                caserFunctions = ((MetadataInCriteria) criteriaObj).hasFieldWithCaseFunctions();
-                if(caserFunctions) {
-                    break;
-                }
-            }
+            } 
         }
         return caserFunctions;
     }    
@@ -301,20 +269,19 @@ public class MetadataConnectorMetadata extends ServerRuntimeMetadata {
      * @throws MetaMatrixComponentException
      * @since 4.3
      */
-    protected Collection getFileRecords(final Map criteria, boolean returnFirstMatch) {
+    private Collection getFileRecords(final Map criteria, boolean returnFirstMatch) {
 
         // get the criteria for path in vdb
-        MetadataLiteralCriteria literalCriteria = (MetadataLiteralCriteria) criteria.get(FileRecord.MetadataMethodNames.PATH_IN_VDB_FIELD.toUpperCase());
+        MetadataLiteralCriteria literalCriteria = (MetadataLiteralCriteria) criteria.get(FileRecordImpl.MetadataMethodNames.PATH_IN_VDB_FIELD.toUpperCase());
         // if the criteria exists get the path invdb
         String pathInVDb = literalCriteria != null ? (String) literalCriteria.getEvaluatedValue() : null;
 
         Collection fileRecords = new ArrayList();
         // get the file paths from the selector
-        String[] filePaths = super.getIndexSelector().getFilePaths();
-        for(int i=0; i< filePaths.length; i++) {
-            String filePath = filePaths[i];
+        Set<String> filePaths = metadataStore.getMetadataSource().getEntries();
+        for (String filePath : filePaths) {
             FileRecordImpl record = new FileRecordImpl();
-            record.setIndexSelector(super.getIndexSelector());
+            record.setIndexSelector(metadataStore.getMetadataSource());
             record.setPathInVdb(filePath);
             // check if pattern specified matches the filePath
             if(!fileRecords.contains(record)) {

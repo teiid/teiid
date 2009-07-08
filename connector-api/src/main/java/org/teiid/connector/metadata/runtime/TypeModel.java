@@ -64,7 +64,7 @@ public interface TypeModel {
      * @throws ConnectorException If an error occurs retrieving the data
      * from runtime metadata
      */
-    Class getJavaType() throws ConnectorException;
+    Class<?> getJavaType() throws ConnectorException;
     
     /**
      * Get nullability of this column.  

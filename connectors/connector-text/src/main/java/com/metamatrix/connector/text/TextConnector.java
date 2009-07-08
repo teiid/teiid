@@ -40,19 +40,24 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.MetadataProvider;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.basic.BasicConnector;
+import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
+import org.teiid.connector.metadata.runtime.TableRecordImpl;
 
 
 /**
  * Implementation of text connector.
  */
-public class TextConnector extends BasicConnector {
+public class TextConnector extends BasicConnector implements MetadataProvider {
 
     private ConnectorLogger logger;
     private ConnectorEnvironment env;
     private int srcFiles = 0;
     private int srcFileErrs = 0;
-    Map metadataProps = new HashMap();
+    private Map<String, Properties> metadataProps = new HashMap<String, Properties>();
     private String parentDirectory;
 
     /**
@@ -63,7 +68,7 @@ public class TextConnector extends BasicConnector {
         logger = environment.getLogger();
         this.env = environment;
 
-        initMetaDataProps(this.env);
+        initMetaDataProps();
         // test connection
         TextConnection test = new TextConnection(this.env, metadataProps);
         test.close();
@@ -84,9 +89,8 @@ public class TextConnector extends BasicConnector {
         return new TextConnection(this.env, metadataProps);
     }
 
-    private void initMetaDataProps(ConnectorEnvironment env) throws ConnectorException {
+    private void initMetaDataProps() throws ConnectorException {
         Properties connectorProps = env.getProperties();
-        this.metadataProps.put(TextPropertyNames.CONNECTOR_PROPERTIES, connectorProps);
         String descriptor = connectorProps.getProperty(TextPropertyNames.DESCRIPTOR_FILE);
         boolean partialStartupAllowed = getPartialStartupAllowedValue(connectorProps);
     	reinitFileCounts();
@@ -138,7 +142,7 @@ public class TextConnector extends BasicConnector {
 
             String line = null;
             // Walk through records, finding matches
-            do {
+            while(true) {
                 line = br.readLine();
                 if (line == null) {
                     break;
@@ -161,7 +165,7 @@ public class TextConnector extends BasicConnector {
 					}
 				}
 
-            } while (line != null);
+            }
             // throw first exception if readAll was set
             if(connExcep!=null) throw connExcep;
             
@@ -169,8 +173,9 @@ public class TextConnector extends BasicConnector {
             logger.logError(TextPlugin.Util.getString("TextConnection.Error_while_reading_text_file__{0}_1", new Object[] {e.getMessage()}), e); //$NON-NLS-1$
             throw new ConnectorException(e, TextPlugin.Util.getString("TextConnection.Error_trying_to_establish_connection_5")); //$NON-NLS-1$
         } finally {
-            try {br.close();} catch (Exception ee) {}
-            br = null;
+        	if (br != null) {
+        		try {br.close();} catch (Exception ee) {}
+        	}
         }
         logger.logDetail("Successfully read metadata information from the descriptor file " + descriptorFile); //$NON-NLS-1$
     }
@@ -198,7 +203,7 @@ public class TextConnector extends BasicConnector {
             String propertyName = propString.substring(lastIndex + 1).toUpperCase();
 
             // Properties read from descriptor, which are properties for a given group
-            Properties props = (Properties)metadataProps.get(groupName);
+            Properties props = metadataProps.get(groupName);
             if (props == null) {
                 props = new Properties();
             }
@@ -241,7 +246,7 @@ public class TextConnector extends BasicConnector {
                 } catch (NumberFormatException e) {
                     throw new ConnectorException(e, TextPlugin.Util.getString("TextConnection.The_value_for_the_property_should_be_an_integer._{0}_3", new Object[] {e.getMessage()})); //$NON-NLS-1$
                 }
-            } else if (!(propertyName.equals(TextPropertyNames.DELIMITER) || propertyName.equals(TextPropertyNames.QUALIFIER))) {
+            } else if (!(propertyName.equals(TextPropertyNames.COLUMNS) || propertyName.equals(TextPropertyNames.TYPES) || propertyName.equals(TextPropertyNames.TYPES) || propertyName.equals(TextPropertyNames.TYPES) || propertyName.equals(TextPropertyNames.TYPES) || propertyName.equals(TextPropertyNames.DELIMITER) || propertyName.equals(TextPropertyNames.QUALIFIER))) {
                 throw new ConnectorException(TextPlugin.Util.getString("TextConnection.The_property_{0}_for_the_group_{1}_is_invalid._4", new Object[] {propertyName, groupName})); //$NON-NLS-1$
             }
 
@@ -350,6 +355,32 @@ public class TextConnector extends BasicConnector {
 
 	public ConnectorCapabilities getCapabilities() {
 		return TextCapabilities.INSTANCE;
+	}
+
+	@Override
+	public void getConnectorMetadata(MetadataFactory metadataFactory) throws ConnectorException {
+		for (Map.Entry<String, Properties> entry : this.metadataProps.entrySet()) {
+			Properties p = entry.getValue();
+			String columns = p.getProperty(TextPropertyNames.COLUMNS);
+			if (columns == null) {
+				continue;
+			}
+			String types = p.getProperty(TextPropertyNames.TYPES);
+			String[] columnNames = columns.trim().split(","); //$NON-NLS-1$
+			String[] typeNames = null; 
+			if (types != null) {
+				typeNames = types.trim().split(","); //$NON-NLS-1$
+				if (typeNames.length != columnNames.length) {
+					throw new ConnectorException(TextPlugin.Util.getString("TextConnector.column_mismatch", entry.getKey())); //$NON-NLS-1$
+				}
+			}
+			TableRecordImpl table = metadataFactory.addTable(entry.getKey().substring(entry.getKey().indexOf('.') + 1));
+			for (int i = 0; i < columnNames.length; i++) {
+				String type = typeNames == null?TypeFacility.RUNTIME_NAMES.STRING:typeNames[i].trim().toLowerCase();
+				ColumnRecordImpl column = metadataFactory.addColumn(columnNames[i].trim(), type, table);
+				column.setNameInSource(String.valueOf(i));
+			}
+		}
 	}
 
 }

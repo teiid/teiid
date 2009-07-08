@@ -29,6 +29,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -48,7 +49,6 @@ import com.metamatrix.common.xml.XMLReaderWriterImpl;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
-import com.metamatrix.vdb.runtime.BasicVDBInfo;
 
 
 public class DEFReaderWriter {
@@ -85,10 +85,10 @@ public class DEFReaderWriter {
         return vdbDefn;
     }
     
-    private void loadHeaderSection(BasicVDBDefn vdbDefn, Element root) throws IOException {
+    private void loadHeaderSection(BasicVDBDefn vdbDefn, Element root) {
     	Element headElement = root.getChild(Header.ELEMENT);
         if (headElement == null) {
-            throw new IOException("VDBDefnXMLHelper.Invalid_xml_section"); //$NON-NLS-1$
+        	headElement = new Element(Header.ELEMENT);
         }
     	
         Properties header = new Properties();
@@ -110,11 +110,17 @@ public class DEFReaderWriter {
         // now place them in the defn too
         vdbDefn.setCreatedBy(headElement.getChildText(Header.USER_CREATED_BY));
         
-        try {
-			vdbDefn.setDateCreated(new SimpleDateFormat().parse(headElement.getChildText(Header.MODIFICATION_TIME)));
-		} catch (ParseException e) {
-			vdbDefn.setDateCreated(Calendar.getInstance().getTime());
-		}
+        boolean useDefault = modificationTime == null; 
+        if (!useDefault) {
+	        try {
+				vdbDefn.setDateCreated(new SimpleDateFormat().parse(modificationTime));
+			} catch (ParseException e) {
+				useDefault = true;
+			}
+        }
+        if (useDefault) {
+        	vdbDefn.setDateCreated(Calendar.getInstance().getTime());
+        }
     }
     
     private void loadVDBInfoSection(BasicVDBDefn vdbDefn, Element root) throws IOException {
@@ -129,17 +135,19 @@ public class DEFReaderWriter {
             throw new IOException("VDBDefnXMLHelper.No_properties_defined_to_create_defn"); //$NON-NLS-1$
         }
         
-        vdbDefn.setName(vdbProps.getProperty(VDBInfo.NAME));
-        vdbDefn.setVersion(vdbProps.getProperty(VDBInfo.VERSION, "1")); //$NON-NLS-1$
-        vdbDefn.setFileName(vdbProps.getProperty(VDBInfo.ARCHIVE_NAME));
-        vdbDefn.setDescription(vdbProps.getProperty(VDBInfo.DESCRIPTION));
-        vdbDefn.setUUID(vdbProps.getProperty(VDBInfo.GUID)); 
-        if (TRUE.equals(vdbProps.getProperty(VDBInfo.ACTIVE))) { 
+        vdbDefn.setName((String)vdbProps.remove(VDBInfo.NAME));
+        String version = (String)vdbProps.remove(VDBInfo.VERSION);
+        vdbDefn.setVersion(version!=null?version:"1");//$NON-NLS-1$
+        vdbDefn.setFileName((String)vdbProps.remove(VDBInfo.ARCHIVE_NAME));
+        vdbDefn.setDescription((String)vdbProps.remove(VDBInfo.DESCRIPTION));
+        vdbDefn.setUUID((String)vdbProps.remove(VDBInfo.GUID)); 
+        if (TRUE.equals(vdbProps.remove(VDBInfo.ACTIVE))) { 
         	vdbDefn.setStatus(VDBStatus.ACTIVE);
         }
         else {
         	vdbDefn.setStatus(VDBStatus.INACTIVE);
         }
+        vdbDefn.setInfoProperties(vdbProps);
     }
               
     private void loadModelsSection(BasicVDBDefn vdbDefn, Element root) throws IOException {
@@ -288,7 +296,7 @@ public class DEFReaderWriter {
    }
    
    
-   private Element createVDBInfoElement(BasicVDBInfo info, int status) throws IOException{
+   private Element createVDBInfoElement(BasicVDBDefn info, int status) throws IOException{
        Element vdbInfoElement = new Element(VDBInfo.ELEMENT);
        boolean valid = addPropertyElement(vdbInfoElement, VDBInfo.NAME, info.getName());
        if (valid) {
@@ -298,6 +306,12 @@ public class DEFReaderWriter {
            addPropertyElement(vdbInfoElement, VDBInfo.DESCRIPTION, info.getDescription());
            if (status == VDBStatus.ACTIVE) {
         	   addPropertyElement(vdbInfoElement, VDBInfo.ACTIVE, TRUE); 
+           }
+           Properties p = info.getInfoProperties();
+           if (p != null) {
+	           for(String key : (List<String>) Collections.list(p.propertyNames())) {
+	        	   addPropertyElement(vdbInfoElement, key, p.getProperty(key));
+	           }
            }
        }
        else {

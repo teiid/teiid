@@ -22,37 +22,63 @@
 
 package com.metamatrix.metadata.runtime;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import com.metamatrix.modeler.core.index.IndexSelector;
-import com.metamatrix.modeler.internal.core.index.CompositeIndexSelector;
-import com.metamatrix.modeler.internal.core.index.RuntimeIndexSelector;
-import com.metamatrix.modeler.transformation.metadata.ServerMetadataFactory;
+import com.metamatrix.common.vdb.api.VDBArchive;
+import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.dqp.service.metadata.CompositeMetadataStore;
+import com.metamatrix.dqp.service.metadata.TransformationMetadata;
+import com.metamatrix.metadata.runtime.api.MetadataSource;
+import com.metamatrix.modeler.internal.core.index.IndexMetadataStore;
+import com.metamatrix.query.metadata.MetadataStore;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 public class VDBMetadataFactory {
 	
 	public static QueryMetadataInterface getVDBMetadata(String vdbFile) {
-        IndexSelector selector = new RuntimeIndexSelector(vdbFile);
-        return ServerMetadataFactory.getInstance().createCachingServerMetadata(selector); 
+		MetadataSource source;
+		try {
+			source = new VDBArchive(new FileInputStream(vdbFile));
+		} catch (IOException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+		IndexMetadataStore selector;
+		try {
+			selector = new IndexMetadataStore(source);
+		} catch (IOException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+        return new TransformationMetadata(new CompositeMetadataStore(Arrays.asList(selector), source)); 
     }
 	
 	public static QueryMetadataInterface getVDBMetadata(URL vdbURL) throws IOException {
-        IndexSelector selector = new RuntimeIndexSelector(vdbURL);
-        return ServerMetadataFactory.getInstance().createCachingServerMetadata(selector); 
+		MetadataSource source = new VDBArchive(vdbURL.openStream());
+		IndexMetadataStore selector = new IndexMetadataStore(source);
+        return new TransformationMetadata(new CompositeMetadataStore(Arrays.asList(selector), source)); 
     }	
 	
 	public static QueryMetadataInterface getVDBMetadata(String[] vdbFile) {
 		
-        List selectors = new ArrayList();
+        List<MetadataStore> selectors = new ArrayList<MetadataStore>();
+        MetadataSource source = null;
         for (int i = 0; i < vdbFile.length; i++){
-	        selectors.add(new RuntimeIndexSelector(vdbFile[i]));        
+        	try {
+	        	MetadataSource tempSource = new VDBArchive(new File(vdbFile[i]));
+	        	if (i == 0) {
+	        		source = tempSource;
+	        	}
+				selectors.add(new IndexMetadataStore(tempSource));
+			} catch (IOException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}        
         }
         
-        IndexSelector composite = new CompositeIndexSelector(selectors);
-        return ServerMetadataFactory.getInstance().createCachingServerMetadata(composite);
+        return new TransformationMetadata(new CompositeMetadataStore(selectors, source));
     }	
 }

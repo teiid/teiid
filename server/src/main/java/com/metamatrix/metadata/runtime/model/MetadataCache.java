@@ -23,6 +23,7 @@
 package com.metamatrix.metadata.runtime.model;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,16 +35,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.connector.metadata.runtime.MetadataConstants;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.connector.metadata.IndexFile;
-import com.metamatrix.connector.metadata.MetadataConnectorConstants;
-import com.metamatrix.connector.metadata.MultiObjectSource;
-import com.metamatrix.connector.metadata.PropertyFileObjectSource;
 import com.metamatrix.connector.metadata.internal.IObjectQuery;
-import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.connector.metadata.internal.MetadataException;
 import com.metamatrix.connector.metadata.internal.ObjectQueryProcessor;
 import com.metamatrix.core.CoreConstants;
@@ -59,8 +57,6 @@ import com.metamatrix.metadata.runtime.api.VirtualDatabase;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseID;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseDoesNotExistException;
 import com.metamatrix.metadata.runtime.exception.VirtualDatabaseException;
-import com.metamatrix.modeler.core.index.IndexSelector;
-import com.metamatrix.modeler.core.metadata.runtime.MetadataConstants;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 
 /**
@@ -228,8 +224,10 @@ public class MetadataCache implements MetadataSourceAPI, Serializable {
         if (loadMetadata) {
             includeMetadata = true;
             try {
-				RuntimeMetadataCatalog.getInstance().getQueryMetadataCache().lookupMetadata(vdb.getVirtualDatabaseID().getFullName(), vdb.getVirtualDatabaseID().getVersion(), vdbcontents);
+				RuntimeMetadataCatalog.getInstance().getQueryMetadataCache().lookupMetadata(vdb.getVirtualDatabaseID().getFullName(), vdb.getVirtualDatabaseID().getVersion(), new VDBArchive(new ByteArrayInputStream(vdbcontents)), null);
 			} catch (MetaMatrixComponentException e) {
+				throw new VirtualDatabaseException(e);
+			} catch (IOException e) {
 				throw new VirtualDatabaseException(e);
 			}
             loadMetadata();
@@ -260,16 +258,9 @@ public class MetadataCache implements MetadataSourceAPI, Serializable {
     
     protected ObjectQueryProcessor getObjectQueryProcessor() throws VirtualDatabaseException {
     	final VirtualDatabaseID vdbID = vdb.getVirtualDatabaseID();
-    	IndexSelector selector = RuntimeMetadataCatalog.getInstance().getQueryMetadataCache().getCompositeSelector(vdbID.getName(), vdbID.getVersion());        
-        
-        // this is less than ideal, put since we are being called statically and we haven't bothered changing all the methods
-    	// we don't have a reference to the actual vdbservice.  we can however just make direct calls.
-        IObjectSource indexFile = new IndexFile(selector, vdbID.getName(), vdbID.getVersion(), null);
-
-        IObjectSource multiObjectSource = new MultiObjectSource(indexFile, MetadataConnectorConstants.PROPERTIES_FILE_EXTENSION, new PropertyFileObjectSource());
         
         // return an adapter object that has access to all sources
-        return new ObjectQueryProcessor(multiObjectSource);
+        return new ObjectQueryProcessor(RuntimeMetadataCatalog.getInstance().getQueryMetadataCache().getCompositeMetadataObjectSource(vdbID.getName(), vdbID.getVersion(), null));
     }
 
     private Map loadModelsUsingVDBContext(VirtualDatabaseID vdbID, byte[] vdbcontents) throws VirtualDatabaseException {

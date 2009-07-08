@@ -22,26 +22,29 @@
 
 package com.metamatrix.connector.text;
 
+import static org.junit.Assert.*;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
+import org.junit.Test;
 import org.teiid.connector.api.ConnectorEnvironment;
-
-import junit.framework.TestCase;
+import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
+import org.teiid.connector.metadata.runtime.TableRecordImpl;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */
-public class TestTextConnector extends TestCase {
+public class TestTextConnector {
     private static final String DESC_FILE = UnitTestUtil.getTestDataPath() + "/testDescriptorDelimited.txt"; //$NON-NLS-1$
 
-    public TestTextConnector(String name) {
-        super(name);
-    }
-
-    public TextConnector helpSetUp() throws Exception {
-        String descFile = DESC_FILE;
+    public TextConnector helpSetUp(String descFile) throws Exception {
         Properties props = new Properties();
         props.put(TextPropertyNames.DESCRIPTOR_FILE, descFile);
 
@@ -52,15 +55,32 @@ public class TestTextConnector extends TestCase {
         return connector;
     }
     
-    public void testInitialize() throws Exception {
-        helpSetUp();
-    }
-
     // descriptor and data file both are files
-    public void testGetConnection() throws Exception{
-        TextConnector connector = helpSetUp();
+    @Test public void testGetConnection() throws Exception{
+        TextConnector connector = helpSetUp(DESC_FILE);
         TextConnection conn = (TextConnection) connector.getConnection(null);
         assertNotNull(conn);
     }
+    
+    @Test public void testGetMetadata() throws Exception{
+        TextConnector connector = helpSetUp(UnitTestUtil.getTestDataPath() + "/SummitData_Descriptor.txt"); //$NON-NLS-1$
+        Map<String, DatatypeRecordImpl> datatypes = new HashMap<String, DatatypeRecordImpl>();
+        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new DatatypeRecordImpl());
+        datatypes.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, new DatatypeRecordImpl());
+        datatypes.put(DataTypeManager.DefaultDataTypes.INTEGER, new DatatypeRecordImpl());
+        datatypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new DatatypeRecordImpl());
+        MetadataFactory metadata = new MetadataFactory("SummitData", datatypes); //$NON-NLS-1$
+        connector.getConnectorMetadata(metadata); 
+        assertFalse(metadata.getProcedures().iterator().hasNext());
+        Iterator<TableRecordImpl> tableIter = metadata.getTables().iterator();
+        TableRecordImpl group = tableIter.next();
+        assertEquals("SUMMITDATA", group.getName()); //$NON-NLS-1$
+        assertEquals("SummitData.SUMMITDATA", group.getFullName()); //$NON-NLS-1$
+        assertEquals(14, group.getColumns().size());
+        group = tableIter.next();
+        
+        assertNotNull(group.getUUID());
+    }
+
 
 }

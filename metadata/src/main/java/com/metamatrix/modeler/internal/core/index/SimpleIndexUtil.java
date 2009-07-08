@@ -37,11 +37,9 @@ import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.CharOperation;
 import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.dqp.service.metadata.RecordFactory;
 import com.metamatrix.internal.core.index.BlocksIndexInput;
 import com.metamatrix.internal.core.index.Index;
-import com.metamatrix.metadata.runtime.impl.RecordFactory;
-import com.metamatrix.modeler.core.index.IndexConstants;
-import com.metamatrix.modeler.core.index.IndexSelector;
 
 /**
  * IndexUtil
@@ -470,25 +468,21 @@ public class SimpleIndexUtil {
 	 * @throws MetamatrixCoreException If there is an error looking up indexes
 	 * @since 4.2
 	 */
-    public static Index[] getIndexes(final String indexName, final IndexSelector selector) throws MetaMatrixCoreException {
+    public static Index[] getIndexes(final String indexName, final IndexMetadataStore selector) {
 		ArgCheck.isNotEmpty(indexName);
         // The the index file name for the record type
-        try {
-            final Index[] indexes = selector.getIndexes();
-            final List<Index> tmp = new ArrayList<Index>(indexes.length);
-            for (int i = 0; i < indexes.length; i++) {
-                Index coreIndex = indexes[i];
-                if(coreIndex != null) {
-                    final String indexFileName = indexes[i].getIndexFile().getName();
-                    if(indexName.equals(indexFileName)) {
-                        tmp.add(coreIndex);
-                    }
+        final Index[] indexes = selector.getIndexes();
+        final List<Index> tmp = new ArrayList<Index>(indexes.length);
+        for (int i = 0; i < indexes.length; i++) {
+            Index coreIndex = indexes[i];
+            if(coreIndex != null) {
+                final String indexFileName = indexes[i].getIndexFile().getName();
+                if(indexName.equals(indexFileName)) {
+                    tmp.add(coreIndex);
                 }
             }
-            return tmp.toArray(new Index[tmp.size()]);
-        } catch(IOException e) {
-            throw new MetaMatrixCoreException(e);
         }
+        return tmp.toArray(new Index[tmp.size()]);
     }
 
     /**

@@ -22,7 +22,7 @@
 
 package com.metamatrix.metadata.runtime;
 
-import com.metamatrix.modeler.core.index.IndexConstants;
+import com.metamatrix.modeler.internal.core.index.IndexConstants;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.QueryMetadataInterfaceBuilder;
 

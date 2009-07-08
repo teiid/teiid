@@ -29,6 +29,8 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.MetadataProvider;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
@@ -36,7 +38,7 @@ import org.teiid.connector.xa.api.XAConnector;
 /**
  * ConnectorWrapper adds default behavior to the wrapped connector.
  */
-public class ConnectorWrapper implements XAConnector {
+public class ConnectorWrapper implements XAConnector, MetadataProvider {
 	
 	private Connector actualConnector;
 	private String name;
@@ -129,5 +131,13 @@ public class ConnectorWrapper implements XAConnector {
 	
 	public String getConnectorBindingName() {
 		return this.name;
+	}
+	
+	@Override
+	public void getConnectorMetadata(MetadataFactory metadataFactory)
+			throws ConnectorException {
+		if (this.actualConnector instanceof MetadataProvider) {
+			((MetadataProvider)this.actualConnector).getConnectorMetadata(metadataFactory);
+		}
 	}
 }

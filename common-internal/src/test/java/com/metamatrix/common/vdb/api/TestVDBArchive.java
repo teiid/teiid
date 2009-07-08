@@ -24,6 +24,7 @@ package com.metamatrix.common.vdb.api;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 import junit.framework.TestCase;
 
@@ -47,7 +48,7 @@ public class TestVDBArchive extends TestCase {
 		
 		VDBArchive archive = new VDBArchive(vdbFile);
 		
-		assertEquals(true, archive.def.hasWSDLDefined());
+		assertEquals(true, archive.getConfigurationDef().hasWSDLDefined());
 		
 		archive.close();
 		vdbFile.delete();
@@ -118,7 +119,9 @@ public class TestVDBArchive extends TestCase {
 		archive.updateConfigurationDef(VDBArchive.readFromDef(new FileInputStream(anotherDEF)));
 
 		// now close the old VDB File, save the changes to a new file
-		FileUtils.write(archive.getInputStream(), vdbFile);
+		FileOutputStream fos = new FileOutputStream(vdbFile);
+		archive.write(fos);
+		fos.close();
 		archive.close();
 		
 		// now read the modified file and make sure the updates from the above exist

@@ -22,8 +22,10 @@
 
 package com.metamatrix.dqp.embedded.services;
 
-import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
+
+import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -32,6 +34,7 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
@@ -89,24 +92,21 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
      */
     public QueryMetadataInterface lookupMetadata(String vdbName, String vdbVersion) 
         throws MetaMatrixComponentException {
-        
-        QueryMetadataInterface qmi = this.metadataCache.lookupMetadata(vdbName, vdbVersion);
-        if(qmi == null) {                        
-            // First see if the vdbService can give the contents directly 
-        	VDBService vdbService = ((VDBService)lookupService(DQPServiceNames.VDB_SERVICE));
-            try {
-				return this.metadataCache.lookupMetadata(vdbName, vdbVersion, vdbService.getVDB(vdbName, vdbVersion).getInputStream());
-			} catch (IOException e) {
-				throw new MetaMatrixComponentException(e);
-			}
-        }
-        return qmi;
+    	VDBService vdbService = ((VDBService)lookupService(DQPServiceNames.VDB_SERVICE));
+    	DataService dataService = ((DataService)lookupService(DQPServiceNames.DATA_SERVICE));
+		return this.metadataCache.lookupMetadata(vdbName, vdbVersion, vdbService.getVDB(vdbName, vdbVersion), dataService);
     }
     
 
 	public IObjectSource getMetadataObjectSource(String vdbName, String vdbVersion) throws MetaMatrixComponentException {
 		VDBService vdbService = (VDBService)lookupService(DQPServiceNames.VDB_SERVICE);
 		return this.metadataCache.getCompositeMetadataObjectSource(vdbName, vdbVersion, vdbService);	
+	}
+	
+	@Override
+	public Map<String, DatatypeRecordImpl> getBuiltinDatatypes()
+			throws MetaMatrixComponentException {
+		return this.metadataCache.getBuiltinDatatypes();
 	}
 
 }

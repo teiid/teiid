@@ -22,17 +22,24 @@
 
 package com.metamatrix.dqp.service.metadata;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.DataTypeManager.DefaultDataTypes;
+import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.connector.metadata.IndexFile;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MultiObjectSource;
@@ -41,13 +48,12 @@ import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
-import com.metamatrix.modeler.core.index.IndexSelector;
-import com.metamatrix.modeler.internal.core.index.CompositeIndexSelector;
-import com.metamatrix.modeler.internal.core.index.RuntimeIndexSelector;
-import com.metamatrix.modeler.internal.core.workspace.ModelFileUtil;
-import com.metamatrix.modeler.transformation.metadata.ServerMetadataFactory;
+import com.metamatrix.metadata.runtime.api.MetadataSource;
+import com.metamatrix.modeler.internal.core.index.IndexMetadataStore;
+import com.metamatrix.query.metadata.MetadataStore;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.vdb.runtime.VDBKey;
 
@@ -58,78 +64,60 @@ import com.metamatrix.vdb.runtime.VDBKey;
  * @since 4.2
  */
 public class QueryMetadataCache {
+	
+	private static class QueryMetadataHolder {
+		QueryMetadataInterface qmi;
+	}
     
     // vdbID to QueryMetadataInterfaceHolder map
-    private Map vdbToQueryMetadata = new HashMap();
+    private Map<VDBKey, QueryMetadataHolder> vdbToQueryMetadata = Collections.synchronizedMap(new HashMap<VDBKey, QueryMetadataHolder>());
     // map between vdbID and CompositeIndexSelector for the vdb (RuntimeSelector for the vdb and system vdb)
-    private Map vdbToCompositeSelector = new HashMap();
-    // map between vdbID and RuntimeIndexSelector for the vdb
-    private Map vdbToRuntimeSelector = new HashMap();
+    private Map<VDBKey, CompositeMetadataStore> vdbToCompositeSelector = Collections.synchronizedMap(new HashMap<VDBKey, CompositeMetadataStore>());
     // RuntimeIndexSelector for the system vdb    
-    private final RuntimeIndexSelector systemVDBSelector;
+    private final VDBArchive systemVDBSelector;
 
     // boolean for the cache being valid
     private boolean isCacheValid = true;
-
+	private IndexMetadataStore indexMetadataStore;
+    
     /** 
-     * Constructor givena URL to a system vdb. 
+     * Constructor given a URL to a system vdb. 
      * @since 4.2
      */
     public QueryMetadataCache(final URL systemVdbUrl) throws MetaMatrixComponentException {
         try {
-            this.systemVDBSelector = getRuntimeIndexSelector(systemVdbUrl);
-        } catch(Exception e) {
+            this.systemVDBSelector = new VDBArchive(systemVdbUrl.openStream());
+            this.indexMetadataStore = new IndexMetadataStore(this.systemVDBSelector);
+        } catch(IOException e) {
             throw new MetaMatrixComponentException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
         }        
     }
-
+    
     /** 
      * Constructor given the contents of a system vdb. 
      * @since 4.2
      */
-    public QueryMetadataCache(final byte[] sysemVdbContent) throws MetaMatrixComponentException {
+    public QueryMetadataCache(final byte[] systemVdbContent) throws MetaMatrixComponentException {
         try {
-	        this.systemVDBSelector = getRuntimeIndexSelector(CoreConstants.SYSTEM_VDB, sysemVdbContent);
-	    } catch(Exception e) {
+	        this.systemVDBSelector = new VDBArchive(new ByteArrayInputStream(systemVdbContent));
+            this.indexMetadataStore = new IndexMetadataStore(this.systemVDBSelector);
+	    } catch(IOException e) {
 	        throw new MetaMatrixComponentException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
 	    }        
-    }
-
-    /** 
-     * Constructor given the filePath to a system vdb. 
-     * @since 4.2
-     */
-    public QueryMetadataCache(final String filePath) throws MetaMatrixComponentException {
-        try {
-            URL systemVdbUrl = new URL( "file:///" + filePath); //$NON-NLS-1$
-            this.systemVDBSelector = getRuntimeIndexSelector(systemVdbUrl);
-        } catch(Exception e) {
-            throw new MetaMatrixComponentException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", CoreConstants.SYSTEM_VDB));  //$NON-NLS-1$
-        }        
-    }
-
-    /**
-     * Check if this query metadata cache is valid, if the
-     * cache has been cleared it is no longer valid. 
-     * @return
-     * @since 4.3
-     */
-    public boolean isValid() {
-        return this.isCacheValid;
     }
 
     /**
      * Get the composite selector fot the given vdbName, version. 
      */
-    public IndexSelector getCompositeSelector(final String vdbName, final String vdbVersion) {
+    private CompositeMetadataStore getCompositeSelector(final String vdbName, final String vdbVersion) {
         // check cache status
         assertIsValidCache();
         VDBKey vdbID = toVdbID(vdbName, vdbVersion);
-        return (IndexSelector) this.vdbToCompositeSelector.get(vdbID);
+        return this.vdbToCompositeSelector.get(vdbID);
     }
     
     public IObjectSource getCompositeMetadataObjectSource(String vdbName, String vdbVersion, VDBService vdbService){
-		IndexSelector indexSelector = getCompositeSelector(vdbName, vdbVersion);
+    	CompositeMetadataStore indexSelector = getCompositeSelector(vdbName, vdbVersion);
 
 		// build up sources to be used by the index connector
 		IObjectSource indexFile = new IndexFile(indexSelector, vdbName, vdbVersion, vdbService);
@@ -140,154 +128,75 @@ public class QueryMetadataCache {
     }
     
     /**
-     * Look up metadata for the given vdbName, version. This method will return null if no cached
-     * QMI could be found.
-     */
-    public QueryMetadataInterface lookupMetadata(final String vdbName, final String vdbVersion) {
-        // check cache status
-        assertIsValidCache();        
-        VDBKey vdbID = toVdbID(vdbName, vdbVersion);
-        QueryMetadataInterfaceHolder qmiHolder = (QueryMetadataInterfaceHolder)vdbToQueryMetadata.get(vdbID);
-        if(qmiHolder != null) {
-	        // Get the QueryMetadataInterface from the holder; this is synchronized 
-	        // and will do the loading if required
-	        return qmiHolder.getQueryMetadataInteface();
-        }
-        return null;
-    }
-
-    /**
      * Look up metadata for the given vdbName, version at the given filecontent.
+     * @throws MetaMatrixComponentException 
      */
-    public QueryMetadataInterface lookupMetadata(final String vdbName, final String vdbVersion, final byte[] vdbContent) throws MetaMatrixComponentException{
-        // check cache status
-        QueryMetadataInterfaceHolder qmiHolder = createMetadataHolder(vdbName, vdbVersion);
-        return qmiHolder.getQueryMetadataInteface(vdbContent);
-    }
-    
-    /**
-     * Look up metadata for the given vdbName, version at the given filecontent.
-     */
-    public QueryMetadataInterface lookupMetadata(final String vdbName, final String vdbVersion, final InputStream vdbContent) throws MetaMatrixComponentException{
-        QueryMetadataInterfaceHolder qmiHolder = createMetadataHolder(vdbName,vdbVersion);
-        return qmiHolder.getQueryMetadataInteface(vdbContent);
-    }
-    
-	private QueryMetadataInterfaceHolder createMetadataHolder(final String vdbName, final String vdbVersion) {
-		assertIsValidCache();        
+    public QueryMetadataInterface lookupMetadata(final String vdbName, final String vdbVersion, MetadataSource iss, DataService dataService) throws MetaMatrixComponentException {
+    	assertIsValidCache();        
         VDBKey vdbID = toVdbID(vdbName, vdbVersion);
-        QueryMetadataInterfaceHolder qmiHolder = null;
+        QueryMetadataHolder qmiHolder = null;
         // Enter a synchronized block to find the holder of a QueryMetadataInterface for a VDB
         synchronized(vdbToQueryMetadata) {
-            qmiHolder = (QueryMetadataInterfaceHolder)vdbToQueryMetadata.get(vdbID);
+            qmiHolder = vdbToQueryMetadata.get(vdbID);
             if ( qmiHolder == null ) {
-                // Didn't find one, so create it and put back in the map ...
-                qmiHolder = new QueryMetadataInterfaceHolder(vdbID,vdbName);
+            	qmiHolder = new QueryMetadataHolder();
                 vdbToQueryMetadata.put(vdbID, qmiHolder);
             }
         }
-		return qmiHolder;
-	}    
+        synchronized (qmiHolder) {
+        	if (qmiHolder.qmi == null) {
+        		qmiHolder.qmi = loadMetadata(vdbID, iss, dataService);
+        	}
+		}
+        return qmiHolder.qmi;
+    }
     
-     
-
     private void assertIsValidCache() {
-        if(!isValid()) {
+        if(!this.isCacheValid) {
             throw new MetaMatrixRuntimeException(DQPPlugin.Util.getString("QueryMetadataCache.cache_not_valid"));             //$NON-NLS-1$
         }
     }
 
-    /**
-     * There a QMI holder per vdb, the holder shields metadata lookups by differrent thereads for differrent
-     * vdbs from having to wait for metadata being loaded for a single vdb. If there are 2 threads for
-     * 2 vdbs, each thread can have their own instance of the holder and load their own metadata without
-     * having to wait for other thread to finish.   
-     * @since 4.2
-     */
-    protected class QueryMetadataInterfaceHolder {
-        private final VDBKey vdbId;
-        private final String vdbName;
-        private QueryMetadataInterface qmi;
-        protected QueryMetadataInterfaceHolder(VDBKey vdbId, String vdbName) {
-            this.vdbId = vdbId;
-            this.vdbName = vdbName;
-        }
-        protected QueryMetadataInterface getQueryMetadataInteface() {
-            return this.qmi;
-        }
-        protected synchronized QueryMetadataInterface getQueryMetadataInteface(final byte[] vdbContent) throws MetaMatrixComponentException {
-            if ( this.qmi == null ) {
-                this.qmi = QueryMetadataCache.this.loadMetadata(this.vdbId, getRuntimeIndexSelector(this.vdbName, vdbContent));
-            }
-            return this.qmi;
-        }
-        protected synchronized QueryMetadataInterface getQueryMetadataInteface(InputStream vdbContent) throws MetaMatrixComponentException {
-            if ( this.qmi == null ) {
-                this.qmi = QueryMetadataCache.this.loadMetadata(this.vdbId, getRuntimeIndexSelector(this.vdbName, vdbContent));
-            }
-            return this.qmi;
-        }        
-    }
-
-    private QueryMetadataInterface loadMetadata(final VDBKey vdbID, final RuntimeIndexSelector runtimeSelector) throws MetaMatrixComponentException {
+    private QueryMetadataInterface loadMetadata(final VDBKey vdbID, final MetadataSource runtimeSelector, DataService dataService) throws MetaMatrixComponentException {
         // check cache status
         assertIsValidCache();
-        vdbToRuntimeSelector.put(vdbID,runtimeSelector);
 
+        List<MetadataStore> metadataStores = new ArrayList<MetadataStore>();
+        try {
+			metadataStores.add(new IndexMetadataStore(runtimeSelector));
+	        Set<String> modelNames = runtimeSelector.getConnectorMetadataModelNames();
+	        if (!modelNames.isEmpty()) {
+		        for (String modelName : modelNames) {
+		        	metadataStores.add(new ConnectorMetadataStore(vdbID, modelName, dataService));
+				}
+	        }
+			metadataStores.add(indexMetadataStore);
+		} catch (IOException e) {
+			throw new MetaMatrixComponentException(e);
+		}
         // build a composite selector for the runtimeselectors of this vdb and system vdb
-        List selectors = new ArrayList(2);
-        selectors.add(runtimeSelector);
-        if(this.systemVDBSelector != null && this.systemVDBSelector.isValid()) {        
-            selectors.add(this.systemVDBSelector);
-        }
-        IndexSelector composite = new CompositeIndexSelector(selectors);
+        CompositeMetadataStore composite = new CompositeMetadataStore(metadataStores, runtimeSelector);
         vdbToCompositeSelector.put(vdbID, composite);
-
-        QueryMetadataInterface result = ServerMetadataFactory.getInstance().createCachingServerMetadata(composite);
-        // being used for performance tuning, not used anymore
-//        if (false) {
-//            result = new TimingMetadataInterface( result, ServerPerformance.METADATA, ConnectorManagerImpl.getPerformanceStatisticsSource() );
-//        }        
+        QueryMetadataInterface result = new TransformationMetadata(composite);
         return result;        
     }
-    
-    private RuntimeIndexSelector getRuntimeIndexSelector(final String vdbName, byte[] vdbContents) {
-        RuntimeIndexSelector runtimeSelector = null;
-        try {
-            String vdbFileName = vdbName + '.' + ModelFileUtil.EXTENSION_VDB;
-            runtimeSelector = new RuntimeIndexSelector(vdbFileName, vdbContents);
-            // force the extraction of indexes for the vdb            
-            runtimeSelector.getIndexes();
-        } catch (IOException e) {            
-            throw new MetaMatrixRuntimeException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", vdbName));  //$NON-NLS-1$
-        }
-        return runtimeSelector;
-    }
-    
-    private RuntimeIndexSelector getRuntimeIndexSelector(final String vdbName, InputStream vdbContents) {
-        RuntimeIndexSelector runtimeSelector = null;
-        try {
-            String vdbFileName = vdbName + '.' + ModelFileUtil.EXTENSION_VDB;
-            runtimeSelector = new RuntimeIndexSelector(vdbFileName, vdbContents);
-            // force the extraction of indexes for the vdb            
-            runtimeSelector.getIndexes();
-        } catch (IOException e) {            
-            throw new MetaMatrixRuntimeException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", vdbName));  //$NON-NLS-1$
-        }
-        return runtimeSelector;
-    }    
 
-    private RuntimeIndexSelector getRuntimeIndexSelector(final URL path) {
-        RuntimeIndexSelector runtimeSelector = null;
-        try {
-            runtimeSelector = new RuntimeIndexSelector(path);
-            // force the extraction of indexes for the vdb            
-            runtimeSelector.getIndexes();
-        } catch (IOException e) {            
-            throw new MetaMatrixRuntimeException(e, DQPPlugin.Util.getString("QueryMetadataCache.Failed_creating_Runtime_Index_Selector._4", path));  //$NON-NLS-1$
-        }
-        return runtimeSelector;
-    }
+	public Map<String, DatatypeRecordImpl> getBuiltinDatatypes() throws MetaMatrixComponentException {
+		Collection<DatatypeRecordImpl> datatypes = this.indexMetadataStore.getDatatypes();
+		Map<String, DatatypeRecordImpl> datatypeMap = new HashMap<String, DatatypeRecordImpl>();
+		for (String typeName : DataTypeManager.getAllDataTypeNames()) {
+			for (DatatypeRecordImpl datatypeRecordImpl : datatypes) {
+				if (datatypeRecordImpl.getName().equals("int")) { //$NON-NLS-1$
+					datatypeMap.put(DefaultDataTypes.INTEGER, datatypeRecordImpl);
+				} else if (datatypeRecordImpl.getName().equals("XMLLiteral")) { //$NON-NLS-1$
+					datatypeMap.put(DataTypeManager.DefaultDataTypes.XML, datatypeRecordImpl);
+				} else if (datatypeRecordImpl.getName().equals(typeName)) {
+					datatypeMap.put(typeName, datatypeRecordImpl);
+				}
+			}
+		}
+		return datatypeMap;
+	}
 
     /**
      * Clears all state on this cache and also deletes any indexfiles
@@ -301,20 +210,10 @@ public class QueryMetadataCache {
         // Clear the holders ...
         vdbToQueryMetadata.clear();
 
-        // Clean up the selectors (cleans up temp directory for each VDB) ...
-        for(final Iterator iter = vdbToRuntimeSelector.values().iterator();iter.hasNext();){
-            RuntimeIndexSelector selector = (RuntimeIndexSelector)iter.next();
-            // selector should no longer be used
-            selector.setValid(false);
-            selector.clearVDB();
-        }
-        vdbToRuntimeSelector.clear();
-
         // Clean up the directory for the System VDB ...
         if (this.systemVDBSelector != null) {
             // selector should no longer be used
-            this.systemVDBSelector.setValid(false);	            
-            this.systemVDBSelector.clearVDB();
+            this.systemVDBSelector.close();
         }
 
         // Clear the cache of selectors ...
@@ -329,23 +228,8 @@ public class QueryMetadataCache {
         LogManager.logTrace(LogConstants.CTX_DQP, new Object[] {"QueryMetadataCache Removing vdb from cache", vdbName, vdbVersion});  //$NON-NLS-1$ 
         if(vdbName != null && vdbVersion != null) {
 	        final VDBKey vdbID = toVdbID(vdbName, vdbVersion);
-	        // Remove the holder ...
-	        QueryMetadataInterfaceHolder qmiHolder = null;
-	        RuntimeIndexSelector selector = null;
-	        synchronized(vdbToQueryMetadata) {
-	            qmiHolder = (QueryMetadataInterfaceHolder)vdbToQueryMetadata.get(vdbID);
-	            if ( qmiHolder != null ) {
-	                vdbToQueryMetadata.remove(vdbID);
-	            }
-		        // Remove from the cache of selectors ...
-	            vdbToCompositeSelector.remove(vdbID);	// CompositeIndexSelector; should not clean up!
-		        selector = (RuntimeIndexSelector)vdbToRuntimeSelector.remove(vdbID); // clean up in a moment
-	        }
-
-	        // Clean up the selector (cleans up temp directory for VDB) ...
-	        if ( selector != null ) {
-	            selector.clearVDB();
-	        }
+            vdbToQueryMetadata.remove(vdbID);
+            vdbToCompositeSelector.remove(vdbID);
         }
     }
 
@@ -356,15 +240,4 @@ public class QueryMetadataCache {
         return new VDBKey(vdbName, vdbVersion);
     }
 
-    /**
-     *  Only to be used by UnitTests
-     */
-    public QueryMetadataInterface testLoadMetadata(final String vdbName, final String vdbVersion, final String filePath) throws MetaMatrixComponentException {
-        VDBKey vdbID = toVdbID(vdbName, vdbVersion);
-        try {
-            return this.loadMetadata(vdbID, getRuntimeIndexSelector(new URL( "file:///" + filePath))); //$NON-NLS-1$
-        } catch(Exception e) {
-            throw new MetaMatrixComponentException(e);
-        }
-    }
 }

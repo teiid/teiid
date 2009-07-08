@@ -22,7 +22,6 @@
 
 package com.metamatrix.connector.metadata.internal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,8 +32,6 @@ import org.teiid.connector.language.ICompareCriteria;
 import org.teiid.connector.language.ICompoundCriteria;
 import org.teiid.connector.language.ICriteria;
 import org.teiid.connector.language.IExpression;
-import org.teiid.connector.language.IInCriteria;
-import org.teiid.connector.language.IIsNullCriteria;
 import org.teiid.connector.language.ILikeCriteria;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IQuery;
@@ -43,7 +40,6 @@ import org.teiid.connector.language.ICompareCriteria.Operator;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
-import com.metamatrix.connector.metadata.index.MetadataInCriteria;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
@@ -155,40 +151,14 @@ public class MetadataSearchCriteriaBuilder {
                 buildMetadataCompareCriteria((ICompareCriteria) criteria);
             } else if (criteria instanceof ILikeCriteria) {
                 buildMetadataLikeCriteria((ILikeCriteria) criteria);
-            } else if (criteria instanceof IInCriteria) {
-                buildMetadataInCriteria((IInCriteria) criteria);
             } else if (criteria instanceof ICompoundCriteria) {
                 buildMetadataCompoundCriteria((ICompoundCriteria) criteria);
-            } else if (criteria instanceof IIsNullCriteria) {
-                buildMetadataIsNullCriteria((IIsNullCriteria) criteria);
             } else {
                 Object[] params = new Object[] { criteria };
                 throw new RuntimeException(MetadataConnectorPlugin.Util.getString("ObjectQuery.Unsupported_criteria_{0}", params)); //$NON-NLS-1$
             }
         }
     }
-    
-    /**
-     * Build MetadataLiteralCriteria objects given IsNullCriteria which is part of 
-     * query language getting submitted to the connector.
-     * @param criteria ICompareCriteria object part of query
-     */
-    private void buildMetadataIsNullCriteria(IIsNullCriteria criteria) throws ConnectorException {
-        if (criteria.isNegated()) {
-            Object[] params = new Object[] { criteria };
-            throw new RuntimeException(MetadataConnectorPlugin.Util.getString("ObjectQuery.Unsupported_criteria_{0}", params)); //$NON-NLS-1$
-        }
-   
-        IExpression ltExpression = criteria.getExpression();
-
-        String fieldName = this.query.getElementName(ltExpression);
-        String fieldFunctionName = this.query.getFunctionName(ltExpression);
-        
-        MetadataLiteralCriteria literalCriteria = new MetadataLiteralCriteria(fieldName, null);
-        literalCriteria.setFieldFunction(fieldFunctionName);
-        // update criteria map with the criteria
-        criteriaMap.put(fieldName.toUpperCase(), literalCriteria);
-    }    
     
     /**
      * Build MetadataLiteralCriteria objects given ICompareCriteria which is part of 
@@ -253,30 +223,6 @@ public class MetadataSearchCriteriaBuilder {
         criteriaMap.put(fieldName.toUpperCase(), literalCriteria);        
     }
     
-    /**
-     * Build MetadataInCriteria objects given IInCriteria which is part of 
-     * query language getting submitted to the connector.
-     * @param criteria IInCriteria object part of query
-     * @since 4.3
-     */    
-    private void buildMetadataInCriteria(IInCriteria criteria) throws ConnectorException {
-        IExpression ltExpression = criteria.getLeftExpression();
-        Collection rtExpressions = criteria.getRightExpressions();
-        Collection literalValues = new ArrayList(rtExpressions.size());
-
-        String fieldName = this.query.getElementName(ltExpression);
-        for(final Iterator iter = rtExpressions.iterator(); iter.hasNext();) {
-            literalValues.add(this.query.getExpressionValue((IExpression) iter.next()));
-        }
-
-        String fieldFunctionName = this.query.getFunctionName(ltExpression);
-        MetadataInCriteria literalCriteria = new MetadataInCriteria(fieldName, literalValues);
-        literalCriteria.setFieldFunction(fieldFunctionName);
-
-        // update criteria map with the criteria
-        criteriaMap.put(fieldName.toUpperCase(), literalCriteria);        
-    }     
-
     /**
      * Build MetadataLiteralCriteria objects given ICompoundCriteria which is part of 
      * query language getting submitted to the connector.

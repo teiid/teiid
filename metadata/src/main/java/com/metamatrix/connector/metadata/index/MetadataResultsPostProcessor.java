@@ -27,23 +27,21 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
+import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.ModelRecordImpl;
+import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.SystemVdbUtility;
-import com.metamatrix.connector.metadata.RuntimeVdbRecord;
+import com.metamatrix.connector.metadata.FileRecordImpl;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.CharOperation;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.metadata.runtime.impl.ModelRecordImpl;
-import com.metamatrix.modeler.core.index.IndexConstants;
-import com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord;
-import com.metamatrix.modeler.core.metadata.runtime.FileRecord;
-import com.metamatrix.modeler.core.metadata.runtime.MetadataRecord;
-import com.metamatrix.modeler.core.metadata.runtime.ModelRecord;
-import com.metamatrix.modeler.core.metadata.runtime.PropertyRecord;
-import com.metamatrix.modeler.core.metadata.runtime.VdbRecord;
+import com.metamatrix.modeler.internal.core.index.IndexConstants;
 
 
 /** 
@@ -100,20 +98,11 @@ public class MetadataResultsPostProcessor {
 
         Collection processedRecods = new ArrayList(records.size());
         for (Iterator iterator = records.iterator(); iterator.hasNext(); ) {
-            MetadataRecord record = (MetadataRecord) iterator.next();
-
-            // if its a vdb record wrap it with real vdb info
-            if(record instanceof VdbRecord) {
-                Object wrappedRecord = getWarpedVdbRecord((VdbRecord)record);
-                if(wrappedRecord != null) {
-                    processedRecods.add(wrappedRecord);
-                }
-                continue;
-            }
+            AbstractMetadataRecord record = (AbstractMetadataRecord) iterator.next();
 
             // filterout private fileRecords
-            if (record instanceof FileRecord) {
-                FileRecord fileRecord = filterFileRecordsByVisibility((FileRecord)record);
+            if (record instanceof FileRecordImpl) {
+                FileRecordImpl fileRecord = filterFileRecordsByVisibility((FileRecordImpl)record);
                 if(fileRecord != null) {
                     processedRecods.add(fileRecord);
                 }
@@ -122,8 +111,8 @@ public class MetadataResultsPostProcessor {
 
             // if its a modelRecord update visibility with the one available on
             // vdb service
-            if(record instanceof ModelRecord) {
-                MetadataRecord modelRecord = getModelRecordWithUpdatedVisibility((ModelRecord)record);
+            if(record instanceof ModelRecordImpl) {
+            	AbstractMetadataRecord modelRecord = getModelRecordWithUpdatedVisibility((ModelRecordImpl)record);
                 if(modelRecord != null) {
                     record = modelRecord;
                 }
@@ -131,7 +120,7 @@ public class MetadataResultsPostProcessor {
 
             // apply search criteria and filterout unmatched records
             if(needSearchFiltering) {
-                MetadataRecord filteredRecord = filterBySearchCriteria(record, searchCriteria);
+                AbstractMetadataRecord filteredRecord = filterBySearchCriteria(record, searchCriteria);
                 if(filteredRecord != null) {
                     processedRecods.add(filteredRecord);
                     continue;
@@ -143,22 +132,6 @@ public class MetadataResultsPostProcessor {
         
         return processedRecods;
     }
-
-    /**
-     * Wrap the vdb recods into a RuntimeVdbRecods with real vdb information. Since the System vdb is
-     * available to a user logged into any vdb filter out the System vdb recod. But for test purposes
-     * if the logged in vdb is the system vdb do not filter it out. 
-     * @param record The VDBRecord object.
-     * @return The wrapped vdb record
-     * @since 4.3
-     */
-    public MetadataRecord getWarpedVdbRecord(final VdbRecord record) {
-        if(!record.getName().equalsIgnoreCase(SystemVdbUtility.VDB_NAME)
-            || vdbName.equalsIgnoreCase(SystemVdbUtility.VDB_NAME)) {
-            return new RuntimeVdbRecord(record, vdbName, vdbVersion);
-        }
-        return null;
-    }
     
     /**
      * Update the ModelRecord with the visibility from vdb service, if vdb service is not available
@@ -167,7 +140,7 @@ public class MetadataResultsPostProcessor {
      * @return The updated ModelRecord
      * @since 4.3
      */
-    public ModelRecord getModelRecordWithUpdatedVisibility(final ModelRecord record) {
+    public ModelRecordImpl getModelRecordWithUpdatedVisibility(final ModelRecordImpl record) {
         if(record instanceof ModelRecordImpl){
             //set visibility
             ModelRecordImpl mRecord = (ModelRecordImpl)record;
@@ -195,7 +168,7 @@ public class MetadataResultsPostProcessor {
      * @return The visible FileReord
      * @since 4.3
      */
-    private FileRecord filterFileRecordsByVisibility(final FileRecord record) {
+    private FileRecordImpl filterFileRecordsByVisibility(final FileRecordImpl record) {
         // begin with assumption that all files are public
         int visibility = ModelInfo.PUBLIC;
         // if its a model file check visibility
@@ -223,21 +196,21 @@ public class MetadataResultsPostProcessor {
      * @return The record that passed filtering
      * @since 4.3
      */
-    public MetadataRecord filterBySearchCriteria(final MetadataRecord record, final Map searchCriteria) {
+    public AbstractMetadataRecord filterBySearchCriteria(final AbstractMetadataRecord record, final Map searchCriteria) {
         if(!searchCriteria.isEmpty()) {
             // appply criteria for generic metadata record
             if(!applyMetadataRecordCriteria(record, searchCriteria)) {
                 return null;
             }
             // appply criteria for datatype record
-            if(record instanceof DatatypeRecord) {
-                if(!applyDatatypeRecordCriteria((DatatypeRecord)record, searchCriteria)) {
+            if(record instanceof DatatypeRecordImpl) {
+                if(!applyDatatypeRecordCriteria((DatatypeRecordImpl)record, searchCriteria)) {
                     return null;
                 }                
             }
             // appply criteria for property record
-            if(record instanceof PropertyRecord) {
-                if(!applyPropertyRecordCriteria((PropertyRecord)record, searchCriteria)) {
+            if(record instanceof PropertyRecordImpl) {
+                if(!applyPropertyRecordCriteria((PropertyRecordImpl)record, searchCriteria)) {
                     return null;
                 }                
             }
@@ -254,19 +227,19 @@ public class MetadataResultsPostProcessor {
      * @return The record that passed filtering
      * @since 4.3
      */
-    private boolean applyDatatypeRecordCriteria(final DatatypeRecord record, final Map searchCriteria) {
+    private boolean applyDatatypeRecordCriteria(final DatatypeRecordImpl record, final Map searchCriteria) {
         // runtimetype criteria
-        MetadataSearchCriteria runtypeCriteria = getSearchCriteria(searchCriteria, DatatypeRecord.MetadataFieldNames.RUN_TYPE_NAME);
+        MetadataSearchCriteria runtypeCriteria = getSearchCriteria(searchCriteria, DatatypeRecordImpl.MetadataFieldNames.RUN_TYPE_NAME);
         if(!applyCriteria(runtypeCriteria, record.getRuntimeTypeName())) {
             return false;
         }
         // basetype id criteria
-        MetadataSearchCriteria baseTypeCriteria = getSearchCriteria(searchCriteria, DatatypeRecord.MetadataFieldNames.BASE_TYPE_UUID);
+        MetadataSearchCriteria baseTypeCriteria = getSearchCriteria(searchCriteria, DatatypeRecordImpl.MetadataFieldNames.BASE_TYPE_UUID);
         if(!applyCriteria(baseTypeCriteria, record.getBasetypeID())) {
             return false;
         }
         // datatype id criteria
-        MetadataSearchCriteria dataTypeCriteria = getSearchCriteria(searchCriteria, DatatypeRecord.MetadataFieldNames.DATA_TYPE_UUID);
+        MetadataSearchCriteria dataTypeCriteria = getSearchCriteria(searchCriteria, DatatypeRecordImpl.MetadataFieldNames.DATA_TYPE_UUID);
         if(!applyCriteria(dataTypeCriteria, record.getDatatypeID())) {
             return false;
         }        
@@ -281,14 +254,14 @@ public class MetadataResultsPostProcessor {
      * @return The record that passed filtering
      * @since 4.3
      */
-    private boolean applyPropertyRecordCriteria(final PropertyRecord record, final Map searchCriteria) {
+    private boolean applyPropertyRecordCriteria(final PropertyRecordImpl record, final Map searchCriteria) {
         // prop name criteria
-        MetadataSearchCriteria propNameCriteria = getSearchCriteria(searchCriteria, PropertyRecord.MetadataFieldNames.PROPERTY_NAME_FIELD);
+        MetadataSearchCriteria propNameCriteria = getSearchCriteria(searchCriteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD);
         if(!applyCriteria(propNameCriteria, record.getPropertyName())) {
             return false;
         }
         // prop value criteria
-        MetadataSearchCriteria propValueCriteria = getSearchCriteria(searchCriteria, PropertyRecord.MetadataFieldNames.PROPERTY_VALUE_FIELD);
+        MetadataSearchCriteria propValueCriteria = getSearchCriteria(searchCriteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD);
         if(!applyCriteria(propValueCriteria, record.getPropertyValue())) {
             return false;
         }
@@ -303,39 +276,39 @@ public class MetadataResultsPostProcessor {
      * @return The record that passed filtering
      * @since 4.3
      */
-    private boolean applyMetadataRecordCriteria(final MetadataRecord record, final Map searchCriteria) {
+    private boolean applyMetadataRecordCriteria(final AbstractMetadataRecord record, final Map searchCriteria) {
         // apply record type criteria first
-        MetadataSearchCriteria recordTypeCriteria = getSearchCriteria(searchCriteria, MetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
+        MetadataSearchCriteria recordTypeCriteria = getSearchCriteria(searchCriteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
         if(!applyCriteria(recordTypeCriteria, new Character(record.getRecordType()))) {
             return false;
         }
         // full name criteria
-        MetadataSearchCriteria fullNameCriteria = getSearchCriteria(searchCriteria, MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD);
+        MetadataSearchCriteria fullNameCriteria = getSearchCriteria(searchCriteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD);
         if(!applyCriteria(fullNameCriteria, record.getFullName())) {
             return false;
         }
         // name criteria
-        MetadataSearchCriteria nameCriteria = getSearchCriteria(searchCriteria, MetadataRecord.MetadataFieldNames.NAME_FIELD);
+        MetadataSearchCriteria nameCriteria = getSearchCriteria(searchCriteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD);
         if(!applyCriteria(nameCriteria, record.getName())) {
             return false;
         }
         // model name criteria
-        MetadataSearchCriteria modelNameCriteria = getSearchCriteria(searchCriteria, MetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD);
+        MetadataSearchCriteria modelNameCriteria = getSearchCriteria(searchCriteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD);
         if(!applyCriteria(modelNameCriteria, record.getModelName())) {
             return false;
         }
         // nameInSource criteria
-        MetadataSearchCriteria nameInSourceCriteria = getSearchCriteria(searchCriteria, MetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD);
+        MetadataSearchCriteria nameInSourceCriteria = getSearchCriteria(searchCriteria, AbstractMetadataRecord.MetadataFieldNames.NAME_IN_SOURCE_FIELD);
         if(!applyCriteria(nameInSourceCriteria, record.getNameInSource())) {
             return false;
         }
         // uuid criteria
-        MetadataSearchCriteria uuidCriteria = getSearchCriteria(searchCriteria, MetadataRecord.MetadataFieldNames.UUID_FIELD);
+        MetadataSearchCriteria uuidCriteria = getSearchCriteria(searchCriteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD);
         if(!applyCriteria(uuidCriteria, record.getUUID())) {
             return false;
         }
         // parent uuid criteria        
-        MetadataSearchCriteria parentUuidCriteria = getSearchCriteria(searchCriteria, MetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD);
+        MetadataSearchCriteria parentUuidCriteria = getSearchCriteria(searchCriteria, AbstractMetadataRecord.MetadataFieldNames.PARENT_UUID_FIELD);
         if(!applyCriteria(parentUuidCriteria, record.getParentUUID())) {
             return false;
         }        
@@ -373,7 +346,7 @@ public class MetadataResultsPostProcessor {
                 String literalString = evaluatedLiteral.toString();
                 String valueString = value.toString();
                 // if no fucnction just do case sensitive match
-                if(!CharOperation.match(literalString.toCharArray(), valueString.toCharArray(), true)) {
+                if(!CharOperation.match(literalString.toCharArray(), valueString.toCharArray(), !literalCriteria.hasFieldWithCaseFunctions())) {
                     criteriaPassed = false;
                 }
             } else {
@@ -385,18 +358,7 @@ public class MetadataResultsPostProcessor {
                 }
             }
         // post processing literal criteria
-        } else if(criteria instanceof MetadataInCriteria) {
-            MetadataInCriteria inCriteria = (MetadataInCriteria) criteria;
-            Collection literalCriteria = inCriteria.getLiteralCriteria();
-            for(final Iterator critIter = literalCriteria.iterator(); critIter.hasNext();) {
-                MetadataLiteralCriteria literalCrit = (MetadataLiteralCriteria) critIter.next();
-                if(!applyCriteria(literalCrit, value)) {
-                    criteriaPassed = false;
-                    break;
-                }
-            }
-            
-        }
+        } 
         return criteriaPassed;
     }
 }

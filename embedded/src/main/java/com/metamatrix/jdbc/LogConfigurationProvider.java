@@ -26,15 +26,9 @@ import java.util.Set;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.log.LogConfiguration;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
 @Singleton
 class LogConfigurationProvider implements Provider<LogConfiguration> {

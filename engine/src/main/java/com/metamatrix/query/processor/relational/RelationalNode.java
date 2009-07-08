@@ -37,6 +37,7 @@ import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.processor.Describable;
@@ -265,9 +266,7 @@ public abstract class RelationalNode implements Cloneable, Describable{
                             //this.nodeStatistics.dumpProperties(this.getClassName());
                         }
                     }
-                    if(this.context.getProcessDebug()) {
-                        this.recordBatch(batch);
-                    }
+                    this.recordBatch(batch);
                 }
                 //24663: only return non-zero batches. 
                 //there have been several instances in the code that have not correctly accounted for non-terminal zero length batches
@@ -373,7 +372,10 @@ public abstract class RelationalNode implements Cloneable, Describable{
      * @param batch Batch being sent
      */
     private void recordBatch(TupleBatch batch) {
-        // Print summary
+        if (!this.context.getProcessDebug() || !LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        	return;
+        }
+    	// Print summary
         StringBuffer str = new StringBuffer();
         str.append(getClassName());
         str.append("("); //$NON-NLS-1$

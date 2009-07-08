@@ -27,14 +27,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 
-import junit.framework.TestCase;
-
 import com.metamatrix.cdk.CommandBuilder;
-import com.metamatrix.connector.metadata.index.MetadataInCriteria;
 import com.metamatrix.connector.metadata.index.MetadataLiteralCriteria;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.QueryResolver;
@@ -215,12 +214,4 @@ public class TestMetadataSearchCriteriaBuilder extends TestCase {
         assertEquals("1", criteria2.getFieldValue()); //$NON-NLS-1$        
     }
     
-    public void testGetBuildInCriteria1() throws Exception {
-        ObjectQuery query = getQuery("select x from t where LCASE(x) IN ('a', 'b', 'c')"); //$NON-NLS-1$
-        MetadataSearchCriteriaBuilder builder = new MetadataSearchCriteriaBuilder(query);
-        Map criteriaMap = builder.getCriteria();
-        MetadataInCriteria criteria1 = (MetadataInCriteria) criteriaMap.get("x".toUpperCase()); //$NON-NLS-1$
-        assertEquals("x", criteria1.getFieldName()); //$NON-NLS-1$
-        assertEquals(3, criteria1.getFieldValues().size());
-    }
 }

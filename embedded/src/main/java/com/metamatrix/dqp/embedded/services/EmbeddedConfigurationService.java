@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,6 +83,7 @@ import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.function.UDFSource;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
 import com.metamatrix.vdb.runtime.BasicVDBDefn;
+import com.metamatrix.vdb.runtime.VDBKey;
 
 
 /** 
@@ -103,12 +105,12 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     
     private Properties userPreferences;
     private URL bootStrapURL;
-    private Map<String, VDBArchive> loadedVDBs = new HashMap<String, VDBArchive>();
+    private Map<VDBKey, VDBArchive> loadedVDBs = new HashMap<VDBKey, VDBArchive>();
     Map<String, ConnectorBinding> loadedConnectorBindings = new HashMap<String, ConnectorBinding>();
     Map<String, ComponentType> loadedConnectorTypes = new HashMap<String, ComponentType>(); 
 
     // load time constructs
-    private Map<String, URL> availableVDBFiles = new HashMap<String, URL>();
+    private Map<VDBKey, URL> availableVDBFiles = new HashMap<VDBKey, URL>();
     ConfigurationModelContainer configurationModel;
     private ArrayList<VDBLifeCycleListener> vdbLifeCycleListeners = new ArrayList<VDBLifeCycleListener>();
     private ArrayList<ConnectorBindingLifeCycleListener> connectorBindingLifeCycleListeners = new ArrayList<ConnectorBindingLifeCycleListener>();
@@ -1116,15 +1118,15 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @throws ApplicationInitializationException
      * @since 4.3
      */
-    HashMap<String, URL> loadVDBs() throws ApplicationInitializationException{
+    HashMap<VDBKey, URL> loadVDBs() throws ApplicationInitializationException{
         // Get the files to load
         HashMap<URL, VDBArchive> vdbFiles;
 		try {
-			vdbFiles = VDBConfigurationReader.loadVDBS(getVDBLocations());
+			vdbFiles = VDBConfigurationReader.loadVDBS(getVDBLocations(), getDeployDir()); 
 		} catch (MetaMatrixComponentException e) {
 			throw new ApplicationInitializationException(e);
 		}
-        HashMap<String, URL> loadedVDBFiles = new HashMap();
+        HashMap<VDBKey, URL> loadedVDBFiles = new HashMap<VDBKey, URL>();
 
         for (URL vdbURL:vdbFiles.keySet()){                               
             
@@ -1146,6 +1148,14 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         }
         return loadedVDBFiles;
     }
+
+	protected File getDeployDir() {
+		File f = new File(getFullyQualifiedPath("deploy").getPath()); //$NON-NLS-1$
+		if (f.exists()) {
+			return f;
+		}
+		return new File(getWorkDir(), "deploy"); //$NON-NLS-1$
+	}
         
     /**
      * Load a config.xml server configuration file.  This is optional as we are really
@@ -1230,7 +1240,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
     
     /** 
-     * @see com.metamatrix.dqp.service.ConfigurationService#getSessionListener()
+     * @see com.metamatrix.dqp.service.ConfigurationService#getConnectionListener()
      * @since 4.3.2
      */
     public SessionListener getSessionListener() {
@@ -1385,7 +1395,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
     
     public File getWorkDir() {
-        String workDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_WORKSPACE);
+        String workDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_WORKSPACE, System.getProperty("java.io.tmpdir") + "/teiid"); //$NON-NLS-1$ //$NON-NLS-2$
         File workDir = new File(workDirectory);
         workDir.mkdirs();
         return workDir;

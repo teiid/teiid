@@ -25,7 +25,6 @@ package com.metamatrix.dqp.service;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -46,7 +45,7 @@ public interface VDBService extends ApplicationService {
      * @param modelName Model name
      * @return list of {@link java.lang.String} names of connectors
      */
-    public List getConnectorBindingNames(String vdbName, String vdbVersion, String modelName)  
+    public List<String> getConnectorBindingNames(String vdbName, String vdbVersion, String modelName)  
         throws MetaMatrixComponentException;
     
     

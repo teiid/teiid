@@ -170,15 +170,7 @@ public class TestObjectQueryProcessor extends TestCase {
         runNextTest();
     }
 
-    public void testNullCriteria() throws Exception {
-        runNextTest();
-    }
-
     public void testWildCardCriteria() throws Exception {
-        runNextTest();
-    }
-
-    public void testInCriteria() throws Exception {
         runNextTest();
     }
 

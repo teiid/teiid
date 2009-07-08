@@ -34,13 +34,15 @@ public class TextPropertyNames {
     public static final String DELIMITER  = "DELIMITER"; //$NON-NLS-1$
     public static final String QUALIFIER  = "QUALIFIER"; //$NON-NLS-1$
     public static final String HEADER_LINES  = "SKIPHEADERLINES"; //$NON-NLS-1$
+    public static final String COLUMNS  = "COLUMNS"; //$NON-NLS-1$
+    public static final String TYPES  = "TYPES"; //$NON-NLS-1$
+    
     /**
      * If HEADER_LINES is non-zero this property defines which row of HEADER_LINES 
      * can be used as the header row.  The value is 1-based and must be < HEADER_LINES.
      * @since 5.0.3
      */
     public static final String HEADER_ROW  = "HEADERLINE"; //$NON-NLS-1$
-    public static final String CONNECTOR_PROPERTIES  = "CONNECTOR_PROPERTIES"; //$NON-NLS-1$
     /**
     * This property can be used to specify specific date formats for String
     * type results that need to be converted into java.util.Date objects for 

@@ -73,6 +73,17 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-text</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-text</artifactId>
+			<type>test-jar</type>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-connector-metadata</artifactId>
 			<type>test-jar</type>

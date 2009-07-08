@@ -24,14 +24,18 @@ package com.metamatrix.metadata.runtime;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Properties;
+
+import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
+import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.connector.metadata.IndexFile;
 import com.metamatrix.connector.metadata.MetadataConnectorConstants;
 import com.metamatrix.connector.metadata.MultiObjectSource;
@@ -40,59 +44,23 @@ import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.core.util.TempDirectoryMonitor;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.dqp.service.MetadataService;
-import com.metamatrix.modeler.core.index.IndexSelector;
-import com.metamatrix.modeler.internal.core.index.CompositeIndexSelector;
-import com.metamatrix.modeler.internal.core.index.RuntimeIndexSelector;
-import com.metamatrix.modeler.transformation.metadata.ServerMetadataFactory;
+import com.metamatrix.dqp.service.metadata.CompositeMetadataStore;
+import com.metamatrix.dqp.service.metadata.TransformationMetadata;
+import com.metamatrix.metadata.runtime.api.MetadataSource;
+import com.metamatrix.modeler.internal.core.index.IndexMetadataStore;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 
 public class FakeMetadataService implements ApplicationService, MetadataService {
-    private IndexSelector systemIndexSelector;
-    private RuntimeIndexSelector runtimeIndexSelector;
-    private boolean useOnlySystemVdb = false;
+    private CompositeMetadataStore compositeMetadataStore;
     
-    
-    public FakeMetadataService(String vdbFile){
-    	runtimeIndexSelector =  new RuntimeIndexSelector(vdbFile);
-    }
-
     public FakeMetadataService(URL vdbFile) throws IOException {
-    	runtimeIndexSelector =  new RuntimeIndexSelector(vdbFile);
-    }
-
-    
-    public void setSystemIndexSelector(IndexSelector systemIndexSelector) {
-        this.systemIndexSelector = systemIndexSelector;
-    }
-    
-    public void useOnlySystemVdb() {
-        useOnlySystemVdb = true;
-    }
-
-    private IndexSelector getIndexSelector(String vdbName, String vdbVersion) throws MetaMatrixComponentException {
         TempDirectoryMonitor.turnOn();
-        
-        IndexSelector vdbSelector = runtimeIndexSelector;
-        if (useOnlySystemVdb) {
-            return systemIndexSelector;
-        }
-        if (systemIndexSelector == null) {
-            return vdbSelector;
-        }
-        ArrayList selectors = new ArrayList();
-        selectors.add(vdbSelector);
-        //selectors.add(systemIndexSelector);
-        CompositeIndexSelector result = new CompositeIndexSelector(selectors);
-
-        return result;
+    	MetadataSource source = new VDBArchive(vdbFile.openStream());
+    	compositeMetadataStore = new CompositeMetadataStore(Arrays.asList(new IndexMetadataStore(source)), source);
     }
-    
+
     public void clear() {
-        if (runtimeIndexSelector != null) {
-            runtimeIndexSelector.clearVDB();
-            runtimeIndexSelector = null;
-        }
         TempDirectoryMonitor.removeAll();
     }
 
@@ -109,19 +77,24 @@ public class FakeMetadataService implements ApplicationService, MetadataService 
     }
 
 	public QueryMetadataInterface lookupMetadata(String vdbName,String vdbVersion) throws MetaMatrixComponentException {
-		return ServerMetadataFactory.getInstance().createCachingServerMetadata(runtimeIndexSelector);
+		return new TransformationMetadata(compositeMetadataStore);
 	}
 
 	public IObjectSource getMetadataObjectSource(String vdbName,String vdbVersion) throws MetaMatrixComponentException {
-		IndexSelector indexSelector = getIndexSelector(vdbName, vdbVersion);
 		
 		// build up sources to be used by the index connector
-		IObjectSource indexFile = new IndexFile(indexSelector, vdbName, vdbVersion, new FakeVDBService());
+		IObjectSource indexFile = new IndexFile(compositeMetadataStore, vdbName, vdbVersion, new FakeVDBService());
 
 		PropertyFileObjectSource propertyFileSource = new PropertyFileObjectSource();
 		IObjectSource multiObjectSource = new MultiObjectSource(indexFile, MetadataConnectorConstants.PROPERTIES_FILE_EXTENSION,propertyFileSource);
 
 		// return an adapter object that has access to all sources
 		return multiObjectSource;	
+	}
+	
+	@Override
+	public Map<String, DatatypeRecordImpl> getBuiltinDatatypes()
+			throws MetaMatrixComponentException {
+		return null;
 	}
 }

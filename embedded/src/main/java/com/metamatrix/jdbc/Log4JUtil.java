@@ -28,8 +28,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.common.util.LogConstants;
-import com.metamatrix.metadata.runtime.util.LogRuntimeMetadataConstants;
 
 class Log4JUtil {
 	private static final String ROOT_CONTEXT = "org.teiid."; //$NON-NLS-1$
@@ -118,7 +116,6 @@ class Log4JUtil {
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_AUTHORIZATION_ADMIN_API);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_SERVER);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_ADMIN);
-		contexts.add(ROOT_CONTEXT+LogRuntimeMetadataConstants.CTX_RUNTIME_METADATA);
 		
 		contexts.add("com.arjuna"); //$NON-NLS-1$
 		contexts.add("org.jboss"); //$NON-NLS-1$

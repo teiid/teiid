@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VDB>
+    <VDBInfo>
+        <Property Name="Name" Value="VDBLess" />
+        <Property Name="Version" Value="4" />
+        <Property Name="UseConnectorMetadata" Value="true" />
+    </VDBInfo>
+    <Model>
+        <Property Name="Name" Value="SummitData" />
+        <ConnectorBindings>
+            <Connector Name="Text Connector" />
+        </ConnectorBindings>
+    </Model>
+    <ConnectorBindings>
+        <Connector Name="Text Connector" ComponentType="Text File Connector">
+            <Properties>
+                <Property Name="Immutable">true</Property>
+                <Property Name="DescriptorFile">src/test/resources/vdbless/TextDescriptor.txt</Property>
+            </Properties>
+        </Connector>
+    </ConnectorBindings>
+</VDB>
+

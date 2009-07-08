@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorPropertyNames;
+import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
@@ -58,7 +59,9 @@ import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.ConnectorBindingLifeCycleListener;
+import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
+import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
 
@@ -118,6 +121,28 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             }
         }
         return id;
+    }
+    
+    @Override
+    public ConnectorMetadata getConnectorMetadata(String vdbName,
+    		String vdbVersion, String modelName) throws MetaMatrixComponentException {
+    	VDBService vdbService = (VDBService)this.lookupService(DQPServiceNames.VDB_SERVICE);
+    	List<String> bindingNames = vdbService.getConnectorBindingNames(vdbName, vdbVersion, modelName);
+    	if (bindingNames.isEmpty()) {
+    		throw new MetaMatrixComponentException("No connectors defined for binding");
+    	}
+    	String deployedConnectorBindingName = bindingNames.get(0);
+    	ConnectorID connector = selectConnector(deployedConnectorBindingName);
+    	ConnectorManager mgr = getConnectorManager(connector);
+    	if (mgr == null) {
+    		throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connector })); //$NON-NLS-1$
+    	}
+    	
+    	try {
+			return mgr.getMetadata(modelName);
+		} catch (ConnectorException e) {
+			throw new MetaMatrixComponentException(e);
+		}
     }
     
      /**

@@ -310,7 +310,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 
 		String[] expected = { "ResourcePath[string]	isBinary[boolean]	", //$NON-NLS-1$
 				"/parts/partsmd/PartsSupplier.xmi	false", //$NON-NLS-1$
-				"/System/System.xmi	false", //$NON-NLS-1$
 		};
 		execute("exec System.getVDBResourcePaths()",new Object[] {}); //$NON-NLS-1$
 		assertResults(expected);

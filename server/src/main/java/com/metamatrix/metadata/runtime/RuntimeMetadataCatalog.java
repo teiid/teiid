@@ -22,6 +22,7 @@
 
 package com.metamatrix.metadata.runtime;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -677,15 +678,11 @@ public class RuntimeMetadataCatalog  {
     }
 
     public QueryMetadataInterface getQueryMetadata(final VirtualDatabaseID vdbID) throws VirtualDatabaseException {
-        QueryMetadataInterface qmi = getQueryMetadataCache().lookupMetadata(vdbID.getName(), vdbID.getVersion());
-        if(qmi == null) {
-	        try {
-	            return getQueryMetadataCache().lookupMetadata(vdbID.getName(), vdbID.getVersion(), getVDBArchive(vdbID));
-	        } catch(Exception e) {
-	            throw new VirtualDatabaseException(e);
-	        }
+        try {
+            return getQueryMetadataCache().lookupMetadata(vdbID.getName(), vdbID.getVersion(), new VDBArchive(new ByteArrayInputStream(getVDBArchive(vdbID))), null);
+        } catch(Exception e) {
+            throw new VirtualDatabaseException(e);
         }
-        return qmi;
     }
 
     public synchronized QueryMetadataCache getQueryMetadataCache() throws VirtualDatabaseException {

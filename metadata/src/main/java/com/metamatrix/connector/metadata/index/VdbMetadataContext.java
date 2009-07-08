@@ -23,15 +23,13 @@
 package com.metamatrix.connector.metadata.index;
 
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.modeler.core.index.IndexSelector;
-import com.metamatrix.modeler.transformation.metadata.QueryMetadataContext;
 
 
 /** 
  * Context for vdb and index information needed by MetadataConnectorMetadata.
  * @since 4.3
  */
-public class VdbMetadataContext extends QueryMetadataContext {
+public class VdbMetadataContext {
 
     private String vdbName;
     private String vdbVersion;
@@ -44,16 +42,6 @@ public class VdbMetadataContext extends QueryMetadataContext {
      */
     public VdbMetadataContext() {}
 
-    /** 
-     * VdbMetadataContext
-     * @param indexSelector The indexSelector to set.
-     * @since 4.2
-     */
-    public VdbMetadataContext(final IndexSelector indexSelector) {
-        super(indexSelector);
-    }
-    
-    
     /** 
      * @return Returns the vdbName.
      * @since 4.3

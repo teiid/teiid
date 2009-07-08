@@ -49,6 +49,7 @@ import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.EmbeddedTestUtil;
@@ -74,6 +75,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
 
     protected void tearDown() throws Exception {
         service.stop();
+        FileUtils.removeDirectoryAndChildren(service.getDeployDir());
     }
 
     public void testUseExtensionPath() throws Exception {
@@ -90,7 +92,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     
     public void testGetAvailableVDBFiles() throws Exception {
         service.setUserPreferences(EmbeddedTestUtil.getProperties()); 
-        HashMap vdbFiles = VDBConfigurationReader.loadVDBS(service.getVDBLocations());
+        HashMap vdbFiles = VDBConfigurationReader.loadVDBS(service.getVDBLocations(), new File(UnitTestUtil.getTestScratchPath()));
         int count = vdbFiles.keySet().size();
         assertEquals(2, count);   
         // admin.vdb is ignored because it did not have any models

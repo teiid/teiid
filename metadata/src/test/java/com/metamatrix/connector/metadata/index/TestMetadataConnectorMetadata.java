@@ -22,27 +22,26 @@
 
 package com.metamatrix.connector.metadata.index;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import junit.extensions.TestSetup;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
+import org.teiid.connector.metadata.runtime.ModelRecordImpl;
 
+import junit.framework.TestCase;
+
+import com.metamatrix.common.vdb.api.VDBArchive;
+import com.metamatrix.connector.metadata.FileRecordImpl;
 import com.metamatrix.connector.metadata.RuntimeVdbRecord;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.modeler.core.index.IndexConstants;
-import com.metamatrix.modeler.core.index.IndexSelector;
-import com.metamatrix.modeler.core.metadata.runtime.FileRecord;
-import com.metamatrix.modeler.core.metadata.runtime.MetadataRecord;
-import com.metamatrix.modeler.core.metadata.runtime.ModelRecord;
-import com.metamatrix.modeler.internal.core.index.CompositeIndexSelector;
-import com.metamatrix.modeler.internal.core.index.RuntimeIndexSelector;
+import com.metamatrix.dqp.service.metadata.CompositeMetadataStore;
+import com.metamatrix.metadata.runtime.api.MetadataSource;
+import com.metamatrix.modeler.internal.core.index.IndexConstants;
+import com.metamatrix.modeler.internal.core.index.IndexMetadataStore;
 
 
 /** 
@@ -63,35 +62,17 @@ public class TestMetadataConnectorMetadata extends TestCase {
     }
 
     // =========================================================================
-    //                        T E S T   C O N T R O L
-    // =========================================================================
-
-    /** 
-     * Construct the test suite, which uses a one-time setup call
-     * and a one-time tear-down call.
-     */
-    public static Test suite() {
-        TestSuite suite = new TestSuite("TestMetadataConnectorMetadata"); //$NON-NLS-1$
-        suite.addTestSuite(TestMetadataConnectorMetadata.class);
-        //suite.addTest(new TestMetadataConnectorMetadata("testGetCharacterVDBResource")); //$NON-NLS-1$
-        //suite.addTest(new TestMetadataConnectorMetadata("testGetElementIDsInKey13760")); //$NON-NLS-1$
-
-        return new TestSetup(suite);
-    }
-
-    // =========================================================================
     //                      H E L P E R   M E T H O D S
     // =========================================================================
 
     public MetadataConnectorMetadata helpGetMetadata(String vdbFilePath, String vdbName, String vdbVersion, VDBService service) throws Exception {
-        List selectors = new ArrayList();
-        selectors.add(new RuntimeIndexSelector(vdbFilePath));        
-        IndexSelector composite = new CompositeIndexSelector(selectors);
-        VdbMetadataContext context = new VdbMetadataContext(composite);
+    	MetadataSource source = new VDBArchive(new File(vdbFilePath));
+        IndexMetadataStore composite = new IndexMetadataStore(source);
+        VdbMetadataContext context = new VdbMetadataContext();
         context.setVdbName(vdbName);
         context.setVdbVersion(vdbVersion);
         context.setVdbService(service);
-        return new MetadataConnectorMetadata(context);
+        return new MetadataConnectorMetadata(context, new CompositeMetadataStore(Arrays.asList(composite), source));
     }
     
     public VDBService helpGetVdbService() {
@@ -102,9 +83,9 @@ public class TestMetadataConnectorMetadata extends TestCase {
         String entityPath = "/parts/partsmd/PartsSupplier.xmi"; //$NON-NLS-1$
         FakeVDBService service = (FakeVDBService) helpGetVdbService();
         service.publicFiles.add(entityPath);
-        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(FileRecord.MetadataMethodNames.PATH_IN_VDB_FIELD, entityPath); 
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(FileRecordImpl.MetadataMethodNames.PATH_IN_VDB_FIELD, entityPath); 
         Map criteria = new HashMap();
-        criteria.put(FileRecord.MetadataMethodNames.PATH_IN_VDB_FIELD.toUpperCase(), literalcriteria);
+        criteria.put(FileRecordImpl.MetadataMethodNames.PATH_IN_VDB_FIELD.toUpperCase(), literalcriteria);
         MetadataConnectorMetadata metadata = helpGetMetadata(TEST_FILE_NAME, TEST_VDB_NAME, TEST_VDB_VERSION, service);
         Collection records = metadata.getObjects(IndexConstants.INDEX_NAME.FILES_INDEX, criteria);
         assertNotNull(records);
@@ -115,14 +96,14 @@ public class TestMetadataConnectorMetadata extends TestCase {
         String modelName = "PartsSupplier"; //$NON-NLS-1$
         FakeVDBService service = (FakeVDBService) helpGetVdbService();
         service.publicModels.add(modelName);
-        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName); 
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName); 
         Map criteria = new HashMap();
-        criteria.put(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
+        criteria.put(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
         MetadataConnectorMetadata metadata = helpGetMetadata(TEST_FILE_NAME, TEST_VDB_NAME, TEST_VDB_VERSION, service);
         Collection records = metadata.getObjects(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         assertNotNull(records);
         assertEquals(1, records.size());
-        ModelRecord modelRecord = (ModelRecord) records.iterator().next();
+        ModelRecordImpl modelRecord = (ModelRecordImpl) records.iterator().next();
         assertTrue(modelRecord.isVisible());
     }
     
@@ -130,14 +111,14 @@ public class TestMetadataConnectorMetadata extends TestCase {
         String modelName = "PartsSupplier"; //$NON-NLS-1$
         FakeVDBService service = (FakeVDBService) helpGetVdbService();
         //service.publicModels.add(modelName);
-        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName); 
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName); 
         Map criteria = new HashMap();
-        criteria.put(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
+        criteria.put(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
         MetadataConnectorMetadata metadata = helpGetMetadata(TEST_FILE_NAME, TEST_VDB_NAME, TEST_VDB_VERSION, service);
         Collection records = metadata.getObjects(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         assertNotNull(records);
         assertEquals(1, records.size());
-        ModelRecord modelRecord = (ModelRecord) records.iterator().next();
+        ModelRecordImpl modelRecord = (ModelRecordImpl) records.iterator().next();
         assertTrue(!modelRecord.isVisible());
     }
 
@@ -156,10 +137,10 @@ public class TestMetadataConnectorMetadata extends TestCase {
         String modelName = "PartsSupplier"; //$NON-NLS-1$
         FakeVDBService service = (FakeVDBService) helpGetVdbService();
         service.publicModels.add(modelName);
-        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName);
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName);
         literalcriteria.setFieldFunction("UPPER"); //$NON-NLS-1$
         Map criteria = new HashMap();
-        criteria.put(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
+        criteria.put(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
         MetadataConnectorMetadata metadata = helpGetMetadata(TEST_FILE_NAME, TEST_VDB_NAME, TEST_VDB_VERSION, service);
         Collection records = metadata.getObjects(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
         assertNotNull(records);

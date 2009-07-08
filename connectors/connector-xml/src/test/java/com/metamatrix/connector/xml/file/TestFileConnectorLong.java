@@ -28,13 +28,9 @@ public class TestFileConnectorLong extends TestCase {
 		host.setSecurityContext("purchase_orders", "1", "root", null);
 	}
 	
-	public void testSelect() {
-		try {
-			List result = host.executeCommand("SELECT * FROM file_po_list.ITEM");
-			assertEquals(5968, result.size());
-		} catch (ConnectorException e) {
-			fail(e.getMessage());
-		}
+	public void testSelect() throws ConnectorException {
+		List result = host.executeCommand("SELECT * FROM file_po_list.ITEM");
+		assertEquals(5968, result.size());
 	}
 
 }

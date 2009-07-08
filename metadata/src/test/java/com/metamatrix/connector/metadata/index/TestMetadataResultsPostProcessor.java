@@ -25,12 +25,13 @@ package com.metamatrix.connector.metadata.index;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
+import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
+import org.teiid.connector.metadata.runtime.ModelRecordImpl;
+
 import junit.framework.TestCase;
 
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.metadata.runtime.impl.ColumnRecordImpl;
-import com.metamatrix.metadata.runtime.impl.ModelRecordImpl;
-import com.metamatrix.modeler.core.metadata.runtime.MetadataRecord;
 
 
 /** 
@@ -61,9 +62,9 @@ public class TestMetadataResultsPostProcessor extends TestCase {
     public void testFilterCaseMisMatch() {
         String modelName = "PartsSupplier"; //$NON-NLS-1$
         
-        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName); 
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName); 
         Map criteria = new HashMap();
-        criteria.put(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
+        criteria.put(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
         
         ModelRecordImpl modelRecord = new ModelRecordImpl();
         modelRecord.setFullName(modelName.toUpperCase());
@@ -77,9 +78,9 @@ public class TestMetadataResultsPostProcessor extends TestCase {
     public void testFilterWildCardMatch() {
         String modelName = "PartsSupplier"; //$NON-NLS-1$
         
-        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "*Supplie?"); //$NON-NLS-1$
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "*Supplie?"); //$NON-NLS-1$
         Map criteria = new HashMap();
-        criteria.put(MetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
+        criteria.put(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
         
         ModelRecordImpl modelRecord = new ModelRecordImpl();
         modelRecord.setFullName(modelName);
@@ -93,9 +94,9 @@ public class TestMetadataResultsPostProcessor extends TestCase {
     public void testFilterNullMatch() {
         String uuid = null;
         
-        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.UUID_FIELD, uuid); 
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, uuid); 
         Map criteria = new HashMap();
-        criteria.put(MetadataRecord.MetadataFieldNames.UUID_FIELD.toUpperCase(), literalcriteria);
+        criteria.put(AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD.toUpperCase(), literalcriteria);
         
         ColumnRecordImpl columnRecord = new ColumnRecordImpl();
         columnRecord.setFullName("testname.name"); //$NON-NLS-1$
@@ -110,9 +111,9 @@ public class TestMetadataResultsPostProcessor extends TestCase {
     public void testFilterNullMisMatch() {
         String uuid = null;
         
-        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(MetadataRecord.MetadataFieldNames.UUID_FIELD, uuid); 
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, uuid); 
         Map criteria = new HashMap();
-        criteria.put(MetadataRecord.MetadataFieldNames.UUID_FIELD.toUpperCase(), literalcriteria);
+        criteria.put(AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD.toUpperCase(), literalcriteria);
         
         ColumnRecordImpl columnRecord = new ColumnRecordImpl();
         columnRecord.setFullName("testname.name"); //$NON-NLS-1$

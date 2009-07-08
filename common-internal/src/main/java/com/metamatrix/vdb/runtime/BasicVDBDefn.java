@@ -103,6 +103,8 @@ public class BasicVDBDefn extends BasicVDBInfo implements VDBDefn {
     
     private Properties headerProperties;
     
+    private Properties infoProperties;
+    
     public BasicVDBDefn(String name) {
         super(name);
     }
@@ -682,4 +684,12 @@ public class BasicVDBDefn extends BasicVDBInfo implements VDBDefn {
 	public void setHeaderProperties(Properties props) {
 		this.headerProperties = props;
 	}      
+	
+	public Properties getInfoProperties() {
+		return infoProperties;
+	}
+
+	public void setInfoProperties(Properties props) {
+		this.infoProperties = props;
+	}
 }

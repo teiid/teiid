@@ -30,7 +30,7 @@ import com.metamatrix.connector.metadata.index.VdbMetadataContext;
 import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.modeler.core.index.IndexSelector;
+import com.metamatrix.dqp.service.metadata.CompositeMetadataStore;
 
 /**
  * Adapter to present metadata from a VDB file as an IObjectSource.
@@ -49,19 +49,19 @@ public class IndexFile implements IObjectSource {
      * may be null, will assume default settings if null.
      * @since 4.3
      */
-    public IndexFile(final IndexSelector indexSelector, final String vdbName, final String vdbVersion, final VDBService vdbService) {
+    public IndexFile(final CompositeMetadataStore indexSelector, final String vdbName, final String vdbVersion, final VDBService vdbService) {
         ArgCheck.isNotNull(indexSelector);
         ArgCheck.isNotNull(vdbName);
         ArgCheck.isNotNull(vdbVersion);
 
         // construct a context object used to pass onto metadata
-        VdbMetadataContext context = new VdbMetadataContext(indexSelector);
+        VdbMetadataContext context = new VdbMetadataContext();
         context.setVdbName(vdbName);
         context.setVdbVersion(vdbVersion);
         context.setVdbService(vdbService);
 
         // construct the metadata instance
-        this.queryTransformationMetadata = new MetadataConnectorMetadata(context);
+        this.queryTransformationMetadata = new MetadataConnectorMetadata(context, indexSelector);
     }
 
     /** 

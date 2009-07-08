@@ -31,6 +31,8 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
+import org.teiid.connector.metadata.runtime.ConnectorMetadata;
+
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -59,7 +61,6 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.ProcessorPlan;
-import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.processor.dynamic.SimpleQueryProcessorFactory;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.sql.lang.Command;
@@ -75,7 +76,6 @@ public class TestDataTierManager extends TestCase {
     private AtomicRequestMessage request;
     private Command command;
     private DataTierTupleSource info;
-    private QueryProcessor processor;
     private int executeRequestFailOnCall = 10000;
     private FakeDataService dataService;
     private RequestWorkItem workItem;
@@ -128,7 +128,6 @@ public class TestDataTierManager extends TestCase {
         context.setVdbName("test"); //$NON-NLS-1$
         context.setVdbVersion("1"); //$NON-NLS-1$
         context.setQueryProcessorFactory(new SimpleQueryProcessorFactory(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
-        processor = new QueryProcessor(new FakeProcessorPlan(), context, bs.getBufferManager(), dtm);
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, workContext);
         
         request = new AtomicRequestMessage(original, workContext, nodeId);
@@ -393,5 +392,10 @@ public class TestDataTierManager extends TestCase {
                 throw new MetaMatrixComponentException("Force fail on executeRequest for call # " + calls); //$NON-NLS-1$
             }            
 		}
+	    @Override
+	    public ConnectorMetadata getConnectorMetadata(String vdbName,
+	    		String vdbVersion, String modelName) {
+	    	throw new UnsupportedOperationException();
+	    }
     }
 }

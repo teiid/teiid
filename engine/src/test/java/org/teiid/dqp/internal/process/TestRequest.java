@@ -31,10 +31,6 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.PreparedPlanCache;
-import org.teiid.dqp.internal.process.PreparedStatementRequest;
-import org.teiid.dqp.internal.process.Request;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryParserException;
@@ -45,11 +41,9 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.vdb.api.ModelInfo;
-import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.AutoGenDataService;
 import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.service.FakeAbstractService;
 import com.metamatrix.dqp.service.FakeAuthorizationService;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.dqp.service.MetadataService;
@@ -257,7 +251,13 @@ public class TestRequest extends TestCase {
         
         public ApplicationService findService(String type) {
             if (type == DQPServiceNames.METADATA_SERVICE) {
-                return new FakeMetadataService(metadata);
+                MetadataService mdSvc = Mockito.mock(MetadataService.class);
+                try {
+					Mockito.stub(mdSvc.lookupMetadata(Mockito.anyString(), Mockito.anyString())).toReturn(metadata);
+				} catch (MetaMatrixComponentException e) {
+					throw new RuntimeException(e);
+				}
+                return mdSvc;
             } else if (type == DQPServiceNames.VDB_SERVICE) {
                 return fakeVDBService;
             } else if (type == DQPServiceNames.DATA_SERVICE) {
@@ -268,28 +268,6 @@ public class TestRequest extends TestCase {
             
             return null;
         }
-    }
-    
-    /**Fake MetadataService that always returns the same metadata*/
-    public static final class FakeMetadataService extends FakeAbstractService implements MetadataService {
-        private QueryMetadataInterface metadata;
-        
-
-        public FakeMetadataService(QueryMetadataInterface metadata) {
-            this.metadata = metadata;            
-        }
-
-        public synchronized void addVdb() {
-        }
-
-        public synchronized QueryMetadataInterface lookupMetadata(String vdbName, String vdbVersion) {
-            return metadata;
-        }
-
-		@Override
-		public IObjectSource getMetadataObjectSource(String vdbName,String vdbVersion) throws MetaMatrixComponentException {
-			return null;
-		}
     }
     
 }

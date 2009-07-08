@@ -25,10 +25,11 @@ package com.metamatrix.metadata.runtime.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.metadata.runtime.MetadataConstants;
+
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.metadata.runtime.api.Group;
 import com.metamatrix.metadata.runtime.api.ModelID;
-import com.metamatrix.modeler.core.metadata.runtime.MetadataConstants;
 
 import junit.framework.TestCase;
 

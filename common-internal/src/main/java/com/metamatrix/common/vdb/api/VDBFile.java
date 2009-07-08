@@ -41,11 +41,4 @@ public interface VDBFile {
      */
     InputStream getContent();
 
-    /**
-     * Get the length of the file this record represents 
-     * @return Lenth of the file
-     * @since 4.2
-     */
-    long getFileLength();
-
 }

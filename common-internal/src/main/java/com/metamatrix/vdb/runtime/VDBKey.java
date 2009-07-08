@@ -36,6 +36,14 @@ public class VDBKey {
         }
     }
     
+    public String getName() {
+		return name;
+	}
+    
+    public String getVersion() {
+		return version;
+	}
+    
     /** 
      * @see java.lang.Object#hashCode()
      */
