@@ -44,8 +44,6 @@ import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.cache.ResultSetCacheUtil;
 
-import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
