@@ -67,8 +67,8 @@ if $cygwin; then
 fi
 
 # generate teiid.keystore if does not exist.
-KEYSTORE_FILE = $TEIID_HOME/deploy/teiid.keystore 
-if [ ! -f $KEYSTORE_FILE ]
+KEYSTORE_FILE=$TEIID_HOME/deploy/teiid.keystore 
+if [ ! -f $KEYSTORE_FILE ]; then
 	"$JAVA" -classpath $TEIID_CLASSPATH com.metamatrix.common.util.crypto.CryptoUtil -genkey $KEYSTORE_FILE
 	echo "A new key with keystore generated at $KEYSTORE_FILE"
 fi
