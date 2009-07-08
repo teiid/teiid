@@ -47,6 +47,13 @@ set JAVA_OPTS=%JAVA_OPTS% -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.
 rem JPDA options. Uncomment and modify as appropriate to enable remote debugging.
 rem set JAVA_OPTS=%JAVA_OPTS% -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y
 
+rem Generate teiid.keystore file
+set KEYSTORE_FILE = %TEIID_HOME%\deploy\teiid.keystore
+if not exist  %KEYSTORE_FILE% (	
+	%JAVA%" -classpath "%TEIID_CLASSPATH%" com.metamatrix.common.util.crypto.CryptoUtil -genkey %KEYSTORE_FILE%
+	echo A new key with keystore generated at %KEYSTORE_FILE%    
+)
+
 echo ===============================================================================
 echo.
 echo   Teiid Bootstrap Environment

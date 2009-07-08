@@ -66,6 +66,13 @@ if $cygwin; then
     TEIID_CLASSPATH=`cygpath --path --windows "$TEIID_CLASSPATH"`
 fi
 
+# generate teiid.keystore if does not exist.
+KEYSTORE_FILE = $TEIID_HOME/deploy/teiid.keystore 
+if [ ! -f $KEYSTORE_FILE ]
+	"$JAVA" -classpath $TEIID_CLASSPATH com.metamatrix.common.util.crypto.CryptoUtil -genkey $KEYSTORE_FILE
+	echo "A new key with keystore generated at $KEYSTORE_FILE"
+fi
+
 # Display our environment
 echo "========================================================================="
 echo ""

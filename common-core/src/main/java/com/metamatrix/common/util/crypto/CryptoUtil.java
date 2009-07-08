@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.util.crypto;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
@@ -366,5 +367,53 @@ public class CryptoUtil {
 	public static synchronized boolean isInitialized() {
 	    return CRYPTOR == null;
 	}
-        
+ 
+	public static void main(String[] args) throws Exception {
+		if (args.length < 1) {
+			printUsage();			
+		}
+		
+		int i = 0;
+		if (args.length == 2 && args[i].equals("-genkey")) { //$NON-NLS-1$
+			String keyName = args[++i];
+			if (keyName == null) {
+				printUsage();
+			}
+			SymmetricCryptor.generateAndSaveKey(keyName);
+			return;
+		}
+		else if (args.length == 4 && args[i].equals("-key")) { //$NON-NLS-1$
+			String keyFile = args[++i];
+			if (keyFile == null) {
+				printUsage();
+			}
+			
+			File key = new File(keyFile);
+			if (!key.exists()) {
+				System.out.println("Key file does not exist at "+keyFile); //$NON-NLS-1$
+			}
+			else {
+				CryptoUtil.init(key.toURI().toURL());
+			}
+			
+			++i;
+			if (args[i].equals("-encrypt")) { //$NON-NLS-1$
+				String clearText = args[++i];
+				if (clearText == null) {
+					printUsage();
+				}
+				System.out.println("Encypted Text:"+stringEncrypt(clearText)); //$NON-NLS-1$
+				return;
+			}		
+		}	
+		printUsage();
+	}
+	
+	private static void printUsage() {
+		System.out.println("java CryptoUtil <option>"); //$NON-NLS-1$
+		System.out.println("options:"); //$NON-NLS-1$
+		System.out.println("\t-genkey <filename> # Generates password key file"); //$NON-NLS-1$
+		System.out.println("\t-key <keyfile> -encrypt <cleartext>   # Encrypts the given clear text string"); //$NON-NLS-1$
+		System.exit(0);
+	}
 }
