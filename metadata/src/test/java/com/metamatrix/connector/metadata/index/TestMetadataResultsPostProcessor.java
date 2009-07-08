@@ -92,7 +92,25 @@ public class TestMetadataResultsPostProcessor extends TestCase {
         Object filteredRecord = processor.filterBySearchCriteria(modelRecord, criteria);
 
         assertNotNull(filteredRecord);
-    }    
+    }
+    
+    public void testFilterWildCardMatch1() {
+        String modelName = "PartsSupplier"; //$NON-NLS-1$
+        
+        MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, "*SUPPLIE?"); //$NON-NLS-1$
+        literalcriteria.setFieldFunction("UCASE"); //$NON-NLS-1$
+        
+        Map criteria = new HashMap();
+        criteria.put(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
+        
+        ModelRecordImpl modelRecord = new ModelRecordImpl();
+        modelRecord.setFullName(modelName);
+        
+        MetadataResultsPostProcessor processor = helpGetProcessor();
+        Object filteredRecord = processor.filterBySearchCriteria(modelRecord, criteria);
+
+        assertNotNull(filteredRecord);
+    }
     
     public void testFilterNullMatch() {
         String uuid = null;
