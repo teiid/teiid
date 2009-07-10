@@ -37,8 +37,8 @@ import java.util.Map;
 
 /**
  * <p> This is a helper class used to obtain SQL type information for java types.
- * The SQL type infomation is obtained from java.sql.Types class. The integers and
- * strings retuned by methods in this class are based on constants in java.sql.Types.
+ * The SQL type information is obtained from java.sql.Types class. The integers and
+ * strings returned by methods in this class are based on constants in java.sql.Types.
  */
 
 public final class MMJDBCSQLTypeInfo {
@@ -68,30 +68,6 @@ public final class MMJDBCSQLTypeInfo {
     public static final String XML = DataTypeManager.DefaultDataTypes.XML;
     public static final String NULL = DataTypeManager.DefaultDataTypes.NULL;
     
-    private static Map<String, Integer> NAME_TO_TYPE_MAP = new HashMap<String, Integer>();
-    
-    static {
-        NAME_TO_TYPE_MAP.put(STRING, Integer.valueOf(Types.VARCHAR));
-        NAME_TO_TYPE_MAP.put(BOOLEAN, Integer.valueOf(Types.BIT));
-        NAME_TO_TYPE_MAP.put(TIME, Integer.valueOf(Types.TIME));
-        NAME_TO_TYPE_MAP.put(DATE, Integer.valueOf(Types.DATE));
-        NAME_TO_TYPE_MAP.put(TIMESTAMP, Integer.valueOf(Types.TIMESTAMP));
-        NAME_TO_TYPE_MAP.put(INTEGER, Integer.valueOf(Types.INTEGER));
-        NAME_TO_TYPE_MAP.put(FLOAT, Integer.valueOf(Types.REAL));
-        NAME_TO_TYPE_MAP.put(DOUBLE, Integer.valueOf(Types.DOUBLE));
-        NAME_TO_TYPE_MAP.put(BIGDECIMAL, Integer.valueOf(Types.NUMERIC));
-        NAME_TO_TYPE_MAP.put(BIGINTEGER, Integer.valueOf(Types.NUMERIC));
-        NAME_TO_TYPE_MAP.put(BYTE, Integer.valueOf(Types.TINYINT));
-        NAME_TO_TYPE_MAP.put(SHORT, Integer.valueOf(Types.SMALLINT));
-        NAME_TO_TYPE_MAP.put(LONG, Integer.valueOf(Types.BIGINT));
-        NAME_TO_TYPE_MAP.put(CHAR, Integer.valueOf(Types.CHAR));
-        NAME_TO_TYPE_MAP.put(OBJECT, Integer.valueOf(Types.JAVA_OBJECT));
-        NAME_TO_TYPE_MAP.put(CLOB, Integer.valueOf(Types.CLOB));
-        NAME_TO_TYPE_MAP.put(BLOB, Integer.valueOf(Types.BLOB));
-        NAME_TO_TYPE_MAP.put(XML, Integer.valueOf(Types.JAVA_OBJECT));
-        NAME_TO_TYPE_MAP.put(NULL, Integer.valueOf(Types.NULL));
-    }
-    
     //java class names
     public static final String STRING_CLASS = DataTypeManager.DefaultDataClasses.STRING.getName();
     public static final String BOOLEAN_CLASS = DataTypeManager.DefaultDataClasses.BOOLEAN.getName();
@@ -112,40 +88,63 @@ public final class MMJDBCSQLTypeInfo {
     public static final String BLOB_CLASS = Blob.class.getName();
     //## JDBC4.0-begin ##
     public static final String XML_CLASS = SQLXML.class.getName();
-    //## JDBC4.0-begin ##
+    //## JDBC4.0-end ##
     /*## JDBC3.0-JDK1.5-begin ##
     public static final String XML_CLASS = DataTypeManager.DefaultDataClasses.OBJECT.getName(); 
     ## JDBC3.0-JDK1.5-end ##*/
-    private static Map<String, Integer> CLASSNAME_TO_TYPE_MAP = new HashMap<String, Integer>();
+    
+    private static Map<String, Integer> NAME_TO_TYPE_MAP = new HashMap<String, Integer>();
+    private static Map<Integer, String> TYPE_TO_NAME_MAP = new HashMap<Integer, String>();
+    private static Map<String, String> NAME_TO_CLASSNAME = new HashMap<String, String>();
+    private static Map<String, String> CLASSNAME_TO_NAME = new HashMap<String, String>();
     
     static {
-        CLASSNAME_TO_TYPE_MAP.put(STRING_CLASS.toLowerCase(), Integer.valueOf(Types.VARCHAR));
-        CLASSNAME_TO_TYPE_MAP.put(BOOLEAN_CLASS.toLowerCase(), Integer.valueOf(Types.BIT));
-        CLASSNAME_TO_TYPE_MAP.put(TIME_CLASS.toLowerCase(), Integer.valueOf(Types.TIME));
-        CLASSNAME_TO_TYPE_MAP.put(DATE_CLASS.toLowerCase(), Integer.valueOf(Types.DATE));
-        CLASSNAME_TO_TYPE_MAP.put(TIMESTAMP_CLASS.toLowerCase(), Integer.valueOf(Types.TIMESTAMP));
-        CLASSNAME_TO_TYPE_MAP.put(INTEGER_CLASS.toLowerCase(), Integer.valueOf(Types.INTEGER));
-        CLASSNAME_TO_TYPE_MAP.put(FLOAT_CLASS.toLowerCase(), Integer.valueOf(Types.REAL));
-        CLASSNAME_TO_TYPE_MAP.put(DOUBLE_CLASS.toLowerCase(), Integer.valueOf(Types.DOUBLE));
-        CLASSNAME_TO_TYPE_MAP.put(BIGDECIMAL_CLASS.toLowerCase(), Integer.valueOf(Types.NUMERIC));
-        CLASSNAME_TO_TYPE_MAP.put(BIGINTEGER_CLASS.toLowerCase(), Integer.valueOf(Types.NUMERIC));
-        CLASSNAME_TO_TYPE_MAP.put(BYTE_CLASS.toLowerCase(), Integer.valueOf(Types.TINYINT));
-        CLASSNAME_TO_TYPE_MAP.put(SHORT_CLASS.toLowerCase(), Integer.valueOf(Types.SMALLINT));
-        CLASSNAME_TO_TYPE_MAP.put(LONG_CLASS.toLowerCase(), Integer.valueOf(Types.BIGINT));
-        CLASSNAME_TO_TYPE_MAP.put(CHAR_CLASS.toLowerCase(), Integer.valueOf(Types.CHAR));
-        CLASSNAME_TO_TYPE_MAP.put(OBJECT_CLASS.toLowerCase(), Integer.valueOf(Types.JAVA_OBJECT));
-        CLASSNAME_TO_TYPE_MAP.put(CLOB_CLASS.toLowerCase(), Integer.valueOf(Types.CLOB));
-        CLASSNAME_TO_TYPE_MAP.put(BLOB_CLASS.toLowerCase(), Integer.valueOf(Types.BLOB));
+        addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR);
+        TYPE_TO_NAME_MAP.put(Types.LONGVARCHAR, STRING);
+        addTypeMapping(BOOLEAN, BOOLEAN_CLASS, Types.BIT);
+        addTypeMapping(TIME, TIME_CLASS, Types.TIME);
+        addTypeMapping(DATE, DATE_CLASS, Types.DATE);
+        addTypeMapping(TIMESTAMP, TIMESTAMP_CLASS, Types.TIMESTAMP);
+        addTypeMapping(INTEGER, INTEGER_CLASS, Types.INTEGER);
+        addTypeMapping(FLOAT, FLOAT_CLASS, Types.REAL);
+        addTypeMapping(DOUBLE, DOUBLE_CLASS, Types.DOUBLE);
+        TYPE_TO_NAME_MAP.put(Types.FLOAT, DOUBLE);
+        addTypeMapping(BIGDECIMAL, BIGDECIMAL_CLASS, Types.NUMERIC);
+        TYPE_TO_NAME_MAP.put(Types.DECIMAL, BIGDECIMAL);
+        NAME_TO_CLASSNAME.put(BIGINTEGER, BIGINTEGER_CLASS);
+        CLASSNAME_TO_NAME.put(BIGINTEGER_CLASS, BIGINTEGER);
+        NAME_TO_TYPE_MAP.put(BIGINTEGER, Types.NUMERIC);
+        addTypeMapping(BYTE, BYTE_CLASS, Types.TINYINT);
+        addTypeMapping(SHORT, SHORT_CLASS, Types.SMALLINT);
+        addTypeMapping(LONG, LONG_CLASS, Types.BIGINT);
+        addTypeMapping(CHAR, CHAR_CLASS, Types.CHAR);
+        addTypeMapping(OBJECT, OBJECT_CLASS, Types.JAVA_OBJECT);
+        addTypeMapping(CLOB, CLOB_CLASS, Types.CLOB);
+        addTypeMapping(BLOB, BLOB_CLASS, Types.BLOB);
+        
+        addTypeMapping(NULL, null, Types.NUMERIC);
         
         //## JDBC4.0-begin ##
-        CLASSNAME_TO_TYPE_MAP.put(XML_CLASS.toLowerCase(), Integer.valueOf(Types.SQLXML));
-        //## JDBC4.0-end ##
-
-        /*## JDBC3.0-JDK1.5-begin ##
-        CLASSNAME_TO_TYPE_MAP.put(XML_CLASS.toLowerCase(), Integer.valueOf(Types.JAVA_OBJECT)); 
-        ## JDBC3.0-JDK1.5-end ##*/
-        
+        addTypeMapping(XML, XML_CLASS, Types.SQLXML);
+		TYPE_TO_NAME_MAP.put(Types.NVARCHAR, STRING);
+        TYPE_TO_NAME_MAP.put(Types.LONGNVARCHAR, STRING);
+		TYPE_TO_NAME_MAP.put(Types.NCHAR, CHAR);
+		TYPE_TO_NAME_MAP.put(Types.NCLOB, CLOB);
+		//## JDBC4.0-end ##
+		
+		/*## JDBC3.0-JDK1.5-begin ##
+	    NAME_TO_CLASSNAME.put(XML, OBJECT_CLASS); 
+	    ## JDBC3.0-JDK1.5-end ##*/
     }
+
+	private static void addTypeMapping(String typeName, String javaClass, int sqlType) {
+		NAME_TO_TYPE_MAP.put(typeName, sqlType);
+		TYPE_TO_NAME_MAP.put(sqlType, typeName);
+		if (javaClass != null) {
+			NAME_TO_CLASSNAME.put(typeName, javaClass);
+			CLASSNAME_TO_NAME.put(javaClass, typeName);
+		}
+	}
     
     /**
      * This method is used to obtain a short indicating JDBC SQL type for any object.
@@ -159,7 +158,7 @@ public final class MMJDBCSQLTypeInfo {
             return Types.NULL;
         }
         
-        Integer sqlType = NAME_TO_TYPE_MAP.get(typeName.toLowerCase());
+        Integer sqlType = NAME_TO_TYPE_MAP.get(typeName);
         
         if (sqlType == null) {
             return Types.JAVA_OBJECT;
@@ -174,19 +173,19 @@ public final class MMJDBCSQLTypeInfo {
      * @param typeName
      * @return int
      */
-    public static final int getSQLTypeFromClass(String typeName) {
+    public static final int getSQLTypeFromClass(String className) {
 
-        if (typeName == null) {
+        if (className == null) {
             return Types.NULL;
         }
         
-        Integer sqlType = CLASSNAME_TO_TYPE_MAP.get(typeName.toLowerCase());
+        String name = CLASSNAME_TO_NAME.get(className);
         
-        if (sqlType == null) {
+        if (name == null) {
             return Types.JAVA_OBJECT;
         }
         
-        return sqlType.intValue();
+        return getSQLType(name);
     } 
     
     /**
@@ -194,8 +193,16 @@ public final class MMJDBCSQLTypeInfo {
      * @param type
      * @return
      */
-    public static final int getSQLTypeFromRuntimeType(Class type) {
+    public static final int getSQLTypeFromRuntimeType(Class<?> type) {
+    	if (type == null) {
+    		return Types.NULL;
+    	}
+    	
         String name = DataTypeManager.getDataTypeName(type);
+        
+        if (name == null) {
+            return Types.JAVA_OBJECT;
+        }
         
         return getSQLType(name);
     }
@@ -208,78 +215,23 @@ public final class MMJDBCSQLTypeInfo {
      * @return A String representing the java class name for the given SQL Type.
      */
     public static final String getJavaClassName(int jdbcSQLType) {
-
-        String javaClassName;
-
-        switch(jdbcSQLType) {
-            case Types.VARCHAR:
-                javaClassName = STRING_CLASS;
-                break;
-            case Types.LONGVARCHAR:
-                javaClassName = STRING_CLASS;
-                break;
-            case Types.CHAR:
-                javaClassName = CHAR_CLASS;
-                break;
-            case Types.BIT:
-                javaClassName = BOOLEAN_CLASS;
-                break;
-            case Types.DATE:
-                javaClassName = DATE_CLASS;
-                break;
-            case Types.TIME:
-                javaClassName = TIME_CLASS;
-                break;                
-            case Types.TIMESTAMP:
-                javaClassName = TIMESTAMP_CLASS;
-                break;
-            case Types.INTEGER:
-                javaClassName = INTEGER_CLASS;
-                break;
-           case Types.REAL:
-           		javaClassName = FLOAT_CLASS;
-                break;
-            case Types.FLOAT:
-                javaClassName = DOUBLE_CLASS;
-                break; 
-            case Types.DOUBLE:
-                javaClassName = DOUBLE_CLASS;
-                break;
-            case Types.NUMERIC:
-                javaClassName = BIGDECIMAL_CLASS;
-                break;
-            case Types.DECIMAL:
-                javaClassName = BIGDECIMAL_CLASS;
-                break;
-            case Types.BIGINT:
-                javaClassName = LONG_CLASS;
-                break;
-            case Types.TINYINT:
-                javaClassName = BYTE_CLASS;
-                break;
-            case Types.SMALLINT:
-                javaClassName = SHORT_CLASS;
-                break;
-            case Types.JAVA_OBJECT:
-                 javaClassName = OBJECT_CLASS;
-                 break;
-            case Types.CLOB:
-                 javaClassName = CLOB_CLASS;
-                 break;
-            case Types.BLOB:
-                 javaClassName = BLOB_CLASS;
-                 break;
-            //## JDBC4.0-begin ##     
-            case Types.SQLXML:
-                javaClassName = XML_CLASS;
-                break;
-            //## JDBC4.0-end ##
-            default:
-                javaClassName = null;
-                break;
-        }
-
-        return javaClassName; // return java class name
+    	String className = NAME_TO_CLASSNAME.get(getTypeName(jdbcSQLType));
+    	
+    	if (className == null) {
+    		return OBJECT_CLASS;
+    	}
+    	
+    	return className;
+    }
+    
+    public static final String getTypeName(int sqlType) {
+    	String name = TYPE_TO_NAME_MAP.get(sqlType);
+    	
+    	if (name == null) {
+    		return OBJECT;
+    	}
+    	
+    	return name;
     }
 
     public static String[] getMMTypeNames() {

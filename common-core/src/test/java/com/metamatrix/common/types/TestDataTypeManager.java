@@ -186,6 +186,7 @@ public class TestDataTypeManager extends TestCase {
         }
         
         assertEquals(MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.TIMESTAMP), Types.TIMESTAMP);
+        assertEquals(MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.XML), Types.SQLXML);
     }
     
     public void testRuntimeTypeConversion() throws Exception {
