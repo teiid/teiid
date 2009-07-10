@@ -24,6 +24,7 @@ package com.metamatrix.jdbc;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Driver;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -39,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+
+import org.teiid.jdbc.TeiidDriver;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
@@ -306,21 +309,14 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
     // driver's connection object used in constructin this object.
     private MMConnection driverConnection;
-    private BaseDriver driver;
 
-    static com.metamatrix.jdbc.api.DatabaseMetaData newInstance(BaseDriver driver, MMConnection connection) throws SQLException {
-        return new MMDatabaseMetaData(driver, connection);        
-    }
-    
     /**
      * <p>Constructor which initializes with the connection object on which metadata
      * is sought
      * @param driver's connection object.
      * @throws SQLException if the connection is already closed.
      */
-    MMDatabaseMetaData(BaseDriver driver, MMConnection connection) throws SQLException {
-        // set driver's connection object
-        this.driver = driver;
+    MMDatabaseMetaData(MMConnection connection) {
         this.driverConnection = connection;
     }
 
@@ -830,7 +826,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if a database access error occurs.
      */
     public int getDatabaseMinorVersion() throws SQLException {
-        return this.driver.getMinorVersion();
+        return TeiidDriver.getInstance().getMinorVersion();
     }
 
     /**
@@ -839,7 +835,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if a database access error occurs.
      */
     public int getDatabaseMajorVersion() throws SQLException {
-        return this.driver.getMajorVersion();
+        return TeiidDriver.getInstance().getMajorVersion();
     }
 
     /**
@@ -875,7 +871,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException if there is an error accessing product release info.
      */
     public String getDatabaseProductVersion() throws SQLException {
-        return this.driver.getMajorVersion() + "." + this.driver.getMinorVersion(); //$NON-NLS-1$
+        return TeiidDriver.getInstance().getMajorVersion() + "." + TeiidDriver.getInstance().getMinorVersion(); //$NON-NLS-1$
     }
 
     /**
@@ -892,7 +888,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @return int representing the driver's major version
      */
     public int getDriverMajorVersion() {
-        return this.driver.getMajorVersion();
+        return TeiidDriver.getInstance().getMajorVersion();
     }
 
     /**
@@ -900,7 +896,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @return int representing the driver's minor version
      */
     public int getDriverMinorVersion() {
-        return this.driver.getMinorVersion();
+        return TeiidDriver.getInstance().getMinorVersion();
     }
 
     /**
@@ -909,7 +905,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException, if the connection is already closed.
      */
     public String getDriverName() throws SQLException {
-        return this.driver.getDriverName();
+        return TeiidDriver.getInstance().getDriverName();
     }
 
     /**

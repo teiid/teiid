@@ -23,16 +23,12 @@
 package com.metamatrix.jdbc.util;
 
 import java.net.URLEncoder;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Properties;
 
 import junit.framework.TestCase;
 
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.EmbeddedDriver;
-import com.metamatrix.jdbc.MMDriver;
 import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.api.ExecutionProperties;
 
@@ -331,4 +327,21 @@ public class TestMMJDBCURL extends TestCase {
         assertEquals("mm://slwxp172:44401,slabc123:12345", result);         //$NON-NLS-1$
     }
 
+    public void testBuildEmbeedURL() {
+    	MMJDBCURL url = new MMJDBCURL("vdb", "/home/foo/deploy.properties", new Properties()); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertEquals("jdbc:teiid:vdb@/home/foo/deploy.properties", url.getJDBCURL()); //$NON-NLS-1$
+    	
+    	Properties p = new Properties();
+    	p.setProperty("user", "test"); //$NON-NLS-1$ //$NON-NLS-2$
+    	p.setProperty("password", "pass"); //$NON-NLS-1$ //$NON-NLS-2$
+    	p.setProperty("autoFailover", "true"); //$NON-NLS-1$ //$NON-NLS-2$
+    	p.setProperty("any", "thing"); //$NON-NLS-1$ //$NON-NLS-2$
+    	
+    	url = new MMJDBCURL("vdb", "/home/foo/deploy.properties", p); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertTrue(url.getJDBCURL().startsWith("jdbc:teiid:vdb@/home/foo/deploy.properties;user=test;")); //$NON-NLS-1$
+    	assertTrue(url.getJDBCURL().indexOf("any=thing")!=-1); //$NON-NLS-1$
+    	assertTrue(url.getJDBCURL().indexOf("password=pass")!=-1); //$NON-NLS-1$
+    	assertTrue(url.getJDBCURL().indexOf("autoFailover=true")!=-1); //$NON-NLS-1$
+    	
+    }
 }

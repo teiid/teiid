@@ -53,7 +53,7 @@ public interface DQPEmbeddedProperties {
     public static final String BOOTURL = "bootURL"; //$NON-NLS-1$
     public static final String ENABLE_SOCKETS = "sockets.enabled"; //$NON-NLS-1$
     public static final String HOST_ADDRESS = "hostAddress"; //$NON-NLS-1$
-	
+    public static final String DQP_BOOTSTRAP_FILE = "bootstrapFile"; //$NON-NLS-1$
     
     public interface BufferService {
         /**

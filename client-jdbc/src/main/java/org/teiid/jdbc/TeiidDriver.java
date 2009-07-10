@@ -23,6 +23,7 @@
 package org.teiid.jdbc;
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
@@ -32,50 +33,32 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.comm.api.ServerConnection;
-import com.metamatrix.common.comm.exception.CommunicationException;
-import com.metamatrix.common.comm.exception.ConnectionException;
-import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
 import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.BaseDriver;
 import com.metamatrix.jdbc.JDBCPlugin;
-import com.metamatrix.jdbc.MMConnection;
 import com.metamatrix.jdbc.MMSQLException;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**
- * <p> The java.sql.DriverManager class uses this class to connect to Teiid Server or Teiid Embedded.
- * The TeiidDriver class has a static initializer, which
- * is used to instantiate and register itself with java.sql.DriverManager. The
- * DriverManager's <code>getConnection</code> method calls <code>connect</code>
- * method on available registered drivers. </p>
+ * JDBC Driver class for Teiid Embedded and Teiid Server. This class automatically registers with the 
+ * {@link DriverManager}
+ * 
+ *  The accepted URL format for the connection
+ *  <ul>
+ *  	<li> Server/socket connection:<b> jdbc:teiid:&lt;vdb-name&gt;@mm[s]://&lt;server-name&gt;:&lt;port&gt;;[user=&lt;user-name&gt;][password=&lt;user-password&gt;][other-properties]*</b>
+ *  	<li> Embedded  connection:<b> jdbc:teiid:&lt;vdb-name&gt;@&lt;file-path-to-deploy.properties&gt;;[user=&lt;user-name&gt;][password=&lt;user-password&gt;][other-properties]*</b>
+ *  </ul>
+ *  The user, password properties are needed if the user authentication is turned on. All the "other-properties" are simple name value pairs.
+ *  Look at {@link MMJDBCURL} KNOWN_PROPERTIES for list of known properties allowed.
  */
 
-public final class TeiidDriver extends BaseDriver {
-	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+public final class TeiidDriver implements Driver {
 	
-    static final String DRIVER_NAME = "Teiid JDBC Driver"; //$NON-NLS-1$
-    
-    /**
-     *  Suports JDBC URLS of format
-     *  - jdbc:teiid:BQT@mm://localhost:####;version=1
-     *  - jdbc:teiid:BQT@mms://localhost:####;version=1
-     *  - jdbc:teiid:BQT@mm(s)://host1:####,host2:####,host3:####;version=1
-     */
-    
-    // This host/port pattern allows just a . or a - to be in the host part.
-    static final String HOST_PORT_PATTERN = "[\\p{Alnum}\\.\\-]+:\\d+"; //$NON-NLS-1$
-    static final String URL_PATTERN = "jdbc:(metamatrix|teiid):(\\w+)@((mm[s]?://"+HOST_PORT_PATTERN+"(,"+HOST_PORT_PATTERN+")*)[;]?){1}((.*)*)"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    static Pattern urlPattern = Pattern.compile(URL_PATTERN);
-    
+	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+	static final String DRIVER_NAME = "Teiid JDBC Driver"; //$NON-NLS-1$
+	
     private static TeiidDriver INSTANCE = new TeiidDriver();
         
     // Static initializer
@@ -101,7 +84,7 @@ public final class TeiidDriver extends BaseDriver {
     }
 
     /**
-     * This method tries to make a metamatrix connection to the given URL. This class
+     * This method tries to make a connection to the given URL. This class
      * will return a null if this is not the right driver to connect to the given URL.
      * @param The URL used to establish a connection.
      * @return Connection object created
@@ -109,102 +92,26 @@ public final class TeiidDriver extends BaseDriver {
      */
     public Connection connect(String url, Properties info) throws SQLException {
 
-        MMConnection myConnection = null;
-        // create a properties obj if it is null
-        if(info == null) {
-            info = new Properties();
-        } else {
-            info = PropertiesUtils.clone(info);
-        }
-
-        // The url provided is in the correct format.
-        if (!acceptsURL(url)) {
-        	return null;
-        }
-
-        try {
-            // parse the URL to add it's properties to properties object
-            parseURL(url, info);
-
-            myConnection = createConnection(url, info);
-        } catch (MetaMatrixCoreException e) {
-            logger.log(Level.SEVERE, "Could not create connection", e); //$NON-NLS-1$
-            throw MMSQLException.create(e, e.getMessage());
-        }
-
-        // logging
-        String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
-        logger.fine(logMsg);
-
-        return myConnection;
-    }
-
-    MMConnection createConnection(String url, Properties info)
-        throws ConnectionException, CommunicationException {
-
-        ServerConnection serverConn = SocketServerConnectionFactory.getInstance().createConnection(info);
-
-        // construct a MMConnection object.
-        MMConnection connection = new MMConnection(serverConn, info, url);
-        return connection;
-    }
-
-    /**
-     * This method parses the URL and adds properties to the the properties object.
-     * These include required and any optional properties specified in the URL.
-     * Expected URL format -- jdbc:metamatrix:local:VDB@server:port;version=1;user=logon;
-     * password=pw;logFile=<logFile.log>;
-     * logLevel=<logLevel>;txnAutoWrap=<?>;credentials=mycredentials
-     * @param The URL needed to be parsed.
-     * @param The properties object which is to be updated with properties in the URL.
-     * @throws SQLException if the URL is not in the expected format.
-     */
-    protected void parseURL(String url, Properties info) throws SQLException {
-        if(url == null) {
-            String msg = JDBCPlugin.Util.getString("MMDriver.urlFormat"); //$NON-NLS-1$
-            throw new MMSQLException(msg);
-        }
-        try {
-            MMJDBCURL jdbcURL = new MMJDBCURL(url);
-            info.setProperty(BaseDataSource.VDB_NAME, jdbcURL.getVDBName());
-            info.setProperty(MMURL.CONNECTION.SERVER_URL, jdbcURL.getConnectionURL());
-            Properties optionalParams = jdbcURL.getProperties();
-            MMJDBCURL.normalizeProperties(info);
-            Enumeration keys = optionalParams.keys();
-            while (keys.hasMoreElements()) {
-                String propName = (String)keys.nextElement();
-                // Don't let the URL properties override the passed-in Properties object.
-                if (!info.containsKey(propName)) {
-                    info.setProperty(propName, optionalParams.getProperty(propName));
-                }
-            }
-            // add the property only if it is new because they could have
-            // already been specified either through url or otherwise.
-            if(!info.containsKey(BaseDataSource.VDB_VERSION) && jdbcURL.getVDBVersion() != null) {
-                info.setProperty(BaseDataSource.VDB_VERSION, jdbcURL.getVDBVersion());
-            }
-            if(!info.containsKey(BaseDataSource.APP_NAME)) {
-                info.setProperty(BaseDataSource.APP_NAME, BaseDataSource.DEFAULT_APP_NAME);
-            }
-
-        } catch(IllegalArgumentException iae) {
-            throw new MMSQLException(JDBCPlugin.Util.getString("MMDriver.urlFormat")); //$NON-NLS-1$
-        }  
+    	if (EmbeddedProfile.acceptsURL(url)) {
+    		return EmbeddedProfile.connect(url, info);
+    	}
+    	else if (SocketProfile.acceptsURL(url)) {
+    		return SocketProfile.connect(url, info);
+    	}
+    	return null;
     }
     
     /**
      * Returns true if the driver thinks that it can open a connection to the given URL.
-     * Typically drivers will return true if they understand the subprotocol specified
-     * in the URL and false if they don't.
-     * Expected URL format is
-     * jdbc:metamatrix:subprotocol:VDB@server:port;version=1;logFile=<logFile.log>;logLevel=<logLevel>;txnAutoWrap=<?>
+     * Expected URL format for server mode is
+     * jdbc:teiid::VDB@mm://server:port;version=1;user=username;password=password
+     * 
      * @param The URL used to establish a connection.
      * @return A boolean value indicating whether the driver understands the subprotocol.
      * @throws SQLException, should never occur
      */
     public boolean acceptsURL(String url) throws SQLException {
-        Matcher m = urlPattern.matcher(url);
-        return m.matches();
+    	return EmbeddedProfile.acceptsURL(url) || SocketProfile.acceptsURL(url);
     }
 
     /**
@@ -223,27 +130,37 @@ public final class TeiidDriver extends BaseDriver {
         return ApplicationInfo.getInstance().getMinorReleaseVersion();
     }
 
-    /** 
-     * @see com.metamatrix.jdbc.BaseDriver#getDriverName()
-     * @since 4.3
-     */
     public String getDriverName() {
         return DRIVER_NAME;
     }
     
-    @Override
-    protected List<DriverPropertyInfo> getAdditionalPropertyInfo(String url,
-    		Properties info) {
-    	List<DriverPropertyInfo> dpis = new LinkedList<DriverPropertyInfo>();
-        DriverPropertyInfo dpi = new DriverPropertyInfo(MMURL.CONNECTION.SERVER_URL, info.getProperty(MMURL.CONNECTION.SERVER_URL));
-        dpi.required = true;
-        dpis.add(dpi);
-        dpis.add(new DriverPropertyInfo(BaseDataSource.USER_NAME, info.getProperty(BaseDataSource.USER_NAME)));
-        dpis.add(new DriverPropertyInfo(BaseDataSource.PASSWORD, info.getProperty(BaseDataSource.PASSWORD)));
-        dpis.add(new DriverPropertyInfo(ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD, info.getProperty(BaseDataSource.PASSWORD)));
-        return dpis;
-    }
+    public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
+        if(info == null) {
+            info = new Properties();
+        }
+
+        // construct list of driverPropertyInfo objects
+        List<DriverPropertyInfo> driverProps = new LinkedList<DriverPropertyInfo>();
+
+        for (String property: MMJDBCURL.KNOWN_PROPERTIES) {
+        	DriverPropertyInfo dpi = new DriverPropertyInfo(property, info.getProperty(property));
+        	driverProps.add(dpi);
+        }
+                
+        // create an array of DriverPropertyInfo objects
+        DriverPropertyInfo [] propInfo = new DriverPropertyInfo[driverProps.size()];
+
+        // copy the elements from the list to the array
+        return driverProps.toArray(propInfo);
+    }    
     
+    /**
+     * This method returns true if the driver passes jdbc compliance tests.
+     * @return true if the driver is jdbc complaint, else false.
+     */
+    public boolean jdbcCompliant() {
+        return false;
+    }
 }
 
 

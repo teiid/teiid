@@ -22,11 +22,14 @@
 
 package org.teiid.jdbc;
 
+import java.net.URL;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 
 import com.metamatrix.common.api.MMURL;
-import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.common.protocol.URLHelper;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.jdbc.MMSQLException;
@@ -99,6 +102,8 @@ public class TeiidDataSource extends BaseDataSource {
     
     private String discoveryStrategy;
     
+    private String bootstrapFile;
+    
     /**
      * Constructor for MMDataSource.
      */
@@ -111,8 +116,6 @@ public class TeiidDataSource extends BaseDataSource {
 
     protected Properties buildProperties(final String userName, final String password) {               
         Properties props = super.buildProperties(userName, password);
-        
-        props.setProperty(MMURL.CONNECTION.SERVER_URL,this.buildServerURL());
         
         if (this.getAutoFailover() != null) {
             props.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, this.getAutoFailover());
@@ -128,6 +131,14 @@ public class TeiidDataSource extends BaseDataSource {
 
         return props;
     }
+    
+    private Properties buildServerProperties(final String userName, final String password) {               
+        Properties props = buildProperties(userName, password);
+        
+        props.setProperty(MMURL.CONNECTION.SERVER_URL,this.buildServerURL());
+
+        return props;
+    }    
 
     protected String buildServerURL() {
     	if ( this.alternateServers == null ) {
@@ -213,16 +224,41 @@ public class TeiidDataSource extends BaseDataSource {
      * @see javax.sql.DataSource#getConnection(java.lang.String, java.lang.String)
      */
     public Connection getConnection(String userName, String password) throws java.sql.SQLException {
-        try {
-            validateProperties(userName,password);
-            final Properties props = buildProperties(userName, password);
-            final TeiidDriver driver = new TeiidDriver();
-            return driver.createConnection(buildURL(), props);
-        } catch (MetaMatrixCoreException e) {
-            throw MMSQLException.create(e, e.getMessage());
-        }
-    }
+    	final TeiidDriver driver = new TeiidDriver();
 
+    	// check if this is embedded connection 
+    	if (getEmbeddedBootstrapFile() != null) {
+    		validateEmbeddedProperties(userName,password);
+	        final Properties props = buildEmbeddedProperties(userName, password);	 
+	        String url = new MMJDBCURL(getDatabaseName(), getEmbeddedBootstrapFile(), props).getJDBCURL();
+	        return driver.connect(url, props);    		    		
+    	}
+    	
+    	// if not proceed with socket connection.
+        validateProperties(userName,password);
+        final Properties props = buildServerProperties(userName, password);	        
+        return driver.connect(buildURL(), props);
+    	
+    }
+    
+	private Properties buildEmbeddedProperties(final String userName, final String password) {
+		Properties props = buildProperties(userName, password);
+
+		if (this.getEmbeddedBootstrapFile().equals(EmbeddedProfile.getDefaultConnectionURL())) {
+			props.put(DQPEmbeddedProperties.VDB_DEFINITION, getDatabaseName() + ".vdb"); //$NON-NLS-1$
+		}
+		props.put(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE, this.bootstrapFile);
+		return props;
+	}
+
+	private void validateEmbeddedProperties(final String userName, final String password) throws java.sql.SQLException {
+		super.validateProperties(userName, password);
+		String reason = reasonWhyInvalidConfigFile(this.bootstrapFile);
+		if (reason != null) {
+			throw new SQLException(reason);
+		}
+	}    
+	
    /**
      * @see java.lang.Object#toString()
      */
@@ -486,5 +522,45 @@ public class TeiidDataSource extends BaseDataSource {
 		this.discoveryStrategy = discoveryStrategy;
 	}
 
+    /**
+     * Returns the path and file name from which embedded DQP configuration information will be read.
+     * 
+     * @return the name of the config file for this data source; may be null
+     */
+    public String getEmbeddedBootstrapFile() {
+        return bootstrapFile;
+    }
+
+    /**
+     * Sets file name from which embedded DQP configuration information * will be read.
+     * 
+     * @param configFile
+     *            The name of the config file name to set
+     */
+    public void setEmbeddedBootstrapFile(final String configFile) {
+        this.bootstrapFile = configFile;
+    }
+    
+    /**
+     * Return the reason why the supplied config file may be invalid, or null if it is considered valid.
+     * 
+     * @param configFile
+     *            a possible value for the property
+     * @return the reason why the property is invalid, or null if it is considered valid
+     * @see #setEmbeddedBootstrapFile(String)
+     */
+    public static String reasonWhyInvalidConfigFile(final String configFile) {
+        if(configFile == null) {
+            return getResourceMessage("EmbeddedDataSource.The_configFile_property_is_null"); //$NON-NLS-1$
+        }
+        
+        try {
+            URL url = URLHelper.buildURL(configFile);
+            url.openStream();
+        } catch (Exception e) {
+            return getResourceMessage("EmbeddedDataSource.The_configFile_does_not_exist_or_cant_be_read"); //$NON-NLS-1$
+        }        
+        return null;
+    }    
 }
 

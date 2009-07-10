@@ -23,7 +23,9 @@
 package com.metamatrix.jdbc.api;
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,9 +42,9 @@ import java.sql.Statement;
 
 import org.junit.After;
 import org.teiid.adminapi.Admin;
+import org.teiid.jdbc.TeiidDriver;
 
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.jdbc.EmbeddedDriver;
 import com.metamatrix.script.io.MetadataReader;
 import com.metamatrix.script.io.ResultSetReader;
 import com.metamatrix.script.io.StringArrayReader;
@@ -56,7 +58,7 @@ import com.metamatrix.script.io.StringArrayReader;
 public class AbstractMMQueryTestCase {
 	
 	static {
-		new EmbeddedDriver();
+		new TeiidDriver();
 	}
 	
     protected com.metamatrix.jdbc.api.Connection internalConnection = null;

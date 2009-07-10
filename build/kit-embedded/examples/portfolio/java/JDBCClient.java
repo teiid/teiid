@@ -35,18 +35,18 @@ public class JDBCClient {
 			System.exit(-1);
 		}
 
-		System.out.println("Executing using the EmbeddedDriver");
+		System.out.println("Executing using the TeiidDriver");
 		execute(getDriverConnection(), args[0]);
 
 		System.out.println("");
-		System.out.println("Executing using the EmbeddedDataSource");
+		System.out.println("Executing using the TeiidDataSource");
 		// this is showing how to make a Data Source connection. 
 		execute(getDataSourceConnection(), args[0]);
 	}
 	
 	static Connection getDriverConnection() throws Exception {
 		String url = "jdbc:metamatrix:Portfolio";
-		Class.forName("com.metamatrix.jdbc.EmbeddedDriver");
+		Class.forName("org.teiid.jdbc.TeiidDriver");
 		
 		return DriverManager.getConnection(url);		
 	}

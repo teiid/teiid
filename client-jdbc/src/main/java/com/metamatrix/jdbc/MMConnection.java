@@ -517,7 +517,7 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
         checkConnection();
         
         if (dbmm == null) {
-            dbmm = MMDatabaseMetaData.newInstance(getBaseDriver(), this);
+            dbmm = new MMDatabaseMetaData(this);
         }       
         return dbmm;
     }
@@ -937,13 +937,6 @@ public class MMConnection extends WrapperImpl implements com.metamatrix.jdbc.api
 		if (this.serverConn instanceof SocketServerConnection) {
 			((SocketServerConnection)this.serverConn).selectNewServerInstance(this.getDQP());
 		}
-	}
-	
-	public BaseDriver getBaseDriver() {
-		if (this.serverConn instanceof SocketServerConnection) {
-			return new TeiidDriver();
-		}
-		return new EmbeddedDriver();
 	}
 	
 	public boolean isSameProcess(MMConnection conn) throws CommunicationException {

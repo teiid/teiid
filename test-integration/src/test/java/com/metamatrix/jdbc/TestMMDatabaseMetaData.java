@@ -50,6 +50,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.jdbc.TeiidDriver;
 
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.core.util.UnitTestUtil;
@@ -85,7 +86,7 @@ public class TestMMDatabaseMetaData {
 
     @Before
     public void setUp() throws Exception {
-        dbmd = new MMDatabaseMetaData((BaseDriver)DriverManager.getDriver(serverUrl), (MMConnection) conn);
+        dbmd = new MMDatabaseMetaData((MMConnection) conn);
     }
 
     @AfterClass
@@ -97,7 +98,7 @@ public class TestMMDatabaseMetaData {
     
     @BeforeClass
     public static void oneTimeSetUp() throws Exception {
-        Class.forName(EmbeddedDriver.class.getName());
+        Class.forName(TeiidDriver.class.getName());
         conn = DriverManager.getConnection(serverUrl);
     }
     

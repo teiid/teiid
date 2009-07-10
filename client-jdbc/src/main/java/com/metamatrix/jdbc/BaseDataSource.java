@@ -954,7 +954,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
     }
     
    
-    static String getResourceMessage(String key) {
+    protected static String getResourceMessage(String key) {
         ResourceBundle messages = ResourceBundle.getBundle(BUNDLE_NAME);          
         String messageTemplate = messages.getString(key);
         return MessageFormat.format(messageTemplate, (Object[])null);

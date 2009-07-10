@@ -71,7 +71,7 @@ public class TestCase3473 extends TestCase {
 
 			@Override
 			protected void setUp() throws Exception {
-                Class.forName("com.metamatrix.jdbc.EmbeddedDriver"); //$NON-NLS-1$
+                Class.forName("org.teiid.jdbc.TeiidDriver"); //$NON-NLS-1$
                 conn = DriverManager.getConnection(serverUrl);
                 dbmd = (MMDatabaseMetaData)conn.getMetaData();
 			}

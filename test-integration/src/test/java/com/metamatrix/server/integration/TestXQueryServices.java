@@ -30,8 +30,9 @@ import java.sql.Statement;
 
 import junit.framework.TestCase;
 
+import org.teiid.jdbc.TeiidDriver;
+
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.jdbc.EmbeddedDriver;
 import com.metamatrix.jdbc.MMSQLException;
 
 /**
@@ -47,7 +48,7 @@ public class TestXQueryServices extends TestCase {
      * This is then not an effective test of xquery, but shows how a procedure without a resultset should behave.
      */
     public void testXQueryCall() throws Exception {
-    	Class.forName(EmbeddedDriver.class.getName());
+    	Class.forName(TeiidDriver.class.getName());
     	Connection conn = DriverManager.getConnection("jdbc:metamatrix:xq@" + UnitTestUtil.getTestDataPath() + "/xquery/xquery.properties;txnAutoWrap=OFF;user=test" ); //$NON-NLS-1$ //$NON-NLS-2$
     	CallableStatement cs = conn.prepareCall("{? = call xqs.test}"); //$NON-NLS-1$
     	assertFalse(cs.execute());

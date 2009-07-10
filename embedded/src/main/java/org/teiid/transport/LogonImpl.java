@@ -40,6 +40,7 @@ import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.client.ResultsFuture;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.jdbc.api.ConnectionProperties;
@@ -67,7 +68,7 @@ public class LogonImpl implements ILogon {
 		
         String applicationName = connProps.getProperty(MMURL.CONNECTION.APP_NAME);
         // user may be null if using trustedToken to log on
-        String user = connProps.getProperty(MMURL.CONNECTION.USER_NAME);
+        String user = connProps.getProperty(MMURL.CONNECTION.USER_NAME, CoreConstants.DEFAULT_ANON_USERNAME);
         // password may be null if using trustedToken to log on
         String password = connProps.getProperty(MMURL.CONNECTION.PASSWORD);
 		Credentials credential = null;

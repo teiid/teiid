@@ -43,7 +43,7 @@ public class MMJDBCURL {
     private static final String JDBC_PROTOCOL = "jdbc:teiid:"; //$NON-NLS-1$
     private static final String OLD_JDBC_PROTOCOL = "jdbc:metamatrix:"; //$NON-NLS-1$
     
-    private static final String[] KNOWN_PROPERTIES = {
+    public static final String[] KNOWN_PROPERTIES = {
         BaseDataSource.APP_NAME,
         BaseDataSource.VDB_NAME,
         BaseDataSource.VERSION,
