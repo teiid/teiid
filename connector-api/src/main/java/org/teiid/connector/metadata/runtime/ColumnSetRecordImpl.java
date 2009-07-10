@@ -50,11 +50,20 @@ public class ColumnSetRecordImpl extends AbstractMetadataRecord {
     }
     
     /** 
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnSetRecord#getColumnIdEntries()
+     * Retrieves a list of ColumnRecordImpls containing only id and position information (used by System Tables)
      */
     public List<ColumnRecordImpl> getColumnIdEntries() {
-    	if (this.columns != null) {
-    		return this.columns;
+    	if (columns != null) {
+            final List<ColumnRecordImpl> entryRecords = new ArrayList<ColumnRecordImpl>(columns.size());
+            for (int i = 0, n = columns.size(); i < n; i++) {
+            	ColumnRecordImpl columnRecordImpl  = columns.get(i);
+                final int position = i+1;
+                ColumnRecordImpl impl = new ColumnRecordImpl();
+                entryRecords.add( impl );
+                impl.setUUID(columnRecordImpl.getUUID());
+                impl.setPosition(position);
+            }
+            return entryRecords;
     	}
         final List<ColumnRecordImpl> entryRecords = new ArrayList<ColumnRecordImpl>(columnIDs.size());
         for (int i = 0, n = columnIDs.size(); i < n; i++) {

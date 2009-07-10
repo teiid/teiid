@@ -1050,26 +1050,6 @@ public class TestMMDatabaseMetaData {
             closeResultSetTestStreams();
         }
     }
-
-    /** test with integer type */
-    @Test
-    public void testGetTypeInfo_specificType_Integer() throws Exception {
-        initResultSetStreams("testGetTypeInfo_specificType_Integer"); //$NON-NLS-1$
-        ResultSet rs = null;
-        try {
-            DatabaseMetaData dbmd = conn.getMetaData();
-            rs = dbmd.getTypeInfo();
-            ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
-            assertEquals("Actual data did not match expected", //$NON-NLS-1$
-                         Collections.EMPTY_LIST,
-                         ResultSetUtil.getUnequalLines(stream));
-        } finally { 
-            if(rs != null) {
-                rs.close();    
-            }
-            closeResultSetTestStreams();
-        }
-    }
     
     @Test
     public void testGetUDTs() throws Exception{

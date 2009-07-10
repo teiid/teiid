@@ -25,6 +25,7 @@ package org.teiid.metadata;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -531,7 +532,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
     	ArgCheck.isInstanceOf(TableRecordImpl.class, groupID);
     	TableRecordImpl tableRecordImpl = (TableRecordImpl)groupID;
     	if (tableRecordImpl.getPrimaryKey() != null) {
-	    	LinkedList<ColumnSetRecordImpl> result = new LinkedList<ColumnSetRecordImpl>(tableRecordImpl.getUniqueKeys());
+	    	ArrayList<ColumnSetRecordImpl> result = new ArrayList<ColumnSetRecordImpl>(tableRecordImpl.getUniqueKeys());
 	    	result.add(tableRecordImpl.getPrimaryKey());
 	    	return result;
     	}
@@ -655,7 +656,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
             // get the transform record for this group            
             TransformationRecordImpl transformRecord = null;
 			// Query the index files
-			Collection results = getMetadataStore().findMetadataRecords(IndexConstants.RECORD_TYPE.MAPPING_TRANSFORM,groupName,false);
+			Collection results = getMetadataStore().findMetadataRecords(MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM,groupName,false);
 			int resultSize = results.size();
 			if(resultSize == 1) {
 				// get the columnset record for this result            
@@ -732,7 +733,7 @@ public class TransformationMetadata extends BasicQueryMetadata {
 		TransformationRecordImpl transformRecord = null;
 
 		// Query the index files
-		Collection results = getMetadataStore().findMetadataRecords(IndexConstants.RECORD_TYPE.MAPPING_TRANSFORM,groupName,false);
+		Collection results = getMetadataStore().findMetadataRecords(MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM,groupName,false);
 		int resultSize = results.size();
 		if(resultSize == 1) {
 			// get the columnset record for this result            

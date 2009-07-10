@@ -170,28 +170,28 @@ public class RecordFactory {
             return null;
         }
         switch (record[0]) {
-            case IndexConstants.RECORD_TYPE.MODEL: return createModelRecord(record);
-            case IndexConstants.RECORD_TYPE.TABLE: return createTableRecord(record);
-            case IndexConstants.RECORD_TYPE.JOIN_DESCRIPTOR: return null;
-            case IndexConstants.RECORD_TYPE.CALLABLE: return createProcedureRecord(record);
-            case IndexConstants.RECORD_TYPE.CALLABLE_PARAMETER: return createProcedureParameterRecord(record);
-            case IndexConstants.RECORD_TYPE.COLUMN: return createColumnRecord(record);
-            case IndexConstants.RECORD_TYPE.ACCESS_PATTERN:
-            case IndexConstants.RECORD_TYPE.INDEX:
-            case IndexConstants.RECORD_TYPE.RESULT_SET: 
-            case IndexConstants.RECORD_TYPE.UNIQUE_KEY:
-            case IndexConstants.RECORD_TYPE.PRIMARY_KEY: return createColumnSetRecord(record);
-            case IndexConstants.RECORD_TYPE.FOREIGN_KEY: return createForeignKeyRecord(record);
-            case IndexConstants.RECORD_TYPE.DATATYPE: return createDatatypeRecord(record);
-            case IndexConstants.RECORD_TYPE.SELECT_TRANSFORM:
-            case IndexConstants.RECORD_TYPE.INSERT_TRANSFORM:
-            case IndexConstants.RECORD_TYPE.UPDATE_TRANSFORM:
-            case IndexConstants.RECORD_TYPE.DELETE_TRANSFORM:
-            case IndexConstants.RECORD_TYPE.MAPPING_TRANSFORM:
-            case IndexConstants.RECORD_TYPE.PROC_TRANSFORM: return createTransformationRecord(record);
-            case IndexConstants.RECORD_TYPE.ANNOTATION: return createAnnotationRecord(record);
-            case IndexConstants.RECORD_TYPE.PROPERTY: return createPropertyRecord(record);
-            case IndexConstants.RECORD_TYPE.FILE: return createFileRecord(record);
+            case MetadataConstants.RECORD_TYPE.MODEL: return createModelRecord(record);
+            case MetadataConstants.RECORD_TYPE.TABLE: return createTableRecord(record);
+            case MetadataConstants.RECORD_TYPE.JOIN_DESCRIPTOR: return null;
+            case MetadataConstants.RECORD_TYPE.CALLABLE: return createProcedureRecord(record);
+            case MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER: return createProcedureParameterRecord(record);
+            case MetadataConstants.RECORD_TYPE.COLUMN: return createColumnRecord(record);
+            case MetadataConstants.RECORD_TYPE.ACCESS_PATTERN:
+            case MetadataConstants.RECORD_TYPE.INDEX:
+            case MetadataConstants.RECORD_TYPE.RESULT_SET: 
+            case MetadataConstants.RECORD_TYPE.UNIQUE_KEY:
+            case MetadataConstants.RECORD_TYPE.PRIMARY_KEY: return createColumnSetRecord(record);
+            case MetadataConstants.RECORD_TYPE.FOREIGN_KEY: return createForeignKeyRecord(record);
+            case MetadataConstants.RECORD_TYPE.DATATYPE: return createDatatypeRecord(record);
+            case MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM:
+            case MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM:
+            case MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM:
+            case MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM:
+            case MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM:
+            case MetadataConstants.RECORD_TYPE.PROC_TRANSFORM: return createTransformationRecord(record);
+            case MetadataConstants.RECORD_TYPE.ANNOTATION: return createAnnotationRecord(record);
+            case MetadataConstants.RECORD_TYPE.PROPERTY: return createPropertyRecord(record);
+            case MetadataConstants.RECORD_TYPE.FILE: return createFileRecord(record);
             default:
                 throw new IllegalArgumentException("Invalid record type for creating MetadataRecord "+record[0]); //$NON-NLS-1$
         }
@@ -223,7 +223,7 @@ public class RecordFactory {
 
         // If the IEntryResult is not continued on another record, return the original
         char[] baseResult = result.getWord();
-        if (baseResult.length < blockSize || baseResult[blockSize-1] != IndexConstants.RECORD_TYPE.RECORD_CONTINUATION) {
+        if (baseResult.length < blockSize || baseResult[blockSize-1] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {
             return result;
         }
 
@@ -410,12 +410,12 @@ public class RecordFactory {
     
     protected static String getTransformTypeForRecordType(final char recordType) {
         switch (recordType) {
-            case IndexConstants.RECORD_TYPE.SELECT_TRANSFORM: return TransformationRecordImpl.Types.SELECT;
-            case IndexConstants.RECORD_TYPE.INSERT_TRANSFORM: return TransformationRecordImpl.Types.INSERT;
-            case IndexConstants.RECORD_TYPE.UPDATE_TRANSFORM: return TransformationRecordImpl.Types.UPDATE;
-            case IndexConstants.RECORD_TYPE.DELETE_TRANSFORM: return TransformationRecordImpl.Types.DELETE;
-            case IndexConstants.RECORD_TYPE.PROC_TRANSFORM: return TransformationRecordImpl.Types.PROCEDURE;
-            case IndexConstants.RECORD_TYPE.MAPPING_TRANSFORM: return TransformationRecordImpl.Types.MAPPING;
+            case MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM: return TransformationRecordImpl.Types.SELECT;
+            case MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM: return TransformationRecordImpl.Types.INSERT;
+            case MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM: return TransformationRecordImpl.Types.UPDATE;
+            case MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM: return TransformationRecordImpl.Types.DELETE;
+            case MetadataConstants.RECORD_TYPE.PROC_TRANSFORM: return TransformationRecordImpl.Types.PROCEDURE;
+            case MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM: return TransformationRecordImpl.Types.MAPPING;
             default:
                 throw new IllegalArgumentException("Invalid record type, for key " + recordType); //$NON-NLS-1$
         }
@@ -423,12 +423,12 @@ public class RecordFactory {
     
     protected static short getKeyTypeForRecordType(final char recordType) {
         switch (recordType) {
-            case IndexConstants.RECORD_TYPE.UNIQUE_KEY: return MetadataConstants.KEY_TYPES.UNIQUE_KEY;
-            case IndexConstants.RECORD_TYPE.INDEX: return MetadataConstants.KEY_TYPES.INDEX;
-            case IndexConstants.RECORD_TYPE.ACCESS_PATTERN: return MetadataConstants.KEY_TYPES.ACCESS_PATTERN;
-            case IndexConstants.RECORD_TYPE.PRIMARY_KEY: return MetadataConstants.KEY_TYPES.PRIMARY_KEY;
-            case IndexConstants.RECORD_TYPE.FOREIGN_KEY: return MetadataConstants.KEY_TYPES.FOREIGN_KEY;
-            case IndexConstants.RECORD_TYPE.RESULT_SET : return -1;
+            case MetadataConstants.RECORD_TYPE.UNIQUE_KEY: return MetadataConstants.KEY_TYPES.UNIQUE_KEY;
+            case MetadataConstants.RECORD_TYPE.INDEX: return MetadataConstants.KEY_TYPES.INDEX;
+            case MetadataConstants.RECORD_TYPE.ACCESS_PATTERN: return MetadataConstants.KEY_TYPES.ACCESS_PATTERN;
+            case MetadataConstants.RECORD_TYPE.PRIMARY_KEY: return MetadataConstants.KEY_TYPES.PRIMARY_KEY;
+            case MetadataConstants.RECORD_TYPE.FOREIGN_KEY: return MetadataConstants.KEY_TYPES.FOREIGN_KEY;
+            case MetadataConstants.RECORD_TYPE.RESULT_SET : return -1;
             default:
                 throw new IllegalArgumentException("Invalid record type, for key" + recordType); //$NON-NLS-1$
         }
@@ -599,7 +599,7 @@ public class RecordFactory {
         List uuids = getIDs((String)tokens.get(tokenIndex++), indexVersion);
         columnSet.setColumnIDs(uuids);
 
-        if (record[0] == IndexConstants.RECORD_TYPE.UNIQUE_KEY || record[0] == IndexConstants.RECORD_TYPE.PRIMARY_KEY) {
+        if (record[0] == MetadataConstants.RECORD_TYPE.UNIQUE_KEY || record[0] == MetadataConstants.RECORD_TYPE.PRIMARY_KEY) {
         	//read the values from the index to update the tokenindex, but we don't actually use them.
         	getIDs((String)tokens.get(tokenIndex++), indexVersion);
         }

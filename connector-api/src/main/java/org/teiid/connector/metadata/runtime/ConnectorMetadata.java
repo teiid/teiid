@@ -11,6 +11,10 @@ public interface ConnectorMetadata extends Serializable {
 	
 	Collection<ProcedureRecordImpl> getProcedures();
 	
+	Collection<AnnotationRecordImpl> getAnnotations();
+	
+	Collection<PropertyRecordImpl> getProperties();
+	
 	//costing
 	
 }

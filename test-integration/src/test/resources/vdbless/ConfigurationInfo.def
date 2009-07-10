@@ -2,7 +2,7 @@
 <VDB>
     <VDBInfo>
         <Property Name="Name" Value="VDBLess" />
-        <Property Name="Version" Value="4" />
+        <Property Name="Version" Value="3" />
         <Property Name="UseConnectorMetadata" Value="true" />
     </VDBInfo>
     <Model>
@@ -11,11 +11,26 @@
             <Connector Name="Text Connector" />
         </ConnectorBindings>
     </Model>
+    <Model>
+        <Property Name="Name" Value="Derby" />
+        <ConnectorBindings>
+            <Connector Name="Derby Connector" />
+        </ConnectorBindings>
+    </Model>
     <ConnectorBindings>
         <Connector Name="Text Connector" ComponentType="Text File Connector">
             <Properties>
                 <Property Name="Immutable">true</Property>
                 <Property Name="DescriptorFile">src/test/resources/vdbless/TextDescriptor.txt</Property>
+            </Properties>
+        </Connector>
+        <Connector Name="Derby Connector" ComponentType="Apache Derby Embedded Connector">
+            <Properties>
+                <Property Name="Immutable">true</Property>
+                <Property Name="URL">jdbc:derby:jar:(src/test/resources/derby/sample.zip)bqt</Property>
+                
+                <!-- import settings -->
+                <Property Name="importer.useFullSchemaName">false</Property>
             </Properties>
         </Connector>
     </ConnectorBindings>

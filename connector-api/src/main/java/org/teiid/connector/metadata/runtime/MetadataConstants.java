@@ -257,7 +257,37 @@ public final class MetadataConstants {
                                                     "Nullable",   //$NON-NLS-1$
                                                     "Unknown" }; //$NON-NLS-1$
     }
-    public final static String getNullTypeName(short type) {
+    //Record type Constants
+	public static class RECORD_TYPE {
+	    public final static char MODEL               = 'A';
+	    public final static char TABLE               = 'B';
+	    public final static char RESULT_SET          = 'C';
+	    public final static char JOIN_DESCRIPTOR     = 'D';
+	    public final static char CALLABLE            = 'E';
+	    public final static char CALLABLE_PARAMETER  = 'F';
+	    public final static char COLUMN              = 'G';
+	    public final static char ACCESS_PATTERN      = 'H';        
+	    public final static char UNIQUE_KEY          = 'I';
+	    public final static char FOREIGN_KEY         = 'J';
+	    public final static char PRIMARY_KEY         = 'K';                
+	    public final static char INDEX               = 'L';
+	    public final static char DATATYPE            = 'M';
+	    //public final static char DATATYPE_ELEMENT    = 'N';
+	    //public final static char DATATYPE_FACET      = 'O';
+	    public final static char SELECT_TRANSFORM    = 'P';
+	    public final static char INSERT_TRANSFORM    = 'Q';
+	    public final static char UPDATE_TRANSFORM    = 'R';
+	    public final static char DELETE_TRANSFORM    = 'S';
+	    public final static char PROC_TRANSFORM      = 'T';
+	    public final static char MAPPING_TRANSFORM   = 'U';
+	    public final static char VDB_ARCHIVE         = 'V';
+	    public final static char ANNOTATION          = 'W';
+	    public final static char PROPERTY            = 'X';
+	    public final static char FILE            	 = 'Z';
+	    public final static char RECORD_CONTINUATION = '&';
+	}
+
+	public final static String getNullTypeName(short type) {
         return NULL_TYPES.TYPE_NAMES[type];
     }
 }

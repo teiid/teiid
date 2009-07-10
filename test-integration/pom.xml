@@ -60,8 +60,8 @@
 			<artifactId>teiid-engine</artifactId>
 			<type>test-jar</type>
 		</dependency>
-    
-    <!-- internal dependencies that are only used by integration testing -->
+
+		<!-- internal dependencies that are only used by integration testing -->
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-embedded</artifactId>
@@ -99,6 +99,14 @@
 			<artifactId>connector-jdbc</artifactId>
 			<type>test-jar</type>
 			<version>${project.version}</version>
+		</dependency>
+
+		<!-- external dependencies -->
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+			<version>10.2.1.6</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

@@ -14,6 +14,7 @@ package com.metamatrix.core.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -1009,6 +1010,14 @@ public final class StringUtil {
     	}
     	else if (type.isAssignableFrom(List.class)) {
     		return (T)new ArrayList<String>(Arrays.asList(value.split(","))); //$NON-NLS-1$
+    	}
+    	else if (type.isArray()) {
+    		String[] values = value.split(","); //$NON-NLS-1$
+    		Object array = Array.newInstance(type.getComponentType(), values.length);
+    		for (int i = 0; i < values.length; i++) {
+				Array.set(array, i, valueOf(values[i], type.getComponentType()));
+			}
+    		return (T)array;
     	}
     	else if (type == Void.class) {
     		return null;

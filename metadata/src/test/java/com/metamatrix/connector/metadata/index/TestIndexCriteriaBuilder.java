@@ -29,6 +29,7 @@ import org.teiid.connector.metadata.IndexCriteriaBuilder;
 import org.teiid.connector.metadata.MetadataLiteralCriteria;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.MetadataConstants;
 import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
 import org.teiid.metadata.index.IndexConstants;
 
@@ -62,7 +63,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         Map criteria = new HashMap();
         helpAddToCriteria(criteria, DatatypeRecordImpl.MetadataFieldNames.DATA_TYPE_UUID, "dataTypeUUID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
-        String expectedPrefix = ""+IndexConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
+        String expectedPrefix = ""+MetadataConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"datatypeuuid"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER;
 
@@ -100,7 +101,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"dataTypeUUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"baseTypeUUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"Name"+ //$NON-NLS-1$
@@ -122,7 +123,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.DATATYPES_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.DATATYPE+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"baseTypeUUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"Name"+ //$NON-NLS-1$
@@ -142,7 +143,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
-        String expectedPrefix = ""+IndexConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
+        String expectedPrefix = ""+MetadataConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"uuid"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER;
 
@@ -182,7 +183,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_VALUE_FIELD, "propValue"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"propName"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"propValue"+ //$NON-NLS-1$
@@ -196,7 +197,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, PropertyRecordImpl.MetadataFieldNames.PROPERTY_NAME_FIELD, "propName"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.PROPERTIES_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.PROPERTY+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"propName"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -211,7 +212,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
-        String expectedPrefix = ""+IndexConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
+        String expectedPrefix = ""+MetadataConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"NAME"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER;
 
@@ -253,7 +254,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"MyModel"+ //$NON-NLS-1$
@@ -271,7 +272,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "MyModel"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"MyModel"+ //$NON-NLS-1$
@@ -289,7 +290,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "MyModel"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.MODELS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.MODEL+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"MyModel"+ //$NON-NLS-1$
@@ -309,7 +310,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPrefix = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPrefix = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPrefix = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"MYMODEL.NAME"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER;
 
@@ -361,7 +362,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"MyModel.Name"+ //$NON-NLS-1$
@@ -381,7 +382,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"MyModel.*.Name"+ //$NON-NLS-1$
@@ -401,7 +402,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*.Name"+ //$NON-NLS-1$
@@ -421,7 +422,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"MyModel.*"+ //$NON-NLS-1$
@@ -441,7 +442,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, "UUID"); //$NON-NLS-1$
         //helpAddToCriteria(criteria, MetadataRecord.MetadataFieldNames.NAME_FIELD, "Name"); //$NON-NLS-1$
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"UUID"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
@@ -455,7 +456,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
     public void testNoCriteriaPrefix() {
         Map criteria = new HashMap();
         String matchPattern = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER;
         assertEquals(matchPattern, expectedPattern);        
     }
@@ -463,7 +464,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
     public void testNoCriteriaPattern() {
         Map criteria = new HashMap();
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"; //$NON-NLS-1$
         assertEquals(matchPattern, expectedPattern);        
     }
@@ -472,7 +473,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         Map criteria = new HashMap();
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, null);
         String matchPattern = IndexCriteriaBuilder.getMatchPrefix(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+IndexConstants.RECORD_STRING.SPACE+
         IndexConstants.RECORD_STRING.RECORD_DELIMITER;
         assertEquals(matchPattern, expectedPattern);        
@@ -482,7 +483,7 @@ public class TestIndexCriteriaBuilder extends TestCase {
         Map criteria = new HashMap();
         helpAddToCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, null);
         String matchPattern = IndexCriteriaBuilder.getMatchPattern(IndexConstants.INDEX_NAME.COLUMNS_INDEX, criteria);
-        String expectedPattern = ""+IndexConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
+        String expectedPattern = ""+MetadataConstants.RECORD_TYPE.COLUMN+//$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+"*"+ //$NON-NLS-1$
         IndexConstants.RECORD_STRING.RECORD_DELIMITER+IndexConstants.RECORD_STRING.SPACE+

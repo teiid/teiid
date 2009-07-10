@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.MetadataConstants;
 import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
 import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.SimpleIndexUtil;
@@ -223,7 +224,7 @@ public class IndexCriteriaBuilder {
             String recordTypeCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.RECORD_TYPE_FIELD);
             // if its a model or vdb record only criteria possible is on Name
             if(recordTypeCriteria != null &&
-                (recordTypeCriteria.equalsIgnoreCase(StringUtil.Constants.EMPTY_STRING+IndexConstants.RECORD_TYPE.MODEL))) {
+                (recordTypeCriteria.equalsIgnoreCase(StringUtil.Constants.EMPTY_STRING+MetadataConstants.RECORD_TYPE.MODEL))) {
                 appendCriteriaValue(criteria, AbstractMetadataRecord.MetadataFieldNames.NAME_FIELD, sb);
             } else {
                 String modelNameCriteria = getValueInCriteria(criteria, AbstractMetadataRecord.MetadataFieldNames.MODEL_NAME_FIELD);

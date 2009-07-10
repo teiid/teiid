@@ -89,7 +89,11 @@ public abstract class TypeFacility {
      */
     public static final int getSQLTypeFromRuntimeType(Class<?> type) {
         return MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(type);
-    }    
+    } 
+    
+    public static final String getDataTypeNameFromSQLType(int sqlType) {
+    	return MMJDBCSQLTypeInfo.getTypeName(sqlType);
+    }
     
     /**
      * Convert the given value to the closest runtime type see {@link RUNTIME_TYPES}

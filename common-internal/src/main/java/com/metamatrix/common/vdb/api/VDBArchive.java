@@ -247,7 +247,9 @@ public class VDBArchive implements MetadataSource {
 		} else {
 			appendManifest(this.def);
 		}
-		this.def.setHasWSDLDefined(this.wsdlAvailable);
+		if (this.def != null) {
+			this.def.setHasWSDLDefined(this.wsdlAvailable);
+		}
 		open = true;
 	}
 	

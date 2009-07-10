@@ -379,6 +379,7 @@ public class TextConnector extends BasicConnector implements MetadataProvider {
 				String type = typeNames == null?TypeFacility.RUNTIME_NAMES.STRING:typeNames[i].trim().toLowerCase();
 				ColumnRecordImpl column = metadataFactory.addColumn(columnNames[i].trim(), type, table);
 				column.setNameInSource(String.valueOf(i));
+				column.setNativeType(TypeFacility.RUNTIME_NAMES.STRING);
 			}
 		}
 	}

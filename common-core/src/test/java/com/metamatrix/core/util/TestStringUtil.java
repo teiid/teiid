@@ -406,6 +406,10 @@ public class TestStringUtil extends TestCase {
     	assertTrue(list.contains("foo")); //$NON-NLS-1$
     	assertTrue(list.contains("x")); //$NON-NLS-1$
     	
+    	int[] values = StringUtil.valueOf("1,2,3,4,5", new int[0].getClass()); //$NON-NLS-1$
+    	assertEquals(5, values.length);
+    	assertEquals(5, values[4]);
+    	
     	Map m = StringUtil.valueOf("foo=bar,x=,y=z", Map.class); //$NON-NLS-1$
     	assertEquals(3, m.size());
     	assertEquals(m.get("foo"), "bar"); //$NON-NLS-1$ //$NON-NLS-2$

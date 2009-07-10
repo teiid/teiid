@@ -29,7 +29,7 @@ import java.util.Collection;
  */
 public class TableRecordImpl extends ColumnSetRecordImpl {
 
-    private int cardinality;
+    private int cardinality = -1;
     private int tableType;
     private String primaryKeyID;
     private String materializedTableID;

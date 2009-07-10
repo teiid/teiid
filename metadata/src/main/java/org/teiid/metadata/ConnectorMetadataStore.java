@@ -33,6 +33,7 @@ import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
 import org.teiid.connector.metadata.runtime.ColumnSetRecordImpl;
 import org.teiid.connector.metadata.runtime.ConnectorMetadata;
+import org.teiid.connector.metadata.runtime.MetadataConstants;
 import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
 import org.teiid.connector.metadata.runtime.TableRecordImpl;
 import org.teiid.metadata.index.IndexConstants;
@@ -93,7 +94,6 @@ public class ConnectorMetadataStore implements MetadataStore {
 	public StoredProcedureInfo getStoredProcedureInfoForProcedure(
 			String fullyQualifiedProcedureName)
 			throws MetaMatrixComponentException, QueryMetadataException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 	
@@ -113,32 +113,29 @@ public class ConnectorMetadataStore implements MetadataStore {
 	private Collection<? extends AbstractMetadataRecord> getRecordsByType(
 			char recordType) {
 		switch (recordType) {
-		case IndexConstants.RECORD_TYPE.CALLABLE:
+		case MetadataConstants.RECORD_TYPE.CALLABLE:
 			return metadata.getProcedures();
-		case IndexConstants.RECORD_TYPE.CALLABLE_PARAMETER:
+		case MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER:
+			//TODO
 			return Collections.emptyList();
-		case IndexConstants.RECORD_TYPE.RESULT_SET:
+		case MetadataConstants.RECORD_TYPE.RESULT_SET:
+			//TODO
 			return Collections.emptyList();
-			
-		case IndexConstants.RECORD_TYPE.ACCESS_PATTERN: {
+		case MetadataConstants.RECORD_TYPE.ACCESS_PATTERN: {
 			Collection<ColumnSetRecordImpl> results = new ArrayList<ColumnSetRecordImpl>();
 			for (TableRecordImpl table : metadata.getTables()) {
-				if (table.getAccessPatterns() != null) {
-					results.addAll(table.getAccessPatterns());
-				}
+				results.addAll(table.getAccessPatterns());
 			}
 			return results;
 		}
-		case IndexConstants.RECORD_TYPE.UNIQUE_KEY: {
+		case MetadataConstants.RECORD_TYPE.UNIQUE_KEY: {
 			Collection<ColumnSetRecordImpl> results = new ArrayList<ColumnSetRecordImpl>();
 			for (TableRecordImpl table : metadata.getTables()) {
-				if (table.getUniqueKeys() != null) {
-					results.addAll(table.getUniqueKeys());
-				}
+				results.addAll(table.getUniqueKeys());
 			}
 			return results;
 		}
-		case IndexConstants.RECORD_TYPE.PRIMARY_KEY: {
+		case MetadataConstants.RECORD_TYPE.PRIMARY_KEY: {
 			Collection<ColumnSetRecordImpl> results = new ArrayList<ColumnSetRecordImpl>();
 			for (TableRecordImpl table : metadata.getTables()) {
 				if (table.getPrimaryKey() != null) {
@@ -147,36 +144,36 @@ public class ConnectorMetadataStore implements MetadataStore {
 			}
 			return results;
 		}
-		case IndexConstants.RECORD_TYPE.FOREIGN_KEY: {
+		case MetadataConstants.RECORD_TYPE.FOREIGN_KEY: {
 			Collection<ColumnSetRecordImpl> results = new ArrayList<ColumnSetRecordImpl>();
 			for (TableRecordImpl table : metadata.getTables()) {
-				if (table.getForeignKeys() != null) {
-					results.addAll(table.getForeignKeys());
-				}
+				results.addAll(table.getForeignKeys());
 			}
 			return results;
 		}
-		case IndexConstants.RECORD_TYPE.INDEX: {
+		case MetadataConstants.RECORD_TYPE.INDEX: {
 			Collection<ColumnSetRecordImpl> results = new ArrayList<ColumnSetRecordImpl>();
 			for (TableRecordImpl table : metadata.getTables()) {
-				if (table.getIndexes() != null) {
-					results.addAll(table.getIndexes());
-				}
+				results.addAll(table.getIndexes());
 			}
 			return results;
 		}
-		case IndexConstants.RECORD_TYPE.MODEL:
+		case MetadataConstants.RECORD_TYPE.MODEL:
 			return Arrays.asList(metadata.getModel());
-		case IndexConstants.RECORD_TYPE.TABLE:
+		case MetadataConstants.RECORD_TYPE.TABLE:
 			return metadata.getTables();
-		case IndexConstants.RECORD_TYPE.COLUMN: {
+		case MetadataConstants.RECORD_TYPE.COLUMN: {
 			Collection<ColumnRecordImpl> results = new ArrayList<ColumnRecordImpl>();
 			for (TableRecordImpl table : metadata.getTables()) {
-				if (table.getColumns() != null) {
-					results.addAll(table.getColumns());
-				}
+				results.addAll(table.getColumns());
 			}
 			return results;
+		}
+		case MetadataConstants.RECORD_TYPE.ANNOTATION: {
+			return metadata.getAnnotations();
+		}
+		case MetadataConstants.RECORD_TYPE.PROPERTY: {
+			return metadata.getProperties();
 		}
 		}
 		return Collections.emptyList();
@@ -187,26 +184,28 @@ public class ConnectorMetadataStore implements MetadataStore {
 			String pattern, boolean isPrefix,
 			boolean isCaseSensitive) throws MetaMatrixCoreException {
 		if (indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.COLUMNS_INDEX)) {
-			return getRecordsByType(IndexConstants.RECORD_TYPE.COLUMN);
+			return getRecordsByType(MetadataConstants.RECORD_TYPE.COLUMN);
 		} else if (indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.KEYS_INDEX)) {
 			List<AbstractMetadataRecord> result = new ArrayList<AbstractMetadataRecord>();
-			result.addAll(getRecordsByType(IndexConstants.RECORD_TYPE.ACCESS_PATTERN));
-			result.addAll(getRecordsByType(IndexConstants.RECORD_TYPE.UNIQUE_KEY));
-			result.addAll(getRecordsByType(IndexConstants.RECORD_TYPE.PRIMARY_KEY));
-			result.addAll(getRecordsByType(IndexConstants.RECORD_TYPE.FOREIGN_KEY));
-			result.addAll(getRecordsByType(IndexConstants.RECORD_TYPE.INDEX));
+			result.addAll(getRecordsByType(MetadataConstants.RECORD_TYPE.ACCESS_PATTERN));
+			result.addAll(getRecordsByType(MetadataConstants.RECORD_TYPE.UNIQUE_KEY));
+			result.addAll(getRecordsByType(MetadataConstants.RECORD_TYPE.PRIMARY_KEY));
+			result.addAll(getRecordsByType(MetadataConstants.RECORD_TYPE.FOREIGN_KEY));
+			result.addAll(getRecordsByType(MetadataConstants.RECORD_TYPE.INDEX));
 			return result;
 		} else if (indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.MODELS_INDEX)) {
-			return getRecordsByType(IndexConstants.RECORD_TYPE.MODEL);
+			return getRecordsByType(MetadataConstants.RECORD_TYPE.MODEL);
 		} else if (indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.PROCEDURES_INDEX)) {
 			List<AbstractMetadataRecord> result = new ArrayList<AbstractMetadataRecord>();
-			result.addAll(getRecordsByType(IndexConstants.RECORD_TYPE.CALLABLE));
-			result.addAll(getRecordsByType(IndexConstants.RECORD_TYPE.CALLABLE_PARAMETER));
-			result.addAll(getRecordsByType(IndexConstants.RECORD_TYPE.RESULT_SET));
+			result.addAll(getRecordsByType(MetadataConstants.RECORD_TYPE.CALLABLE));
+			result.addAll(getRecordsByType(MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER));
+			result.addAll(getRecordsByType(MetadataConstants.RECORD_TYPE.RESULT_SET));
 			return result;
 		} else if (indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.TABLES_INDEX)) {
-			return getRecordsByType(IndexConstants.RECORD_TYPE.TABLE);
-		} 
+			return getRecordsByType(MetadataConstants.RECORD_TYPE.TABLE);
+		} else if (indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.ANNOTATION_INDEX)) {
+			return getRecordsByType(MetadataConstants.RECORD_TYPE.ANNOTATION);
+		}
 		return Collections.emptyList();
 	}
 	

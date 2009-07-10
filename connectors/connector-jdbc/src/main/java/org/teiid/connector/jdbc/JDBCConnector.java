@@ -42,10 +42,12 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.MappedUserIdentity;
+import org.teiid.connector.api.MetadataProvider;
 import org.teiid.connector.api.SingleIdentity;
 import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
 import org.teiid.connector.basic.BasicConnector;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
@@ -58,7 +60,7 @@ import com.metamatrix.core.util.ReflectionHelper;
  * JDBC implementation of Connector interface.
  */
 @ConnectionPooling
-public class JDBCConnector extends BasicConnector implements XAConnector {
+public class JDBCConnector extends BasicConnector implements XAConnector, MetadataProvider {
 	
     public static final String INVALID_AUTHORIZATION_SPECIFICATION_NO_SUBCLASS = "28000"; //$NON-NLS-1$
 
@@ -159,22 +161,23 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
 		 * attempt to deregister drivers that may have been implicitly registered
 		 * with the driver manager
 		 */
-        Enumeration drivers = DriverManager.getDrivers();
+		boolean usingCustomClassLoader = PropertiesUtils.getBooleanProperty(this.environment.getProperties(), ConnectorPropertyNames.USING_CUSTOM_CLASSLOADER, false);
 
-        String driverClassname = this.environment.getProperties().getProperty(JDBCPropertyNames.CONNECTION_SOURCE_CLASS);
-        boolean usingCustomClassLoader = PropertiesUtils.getBooleanProperty(this.environment.getProperties(), ConnectorPropertyNames.USING_CUSTOM_CLASSLOADER, false);
+		if (!usingCustomClassLoader) {
+			return;
+		}
+		
+		Enumeration drivers = DriverManager.getDrivers();
 
         while(drivers.hasMoreElements()){
         	Driver tempdriver = (Driver)drivers.nextElement();
-            if(tempdriver.getClass().getClassLoader() != this.getClass().getClassLoader()) {
+            if(tempdriver.getClass().getClassLoader() != Thread.currentThread().getContextClassLoader()) {
             	continue;
             }
-            if(usingCustomClassLoader || tempdriver.getClass().getName().equals(driverClassname)) {
-                try {
-                    DriverManager.deregisterDriver(tempdriver);
-                } catch (Throwable e) {
-                    this.environment.getLogger().logError(e.getMessage());
-                }
+            try {
+                DriverManager.deregisterDriver(tempdriver);
+            } catch (Throwable e) {
+                this.environment.getLogger().logError(e.getMessage());
             }
         }
                 
@@ -332,6 +335,37 @@ public class JDBCConnector extends BasicConnector implements XAConnector {
 			throws SQLException {
 		if(getDefaultTransactionIsolationLevel() != NO_ISOLATION_LEVEL_SET && getDefaultTransactionIsolationLevel() != java.sql.Connection.TRANSACTION_NONE){
 		    sqlConn.setTransactionIsolation(getDefaultTransactionIsolationLevel());
+		}
+	}
+	
+	@Override
+	public void getConnectorMetadata(MetadataFactory metadataFactory)
+			throws ConnectorException {
+		java.sql.Connection conn = null;
+		javax.sql.XAConnection xaConn = null;
+		try {
+			if (ds != null) {
+				conn = ds.getConnection();
+			} else {
+				xaConn = xaDs.getXAConnection();
+				conn = xaConn.getConnection();
+			}
+			JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor();
+			PropertiesUtils.setBeanProperties(metadataProcessor, this.environment.getProperties(), "importer"); //$NON-NLS-1$
+			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
+		} catch (SQLException e) {
+			throw new ConnectorException(e);
+		} finally {
+			try {
+				if (conn != null) {
+					conn.close();
+				}
+				if (xaConn != null) {
+					xaConn.close();
+				}
+			} catch (SQLException e) {
+				
+			}
 		}
 	}
         

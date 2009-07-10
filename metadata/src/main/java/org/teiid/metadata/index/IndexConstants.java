@@ -22,6 +22,8 @@
 
 package org.teiid.metadata.index;
 
+import org.teiid.connector.metadata.runtime.MetadataConstants;
+
 /**
  * IndexConstants
  */
@@ -72,37 +74,7 @@ public class IndexConstants {
         }
     }
 
-    //Record type Constants
-    public static class RECORD_TYPE {
-        public final static char MODEL               = 'A';
-        public final static char TABLE               = 'B';
-        public final static char RESULT_SET          = 'C';
-        public final static char JOIN_DESCRIPTOR     = 'D';
-        public final static char CALLABLE            = 'E';
-        public final static char CALLABLE_PARAMETER  = 'F';
-        public final static char COLUMN              = 'G';
-        public final static char ACCESS_PATTERN      = 'H';        
-        public final static char UNIQUE_KEY          = 'I';
-        public final static char FOREIGN_KEY         = 'J';
-        public final static char PRIMARY_KEY         = 'K';                
-        public final static char INDEX               = 'L';
-        public final static char DATATYPE            = 'M';
-        //public final static char DATATYPE_ELEMENT    = 'N';
-        //public final static char DATATYPE_FACET      = 'O';
-        public final static char SELECT_TRANSFORM    = 'P';
-        public final static char INSERT_TRANSFORM    = 'Q';
-        public final static char UPDATE_TRANSFORM    = 'R';
-        public final static char DELETE_TRANSFORM    = 'S';
-        public final static char PROC_TRANSFORM      = 'T';
-        public final static char MAPPING_TRANSFORM   = 'U';
-        public final static char VDB_ARCHIVE         = 'V';
-        public final static char ANNOTATION          = 'W';
-        public final static char PROPERTY            = 'X';
-        public final static char FILE            	 = 'Z';
-        public final static char RECORD_CONTINUATION = '&';
-    }
-
-	//Search Record type Constants
+    //Search Record type Constants
 	public static class SEARCH_RECORD_TYPE {
 		public final static char RESOURCE       	= 'A';
 		public final static char MODEL_IMPORT       = 'B';
@@ -130,32 +102,32 @@ public class IndexConstants {
 	};
 
     public static final char[] RECORD_TYPES = new char[]{
-        RECORD_TYPE.MODEL,
-        RECORD_TYPE.TABLE,
-        RECORD_TYPE.RESULT_SET,
-        RECORD_TYPE.JOIN_DESCRIPTOR,
-        RECORD_TYPE.CALLABLE,
-        RECORD_TYPE.CALLABLE_PARAMETER,
-        RECORD_TYPE.COLUMN,
-        RECORD_TYPE.ACCESS_PATTERN,
-        RECORD_TYPE.UNIQUE_KEY,
-        RECORD_TYPE.FOREIGN_KEY,
-        RECORD_TYPE.PRIMARY_KEY,
-        RECORD_TYPE.INDEX,
-        RECORD_TYPE.DATATYPE,
+        MetadataConstants.RECORD_TYPE.MODEL,
+        MetadataConstants.RECORD_TYPE.TABLE,
+        MetadataConstants.RECORD_TYPE.RESULT_SET,
+        MetadataConstants.RECORD_TYPE.JOIN_DESCRIPTOR,
+        MetadataConstants.RECORD_TYPE.CALLABLE,
+        MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER,
+        MetadataConstants.RECORD_TYPE.COLUMN,
+        MetadataConstants.RECORD_TYPE.ACCESS_PATTERN,
+        MetadataConstants.RECORD_TYPE.UNIQUE_KEY,
+        MetadataConstants.RECORD_TYPE.FOREIGN_KEY,
+        MetadataConstants.RECORD_TYPE.PRIMARY_KEY,
+        MetadataConstants.RECORD_TYPE.INDEX,
+        MetadataConstants.RECORD_TYPE.DATATYPE,
         //RECORD_TYPE.DATATYPE_ELEMENT,
         //RECORD_TYPE.DATATYPE_FACET,
-        RECORD_TYPE.SELECT_TRANSFORM,
-        RECORD_TYPE.INSERT_TRANSFORM,
-        RECORD_TYPE.UPDATE_TRANSFORM,
-        RECORD_TYPE.DELETE_TRANSFORM,
-        RECORD_TYPE.PROC_TRANSFORM,
-        RECORD_TYPE.MAPPING_TRANSFORM,
-        RECORD_TYPE.VDB_ARCHIVE,
-        RECORD_TYPE.ANNOTATION,
-        RECORD_TYPE.PROPERTY,
-        RECORD_TYPE.FILE,
-		RECORD_TYPE.RECORD_CONTINUATION
+        MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM,
+        MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM,
+        MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM,
+        MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM,
+        MetadataConstants.RECORD_TYPE.PROC_TRANSFORM,
+        MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM,
+        MetadataConstants.RECORD_TYPE.VDB_ARCHIVE,
+        MetadataConstants.RECORD_TYPE.ANNOTATION,
+        MetadataConstants.RECORD_TYPE.PROPERTY,
+        MetadataConstants.RECORD_TYPE.FILE,
+		MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION
     };
 
     public static class RECORD_STRING {

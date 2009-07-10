@@ -89,7 +89,7 @@ public class IndexMetadataStore implements MetadataStore {
     public Collection<String> getModelNames() {
     	Collection<ModelRecordImpl> records;
 		try {
-			records = findMetadataRecords(IndexConstants.RECORD_TYPE.MODEL, null, false);
+			records = findMetadataRecords(MetadataConstants.RECORD_TYPE.MODEL, null, false);
 		} catch (MetaMatrixComponentException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
@@ -102,14 +102,14 @@ public class IndexMetadataStore implements MetadataStore {
     
     @Override
     public TableRecordImpl findGroup(String groupName) throws QueryMetadataException, MetaMatrixComponentException {
-        TableRecordImpl tableRecord = (TableRecordImpl)getRecordByType(groupName, IndexConstants.RECORD_TYPE.TABLE);
-    	List<ColumnRecordImpl> columns = new ArrayList<ColumnRecordImpl>(findChildRecords(tableRecord, IndexConstants.RECORD_TYPE.COLUMN, true));
+        TableRecordImpl tableRecord = (TableRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.TABLE);
+    	List<ColumnRecordImpl> columns = new ArrayList<ColumnRecordImpl>(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.COLUMN, true));
         for (ColumnRecordImpl columnRecordImpl : columns) {
     		columnRecordImpl.setDatatype(getDatatypeCache().get(columnRecordImpl.getDatatypeUUID()));
 		}
         Collections.sort(columns);
         tableRecord.setColumns(columns);
-        tableRecord.setAccessPatterns(findChildRecords(tableRecord, IndexConstants.RECORD_TYPE.ACCESS_PATTERN, true));
+        tableRecord.setAccessPatterns(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.ACCESS_PATTERN, true));
         Map<String, ColumnRecordImpl> uuidColumnMap = new HashMap<String, ColumnRecordImpl>();
         for (ColumnRecordImpl columnRecordImpl : columns) {
 			uuidColumnMap.put(columnRecordImpl.getUUID(), columnRecordImpl);
@@ -117,44 +117,44 @@ public class IndexMetadataStore implements MetadataStore {
         for (ColumnSetRecordImpl columnSetRecordImpl : tableRecord.getAccessPatterns()) {
 			loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 		}
-        tableRecord.setForiegnKeys(findChildRecords(tableRecord, IndexConstants.RECORD_TYPE.FOREIGN_KEY, true));
+        tableRecord.setForiegnKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.FOREIGN_KEY, true));
         for (ForeignKeyRecordImpl foreignKeyRecord : tableRecord.getForeignKeys()) {
-        	(foreignKeyRecord).setPrimaryKey((ColumnSetRecordImpl)this.getRecordByType(foreignKeyRecord.getUniqueKeyID(), IndexConstants.RECORD_TYPE.PRIMARY_KEY));
+        	(foreignKeyRecord).setPrimaryKey((ColumnSetRecordImpl)this.getRecordByType(foreignKeyRecord.getUniqueKeyID(), MetadataConstants.RECORD_TYPE.PRIMARY_KEY));
         	loadColumnSetRecords(foreignKeyRecord, uuidColumnMap);
 		}
-        tableRecord.setUniqueKeys(findChildRecords(tableRecord, IndexConstants.RECORD_TYPE.UNIQUE_KEY, true));
+        tableRecord.setUniqueKeys(findChildRecords(tableRecord, MetadataConstants.RECORD_TYPE.UNIQUE_KEY, true));
         for (ColumnSetRecordImpl columnSetRecordImpl : tableRecord.getUniqueKeys()) {
 			loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 		}
         if (tableRecord.getPrimaryKeyID() != null) {
-        	ColumnSetRecordImpl primaryKey = (ColumnSetRecordImpl)getRecordByType(tableRecord.getPrimaryKeyID(), IndexConstants.RECORD_TYPE.PRIMARY_KEY);
+        	ColumnSetRecordImpl primaryKey = (ColumnSetRecordImpl)getRecordByType(tableRecord.getPrimaryKeyID(), MetadataConstants.RECORD_TYPE.PRIMARY_KEY);
         	loadColumnSetRecords(primaryKey, uuidColumnMap);
         	tableRecord.setPrimaryKey(primaryKey);
         }
-        tableRecord.setModel((ModelRecordImpl)getRecordByType(tableRecord.getModelName(), IndexConstants.RECORD_TYPE.MODEL));
+        tableRecord.setModel((ModelRecordImpl)getRecordByType(tableRecord.getModelName(), MetadataConstants.RECORD_TYPE.MODEL));
         if (tableRecord.isVirtual()) {
-        	TransformationRecordImpl update = (TransformationRecordImpl)getRecordByType(groupName, IndexConstants.RECORD_TYPE.UPDATE_TRANSFORM,false);
+        	TransformationRecordImpl update = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM,false);
 	        if (update != null) {
 	        	tableRecord.setUpdatePlan(update.getTransformation());
 	        }
-	        TransformationRecordImpl insert = (TransformationRecordImpl)getRecordByType(groupName, IndexConstants.RECORD_TYPE.INSERT_TRANSFORM,false);
+	        TransformationRecordImpl insert = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM,false);
 	        if (insert != null) {
 	        	tableRecord.setInsertPlan(insert.getTransformation());
 	        }
-	        TransformationRecordImpl delete = (TransformationRecordImpl)getRecordByType(groupName, IndexConstants.RECORD_TYPE.DELETE_TRANSFORM,false);
+	        TransformationRecordImpl delete = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM,false);
 	        if (delete != null) {
 	        	tableRecord.setDeletePlan(delete.getTransformation());
 	        }
-	        TransformationRecordImpl select = (TransformationRecordImpl)getRecordByType(groupName, IndexConstants.RECORD_TYPE.SELECT_TRANSFORM,false);
+	        TransformationRecordImpl select = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM,false);
 	        // this group may be an xml document            
 	        if(select == null) {
-		        select = (TransformationRecordImpl)getRecordByType(groupName, IndexConstants.RECORD_TYPE.MAPPING_TRANSFORM,false);
+		        select = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM,false);
 	        }
 	        tableRecord.setSelectTransformation(select);
         }
         if (tableRecord.isMaterialized()) {
-        	tableRecord.setMaterializedStageTableName(getRecordByType(tableRecord.getMaterializedStageTableID(), IndexConstants.RECORD_TYPE.TABLE).getFullName());
-        	tableRecord.setMaterializedTableName(getRecordByType(tableRecord.getMaterializedTableID(), IndexConstants.RECORD_TYPE.TABLE).getFullName());
+        	tableRecord.setMaterializedStageTableName(getRecordByType(tableRecord.getMaterializedStageTableID(), MetadataConstants.RECORD_TYPE.TABLE).getFullName());
+        	tableRecord.setMaterializedTableName(getRecordByType(tableRecord.getMaterializedTableID(), MetadataConstants.RECORD_TYPE.TABLE).getFullName());
         }
         return tableRecord;
     }
@@ -162,7 +162,7 @@ public class IndexMetadataStore implements MetadataStore {
 	private Map<String, DatatypeRecordImpl> getDatatypeCache() throws MetaMatrixComponentException {
 		if (this.datatypeCache == null) {
 			this.datatypeCache = new HashMap<String, DatatypeRecordImpl>();
-			Collection<DatatypeRecordImpl> dataTypes = findMetadataRecords(IndexConstants.RECORD_TYPE.DATATYPE, null, false);
+			Collection<DatatypeRecordImpl> dataTypes = findMetadataRecords(MetadataConstants.RECORD_TYPE.DATATYPE, null, false);
 			for (DatatypeRecordImpl datatypeRecordImpl : dataTypes) {
 				datatypeCache.put(datatypeRecordImpl.getUUID(), datatypeRecordImpl);
 			}
@@ -176,7 +176,7 @@ public class IndexMetadataStore implements MetadataStore {
     
     @Override
     public ColumnRecordImpl findElement(String fullName) throws QueryMetadataException, MetaMatrixComponentException {
-        ColumnRecordImpl columnRecord = (ColumnRecordImpl)getRecordByType(fullName, IndexConstants.RECORD_TYPE.COLUMN);
+        ColumnRecordImpl columnRecord = (ColumnRecordImpl)getRecordByType(fullName, MetadataConstants.RECORD_TYPE.COLUMN);
     	columnRecord.setDatatype(getDatatypeCache().get(columnRecord.getDatatypeUUID()));
         return columnRecord;
     }
@@ -185,7 +185,7 @@ public class IndexMetadataStore implements MetadataStore {
     public Collection<String> getGroupsForPartialName(String partialGroupName)
     		throws MetaMatrixComponentException, QueryMetadataException {
         // Query the index files
-		Collection<String> tableRecords = findMetadataRecords(IndexConstants.RECORD_TYPE.TABLE,partialGroupName,true);
+		Collection<String> tableRecords = findMetadataRecords(MetadataConstants.RECORD_TYPE.TABLE,partialGroupName,true);
 
 		// Extract the fully qualified names to return
 		final Collection tableNames = new ArrayList(tableRecords.size());
@@ -226,7 +226,7 @@ public class IndexMetadataStore implements MetadataStore {
     public StoredProcedureInfo getStoredProcedureInfoForProcedure(final String fullyQualifiedProcedureName)
         throws MetaMatrixComponentException, QueryMetadataException {
 
-    	ProcedureRecordImpl procRecord = (ProcedureRecordImpl) getRecordByType(fullyQualifiedProcedureName, IndexConstants.RECORD_TYPE.CALLABLE); 
+    	ProcedureRecordImpl procRecord = (ProcedureRecordImpl) getRecordByType(fullyQualifiedProcedureName, MetadataConstants.RECORD_TYPE.CALLABLE); 
 
         String procedureFullName = procRecord.getFullName();
 
@@ -236,20 +236,20 @@ public class IndexMetadataStore implements MetadataStore {
         procInfo.setProcedureID(procRecord);
 
         // modelID for the procedure
-        AbstractMetadataRecord modelRecord = getRecordByType(procRecord.getModelName(), IndexConstants.RECORD_TYPE.MODEL);
+        AbstractMetadataRecord modelRecord = getRecordByType(procRecord.getModelName(), MetadataConstants.RECORD_TYPE.MODEL);
         procInfo.setModelID(modelRecord);
 
         // get the parameter metadata info
         for(Iterator paramIter = procRecord.getParameterIDs().iterator();paramIter.hasNext();) {
             String paramID = (String) paramIter.next();
-            ProcedureParameterRecordImpl paramRecord = (ProcedureParameterRecordImpl) this.getRecordByType(paramID, IndexConstants.RECORD_TYPE.CALLABLE_PARAMETER);
+            ProcedureParameterRecordImpl paramRecord = (ProcedureParameterRecordImpl) this.getRecordByType(paramID, MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
             String runtimeType = paramRecord.getRuntimeType();
             int direction = this.convertParamRecordTypeToStoredProcedureType(paramRecord.getType());
             // create a parameter and add it to the procedure object
             SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getFullName());
             spParam.setMetadataID(paramRecord);
             if (paramRecord.getDatatypeUUID() != null) {
-            	paramRecord.setDatatype((DatatypeRecordImpl)getRecordByType(paramRecord.getDatatypeUUID(), IndexConstants.RECORD_TYPE.DATATYPE));
+            	paramRecord.setDatatype((DatatypeRecordImpl)getRecordByType(paramRecord.getDatatypeUUID(), MetadataConstants.RECORD_TYPE.DATATYPE));
             }
             spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
             procInfo.addParameter(spParam);
@@ -259,7 +259,7 @@ public class IndexMetadataStore implements MetadataStore {
         String resultID = procRecord.getResultSetID();
         if(resultID != null) {
             try {
-                ColumnSetRecordImpl resultRecord = (ColumnSetRecordImpl) this.getRecordByType(resultID, IndexConstants.RECORD_TYPE.RESULT_SET);
+                ColumnSetRecordImpl resultRecord = (ColumnSetRecordImpl) this.getRecordByType(resultID, MetadataConstants.RECORD_TYPE.RESULT_SET);
                 // resultSet is the last parameter in the procedure
                 int lastParamIndex = procInfo.getParameters().size() + 1;
                 SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getFullName());
@@ -283,7 +283,7 @@ public class IndexMetadataStore implements MetadataStore {
 
         // if this is a virtual procedure get the procedure plan
         if(procRecord.isVirtual()) {
-    		TransformationRecordImpl transformRecord = (TransformationRecordImpl)getRecordByType(procedureFullName, IndexConstants.RECORD_TYPE.PROC_TRANSFORM, false);
+    		TransformationRecordImpl transformRecord = (TransformationRecordImpl)getRecordByType(procedureFullName, MetadataConstants.RECORD_TYPE.PROC_TRANSFORM, false);
     		if(transformRecord != null) {
                 QueryNode queryNode = new QueryNode(procedureFullName, transformRecord.getTransformation()); 
                 procInfo.setQueryPlan(queryNode);
@@ -318,7 +318,7 @@ public class IndexMetadataStore implements MetadataStore {
 	@Override
 	public Collection getXMLTempGroups(TableRecordImpl table) throws MetaMatrixComponentException {
 		// Query the index files
-		final Collection results = findChildRecords(table, IndexConstants.RECORD_TYPE.TABLE, false);
+		final Collection results = findChildRecords(table, MetadataConstants.RECORD_TYPE.TABLE, false);
         Collection tempGroups = new HashSet(results.size());
         for(Iterator resultIter = results.iterator();resultIter.hasNext();) {
             TableRecordImpl record = (TableRecordImpl) resultIter.next();
@@ -403,9 +403,9 @@ public class IndexMetadataStore implements MetadataStore {
     public Collection<PropertyRecordImpl> getExtensionProperties(AbstractMetadataRecord metadataRecord) throws MetaMatrixComponentException {
 		// find the entities properties records
 		String uuid = metadataRecord.getUUID();
-		String prefixString  = getUUIDPrefixPattern(IndexConstants.RECORD_TYPE.PROPERTY, uuid);
+		String prefixString  = getUUIDPrefixPattern(MetadataConstants.RECORD_TYPE.PROPERTY, uuid);
 
-		IEntryResult[] results = queryIndex(IndexConstants.RECORD_TYPE.PROPERTY, prefixString.toCharArray(), true, true, true);
+		IEntryResult[] results = queryIndex(MetadataConstants.RECORD_TYPE.PROPERTY, prefixString.toCharArray(), true, true, true);
 		
 		return RecordFactory.getMetadataRecord(results);
     }
@@ -506,7 +506,7 @@ public class IndexMetadataStore implements MetadataStore {
 		// Query based on UUID
 		if (StringUtil.startsWithIgnoreCase(entityName,UUID.PROTOCOL)) {
             String patternString = null;
-            if (recordType == IndexConstants.RECORD_TYPE.DATATYPE) {
+            if (recordType == MetadataConstants.RECORD_TYPE.DATATYPE) {
                 patternString = getDatatypeUUIDMatchPattern(entityName);
             } else {
                 patternString = getUUIDMatchPattern(recordType,entityName);
@@ -544,7 +544,7 @@ public class IndexMetadataStore implements MetadataStore {
         }
         // construct the pattern string
         String patternStr = "" //$NON-NLS-1$
-                          + IndexConstants.RECORD_TYPE.DATATYPE            //recordType
+                          + MetadataConstants.RECORD_TYPE.DATATYPE            //recordType
                           + IndexConstants.RECORD_STRING.RECORD_DELIMITER
                           + IndexConstants.RECORD_STRING.MATCH_CHAR        //datatypeID 
                           + IndexConstants.RECORD_STRING.RECORD_DELIMITER

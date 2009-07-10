@@ -10,7 +10,7 @@ short	5	5	null	null	null	1	false	3	false	false	false	short	0	255	null	null	10
 float	7	20	null	null	null	1	false	3	false	false	false	float	0	255	null	null	10
 double	8	20	null	null	null	1	false	3	false	false	false	double	0	255	null	null	10
 string	12	4000	'	'	null	1	false	3	true	true	false	string	0	255	null	null	0
-xml	2000	2147483647	null	null	null	1	false	3	true	true	false	xml	0	255	null	null	0
+xml	2009	2147483647	null	null	null	1	false	3	true	true	false	xml	0	255	null	null	0
 date	91	10	{d'	}	null	1	false	3	true	true	false	date	0	255	null	null	0
 time	92	8	{t'	}	null	1	false	3	true	true	false	time	0	255	null	null	0
 timestamp	93	29	{ts'	}	null	1	false	3	true	true	false	timestamp	0	255	null	null	0

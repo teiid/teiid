@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.connector.metadata.runtime.MetadataConstants;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.internal.core.index.BlocksIndexInput;
 import org.teiid.internal.core.index.Index;
@@ -246,7 +247,7 @@ public class SimpleIndexUtil {
                     	// filter out any continuation records, they should already appended
                     	// to index record thet is continued
 						IEntryResult result = partialResults[j];
-						if(result != null && result.getWord()[0] != IndexConstants.RECORD_TYPE.RECORD_CONTINUATION) {
+						if(result != null && result.getWord()[0] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {
 	                        queryResult.add(partialResults[j]);
 						}
                     }
@@ -325,7 +326,7 @@ public class SimpleIndexUtil {
                                 char[] recordWord = partialResults[j].getWord();
                                 // filter out any continuation records, they should already appended
                                 // to index record thet is continued
-                                if(recordWord[0] != IndexConstants.RECORD_TYPE.RECORD_CONTINUATION) {                            
+                                if(recordWord[0] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {                            
                                     if (!isPrefix) {
                                         // filter results that do not match after tokenizing the record
                                         if(entryMatches(recordWord,pattern,IndexConstants.RECORD_STRING.RECORD_DELIMITER) ) {
@@ -371,13 +372,13 @@ public class SimpleIndexUtil {
             char[] word = partialResult.getWord();
 
             // If this IEntryResult is not continued on another record then skip to the next result
-            if (word.length < blockSize || word[blockSize-1] != IndexConstants.RECORD_TYPE.RECORD_CONTINUATION) {
+            if (word.length < blockSize || word[blockSize-1] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {
                 continue;
             }
             // Extract the UUID from the IEntryResult to use when creating the prefix string
             String objectID = RecordFactory.extractUUIDString(partialResult);
             String patternStr = "" //$NON-NLS-1$
-                              + IndexConstants.RECORD_TYPE.RECORD_CONTINUATION
+                              + MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION
                               + word[0]
                               + IndexConstants.RECORD_STRING.RECORD_DELIMITER
                               + objectID
@@ -492,31 +493,31 @@ public class SimpleIndexUtil {
      */
     public static String getIndexFileNameForRecordType(final char recordType) {
         switch (recordType) {
-  	      case IndexConstants.RECORD_TYPE.COLUMN: return IndexConstants.INDEX_NAME.COLUMNS_INDEX;
-		  case IndexConstants.RECORD_TYPE.TABLE: return IndexConstants.INDEX_NAME.TABLES_INDEX;
-          case IndexConstants.RECORD_TYPE.MODEL: return IndexConstants.INDEX_NAME.MODELS_INDEX;
-          case IndexConstants.RECORD_TYPE.CALLABLE:
-          case IndexConstants.RECORD_TYPE.CALLABLE_PARAMETER:
-		  case IndexConstants.RECORD_TYPE.RESULT_SET: return IndexConstants.INDEX_NAME.PROCEDURES_INDEX;
-          case IndexConstants.RECORD_TYPE.INDEX:
-          case IndexConstants.RECORD_TYPE.ACCESS_PATTERN:           
-          case IndexConstants.RECORD_TYPE.PRIMARY_KEY:
-          case IndexConstants.RECORD_TYPE.FOREIGN_KEY:
-		  case IndexConstants.RECORD_TYPE.UNIQUE_KEY:  return IndexConstants.INDEX_NAME.KEYS_INDEX;
-          case IndexConstants.RECORD_TYPE.SELECT_TRANSFORM: return IndexConstants.INDEX_NAME.SELECT_TRANSFORM_INDEX;
-          case IndexConstants.RECORD_TYPE.INSERT_TRANSFORM: return IndexConstants.INDEX_NAME.INSERT_TRANSFORM_INDEX;
-          case IndexConstants.RECORD_TYPE.UPDATE_TRANSFORM: return IndexConstants.INDEX_NAME.UPDATE_TRANSFORM_INDEX;
-          case IndexConstants.RECORD_TYPE.DELETE_TRANSFORM: return IndexConstants.INDEX_NAME.DELETE_TRANSFORM_INDEX;
-          case IndexConstants.RECORD_TYPE.PROC_TRANSFORM: return IndexConstants.INDEX_NAME.PROC_TRANSFORM_INDEX;
-          case IndexConstants.RECORD_TYPE.MAPPING_TRANSFORM: return IndexConstants.INDEX_NAME.MAPPING_TRANSFORM_INDEX;
-          case IndexConstants.RECORD_TYPE.DATATYPE: return IndexConstants.INDEX_NAME.DATATYPES_INDEX;
+  	      case MetadataConstants.RECORD_TYPE.COLUMN: return IndexConstants.INDEX_NAME.COLUMNS_INDEX;
+		  case MetadataConstants.RECORD_TYPE.TABLE: return IndexConstants.INDEX_NAME.TABLES_INDEX;
+          case MetadataConstants.RECORD_TYPE.MODEL: return IndexConstants.INDEX_NAME.MODELS_INDEX;
+          case MetadataConstants.RECORD_TYPE.CALLABLE:
+          case MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER:
+		  case MetadataConstants.RECORD_TYPE.RESULT_SET: return IndexConstants.INDEX_NAME.PROCEDURES_INDEX;
+          case MetadataConstants.RECORD_TYPE.INDEX:
+          case MetadataConstants.RECORD_TYPE.ACCESS_PATTERN:           
+          case MetadataConstants.RECORD_TYPE.PRIMARY_KEY:
+          case MetadataConstants.RECORD_TYPE.FOREIGN_KEY:
+		  case MetadataConstants.RECORD_TYPE.UNIQUE_KEY:  return IndexConstants.INDEX_NAME.KEYS_INDEX;
+          case MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM: return IndexConstants.INDEX_NAME.SELECT_TRANSFORM_INDEX;
+          case MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM: return IndexConstants.INDEX_NAME.INSERT_TRANSFORM_INDEX;
+          case MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM: return IndexConstants.INDEX_NAME.UPDATE_TRANSFORM_INDEX;
+          case MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM: return IndexConstants.INDEX_NAME.DELETE_TRANSFORM_INDEX;
+          case MetadataConstants.RECORD_TYPE.PROC_TRANSFORM: return IndexConstants.INDEX_NAME.PROC_TRANSFORM_INDEX;
+          case MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM: return IndexConstants.INDEX_NAME.MAPPING_TRANSFORM_INDEX;
+          case MetadataConstants.RECORD_TYPE.DATATYPE: return IndexConstants.INDEX_NAME.DATATYPES_INDEX;
           //case IndexConstants.RECORD_TYPE.DATATYPE_ELEMENT:
           //case IndexConstants.RECORD_TYPE.DATATYPE_FACET:
-          case IndexConstants.RECORD_TYPE.VDB_ARCHIVE: return IndexConstants.INDEX_NAME.VDBS_INDEX;
-          case IndexConstants.RECORD_TYPE.ANNOTATION: return IndexConstants.INDEX_NAME.ANNOTATION_INDEX;
-          case IndexConstants.RECORD_TYPE.PROPERTY: return IndexConstants.INDEX_NAME.PROPERTIES_INDEX;
+          case MetadataConstants.RECORD_TYPE.VDB_ARCHIVE: return IndexConstants.INDEX_NAME.VDBS_INDEX;
+          case MetadataConstants.RECORD_TYPE.ANNOTATION: return IndexConstants.INDEX_NAME.ANNOTATION_INDEX;
+          case MetadataConstants.RECORD_TYPE.PROPERTY: return IndexConstants.INDEX_NAME.PROPERTIES_INDEX;
 		  //case IndexConstants.RECORD_TYPE.JOIN_DESCRIPTOR: return null;
-		  case IndexConstants.RECORD_TYPE.FILE: return IndexConstants.INDEX_NAME.FILES_INDEX;
+		  case MetadataConstants.RECORD_TYPE.FILE: return IndexConstants.INDEX_NAME.FILES_INDEX;
         }
         throw new IllegalArgumentException("Unkown record type " + recordType);
     }
@@ -530,33 +531,33 @@ public class SimpleIndexUtil {
     public static String getRecordTypeForIndexFileName(final String indexName) {
         char recordType;
         if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.COLUMNS_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.COLUMN;
+            recordType = MetadataConstants.RECORD_TYPE.COLUMN;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.TABLES_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.TABLE;
+            recordType = MetadataConstants.RECORD_TYPE.TABLE;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.MODELS_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.MODEL;
+            recordType = MetadataConstants.RECORD_TYPE.MODEL;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.DATATYPES_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.DATATYPE;
+            recordType = MetadataConstants.RECORD_TYPE.DATATYPE;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.VDBS_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.VDB_ARCHIVE;
+            recordType = MetadataConstants.RECORD_TYPE.VDB_ARCHIVE;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.ANNOTATION_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.ANNOTATION;
+            recordType = MetadataConstants.RECORD_TYPE.ANNOTATION;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.PROPERTIES_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.PROPERTY;
+            recordType = MetadataConstants.RECORD_TYPE.PROPERTY;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.SELECT_TRANSFORM_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.SELECT_TRANSFORM;
+            recordType = MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.INSERT_TRANSFORM_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.INSERT_TRANSFORM;
+            recordType = MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.UPDATE_TRANSFORM_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.UPDATE_TRANSFORM;
+            recordType = MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.DELETE_TRANSFORM_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.DELETE_TRANSFORM;
+            recordType = MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.PROC_TRANSFORM_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.PROC_TRANSFORM;
+            recordType = MetadataConstants.RECORD_TYPE.PROC_TRANSFORM;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.MAPPING_TRANSFORM_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.MAPPING_TRANSFORM;
+            recordType = MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM;
         } else if(indexName.equalsIgnoreCase(IndexConstants.INDEX_NAME.FILES_INDEX)) {
-            recordType = IndexConstants.RECORD_TYPE.FILE;
+            recordType = MetadataConstants.RECORD_TYPE.FILE;
         } else {
             return null;
         }

@@ -78,6 +78,7 @@ public class TestTextConnector {
         assertEquals("SummitData.SUMMITDATA", group.getFullName()); //$NON-NLS-1$
         assertEquals(14, group.getColumns().size());
         assertNotNull(group.getUUID());
+        assertEquals("string", group.getColumns().get(0).getNativeType()); //$NON-NLS-1$
     }
 
 
