@@ -54,6 +54,8 @@ if not exist  %KEYSTORE_FILE% (
 	echo A new key with keystore generated at %KEYSTORE_FILE%    
 )
 
+cd %TEIID_HOME%
+
 echo ===============================================================================
 echo.
 echo   Teiid Bootstrap Environment

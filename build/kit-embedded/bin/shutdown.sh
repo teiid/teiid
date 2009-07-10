@@ -47,6 +47,7 @@ if [ "x$TEIID_HOME" = "x" ]; then
     TEIID_HOME=`cd $DIRNAME/..; pwd`
 fi
 export TEIID_HOME
+cd $TEIID_HOME
 
 # Setup the JVM
 if [ "x$JAVA" = "x" ]; then

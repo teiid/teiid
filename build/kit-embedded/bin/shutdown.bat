@@ -46,6 +46,8 @@ set JAVA_OPTS=%JAVA_OPTS% -Dsun.rmi.dgc.client.gcInterval=3600000 -Dsun.rmi.dgc.
 rem JPDA options. Uncomment and modify as appropriate to enable remote debugging.
 rem set JAVA_OPTS=%JAVA_OPTS% -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y
 
+cd %TEIID_HOME%
+
 echo ===============================================================================
 echo.
 echo   Teiid Bootstrap Environment
