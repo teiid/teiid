@@ -51,6 +51,7 @@ import org.teiid.metadata.index.IndexConstants;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.core.util.StringUtil;
@@ -63,6 +64,7 @@ import com.metamatrix.query.mapping.xml.MappingNode;
 import com.metamatrix.query.metadata.BasicQueryMetadata;
 import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.query.metadata.SupportConstants;
+import com.metamatrix.query.sql.lang.SPParameter;
 
 /**
  * Modelers implementation of QueryMetadataInterface that reads columns, groups, models etc.
@@ -82,10 +84,9 @@ public class TransformationMetadata extends BasicQueryMetadata {
     public static final char DELIMITER_CHAR = IndexConstants.NAME_DELIM_CHAR;
     public static final String DELIMITER_STRING = StringUtil.Constants.EMPTY_STRING + IndexConstants.NAME_DELIM_CHAR;
     
-    // error message cached to avaid i18n lookup each time
+    // error message cached to avoid i18n lookup each time
     public static String NOT_EXISTS_MESSAGE = StringUtil.Constants.SPACE+RuntimeMetadataPlugin.Util.getString("TransformationMetadata.does_not_exist._1"); //$NON-NLS-1$
 
-    // context object all the info needed for metadata lookup
     private final CompositeMetadataStore store;
 
     /*
@@ -94,7 +95,8 @@ public class TransformationMetadata extends BasicQueryMetadata {
     private final Map<String, Object> metadataCache = Collections.synchronizedMap(new LRUCache<String, Object>(500));
     private final Map<String, TableRecordImpl> groupCache = Collections.synchronizedMap(new LRUCache<String, TableRecordImpl>(2000));
     private final Map<String, StoredProcedureInfo> procedureCache = Collections.synchronizedMap(new LRUCache<String, StoredProcedureInfo>(200));
-    private final Map<String, String> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, String>(100));
+    private final Map<String, String> partialNameToFullNameCache = Collections.synchronizedMap(new LRUCache<String, String>(1000));
+    private final Map<String, ModelRecordImpl> modelCache = Collections.synchronizedMap(new LRUCache<String, ModelRecordImpl>(100));
     
     /**
      * TransformationMetadata constructor
@@ -160,10 +162,24 @@ public class TransformationMetadata extends BasicQueryMetadata {
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getModelID(java.lang.Object)
      */
     public Object getModelID(final Object groupOrElementID) throws MetaMatrixComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(TableRecordImpl.class, groupOrElementID);
+        if (!(groupOrElementID instanceof TableRecordImpl) && !(groupOrElementID instanceof ColumnRecordImpl)) {
+        	throw createInvalidRecordTypeException(groupOrElementID);
+        }
         
-        return ((TableRecordImpl)groupOrElementID).getModel();
+        String modelName = ((AbstractMetadataRecord)groupOrElementID).getModelName();
+        return getModel(modelName);
     }
+
+	private Object getModel(String modelName) throws QueryMetadataException,
+			MetaMatrixComponentException {
+		modelName = modelName.toUpperCase();
+		ModelRecordImpl model = modelCache.get(modelName);
+        if (model == null) {
+        	model = getMetadataStore().getModel(modelName);
+        	modelCache.put(modelName, model);
+        }
+        return model;
+	}
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.metadata.QueryMetadataInterface#getFullName(java.lang.Object)
@@ -249,13 +265,82 @@ public class TransformationMetadata extends BasicQueryMetadata {
         throws MetaMatrixComponentException, QueryMetadataException {
         ArgCheck.isNotEmpty(fullyQualifiedProcedureName);
         String upperGroupName = fullyQualifiedProcedureName.toUpperCase();
-        StoredProcedureInfo result = this.procedureCache.get(upperGroupName);
+        StoredProcedureInfo procInfo = this.procedureCache.get(upperGroupName);
         
-        if (result == null) {
-        	result = getMetadataStore().getStoredProcedureInfoForProcedure(fullyQualifiedProcedureName);
-        	this.procedureCache.put(upperGroupName, result);
+        if (procInfo != null) {
+        	return procInfo;
         }
-        return result;
+        
+    	ProcedureRecordImpl procRecord = getMetadataStore().getStoredProcedure(fullyQualifiedProcedureName); 
+
+        String procedureFullName = procRecord.getFullName();
+
+        // create the storedProcedure info object that would hold procedure's metadata
+        procInfo = new StoredProcedureInfo();
+        procInfo.setProcedureCallableName(procRecord.getName());
+        procInfo.setProcedureID(procRecord);
+
+        // modelID for the procedure
+        procInfo.setModelID(getModel(procRecord.getModelName()));
+
+        // get the parameter metadata info
+        for (ProcedureParameterRecordImpl paramRecord : procRecord.getParameters()) {
+            String runtimeType = paramRecord.getRuntimeType();
+            int direction = this.convertParamRecordTypeToStoredProcedureType(paramRecord.getType());
+            // create a parameter and add it to the procedure object
+            SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getFullName());
+            spParam.setMetadataID(paramRecord);
+            spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
+            procInfo.addParameter(spParam);
+        }
+
+        // if the procedure returns a resultSet, obtain resultSet metadata
+        if(procRecord.getResultSet() != null) {
+            ColumnSetRecordImpl resultRecord = procRecord.getResultSet();
+            // resultSet is the last parameter in the procedure
+            int lastParamIndex = procInfo.getParameters().size() + 1;
+            SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getFullName());
+            param.setClassType(java.sql.ResultSet.class);           
+            param.setMetadataID(resultRecord);
+
+            for (ColumnRecordImpl columnRecord : resultRecord.getColumns()) {
+                String colType = columnRecord.getRuntimeType();
+                param.addResultSetColumn(columnRecord.getFullName(), DataTypeManager.getDataTypeClass(colType), columnRecord);
+            }
+
+            procInfo.addParameter(param);            
+        }
+
+        // if this is a virtual procedure get the procedure plan
+        if(procRecord.isVirtual()) {
+            QueryNode queryNode = new QueryNode(procedureFullName, procRecord.getQueryPlan()); 
+            procInfo.setQueryPlan(queryNode);
+        }
+        
+        //subtract 1, to match up with the server
+        procInfo.setUpdateCount(procRecord.getUpdateCount() -1);
+
+    	this.procedureCache.put(upperGroupName, procInfo);
+    	
+        return procInfo;
+    }
+    
+    /**
+     * Method to convert the parameter type returned from a ProcedureParameterRecord
+     * to the parameter type expected by StoredProcedureInfo
+     * @param parameterType
+     * @return
+     */
+    private int convertParamRecordTypeToStoredProcedureType(final int parameterType) {
+        switch (parameterType) {
+            case MetadataConstants.PARAMETER_TYPES.IN_PARM : return SPParameter.IN;
+            case MetadataConstants.PARAMETER_TYPES.OUT_PARM : return SPParameter.OUT;
+            case MetadataConstants.PARAMETER_TYPES.INOUT_PARM : return SPParameter.INOUT;
+            case MetadataConstants.PARAMETER_TYPES.RETURN_VALUE : return SPParameter.RETURN_VALUE;
+            case MetadataConstants.PARAMETER_TYPES.RESULT_SET : return SPParameter.RESULT_SET;
+            default : 
+                return -1;
+        }
     }
 
     /* (non-Javadoc)

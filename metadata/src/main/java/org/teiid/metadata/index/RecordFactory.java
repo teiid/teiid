@@ -806,7 +806,7 @@ public class RecordFactory {
         paramRd.setPosition(Integer.parseInt((String)tokens.get(tokenIndex++)) );
 
         // The next token is parameter type        
-        paramRd.setType(Integer.parseInt((String)tokens.get(tokenIndex++)));
+        paramRd.setType(Short.parseShort((String)tokens.get(tokenIndex++)));
 
         // The next token is flag for parameter optional prop
         char[] flags = ((String)tokens.get(tokenIndex++)).toCharArray();

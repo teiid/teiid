@@ -53,28 +53,33 @@ public class ColumnSetRecordImpl extends AbstractMetadataRecord {
      * Retrieves a list of ColumnRecordImpls containing only id and position information (used by System Tables)
      */
     public List<ColumnRecordImpl> getColumnIdEntries() {
-    	if (columns != null) {
-            final List<ColumnRecordImpl> entryRecords = new ArrayList<ColumnRecordImpl>(columns.size());
-            for (int i = 0, n = columns.size(); i < n; i++) {
-            	ColumnRecordImpl columnRecordImpl  = columns.get(i);
-                final int position = i+1;
-                ColumnRecordImpl impl = new ColumnRecordImpl();
-                entryRecords.add( impl );
-                impl.setUUID(columnRecordImpl.getUUID());
-                impl.setPosition(position);
-            }
-            return entryRecords;
-    	}
-        final List<ColumnRecordImpl> entryRecords = new ArrayList<ColumnRecordImpl>(columnIDs.size());
-        for (int i = 0, n = columnIDs.size(); i < n; i++) {
-            final String uuid  = columnIDs.get(i);
-            final int position = i+1;
+    	int count = getColumnCount();
+        final List<ColumnRecordImpl> entryRecords = new ArrayList<ColumnRecordImpl>(count);
+        for (int i = 0; i < count; i++) {
+            final String uuid  = getUUID(i);
             ColumnRecordImpl impl = new ColumnRecordImpl();
             entryRecords.add( impl );
             impl.setUUID(uuid);
-            impl.setPosition(position);
+            impl.setPosition(i+1);
         }
         return entryRecords;
+    }
+    
+    private int getColumnCount() {
+    	if (columnIDs != null) {
+    		return columnIDs.size();
+    	}
+    	if (columns != null) {
+    		return columns.size();
+    	}
+    	return 0;
+    }
+    
+    private String getUUID(int index) {
+    	if (columnIDs != null) {
+    		return columnIDs.get(index);
+    	}
+		return columns.get(index).getUUID();
     }
 
     /** 

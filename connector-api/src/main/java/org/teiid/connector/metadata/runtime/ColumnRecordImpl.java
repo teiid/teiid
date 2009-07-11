@@ -25,10 +25,9 @@ package org.teiid.connector.metadata.runtime;
 /**
  * ColumnRecordImpl
  */
-public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparable<ColumnRecordImpl> {
+public class ColumnRecordImpl extends BaseColumn implements Comparable<ColumnRecordImpl> {
 
-    private String datatypeUUID;
-    private boolean selectable;
+    private boolean selectable = true;
     private boolean updatable;
     private boolean autoIncrementable;
     private boolean caseSensitive;
@@ -37,22 +36,13 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
     private boolean fixedLength;
     private boolean tranformationInputParameter;
     private int searchType;
-    private Object defaultValue;
     private Object minValue;
     private Object maxValue;
-    private int length;
-    private int scale;
-    private int nullType;
-    private String runtimeTypeName;
     private String nativeType;
     private String format;
-    private int precision;
     private int charOctetLength;
-    private int position;
-    private int radix;
-    private int distinctValues;
-    private int nullValues;
-    private DatatypeRecordImpl datatype;
+    private int distinctValues = -1;
+    private int nullValues = -1;
 
     //==================================================================================
     //                     I N T E R F A C E   M E T H O D S
@@ -71,34 +61,6 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
     }
 
     /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getRuntimeType()
-     */
-    public String getRuntimeType() {
-        return runtimeTypeName;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getDatatypeUUID()
-     */
-    public String getDatatypeUUID() {
-        return datatypeUUID;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getDefaultValue()
-     */
-    public Object getDefaultValue() {
-        return defaultValue;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getLength()
-     */
-    public int getLength() {
-        return length;
-    }
-
-    /* (non-Javadoc)
      * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getMaxValue()
      */
     public Object getMaxValue() {
@@ -110,27 +72,6 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
      */
     public Object getMinValue() {
         return minValue;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getPrecision()
-     */
-    public int getPrecision() {
-        return precision;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getPosition()
-     */
-    public int getPosition() {
-        return position;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getScale()
-     */
-    public int getScale() {
-        return scale;
     }
 
     /* (non-Javadoc)
@@ -183,13 +124,6 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
         return tranformationInputParameter;
     }
 
-    /**
-     * @return
-     */
-    public int getNullType() {
-        return nullType;
-    }
-
     /* (non-Javadoc)
      * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isSelectable()
      */
@@ -209,13 +143,6 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
      */
     public boolean isUpdatable() {
         return updatable;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getRadix()
-     */
-    public int getRadix() {
-        return radix;
     }
 
     /**
@@ -275,45 +202,10 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
     }
 
     /**
-     * @param string
-     */
-    public void setRuntimeType(String string) {
-        runtimeTypeName = string;
-    }
-
-    /**
-     * @param string
-     */
-    public void setDatatypeUUID(String string) {
-        datatypeUUID = string;
-    }
-
-    /**
-     * @param object
-     */
-    public void setDefaultValue(Object object) {
-        defaultValue = object;
-    }
-
-    /**
      * @param b
      */
     public void setFixedLength(boolean b) {
         fixedLength = b;
-    }
-
-    /**
-     * @param i
-     */
-    public void setLength(int i) {
-        length = i;
-    }
-
-    /**
-     * @param i
-     */
-    public void setNullType(int i) {
-        nullType = i;
     }
 
     /**
@@ -328,27 +220,6 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
      */
     public void setMinValue(Object object) {
         minValue = object;
-    }
-
-    /**
-     * @param i
-     */
-    public void setPrecision(int i) {
-        precision = i;
-    }
-
-    /**
-     * @param i
-     */
-    public void setPosition(int i) {
-        position = i;
-    }
-
-    /**
-     * @param i
-     */
-    public void setScale(int i) {
-        scale = i;
     }
 
     /**
@@ -377,13 +248,6 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
      */
     public void setUpdatable(boolean b) {
         updatable = b;
-    }
-
-    /**
-     * @param i
-     */
-    public void setRadix(int i) {
-        radix = i;
     }
 
     /**
@@ -424,14 +288,6 @@ public class ColumnRecordImpl extends AbstractMetadataRecord implements Comparab
         this.tranformationInputParameter = b;
     }
     
-    public DatatypeRecordImpl getDatatype() {
-    	return this.datatype;
-    }
-    
-    public void setDatatype(DatatypeRecordImpl datatype) {
-		this.datatype = datatype;
-	}
-
     public String toString() {
         StringBuffer sb = new StringBuffer(100);
         sb.append(getClass().getSimpleName());

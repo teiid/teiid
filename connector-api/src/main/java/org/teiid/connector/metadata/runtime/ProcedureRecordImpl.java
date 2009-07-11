@@ -30,16 +30,19 @@ import java.util.List;
  */
 public class ProcedureRecordImpl extends AbstractMetadataRecord {
     
-    private List parameterIDs;
+	private List<String> parameterIDs;
     private boolean isFunction;
     private boolean isVirtual;
     private String resultSetID;
-    private int updateCount;
+    private int updateCount = 1;
+    private List<ProcedureParameterRecordImpl> parameters;
+    private ColumnSetRecordImpl resultSet;
+    private String queryPlan;
 
     /*
      * @see com.metamatrix.modeler.core.metadata.runtime.ProcedureRecord#getParameterIDs()
      */
-    public List getParameterIDs() {
+    public List<String> getParameterIDs() {
         return parameterIDs;
     }
 
@@ -78,11 +81,27 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord {
     public int getUpdateCount() {
         return this.updateCount;
     }
+    
+	public List<ProcedureParameterRecordImpl> getParameters() {
+		return parameters;
+	}
+
+	public void setParameters(List<ProcedureParameterRecordImpl> parameters) {
+		this.parameters = parameters;
+	}
+
+	public String getQueryPlan() {
+		return queryPlan;
+	}
+
+	public void setQueryPlan(String queryPlan) {
+		this.queryPlan = queryPlan;
+	}
 
     /**
      * @param list
      */
-    public void setParameterIDs(List list) {
+    public void setParameterIDs(List<String> list) {
         parameterIDs = list;
     }
 
@@ -120,5 +139,13 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord {
         }
         return MetadataConstants.PROCEDURE_TYPES.STORED_PROCEDURE;
     }
+
+	public void setResultSet(ColumnSetRecordImpl resultSet) {
+		this.resultSet = resultSet;
+	}
+
+	public ColumnSetRecordImpl getResultSet() {
+		return resultSet;
+	}
 
 }

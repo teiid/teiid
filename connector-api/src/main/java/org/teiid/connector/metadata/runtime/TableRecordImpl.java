@@ -38,7 +38,6 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
     private boolean isSystem;
     private boolean isMaterialized;
     private boolean supportsUpdate;
-    private ModelRecordImpl model;
     private String insertPlan;
     private String updatePlan;
     private String deletePlan;
@@ -201,14 +200,6 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
         this.materializedTableID = materializedTableID;
     }
 
-    public ModelRecordImpl getModel() {
-    	return this.model;
-    }
-    
-    public void setModel(ModelRecordImpl model) {
-		this.model = model;
-	}
-    
     public String getInsertPlan() {
     	return insertPlan;
     }

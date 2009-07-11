@@ -26,7 +26,8 @@ import java.util.Collection;
 
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
-import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.ModelRecordImpl;
+import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
 import org.teiid.connector.metadata.runtime.TableRecordImpl;
 
@@ -35,17 +36,30 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.core.MetaMatrixCoreException;
 
 public interface MetadataStore {
+	
+	ModelRecordImpl getModel(String fullName) throws QueryMetadataException, MetaMatrixComponentException;
 
 	TableRecordImpl findGroup(String fullName) throws QueryMetadataException, MetaMatrixComponentException;
 	
+	/**
+	 * Returns the fully qualified names of groups matching the given partial name.
+	 * 
+	 * @param partialGroupName expected to be in lowercase
+	 * @return
+	 * @throws MetaMatrixComponentException
+	 * @throws QueryMetadataException
+	 */
 	Collection<String> getGroupsForPartialName(final String partialGroupName)
     throws MetaMatrixComponentException, QueryMetadataException;
 	
-	StoredProcedureInfo getStoredProcedureInfoForProcedure(final String fullyQualifiedProcedureName)
+	ProcedureRecordImpl getStoredProcedure(final String fullyQualifiedProcedureName)
     throws MetaMatrixComponentException, QueryMetadataException;
 	
 	Collection<PropertyRecordImpl> getExtensionProperties(AbstractMetadataRecord record) throws MetaMatrixComponentException;
 	
+	/**
+	 * Get the set of model names known to this store.
+	 */
 	Collection<String> getModelNames();
 	
 	/**

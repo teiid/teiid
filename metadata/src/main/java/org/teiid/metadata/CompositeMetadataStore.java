@@ -30,6 +30,8 @@ import java.util.Map;
 
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
 import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
+import org.teiid.connector.metadata.runtime.ModelRecordImpl;
+import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
 import org.teiid.connector.metadata.runtime.TableRecordImpl;
 
@@ -39,7 +41,6 @@ import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
 import com.metamatrix.query.metadata.MetadataStore;
-import com.metamatrix.query.metadata.StoredProcedureInfo;
 
 public class CompositeMetadataStore implements MetadataStore {
 
@@ -61,6 +62,12 @@ public class CompositeMetadataStore implements MetadataStore {
 	@Override
 	public Collection<String> getModelNames() {
 		return storeMap.keySet();
+	}
+	
+	@Override
+	public ModelRecordImpl getModel(String fullName)
+			throws QueryMetadataException, MetaMatrixComponentException {
+		return getMetadataStore(fullName).getModel(fullName);
 	}
 	
 	@Override
@@ -100,14 +107,14 @@ public class CompositeMetadataStore implements MetadataStore {
 	}
 	
 	@Override
-	public StoredProcedureInfo getStoredProcedureInfoForProcedure(
+	public ProcedureRecordImpl getStoredProcedure(
 			String fullyQualifiedProcedureName)
 			throws MetaMatrixComponentException, QueryMetadataException {
 		List<String> tokens = StringUtil.getTokens(fullyQualifiedProcedureName, TransformationMetadata.DELIMITER_STRING);
 		if (tokens.size() < 2) {
 		    throw new QueryMetadataException(fullyQualifiedProcedureName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
-		return getMetadataStore(tokens.get(0)).getStoredProcedureInfoForProcedure(fullyQualifiedProcedureName);
+		return getMetadataStore(tokens.get(0)).getStoredProcedure(fullyQualifiedProcedureName);
 	}
 
 	@Override

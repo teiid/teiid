@@ -34,6 +34,9 @@ import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
 import org.teiid.connector.metadata.runtime.ColumnSetRecordImpl;
 import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.connector.metadata.runtime.MetadataConstants;
+import org.teiid.connector.metadata.runtime.ModelRecordImpl;
+import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl;
+import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.PropertyRecordImpl;
 import org.teiid.connector.metadata.runtime.TableRecordImpl;
 import org.teiid.metadata.index.IndexConstants;
@@ -43,7 +46,6 @@ import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.query.metadata.MetadataStore;
-import com.metamatrix.query.metadata.StoredProcedureInfo;
 import com.metamatrix.vdb.runtime.VDBKey;
 
 public class ConnectorMetadataStore implements MetadataStore {
@@ -54,6 +56,13 @@ public class ConnectorMetadataStore implements MetadataStore {
 	public ConnectorMetadataStore(VDBKey key, String modelName, DataService dataService) throws MetaMatrixComponentException {
 		this.modelName = modelName;
 		this.metadata = dataService.getConnectorMetadata(key.getName(), key.getVersion(), modelName);
+	}
+	
+	@Override
+	public ModelRecordImpl getModel(String fullName)
+			throws QueryMetadataException, MetaMatrixComponentException {
+		//there's no need to check the name, the CompositeMetadataStore will have already done that
+		return metadata.getModel();
 	}
 	
 	@Override
@@ -91,10 +100,15 @@ public class ConnectorMetadataStore implements MetadataStore {
 	}
 	
 	@Override
-	public StoredProcedureInfo getStoredProcedureInfoForProcedure(
+	public ProcedureRecordImpl getStoredProcedure(
 			String fullyQualifiedProcedureName)
 			throws MetaMatrixComponentException, QueryMetadataException {
-		return null;
+		for (ProcedureRecordImpl procedureRecordImpl : metadata.getProcedures()) {
+			if (procedureRecordImpl.getFullName().equalsIgnoreCase(fullyQualifiedProcedureName)) {
+				return procedureRecordImpl;
+			}
+		}
+        throw new QueryMetadataException(fullyQualifiedProcedureName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 	}
 	
 	@Override
@@ -115,12 +129,22 @@ public class ConnectorMetadataStore implements MetadataStore {
 		switch (recordType) {
 		case MetadataConstants.RECORD_TYPE.CALLABLE:
 			return metadata.getProcedures();
-		case MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER:
-			//TODO
-			return Collections.emptyList();
-		case MetadataConstants.RECORD_TYPE.RESULT_SET:
-			//TODO
-			return Collections.emptyList();
+		case MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER: {
+			Collection<ProcedureParameterRecordImpl> results = new ArrayList<ProcedureParameterRecordImpl>();
+			for (ProcedureRecordImpl procedure : metadata.getProcedures()) {
+				results.addAll(procedure.getParameters());
+			}
+			return results;
+		}
+		case MetadataConstants.RECORD_TYPE.RESULT_SET: {
+			Collection<ColumnSetRecordImpl> results = new ArrayList<ColumnSetRecordImpl>();
+			for (ProcedureRecordImpl procedure : metadata.getProcedures()) {
+				if (procedure.getResultSet() != null) {
+					results.add(procedure.getResultSet());
+				}
+			}
+			return results;
+		}
 		case MetadataConstants.RECORD_TYPE.ACCESS_PATTERN: {
 			Collection<ColumnSetRecordImpl> results = new ArrayList<ColumnSetRecordImpl>();
 			for (TableRecordImpl table : metadata.getTables()) {

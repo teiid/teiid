@@ -34,12 +34,21 @@ import java.util.TreeMap;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.metadata.runtime.AbstractMetadataRecord;
+import org.teiid.connector.metadata.runtime.BaseColumn;
 import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
+import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.TableRecordImpl;
+import org.teiid.connector.metadata.runtime.MetadataConstants.PARAMETER_TYPES;
 
+/**
+ * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
+ */
 public class JDBCMetdataProcessor {
 	
+	/**
+	 * A holder for table records that keeps track of catalog and schema information.
+	 */
 	private static class TableInfo {
 		private String catalog;
 		private String schema;
@@ -68,9 +77,81 @@ public class JDBCMetdataProcessor {
 	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException, ConnectorException {
-		
-		//- retrieve tables
 		DatabaseMetaData metadata = conn.getMetaData();
+		
+		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
+		
+		if (importKeys) {
+			getPrimaryKeys(metadataFactory, metadata, tableMap);
+			
+			getForeignKeys(metadataFactory, metadata, tableMap);
+		}
+		
+		if (importIndexes) {
+			getIndexes(metadataFactory, metadata, tableMap);
+		}
+		
+		if (importProcedures) {
+			getProcedures(metadataFactory, metadata);
+		}
+	}
+
+	private void getProcedures(MetadataFactory metadataFactory,
+			DatabaseMetaData metadata) throws SQLException, ConnectorException {
+		ResultSet procedures = metadata.getProcedures(catalog, schemaPattern, procedureNamePattern);
+		while (procedures.next()) {
+			String procedureCatalog = procedures.getString(1);
+			String procedureSchema = procedures.getString(2);
+			String procedureName = procedures.getString(3);
+			String fullProcedureName = getTableName(procedureCatalog, procedureSchema, procedureName);
+			ProcedureRecordImpl procedure = metadataFactory.addProcedure(useFullSchemaName?fullProcedureName:procedureName);
+			procedure.setNameInSource(fullProcedureName);
+			ResultSet columns = metadata.getProcedureColumns(catalog, procedureSchema, procedureName, null);
+			while (columns.next()) {
+				String columnName = columns.getString(4);
+				short columnType = columns.getShort(5);
+				int sqlType = columns.getInt(6);
+				if (columnType == DatabaseMetaData.procedureColumnUnknown) {
+					continue; //there's a good chance this won't work
+				}
+				BaseColumn record = null;
+				if (columnType == DatabaseMetaData.procedureColumnResult) {
+					ColumnRecordImpl column = metadataFactory.addProcedureResultSetColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), procedure);
+					record = column;
+					column.setNativeType(columns.getString(7));
+				} else {
+					record = metadataFactory.addProcedureParameter(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), getParameterType(columnType), procedure);
+				}
+				record.setPrecision(columns.getInt(8));
+				record.setLength(columns.getInt(9));
+				record.setScale(columns.getInt(10));
+				record.setRadix(columns.getInt(11));
+				record.setNullType(columns.getShort(12));
+				String remarks = columns.getString(13);
+				if (remarks != null) {
+					metadataFactory.addAnnotation(remarks, record);
+				}
+			}
+		}
+		procedures.close();
+	}
+	
+	private static short getParameterType(short type) {
+		switch (type) {
+		case DatabaseMetaData.procedureColumnIn:
+			return PARAMETER_TYPES.IN_PARM;
+		case DatabaseMetaData.procedureColumnInOut:
+			return PARAMETER_TYPES.INOUT_PARM;
+		case DatabaseMetaData.procedureColumnOut:
+			return PARAMETER_TYPES.OUT_PARM;
+		case DatabaseMetaData.procedureColumnReturn:
+			return PARAMETER_TYPES.RETURN_VALUE;
+		}
+		throw new AssertionError();
+	}
+
+	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
+			DatabaseMetaData metadata) throws SQLException, ConnectorException {
 		ResultSet tables = metadata.getTables(catalog, schemaPattern, tableNamePattern, tableTypes);
 		Map<String, TableInfo> tableMap = new HashMap<String, TableInfo>();
 		while (tables.next()) {
@@ -90,22 +171,7 @@ public class JDBCMetdataProcessor {
 		tables.close();
 		
 		getColumns(metadataFactory, metadata, tableMap);
-		
-		if (importKeys) {
-			getPrimaryKeys(metadataFactory, metadata, tableMap);
-			
-			getForeignKeys(metadataFactory, metadata, tableMap);
-		}
-		
-		if (importIndexes) {
-			getIndexes(metadataFactory, metadata, tableMap);
-		}
-		
-		if (importProcedures) {
-			/*ResultSet procedures = metadata.getProcedures(catalog, schemaPattern, procedureNamePattern);
-			
-			procedures.close();*/
-		}
+		return tableMap;
 	}
 
 	private void getColumns(MetadataFactory metadataFactory,
@@ -128,6 +194,7 @@ public class JDBCMetdataProcessor {
 			column.setNativeType(columns.getString(6));
 			column.setRadix(columns.getInt(10));
 			column.setNullType(columns.getInt(11));
+			column.setUpdatable(true);
 			String remarks = columns.getString(12);
 			if (remarks != null) {
 				metadataFactory.addAnnotation(remarks, column);
@@ -165,7 +232,7 @@ public class JDBCMetdataProcessor {
 		}
 	}
 	
-	private static void getForeignKeys(MetadataFactory metadataFactory,
+	private void getForeignKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap) throws SQLException, ConnectorException {
 		for (TableInfo tableInfo : tableMap.values()) {
 			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);

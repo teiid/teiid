@@ -52,21 +52,21 @@ import org.teiid.metadata.TransformationMetadata;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.id.UUID;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
-import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.MetadataStore;
-import com.metamatrix.query.metadata.StoredProcedureInfo;
-import com.metamatrix.query.sql.lang.SPParameter;
 
+/**
+ * Loads MetadataRecords from index files.  
+ * Only datatypes are directly cached.
+ */
 public class IndexMetadataStore implements MetadataStore {
-	// size of file being returned by content methods
-    private Index[] indexes;
+
+	private Index[] indexes;
     private Map<String, DatatypeRecordImpl> datatypeCache;
 
     public IndexMetadataStore(MetadataSource source) throws IOException {
@@ -100,6 +100,10 @@ public class IndexMetadataStore implements MetadataStore {
     	return result;
     }
     
+    public ModelRecordImpl getModel(String name) throws QueryMetadataException, MetaMatrixComponentException {
+    	return (ModelRecordImpl)getRecordByType(name, MetadataConstants.RECORD_TYPE.MODEL);
+    }
+    
     @Override
     public TableRecordImpl findGroup(String groupName) throws QueryMetadataException, MetaMatrixComponentException {
         TableRecordImpl tableRecord = (TableRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.TABLE);
@@ -131,7 +135,6 @@ public class IndexMetadataStore implements MetadataStore {
         	loadColumnSetRecords(primaryKey, uuidColumnMap);
         	tableRecord.setPrimaryKey(primaryKey);
         }
-        tableRecord.setModel((ModelRecordImpl)getRecordByType(tableRecord.getModelName(), MetadataConstants.RECORD_TYPE.MODEL));
         if (tableRecord.isVirtual()) {
         	TransformationRecordImpl update = (TransformationRecordImpl)getRecordByType(groupName, MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM,false);
 	        if (update != null) {
@@ -220,59 +223,27 @@ public class IndexMetadataStore implements MetadataStore {
         throw new QueryMetadataException(RuntimeMetadataPlugin.Util.getString("TransformationMetadata.0", entityName)); //$NON-NLS-1$
     }
     
-    /* (non-Javadoc)
-     * @see com.metamatrix.query.metadata.QueryMetadataInterface#getStoredProcedureInfoForProcedure(java.lang.String)
-     */
-    public StoredProcedureInfo getStoredProcedureInfoForProcedure(final String fullyQualifiedProcedureName)
-        throws MetaMatrixComponentException, QueryMetadataException {
+    @Override
+    public ProcedureRecordImpl getStoredProcedure(
+    		String fullyQualifiedProcedureName)
+    		throws MetaMatrixComponentException, QueryMetadataException {
+    	ProcedureRecordImpl procedureRecord = (ProcedureRecordImpl)getRecordByType(fullyQualifiedProcedureName, MetadataConstants.RECORD_TYPE.CALLABLE);
 
-    	ProcedureRecordImpl procRecord = (ProcedureRecordImpl) getRecordByType(fullyQualifiedProcedureName, MetadataConstants.RECORD_TYPE.CALLABLE); 
-
-        String procedureFullName = procRecord.getFullName();
-
-        // create the storedProcedure info object that would hold procedure's metadata
-        StoredProcedureInfo procInfo = new StoredProcedureInfo();
-        procInfo.setProcedureCallableName(procRecord.getName());
-        procInfo.setProcedureID(procRecord);
-
-        // modelID for the procedure
-        AbstractMetadataRecord modelRecord = getRecordByType(procRecord.getModelName(), MetadataConstants.RECORD_TYPE.MODEL);
-        procInfo.setModelID(modelRecord);
-
+    	procedureRecord.setParameters(new ArrayList<ProcedureParameterRecordImpl>(procedureRecord.getParameterIDs().size()));
+    	
         // get the parameter metadata info
-        for(Iterator paramIter = procRecord.getParameterIDs().iterator();paramIter.hasNext();) {
-            String paramID = (String) paramIter.next();
+        for (String paramID : procedureRecord.getParameterIDs()) {
             ProcedureParameterRecordImpl paramRecord = (ProcedureParameterRecordImpl) this.getRecordByType(paramID, MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER);
-            String runtimeType = paramRecord.getRuntimeType();
-            int direction = this.convertParamRecordTypeToStoredProcedureType(paramRecord.getType());
-            // create a parameter and add it to the procedure object
-            SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getFullName());
-            spParam.setMetadataID(paramRecord);
-            if (paramRecord.getDatatypeUUID() != null) {
-            	paramRecord.setDatatype((DatatypeRecordImpl)getRecordByType(paramRecord.getDatatypeUUID(), MetadataConstants.RECORD_TYPE.DATATYPE));
-            }
-            spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
-            procInfo.addParameter(spParam);
+            paramRecord.setDatatype(getDatatypeCache().get(paramRecord.getDatatypeUUID()));
+            procedureRecord.getParameters().add(paramRecord);
         }
-
-        // if the procedure returns a resultSet, obtain resultSet metadata
-        String resultID = procRecord.getResultSetID();
+    	
+        String resultID = procedureRecord.getResultSetID();
         if(resultID != null) {
             try {
                 ColumnSetRecordImpl resultRecord = (ColumnSetRecordImpl) this.getRecordByType(resultID, MetadataConstants.RECORD_TYPE.RESULT_SET);
-                // resultSet is the last parameter in the procedure
-                int lastParamIndex = procInfo.getParameters().size() + 1;
-                SPParameter param = new SPParameter(lastParamIndex, SPParameter.RESULT_SET, resultRecord.getFullName());
-                param.setClassType(java.sql.ResultSet.class);           
-                param.setMetadataID(resultRecord);
-    
                 loadColumnSetRecords(resultRecord, null);
-                for (ColumnRecordImpl columnRecord : resultRecord.getColumns()) {
-                    String colType = columnRecord.getRuntimeType();
-                    param.addResultSetColumn(columnRecord.getFullName(), DataTypeManager.getDataTypeClass(colType), columnRecord);
-                }
-    
-                procInfo.addParameter(param);            
+                procedureRecord.setResultSet(resultRecord);
             } catch (QueryMetadataException e) {
                 //it is ok to fail here.  it will happen when a 
                 //virtual stored procedure is created from a
@@ -282,37 +253,14 @@ public class IndexMetadataStore implements MetadataStore {
         }
 
         // if this is a virtual procedure get the procedure plan
-        if(procRecord.isVirtual()) {
-    		TransformationRecordImpl transformRecord = (TransformationRecordImpl)getRecordByType(procedureFullName, MetadataConstants.RECORD_TYPE.PROC_TRANSFORM, false);
+        if(procedureRecord.isVirtual()) {
+    		TransformationRecordImpl transformRecord = (TransformationRecordImpl)getRecordByType(fullyQualifiedProcedureName, MetadataConstants.RECORD_TYPE.PROC_TRANSFORM, false);
     		if(transformRecord != null) {
-                QueryNode queryNode = new QueryNode(procedureFullName, transformRecord.getTransformation()); 
-                procInfo.setQueryPlan(queryNode);
-    			
+    			procedureRecord.setQueryPlan(transformRecord.getTransformation());
     		}
         }
-        
-        //subtract 1, to match up with the server
-        procInfo.setUpdateCount(procRecord.getUpdateCount() -1);
 
-        return procInfo;
-    }
-    
-    /**
-     * Method to convert the parameter type returned from a ProcedureParameterRecord
-     * to the parameter type expected by StoredProcedureInfo
-     * @param parameterType
-     * @return
-     */
-    private int convertParamRecordTypeToStoredProcedureType(final int parameterType) {
-        switch (parameterType) {
-            case MetadataConstants.PARAMETER_TYPES.IN_PARM : return SPParameter.IN;
-            case MetadataConstants.PARAMETER_TYPES.OUT_PARM : return SPParameter.OUT;
-            case MetadataConstants.PARAMETER_TYPES.INOUT_PARM : return SPParameter.INOUT;
-            case MetadataConstants.PARAMETER_TYPES.RETURN_VALUE : return SPParameter.RETURN_VALUE;
-            case MetadataConstants.PARAMETER_TYPES.RESULT_SET : return SPParameter.RESULT_SET;
-            default : 
-                return -1;
-        }
+    	return procedureRecord;
     }
     
 	@Override

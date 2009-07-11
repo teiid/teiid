@@ -46,15 +46,23 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			                            "y    2"   //$NON-NLS-1$
 
     	});
-    }
+    }    
     
-    @Test public void testExecution1() {
+    @Test public void testIntegrationExecution() {
     	getConnection(VDB, DQP_PROP_FILE);
     	executeAndAssertResults("select * from Example, Smalla where notional = intkey", new String[] { //$NON-NLS-1$
     			"TRADEID[string]    NOTIONAL[integer]    INTKEY[integer]    STRINGKEY[string]    INTNUM[integer]    STRINGNUM[string]    FLOATNUM[float]    LONGNUM[long]    DOUBLENUM[double]    BYTENUM[short]    DATEVALUE[date]    TIMEVALUE[time]    TIMESTAMPVALUE[timestamp]    BOOLEANVALUE[short]    CHARVALUE[char]    SHORTVALUE[short]    BIGINTEGERVALUE[long]    BIGDECIMALVALUE[bigdecimal]    OBJECTVALUE[string]", //$NON-NLS-1$
                 "x    1    1    1    -23    null    -23.0    -23    -23.0    -127    2000-01-02    01:00:00    2000-01-01 00:00:01.0    1    0    -32767    -23    -23    -23", //$NON-NLS-1$
                 "y    2    2    2    -22    -22    null    -22    -22.0    -126    2000-01-03    02:00:00    2000-01-01 00:00:02.0    0    1    -32766    -22    -22    -22", //$NON-NLS-1$
     	});
+    }
+    
+    /**
+     * We have no results to assert here since derby does not provide procedure resultset columns in their metadata.
+     */
+    @Test public void testProcedureExecution() {
+    	getConnection(VDB, DQP_PROP_FILE);
+    	execute("exec Derby.SQLUDTS(null, null, null, null, null)"); //$NON-NLS-1$
     }
     
     @Test public void testDatabaseMetaDataTables() throws Exception {
@@ -186,6 +194,32 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
 				"null    VDBLess    Derby.SYSSTATISTICS    false    null    SYSSTATISTICS_INDEX1    0    2    REFERENCEID    null    0    1    null", //$NON-NLS-1$
 				"null    VDBLess    Derby.SYSTRIGGERS    false    null    SYSTRIGGERS_INDEX3    0    1    TABLEID    null    0    1    null", //$NON-NLS-1$
 				"null    VDBLess    Derby.SYSTRIGGERS    false    null    SYSTRIGGERS_INDEX3    0    2    CREATIONTIMESTAMP    null    0    1    null", //$NON-NLS-1$
+    	});
+    }
+    
+    @Test public void testDatabaseMetaDataProcedures() throws Exception {
+    	Connection conn = getConnection(VDB, DQP_PROP_FILE);
+    	DatabaseMetaData metadata = conn.getMetaData();
+    	this.internalResultSet = metadata.getProcedures(null, null, "Derby.%JAR"); //$NON-NLS-1$
+    	assertResults(new String[] {
+    			"PROCEDURE_CAT[string]    PROCEDURE_SCHEM[string]    PROCEDURE_NAME[string]    RESERVED_1[string]    RESERVED_2[string]    RESERVED_3[string]    REMARKS[string]    PROCEDURE_TYPE[short]", //$NON-NLS-1$
+				"null    VDBLess    Derby.INSTALL_JAR    null    null    null    null    1", //$NON-NLS-1$
+				"null    VDBLess    Derby.REMOVE_JAR    null    null    null    null    1", //$NON-NLS-1$
+				"null    VDBLess    Derby.REPLACE_JAR    null    null    null    null    1" //$NON-NLS-1$
+    	});
+    }
+    
+    @Test public void testDatabaseMetaDataProcedureColumns() throws Exception {
+    	Connection conn = getConnection(VDB, DQP_PROP_FILE);
+    	DatabaseMetaData metadata = conn.getMetaData();
+    	this.internalResultSet = metadata.getProcedureColumns(null, null, "Derby.SQLUDTS", null); //$NON-NLS-1$
+    	assertResults(new String[] {
+    			"PROCEDURE_CAT[string]    PROCEDURE_SCHEM[string]    PROCEDURE_NAME[string]    COLUMN_NAME[string]    COLUMN_TYPE[short]    DATA_TYPE[integer]    TYPE_NAME[string]    PRECISION[integer]    LENGTH[integer]    SCALE[short]    RADIX[integer]    NULLABLE[integer]    REMARKS[string]    POSITION[integer]", //$NON-NLS-1$
+				"null    VDBLess    Derby.SQLUDTS    CATALOGNAME    1    12    string    128    256    0    0    1    null    1", //$NON-NLS-1$
+				"null    VDBLess    Derby.SQLUDTS    SCHEMAPATTERN    1    12    string    128    256    0    0    1    null    2", //$NON-NLS-1$
+				"null    VDBLess    Derby.SQLUDTS    TYPENAMEPATTERN    1    12    string    128    256    0    0    1    null    3", //$NON-NLS-1$
+				"null    VDBLess    Derby.SQLUDTS    UDTTYPES    1    12    string    128    256    0    0    1    null    4", //$NON-NLS-1$
+				"null    VDBLess    Derby.SQLUDTS    OPTIONS    1    12    string    4000    8000    0    0    1    null    5", //$NON-NLS-1$
     	});
     }
         
