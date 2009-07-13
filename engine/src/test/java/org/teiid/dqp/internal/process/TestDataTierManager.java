@@ -394,7 +394,7 @@ public class TestDataTierManager extends TestCase {
 		}
 	    @Override
 	    public ConnectorMetadata getConnectorMetadata(String vdbName,
-	    		String vdbVersion, String modelName) {
+	    		String vdbVersion, String modelName, Properties importProperties) {
 	    	throw new UnsupportedOperationException();
 	    }
     }

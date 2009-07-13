@@ -351,6 +351,7 @@ public class JDBCConnector extends BasicConnector implements XAConnector, Metada
 				conn = xaConn.getConnection();
 			}
 			JDBCMetdataProcessor metadataProcessor = new JDBCMetdataProcessor();
+			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
 			PropertiesUtils.setBeanProperties(metadataProcessor, this.environment.getProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
 		} catch (SQLException e) {

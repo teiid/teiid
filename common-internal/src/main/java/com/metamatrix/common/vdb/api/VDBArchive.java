@@ -64,6 +64,7 @@ import com.metamatrix.vdb.runtime.BasicVDBDefn;
 public class VDBArchive implements MetadataSource {
 	
 	public static String USE_CONNECTOR_METADATA = "UseConnectorMetadata"; //$NON-NLS-1$
+	public static String CACHED = "CACHED"; //$NON-NLS-1$
 	
 	// configuration def contents
 	private BasicVDBDefn def;
@@ -121,7 +122,7 @@ public class VDBArchive implements MetadataSource {
         } 
 
         if (def == null) {
-    		throw new IllegalArgumentException("No ConfigurationInfo.def file associated with vdb " + vdbURL);
+    		throw new IllegalArgumentException("No ConfigurationInfo.def file associated with vdb " + vdbURL); //$NON-NLS-1$
         }
         
     	deployDirectory = new File(deployDirectory, def.getName().toLowerCase() + "/" + def.getVersion().toLowerCase()); //$NON-NLS-1$
@@ -255,10 +256,23 @@ public class VDBArchive implements MetadataSource {
 	
 	@Override
 	public Set<String> getConnectorMetadataModelNames() {
-		if (this.def.getInfoProperties() != null && PropertiesUtils.getBooleanProperty(this.def.getInfoProperties(), USE_CONNECTOR_METADATA, false)) {
+		if (this.def.getInfoProperties() != null && 
+				(cacheConnectorMetadata() || PropertiesUtils.getBooleanProperty(this.def.getInfoProperties(), USE_CONNECTOR_METADATA, false))) {
 			return new HashSet<String>(this.def.getModelNames());
 		}
 		return Collections.emptySet();
+	}
+	
+	public boolean cacheConnectorMetadata() {
+		if (this.def.getInfoProperties() == null) {
+			return false;
+		}
+		return CACHED.equalsIgnoreCase(this.def.getInfoProperties().getProperty(USE_CONNECTOR_METADATA));
+	}
+	
+	@Override
+	public void saveFile(InputStream is, String path) throws IOException {
+		FileUtils.write(is, new File(this.deployDirectory, path));
 	}
 	
 	private InputStream getStream(String path) throws IOException {
@@ -541,6 +555,14 @@ public class VDBArchive implements MetadataSource {
 			return f;
 		}
 		return null;
+	}
+	
+	@Override
+	public ModelInfo getModelInfo(String name) {
+		if (this.def == null) {
+			return null;
+		}
+		return this.def.getModel(name);
 	}
 
 }

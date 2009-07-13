@@ -23,7 +23,12 @@
 package org.teiid.metadata;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +42,7 @@ import org.teiid.connector.metadata.IndexFile;
 import org.teiid.connector.metadata.MetadataConnectorConstants;
 import org.teiid.connector.metadata.MultiObjectSource;
 import org.teiid.connector.metadata.PropertyFileObjectSource;
+import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
 import org.teiid.metadata.index.IndexMetadataStore;
 
@@ -167,7 +173,35 @@ public class QueryMetadataCache {
 	        Set<String> modelNames = runtimeSelector.getConnectorMetadataModelNames();
 	        if (!modelNames.isEmpty()) {
 		        for (String modelName : modelNames) {
-		        	metadataStores.add(new ConnectorMetadataStore(vdbID, modelName, dataService));
+		        	ConnectorMetadata connectorMetadata = null;
+		        	String savedMetadata = "/META-INF/" + modelName.toLowerCase() + ".ser"; //$NON-NLS-1$ //$NON-NLS-2$
+	        		if (runtimeSelector.cacheConnectorMetadata()) {
+		        		File f = runtimeSelector.getFile(savedMetadata);
+		        		if (f != null) {
+		        			ObjectInputStream ois = null;
+		        			try {
+			        			ois = new ObjectInputStream(new FileInputStream(f));
+			        			connectorMetadata = (ConnectorMetadata)ois.readObject();
+		        			} catch (Exception e) {
+		        				
+		        			} finally {
+		        				if (ois != null) {
+				        			ois.close();
+		        				}
+		        			}
+		        		}
+		        	}
+		        	if (connectorMetadata == null) {
+		        		connectorMetadata = dataService.getConnectorMetadata(vdbID.getName(), vdbID.getVersion(), modelName, runtimeSelector.getModelInfo(modelName).getProperties());
+		        	}
+		        	if (runtimeSelector.cacheConnectorMetadata()) {
+		        		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		        		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		        		oos.writeObject(connectorMetadata);
+		        		oos.close();
+		        		runtimeSelector.saveFile(new ByteArrayInputStream(baos.toByteArray()), savedMetadata);
+		        	}
+		        	metadataStores.add(new ConnectorMetadataStore(modelName, connectorMetadata));
 				}
 	        }
 			metadataStores.add(indexMetadataStore);

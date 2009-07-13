@@ -24,6 +24,7 @@ package com.metamatrix.dqp.service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 
 import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -84,10 +85,11 @@ public interface DataService extends ApplicationService {
      * @param vdbName
      * @param vdbVersion
      * @param modelName
+     * @param importProperties
      * @return
      * @throws MetaMatrixComponentException 
      */
-    ConnectorMetadata getConnectorMetadata(String vdbName, String vdbVersion, String modelName) throws MetaMatrixComponentException;
+    ConnectorMetadata getConnectorMetadata(String vdbName, String vdbVersion, String modelName, Properties importProperties) throws MetaMatrixComponentException;
                
     /**
      * Start the Connector Binding by the name given, if it is already added and not srarted. 

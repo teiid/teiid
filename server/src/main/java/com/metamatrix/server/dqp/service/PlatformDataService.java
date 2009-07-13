@@ -234,7 +234,7 @@ public class PlatformDataService implements DataService {
     
     @Override
     public ConnectorMetadata getConnectorMetadata(String vdbName,
-    		String vdbVersion, String modelName) {
+    		String vdbVersion, String modelName, Properties importProperties) {
     	throw new UnsupportedOperationException();
     }
 

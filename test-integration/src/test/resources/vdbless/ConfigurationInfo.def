@@ -2,8 +2,8 @@
 <VDB>
     <VDBInfo>
         <Property Name="Name" Value="VDBLess" />
-        <Property Name="Version" Value="3" />
-        <Property Name="UseConnectorMetadata" Value="true" />
+        <Property Name="Version" Value="2" />
+        <Property Name="UseConnectorMetadata" Value="cached" />
     </VDBInfo>
     <Model>
         <Property Name="Name" Value="SummitData" />
@@ -13,9 +13,13 @@
     </Model>
     <Model>
         <Property Name="Name" Value="Derby" />
+        
         <ConnectorBindings>
             <Connector Name="Derby Connector" />
         </ConnectorBindings>
+        
+        <!-- import settings -->
+        <Property Name="importer.useFullSchemaName" Value="false"/>
     </Model>
     <ConnectorBindings>
         <Connector Name="Text Connector" ComponentType="Text File Connector">
@@ -28,9 +32,6 @@
             <Properties>
                 <Property Name="Immutable">true</Property>
                 <Property Name="URL">jdbc:derby:jar:(src/test/resources/derby/sample.zip)bqt</Property>
-                
-                <!-- import settings -->
-                <Property Name="importer.useFullSchemaName">false</Property>
             </Properties>
         </Connector>
     </ConnectorBindings>

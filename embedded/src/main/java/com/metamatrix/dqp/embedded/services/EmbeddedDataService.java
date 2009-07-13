@@ -125,7 +125,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     
     @Override
     public ConnectorMetadata getConnectorMetadata(String vdbName,
-    		String vdbVersion, String modelName) throws MetaMatrixComponentException {
+    		String vdbVersion, String modelName, Properties importProperties) throws MetaMatrixComponentException {
     	VDBService vdbService = (VDBService)this.lookupService(DQPServiceNames.VDB_SERVICE);
     	List<String> bindingNames = vdbService.getConnectorBindingNames(vdbName, vdbVersion, modelName);
     	if (bindingNames.isEmpty()) {
@@ -139,7 +139,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     	}
     	
     	try {
-			return mgr.getMetadata(modelName);
+			return mgr.getMetadata(modelName, importProperties);
 		} catch (ConnectorException e) {
 			throw new MetaMatrixComponentException(e);
 		}

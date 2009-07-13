@@ -69,7 +69,7 @@ public class TestTextConnector {
         datatypes.put(DataTypeManager.DefaultDataTypes.BIG_INTEGER, new DatatypeRecordImpl());
         datatypes.put(DataTypeManager.DefaultDataTypes.INTEGER, new DatatypeRecordImpl());
         datatypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new DatatypeRecordImpl());
-        MetadataFactory metadata = new MetadataFactory("SummitData", datatypes); //$NON-NLS-1$
+        MetadataFactory metadata = new MetadataFactory("SummitData", datatypes, new Properties()); //$NON-NLS-1$
         connector.getConnectorMetadata(metadata); 
         assertFalse(metadata.getProcedures().iterator().hasNext());
         Iterator<TableRecordImpl> tableIter = metadata.getTables().iterator();

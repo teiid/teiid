@@ -35,6 +35,7 @@ import com.metamatrix.common.config.util.ConfigurationPropertyNames;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
+import com.metamatrix.core.util.FileUtils;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 
 
@@ -116,10 +117,11 @@ public class VDBConfigurationWriter {
             }
         }         
         
+        VDBDefn def = vdb.getConfigurationDef();
+    	
         // If previous one is a DEF file, we also need to delete the VDB file        
-        if (url.getPath().endsWith(DEF)) {
+        if (url.getPath().endsWith(DEF) && def.getFileName() != null) {
             try {
-            	VDBDefn def = vdb.getConfigurationDef();
                 url = URLHelper.buildURL(url, def.getFileName());
                 urlPath = url.toString()+"?action=delete"; //$NON-NLS-1$
                 
@@ -136,6 +138,11 @@ public class VDBConfigurationWriter {
                     try {in.close();}catch(IOException e) {}
                 }
             }
-        }        
+        }  
+        
+        if (vdb.getDeployDirectory().exists()) {
+        	FileUtils.removeDirectoryAndChildren(vdb.getDeployDirectory());
+        }
+        
     }
 }

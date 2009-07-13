@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import org.teiid.connector.DataPlugin;
@@ -43,6 +44,7 @@ public class MetadataFactory implements ConnectorMetadata {
 	
 	private transient UUIDFactory factory = new UUIDFactory();
 	private transient Map<String, DatatypeRecordImpl> dataTypes;
+	private transient Properties importProperties;
 	
 	private ModelRecordImpl model;
 	private Collection<TableRecordImpl> tables = new ArrayList<TableRecordImpl>();
@@ -52,14 +54,19 @@ public class MetadataFactory implements ConnectorMetadata {
 	
 	private Set<String> uniqueNames = new HashSet<String>();
 	
-	public MetadataFactory(String modelName, Map<String, DatatypeRecordImpl> dataTypes) {
+	public MetadataFactory(String modelName, Map<String, DatatypeRecordImpl> dataTypes, Properties importProperties) {
 		this.dataTypes = dataTypes;
+		this.importProperties = importProperties;
 		model = new ModelRecordImpl();
 		model.setFullName(modelName);
 		model.setModelType(ModelType.PHYSICAL);
 		model.setRecordType(RECORD_TYPE.MODEL);
 		model.setPrimaryMetamodelUri("http://www.metamatrix.com/metamodels/Relational"); //$NON-NLS-1$
 		setUUID(model);	
+	}
+	
+	public Properties getImportProperties() {
+		return importProperties;
 	}
 	
 	@Override

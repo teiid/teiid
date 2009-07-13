@@ -36,6 +36,7 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.vdb.api.VDBArchive;
+import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.ObjectConverterUtil;
 import com.metamatrix.core.vdb.VdbConstants;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
@@ -97,9 +98,7 @@ public class VDBConfigurationReader {
     public static VDBArchive loadVDB(String name, byte[] vdbContents) 
         throws MetaMatrixComponentException{
     	
-    	if (vdbContents == null) {
-    		throw new IllegalArgumentException("VDB Content provided can not be null");
-    	}
+    	ArgCheck.isNotNull(vdbContents);
     	
         try {
         	VDBArchive archive = new VDBArchive(new ByteArrayInputStream(vdbContents));

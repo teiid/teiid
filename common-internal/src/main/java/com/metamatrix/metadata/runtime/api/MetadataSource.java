@@ -1,7 +1,11 @@
 package com.metamatrix.metadata.runtime.api;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Set;
+
+import com.metamatrix.common.vdb.api.ModelInfo;
 
 public interface MetadataSource {
 	
@@ -25,5 +29,24 @@ public interface MetadataSource {
 	 * @return
 	 */
 	Set<String> getConnectorMetadataModelNames();
+	
+	/**
+	 * Whether to cache connector metadata
+	 * @return
+	 */
+	boolean cacheConnectorMetadata();
+	
+	/**
+	 * Save the stream to given path.
+	 * @param path
+	 */
+	void saveFile(InputStream stream, String path) throws IOException;
+	
+	/**
+	 * Get the model with the given name.
+	 * @param name
+	 * @return
+	 */
+	ModelInfo getModelInfo(String name);
 	
 }

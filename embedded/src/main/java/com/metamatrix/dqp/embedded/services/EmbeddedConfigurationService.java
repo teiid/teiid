@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -61,6 +60,7 @@ import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
@@ -283,15 +283,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @return URL - never null;
      * @since 4.3
      */
-    URL getVDBLocation(VDBArchive vdb) throws MetaMatrixComponentException {
-        // Check if this already existing VDB then overwrite the files.
-        if (this.availableVDBFiles != null && this.availableVDBFiles.size() > 0) {            
-            URL vdbFile = availableVDBFiles.get(vdbId(vdb));
-            if (vdbFile != null) {
-                return vdbFile;
-            }
-        }
-        
+    URL getNewVDBLocation(VDBArchive vdb) {
         // This is a new VDB, so where other vdbs are stored. Also since we storing this as
         // single VDB/DEF combination, update the archive file info.
         String vdbName = vdb.getName()+"_"+vdb.getVersion()+VDB; //$NON-NLS-1$
@@ -299,7 +291,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         
 		BasicVDBDefn def = vdb.getConfigurationDef();
 		def.setFileName(vdbName);     
-		updateDef(def,vdb);
         
         return fileToSave;
     }
@@ -314,14 +305,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         }
         return urls[0];
     }    
-    
-    private void updateDef(BasicVDBDefn def, VDBArchive vdb) throws MetaMatrixComponentException{
-        try {
-			vdb.updateConfigurationDef(def);
-		} catch (IOException e) {
-			throw new MetaMatrixComponentException(e);
-		}    	
-    }
     
     /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#saveVDB(com.metamatrix.metadata.runtime.admin.vdb.VDBDefn)
@@ -348,26 +331,29 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 archiveFileName = archiveFileName.substring(0, index)+"_"+nextVersion+".vdb"; //$NON-NLS-1$ //$NON-NLS-2$
             }
             def.setFileName(archiveFileName);
-            
-            // update the changes in the archive
-            updateDef(def,srcVdb);
         }
         
+        try {
+			srcVdb.updateConfigurationDef(srcVdb.getConfigurationDef());
+		} catch (IOException e) {
+			throw new MetaMatrixComponentException(e);
+		}
+        
         // make sure we match up the connector binding based on user preferences
-        URL vdbFile = getVDBLocation(srcVdb);
-        VDBConfigurationWriter.write(srcVdb, vdbFile);
-                        
+        URL vdbFile = availableVDBFiles.get(vdbId(srcVdb));
+        if (vdbFile == null) {
+        	vdbFile = getNewVDBLocation(srcVdb);
+        	VDBConfigurationWriter.write(srcVdb, vdbFile);
+        	srcVdb = VDBConfigurationReader.loadVDB(vdbFile, getDeployDir());
+        	try {
+				loadVDB(vdbFile, srcVdb);
+			} catch (ApplicationInitializationException e) {
+				throw new MetaMatrixComponentException(e);
+			}
+        	notifyVDBLoad(def.getName(), def.getVersion());
+        } 
+        
         DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.vdb_saved", new Object[] {def.getName(), def.getVersion(), vdbFile}); //$NON-NLS-1$
-                
-        // Only notify on the first time loads, as the all other saves due to
-        // binding changes only
-        if (loadedVDBs.get(vdbId(srcVdb)) == null) {
-            notifyVDBLoad(def.getName(), def.getVersion());
-        }
-                
-        // Refresh the local holdings.
-        loadedVDBs.put(vdbId(srcVdb), srcVdb);
-        availableVDBFiles.put(vdbId(srcVdb), vdbFile);        
     }
 
     /**  
@@ -395,11 +381,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             // now try to add the connector bindings in the VDB to the configuration service
             addConnectorBindingsInVDB(vdb, replaceBindings);
             
-            // Now save the VDB for future use using the Configuration.
-            // configuration may alter the connector bindings on VDB based
-            // upon preferences set.
-            saveVDB(vdb, exists ? ConfigurationService.NEXT_VDB_VERSION : vdb.getVersion());
-            
             // make sure we have all the bindings, otherwise this is incomplete VDB
             if (!isFullyConfiguredVDB(vdb)) {
                 // mark as in-active
@@ -409,6 +390,11 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 vdb.setStatus(VDBStatus.ACTIVE);
                 DQPEmbeddedPlugin.logInfo("VDBService.vdb_active", new Object[] {vdb.getName(), vdb.getVersion()}); //$NON-NLS-1$                                
             }
+            
+            // Now save the VDB for future use using the Configuration.
+            // configuration may alter the connector bindings on VDB based
+            // upon preferences set.
+            saveVDB(vdb, exists ? ConfigurationService.NEXT_VDB_VERSION : vdb.getVersion());
                         
             DQPEmbeddedPlugin.logInfo("VDBService.vdb_deployed", new Object[] {vdb.getName(), vdb.getVersion()}); //$NON-NLS-1$
             
@@ -451,7 +437,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 // holds true when DQP restarted. Also, this will be only the case
                 // when shared binding is used.                    
                 def.addConnectorBinding(existing);
-                updateDef(def,vdb);
+                saveVDB(vdb, vdb.getVersion());
             }            
         }        
     }    
@@ -498,8 +484,12 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         throws MetaMatrixComponentException {
                 
     	try {
+    		
+    		URL vdbFile = availableVDBFiles.remove(vdbId(vdb));
+    		
+    		Assertion.isNotNull(vdbFile);
+    		
 	        // delete the def/vdb files
-	        URL vdbFile = getVDBLocation(vdb);
 	        VDBConfigurationWriter.deleteVDB(vdb, vdbFile);
 	
 	        // Notify any listeners that vdb is deleted
@@ -507,7 +497,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 	        
 	        // remove from local references.
 	        loadedVDBs.remove(vdbId(vdb));
-	        availableVDBFiles.remove(vdbId(vdb));
 	        
 	        VDBDefn def = vdb.getConfigurationDef();
 	                
@@ -585,7 +574,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 }
                 
                 // Save the new vdb/model defination into the persistent store.
-                updateDef(def,vdb);
                 saveVDB(vdb, vdb.getVersion());
                 
                 deleteOrphanedConnectorBindings(orphanBindings);
@@ -724,7 +712,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                     // all the deployed VDBs that are using this connector binding.
                 	BasicVDBDefn def = vdb.getConfigurationDef();
                 	def.addConnectorBinding(binding);
-                	updateDef(def,vdb);
                 	
                     // we may need to save the VDB's here..
                     saveVDB(vdb, vdb.getVersion());                    
@@ -978,7 +965,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                         
             // Find all the VDB File in the configuration
             // Load them the available VDBs
-            this.availableVDBFiles  = loadVDBs();
+            loadVDBs();
             
             // load the connector bindings
             loadConnectorBindings(connectorBindings, connectorTypes);
@@ -1118,7 +1105,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @throws ApplicationInitializationException
      * @since 4.3
      */
-    HashMap<VDBKey, URL> loadVDBs() throws ApplicationInitializationException{
+    void loadVDBs() throws ApplicationInitializationException{
         // Get the files to load
         HashMap<URL, VDBArchive> vdbFiles;
 		try {
@@ -1126,7 +1113,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 		} catch (MetaMatrixComponentException e) {
 			throw new ApplicationInitializationException(e);
 		}
-        HashMap<VDBKey, URL> loadedVDBFiles = new HashMap<VDBKey, URL>();
 
         for (URL vdbURL:vdbFiles.keySet()){                               
             
@@ -1134,20 +1120,24 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             
             if (vdb != null) {
             
-                // Check to make sure there are two identical VDBs with same version 
-                // being loaded into DQP
-                if (loadedVDBs.get(vdbId(vdb)) != null) {
-                    throw new ApplicationInitializationException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.duplicate_vdb_found", new Object[] {vdbURL})); //$NON-NLS-1$
-                }
-                
-                // add vdb to loaded VDBS
-                loadedVDBs.put(vdbId(vdb), vdb);
-                loadedVDBFiles.put(vdbId(vdb), vdbURL);
-                DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.loaded_vdb", new Object[] {vdbURL}); //$NON-NLS-1$
+                loadVDB(vdbURL, vdb);
             }
         }
-        return loadedVDBFiles;
     }
+
+	private void loadVDB(URL vdbURL, VDBArchive vdb)
+			throws ApplicationInitializationException {
+		// Check to make sure there are two identical VDBs with same version 
+		// being loaded into DQP
+		if (loadedVDBs.get(vdbId(vdb)) != null) {
+		    throw new ApplicationInitializationException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.duplicate_vdb_found", new Object[] {vdbURL})); //$NON-NLS-1$
+		}
+		
+		// add vdb to loaded VDBS
+		loadedVDBs.put(vdbId(vdb), vdb);
+		availableVDBFiles.put(vdbId(vdb), vdbURL);
+		DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.loaded_vdb", new Object[] {vdbURL}); //$NON-NLS-1$
+	}
 
 	protected File getDeployDir() {
 		File f = new File(getFullyQualifiedPath("deploy").getPath()); //$NON-NLS-1$

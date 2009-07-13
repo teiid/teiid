@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * This interface provides the model information.
@@ -208,5 +209,7 @@ public interface ModelInfo {
             
     
     String getPath();
+    
+    Properties getProperties();
     
 }

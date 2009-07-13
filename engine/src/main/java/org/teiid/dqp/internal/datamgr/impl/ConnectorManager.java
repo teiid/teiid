@@ -146,10 +146,10 @@ public class ConnectorManager implements ApplicationService {
 		return classloader;
 	}
     
-    public ConnectorMetadata getMetadata(String modelName) throws ConnectorException {
+    public ConnectorMetadata getMetadata(String modelName, Properties importProperties) throws ConnectorException {
     	MetadataFactory factory;
 		try {
-			factory = new MetadataFactory(modelName, this.metadataService.getBuiltinDatatypes());
+			factory = new MetadataFactory(modelName, this.metadataService.getBuiltinDatatypes(), importProperties);
 		} catch (MetaMatrixComponentException e) {
 			throw new ConnectorException(e);
 		}

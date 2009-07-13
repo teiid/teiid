@@ -44,18 +44,16 @@ import org.teiid.metadata.index.IndexConstants;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.core.MetaMatrixCoreException;
-import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.query.metadata.MetadataStore;
-import com.metamatrix.vdb.runtime.VDBKey;
 
 public class ConnectorMetadataStore implements MetadataStore {
 	
 	private ConnectorMetadata metadata;
 	private String modelName;
 	
-	public ConnectorMetadataStore(VDBKey key, String modelName, DataService dataService) throws MetaMatrixComponentException {
+	public ConnectorMetadataStore(String modelName, ConnectorMetadata metadata) {
 		this.modelName = modelName;
-		this.metadata = dataService.getConnectorMetadata(key.getName(), key.getVersion(), modelName);
+		this.metadata = metadata;
 	}
 	
 	@Override

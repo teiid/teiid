@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.common.util.ByteArrayHelper;
@@ -265,5 +266,10 @@ public class FakeModelInfo implements ModelInfo {
     }
 	public String getPath() {
 		return null;
+	}
+	
+	@Override
+	public Properties getProperties() {
+		return new Properties();
 	}
 }

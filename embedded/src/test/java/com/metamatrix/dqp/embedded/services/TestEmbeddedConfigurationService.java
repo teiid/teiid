@@ -152,7 +152,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
         VDBArchive vdb = service.getVDB("QT_Ora9DS", "1"); //$NON-NLS-1$ //$NON-NLS-2$
         vdb.getConfigurationDef().setName("Foo"); //$NON-NLS-1$
         vdb.getConfigurationDef().setVersion("2"); //$NON-NLS-1$
-        assertTrue(service.getVDBLocation(vdb).toString().endsWith("dqp/config/Foo_2.vdb")); //$NON-NLS-1$
+        assertTrue(service.getNewVDBLocation(vdb).toString().endsWith("dqp/config/Foo_2.vdb")); //$NON-NLS-1$
     }
     
     public void testGetFileToSaveNewFile() throws Exception{
@@ -164,19 +164,8 @@ public class TestEmbeddedConfigurationService extends TestCase {
         VDBArchive vdb = service.getVDB("QT_Ora9DS", "1"); //$NON-NLS-1$ //$NON-NLS-2$
         vdb.getConfigurationDef().setName("Foo"); //$NON-NLS-1$
         vdb.getConfigurationDef().setVersion("2"); //$NON-NLS-1$
-        URL f = service.getVDBLocation(vdb);
+        URL f = service.getNewVDBLocation(vdb);
         assertTrue(f.toString().endsWith("dqp/config/Foo_2.vdb")); //$NON-NLS-1$
-    }
-    
-    public void testGetFileAlreadyExisting() throws Exception{
-        Properties p = EmbeddedTestUtil.getProperties(); 
-        service.setUserPreferences(p);
-        service.initializeService(p);
-        
-        VDBArchive vdb = service.getVDB("QT_Ora9DS", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        URL f = service.getVDBLocation(vdb);        
-        assertTrue(f.getPath().endsWith("dqp/config/QT_Ora9DS.vdb")); //$NON-NLS-1$
     }
     
     public void testGetFullyQualifiedPath() throws Exception{

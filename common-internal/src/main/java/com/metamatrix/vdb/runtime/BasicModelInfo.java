@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.common.util.ByteArrayHelper;
@@ -67,6 +68,8 @@ public class BasicModelInfo implements ModelInfo, Serializable {
     private boolean isVisible;
 
     private Map ddlFileNamesToFiles = Collections.EMPTY_MAP;
+    
+    private Properties properties;
 
     protected BasicModelInfo() {
         
@@ -417,6 +420,15 @@ public class BasicModelInfo implements ModelInfo, Serializable {
     public void setPath(String path) {
     	this.pathInVdb = path;
     }
+    
+    @Override
+    public Properties getProperties() {
+    	return this.properties;
+    }
+    
+    public void setProperties(Properties properties) {
+		this.properties = properties;
+	}
     
     public String toString() {
         StringBuffer sw = new StringBuffer();

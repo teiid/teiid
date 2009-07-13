@@ -162,8 +162,11 @@ public class DEFReaderWriter {
     	
     	BasicModelInfo model = new BasicModelInfo(props.getProperty(Model.NAME));
     	String visibility = props.getProperty(Model.VISIBILITY, ModelInfo.PUBLIC_VISIBILITY);
+    	props.remove(Model.VISIBILITY);
     	model.setVisibility(visibility.equalsIgnoreCase(ModelInfo.PRIVATE_VISIBILITY)?ModelInfo.PRIVATE:ModelInfo.PUBLIC);
     	model.enableMutliSourceBindings(Boolean.parseBoolean(props.getProperty(Model.MULTI_SOURCE_ENABLED)));
+    	props.remove(Model.MULTI_SOURCE_ENABLED);
+    	model.setProperties(props);
     	
     	Element cbElement = modelElement.getChild(Model.CONNECTOR_BINDINGS_ELEMENT);
     	if (cbElement != null) {
@@ -308,17 +311,21 @@ public class DEFReaderWriter {
         	   addPropertyElement(vdbInfoElement, VDBInfo.ACTIVE, TRUE); 
            }
            Properties p = info.getInfoProperties();
-           if (p != null) {
-	           for(String key : (List<String>) Collections.list(p.propertyNames())) {
-	        	   addPropertyElement(vdbInfoElement, key, p.getProperty(key));
-	           }
-           }
+           addPropertyElements(vdbInfoElement, p);
        }
        else {
     	   throw new IOException("Invalid DEF, No name supplied"); //$NON-NLS-1$
        }
        return vdbInfoElement;
-   }   
+   }
+
+	private void addPropertyElements(Element vdbInfoElement, Properties p) {
+		if (p != null) {
+			for (String key : (List<String>) Collections.list(p.propertyNames())) {
+				addPropertyElement(vdbInfoElement, key, p.getProperty(key));
+			}
+		}
+	}
    
    private Element createModel(ModelInfo model) throws IOException {
        Element modelElement = new Element(Model.ELEMENT);
@@ -326,7 +333,7 @@ public class DEFReaderWriter {
        if (valid) {
     	   addPropertyElement(modelElement, Model.VISIBILITY, model.getVisibility()==ModelInfo.PRIVATE?ModelInfo.PRIVATE_VISIBILITY:ModelInfo.PUBLIC_VISIBILITY);
     	   addPropertyElement(modelElement, Model.MULTI_SOURCE_ENABLED, Boolean.toString(model.isMultiSourceBindingEnabled()));
-    	   
+    	   addPropertyElements(modelElement, model.getProperties());
     	   List<String> bindings = model.getConnectorBindingNames();
     	   if (bindings != null && !bindings.isEmpty()) {
     		   Element cbsElement = new Element(Model.CONNECTOR_BINDINGS_ELEMENT);

@@ -22,6 +22,7 @@
 
 package org.teiid.connector.metadata.runtime;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -32,7 +33,7 @@ import com.metamatrix.core.util.HashCodeUtil;
 /**
  * AbstractMetadataRecord
  */
-public abstract class AbstractMetadataRecord {
+public abstract class AbstractMetadataRecord implements Serializable {
 	    
     /**
 	 * Constants for names of accessor methods that map to fields stored on the MetadataRecords.
@@ -63,7 +64,7 @@ public abstract class AbstractMetadataRecord {
 	private String name;
 	
 	private Collection<PropertyRecordImpl> extensionProperties;
-	private Properties properties;
+	private transient Properties properties;
 	private AnnotationRecordImpl annotation;
 	
 	public String getUUID() {
