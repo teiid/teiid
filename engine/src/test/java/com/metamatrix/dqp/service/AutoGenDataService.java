@@ -198,7 +198,7 @@ public class AutoGenDataService extends FakeAbstractService implements DataServi
      * @see com.metamatrix.dqp.service.DataService#getConnectorBindingState(java.lang.String)
      * @since 4.3
      */
-    public Boolean getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
+    public ConnectorStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
         return null;
     }
 

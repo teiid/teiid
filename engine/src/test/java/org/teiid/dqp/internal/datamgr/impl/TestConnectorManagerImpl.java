@@ -35,7 +35,13 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations.Mock;
+import org.teiid.connector.api.Connection;
+import org.teiid.connector.api.Connector;
+import org.teiid.connector.api.ConnectorException;
+import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ConnectorPropertyNames;
+import org.teiid.connector.api.ExecutionContext;
 import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
 import org.teiid.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
@@ -46,6 +52,7 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
+import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.FakeMetadataService;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -205,5 +212,86 @@ public final class TestConnectorManagerImpl {
         assertNotNull(receiver.getResults().poll(1000, TimeUnit.MILLISECONDS));
         cm.stop();
     }
+
+    @Test public void testConnectorStatus() throws Exception {
+    	ConnectorManager cm = new ConnectorManager();
+    	assertEquals(ConnectorStatus.NOT_INITIALIZED, cm.getStatus());
+    	
+    	Properties props = new Properties();
+    	Connector mockConnector = Mockito.mock(Connector.class);
+    	Connection mockConnection = Mockito.mock(Connection.class);
+    	
+    	Mockito.stub(mockConnector.getConnection((ExecutionContext)Mockito.anyObject())).toReturn(mockConnection);        
+    	
+        final String connectorName = mockConnector.getClass().getName();
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, connectorName);
+        cm.setConnector(new ConnectorWrapper(mockConnector)); // to make them same connector
+
+        // no identity can be defined
+        assertEquals(ConnectorStatus.UNABLE_TO_CHECK, cm.getStatus());
+    }
     
+    @Test public void testConnectorStatus_alive() throws Exception {
+    	ConnectorManager cm = new ConnectorManager();
+    	assertEquals(ConnectorStatus.NOT_INITIALIZED, cm.getStatus());
+    	
+    	Properties props = new Properties();
+    	Connector mockConnector = Mockito.mock(Connector.class);
+    	Connection mockConnection = Mockito.mock(Connection.class);
+    	ConnectorIdentity mockIdentity = Mockito.mock(ConnectorIdentity.class);
+    	
+    	Mockito.stub(mockConnector.getConnection((ExecutionContext)Mockito.anyObject())).toReturn(mockConnection);        
+        Mockito.stub(mockConnector.createIdentity(null)).toReturn(mockIdentity);
+    	
+        final String connectorName = mockConnector.getClass().getName();
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, connectorName);
+        startConnectorManager(cm, props);        
+        cm.setConnector(new ConnectorWrapper(mockConnector)); // to make them same connector
+
+        // check Open
+        Mockito.stub(mockConnection.isAlive()).toReturn(true);
+        assertEquals(ConnectorStatus.OPEN, cm.getStatus());
+    }
+    
+    @Test public void testConnectorStatus_dead() throws Exception {
+    	ConnectorManager cm = new ConnectorManager();
+    	assertEquals(ConnectorStatus.NOT_INITIALIZED, cm.getStatus());
+    	
+    	Properties props = new Properties();
+    	Connector mockConnector = Mockito.mock(Connector.class);
+    	Connection mockConnection = Mockito.mock(Connection.class);
+    	ConnectorIdentity mockIdentity = Mockito.mock(ConnectorIdentity.class);
+    	
+    	Mockito.stub(mockConnector.getConnection((ExecutionContext)Mockito.anyObject())).toReturn(mockConnection);        
+        Mockito.stub(mockConnector.createIdentity(null)).toReturn(mockIdentity);
+    	
+        final String connectorName = mockConnector.getClass().getName();
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, connectorName);
+        startConnectorManager(cm, props);        
+        cm.setConnector(new ConnectorWrapper(mockConnector)); // to make them same connector
+
+        // data source not available
+        Mockito.stub(mockConnection.isAlive()).toReturn(false);
+        assertEquals(ConnectorStatus.DATA_SOURCE_UNAVAILABLE, cm.getStatus());
+    }    
+    
+    @Test public void testConnectorStatus_exception() throws Exception {
+    	ConnectorManager cm = new ConnectorManager();
+    	assertEquals(ConnectorStatus.NOT_INITIALIZED, cm.getStatus());
+    	
+    	Properties props = new Properties();
+    	Connector mockConnector = Mockito.mock(Connector.class);
+    	ConnectorIdentity mockIdentity = Mockito.mock(ConnectorIdentity.class);
+    	
+    	Mockito.stub(mockConnector.getConnection((ExecutionContext)Mockito.anyObject())).toThrow(new ConnectorException());        
+        Mockito.stub(mockConnector.createIdentity(null)).toReturn(mockIdentity);
+    	
+        final String connectorName = mockConnector.getClass().getName();
+        props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, connectorName);
+        startConnectorManager(cm, props);        
+        cm.setConnector(new ConnectorWrapper(mockConnector)); // to make them same connector
+
+        // data source not available
+        assertEquals(ConnectorStatus.INIT_FAILED, cm.getStatus());
+    }     
 }

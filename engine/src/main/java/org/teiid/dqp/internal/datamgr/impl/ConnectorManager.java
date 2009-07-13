@@ -86,6 +86,7 @@ import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.CommandLogMessage;
+import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.TransactionService;
@@ -101,7 +102,8 @@ import com.metamatrix.query.sql.lang.Command;
  */
 public class ConnectorManager implements ApplicationService {
 
-    public static final int DEFAULT_MAX_THREADS = 20;
+    private static final int TIME_BETWEEN_STATUS_CHECKS = 5000;
+	public static final int DEFAULT_MAX_THREADS = 20;
     private static final String DEFAULT_MAX_RESULTSET_CACHE_SIZE = "20"; //$NON-NLS-1$
     private static final String DEFAULT_MAX_RESULTSET_CACHE_AGE = "3600000"; //$NON-NLS-1$
 
@@ -132,6 +134,9 @@ public class ConnectorManager implements ApplicationService {
 
     private Properties props;
 	private ClassLoader classloader;
+	private ConnectorStatus previousStatus;
+	private long lastStatusCheck = -1;
+	
     
     public void initialize(Properties props) {
     	this.props = props;
@@ -295,16 +300,23 @@ public class ConnectorManager implements ApplicationService {
     /**
      * @see com.metamatrix.dqp.internal.datamgr.ConnectorManager#isAlive()
      */
-    public Boolean getStatus() {
-    	if (this.connector == null) return false;
+    public ConnectorStatus getStatus() {
+    	if (this.connector == null) {
+    		return ConnectorStatus.NOT_INITIALIZED;
+    	}
     	
-        ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
-        try {
-        	Thread.currentThread().setContextClassLoader(classloader);
-            return this.connector.getStatus();
-        } finally {
-        	Thread.currentThread().setContextClassLoader(contextloader);
-        }
+    	// we want to avoid repeated calls to status, as they may be expensive to make. 
+    	if (lastStatusCheck == -1 || (System.currentTimeMillis() - lastStatusCheck >= TIME_BETWEEN_STATUS_CHECKS)) {
+	        ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
+	        try {
+	        	Thread.currentThread().setContextClassLoader(classloader);
+	            this.previousStatus = this.connector.getStatus();
+	            this.lastStatusCheck = System.currentTimeMillis();
+	        } finally {
+	        	Thread.currentThread().setContextClassLoader(contextloader);
+	        }
+    	}
+        return this.previousStatus;
     }
     
     /**

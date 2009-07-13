@@ -48,6 +48,7 @@ import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
@@ -193,7 +194,7 @@ public class PlatformDataService implements DataService {
      * @see com.metamatrix.dqp.service.DataService#getConnectorBindingState(java.lang.String)
      * @since 4.3
      */
-    public Boolean getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
+    public ConnectorStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {
         throw new UnsupportedOperationException();
     }
 

@@ -75,6 +75,7 @@ import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
+import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
@@ -252,9 +253,9 @@ public class ConnectorService extends AbstractService implements ConnectorServic
     public void checkState() throws ServiceStateException {
 
         if (monitoringEnabled && connectorMgr != null) {
-            Boolean status = connectorMgr.getStatus();
+            ConnectorStatus status = connectorMgr.getStatus();
             int state = getCurrentState();
-            if (state == ServiceState.STATE_OPEN && status == Boolean.FALSE) {
+            if (state == ServiceState.STATE_OPEN && status == ConnectorStatus.DATA_SOURCE_UNAVAILABLE) {
                 updateState(ServiceState.STATE_DATA_SOURCE_UNAVAILABLE);
                 
                 logOK("ConnectorService.Change_state_to_data_source_unavailable", connectorMgrName); //$NON-NLS-1$
@@ -262,7 +263,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
                 //TODO: store the exception in the registry
             }
             
-            if (state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE && status == Boolean.TRUE) {
+            if (state == ServiceState.STATE_DATA_SOURCE_UNAVAILABLE && status == ConnectorStatus.OPEN) {
                 this.updateState(ServiceState.STATE_OPEN);
                 
                 logOK("ConnectorService.Change_state_to_open", connectorMgrName); //$NON-NLS-1$                

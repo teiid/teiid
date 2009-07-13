@@ -131,11 +131,11 @@ public interface DataService extends ApplicationService {
     
     /**
      * Get the State of the connector binding name 
-     * @return {@link com.metamatrix.connector.monitor.AliveStatus}
+     * @return {@link ConnectorStatus}
      * @throws MetaMatrixComponentException
      * @since 4.3
      */
-    Boolean getConnectorBindingState(String connectorBindingName) 
+    ConnectorStatus getConnectorBindingState(String connectorBindingName) 
         throws MetaMatrixComponentException;
     
     /**

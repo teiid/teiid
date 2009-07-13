@@ -51,6 +51,8 @@ public interface ConnectorBinding extends
     public static final int STATE_DATA_SOURCE_UNAVAILABLE = 6;
     /**Running, not deployed*/
     public static final int STATE_NOT_DEPLOYED = 7;
+    /** failed to check the status */
+    public static final int STATE_FAILED_TO_CHECK = 8;
     
     /** Password connector property name */
     public static final String PASSWORD = "Password"; //$NON-NLS-1$

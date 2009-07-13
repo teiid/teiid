@@ -50,6 +50,7 @@ import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
+import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.FakeBufferService;
 import com.metamatrix.dqp.service.FakeVDBService;
@@ -366,7 +367,7 @@ public class TestDataTierManager extends TestCase {
         public void startConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
         public void stopConnectorBinding(String connectorBindingName) throws ApplicationLifecycleException,ComponentNotFoundException {}
         public List getConnectorBindings() throws ComponentNotFoundException {return null;}
-        public Boolean getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {return null;}
+        public ConnectorStatus getConnectorBindingState(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public ConnectorBinding getConnectorBinding(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public Collection getConnectorBindingStatistics(String connectorBindingName) throws MetaMatrixComponentException {return null;}
         public Collection getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException { return null; }

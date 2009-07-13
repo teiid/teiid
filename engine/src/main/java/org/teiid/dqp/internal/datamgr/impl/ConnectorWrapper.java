@@ -35,6 +35,8 @@ import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
 
+import com.metamatrix.dqp.service.ConnectorStatus;
+
 /**
  * ConnectorWrapper adds default behavior to the wrapped connector.
  */
@@ -94,21 +96,21 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 	    return actualConnector.getCapabilities();
 	}
 	
-	public final Boolean getStatus() {
+	public final ConnectorStatus getStatus() {
 		if (supportsSingleIdentity()) {
 			Connection conn = null;
 			try {
 				conn = this.getConnection(null);
-				return conn.isAlive();
+				return conn.isAlive()?ConnectorStatus.OPEN:ConnectorStatus.DATA_SOURCE_UNAVAILABLE;
 			} catch (ConnectorException e) {
-				return Boolean.FALSE;
+				return ConnectorStatus.INIT_FAILED;
 			} finally {
 				if (conn != null) {
 					conn.close();
 				}
 			}
 		}
-		return null;
+		return ConnectorStatus.UNABLE_TO_CHECK;
 	}
 	
 	public Connector getActualConnector() {

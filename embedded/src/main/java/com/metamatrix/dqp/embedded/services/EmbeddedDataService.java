@@ -59,6 +59,7 @@ import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.ConnectorBindingLifeCycleListener;
+import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.VDBService;
@@ -323,7 +324,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      * @see com.metamatrix.dqp.service.DataService#getConnectorBindingState(java.lang.String)
      * @since 4.3
      */
-    public Boolean getConnectorBindingState(String deployedConnectorBindingName) 
+    public ConnectorStatus getConnectorBindingState(String deployedConnectorBindingName) 
         throws MetaMatrixComponentException {
         ConnectorBinding binding = getConnectorBinding(deployedConnectorBindingName);
         if (binding != null) {
@@ -331,6 +332,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
             if (mgr != null) {
                 return mgr.getStatus();
             }
+            return ConnectorStatus.CLOSED;
         }
         throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector", deployedConnectorBindingName)); //$NON-NLS-1$
     } 

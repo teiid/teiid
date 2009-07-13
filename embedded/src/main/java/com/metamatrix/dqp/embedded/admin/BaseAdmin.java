@@ -66,6 +66,7 @@ import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.AuthorizationService;
 import com.metamatrix.dqp.service.ConfigurationService;
+import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.TransactionService;
@@ -336,18 +337,29 @@ abstract class BaseAdmin {
         // Binding state needs to be converted into pool state; until then we use
         // binding state  as pool state.
         try {
-            Boolean status = getDataService().getConnectorBindingState(src.getDeployedName());            
-            if (status == Boolean.TRUE) {
-                binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_OPEN);
-            }
-            else if (status == Boolean.FALSE) {
-                binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);
-            }
-            else {
-                binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);
-            }            
-        }catch(Exception e) {
-            binding.setState(MMConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);            
+        	ConnectorStatus status = getDataService().getConnectorBindingState(src.getDeployedName());
+        	switch(status) {
+        	case OPEN:
+        		binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_OPEN);
+        		break;
+        	case NOT_INITIALIZED:
+        		binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_NOT_INITIALIZED);
+        		break;
+        	case CLOSED:
+        		binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_CLOSED);
+        		break;
+        	case DATA_SOURCE_UNAVAILABLE:
+        		binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_DATA_SOURCE_UNAVAILABLE);
+        		break;
+        	case INIT_FAILED:
+        		binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_INIT_FAILED);
+        		break;
+        	case UNABLE_TO_CHECK:
+        		binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_FAILED_TO_CHECK);
+        		break;
+        	}        	
+        }catch(MetaMatrixComponentException e) {
+            binding.setState(org.teiid.adminapi.ConnectorBinding.STATE_NOT_DEPLOYED);            
         }
         binding.setStateChangedTime(src.getLastChangedDate());
         return binding;       
