@@ -41,9 +41,19 @@ public class TestAccessPatterns extends TestCase {
         TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), new String[] {"SELECT test.\"group\".e0, test.\"group\".e2 FROM test.\"group\" WHERE (test.\"group\".e0 = 1) AND (test.\"group\".e1 = '2')"}); //$NON-NLS-1$
     }
 
+    public void testVirtualAccessPatternPassing1() {
+        String sql = "delete from vm1.g37 where e1 = 1"; //$NON-NLS-1$
+        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {});
+    }
+    
     public void testVirtualAccessPatternFailing() {
         String sql = "SELECT e0, e2 FROM vTest.vGroup2 where e0=1"; //$NON-NLS-1$
         TestOptimizer.helpPlan(sql, TestValidator.exampleMetadata4(), null, null, null, TestOptimizer.SHOULD_FAIL); 
+    }
+    
+    public void testVirtualAccessPatternFailing1() {
+        String sql = "delete from vm1.g37"; //$NON-NLS-1$
+        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, null, null, TestOptimizer.SHOULD_FAIL);
     }
 
     public void testAccessPattern1() throws Exception {

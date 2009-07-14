@@ -81,13 +81,12 @@ public final class RuleCollapseSource implements OptimizerRule {
             
             // Get nested non-relational plan if there is one
             ProcessorPlan nonRelationalPlan = FrameUtil.getNestedPlan(accessNode);
+    		Command command = FrameUtil.getNonQueryCommand(accessNode);
+
             if(nonRelationalPlan != null) {
                 accessNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, nonRelationalPlan);
-                    
             } else { 
                 // Create command from access on down and save in access node
-        		Command command = FrameUtil.getNonQueryCommand(accessNode);
-        		
                 if(command == null) {
                 	PlanNode commandRoot = accessNode;
                 	GroupSymbol intoGroup = (GroupSymbol)accessNode.getFirstChild().getProperty(NodeConstants.Info.INTO_GROUP);
@@ -103,9 +102,8 @@ public final class RuleCollapseSource implements OptimizerRule {
                     	command = insertCommand;
                     }
                 } 
-        		accessNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
             }
-    				
+    		accessNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
     		accessNode.removeAllChildren();
         }
        				
