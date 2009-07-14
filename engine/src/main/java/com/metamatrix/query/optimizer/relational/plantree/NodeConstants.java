@@ -110,6 +110,7 @@ public final class NodeConstants {
         // Sort node properties
         ORDER_TYPES,        // List <Boolean>
         SORT_ORDER,         // List <SingleElementSymbol>
+        UNRELATED_SORT,     // Boolean
         IS_DUP_REMOVAL,		// Boolean
 
         // Source node properties

@@ -211,6 +211,11 @@ public class JDBCCapabilities extends BasicConnectorCapabilities {
     public boolean supportsOrderBy() {
         return true;
     }
+    
+    @Override
+    public boolean supportsOrderByUnrelated() {
+    	return true;
+    }
 
     /* 
      * @see com.metamatrix.data.ConnectorCapabilities#supportsOuterJoins()

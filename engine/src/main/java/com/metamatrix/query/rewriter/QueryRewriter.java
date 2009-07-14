@@ -853,14 +853,21 @@ public class QueryRewriter {
         }
 
         OrderBy newOrderBy = new OrderBy();
+        newOrderBy.setUnrelated(orderBy.hasUnrelated());
         HashSet<Expression> previousExpressions = new HashSet<Expression>();
         
         for (int i = 0; i < orderBy.getVariableCount(); i++) {
             SingleElementSymbol querySymbol = orderBy.getVariable(i);
             if (!orderBy.isInPlanForm()) { 
                 //get the order by item from the select clause, the variable must be an element symbol
-                int index = ((TempMetadataID)((ElementSymbol)querySymbol).getMetadataID()).getPosition();
-                querySymbol = (SingleElementSymbol)((SingleElementSymbol)projectedSymbols.get(index)).clone();
+            	//however we have a hack to determine the position...
+            	Object id = ((ElementSymbol)querySymbol).getMetadataID();
+            	if (id instanceof TempMetadataID) {
+	                int index = ((TempMetadataID)((ElementSymbol)querySymbol).getMetadataID()).getPosition();
+	                if (index != -1) {
+	                	querySymbol = (SingleElementSymbol)((SingleElementSymbol)projectedSymbols.get(index)).clone();
+	                }
+            	} // else not a projected symbol
             } 
             Expression expr = SymbolMap.getExpression(querySymbol);
             if (!previousExpressions.add(expr)) {

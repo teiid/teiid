@@ -612,7 +612,7 @@ public class SimpleQueryResolver implements CommandResolver {
         
         public void visit(OrderBy obj) {
             try {
-                ResolverUtil.resolveOrderBy(obj, new ArrayList(currentGroups), query.getSelect().getProjectedSymbols(), metadata);
+                ResolverUtil.resolveOrderBy(obj, new ArrayList(currentGroups), query.getSelect().getProjectedSymbols(), metadata, query.getGroupBy() == null && !query.getSelect().isDistinct());
             } catch(QueryResolverException e) {
                 throw new MetaMatrixRuntimeException(e);
             } catch(MetaMatrixComponentException e) {

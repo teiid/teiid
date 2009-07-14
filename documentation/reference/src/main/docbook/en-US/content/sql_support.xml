@@ -791,16 +791,32 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
         <para>Syntax Rules:
         </para>
         <listitem>
-          <para>Column references in the order by must appear in the select clause.</para>
+          <para>Sort columns may be specified positionally by a 1 based
+	        integer or string literal, by SELECT clause alias name, or by a column
+	        reference.</para>
         </listitem>
         <listitem>
-          <para>The order by columns must be of a comparable type.</para>
+          <para>Column references may appear in the SELECT clause as the
+			expression for an aliased column or may reference columns from tables
+			in the FROM clause.
+			If the column reference is not in the SELECT clause the query must not
+			be a set operation, specify SELECT DISTINCT, or contain a GROUP BY
+			clause.</para>
         </listitem>
         <listitem>
-          <para>If an order by is used in an inline view or view definition without a limit clause, it will be removed by the Teiid optimizer.
-          </para>
+          <para>The ORDER BY columns must be of a comparable type.</para>
+        </listitem>
+        <listitem>
+          <para>If an ORDER BY is used in an inline view or view
+	         definition without a limit clause, it will be removed by the Teiid
+	         optimizer.</para>
         </listitem>
       </itemizedlist>
+      <warning>
+		<para>The use of positional ordering is no longer supported by the
+				ANSI SQL standard and is a deprecated feature in Teiid. It is
+				preferable to use alias names in the order by clause.</para>
+	  </warning>
     </sect2>
     <sect2 id="limit_clause">
       <title>LIMIT Clause</title>

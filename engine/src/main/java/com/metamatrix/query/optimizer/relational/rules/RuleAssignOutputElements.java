@@ -146,7 +146,16 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		    case NodeConstants.Types.TUPLE_LIMIT:
 		    case NodeConstants.Types.DUP_REMOVE:
 		    case NodeConstants.Types.SORT:
-		        //for nodes that are above a project or an access node, there's no special work needed
+		    	if (root.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
+		    		//add missing sort columns
+			    	List<SingleElementSymbol> elements = (List<SingleElementSymbol>) root.getProperty(NodeConstants.Info.SORT_ORDER);
+			    	outputElements = new ArrayList<SingleElementSymbol>(outputElements);
+			    	for (SingleElementSymbol singleElementSymbol : elements) {
+						if (!outputElements.contains(singleElementSymbol)) {
+							outputElements.add(singleElementSymbol);
+						}
+					}
+		    	}
 		        assignOutputElements(root.getLastChild(), outputElements, metadata, capFinder, rules, analysisRecord, context);
 		        break;
 		    case NodeConstants.Types.SOURCE: {

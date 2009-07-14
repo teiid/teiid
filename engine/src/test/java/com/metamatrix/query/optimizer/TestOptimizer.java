@@ -144,6 +144,7 @@ public class TestOptimizer extends TestCase {
         caps.setCapabilitySupport(Capability.CRITERIA_OR, true);    
         caps.setCapabilitySupport(Capability.CRITERIA_NOT, true);    
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);    
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_UNRELATED, true);
         
         // set typical max set size
         caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, new Integer(1000));

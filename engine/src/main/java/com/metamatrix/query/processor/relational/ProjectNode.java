@@ -66,7 +66,6 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 
     public void reset() {
         super.reset();
-        needsProject = true;
 
         currentBatch = null;
         currentRow = 0;

@@ -4698,5 +4698,17 @@ public class TestResolver extends TestCase {
     	String sql = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
     	helpResolve(sql);
     }
+    
+    public void testOrderByUnrelated() {
+        helpResolve("SELECT pm1.g1.e1, e2 as x, e3 as y FROM pm1.g1 ORDER BY e4"); //$NON-NLS-1$
+    }
+
+    public void testOrderByUnrelated1() {
+        helpResolveException("SELECT distinct pm1.g1.e1, e2 as x, e3 as y FROM pm1.g1 ORDER BY e4"); //$NON-NLS-1$
+    }
+
+    public void testOrderByUnrelated2() {
+        helpResolveException("SELECT max(e2) FROM pm1.g1 group by e1 ORDER BY e4"); //$NON-NLS-1$
+    }
 
 }

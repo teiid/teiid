@@ -205,6 +205,13 @@ public interface ConnectorCapabilities {
     boolean supportsOrderBy();
     
     /**
+     * Support indicates connector accepts ORDER BY clause with columns not from the select    
+     * @since 6.2
+     * @return
+     */
+    boolean supportsOrderByUnrelated();
+    
+    /**
      * Whether the source supports an explicit GROUP BY clause
      * @since 6.1
      */

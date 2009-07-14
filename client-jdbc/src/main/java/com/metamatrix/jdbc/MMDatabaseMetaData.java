@@ -2856,7 +2856,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException, should never occur.
      */
     public boolean supportsOrderByUnrelated() throws SQLException {
-        return false;
+        return true;
     }
 
     /**

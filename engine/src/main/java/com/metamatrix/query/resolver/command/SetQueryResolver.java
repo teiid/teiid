@@ -92,7 +92,7 @@ public class SetQueryResolver implements CommandResolver {
         if(setQuery.getOrderBy() != null) {
             List validGroups = Collections.EMPTY_LIST;
             //order by elements must use the short name of the projected symbols
-            ResolverUtil.resolveOrderBy(setQuery.getOrderBy(), validGroups, setQuery.getProjectedSymbols(), metadata);
+            ResolverUtil.resolveOrderBy(setQuery.getOrderBy(), validGroups, setQuery.getProjectedSymbols(), metadata, false);
         } 
 
         setProjectedTypes(setQuery, firstProjectTypes);

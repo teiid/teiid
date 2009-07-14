@@ -102,6 +102,16 @@ public final class RuleMergeVirtual implements
         if (FrameUtil.isProcedure(projectNode)) {
             return root;
         }
+        
+        PlanNode sortNode = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+        
+        if (sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
+        	// the lower group cannot contain DUP_REMOVE, GROUP, UNION
+        	// or a projected expression for an unrelated sort column (until SQL 2003 sorts are supported).
+        	
+        	// for now though the simplification is to just not remove the inline view.
+        	return root;
+        }
 
         //try to remove the virtual layer if we are only doing a simple projection in the following cases:
         // 1. if the frame root is something other than a project (SET_OP, SORT, LIMIT, etc.)

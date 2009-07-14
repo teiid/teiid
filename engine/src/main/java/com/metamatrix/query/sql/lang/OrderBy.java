@@ -54,6 +54,7 @@ public class OrderBy implements LanguageObject {
 	private List sortOrder;
     private List orderTypes;
     private boolean inPlanForm = true;
+    private boolean hasUnrelated;
 
     /**
      * Constructs a default instance of this class.
@@ -192,6 +193,7 @@ public class OrderBy implements LanguageObject {
 	    }
 		OrderBy result = new OrderBy(copySymbols, getTypes());
 		result.setInPlanForm(this.inPlanForm);
+		result.setUnrelated(this.hasUnrelated);
         return result;
 	}
 
@@ -244,5 +246,13 @@ public class OrderBy implements LanguageObject {
     public void setInPlanForm(boolean inPlanForm) {
         this.inPlanForm = inPlanForm;
     }
+    
+    public boolean hasUnrelated() {
+		return hasUnrelated;
+	}
+    
+    public void setUnrelated(boolean hasUnrelated) {
+		this.hasUnrelated = hasUnrelated;
+	}
 
 }

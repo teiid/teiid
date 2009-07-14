@@ -7683,6 +7683,32 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
     }
     
+    @Test public void testOrderByOutsideOfSelect() {
+        // Create query 
+        String sql = "SELECT e1 FROM (select e1, e2 || e3 as e2 from pm1.g2) x order by e2"; //$NON-NLS-1$
+        
+        //a, a, null, c, b, a
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList("a"),
+            Arrays.asList("a"),
+            Arrays.asList(new String[] {null}),
+            Arrays.asList("c"),
+            Arrays.asList("b"),
+            Arrays.asList("a"),
+        };    
+    
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        // Plan query
+        ProcessorPlan plan = helpGetPlan(helpParse(sql), FakeMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+        
+        // Run query
+        helpProcess(plan, dataManager, expected);
+    }
+    
     
     private static final boolean DEBUG = false;
 }

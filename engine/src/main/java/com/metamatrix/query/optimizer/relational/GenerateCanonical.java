@@ -33,6 +33,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeFactory;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
@@ -445,7 +446,9 @@ public final class GenerateCanonical {
 		
 		sortNode.setProperty(NodeConstants.Info.SORT_ORDER, orderBy.getVariables());
 		sortNode.setProperty(NodeConstants.Info.ORDER_TYPES, orderBy.getTypes());
-
+		if (orderBy.hasUnrelated()) {
+			sortNode.setProperty(Info.UNRELATED_SORT, true);
+		}
 		sortNode.addGroups(GroupsUsedByElementsVisitor.getGroups(orderBy));
 
 		GenerateCanonical.attachLast(sortNode, plan);

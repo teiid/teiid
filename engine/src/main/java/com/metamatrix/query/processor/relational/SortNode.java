@@ -130,7 +130,7 @@ public class SortNode extends RelationalNode {
         this.phase = SORT;
     }
 
-    private void sortPhase() throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
+    private void sortPhase() throws BlockedException, MetaMatrixComponentException {
 		this.outputID = this.sortUtility.sort();
         this.phase = OUTPUT;
     }
@@ -154,10 +154,12 @@ public class SortNode extends RelationalNode {
             
             this.outputBeginRow += outputBatch.getRowCount();
 
+            outputBatch = removeUnrelatedColumns(outputBatch);
+
             if(rowCount != -1 && outputBeginRow > rowCount) {
                 outputBatch.setTerminationFlag(true);
             }
-            
+
             return outputBatch;
         } catch(MemoryNotAvailableException e) {
             throw BlockedOnMemoryException.INSTANCE;
@@ -165,6 +167,18 @@ public class SortNode extends RelationalNode {
             getBufferManager().unpinTupleBatch(outputID, beginPinned, endPinned);
         }
     }
+
+	private TupleBatch removeUnrelatedColumns(TupleBatch outputBatch) {
+		int extraColumns = this.getChildren()[0].getElements().size() - this.getElements().size();
+		
+		if (extraColumns > 0) {
+			for (List tuple : outputBatch.getAllTuples()) {
+				addBatchRow(tuple.subList(0, this.getElements().size()));
+			}
+			outputBatch = pullBatch();
+		}
+		return outputBatch;
+	}
 
     public void close() throws MetaMatrixComponentException {
         if (!isClosed()) {

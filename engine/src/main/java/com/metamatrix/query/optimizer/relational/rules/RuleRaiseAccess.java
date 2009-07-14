@@ -282,7 +282,19 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
         
         // If model supports the support constant parameter, then move access node
-        return CapabilitiesUtil.supportsOrderBy(modelID, metadata, capFinder);
+        if (!CapabilitiesUtil.supportsOrderBy(modelID, metadata, capFinder)) {
+        	return false;
+        }
+        
+        /* If we have an unrelated sort it cannot be pushed down if it's not supported by the source
+         * 
+         * TODO: we should be able to work this
+         */
+        if (parentNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT) && !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_UNRELATED, modelID, metadata, capFinder)) {
+        	return false;
+        }
+        
+        return true;
     }
 
     /** 

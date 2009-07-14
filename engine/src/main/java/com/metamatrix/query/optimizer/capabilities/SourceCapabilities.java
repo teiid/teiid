@@ -162,6 +162,8 @@ public interface SourceCapabilities {
          * @since 3.1 SP2
          */
         QUERY_ORDERBY,
+        
+        QUERY_ORDERBY_UNRELATED,
         /**
          * Composite support for group by and having - not
          * used by the connector layer

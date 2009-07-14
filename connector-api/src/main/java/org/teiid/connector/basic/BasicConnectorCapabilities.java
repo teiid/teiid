@@ -372,4 +372,9 @@ public class BasicConnectorCapabilities implements ConnectorCapabilities {
 		return false;
 	}
 	
+	@Override
+	public boolean supportsOrderByUnrelated() {
+		return false;
+	}
+	
 }

@@ -282,20 +282,36 @@ public class ResolverUtil {
     * Attempt to resolve the order by
     * throws QueryResolverException if the symbol is not of SingleElementSymbol type
     * @param orderBy
-    * @param fromClauseGroups groups of the FROM clause of the query (for 
+     * @param fromClauseGroups groups of the FROM clause of the query (for 
     * resolving ambiguous unqualified element names), or empty List if a Set Query
     * Order By is being resolved
-    * @param knownElements resolved elements from SELECT clause, which are only 
+     * @param knownElements resolved elements from SELECT clause, which are only 
     * ones allowed to be in ORDER BY 
-    * @param metadata QueryMetadataInterface
+     * @param metadata QueryMetadataInterface
+     * @param isSimpleQuery
     */
-    public static void resolveOrderBy(OrderBy orderBy, List fromClauseGroups, List knownElements, QueryMetadataInterface metadata)
+    public static void resolveOrderBy(OrderBy orderBy, List fromClauseGroups, List knownElements, QueryMetadataInterface metadata, boolean isSimpleQuery)
         throws QueryResolverException, QueryMetadataException, MetaMatrixComponentException {
 
         orderBy.setInPlanForm(false);
         
         // Cached state, if needed
-        String[] knownShortNames = null;
+        String[] knownShortNames = new String[knownElements.size()];
+
+        for(int i=0; i<knownElements.size(); i++) {
+            SingleElementSymbol knownSymbol = (SingleElementSymbol) knownElements.get(i);
+            if (knownSymbol instanceof ExpressionSymbol) {
+                continue;
+            }
+            
+            String name = knownSymbol.getShortName();
+            //special check for uuid element symbols
+            if (knownSymbol instanceof ElementSymbol && knownSymbol.getShortName().equalsIgnoreCase(knownSymbol.getName())) {
+                name = metadata.getShortElementName(metadata.getFullName((((ElementSymbol)knownSymbol).getMetadataID())));
+            }  
+            
+            knownShortNames[i] = name;
+        }
 
         // Collect all elements from order by
         List elements = orderBy.getVariables();
@@ -314,25 +330,6 @@ public class ResolverUtil {
                 throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbolName));
             }
 
-            // construct the array of short names of the SELECT columns (once only)
-            if(knownShortNames == null) {
-                knownShortNames = new String[knownElements.size()];
-
-                for(int i=0; i<knownElements.size(); i++) {
-                    SingleElementSymbol knownSymbol = (SingleElementSymbol) knownElements.get(i);
-                    if (knownSymbol instanceof ExpressionSymbol) {
-                        continue;
-                    }
-                    
-                    String name = knownSymbol.getShortName();
-                    //special check for uuid element symbols
-                    if (knownSymbol instanceof ElementSymbol && knownSymbol.getShortName().equalsIgnoreCase(knownSymbol.getName())) {
-                        name = metadata.getShortElementName(metadata.getFullName((((ElementSymbol)knownSymbol).getMetadataID())));
-                    }  
-                    
-                    knownShortNames[i] = name;
-                }
-            }
             // walk the SELECT col short names, looking for a match on the current ORDER BY 'short name'
             for(int i=0; i<knownShortNames.length; i++) {
             	if( shortName.equalsIgnoreCase( knownShortNames[i] )) {
@@ -387,11 +384,18 @@ public class ResolverUtil {
 
                 matchedSymbol = findMatchingElementByID(symbol, knownElements);
             }
-                        
-            TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
-            tempMetadataID.setPosition(knownElements.indexOf(matchedSymbol));
-            symbol.setMetadataID(tempMetadataID);
-            symbol.setType(matchedSymbol.getType());
+                       
+            if (matchedSymbol == null) {
+            	if (!isSimpleQuery) {
+                    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()));
+                }
+            	orderBy.setUnrelated(true);
+            } else {
+	            TempMetadataID tempMetadataID = new TempMetadataID(symbol.getName(), matchedSymbol.getType());
+	            tempMetadataID.setPosition(knownElements.indexOf(matchedSymbol));
+	            symbol.setMetadataID(tempMetadataID);
+	            symbol.setType(matchedSymbol.getType());
+            } 
         }
     }
 
@@ -429,7 +433,7 @@ public class ResolverUtil {
             }
         }
 
-        throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0043, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0043, symbol.getName()));
+        return null;
     }
 
     /** 
