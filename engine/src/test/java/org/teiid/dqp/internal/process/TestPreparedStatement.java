@@ -22,13 +22,14 @@
 
 package org.teiid.dqp.internal.process;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.dqp.internal.process.TestRequest.FakeApplicationEnvironment;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -54,7 +55,7 @@ import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
-public class TestPreparedStatement extends TestCase{
+public class TestPreparedStatement {
 	
 	private static final int SESSION_ID = 6;
 	
@@ -75,10 +76,6 @@ public class TestPreparedStatement extends TestCase{
 		
 	}
 		
-	public TestPreparedStatement(String name) { 
-		super(name);
-	}	        	    
-	
     static void helpTestProcessing(String preparedSql, List values, List[] expected, ProcessorDataManager dataManager, QueryMetadataInterface metadata, boolean callableStatement) throws Exception { 
     	helpTestProcessing(preparedSql, values, expected, dataManager, metadata, callableStatement, false);
     }
@@ -146,7 +143,7 @@ public class TestPreparedStatement extends TestCase{
         assertEquals(exHitCount, pPlanCache.hitCount); 
 	}
     	    
-    public void testWhere() throws Exception { 
+    @Test public void testWhere() throws Exception { 
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
         
@@ -163,7 +160,7 @@ public class TestPreparedStatement extends TestCase{
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false);
 	}
     
-    public void testSessionSpecificFunction() throws Exception { 
+    @Test public void testSessionSpecificFunction() throws Exception { 
         // Create query 
         String preparedSql = "SELECT user(), e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$
         
@@ -180,7 +177,7 @@ public class TestPreparedStatement extends TestCase{
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, true);
 	}
     
-    public void testFunctionWithReferencePushDown() throws Exception { 
+    @Test public void testFunctionWithReferencePushDown() throws Exception { 
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1 = pm1.g2.e1 and pm1.g1.e2+2=?"; //$NON-NLS-1$
         
@@ -203,8 +200,7 @@ public class TestPreparedStatement extends TestCase{
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
-        List values = new ArrayList();
-        values.add(new Integer(0));
+        List values = Arrays.asList(0);
 
         PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new PreparedPlanCache(), SESSION_ID, false, false);
         
@@ -266,7 +262,7 @@ public class TestPreparedStatement extends TestCase{
 		return serverRequest;
 	}
 	
-	public void testValidateCorrectValues() throws Exception {
+	@Test public void testValidateCorrectValues() throws Exception {
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e1=?"; //$NON-NLS-1$
         
@@ -278,32 +274,29 @@ public class TestPreparedStatement extends TestCase{
 	}	
 
 	/** SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)*/
-	public void testWithSubquery() throws Exception {
+	@Test public void testWithSubquery() throws Exception {
 		// Create query 
 		String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
         
-		List values = new ArrayList();
-		values.add("a"); //$NON-NLS-1$
+		List values = Arrays.asList("a"); //$NON-NLS-1$
 		
         //Create plan
         helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
 	}	
 
 	/** SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = ? AND pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?) */
-	public void testWithSubquery2() throws Exception {
+	@Test public void testWithSubquery2() throws Exception {
 		// Create query 
 		String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = ? AND pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
                 
-		List values = new ArrayList();
-		values.add("d"); //$NON-NLS-1$
-		values.add("c"); //$NON-NLS-1$
+		List values = Arrays.asList("d", "c"); //$NON-NLS-1$ //$NON-NLS-2$
 				
         //Create plan
         helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
 	}	
 
 	/** SELECT X.e1 FROM (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 = ?) as X */
-	public void testWithSubquery3() throws Exception {
+	@Test public void testWithSubquery3() throws Exception {
 		// Create query 
 		String preparedSql = "SELECT X.e1 FROM (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 = ?) as X"; //$NON-NLS-1$
         
@@ -315,7 +308,7 @@ public class TestPreparedStatement extends TestCase{
         helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
 	}	
 	
-	public void testValidateWrongValues() throws Exception {
+	@Test public void testValidateWrongValues() throws Exception {
 		// Create query 
 	    String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e2=?"; //$NON-NLS-1$
 	    TestablePreparedPlanCache prepCache = new TestablePreparedPlanCache();
@@ -359,13 +352,11 @@ public class TestPreparedStatement extends TestCase{
     	
 	}	
     
-    public void testResolveParameterValues() throws Exception {
+    @Test public void testResolveParameterValues() throws Exception {
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
-        List values = new ArrayList();
-        //values.add("a");
-        values.add("0"); //$NON-NLS-1$
+        List values = Arrays.asList("0"); //$NON-NLS-1$
         
 		helpGetProcessorPlan(preparedSql, values, new PreparedPlanCache());
     }
@@ -373,12 +364,11 @@ public class TestPreparedStatement extends TestCase{
     /**
      * TODO: there may be other ways of handling this situation in the future
      */
-    public void testLimitNoCache() throws Exception {
+    @Test public void testLimitNoCache() throws Exception {
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
-        List values = new ArrayList();
-        values.add("0"); //$NON-NLS-1$
+        List values = Arrays.asList("0"); //$NON-NLS-1$
         
         TestablePreparedPlanCache planCache = new TestablePreparedPlanCache();
         
@@ -387,6 +377,19 @@ public class TestPreparedStatement extends TestCase{
 		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), FakeMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true);
 		//make sure the plan wasn't reused
 		assertEquals(0, planCache.hitCount);
+    }
+    
+    @Test public void testUpdateProcedureCriteria() throws Exception {
+        String preparedSql = "delete from vm1.g37 where e1=?"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(1),
+        };    
+    
+		List values = Arrays.asList("aa "); //$NON-NLS-1$
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData2b(dataManager);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
     }
 
 }

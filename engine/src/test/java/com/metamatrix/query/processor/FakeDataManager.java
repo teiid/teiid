@@ -42,6 +42,7 @@ import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SetQuery;
+import com.metamatrix.query.sql.lang.TranslatableProcedureContainer;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -145,7 +146,7 @@ public class FakeDataManager implements ProcessorDataManager {
 		*  either came from a BatchedUpdateCommand or a signle 
 		*  command from an Update command.
 		*/
-		List<Update> updateCommands = new ArrayList<Update>();
+		List<TranslatableProcedureContainer> updateCommands = new ArrayList<TranslatableProcedureContainer>();
 		
 		// Apply query criteria to tuples
 		if(command instanceof Query){
@@ -176,15 +177,15 @@ public class FakeDataManager implements ProcessorDataManager {
 			    tuples = new List[filteredTuples.size()];
 			    filteredTuples.toArray(tuples);
 			}
-		} else if ( command instanceof Update ) {
+		} else if ( command instanceof TranslatableProcedureContainer ) {
 			// add single update command to a list to be executed
-			updateCommands.add((Update)command);
+			updateCommands.add((TranslatableProcedureContainer)command);
 		} else if ( command instanceof BatchedUpdateCommand ) {
         	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 )
 				// add all update commands to a list to be executed
         		for ( int i = 0; i < ((CommandContainer) command).getContainedCommands().size(); i++ ) 
-        			if ( ((CommandContainer) command).getContainedCommands().get(i) instanceof Update ) {
-        				updateCommands.add(((Update) ((CommandContainer) command).getContainedCommands().get(i)));
+        			if ( ((CommandContainer) command).getContainedCommands().get(i) instanceof TranslatableProcedureContainer ) {
+        				updateCommands.add(((TranslatableProcedureContainer) ((CommandContainer) command).getContainedCommands().get(i)));
         		}
 		}
 		
@@ -192,7 +193,7 @@ public class FakeDataManager implements ProcessorDataManager {
 		if ( updateCommands.size() > 0 ) {
 		    List<List<Integer>> filteredTuples = new ArrayList<List<Integer>>();
 			for ( int c = 0; c < updateCommands.size(); c++ ) {
-				Update update = (Update)updateCommands.get(c);
+				TranslatableProcedureContainer update = updateCommands.get(c);
 				if ( update.getCriteria() != null ) {
 				    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
 		            Map<Object, Integer> lookupMap = new HashMap<Object, Integer>();

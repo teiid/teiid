@@ -444,7 +444,7 @@ public class TestProcessor {
         }
     }    
     
-    static void sampleData2b(FakeDataManager dataMgr) {
+    public static void sampleData2b(FakeDataManager dataMgr) {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
     
         try { 

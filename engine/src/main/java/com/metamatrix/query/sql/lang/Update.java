@@ -41,9 +41,9 @@ import com.metamatrix.query.sql.visitor.SQLStringVisitor;
  * Represents a SQL Update statement of the form:
  * "UPDATE <group> SET <element> = <expression>, ... [WHERE <criteria>]".
  */
-public class Update extends ProcedureContainer {
+public class Update extends TranslatableProcedureContainer {
 
-    /** Identifies the group to be udpdated. */
+    /** Identifies the group to be updated. */
     private GroupSymbol group;
 
     private SetClauseList changeList = new SetClauseList();

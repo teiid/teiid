@@ -55,6 +55,7 @@ import com.metamatrix.query.sql.lang.DynamicCommand;
 import com.metamatrix.query.sql.lang.Into;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.TranslatableProcedureContainer;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
 import com.metamatrix.query.sql.proc.Block;
 import com.metamatrix.query.sql.proc.CommandStatement;
@@ -139,6 +140,9 @@ public final class ProcedurePlanner implements CommandPlanner {
             Map params = container.getProcedureParameters();
             plan.setParams(params);
             plan.setMetadata(metadata);
+            if (container instanceof TranslatableProcedureContainer) {
+            	plan.setImplicitParams(((TranslatableProcedureContainer)container).getImplicitParams());
+            }
         }
         
         plan.setUpdateProcedure(((CreateUpdateProcedureCommand)procCommand).isUpdateProcedure());

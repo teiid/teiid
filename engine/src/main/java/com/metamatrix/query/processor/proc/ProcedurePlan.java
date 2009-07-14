@@ -64,6 +64,7 @@ import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.VariableContext;
 import com.metamatrix.query.tempdata.TempTableStore;
 import com.metamatrix.query.tempdata.TempTableStoreImpl;
@@ -90,6 +91,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
     private List batchRows;
     private boolean lastBatch = false;
     private Map<ElementSymbol, Expression> params;
+    private Map<ElementSymbol, Reference> implicitParams;
     private QueryMetadataInterface metadata;
     
     private Map tupleSourceMap = new HashMap();     // rsName -> TupleSource
@@ -197,20 +199,29 @@ public class ProcedurePlan extends BaseProcessorPlan {
     }
 
     public void open() throws MetaMatrixProcessingException, MetaMatrixComponentException {
-    	if (this.params != null && !this.evaluatedParams) { 
-	        for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
-	            ElementSymbol param = entry.getKey();
-	            Expression expr = entry.getValue();
-	            
-	            VariableContext context = getCurrentVariableContext();
-	            Object value = this.evaluateExpression(expr);
-	
-	            //check constraint
-	            if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
-	                throw new QueryValidatorException(QueryExecPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
-	            }
-	            context.setValue(param, value);
-	        }
+    	if (!this.evaluatedParams) {
+    		if (this.params != null) { 
+		        for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
+		            ElementSymbol param = entry.getKey();
+		            Expression expr = entry.getValue();
+		            
+		            VariableContext context = getCurrentVariableContext();
+		            Object value = this.evaluateExpression(expr);
+		
+		            //check constraint
+		            if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
+		                throw new QueryValidatorException(QueryExecPlugin.Util.getString("ProcedurePlan.nonNullableParam", expr)); //$NON-NLS-1$
+		            }
+		            context.setValue(param, value);
+		        }
+    		}
+    		if (this.implicitParams != null) {
+    			for (Map.Entry<ElementSymbol, Reference> entry : this.implicitParams.entrySet()) {
+		            VariableContext context = getCurrentVariableContext();
+		            Object value = this.evaluateExpression(entry.getValue());
+		            context.setValue(entry.getKey(), value);
+				}
+    		}
     	}
     	this.evaluatedParams = true;
     }
@@ -362,6 +373,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         plan.setUpdateProcedure(this.isUpdateProcedure());
         plan.setOutputElements(this.getOutputElements());
         plan.setParams(params);
+        plan.setImplicitParams(implicitParams);
         plan.setMetadata(metadata);
         return plan;
     }
@@ -423,6 +435,10 @@ public class ProcedurePlan extends BaseProcessorPlan {
     public void setParams( Map<ElementSymbol, Expression> params ) {
         this.params = params;
     }
+    
+    public void setImplicitParams(Map<ElementSymbol, Reference> implicitParams) {
+		this.implicitParams = implicitParams;
+	}
         
 	private void createVariableContext() {
 		this.currentVarContext = new VariableContext(true);

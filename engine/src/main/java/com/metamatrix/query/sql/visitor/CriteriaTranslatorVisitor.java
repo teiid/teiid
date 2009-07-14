@@ -55,13 +55,13 @@ public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
 	// criteria selector specified on the TranslateCriteria obj
 	private CriteriaSelector selector;
 
-	// traslation in for of CompareCriteria objs on the TranslateCriteria obj
+	// translation in for of CompareCriteria objs on the TranslateCriteria obj
 	private Collection translations;
 
 	// list of translated criteria
 	private List<Criteria> translatedCriteria = new ArrayList<Criteria>();
 	
-	private Map<Reference, Reference> impliedParameters = new HashMap<Reference, Reference>();
+	private Map<ElementSymbol, Reference> implicitParams = new HashMap<ElementSymbol, Reference>();
 
     /**
      * <p> This constructor initialises the visitor</p>
@@ -71,7 +71,7 @@ public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
     }
 
     /**
-     * <p> This constructor initialises this object by setting the symbolMap.</p>
+     * <p> This constructor initializes this object by setting the symbolMap.</p>
      * @param symbolMap A map of virtual elements to their counterparts in transform
      * defining the virtual group
      */
@@ -203,7 +203,7 @@ public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
             return false;
         } else if(selector.hasElements()) {                
             Iterator selectElmnIter = selector.getElements().iterator();
-            Collection critElmnts = ElementCollectorVisitor.getElements(criteria, true);
+            Collection<ElementSymbol> critElmnts = ElementCollectorVisitor.getElements(criteria, true);
             while(selectElmnIter.hasNext()) {
                 ElementSymbol selectElmnt = (ElementSymbol) selectElmnIter.next();
                 if(critElmnts.contains(selectElmnt)) {
@@ -221,14 +221,30 @@ public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
 			Iterator transIter = this.translations.iterator();
 			while(transIter.hasNext()) {
 				CompareCriteria compCrit = (CompareCriteria) transIter.next();
-				Collection leftElmnts = ElementCollectorVisitor.getElements(compCrit.getLeftExpression(), true);
+				Collection<ElementSymbol> leftElmnts = ElementCollectorVisitor.getElements(compCrit.getLeftExpression(), true);
 				// there is always only one element
-				ElementSymbol element = (ElementSymbol)leftElmnts.iterator().next();
+				ElementSymbol element = leftElmnts.iterator().next();
 				if(obj.equals(element)) {
 					return compCrit.getRightExpression();
 				}
 			}
      	}
+    	/*
+    	 * Special handling for references in translated criteria.
+    	 * We need to create a locally valid reference name.
+    	 */
+    	if (obj instanceof Reference) {
+    		Reference implicit = (Reference)obj;
+    		ElementSymbol key = null;
+    		if (implicit.isPositional()) {
+    			key = new ElementSymbol("$INPUT." + implicit.getContextSymbol()); //$NON-NLS-1$
+    		} else {
+    			key = new ElementSymbol("$INPUT." + implicit.getExpression().getName()); //$NON-NLS-1$
+    		}
+    		key.setType(implicit.getType());
+    		this.implicitParams.put(key, implicit);
+    		return new Reference(key);
+    	}
     	return super.replaceExpression(obj);
     }
 
@@ -243,11 +259,15 @@ public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
     public Criteria getTranslatedCriteria() {
     	if(translatedCriteria.size() > 0) {
     		if(translatedCriteria.size() == 1) {
-    			return (Criteria) translatedCriteria.get(0);
+    			return translatedCriteria.get(0);
     		}
    			return new CompoundCriteria(CompoundCriteria.AND, translatedCriteria);
     	}
    		return null;
     }
-
+    
+    public Map<ElementSymbol, Reference> getImplicitParams() {
+		return implicitParams;
+	}
+    
 }

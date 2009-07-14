@@ -108,6 +108,7 @@ import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.lang.SubqueryFromClause;
 import com.metamatrix.query.sql.lang.SubquerySetCriteria;
+import com.metamatrix.query.sql.lang.TranslatableProcedureContainer;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.navigator.PostOrderNavigator;
@@ -610,21 +611,11 @@ public class QueryRewriter {
 		// get the user's command from the procedure
 		Command userCmd = procCommand.getUserCommand();
 
-		// check if there is a criteria on user's command, else return
-		// a false criteria
-		int cmdType = userCmd.getType();
-
-		Criteria userCriteria = null;
-		switch(cmdType) {
-			case Command.TYPE_DELETE:
-				userCriteria = ((Delete)userCmd).getCriteria();
-				break;
-			case Command.TYPE_UPDATE:
-				userCriteria = ((Update)userCmd).getCriteria();
-				break;
-			default:
-				return FALSE_CRITERIA;
+		if (!(userCmd instanceof TranslatableProcedureContainer)) {
+			return FALSE_CRITERIA;
 		}
+
+		Criteria userCriteria = ((TranslatableProcedureContainer)userCmd).getCriteria();
 
 		if(userCriteria == null) {
 			return FALSE_CRITERIA;
@@ -660,7 +651,8 @@ public class QueryRewriter {
 
 		// translated criteria
 		translatedCriteria = translateVisitor.getTranslatedCriteria();
-
+		((TranslatableProcedureContainer)userCmd).addImplicitParameters(translateVisitor.getImplicitParams());
+		
 		translatedCriteria = rewriteCriteria(translatedCriteria, null, context, metadata);
 
 		// apply any implicit conversions
