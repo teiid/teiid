@@ -281,6 +281,6 @@ public class AuthorizationRealm implements Comparable, Serializable {
      *         greater than obj2
      */
     static public final int compare(AuthorizationRealm obj1, AuthorizationRealm obj2) {
-        return obj1.getRealmName().compareTo(obj2.getRealmName());
+        return obj1.getRealmName().toLowerCase().compareTo(obj2.getRealmName().toLowerCase());
     }
 }
