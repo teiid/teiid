@@ -511,30 +511,34 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	Collection groups = GroupCollectorVisitor.getGroups(this.currentCommand, true);
 		int selectType = obj.getSelector().getSelectorType();
 
-		Iterator critIter = PredicateCollectorVisitor.getPredicates(userCrit).iterator();
+		Collection predicates = PredicateCollectorVisitor.getPredicates(userCrit);
+		if (predicates.size() != Criteria.separateCriteriaByAnd(userCrit).size()) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.translated_or"), userCrit); //$NON-NLS-1$
+		}
+		Iterator critIter = predicates.iterator();
 		while(critIter.hasNext()) {
 			Criteria predCrit = (Criteria) critIter.next();
 			if(selectType != CriteriaSelector.NO_TYPE) {
 				if(predCrit instanceof CompareCriteria) {
 					CompareCriteria ccCrit = (CompareCriteria) predCrit;
 					if(selectType != ccCrit.getOperator()) {
-						return;
+						continue;
 					}
 				} else if(predCrit instanceof MatchCriteria) {
 					if(selectType != CriteriaSelector.LIKE) {
-						return;
+						continue;
 					}
 				} else if(predCrit instanceof IsNullCriteria) {
 					if(selectType != CriteriaSelector.IS_NULL) {
-						return;
+						continue;
 					}
                 } else if(predCrit instanceof SetCriteria) {
                     if(selectType != CriteriaSelector.IN) {
-                        return;
+                    	continue;
                     }
                 } else if(predCrit instanceof BetweenCriteria) {
                     if(selectType != CriteriaSelector.BETWEEN) {
-                        return;
+                    	continue;
                     }
 				}
 			}

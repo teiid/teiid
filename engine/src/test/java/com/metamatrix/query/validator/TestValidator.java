@@ -1281,6 +1281,23 @@ public class TestValidator extends TestCase {
 		helpFailProcedure(procedure, userQuery, 
 				FakeMetadataObject.Props.UPDATE_PROCEDURE);
 	}
+    
+	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
+	// failure, aggregate function in query transform
+    public void testCreateUpdateProcedure18a() {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g1.e2 from pm1.g1 where TRANSLATE = CRITERIA ON (e3);\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
+
+        String userQuery = "UPDATE vm1.g3 SET x='x' where y like '%a' and e3= 1"; //$NON-NLS-1$
+
+		helpFailProcedure(procedure, userQuery, 
+				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+	}
+
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
 	// failure, translated criteria elements not present on groups of command
@@ -1385,6 +1402,20 @@ public class TestValidator extends TestCase {
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
 		helpValidateProcedure(procedure, userQuery, 
+				FakeMetadataObject.Props.UPDATE_PROCEDURE);
+	}
+    
+    public void testCreateUpdateProcedure28() {
+        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
+        procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
+        procedure = procedure + "Select pm1.g2.e2 from pm1.g2 where TRANSLATE CRITERIA;\n"; //$NON-NLS-1$
+        procedure = procedure + "ROWS_UPDATED =0;\n";         //$NON-NLS-1$
+        procedure = procedure + "END\n"; //$NON-NLS-1$
+
+        String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1 or y = 2"; //$NON-NLS-1$
+
+		helpFailProcedure(procedure, userQuery, 
 				FakeMetadataObject.Props.UPDATE_PROCEDURE);
 	}
 

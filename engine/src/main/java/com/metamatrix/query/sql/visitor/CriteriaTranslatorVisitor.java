@@ -22,13 +22,26 @@
 
 package com.metamatrix.query.sql.visitor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.sql.LanguageVisitor;
-import com.metamatrix.query.sql.lang.*;
-import com.metamatrix.query.sql.symbol.*;
-import com.metamatrix.query.sql.proc.*;
+import com.metamatrix.query.sql.lang.BetweenCriteria;
+import com.metamatrix.query.sql.lang.CompareCriteria;
+import com.metamatrix.query.sql.lang.CompoundCriteria;
+import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.lang.DependentSetCriteria;
+import com.metamatrix.query.sql.lang.IsNullCriteria;
+import com.metamatrix.query.sql.lang.MatchCriteria;
+import com.metamatrix.query.sql.lang.SetCriteria;
+import com.metamatrix.query.sql.proc.CriteriaSelector;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
+import com.metamatrix.query.sql.symbol.Reference;
 
 /**
  * <p> This class is used to translate criteria specified on the user's update command against
@@ -37,10 +50,7 @@ import com.metamatrix.query.sql.proc.*;
  * if a CriteriaSelector is specified, also if the user explicty defines translations for some
  * of the elements those translations override any symbol mappings.</p>
  */
-public class CriteriaTranslatorVisitor extends LanguageVisitor {
-
-	// map between virtual elements and the elements in its query transformation
-	private Map symbolMap;
+public class CriteriaTranslatorVisitor extends ExpressionMappingVisitor {
 
 	// criteria selector specified on the TranslateCriteria obj
 	private CriteriaSelector selector;
@@ -49,13 +59,15 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
 	private Collection translations;
 
 	// list of translated criteria
-	private List translatedCriteria;
+	private List<Criteria> translatedCriteria = new ArrayList<Criteria>();
+	
+	private Map<Reference, Reference> impliedParameters = new HashMap<Reference, Reference>();
 
     /**
      * <p> This constructor initialises the visitor</p>
      */
     public CriteriaTranslatorVisitor() {
-        this.translatedCriteria = new ArrayList();
+    	this(null);
     }
 
     /**
@@ -64,29 +76,8 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
      * defining the virtual group
      */
     public CriteriaTranslatorVisitor(Map symbolMap) {
-        this();
+        super(symbolMap);
         Assertion.isNotNull(symbolMap);
-        this.symbolMap = symbolMap;
-    }
-
-    /**
-     * <p>Get the symbol map between virtual group elements and the expressions that define
-     * them on the query transform of the virtual group.</p>
-     * @param symbolMap A map of virtual elements to their counterparts in transform
-     * defining the virtual group
-     */
-    protected Symbol getMappedSymbol(Symbol symbol) {
-        return (Symbol) this.symbolMap.get(symbol);
-    }
-
-    /**
-     * <p>Set the symbol map between virtual group elements and the expressions that define
-     * them on the query transform of the virtual group.</p>
-     * @param symbolMap A map of virtual elements to their counterparts in transform
-     * defining the virtual group
-     */
-    public void setSymbolMap(Map symbolMap) {
-    	this.symbolMap = symbolMap;
     }
 
 	/**
@@ -121,33 +112,8 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
         if (!selectorContainsCriteriaElements(obj, CriteriaSelector.BETWEEN)) {
             return;
         }
-        
-        obj.setExpression(replaceExpression(obj.getExpression()));
-        obj.setLowerExpression(replaceExpression(obj.getLowerExpression()));
-        obj.setUpperExpression(replaceExpression(obj.getUpperExpression()));
-
+        super.visit(obj);
         translatedCriteria.add(obj);
-    }
-
-    /**
-     * <p> This method updates the <code>CaseExpression</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions.</p>
-     * @param obj The CaseExpression object to be updated with translated expressions
-     */
-    public void visit(CaseExpression obj) {
-        obj.setExpression(replaceExpression(obj.getExpression()));
-        int whenCount = obj.getWhenCount();
-        ArrayList whens = new ArrayList(whenCount);
-        ArrayList thens = new ArrayList(whenCount);
-        for(int i = 0; i < whenCount; i++) {
-            whens.add(replaceExpression(obj.getWhenExpression(i)));
-            thens.add(replaceExpression(obj.getThenExpression(i)));
-        }
-        obj.setWhen(whens, thens);
-        if (obj.getElseExpression() != null) {
-            obj.setElseExpression(replaceExpression(obj.getElseExpression()));
-        }
     }
     
     /**
@@ -162,9 +128,7 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
             return;
         }
 
-        obj.setLeftExpression(replaceExpression(obj.getLeftExpression()));
-        obj.setRightExpression(replaceExpression(obj.getRightExpression()));
-
+        super.visit(obj);
     	translatedCriteria.add(obj);
     }
 
@@ -179,8 +143,7 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
         if (!selectorContainsCriteriaElements(obj, CriteriaSelector.IS_NULL)) {
             return;
         }
-		obj.setExpression(replaceExpression(obj.getExpression()));
-        
+        super.visit(obj);
         translatedCriteria.add(obj);
     }
 
@@ -196,28 +159,8 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
             return;
         }
 
-        obj.setLeftExpression(replaceExpression(obj.getLeftExpression()));
-        obj.setRightExpression(replaceExpression(obj.getRightExpression()));
-
+        super.visit(obj);
     	translatedCriteria.add(obj);
-    }
-
-    /**
-     * <p> This method updates the <code>SearchedCaseExpression</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions.</p>
-     * @param obj The SearchedCaseExpression object to be updated with translated expressions
-     */
-    public void visit(SearchedCaseExpression obj) {
-        int whenCount = obj.getWhenCount();
-        ArrayList thens = new ArrayList(whenCount);
-        for(int i = 0; i < whenCount; i++) {
-            thens.add(replaceExpression(obj.getThenExpression(i)));
-        }
-        obj.setWhen(obj.getWhen(), thens);
-        if (obj.getElseExpression() != null) {
-            obj.setElseExpression(replaceExpression(obj.getElseExpression()));
-        }
     }
     
     /**
@@ -232,19 +175,7 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
             return;
         }
         
-        obj.setExpression(replaceExpression(obj.getExpression()));
-
-    	// create a new list containing physical elements and constants
-    	List valuesList = new ArrayList(obj.getNumberOfValues());
-
-    	// iterate over the list containing virtual elements/constants
-    	Iterator valuesIter = obj.getValues().iterator();
-    	while(valuesIter.hasNext()) {
-    	    Expression valueExpr = (Expression) valuesIter.next();
-    	    valuesList.add(replaceExpression(valueExpr));
-    	}
-        obj.setValues(valuesList);
-
+        super.visit(obj);
     	translatedCriteria.add(obj);
     }
 
@@ -260,26 +191,8 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
             return;
         }
         
-        obj.setExpression(replaceExpression(obj.getExpression()));
-
+        super.visit(obj);
         translatedCriteria.add(obj);
-    }
-
-    /**
-     * <p> This method updates the <code>Function</code> object it receives as an
-     * argument by replacing the virtual elements present in the expressions in the
-     * function with translated expressions</p>
-     * @param obj The Function object to be updated with translated expressions
-     */
-    public void visit(Function obj) {
-
-    	int argLength = obj.getArgs().length;
-    	Expression args[] = new Expression [argLength];
-
-    	for(int i=0; i < argLength; i++) {
-            args[i] = replaceExpression(obj.getArg(i));
-    	}
-    	obj.setArgs(args);
     }
 
     /* ############### Helper Methods ##################   */    
@@ -302,44 +215,9 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
         return true;
     }
     
-    /**
-     * Utility method that implements a common pattern used throughout this class.
-     * @param exp an expression
-     * @return the translated expression, if the the expression needs to the
-     *         translated. Otherwise, the same expression.
-     */
-    private Expression replaceExpression(Expression exp) {
-        if(exp instanceof AliasSymbol) {
-            exp = ((AliasSymbol)exp).getSymbol();
-        }
-        if(exp instanceof ElementSymbol) {
-            exp = getTranslatedExpression((ElementSymbol)exp);
-        }
-        return exp;
-    }
-
-    /**
-     * <p> This method looks up the symbol map between <code>ElementSymbol</code>s at the virtual
-     * group level to the <code>Expression</code>s they map to in the query transformation
-     * that defines the virtual group, if there is valid translation expresion in the map the
-     * translated expression is returned else a the element symbol is
-     * returned back as there is no mapping (physical elements).</p>
-     * @param obj The virtual <code>ElementSymbol</code> object whose counterpart used in
-     * the query transformation of the virtual group is returned
-     * @return An <code>Expression</code> object or the elementSymbol if the
-     * object could not be mapped
-     */
-    private Expression getMappedExpression(ElementSymbol obj) {
-    	
-    	Expression expr = (Expression) this.symbolMap.get(obj); 
-		if(expr != null) {
-			return expr;
-		}
-		return obj;
-    }
-
-    private Expression getTranslatedExpression(ElementSymbol obj) {
-    	 if(this.translations != null) {
+    @Override
+    public Expression replaceExpression(Expression obj) {
+    	if (this.translations != null && obj instanceof ElementSymbol) {
 			Iterator transIter = this.translations.iterator();
 			while(transIter.hasNext()) {
 				CompareCriteria compCrit = (CompareCriteria) transIter.next();
@@ -350,9 +228,8 @@ public class CriteriaTranslatorVisitor extends LanguageVisitor {
 					return compCrit.getRightExpression();
 				}
 			}
-    	}
-
-		return getMappedExpression(obj);
+     	}
+    	return super.replaceExpression(obj);
     }
 
     /**
