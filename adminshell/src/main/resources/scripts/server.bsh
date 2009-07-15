@@ -27,12 +27,6 @@ Connection connect () {
     return connect(auto_jdbc_url+";user="+auto_user+";password="+auto_password);
 }
 
-Connection connectEmbedded(String url) throws SQLException {
-    c = connectURL(url, "com.metamatrix.jdbc.EmbeddedDriver");
-    currentContext().internalPrompt = "embedded:["+extractVDBName(url)+"]$ ";
-    return c;
-}
-
 /**
  * Connect to the Server with supplied URL, used TeiidDriver
  * @param url - complete url for connection
@@ -46,10 +40,14 @@ private Connection connectURL (String url, String driver) {
         String contextName = genConnectionName();
         newContext(contextName);        
         url = url+";ApplicationName="+contextName;
-		com.metamatrix.jdbc.api.Connection mmConn = connectDriver(driver, url);    
-        currentContext().internalPrompt = contextName+"["+extractVDBName(url)+"@"+extractHost(url)+"] $ ";
-        currentContext().internalAdmin = createExceptionHandlingProxy(mmConn.getAdminAPI());
-		return mmConn;	
+        try {
+        	com.metamatrix.jdbc.api.Connection mmConn = connectDriver(driver, url);
+            currentContext().internalPrompt = contextName+"["+extractVDBName(url)+"@"+extractHost(url)+"] $ ";
+            currentContext().internalAdmin = createExceptionHandlingProxy(mmConn.getAdminAPI());
+    		return mmConn;        	
+        } catch(SQLException e) {
+        	print("Failed to connect: "+e.getMessage());
+        }
     }
     else {
         print("Wrong syntax for the URL.. connection failed");
@@ -141,7 +139,7 @@ private loadConnectionProperties(String propsFile){
     }
 
     if (p.getProperty("password") != null) {
-        auto_password = p.getProperty("user");
+        auto_password = p.getProperty("password");
     }       
 }
 
