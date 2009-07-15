@@ -83,7 +83,7 @@ public class TestAuthorizationRealm extends TestCase {
             fail(realm_2 + " != " + realm_5 + " but should be."); //$NON-NLS-1$ //$NON-NLS-2$
         }
         
-        assertFalse(realm_5.equals(realm_6));
+        assertTrue(realm_5.equals(realm_6));
     }
 
 }
