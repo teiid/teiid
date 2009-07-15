@@ -2,11 +2,11 @@
 <ConfigurationDocument>
     <Header>
         <ApplicationCreatedBy>Teiid</ApplicationCreatedBy>
-        <ApplicationVersionCreatedBy>6.0</ApplicationVersionCreatedBy>
+        <ApplicationVersionCreatedBy>6.2</ApplicationVersionCreatedBy>
         <UserCreatedBy>Configuration</UserCreatedBy>
-        <ConfigurationVersion>6.0</ConfigurationVersion>
-        <MetaMatrixSystemVersion>6.0</MetaMatrixSystemVersion>
-        <Time>2009-03-20T12:23:53.919-06:00</Time>
+        <ConfigurationVersion>6.2</ConfigurationVersion>
+        <MetaMatrixSystemVersion>6.2</MetaMatrixSystemVersion>
+        <Time>2009-07-20T12:23:53.919-06:00</Time>
     </Header>
     <Configuration Name="Next Startup" ComponentType="Configuration" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
         <Properties />
