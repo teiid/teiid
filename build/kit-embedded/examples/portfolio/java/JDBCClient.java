@@ -26,7 +26,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import com.metamatrix.jdbc.EmbeddedDataSource;
+import org.teiid.jdbc.TeiidDataSource;
+import org.teiid.jdbc.TeiidDriver;
 
 public class JDBCClient {
 	public static void main(String[] args) throws Exception {
@@ -48,12 +49,15 @@ public class JDBCClient {
 		String url = "jdbc:metamatrix:Portfolio";
 		Class.forName("org.teiid.jdbc.TeiidDriver");
 		
-		return DriverManager.getConnection(url);		
+		return DriverManager.getConnection(url,"admin", "teiid");		
 	}
 	
 	static Connection getDataSourceConnection() throws Exception {
-		EmbeddedDataSource ds = new EmbeddedDataSource();
+		TeiidDataSource ds = new TeiidDataSource();
 		ds.setDatabaseName("Portfolio");
+		ds.setEmbeddedBootstrapFile("classpath:/deploy.properties");
+		ds.setUser("admin");
+		ds.setPassword("teiid");
 		return ds.getConnection();
 	}
 	
