@@ -30,7 +30,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
@@ -41,7 +40,6 @@ import org.teiid.adminapi.MonitoringAdmin;
 import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.SystemObject;
 import org.teiid.adminapi.Transaction;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;

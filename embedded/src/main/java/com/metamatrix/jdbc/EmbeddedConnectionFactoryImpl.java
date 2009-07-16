@@ -30,7 +30,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import java.util.Properties;
@@ -126,19 +125,32 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     	
         URL bootstrapURL = null;
         Properties props = info;
-		try {
+
+        try {
 			bootstrapURL = URLHelper.buildURL(info.getProperty(DQPEmbeddedProperties.BOOTURL));
 			props = PropertiesUtils.loadFromURL(bootstrapURL);
 			props.putAll(info);
 			props = PropertiesUtils.resolveNestedProperties(props);
+			
+	        // Create a temporary workspace directory
+			String teiidHome = info.getProperty(DQPEmbeddedProperties.TEIID_HOME);
+	        this.workspaceDirectory = createWorkspace(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR, "work"), dqpId); //$NON-NLS-1$
+	        props.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, this.workspaceDirectory);
+	        
+	        // create the deploy directories
+	        File deployDirectory = new File(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, "deploy")); //$NON-NLS-1$
+	        props.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, deployDirectory.getCanonicalPath());
+	        deployDirectory.mkdirs();
+	        
+	        // create log directory
+	        File logDirectory = new File(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_LOGDIR, "log")); //$NON-NLS-1$
+	        props.setProperty(DQPEmbeddedProperties.DQP_LOGDIR, logDirectory.getCanonicalPath());
+	        deployDirectory.mkdirs();
+	        
 		} catch (IOException e) {
 			throw new ApplicationInitializationException(e);
 		}
 		        	
-        // Create a temporary workspace directory
-        this.workspaceDirectory = createWorkspace(bootstrapURL, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR), dqpId);
-        props.setProperty(DQPEmbeddedProperties.DQP_WORKSPACE, this.workspaceDirectory);
-
         this.jmxServer = new JMXUtil(dqpId);
         
         EmbeddedGuiceModule config = new EmbeddedGuiceModule(bootstrapURL, props);
@@ -175,7 +187,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         DQPEmbeddedPlugin.logInfo("DQPEmbeddedManager.start_dqp", new Object[] {new Date(System.currentTimeMillis()).toString()}); //$NON-NLS-1$
     }
     
-    private ClientServiceRegistry createClientServices(ConfigurationService configService) {
+	private ClientServiceRegistry createClientServices(ConfigurationService configService) {
     	ClientServiceRegistry services  = new ClientServiceRegistry();
     
     	SessionServiceInterface sessionService = (SessionServiceInterface)this.dqp.getEnvironment().findService(DQPServiceNames.SESSION_SERVICE);
@@ -214,19 +226,12 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
      * @param identity - identity of the dqp
      * @throws MMSQLException 
      */
-    private String createWorkspace(URL bootstrapURL, String baseDir, String identity) throws ApplicationInitializationException {
-    	if (baseDir == null) {
-    		baseDir = System.getProperty("java.io.tmpdir")+"/teiid/"; //$NON-NLS-1$ //$NON-NLS-2$
-    	} else {
-			try {
-        		baseDir = URLHelper.buildURL(bootstrapURL, baseDir).getPath();
-			} catch (MalformedURLException e) {
-				throw new ApplicationInitializationException(e);
-			}
-    	}
-        System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, baseDir + "/temp"); //$NON-NLS-1$S 
+    private String createWorkspace(String teiidHome, String baseDir, String identity) throws IOException {
+		File baseFile = new File(teiidHome, baseDir);
 
-        File f = new File(baseDir, identity);
+		System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, baseFile.getCanonicalPath() + "/temp"); //$NON-NLS-1$S 
+
+        File f = new File(baseFile, identity);
 
         // If directory already exists then try to delete it; because we may have
         // failed to delete at end of last run (JVM holds lock on jar files)
@@ -238,7 +243,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         if (!f.exists()) {
             f.mkdirs();
         }  
-        return f.getAbsolutePath();
+        return f.getCanonicalPath();
     }
     
     /**

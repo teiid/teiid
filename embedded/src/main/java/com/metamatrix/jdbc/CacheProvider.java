@@ -33,16 +33,18 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
 @Singleton
 class CacheProvider implements Provider<org.jboss.cache.Cache> {
 	
-	@Inject @Named("WorkspaceDir") String workspaceDir;
+	@Inject @Named("DQPProperties") Properties props;
 
 	public Cache get() {
 		Cache cache = new DefaultCacheFactory().createCache("jboss-cache-configuration.xml", false); //$NON-NLS-1$
 		List<IndividualCacheLoaderConfig> configs = cache.getConfiguration().getCacheLoaderConfig().getIndividualCacheLoaderConfigs();
 		Properties p = configs.get(0).getProperties();
+		String workspaceDir = this.props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR);
 		p.setProperty("location", workspaceDir + "/cache"); //$NON-NLS-1$ //$NON-NLS-2$
 		configs.get(0).setProperties(p);
 		return cache;

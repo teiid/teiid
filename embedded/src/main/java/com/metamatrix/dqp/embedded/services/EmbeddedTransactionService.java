@@ -48,7 +48,7 @@ public class EmbeddedTransactionService extends TransactionServerImpl {
         	props = new Properties(props);
             props.setProperty(TransactionService.HOSTNAME, "dqp"); //$NON-NLS-1$
             props.setProperty(TransactionService.VMNAME, props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY));
-            props.setProperty(TransactionService.TXN_STORE_DIR, props.getProperty(DQPEmbeddedProperties.DQP_WORKSPACE));
+            props.setProperty(TransactionService.TXN_STORE_DIR, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR));
             this.setTransactionProvider(ArjunaTransactionProvider.getInstance(props));
         } catch (XATransactionException e) {
             throw new ApplicationInitializationException(e);

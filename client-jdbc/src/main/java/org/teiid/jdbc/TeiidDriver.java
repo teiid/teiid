@@ -27,18 +27,14 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.util.ApplicationInfo;
-import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.JDBCPlugin;
-import com.metamatrix.jdbc.MMSQLException;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**

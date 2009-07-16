@@ -22,14 +22,10 @@
 
 package com.metamatrix.dqp.service;
 
-import org.teiid.connector.api.CacheScope;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
-import com.metamatrix.cache.Cache;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.dqp.message.RequestID;
 
 /**
  */

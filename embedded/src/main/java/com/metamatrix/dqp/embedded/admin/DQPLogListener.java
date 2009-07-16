@@ -25,7 +25,6 @@ package com.metamatrix.dqp.embedded.admin;
 import org.teiid.adminapi.EmbeddedLogger;
 
 import com.metamatrix.core.log.LogListener;
-import com.metamatrix.core.log.LogMessage;
 import com.metamatrix.core.log.MessageLevel;
 
 

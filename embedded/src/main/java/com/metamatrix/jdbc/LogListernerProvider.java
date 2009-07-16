@@ -22,8 +22,7 @@
 
 package com.metamatrix.jdbc;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.File;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -32,50 +31,23 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.metamatrix.common.protocol.URLHelper;
-import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.log.JavaLogWriter;
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
 @Singleton
 class LogListernerProvider implements Provider<LogListener> {
+	
 	@Inject @Named("DQPProperties")
 	Properties props;
 	
-	@Inject @Named("BootstrapURL")
-	URL dqpURL;
-	
 	@Override
 	public LogListener get() {
-        String logFile = this.props.getProperty(DQPEmbeddedProperties.DQP_LOGFILE);
+        String logDirectory = this.props.getProperty(DQPEmbeddedProperties.DQP_LOGDIR);
         String instanceId = this.props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "0"); //$NON-NLS-1$        
-        
-        // Configure Logging            
-        try {
-        	String dqpURLString = dqpURL.toString(); 
-        	dqpURL = URLHelper.buildURL(dqpURLString);
-        	if (logFile != null) {
-                String modifiedLogFileName = logFile;                    
-                int dotIndex = logFile.lastIndexOf('.');
-                if (dotIndex != -1) {
-                    modifiedLogFileName = logFile.substring(0,dotIndex)+"_"+instanceId+"."+logFile.substring(dotIndex+1); //$NON-NLS-1$ //$NON-NLS-2$
-                }
-                else {
-                    modifiedLogFileName = logFile+"_"+instanceId; //$NON-NLS-1$
-                }
-                URL logURL = URLHelper.buildURL(dqpURL, modifiedLogFileName);
-                
-                // TODO: The Log4j File appender needs to be created with the above name
-                // since we do not have handle on the Log4J configuration we come back to this issue.
-                // until then just manage on the properties file.
-                System.setProperty("dqp.log4jFile", logURL.getPath()); //$NON-NLS-1$ // hack
-                return new Log4jListener();
-        	}
-    		return new JavaLogWriter();
-        } catch (MalformedURLException e) {
-        	throw new MetaMatrixRuntimeException(e);
-        }
+
+    	File logFile = new File(logDirectory, "teiid_"+instanceId+".log"); //$NON-NLS-1$ //$NON-NLS-2$
+    	System.setProperty("dqp.log4jFile", logFile.getAbsolutePath()); //$NON-NLS-1$ // hack
+    	return new Log4jListener();
 	}
 
 	/**

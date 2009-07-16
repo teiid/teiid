@@ -49,7 +49,8 @@ public class TestLocalBufferService extends TestCase {
             Application r = new Application();
             ConfigurationService cs = new EmbeddedConfigurationService();
             Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest1.properties"); //$NON-NLS-1$
-            p.setProperty(DQPEmbeddedProperties.DQP_WORKSPACE, System.getProperty("java.io.tmpdir")+"/metamatrix/1");         //$NON-NLS-1$ //$NON-NLS-2$ 
+            p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
+            p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, System.getProperty("java.io.tmpdir")+"/teiid/deploy");         //$NON-NLS-1$ //$NON-NLS-2$
             cs.initialize(p);
             r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
             EmbeddedBufferService svc = new EmbeddedBufferService();
@@ -72,7 +73,8 @@ public class TestLocalBufferService extends TestCase {
         Application r = new Application();
         cs = new EmbeddedConfigurationService();
         Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest2.properties"); //$NON-NLS-1$
-        p.setProperty(DQPEmbeddedProperties.DQP_WORKSPACE, System.getProperty("java.io.tmpdir")+"/metamatrix/1");         //$NON-NLS-1$ //$NON-NLS-2$ 
+        p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, System.getProperty("java.io.tmpdir")+"/teiid/deploy");         //$NON-NLS-1$ //$NON-NLS-2$
         cs.initialize(p);
         r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
         svc = new EmbeddedBufferService();
@@ -98,7 +100,8 @@ public class TestLocalBufferService extends TestCase {
         Application r = new Application();
         ConfigurationService cs = new EmbeddedConfigurationService();
         Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest3.properties"); //$NON-NLS-1$
-        p.setProperty(DQPEmbeddedProperties.DQP_WORKSPACE, System.getProperty("java.io.tmpdir")+"/metamatrix/1");         //$NON-NLS-1$ //$NON-NLS-2$ 
+        p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, System.getProperty("java.io.tmpdir")+"/teiid/deploy");         //$NON-NLS-1$ //$NON-NLS-2$
         cs.initialize(p);            
         r.installService(DQPServiceNames.CONFIGURATION_SERVICE, cs);
         svc = new EmbeddedBufferService();

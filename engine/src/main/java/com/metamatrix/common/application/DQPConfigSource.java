@@ -22,10 +22,7 @@
 
 package com.metamatrix.common.application;
 
-import java.util.Map;
 import java.util.Properties;
-
-import com.google.inject.Binder;
 
 /**
  * This interface represents a source of DQP configuration information.

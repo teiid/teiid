@@ -82,8 +82,6 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 		bind(URL.class).annotatedWith(Names.named("BootstrapURL")).toInstance(bootstrapURL); //$NON-NLS-1$
 		bindConstant().annotatedWith(Names.named("HostName")).to("embedded"); //$NON-NLS-1$ //$NON-NLS-2$
 		bindConstant().annotatedWith(Names.named("ProcessName")).to(props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "test")); //$NON-NLS-1$ //$NON-NLS-2$
-		String workspaceDir = props.getProperty(DQPEmbeddedProperties.DQP_WORKSPACE, System.getProperty("user.dir")); //$NON-NLS-1$
-		bindConstant().annotatedWith(Names.named("WorkspaceDir")).to(workspaceDir); //$NON-NLS-1$
 		bind(Properties.class).annotatedWith(Names.named("DQPProperties")).toInstance(this.props); //$NON-NLS-1$
 
 		InetAddress address = resolveHostAddress(props.getProperty(DQPEmbeddedProperties.BIND_ADDRESS));

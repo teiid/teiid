@@ -35,7 +35,10 @@ import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
 public class EmbeddedTestUtil {
 	
 	public static Properties getProperties() throws IOException {
-		return getProperties(UnitTestUtil.getTestScratchPath()+"/dqp/dqp.properties"); //$NON-NLS-1$
+		Properties p = getProperties(UnitTestUtil.getTestScratchPath()+"/dqp/dqp.properties"); //$NON-NLS-1$
+        p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, System.getProperty("java.io.tmpdir")+"/teiid/deploy");         //$NON-NLS-1$ //$NON-NLS-2$
+        return p;
 	}
 	
     public static Properties getProperties(String file) throws IOException {

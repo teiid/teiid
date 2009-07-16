@@ -1002,14 +1002,19 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
         
     /**
-     * Get path(s) for VDB(s) that are availble from the configuration to the DQP
+     * Get path(s) for VDB(s) that are available from the configuration to the DQP
      * engine. 
      * @return URLs to the resources.
      */
     public URL[] getVDBLocations() {
         ArrayList vdbs = new ArrayList();
-        String vdbProperty = getUserPreferences().getProperty(DQPEmbeddedProperties.VDB_DEFINITION);
-        if (vdbProperty != null  && vdbProperty.length() != 0) {
+        addVDBs(vdbs, getUserPreferences().getProperty(DQPEmbeddedProperties.VDB_DEFINITION));
+        addVDBs(vdbs, getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR));
+        return (URL[])vdbs.toArray(new URL[vdbs.size()]);
+    }
+
+	private void addVDBs(ArrayList vdbs, String vdbProperty) {
+		if (vdbProperty != null  && vdbProperty.length() != 0) {
             StringTokenizer st = new StringTokenizer(vdbProperty, VDB_LIST_SEPARATOR);
             while( st.hasMoreTokens() ) {
                 String token = st.nextToken();
@@ -1022,8 +1027,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 vdbs.add(vdbURL);
             }            
         }
-        return (URL[])vdbs.toArray(new URL[vdbs.size()]);
-    }
+	}
  
     /**
      * Load the Connector Bindings from the VDBS and ServerConfig.xml
@@ -1140,11 +1144,9 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 	}
 
 	protected File getDeployDir() {
-		File f = new File(getFullyQualifiedPath("deploy").getPath()); //$NON-NLS-1$
-		if (f.exists()) {
-			return f;
-		}
-		return new File(getWorkDir(), "deploy"); //$NON-NLS-1$
+        String deployDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR);
+        File deployDir = new File(deployDirectory);
+        return deployDir;
 	}
         
     /**
@@ -1384,8 +1386,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         return Boolean.valueOf(getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_USEDISK, "true")).booleanValue(); //$NON-NLS-1$        
     }
     
-    public File getWorkDir() {
-        String workDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_WORKSPACE, System.getProperty("java.io.tmpdir") + "/teiid"); //$NON-NLS-1$ //$NON-NLS-2$
+    private File getWorkDir() {
+        String workDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_WORKDIR);
         File workDir = new File(workDirectory);
         workDir.mkdirs();
         return workDir;

@@ -23,12 +23,8 @@
 package org.teiid.jdbc;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
 import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,15 +36,12 @@ import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.socket.client.SocketServerConnectionFactory;
-import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.BaseDriver;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.jdbc.MMConnection;
 import com.metamatrix.jdbc.MMSQLException;
-import com.metamatrix.jdbc.api.ConnectionProperties;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 /**

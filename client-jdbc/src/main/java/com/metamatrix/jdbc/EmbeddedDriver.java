@@ -22,6 +22,7 @@
 
 package com.metamatrix.jdbc;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -41,6 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 
 import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.common.comm.api.ServerConnection;
@@ -330,13 +332,14 @@ public final class EmbeddedDriver extends BaseDriver {
 		private ServerConnectionFactory connectionFactory;
         private ClassLoader classLoader; 
         private URL url;
+        Properties props;
 
         public EmbeddedTransport(URL dqpURL, Properties info) throws SQLException {
 
         	this.url = dqpURL;
         	
             //Load the properties from dqp.properties file
-            Properties props = loadDQPProperties(dqpURL);
+            props = loadDQPProperties(dqpURL);
             props.putAll(info);
             
             props = PropertiesUtils.resolveNestedProperties(props);
@@ -354,7 +357,7 @@ public final class EmbeddedDriver extends BaseDriver {
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
             
 	            try {
-		            String configLocation = props.getProperty(DQPEmbeddedProperties.VDB_DEFINITION, "./deploy/"); //$NON-NLS-1$ 
+		            String configLocation = props.getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, "./deploy/"); //$NON-NLS-1$ 
 		            if (!configLocation.endsWith("/")) { //$NON-NLS-1$
 		            	configLocation = configLocation + "/"; //$NON-NLS-1$
 		            }
@@ -462,6 +465,7 @@ public final class EmbeddedDriver extends BaseDriver {
                 Thread.currentThread().setContextClassLoader(classLoader);       
                 try {
                 	info.setProperty(DQPEmbeddedProperties.BOOTURL, url.toExternalForm());
+                	info.setProperty(DQPEmbeddedProperties.TEIID_HOME, getHomeDirectory(url));
 					ServerConnection conn = connectionFactory.createConnection(info);
 					return new MMConnection(conn, info, url.toExternalForm());
 				} catch (CommunicationException e) {
@@ -473,6 +477,32 @@ public final class EmbeddedDriver extends BaseDriver {
                 Thread.currentThread().setContextClassLoader(current);
             }            
         }
+        
+        String getHomeDirectory(URL url) throws SQLException {
+        	try {
+        		// check the system wide
+        		String teiidHome = System.getProperty(DQPEmbeddedProperties.TEIID_HOME);
+
+        		// then check the deploy.properties
+        		if (teiidHome == null) {
+        			teiidHome = this.props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
+        		}
+        		
+        		if (teiidHome == null) {
+    	        	if (getDefaultConnectionURL().equals(url.toString())) {
+    	        		teiidHome = System.getProperty("user.dir")+"/teiid"; //$NON-NLS-1$ //$NON-NLS-2$
+    	        	}
+    	        	else {
+    	        		URL installDirectory = URLHelper.buildURL(url, "."); //$NON-NLS-1$
+    	        		teiidHome = installDirectory.getPath();
+    	        	}
+        		}
+        		File f = new File(teiidHome); 
+        		return f.getCanonicalPath();
+        	} catch(IOException e) {
+        		throw MMSQLException.create(e);
+        	}
+        }      
         
     }
 

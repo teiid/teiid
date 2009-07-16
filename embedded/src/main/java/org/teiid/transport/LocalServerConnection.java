@@ -33,17 +33,14 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.client.ExceptionUtil;
-import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
-import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
-import com.metamatrix.platform.security.api.SessionToken;
 
 public class LocalServerConnection implements ServerConnection {
 	

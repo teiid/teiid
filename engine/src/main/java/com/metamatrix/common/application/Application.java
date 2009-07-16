@@ -25,18 +25,9 @@ package com.metamatrix.common.application;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.ResourceFinder;
-import com.metamatrix.dqp.service.DQPServiceNames;
-import com.metamatrix.dqp.util.LogConstants;
 
 /**
  */

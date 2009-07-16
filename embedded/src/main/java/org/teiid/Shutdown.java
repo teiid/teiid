@@ -58,7 +58,7 @@ public class Shutdown {
 			// enable socket communication by default.
 			props.setProperty(DQPEmbeddedProperties.ENABLE_SOCKETS, Boolean.TRUE.toString());
 			props.setProperty(DQPEmbeddedProperties.BOOTURL, f.getCanonicalPath());
-			
+			props.setProperty(DQPEmbeddedProperties.TEIID_HOME,f.getParentFile().getCanonicalPath());
 		} catch (IOException e) {
 			System.out.println("Failed to load bootstrap properties file."); //$NON-NLS-1$
 			e.printStackTrace();

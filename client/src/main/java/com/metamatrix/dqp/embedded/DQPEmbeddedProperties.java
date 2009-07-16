@@ -25,8 +25,7 @@ package com.metamatrix.dqp.embedded;
 /**
  */
 public interface DQPEmbeddedProperties {
-
-    public static final String DQP_LOGFILE = "dqp.logFile"; //$NON-NLS-1$
+    public static final String DQP_LOGDIR = "dqp.logdir"; //$NON-NLS-1$
     public static final String DQP_EXTENSIONS = "dqp.extensions"; //$NON-NLS-1$
     public static final String DQP_CONFIGFILE = "dqp.configFile"; //$NON-NLS-1$
     public static final String DQP_METADATA_SYSTEMURL = "dqp.metadata.systemURL"; //$NON-NLS-1$    
@@ -35,6 +34,7 @@ public interface DQPEmbeddedProperties {
     public static final String COMMON_EXTENSION_CLASPATH = "dqp.extension.CommonClasspath"; //$NON-NLS-1$
     public static final String DQP_KEYSTORE = "dqp.keystore"; //$NON-NLS-1$
     public static final String DQP_WORKDIR = "dqp.workdir"; //$NON-NLS-1$
+    public static final String DQP_DEPLOYDIR = "dqp.deploydir"; //$NON-NLS-1$
     public static final String DQP_LIBDIR = "dqp.lib"; //$NON-NLS-1$
     public static final String PROCESSNAME = "processName"; //$NON-NLS-1$
     public static final String CLUSTERNAME = "clusterName"; //$NON-NLS-1$
@@ -49,11 +49,11 @@ public interface DQPEmbeddedProperties {
     //derived properties
     public static final String DQP_IDENTITY = "dqp.identity"; //$NON-NLS-1$
     public static final String DQP_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
-    public static final String DQP_WORKSPACE = "dqp.workspacedir"; //$NON-NLS-1$
     public static final String BOOTURL = "bootURL"; //$NON-NLS-1$
     public static final String ENABLE_SOCKETS = "sockets.enabled"; //$NON-NLS-1$
     public static final String HOST_ADDRESS = "hostAddress"; //$NON-NLS-1$
     public static final String DQP_BOOTSTRAP_FILE = "bootstrapFile"; //$NON-NLS-1$
+    public static final String TEIID_HOME = "teiid.home"; //$NON-NLS-1$
     
     public interface BufferService {
         /**

@@ -21,8 +21,6 @@
  */
 package org.teiid;
 
-import javax.management.ObjectName;
-
 import com.metamatrix.common.util.JMXUtil;
 
 public interface ServerMBean {
