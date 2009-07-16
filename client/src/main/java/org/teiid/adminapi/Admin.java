@@ -22,9 +22,6 @@
 
 package org.teiid.adminapi;
 
-import com.metamatrix.admin.RolesAllowed;
-
-
 /**
  * Marker interface for all MetaMatrix administration - core.
  * 
