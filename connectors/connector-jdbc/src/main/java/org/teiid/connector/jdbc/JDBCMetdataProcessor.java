@@ -178,6 +178,7 @@ public class JDBCMetdataProcessor {
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
 			throws SQLException, ConnectorException {
 		ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
+		int rsColumns = columns.getMetaData().getColumnCount();
 		while (columns.next()) {
 			String tableCatalog = columns.getString(1);
 			String tableSchema = columns.getString(2);
@@ -200,6 +201,9 @@ public class JDBCMetdataProcessor {
 				metadataFactory.addAnnotation(remarks, column);
 			}
 			column.setCharOctetLength(columns.getInt(16));
+			if (rsColumns >= 23) {
+				column.setAutoIncrementable("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
+			}
 		}
 		columns.close();
 	}

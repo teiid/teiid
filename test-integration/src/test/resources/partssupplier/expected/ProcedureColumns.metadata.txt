@@ -1,4 +1,4 @@
-ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
+ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName
 PROCEDURE_CAT	12	string	java.lang.String	1	null	PartsSupplier	null
 PROCEDURE_SCHEM	12	string	java.lang.String	0	System.VirtualDatabases	PartsSupplier	null
 PROCEDURE_NAME	12	string	java.lang.String	0	System.ProcedureParams	PartsSupplier	null
@@ -12,4 +12,10 @@ SCALE	5	short	java.lang.Short	1	null	PartsSupplier	null
 RADIX	4	integer	java.lang.Integer	0	System.ProcedureParams	PartsSupplier	null
 NULLABLE	4	integer	java.lang.Integer	1	null	PartsSupplier	null
 REMARKS	12	string	java.lang.String	1	null	PartsSupplier	null
-POSITION	4	integer	java.lang.Integer	0	System.ProcedureParams	PartsSupplier	null
+COLUMN_DEF	12	string	java.lang.String	1	null	PartsSupplier	null
+SQL_DATA_TYPE	12	string	java.lang.String	1	null	PartsSupplier	null
+SQL_DATETIME_SUB	12	string	java.lang.String	1	null	PartsSupplier	null
+CHAR_OCTET_LENGTH	12	string	java.lang.String	1	null	PartsSupplier	null
+ORDINAL_POSITION	4	integer	java.lang.Integer	0	System.ProcedureParams	PartsSupplier	null
+IS_NULLABLE	12	string	java.lang.String	1	null	PartsSupplier	null
+SPECIFIC_NAME	12	string	java.lang.String	1	null	PartsSupplier	null

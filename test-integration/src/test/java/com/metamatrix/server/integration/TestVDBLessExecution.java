@@ -95,9 +95,9 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	DatabaseMetaData metadata = conn.getMetaData();
     	this.internalResultSet = metadata.getColumns(null, null, "SummitData%", "%"); //$NON-NLS-1$ //$NON-NLS-2$
     	assertResults(new String[] {
-    			"TABLE_CAT[string]    TABLE_SCHEM[string]    TABLE_NAME[string]    COLUMN_NAME[string]    DATA_TYPE[short]    TYPE_NAME[string]    COLUMN_SIZE[integer]    BUFFER_LENGTH[string]    DECIMAL_DIGITS[integer]    NUM_PREC_RADIX[integer]    NULLABLE[integer]    REMARKS[string]    COLUMN_DEF[string]    SQL_DATA_TYPE[string]    SQL_DATETIME_SUB[string]    CHAR_OCTET_LENGTH[integer]    ORDINAL_POSITION[integer]    IS_NULLABLE[string]", //$NON-NLS-1$
-    			"null    VDBLess    SummitData.EXAMPLE    TRADEID    12    string    4000    null    0    0    0    null    null    null    null    0    1    YES", //$NON-NLS-1$
-    			"null    VDBLess    SummitData.EXAMPLE    NOTIONAL    4    integer    10    null    0    0    0    null    null    null    null    0    2    YES" //$NON-NLS-1$
+    			"TABLE_CAT[string]    TABLE_SCHEM[string]    TABLE_NAME[string]    COLUMN_NAME[string]    DATA_TYPE[short]    TYPE_NAME[string]    COLUMN_SIZE[integer]    BUFFER_LENGTH[string]    DECIMAL_DIGITS[integer]    NUM_PREC_RADIX[integer]    NULLABLE[integer]    REMARKS[string]    COLUMN_DEF[string]    SQL_DATA_TYPE[string]    SQL_DATETIME_SUB[string]    CHAR_OCTET_LENGTH[integer]    ORDINAL_POSITION[integer]    IS_NULLABLE[string]    SCOPE_CATALOG[string]    SCOPE_SCHEMA[string]    SCOPE_TABLE[string]    SOURCE_DATA_TYPE[string]    IS_AUTOINCREMENT[string]", //$NON-NLS-1$
+    			"null    VDBLess    SummitData.EXAMPLE    TRADEID    12    string    4000    null    0    0    0    null    null    null    null    0    1    YES    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    SummitData.EXAMPLE    NOTIONAL    4    integer    10    null    0    0    0    null    null    null    null    0    2    YES    null    null    null    null    NO", //$NON-NLS-1$
     	});
     }
     
@@ -106,24 +106,24 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	DatabaseMetaData metadata = conn.getMetaData();
     	this.internalResultSet = metadata.getColumns(null, null, "%smalla", "%"); //$NON-NLS-1$ //$NON-NLS-2$
     	assertResults(new String[] {
-    		   "TABLE_CAT[string]    TABLE_SCHEM[string]    TABLE_NAME[string]    COLUMN_NAME[string]    DATA_TYPE[short]    TYPE_NAME[string]    COLUMN_SIZE[integer]    BUFFER_LENGTH[string]    DECIMAL_DIGITS[integer]    NUM_PREC_RADIX[integer]    NULLABLE[integer]    REMARKS[string]    COLUMN_DEF[string]    SQL_DATA_TYPE[string]    SQL_DATETIME_SUB[string]    CHAR_OCTET_LENGTH[integer]    ORDINAL_POSITION[integer]    IS_NULLABLE[string]", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    INTKEY    4    integer    10    null    0    10    0    null    null    null    null    0    1    YES", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    STRINGKEY    12    string    4000    null    0    0    0    null    null    null    null    20    2    YES", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    INTNUM    4    integer    10    null    0    10    1    null    null    null    null    0    3    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    STRINGNUM    12    string    4000    null    0    0    1    null    null    null    null    20    4    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    FLOATNUM    7    float    20    null    0    2    1    null    null    null    null    0    5    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    LONGNUM    -5    long    19    null    0    10    1    null    null    null    null    0    6    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    DOUBLENUM    8    double    20    null    0    2    1    null    null    null    null    0    7    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    BYTENUM    5    short    5    null    0    10    1    null    null    null    null    0    8    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    DATEVALUE    91    date    10    null    0    10    1    null    null    null    null    0    9    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    TIMEVALUE    92    time    8    null    0    10    1    null    null    null    null    0    10    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    TIMESTAMPVALUE    93    timestamp    29    null    0    10    1    null    null    null    null    0    11    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    BOOLEANVALUE    5    short    5    null    0    10    1    null    null    null    null    0    12    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    CHARVALUE    1    char    1    null    0    0    1    null    null    null    null    2    13    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    SHORTVALUE    5    short    5    null    0    10    1    null    null    null    null    0    14    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    BIGINTEGERVALUE    -5    long    19    null    0    10    1    null    null    null    null    0    15    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    BIGDECIMALVALUE    2    bigdecimal    20    null    0    10    1    null    null    null    null    0    16    NO", //$NON-NLS-1$
-			   "null    VDBLess    Derby.SMALLA    OBJECTVALUE    12    string    4000    null    0    0    1    null    null    null    null    4096    17    NO" //$NON-NLS-1$
+    			"TABLE_CAT[string]    TABLE_SCHEM[string]    TABLE_NAME[string]    COLUMN_NAME[string]    DATA_TYPE[short]    TYPE_NAME[string]    COLUMN_SIZE[integer]    BUFFER_LENGTH[string]    DECIMAL_DIGITS[integer]    NUM_PREC_RADIX[integer]    NULLABLE[integer]    REMARKS[string]    COLUMN_DEF[string]    SQL_DATA_TYPE[string]    SQL_DATETIME_SUB[string]    CHAR_OCTET_LENGTH[integer]    ORDINAL_POSITION[integer]    IS_NULLABLE[string]    SCOPE_CATALOG[string]    SCOPE_SCHEMA[string]    SCOPE_TABLE[string]    SOURCE_DATA_TYPE[string]    IS_AUTOINCREMENT[string]", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    INTKEY    4    integer    10    null    0    10    0    null    null    null    null    0    1    YES    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    STRINGKEY    12    string    4000    null    0    0    0    null    null    null    null    20    2    YES    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    INTNUM    4    integer    10    null    0    10    1    null    null    null    null    0    3    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    STRINGNUM    12    string    4000    null    0    0    1    null    null    null    null    20    4    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    FLOATNUM    7    float    20    null    0    2    1    null    null    null    null    0    5    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    LONGNUM    -5    long    19    null    0    10    1    null    null    null    null    0    6    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    DOUBLENUM    8    double    20    null    0    2    1    null    null    null    null    0    7    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    BYTENUM    5    short    5    null    0    10    1    null    null    null    null    0    8    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    DATEVALUE    91    date    10    null    0    10    1    null    null    null    null    0    9    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    TIMEVALUE    92    time    8    null    0    10    1    null    null    null    null    0    10    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    TIMESTAMPVALUE    93    timestamp    29    null    0    10    1    null    null    null    null    0    11    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    BOOLEANVALUE    5    short    5    null    0    10    1    null    null    null    null    0    12    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    CHARVALUE    1    char    1    null    0    0    1    null    null    null    null    2    13    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    SHORTVALUE    5    short    5    null    0    10    1    null    null    null    null    0    14    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    BIGINTEGERVALUE    -5    long    19    null    0    10    1    null    null    null    null    0    15    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    BIGDECIMALVALUE    2    bigdecimal    20    null    0    10    1    null    null    null    null    0    16    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    OBJECTVALUE    12    string    4000    null    0    0    1    null    null    null    null    4096    17    NO    null    null    null    null    NO", //$NON-NLS-1$
     	});
     }
     
@@ -202,10 +202,10 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	DatabaseMetaData metadata = conn.getMetaData();
     	this.internalResultSet = metadata.getProcedures(null, null, "Derby.%JAR"); //$NON-NLS-1$
     	assertResults(new String[] {
-    			"PROCEDURE_CAT[string]    PROCEDURE_SCHEM[string]    PROCEDURE_NAME[string]    RESERVED_1[string]    RESERVED_2[string]    RESERVED_3[string]    REMARKS[string]    PROCEDURE_TYPE[short]", //$NON-NLS-1$
-				"null    VDBLess    Derby.INSTALL_JAR    null    null    null    null    1", //$NON-NLS-1$
-				"null    VDBLess    Derby.REMOVE_JAR    null    null    null    null    1", //$NON-NLS-1$
-				"null    VDBLess    Derby.REPLACE_JAR    null    null    null    null    1" //$NON-NLS-1$
+    			"PROCEDURE_CAT[string]    PROCEDURE_SCHEM[string]    PROCEDURE_NAME[string]    RESERVED_1[string]    RESERVED_2[string]    RESERVED_3[string]    REMARKS[string]    PROCEDURE_TYPE[short]    SPECIFIC_NAME[string]", //$NON-NLS-1$
+    			"null    VDBLess    Derby.INSTALL_JAR    null    null    null    null    1    Derby.INSTALL_JAR", //$NON-NLS-1$
+    			"null    VDBLess    Derby.REMOVE_JAR    null    null    null    null    1    Derby.REMOVE_JAR", //$NON-NLS-1$
+    			"null    VDBLess    Derby.REPLACE_JAR    null    null    null    null    1    Derby.REPLACE_JAR", //$NON-NLS-1$
     	});
     }
     
@@ -214,12 +214,12 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	DatabaseMetaData metadata = conn.getMetaData();
     	this.internalResultSet = metadata.getProcedureColumns(null, null, "Derby.SQLUDTS", null); //$NON-NLS-1$
     	assertResults(new String[] {
-    			"PROCEDURE_CAT[string]    PROCEDURE_SCHEM[string]    PROCEDURE_NAME[string]    COLUMN_NAME[string]    COLUMN_TYPE[short]    DATA_TYPE[integer]    TYPE_NAME[string]    PRECISION[integer]    LENGTH[integer]    SCALE[short]    RADIX[integer]    NULLABLE[integer]    REMARKS[string]    POSITION[integer]", //$NON-NLS-1$
-				"null    VDBLess    Derby.SQLUDTS    CATALOGNAME    1    12    string    128    256    0    0    1    null    1", //$NON-NLS-1$
-				"null    VDBLess    Derby.SQLUDTS    SCHEMAPATTERN    1    12    string    128    256    0    0    1    null    2", //$NON-NLS-1$
-				"null    VDBLess    Derby.SQLUDTS    TYPENAMEPATTERN    1    12    string    128    256    0    0    1    null    3", //$NON-NLS-1$
-				"null    VDBLess    Derby.SQLUDTS    UDTTYPES    1    12    string    128    256    0    0    1    null    4", //$NON-NLS-1$
-				"null    VDBLess    Derby.SQLUDTS    OPTIONS    1    12    string    4000    8000    0    0    1    null    5", //$NON-NLS-1$
+    			"PROCEDURE_CAT[string]    PROCEDURE_SCHEM[string]    PROCEDURE_NAME[string]    COLUMN_NAME[string]    COLUMN_TYPE[short]    DATA_TYPE[integer]    TYPE_NAME[string]    PRECISION[integer]    LENGTH[integer]    SCALE[short]    RADIX[integer]    NULLABLE[integer]    REMARKS[string]    COLUMN_DEF[string]    SQL_DATA_TYPE[string]    SQL_DATETIME_SUB[string]    CHAR_OCTET_LENGTH[string]    ORDINAL_POSITION[integer]    IS_NULLABLE[string]    SPECIFIC_NAME[string]", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SQLUDTS    CATALOGNAME    1    12    string    128    256    0    0    1    null    null    null    null    null    1    YES    Derby.SQLUDTS.CATALOGNAME", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SQLUDTS    SCHEMAPATTERN    1    12    string    128    256    0    0    1    null    null    null    null    null    2    YES    Derby.SQLUDTS.SCHEMAPATTERN", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SQLUDTS    TYPENAMEPATTERN    1    12    string    128    256    0    0    1    null    null    null    null    null    3    YES    Derby.SQLUDTS.TYPENAMEPATTERN", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SQLUDTS    UDTTYPES    1    12    string    128    256    0    0    1    null    null    null    null    null    4    YES    Derby.SQLUDTS.UDTTYPES", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SQLUDTS    OPTIONS    1    12    string    4000    8000    0    0    1    null    null    null    null    null    5    YES    Derby.SQLUDTS.OPTIONS", //$NON-NLS-1$
     	});
     }
         

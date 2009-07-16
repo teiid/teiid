@@ -81,7 +81,7 @@ interface JDBCColumnPositions {
     interface COLUMNS {
 
         /** Number of columns to be read from results returned getElements method. */
-        static final int MAX_COLUMNS = 18;
+        static final int MAX_COLUMNS = 23;
 
         /** Position of column that contains catalog name in which the table for the column is present. */
         static final int TABLE_CAT = 1;
@@ -127,6 +127,16 @@ interface JDBCColumnPositions {
         
         /** Position of column that has an String value indicating nullablity */
         static final int IS_NULLABLE = 18;
+        
+        static final int SCOPE_CATALOG = 19;
+        
+        static final int SCOPE_SCHEMA = 20;
+        
+        static final int SCOPE_TABLE = 21;
+        
+        static final int SOURCE_DATA_TYPE = 22;
+        
+        static final int IS_AUTOINCREMENT = 23;
 
     }
 
@@ -141,7 +151,7 @@ interface JDBCColumnPositions {
      */
     interface TABLES {
 
-        /** Number of columns to be read from results returned getElements method. */
+        /** Number of columns to be read from results returned getTables method. */
         static final int MAX_COLUMNS = 11;
         
         /** Position of column that contains catalog name in which the table is present. */
@@ -151,6 +161,7 @@ interface JDBCColumnPositions {
         static final int TYPE_NAME = 8;
         static final int SELF_REFERENCING_COL_NAME = 9;
         static final int REF_GENERATION = 10;
+        static final int ISPHYSICAL = 11;
     }
 
     /**
@@ -395,7 +406,7 @@ interface JDBCColumnPositions {
     interface PROCEDURES {
 
         /** Number of columns to be read from results returned getCrossReferences method. */
-        static final int MAX_COLUMNS = 8;
+        static final int MAX_COLUMNS = 9;
 
         /** Position of column that contains catalog name of the procedure. */
         static final int PROCEDURE_CAT = 1;
@@ -415,6 +426,8 @@ interface JDBCColumnPositions {
         
         /** Position of column Procedure type. */
         static final int PROCEDURE_TYPE = 8;
+        
+        static final int SPECIFIC_NAME = 9;
     }
 
     /**
@@ -429,7 +442,7 @@ interface JDBCColumnPositions {
     interface PROCEDURE_COLUMNS {
 
         /** Number of columns to be read from results returned getProcedureColumns method. */
-        static final int MAX_COLUMNS = 14;
+        static final int MAX_COLUMNS = 20;
         
         /** Position of column that contains catalog name of the procedure. */
         static final int PROCEDURE_CAT = 1;     
@@ -457,16 +470,17 @@ interface JDBCColumnPositions {
 
         /** Position of column that contains comments. */
         static final int REMARKS = 13;
-        static final int POSITION = 14;
+        static final int COLUMN_DEF = 14;
         
-        /** position of column that contains parameter type name in the results. */
-        static final int PARAM_TYPE_NAME = 15;
-
-        /** position of column that contains null type name in the results. */
-        static final int NULL_TYPE_NAME = 16;
-
-        /** Position of column in results containing MetaMatrix data type.*/
-        static final int DATA_TYPE_NAME = 17;
+        static final int SQL_DATA_TYPE = 15;
+        static final int SQL_DATETIME_SUB = 16;
+        static final int CHAR_OCTET_LENGTH = 17;
+        
+        static final int ORDINAL_POSITION = 18;
+        
+        static final int IS_NULLABLE = 19;
+        
+        static final int SPECIFIC_NAME = 20;
     }
 
     /**
