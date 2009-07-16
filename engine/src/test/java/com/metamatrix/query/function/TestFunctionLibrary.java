@@ -1341,6 +1341,10 @@ public class TestFunctionLibrary {
         helpInvokeMethod("power", new Object[] { new Double("10"), new Double("2") }, new Double("100")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
     
+    @Test public void testInvokePower1() {
+        helpInvokeMethod("power", new Object[] { new BigDecimal("10"), new Integer(2) }, new BigDecimal("100")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
     @Test public void testInvokeSqrt() {
         helpInvokeMethod("sqrt", new Object[] { new Double("4")}, new Double("2")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }

@@ -350,8 +350,7 @@
 							<para>x to the y power</para>
 						</entry>
 						<entry>
-							<para>x in {integer, long, float, double, biginteger}, if x is
-								biginteger then return type is biginteger, else double</para>
+							<para>x in {double, bigdecimal, biginteger}, return is the same type as x</para>
 						</entry>
 					</row>
 					<row>

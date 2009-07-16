@@ -282,21 +282,17 @@ public final class FunctionMethods {
 	}
 
 	// ================== Function = power =====================
-
-	public static  Object power(Object x, Object y) throws FunctionExecutionException {
-		if(x == null || y == null) {
-			return null;
-		} else if(x instanceof Double) {
-			if(y instanceof Double) {
-				return new Double(Math.pow(((Double)x).doubleValue(), ((Double)y).doubleValue()));
-			}
-		} else if(x instanceof BigInteger) {
-			if(y instanceof Integer) {
-				return ((BigInteger)x).pow(((Integer)y).intValue());
-			}
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"power", x.getClass().getName(), y.getClass().getName()})); //$NON-NLS-1$
+	
+	public static double power(double x, double y) {
+		return Math.pow(x, y);
+	}
+	
+	public static BigInteger power(BigInteger x, int y) {
+		return x.pow(y);
+	}
+	
+	public static BigDecimal power(BigDecimal x, int y) {
+		return x.pow(y);
 	}
 
     public static int round(int number, int places) {

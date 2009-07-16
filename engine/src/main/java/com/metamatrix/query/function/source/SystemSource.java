@@ -298,6 +298,7 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     private void addPowerFunction() {
         addTypedPowerFunction(DataTypeManager.DefaultDataTypes.DOUBLE, DataTypeManager.DefaultDataTypes.DOUBLE);
         addTypedPowerFunction(DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.INTEGER);        
+        addTypedPowerFunction(DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.DefaultDataTypes.INTEGER);
     }
 
     private void addTypedPowerFunction(String baseType, String powerType) { 
