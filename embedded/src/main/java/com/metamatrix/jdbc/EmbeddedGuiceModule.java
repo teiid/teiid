@@ -45,6 +45,7 @@ import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.JMXUtil;
 import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
@@ -67,11 +68,13 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 	
 	private Properties props;
 	private URL bootstrapURL;
+	private JMXUtil jmx;
 	Injector injector;
 	
-	public EmbeddedGuiceModule(URL bootstrapURL, Properties props) {
+	public EmbeddedGuiceModule(URL bootstrapURL, Properties props, JMXUtil jmxUtil) {
 		this.bootstrapURL = bootstrapURL;
 		this.props = props;
+		this.jmx = jmxUtil;
 	}
 	
 	@Override
@@ -83,6 +86,7 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 		bindConstant().annotatedWith(Names.named("HostName")).to("embedded"); //$NON-NLS-1$ //$NON-NLS-2$
 		bindConstant().annotatedWith(Names.named("ProcessName")).to(props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "test")); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(Properties.class).annotatedWith(Names.named("DQPProperties")).toInstance(this.props); //$NON-NLS-1$
+		bind(JMXUtil.class).toInstance(this.jmx);
 
 		InetAddress address = resolveHostAddress(props.getProperty(DQPEmbeddedProperties.BIND_ADDRESS));
 		bind(InetAddress.class).annotatedWith(Names.named(DQPEmbeddedProperties.HOST_ADDRESS)).toInstance(address);

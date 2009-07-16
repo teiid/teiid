@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.metamatrix.common.protocol.URLHelper;
+import com.metamatrix.common.util.JMXUtil;
 import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.FakeAbstractService;
@@ -53,7 +54,7 @@ public class TestEmbeddedConfigSource extends TestCase {
     	URL url = buildDQPUrl(UnitTestUtil.getTestDataPath() + "/bqt/fakebqt.properties"); //$NON-NLS-1$
     	p.load(url.openStream());
     	
-    	EmbeddedGuiceModule source = new EmbeddedGuiceModule(url, p);       
+    	EmbeddedGuiceModule source = new EmbeddedGuiceModule(url, p, new JMXUtil("test")); //$NON-NLS-1$       
 		Injector injector = Guice.createInjector(source);
 		source.setInjector(injector);
 

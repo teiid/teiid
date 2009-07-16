@@ -22,55 +22,45 @@
 
 package com.metamatrix.cache.jboss;
 
-import java.lang.management.ManagementFactory;
-
-import javax.management.InstanceNotFoundException;
-import javax.management.MBeanRegistrationException;
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import javax.management.OperationsException;
-
 import org.jboss.cache.Fqn;
 import org.jboss.cache.Node;
 import org.jboss.cache.Region;
-import org.jboss.cache.config.EvictionPolicyConfig;
-import org.jboss.cache.eviction.FIFOConfiguration;
-import org.jboss.cache.eviction.LFUConfiguration;
-import org.jboss.cache.eviction.LRUConfiguration;
-import org.jboss.cache.eviction.MRUConfiguration;
-import org.jboss.cache.jmx.CacheJmxWrapper;
-import org.jboss.cache.jmx.CacheJmxWrapperMBean;
+import org.jboss.cache.config.EvictionAlgorithmConfig;
+import org.jboss.cache.config.EvictionRegionConfig;
+import org.jboss.cache.eviction.FIFOAlgorithmConfig;
+import org.jboss.cache.eviction.LFUAlgorithmConfig;
+import org.jboss.cache.eviction.LRUAlgorithmConfig;
+import org.jboss.cache.eviction.MRUAlgorithmConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.Cache.Type;
 import com.metamatrix.cache.CacheConfiguration.Policy;
+import com.metamatrix.common.util.JMXUtil;
+import com.metamatrix.common.util.JMXUtil.FailedToRegisterException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 @Singleton
 public class JBossCacheFactory implements CacheFactory {
+	private static final String NAME = "Cache"; //$NON-NLS-1$
 	private org.jboss.cache.Cache cacheStore;
 	private volatile boolean destroyed = false;
-	private ObjectName jmxName;
 	
 	@Inject
-	public JBossCacheFactory(org.jboss.cache.Cache cacheStore, @Named("ProcessName") String processName) {
+	JMXUtil jmx;
+	
+	@Inject
+	public JBossCacheFactory(org.jboss.cache.Cache cacheStore) {
 		try {
-			CacheJmxWrapperMBean wrapper = new CacheJmxWrapper(cacheStore);			
-			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			this.jmxName = new ObjectName("Teiid["+processName+"]:service=JBossCache,name=cache"); //$NON-NLS-1$ //$NON-NLS-2$
-			mbs.registerMBean(wrapper, this.jmxName);
-			wrapper.create();
-			wrapper.start();
-			this.cacheStore =  wrapper.getCache();
-		} catch (OperationsException e) {
-			throw new MetaMatrixRuntimeException(e);
-		}  catch (MBeanRegistrationException e) {
-			throw new MetaMatrixRuntimeException(e);
+			jmx.register(JMXUtil.MBeanType.SERVICE, NAME, cacheStore); 
+			cacheStore.create();
+			cacheStore.start();
+			this.cacheStore =  cacheStore;
+		} catch (FailedToRegisterException e) {
+			throw new MetaMatrixRuntimeException(e.getCause());
 		}
 	}
 
@@ -82,37 +72,37 @@ public class JBossCacheFactory implements CacheFactory {
 			Node cacheRoot = this.cacheStore.getRoot().addChild(Fqn.fromString("Teiid")); //$NON-NLS-1$
 			Node node = cacheRoot.addChild(Fqn.fromString(type.location()));
 			
-			
 			Region cacheRegion = this.cacheStore.getRegion(node.getFqn(), true);
-			cacheRegion.setEvictionPolicy(buildEvictionPolicy(config));
+			EvictionRegionConfig erc = new EvictionRegionConfig(node.getFqn(), buildEvictionAlgorithmConfig(config));
+			cacheRegion.setEvictionRegionConfig(erc);
 			
 			return new JBossCache(this.cacheStore, node.getFqn());
 		}
 		throw new MetaMatrixRuntimeException("Cache system has been shutdown"); //$NON-NLS-1$
 	}
 
-	private EvictionPolicyConfig buildEvictionPolicy(CacheConfiguration config) {
-		EvictionPolicyConfig evictionConfig = null;
+	private EvictionAlgorithmConfig  buildEvictionAlgorithmConfig(CacheConfiguration config) {
+		EvictionAlgorithmConfig  evictionConfig = null;
 		
 		if (config.getPolicy() == Policy.LRU) {
-			LRUConfiguration lru = new LRUConfiguration();
+			LRUAlgorithmConfig lru = new LRUAlgorithmConfig();
 			lru.setMaxNodes(config.getMaxNodes());
-			lru.setMaxAgeSeconds(config.getMaxAgeInSeconds());
-			lru.setTimeToLiveSeconds(0);
+			lru.setMaxAge(config.getMaxAgeInSeconds()*1000);
+			lru.setTimeToLive(0);
 			evictionConfig = lru;
 		}
 		else if (config.getPolicy() == Policy.MRU) {
-			MRUConfiguration mru = new MRUConfiguration();
+			MRUAlgorithmConfig mru = new MRUAlgorithmConfig();
 			mru.setMaxNodes(config.getMaxNodes());
 			evictionConfig = mru;
 		}
 		else if (config.getPolicy() == Policy.FIFO) {
-			FIFOConfiguration fifo = new FIFOConfiguration();
+			FIFOAlgorithmConfig fifo = new FIFOAlgorithmConfig();
 			fifo.setMaxNodes(config.getMaxNodes());
 			evictionConfig = fifo;
 		}
 		else if (config.getPolicy() == Policy.LFU) {
-			LFUConfiguration lfu  = new LFUConfiguration();
+			LFUAlgorithmConfig lfu  = new LFUAlgorithmConfig();
 			lfu.setMaxNodes(config.getMaxNodes());
 			evictionConfig = lfu;
 		}
@@ -121,10 +111,8 @@ public class JBossCacheFactory implements CacheFactory {
 	
 	public void destroy() {
 		try {
-			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-			mbs.unregisterMBean(this.jmxName);
-		} catch (InstanceNotFoundException e) {
-		} catch (MBeanRegistrationException e) {
+			jmx.unregister(JMXUtil.MBeanType.SERVICE, NAME);
+		} catch (FailedToRegisterException e) {
 		} finally {
 			this.cacheStore.destroy();
 			this.destroyed = true;

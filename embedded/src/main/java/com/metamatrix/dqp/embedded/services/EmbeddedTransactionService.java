@@ -22,13 +22,10 @@
 
 package com.metamatrix.dqp.embedded.services;
 
-import java.net.URL;
 import java.util.Properties;
 
 import org.teiid.dqp.internal.transaction.TransactionServerImpl;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
@@ -38,8 +35,6 @@ import com.metamatrix.xa.arjuna.ArjunaTransactionProvider;
 public class EmbeddedTransactionService extends TransactionServerImpl {
 
     public static final String TRANSACTIONS_ENABLED = "metamatrix.xatxnmgr.enabled"; //$NON-NLS-1$
-    
-    @Inject @Named("BootstrapURL") URL bootstrapURL;
     
     @Override
     public void initialize(Properties props)

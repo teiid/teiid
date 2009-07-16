@@ -153,7 +153,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 		        	
         this.jmxServer = new JMXUtil(dqpId);
         
-        EmbeddedGuiceModule config = new EmbeddedGuiceModule(bootstrapURL, props);
+        EmbeddedGuiceModule config = new EmbeddedGuiceModule(bootstrapURL, props, this.jmxServer);
 		Injector injector = Guice.createInjector(config);
 		ResourceFinder.setInjector(injector);
 		config.setInjector(injector);
