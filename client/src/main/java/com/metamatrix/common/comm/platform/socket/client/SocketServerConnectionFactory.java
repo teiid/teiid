@@ -233,7 +233,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 			key.actual = ssii;
 			key.instance = instanceCount.getAndIncrement();
 			//create a proxied socketserverinstance that will pool itself on shutdown
-			key.proxy = (SocketServerInstance)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {SocketServerInstance.class}, new ShutdownHandler(key));
+			key.proxy = (SocketServerInstance)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {SocketServerInstance.class}, new ShutdownHandler(key));
 			return key.proxy;
 		}
 		return ssii;
@@ -256,7 +256,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 			discovery = new UrlServerDiscovery();
 		} else {
 			try {
-				discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, Thread.currentThread().getContextClassLoader());
+				discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, this.getClass().getClassLoader());
 			} catch (MetaMatrixCoreException e) {
 				throw new ConnectionException(e);
 			}

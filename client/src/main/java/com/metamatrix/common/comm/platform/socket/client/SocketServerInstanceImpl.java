@@ -244,7 +244,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 	@Override
 	//## JDBC4.0-end ##
 	public <T> T getService(Class<T> iface) {
-		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface));
+		return (T)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface));
 	}
 	
 	public class RemoteInvocationHandler implements InvocationHandler {

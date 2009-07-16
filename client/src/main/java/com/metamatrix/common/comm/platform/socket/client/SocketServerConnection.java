@@ -242,7 +242,7 @@ public class SocketServerConnection implements ServerConnection {
 	}
 
 	public <T> T getService(Class<T> iface) {
-		return (T)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {iface}, new ServerConnectionInvocationHandler(iface));
+		return (T)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new ServerConnectionInvocationHandler(iface));
 	}
 
 	public synchronized void shutdown() {

@@ -68,7 +68,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
             //The output stream must be flushed on creation in order to write some initialization data
             //through the buffered stream to the input stream on the other side
             outputStream.flush();
-            final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            final ClassLoader cl = this.getClass().getClassLoader();
             BufferedInputStream bis = new BufferedInputStream(socket.getInputStream(), STREAM_BUFFER_SIZE);
             inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, MAX_OBJECT_SIZE);
 		}

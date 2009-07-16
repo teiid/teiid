@@ -219,7 +219,7 @@ public class ServerAdminFactory {
 		p.remove(MMURL.JDBC.VDB_NAME);
 		p.remove(MMURL.JDBC.VDB_VERSION);
     	p.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
-		Admin serverAdmin = (Admin)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] { Admin.class }, new ReconnectingProxy(p));
+		Admin serverAdmin = (Admin)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { Admin.class }, new ReconnectingProxy(p));
     	
        return serverAdmin;
     }
