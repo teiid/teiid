@@ -55,6 +55,7 @@ if not exist  %KEYSTORE_FILE% (
 )
 
 cd %TEIID_HOME%
+set JAVA_OPTS=%JAVA_OPTS% -Dteiid.home=%TEIID_HOME%
 
 echo ===============================================================================
 echo.

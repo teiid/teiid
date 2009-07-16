@@ -74,6 +74,8 @@ if [ ! -f $KEYSTORE_FILE ]; then
 	echo "A new key with keystore generated at $KEYSTORE_FILE"
 fi
 
+JAVA_OPTS="$JAVA_OPTS -Dteiid.home=$TEIID_HOME"
+
 # Display our environment
 echo "========================================================================="
 echo ""

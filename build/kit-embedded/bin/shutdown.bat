@@ -47,6 +47,7 @@ rem JPDA options. Uncomment and modify as appropriate to enable remote debugging
 rem set JAVA_OPTS=%JAVA_OPTS% -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=y
 
 cd %TEIID_HOME%
+set JAVA_OPTS=%JAVA_OPTS% -Dteiid.home=%TEIID_HOME%
 
 echo ===============================================================================
 echo.

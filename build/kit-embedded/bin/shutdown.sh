@@ -67,6 +67,8 @@ if $cygwin; then
     TEIID_CLASSPATH=`cygpath --path --windows "$TEIID_CLASSPATH"`
 fi
 
+JAVA_OPTS="$JAVA_OPTS -Dteiid.home=$TEIID_HOME"
+
 # Display our environment
 echo "========================================================================="
 echo ""
