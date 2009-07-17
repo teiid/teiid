@@ -58,6 +58,7 @@ import com.metamatrix.dqp.embedded.services.EmbeddedMetadataService;
 import com.metamatrix.dqp.embedded.services.EmbeddedTransactionService;
 import com.metamatrix.dqp.embedded.services.EmbeddedVDBService;
 import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.authorization.service.AdminAuthorizationPolicyProvider;
 import com.metamatrix.platform.security.authorization.service.AuthorizationServiceImpl;
@@ -83,10 +84,8 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 		bind(LogListener.class).toProvider(LogListernerProvider.class).in(Scopes.SINGLETON);  
 		
 		bind(URL.class).annotatedWith(Names.named("BootstrapURL")).toInstance(bootstrapURL); //$NON-NLS-1$
-		bindConstant().annotatedWith(Names.named("HostName")).to("embedded"); //$NON-NLS-1$ //$NON-NLS-2$
-		bindConstant().annotatedWith(Names.named("ProcessName")).to(props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "test")); //$NON-NLS-1$ //$NON-NLS-2$
 		bind(Properties.class).annotatedWith(Names.named("DQPProperties")).toInstance(this.props); //$NON-NLS-1$
-		bind(JMXUtil.class).toInstance(this.jmx);
+		bind(JMXUtil.class).annotatedWith(Names.named("jmx")).toInstance(this.jmx); //$NON-NLS-1$
 
 		InetAddress address = resolveHostAddress(props.getProperty(DQPEmbeddedProperties.BIND_ADDRESS));
 		bind(InetAddress.class).annotatedWith(Names.named(DQPEmbeddedProperties.HOST_ADDRESS)).toInstance(address);
@@ -136,7 +135,7 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 	}
 	
 	private Map<String, Class<? extends ApplicationService>> getDefaultServiceClasses() {
-		boolean useTxn = PropertiesUtils.getBooleanProperty(props, EmbeddedTransactionService.TRANSACTIONS_ENABLED, true);
+		boolean useTxn = PropertiesUtils.getBooleanProperty(props, TransactionService.TRANSACTIONS_ENABLED, true);
 		
 		Map<String, Class<? extends ApplicationService>> result = new HashMap<String, Class<? extends ApplicationService>>();
 		result.put(DQPServiceNames.CONFIGURATION_SERVICE, EmbeddedConfigurationService.class);

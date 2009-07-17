@@ -21,6 +21,8 @@
  */
 package org.teiid.dqp.internal.cache;
 
+import java.util.Properties;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -28,6 +30,7 @@ import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.CacheConfiguration.Policy;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
 @Singleton
 public class DQPContextCache {
@@ -37,9 +40,9 @@ public class DQPContextCache {
 	private String processIdentifier;
 	
 	@Inject
-	public DQPContextCache(@Named("HostName") String hostName, @Named("ProcessName") String processName, CacheFactory cacheFactory) {
+	public DQPContextCache(@Named("DQPProperties") Properties props, CacheFactory cacheFactory) {
 		this.cache = cacheFactory.get(Cache.Type.SCOPED_CACHE, new CacheConfiguration(Policy.LRU, 600, 10000));
-		this.processIdentifier = hostName + "-" + processName; //$NON-NLS-1$
+		this.processIdentifier = props.getProperty(DQPEmbeddedProperties.PROCESSNAME);
 	}
 	
 	public Cache getGlobalScopedCache() {

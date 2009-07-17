@@ -34,6 +34,7 @@ import org.jboss.cache.eviction.MRUAlgorithmConfig;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
@@ -48,20 +49,18 @@ public class JBossCacheFactory implements CacheFactory {
 	private static final String NAME = "Cache"; //$NON-NLS-1$
 	private org.jboss.cache.Cache cacheStore;
 	private volatile boolean destroyed = false;
+	private JMXUtil jmx; 
 	
 	@Inject
-	JMXUtil jmx;
-	
-	@Inject
-	public JBossCacheFactory(org.jboss.cache.Cache cacheStore) {
-		try {
-			jmx.register(JMXUtil.MBeanType.SERVICE, NAME, cacheStore); 
-			cacheStore.create();
-			cacheStore.start();
-			this.cacheStore =  cacheStore;
-		} catch (FailedToRegisterException e) {
-			throw new MetaMatrixRuntimeException(e.getCause());
-		}
+	public JBossCacheFactory(org.jboss.cache.Cache cacheStore, @Named("jmx") JMXUtil jmx) {
+		this.cacheStore =  cacheStore;
+//		try {
+//			this.jmx = jmx;
+//			//jmx.register(JMXUtil.MBeanType.SERVICE, NAME, cacheStore); 
+//			this.cacheStore =  cacheStore;
+//		} catch (FailedToRegisterException e) {
+//			throw new MetaMatrixRuntimeException(e.getCause());
+//		}
 	}
 
 	/**
@@ -110,13 +109,13 @@ public class JBossCacheFactory implements CacheFactory {
 	}    
 	
 	public void destroy() {
-		try {
-			jmx.unregister(JMXUtil.MBeanType.SERVICE, NAME);
-		} catch (FailedToRegisterException e) {
-		} finally {
-			this.cacheStore.destroy();
-			this.destroyed = true;
-		}
+//		try {
+//			jmx.unregister(JMXUtil.MBeanType.SERVICE, NAME);
+//		} catch (FailedToRegisterException e) {
+//		} finally {
+//			this.cacheStore.destroy();
+//			this.destroyed = true;
+//		}
 	}	
 	
 }

@@ -39,18 +39,19 @@ import org.teiid.dqp.internal.transaction.TransactionProvider.XAConnectionSource
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.xa.MMXid;
 import com.metamatrix.common.xa.XATransactionException;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
 /**
  */
 public interface TransactionService extends ApplicationService {
-    public static final String MAX_TIMEOUT = "metamatrix.xatxnmgr.max_timeout"; //$NON-NLS-1$
-    public static final String TXN_STORE_DIR = "metamatrix.xatxnmgr.txnstore_dir"; //$NON-NLS-1$
-    public static final String TXN_STATUS_PORT = "metamatrix.xatxnmgr.txnstatus_port"; //$NON-NLS-1$
-    public static final String TXN_ENABLE_RECOVERY = "metamatrix.xatxnmgr.enable_recovery"; //$NON-NLS-1$
+	public static final String TRANSACTIONS_ENABLED = "xa.enabled"; //$NON-NLS-1$
+    public static final String MAX_TIMEOUT = "xa.max_timeout"; //$NON-NLS-1$
+    public static final String TXN_STORE_DIR = "xa.txnstore_dir"; //$NON-NLS-1$
+    public static final String TXN_STATUS_PORT = "xa.txnstatus_port"; //$NON-NLS-1$
+    public static final String TXN_ENABLE_RECOVERY = "xa.enable_recovery"; //$NON-NLS-1$
     
     
-    public static final String VMNAME = "metamatrix.xatxnmgr.vmname"; //$NON-NLS-1$
-    public static final String HOSTNAME = "metamatrix.xatxnmgr.hostname"; //$NON-NLS-1$
+    public static final String PROCESSNAME = DQPEmbeddedProperties.PROCESSNAME;
     
     public static final String DEFAULT_TXN_MGR_LOG_DIR = "txnlog"; //$NON-NLS-1$
     public static final String DEFAULT_TXN_TIMEOUT = "120"; //$NON-NLS-1$ //2 mins

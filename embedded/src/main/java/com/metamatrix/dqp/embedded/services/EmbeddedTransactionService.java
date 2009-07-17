@@ -34,15 +34,12 @@ import com.metamatrix.xa.arjuna.ArjunaTransactionProvider;
 
 public class EmbeddedTransactionService extends TransactionServerImpl {
 
-    public static final String TRANSACTIONS_ENABLED = "metamatrix.xatxnmgr.enabled"; //$NON-NLS-1$
-    
     @Override
     public void initialize(Properties props)
     		throws ApplicationInitializationException {
         try {
         	props = new Properties(props);
-            props.setProperty(TransactionService.HOSTNAME, "dqp"); //$NON-NLS-1$
-            props.setProperty(TransactionService.VMNAME, props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY));
+            props.setProperty(TransactionService.PROCESSNAME, props.getProperty(DQPEmbeddedProperties.PROCESSNAME));
             props.setProperty(TransactionService.TXN_STORE_DIR, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR));
             this.setTransactionProvider(ArjunaTransactionProvider.getInstance(props));
         } catch (XATransactionException e) {

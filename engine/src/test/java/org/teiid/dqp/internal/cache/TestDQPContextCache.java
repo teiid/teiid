@@ -21,16 +21,15 @@
  */
 package org.teiid.dqp.internal.cache;
 
+import java.util.Properties;
+
 import junit.framework.TestCase;
 
-import org.teiid.connector.api.CacheScope;
-import org.teiid.connector.api.ExecutionContext;
-import org.teiid.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.FakeCache.FakeCacheFactory;
-import com.metamatrix.dqp.message.RequestID;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
 
@@ -41,7 +40,9 @@ public class TestDQPContextCache extends TestCase {
 	
 	@Override
 	protected void setUp() throws Exception {
-		cacheContext = new DQPContextCache("host", "process", new FakeCacheFactory()); //$NON-NLS-1$ //$NON-NLS-2$
+		Properties p = new Properties();
+		p.setProperty(DQPEmbeddedProperties.PROCESSNAME, "host-process"); //$NON-NLS-1$
+		cacheContext = new DQPContextCache(p, new FakeCacheFactory());
 			
 	}
 	

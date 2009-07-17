@@ -43,9 +43,9 @@ class LogListernerProvider implements Provider<LogListener> {
 	@Override
 	public LogListener get() {
         String logDirectory = this.props.getProperty(DQPEmbeddedProperties.DQP_LOGDIR);
-        String instanceId = this.props.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "0"); //$NON-NLS-1$        
+        String processName = this.props.getProperty(DQPEmbeddedProperties.PROCESSNAME);        
 
-    	File logFile = new File(logDirectory, "teiid_"+instanceId+".log"); //$NON-NLS-1$ //$NON-NLS-2$
+    	File logFile = new File(logDirectory, "teiid_"+processName+".log"); //$NON-NLS-1$ //$NON-NLS-2$
     	System.setProperty("dqp.log4jFile", logFile.getAbsolutePath()); //$NON-NLS-1$ // hack
     	return new Log4jListener();
 	}

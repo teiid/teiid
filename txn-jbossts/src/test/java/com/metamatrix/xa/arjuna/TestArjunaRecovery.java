@@ -81,8 +81,7 @@ public class TestArjunaRecovery extends TestCase {
         final List done = new ArrayList();
         
         Properties props = new Properties();
-        props.setProperty(TransactionService.VMNAME, "test"); //$NON-NLS-1$
-        props.setProperty(TransactionService.HOSTNAME, "test"); //$NON-NLS-1$
+        props.setProperty(TransactionService.PROCESSNAME, "test"); //$NON-NLS-1$
         RecoveryConfiguration.setRecoveryManagerPropertiesFile("com/metamatrix/xa/arjuna/jbossjta-properties.xml"); //$NON-NLS-1$
         com.arjuna.ats.jta.common.Configuration.setPropertiesFile("com/metamatrix/xa/arjuna/jbossjta-properties.xml"); //$NON-NLS-1$
         Configuration.setPropertiesFile("com/metamatrix/xa/arjuna/jbossjta-properties.xml"); //$NON-NLS-1$

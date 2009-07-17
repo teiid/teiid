@@ -16,13 +16,15 @@ public class TestMetadataInConnector extends AbstractMMQueryTestCase {
     	execute("Select * from TableA"); //$NON-NLS-1$
     	String expected[] = {"column1[string]    column2[integer]"}; //$NON-NLS-1$
     	assertResults(expected); 
+    	closeConnection();
     }
     
     @Test public void testMetadataProcedure() throws Exception {
     	getConnection(VDB, DQP_PROP_FILE, ""); //$NON-NLS-1$
     	execute("exec AnyModel.ProcedureB(?)", new Object[] {"foo"}); //$NON-NLS-1$ //$NON-NLS-2$
     	String expected[] = {"column1[string]    column2[integer]"}; //$NON-NLS-1$
-    	assertResults(expected); 
+    	assertResults(expected);
+    	closeConnection();
     }	
     
 }

@@ -26,11 +26,13 @@ import static org.teiid.dqp.internal.process.Util.convertStats;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.util.Date;
 import java.util.Properties;
 
@@ -101,7 +103,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     		initialize(connectionProperties);
             return new LocalServerConnection(connectionProperties, this.clientServices);
     	} catch (ApplicationInitializationException e) {
-            throw new ConnectionException(e.getCause());
+            throw new ConnectionException(e, e.getMessage());
 		}
 	}
     
@@ -120,21 +122,22 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     		return;
     	}
         
-        String dqpId = getDQPIdentity(info);
-        info.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, dqpId);
-    	
         URL bootstrapURL = null;
         Properties props = info;
-
+        String processName = "embedded"; //$NON-NLS-1$
+        
         try {
 			bootstrapURL = URLHelper.buildURL(info.getProperty(DQPEmbeddedProperties.BOOTURL));
 			props = PropertiesUtils.loadFromURL(bootstrapURL);
 			props.putAll(info);
 			props = PropertiesUtils.resolveNestedProperties(props);
 			
+			processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME, processName); 
+			props.setProperty(DQPEmbeddedProperties.PROCESSNAME, processName);
+			
 	        // Create a temporary workspace directory
 			String teiidHome = info.getProperty(DQPEmbeddedProperties.TEIID_HOME);
-	        this.workspaceDirectory = createWorkspace(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR, "work"), dqpId); //$NON-NLS-1$
+	        this.workspaceDirectory = createWorkspace(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR, "work"), processName); //$NON-NLS-1$
 	        props.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, this.workspaceDirectory);
 	        
 	        // create the deploy directories
@@ -142,17 +145,28 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 	        props.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, deployDirectory.getCanonicalPath());
 	        deployDirectory.mkdirs();
 	        
+	        // if there is no separate vdb-definitions specified then use the deploy directory as the location of the vdb
+	        String vdbDefinitions = props.getProperty(DQPEmbeddedProperties.VDB_DEFINITION);
+	        if (vdbDefinitions == null) {
+	        	props.setProperty(DQPEmbeddedProperties.VDB_DEFINITION, deployDirectory.getCanonicalPath());
+	        }
+	        
 	        // create log directory
 	        File logDirectory = new File(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_LOGDIR, "log")); //$NON-NLS-1$
 	        props.setProperty(DQPEmbeddedProperties.DQP_LOGDIR, logDirectory.getCanonicalPath());
 	        deployDirectory.mkdirs();
-	        
+	    	        
 		} catch (IOException e) {
 			throw new ApplicationInitializationException(e);
 		}
-		        	
-        this.jmxServer = new JMXUtil(dqpId);
-        
+		
+		// check for a duplicate process and exit if one found.
+		if(isDuplicateProcess(processName)) {
+			throw new ApplicationInitializationException(DQPEmbeddedPlugin.Util.getString("DQPEmbeddedManager.duplicate_process", processName)); //$NON-NLS-1$
+		}
+		
+		this.jmxServer = new JMXUtil(processName);
+		
         EmbeddedGuiceModule config = new EmbeddedGuiceModule(bootstrapURL, props, this.jmxServer);
 		Injector injector = Guice.createInjector(config);
 		ResourceFinder.setInjector(injector);
@@ -187,6 +201,18 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         DQPEmbeddedPlugin.logInfo("DQPEmbeddedManager.start_dqp", new Object[] {new Date(System.currentTimeMillis()).toString()}); //$NON-NLS-1$
     }
     
+	private boolean isDuplicateProcess(String processName) {
+		try {
+			File f = new File(this.workspaceDirectory, "teiid_"+processName+".pid"); //$NON-NLS-1$ //$NON-NLS-2$			
+			FileChannel channel = new RandomAccessFile(f, "rw").getChannel(); //$NON-NLS-1$
+			return (channel.tryLock() == null); 
+		} catch (Exception e) {
+			// ignore
+		}
+		return true;
+	}
+
+
 	private ClientServiceRegistry createClientServices(ConfigurationService configService) {
     	ClientServiceRegistry services  = new ClientServiceRegistry();
     
@@ -202,36 +228,16 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 	}
     
     /**
-     * Define an identifier for the DQP 
-     * @return a JVM level unique identifier
-     */
-    private String getDQPIdentity(Properties props) {
-    	
-    	String processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME);
-    	if (processName != null) {
-    		return processName;
-    	}
-    	
-    	synchronized (System.class) {
-            String id = System.getProperty(DQPEmbeddedProperties.DQP_IDENTITY, "1"); //$NON-NLS-1$
-            int identity = Integer.parseInt(id);
-            System.setProperty(DQPEmbeddedProperties.DQP_IDENTITY, String.valueOf(identity + 1));
-            id = String.valueOf(identity);
-            return id;
-    	}
-    }        
-    
-    /**
      * Create the temporary workspace directory for the dqp  
      * @param identity - identity of the dqp
      * @throws MMSQLException 
      */
     private String createWorkspace(String teiidHome, String baseDir, String identity) throws IOException {
 		File baseFile = new File(teiidHome, baseDir);
-
-		System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, baseFile.getCanonicalPath() + "/temp"); //$NON-NLS-1$S 
-
+		
         File f = new File(baseFile, identity);
+        
+        System.setProperty(DQPEmbeddedProperties.DQP_TMPDIR, f.getCanonicalPath() + "/temp"); //$NON-NLS-1$S
 
         // If directory already exists then try to delete it; because we may have
         // failed to delete at end of last run (JVM holds lock on jar files)

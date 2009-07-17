@@ -47,7 +47,6 @@ public interface DQPEmbeddedProperties {
     public static final String OUTPUT_BUFFER_SIZE = "server.outputBufferSize"; //$NON-NLS-1$       
     
     //derived properties
-    public static final String DQP_IDENTITY = "dqp.identity"; //$NON-NLS-1$
     public static final String DQP_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
     public static final String BOOTURL = "bootURL"; //$NON-NLS-1$
     public static final String ENABLE_SOCKETS = "sockets.enabled"; //$NON-NLS-1$

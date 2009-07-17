@@ -16,6 +16,7 @@ public class TestDataEntitlements extends AbstractMMQueryTestCase {
     	try {
 			getConnection(VDB, DQP_PROP_FILE, "user=test"); //$NON-NLS-1$
 			TestCase.fail("Should have failed authenticate user test"); //$NON-NLS-1$
+			closeConnection();
 		} catch (Exception e) {
 		}
     }
@@ -23,13 +24,14 @@ public class TestDataEntitlements extends AbstractMMQueryTestCase {
     @Test public void testAdminAuth() {
 		try {
 			getConnection(VDB, DQP_PROP_FILE, "user=admin;password=mm"); //$NON-NLS-1$
-			TestCase.fail("Should have failed authenticate user test"); //$NON-NLS-1$
+			TestCase.fail("Should have failed authenticate user test"); //$NON-NLS-1$			
 		} catch (Exception e) {
 		}
 		
 		getConnection(VDB, DQP_PROP_FILE, "user=admin;password=teiid"); //$NON-NLS-1$
 		execute("select * from BQT1.smalla"); //$NON-NLS-1$
 		walkResults();
+		closeConnection();
     }
 
     @Test public void testEntitlements() {
@@ -38,26 +40,29 @@ public class TestDataEntitlements extends AbstractMMQueryTestCase {
 			TestCase.fail("Should have failed authenticate user test"); //$NON-NLS-1$
 		} catch (Exception e) {
 		}
-		
+
+		getConnection(VDB, DQP_PROP_FILE, "user=john;password=mm"); //$NON-NLS-1$
 		try {
-			getConnection(VDB, DQP_PROP_FILE, "user=john;password=mm"); //$NON-NLS-1$
 			execute("select intkey, stringkey from BQT1.smalla"); //$NON-NLS-1$
 			walkResults();
 		} catch(Exception e) {
 			TestCase.assertTrue(e.getMessage().endsWith("is not entitled to action <Read> for 1 or more of the groups/elements/procedures.")); //$NON-NLS-1$
 		}
+		closeConnection();
 		
 		getConnection(VDB, DQP_PROP_FILE, "user=paul;password=mm"); //$NON-NLS-1$
 		execute("select intkey, stringkey from BQT1.smalla"); //$NON-NLS-1$
 		assertRowCount(50);
-		
+		closeConnection();
+
+		getConnection(VDB, DQP_PROP_FILE, "user=paul;password=mm"); //$NON-NLS-1$
 		try {
-			getConnection(VDB, DQP_PROP_FILE, "user=paul;password=mm"); //$NON-NLS-1$
 			execute("select * from BQT1.smalla"); //$NON-NLS-1$
 			walkResults();
 		} catch(Exception e) {
 			TestCase.assertTrue(e.getMessage().endsWith("is not entitled to action <Read> for 1 or more of the groups/elements/procedures.")); //$NON-NLS-1$
-		}		
+		}
+		closeConnection();
     }
     
 }

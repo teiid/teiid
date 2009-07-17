@@ -46,6 +46,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			                            "y    2"   //$NON-NLS-1$
 
     	});
+    	closeConnection();
     }    
     
     @Test public void testIntegrationExecution() {
@@ -55,6 +56,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
                 "x    1    1    1    -23    null    -23.0    -23    -23.0    -127    2000-01-02    01:00:00    2000-01-01 00:00:01.0    1    0    -32767    -23    -23    -23", //$NON-NLS-1$
                 "y    2    2    2    -22    -22    null    -22    -22.0    -126    2000-01-03    02:00:00    2000-01-01 00:00:02.0    0    1    -32766    -22    -22    -22", //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     /**
@@ -63,6 +65,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     @Test public void testProcedureExecution() {
     	getConnection(VDB, DQP_PROP_FILE);
     	execute("exec Derby.SQLUDTS(null, null, null, null, null)"); //$NON-NLS-1$
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataTables() throws Exception {
@@ -73,6 +76,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			"TABLE_CAT[string]    TABLE_SCHEM[string]    TABLE_NAME[string]    TABLE_TYPE[string]    REMARKS[string]    TYPE_CAT[string]    TYPE_SCHEM[string]    TYPE_NAME[string]    SELF_REFERENCING_COL_NAME[string]    REF_GENERATION[string]    ISPHYSICAL[boolean]", //$NON-NLS-1$
     			"null    VDBLess    SummitData.EXAMPLE    TABLE    null    null    null    null    null    null    true" //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     /**
@@ -88,6 +92,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			"null    VDBLess    System.ElementProperties    SYSTEM TABLE    null    null    null    null    null    null    false" //$NON-NLS-1$
 
     	});
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataColumns() throws Exception {
@@ -99,6 +104,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			"null    VDBLess    SummitData.EXAMPLE    TRADEID    12    string    4000    null    0    0    0    null    null    null    null    0    1    YES    null    null    null    null    NO", //$NON-NLS-1$
     			"null    VDBLess    SummitData.EXAMPLE    NOTIONAL    4    integer    10    null    0    0    0    null    null    null    null    0    2    YES    null    null    null    null    NO", //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataColumns1() throws Exception {
@@ -125,6 +131,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			"null    VDBLess    Derby.SMALLA    BIGDECIMALVALUE    2    bigdecimal    20    null    0    10    1    null    null    null    null    0    16    NO    null    null    null    null    NO", //$NON-NLS-1$
     			"null    VDBLess    Derby.SMALLA    OBJECTVALUE    12    string    4000    null    0    0    1    null    null    null    null    4096    17    NO    null    null    null    null    NO", //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataPrimaryKeys() throws Exception {
@@ -141,6 +148,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
 			   "null    VDBLess    Derby.FLIGHTS    SEGMENT_NUMBER    2    SQL090709161814150", //$NON-NLS-1$
 			   "null    VDBLess    Derby.FLTAVAIL    SEGMENT_NUMBER    2    FLTAVAIL_PK", //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataExportedKeys() throws Exception {
@@ -152,6 +160,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
                 "null    VDBLess    Derby.FLIGHTS    FLIGHT_ID    null    VDBLess    Derby.FLTAVAIL    FLIGHT_ID    1    3    3    FLTS_FK    SQL090709161814150    5", //$NON-NLS-1$
     			"null    VDBLess    Derby.FLIGHTS    SEGMENT_NUMBER    null    VDBLess    Derby.FLTAVAIL    SEGMENT_NUMBER    2    3    3    FLTS_FK    SQL090709161814150    5" //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataImportedKeys() throws Exception {
@@ -169,6 +178,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
                 "null    VDBLess    Derby.SMALLA    INTKEY    null    VDBLess    Derby.SMALLBRIDGE    AKEY    1    3    3    SMLA_FK    SQL060110103634070    5", //$NON-NLS-1$
                 "null    VDBLess    Derby.SMALLB    INTKEY    null    VDBLess    Derby.SMALLBRIDGE    BKEY    1    3    3    SMLB_FK    SQL060110103635170    5", //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataIndexInfo() throws Exception {
@@ -195,6 +205,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
 				"null    VDBLess    Derby.SYSTRIGGERS    false    null    SYSTRIGGERS_INDEX3    0    1    TABLEID    null    0    1    null", //$NON-NLS-1$
 				"null    VDBLess    Derby.SYSTRIGGERS    false    null    SYSTRIGGERS_INDEX3    0    2    CREATIONTIMESTAMP    null    0    1    null", //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataProcedures() throws Exception {
@@ -207,6 +218,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			"null    VDBLess    Derby.REMOVE_JAR    null    null    null    null    1    Derby.REMOVE_JAR", //$NON-NLS-1$
     			"null    VDBLess    Derby.REPLACE_JAR    null    null    null    null    1    Derby.REPLACE_JAR", //$NON-NLS-1$
     	});
+    	closeConnection();
     }
     
     @Test public void testDatabaseMetaDataProcedureColumns() throws Exception {
@@ -221,6 +233,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			"null    VDBLess    Derby.SQLUDTS    UDTTYPES    1    12    string    128    256    0    0    1    null    null    null    null    null    4    YES    Derby.SQLUDTS.UDTTYPES", //$NON-NLS-1$
     			"null    VDBLess    Derby.SQLUDTS    OPTIONS    1    12    string    4000    8000    0    0    1    null    null    null    null    null    5    YES    Derby.SQLUDTS.OPTIONS", //$NON-NLS-1$
     	});
+    	closeConnection();
     }
         
 }

@@ -942,7 +942,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         try {
             this.setUserPreferences(PropertiesUtils.clone(properties));
                         
-            DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.dqp_loading", new Object[] {getInstanceIdenifier()}); //$NON-NLS-1$
+            DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.dqp_loading", new Object[] {getProcessName()}); //$NON-NLS-1$
             
             // initialize encryption
             initializeEncryption();
@@ -1008,12 +1008,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      */
     public URL[] getVDBLocations() {
         ArrayList vdbs = new ArrayList();
-        addVDBs(vdbs, getUserPreferences().getProperty(DQPEmbeddedProperties.VDB_DEFINITION));
-        addVDBs(vdbs, getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR));
-        return (URL[])vdbs.toArray(new URL[vdbs.size()]);
-    }
-
-	private void addVDBs(ArrayList vdbs, String vdbProperty) {
+        String vdbProperty = getUserPreferences().getProperty(DQPEmbeddedProperties.VDB_DEFINITION); 
 		if (vdbProperty != null  && vdbProperty.length() != 0) {
             StringTokenizer st = new StringTokenizer(vdbProperty, VDB_LIST_SEPARATOR);
             while( st.hasMoreTokens() ) {
@@ -1027,7 +1022,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 vdbs.add(vdbURL);
             }            
         }
-	}
+        return (URL[])vdbs.toArray(new URL[vdbs.size()]);
+    }
  
     /**
      * Load the Connector Bindings from the VDBS and ServerConfig.xml
@@ -1389,7 +1385,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     private File getWorkDir() {
         String workDirectory = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_WORKDIR);
         File workDir = new File(workDirectory);
-        workDir.mkdirs();
         return workDir;
     }
     
@@ -1417,10 +1412,10 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
     
     /**  
-     * @see com.metamatrix.dqp.service.ConfigurationService#getInstanceIdenifier()
+     * @see com.metamatrix.dqp.service.ConfigurationService#getProcessName()
      */
-    public String getInstanceIdenifier() {
-        return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_IDENTITY);
+    public String getProcessName() {
+        return getUserPreferences().getProperty(DQPEmbeddedProperties.PROCESSNAME);
     }
     
     

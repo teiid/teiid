@@ -47,6 +47,8 @@ class CacheProvider implements Provider<org.jboss.cache.Cache> {
 		String workspaceDir = this.props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR);
 		p.setProperty("location", workspaceDir + "/cache"); //$NON-NLS-1$ //$NON-NLS-2$
 		configs.get(0).setProperties(p);
+		cache.create();
+		cache.start();
 		return cache;
 	}
 }

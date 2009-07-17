@@ -91,8 +91,8 @@ public class TestEmbeddedConfigurationService extends TestCase {
     }
     
     public void testGetAvailableVDBFiles() throws Exception {
-        service.setUserPreferences(EmbeddedTestUtil.getProperties()); 
-        HashMap vdbFiles = VDBConfigurationReader.loadVDBS(service.getVDBLocations(), new File(UnitTestUtil.getTestScratchPath()));
+        service.setUserPreferences(EmbeddedTestUtil.getProperties());
+        HashMap vdbFiles = VDBConfigurationReader.loadVDBS(service.getVDBLocations(), service.getDeployDir());
         int count = vdbFiles.keySet().size();
         assertEquals(2, count);   
         // admin.vdb is ignored because it did not have any models

@@ -358,11 +358,11 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
     public String getBufferMemorySize();
     
     /**
-     * Return some identifier which uniquely identifies the DQP. Usally this
-     * is an integer value which is set at the creation of the DQP 
+     * Return some identifier which uniquely identifies the DQP. Usually this
+     * is name given to this process 
      * @return unique number for DQP in a given JVM
      */
-    public String getInstanceIdenifier();    
+    public String getProcessName();    
     
 
     /**

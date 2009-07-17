@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,6 +56,10 @@ public class TestPartsDatabaseMetadata extends AbstractMMQueryTestCase {
     @Before public void setUp() throws SQLException {
     	getConnection(VDB, DQP_PROP_FILE);
     	dbMetadata = this.internalConnection.getMetaData();
+    }
+    
+    @After public void tearDown() {
+    	closeConnection();
     }
         
     private void checkResult(String testName, ResultSet actualResults)  throws Exception {

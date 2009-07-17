@@ -22,6 +22,8 @@
 
 package com.metamatrix.dqp.service;
 
+import java.util.Properties;
+
 import org.teiid.dqp.internal.cache.DQPContextCache;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -57,6 +59,6 @@ public class FakeBufferService extends FakeAbstractService implements BufferServ
 
 	@Override
 	public DQPContextCache getContextCache() {
-		return new DQPContextCache("test", "test", new FakeCacheFactory()); //$NON-NLS-1$ //$NON-NLS-2$
+		return new DQPContextCache(new Properties(), new FakeCacheFactory()); 
 	}
 }

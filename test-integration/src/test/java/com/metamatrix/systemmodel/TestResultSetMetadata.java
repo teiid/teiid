@@ -22,6 +22,7 @@
 
 package com.metamatrix.systemmodel;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,6 +42,10 @@ public class TestResultSetMetadata extends AbstractMMQueryTestCase {
     
     @Before public void setUp() {
     	getConnection(VDB, DQP_PROP_FILE);
+    }
+    
+    @After public void tearDown() {
+    	closeConnection();
     }
     
     private void executeTest(String sql, String[] expected) throws Exception {

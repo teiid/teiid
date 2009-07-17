@@ -36,8 +36,11 @@ public class EmbeddedTestUtil {
 	
 	public static Properties getProperties() throws IOException {
 		Properties p = getProperties(UnitTestUtil.getTestScratchPath()+"/dqp/dqp.properties"); //$NON-NLS-1$
-        p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
-        p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, System.getProperty("java.io.tmpdir")+"/teiid/deploy");         //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, p.getProperty(DQPEmbeddedProperties.TEIID_HOME)+"/work"); //$NON-NLS-1$
+        p.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, p.getProperty(DQPEmbeddedProperties.TEIID_HOME)+"/deploy");  //$NON-NLS-1$
+        
+        new File(p.getProperty(DQPEmbeddedProperties.TEIID_HOME)+"/work").mkdirs(); //$NON-NLS-1$
+        new File(p.getProperty(DQPEmbeddedProperties.TEIID_HOME)+"/deploy").mkdirs(); //$NON-NLS-1$
         return p;
 	}
 	

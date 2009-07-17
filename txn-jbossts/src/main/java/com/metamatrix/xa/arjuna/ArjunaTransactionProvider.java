@@ -77,8 +77,8 @@ public class ArjunaTransactionProvider implements TransactionProvider {
      */
     public void init(Properties props) throws XATransactionException {
         // unique name for this txn manager
-        String vmName = props.getProperty(TransactionService.VMNAME);        
-        String txnMgrUniqueName = "txnmgr_" + props.getProperty(TransactionService.HOSTNAME, "").replace('.', '_') + "_" + vmName; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        String vmName = props.getProperty(TransactionService.PROCESSNAME);        
+        String txnMgrUniqueName = "txnmgr_" + "_" + vmName; //$NON-NLS-1$ //$NON-NLS-2$
 
         // set the directory for storing the in-flight transactions
         String baseDir = props.getProperty(TransactionService.TXN_STORE_DIR, System.getProperty("java.io.tmpdir")); //$NON-NLS-1$

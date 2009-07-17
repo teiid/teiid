@@ -65,8 +65,7 @@ public class PlatformTransactionService extends TransactionServerImpl {
             }
             
             props.putAll(env);
-            props.setProperty(TransactionService.HOSTNAME, host.getFullName());
-            props.setProperty(TransactionService.VMNAME, CurrentConfiguration.getInstance().getProcessName());
+            props.setProperty(TransactionService.PROCESSNAME, CurrentConfiguration.getInstance().getProcessName());
             props.setProperty(TransactionService.TXN_STORE_DIR, host.getDataDirectory()); 
 
             this.setTransactionProvider(ArjunaTransactionProvider.getInstance(props));
