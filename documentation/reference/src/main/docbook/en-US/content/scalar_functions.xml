@@ -2174,4 +2174,49 @@ public class TempConv {
         query engine to know about and use functions</para>
     </sect2>
   </sect1>
+  <sect1 id="nondeterministic_functions">
+  	<title>Nondeterministic Function Handling</title>
+	<para>Teiid categorizes functions by varying degrees of determinism.
+		When a function is evaluated and to what extent the result can be
+		cached are based upon its determinism level.</para>
+  	<orderedlist>
+		<listitem>
+			<para>Deterministic - the function will always return the same result
+				for the given inputs. Deterministic functions are evaluated by the
+				engine as soon as all input values are known, which may occur as soon
+				as the rewrite phase. Some functions, such as the lookup function, are
+				not truly deterministic, but is treated as such for performance. All
+				functions not categorized below are considered deterministic.</para>
+		</listitem>
+		<listitem>
+			<para>Session Deterministic - the function will return the same
+				result for the given inputs under the same user session. This category includes the hasRole,
+				env, and user functions. Session deterministic functions are evaluated
+				by the engine as soon as all input values are known, which may occur as soon
+				as the rewrite phase. If a session deterministic function is evaluated
+				during the creation of a prepared processing plan, then the resulting
+				plan will be cached only for the user's session.</para>
+		</listitem>
+		<listitem>
+			<para>Command Deterministic - the result of function evaluation is
+				only deterministic within the scope of the user command. This category
+				include the curdate, curtime, now, and commandpayload functions.
+				Command deterministic functions are delayed in evaluation until
+				processing to ensure that even prepared plans utilizing these
+				functions will be executed with relevant values. Command deterministic function
+				evaulation will occur prior to pushdown - however multiple occurances
+				of the same command deterministic time function are not guarenteed to
+				evaluate to the same value. </para>
+		</listitem>
+		<listitem>
+			<para>Nondeterministic - the result of function evaluation is fully
+				nondeterministic. This category includes the rand function and UDFs
+				marked as nondeterministic. Nondeterministic functions are delayed in
+				evaluation until processing with a preference for pushdown. If the
+				function is not pushed down, then it may be evaluated for every row in
+				it's execution context (for example if the function is used in the
+				select clause).</para>
+		</listitem>
+  	</orderedlist>
+  </sect1>
 </chapter>
