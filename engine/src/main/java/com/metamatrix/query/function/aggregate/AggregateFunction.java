@@ -40,8 +40,9 @@ public interface AggregateFunction {
      * Called to initialize the function.  In the future this may expand
      * with additional information.
      * @param dataType Data type of element begin aggregated
+     * @param inputType
      */
-    public abstract void initialize(Class dataType);
+    public abstract void initialize(Class dataType, Class inputType);
 
     /**
      * Called to reset the state of the function.

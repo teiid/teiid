@@ -42,9 +42,9 @@ public class Max implements AggregateFunction {
     }
 
     /**
-     * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String)
+     * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String, Class)
      */
-    public void initialize(Class dataType) {
+    public void initialize(Class dataType, Class inputType) {
     }
 
     public void reset() {

@@ -191,13 +191,14 @@ public class GroupingNode extends RelationalNode {
         // Construct aggregate function state accumulators
         functions = new AggregateFunction[getElements().size()];
         for(int i=0; i<getElements().size(); i++) {
-            Object symbol = getElements().get(i);
+            SingleElementSymbol symbol = (SingleElementSymbol)getElements().get(i);
+            Class<?> outputType = symbol.getType();
+            Class<?> inputType = symbol.getType();
             if(symbol instanceof AggregateSymbol) {
                 AggregateSymbol aggSymbol = (AggregateSymbol) symbol;
 
                 if(aggSymbol.getExpression() == null) {
                     functions[i] = new Count();
-                    functions[i].initialize(null);
                 } else {
                     String function = aggSymbol.getAggregateFunction();
                     if(function.equals(ReservedWords.COUNT)) {
@@ -214,18 +215,15 @@ public class GroupingNode extends RelationalNode {
 
                     if(aggSymbol.isDistinct()) {
                         functions[i] = new DuplicateFilter(functions[i], getBufferManager(), getConnectionID(), getBatchSize());
-                        functions[i].initialize(aggSymbol.getExpression().getType());
                     }
-                    else {
-                       functions[i].initialize(aggSymbol.getType());                            
-                    }
+                    
                     functions[i] = new NullFilter(functions[i]);
-                    functions[i].initialize(aggSymbol.getType());
+                    outputType = aggSymbol.getType();
                 }
             } else {
                 functions[i] = new ConstantFunction();
-                functions[i].initialize(((SingleElementSymbol)symbol).getType() );
             }
+            functions[i].initialize(outputType, inputType);
         }
     }    
 

@@ -51,11 +51,10 @@ public class Avg extends Sum {
     }
 
     /**
-     * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String)
+     * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String, Class)
      */
-    public void initialize(Class dataType) {
-        if (dataType.equals(DataTypeManager.DefaultDataClasses.BIG_INTEGER)
-            || dataType.equals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL)) {
+    public void initialize(Class dataType, Class inputType) {
+        if (dataType.equals(DataTypeManager.DefaultDataClasses.BIG_DECIMAL)) {
             this.accumulatorType = BIG_DECIMAL;
         } else {
             this.accumulatorType = DOUBLE;

@@ -64,16 +64,12 @@ public class Sum implements AggregateFunction {
     /**
      * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(boolean, String)
      */
-    public void initialize(Class dataType) {
-        if(dataType.equals(DataTypeManager.DefaultDataClasses.INTEGER) ||
-           dataType.equals(DataTypeManager.DefaultDataClasses.LONG) ||
-           dataType.equals(DataTypeManager.DefaultDataClasses.BYTE) ||
-           dataType.equals(DataTypeManager.DefaultDataClasses.SHORT)) {
+    public void initialize(Class dataType, Class inputType) {
+        if(dataType.equals(DataTypeManager.DefaultDataClasses.LONG)) {
                     
             this.accumulatorType = LONG;    
             
-        } else if(dataType.equals(DataTypeManager.DefaultDataClasses.FLOAT) ||
-           dataType.equals(DataTypeManager.DefaultDataClasses.DOUBLE)) {
+        } else if(dataType.equals(DataTypeManager.DefaultDataClasses.DOUBLE)) {
         
             this.accumulatorType = DOUBLE;
 

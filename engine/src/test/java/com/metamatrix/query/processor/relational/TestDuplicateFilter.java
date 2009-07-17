@@ -47,7 +47,7 @@ public class TestDuplicateFilter extends TestCase {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         
         DuplicateFilter filter = new DuplicateFilter(new Count(), mgr, "test", mgr.getProcessorBatchSize()); //$NON-NLS-1$
-        filter.initialize(dataType);
+        filter.initialize(dataType, dataType);
         filter.reset();
         
         // Add inputs

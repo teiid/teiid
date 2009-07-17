@@ -71,14 +71,13 @@ public class DuplicateFilter implements AggregateFunction {
     }
 
     /**
-     * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String)
+     * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String, Class)
      */
-    public void initialize(Class dataType) {
-        this.proxy.initialize(dataType);
-
+    public void initialize(Class dataType, Class inputType) {
+    	this.proxy.initialize(dataType, inputType);
         // Set up schema
         ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
-        element.setType(dataType);
+        element.setType(inputType);
         elements = new ArrayList();
         elements.add(element);
         elementTypes = TypeRetrievalUtil.getTypeNames(elements);

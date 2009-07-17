@@ -44,10 +44,10 @@ public class NullFilter implements AggregateFunction {
     }
 
     /**
-     * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String)
+     * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String, Class)
      */
-    public void initialize(Class dataType) {
-        this.proxy.initialize(dataType);
+    public void initialize(Class dataType, Class inputType) {
+    	this.proxy.initialize(dataType, inputType);
     }
 
     public void reset() {
