@@ -62,6 +62,7 @@ public class TestXQueryServices extends TestCase {
     	} catch (MMSQLException e) {
     		assertEquals("Statement does not return a result set.", e.getMessage()); //$NON-NLS-1$
     	}
+    	conn.close();
     }
 
 }

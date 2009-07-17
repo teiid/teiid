@@ -94,7 +94,7 @@ public class TestConnectorShell extends CommandShellTest {
     
     public void testCallingScriptFromAnotherScriptFile() {
         commandTarget.setFailOnError(true);
-        connectorShell.execute( "setscriptfile " + UnitTestUtil.getTestDataPath() + File.separator + "s1.txt" ); //$NON-NLS-1$ //$NON-NLS-2$
+        connectorShell.execute( "setscriptfile " + UnitTestUtil.getTestDataPath() + File.separator + "/cdk/s1.txt" ); //$NON-NLS-1$ //$NON-NLS-2$
         
         assertEquals( "", connectorShell.execute( "s3" ) ); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals( "", connectorShell.execute( "s1" ) ); //$NON-NLS-1$ //$NON-NLS-2$
@@ -105,7 +105,7 @@ public class TestConnectorShell extends CommandShellTest {
     public void testCallingScriptFromAnotherScriptFileThatCallsAScript() {
         commandTarget.setFailOnError(true);
         connectorShell.setDefaultFilePath(""); //$NON-NLS-1$
-        connectorShell.execute( "setscriptfile " + UnitTestUtil.getTestDataPath() + File.separator + "s3.txt" ); //$NON-NLS-1$ //$NON-NLS-2$
+        connectorShell.execute( "setscriptfile " + UnitTestUtil.getTestDataPath() + File.separator + "/cdk/s3.txt" ); //$NON-NLS-1$ //$NON-NLS-2$
         
         assertEquals( "", connectorShell.execute( "s3_3" ) ); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -222,7 +222,7 @@ public class TestConnectorShell extends CommandShellTest {
     
     public void testLoadPropertiesFromPropertiesFile() {
         loadLoopBackConnector();
-        connectorShell.execute("loadProperties " + UnitTestUtil.getTestDataPath() + File.separator+ "connector.properties"); //$NON-NLS-1$ //$NON-NLS-2$
+        connectorShell.execute("loadProperties " + UnitTestUtil.getTestDataPath() + File.separator+ "/cdk/connector.properties"); //$NON-NLS-1$ //$NON-NLS-2$
         start();
         String loadedProperties = connectorShell.execute("getProperties"); //$NON-NLS-1$
         assertNotNull(loadedProperties);

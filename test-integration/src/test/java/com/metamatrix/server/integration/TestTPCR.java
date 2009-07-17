@@ -46,7 +46,7 @@ public class TestTPCR extends BaseQueryTest {
 
     private static final boolean DEBUG = false;
 
-    private static final QueryMetadataInterface METADATA = createMetadata(UnitTestUtil.getTestDataPath()+"/TPC_R.vdb");  //$NON-NLS-1$
+    private static final QueryMetadataInterface METADATA = createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPC_R.vdb");  //$NON-NLS-1$
     
     public TestTPCR(String name) {
         super(name);
@@ -87,7 +87,7 @@ public class TestTPCR extends BaseQueryTest {
         FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         
-        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/TPCR_3.vdb"),  //$NON-NLS-1$
+        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
                  "SELECT count (*)  " + //$NON-NLS-1$
                  "FROM TPCR_Ora.CUSTOMER LEFT OUTER JOIN TPCR_Ora.ORDERS ON C_CUSTKEY = O_CUSTKEY " +  //$NON-NLS-1$
                  "WHERE (O_ORDERKEY IS NULL) OR O_ORDERDATE < '1992-01-02 00:00:00' " +  //$NON-NLS-1$
@@ -122,7 +122,7 @@ public class TestTPCR extends BaseQueryTest {
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SqlServerCapabilities())); //$NON-NLS-1$
         
-        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/TPCR_3.vdb"),  //$NON-NLS-1$
+        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
                  "SELECT C_CUSTKEY, C_NAME, C_ADDRESS, C_PHONE, C_ACCTBAL, O_ORDERKEY FROM TPCR_Ora.CUSTOMER " + //$NON-NLS-1$
                  "LEFT OUTER JOIN TPCR_SQLS.ORDERS ON C_CUSTKEY = O_CUSTKEY " + //$NON-NLS-1$
                  "AND O_ORDERDATE < {ts'1992-01-02 00:00:00.0'} " + //$NON-NLS-1$
@@ -164,7 +164,7 @@ public class TestTPCR extends BaseQueryTest {
         finder.addCapabilities("TPCR_Ora", CapabilitiesConverter.convertCapabilities(new OracleCapabilities())); //$NON-NLS-1$
         finder.addCapabilities("TPCR_SQLS", CapabilitiesConverter.convertCapabilities(new SqlServerCapabilities())); //$NON-NLS-1$
         
-        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/TPCR_3.vdb"),  //$NON-NLS-1$
+        ProcessorPlan plan = createPlan(BaseQueryTest.createMetadata(UnitTestUtil.getTestDataPath()+"/tpcr/TPCR_3.vdb"),  //$NON-NLS-1$
                  "SELECT C_CUSTKEY, C_NAME, C_ADDRESS, C_PHONE, C_ACCTBAL, O_ORDERKEY FROM TPCR_Ora.CUSTOMER " + //$NON-NLS-1$
                  "LEFT OUTER JOIN " + //$NON-NLS-1$
                  "(SELECT O_CUSTKEY, O_ORDERKEY FROM TPCR_SQLS.ORDERS WHERE O_ORDERDATE < {ts'1992-01-02 00:00:00.0'}) AS X " + //$NON-NLS-1$
