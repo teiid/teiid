@@ -3557,21 +3557,21 @@ public class TestOptimizer extends TestCase {
         });                                    
     }
     
-    /** defect 11630 - note that the lookup function is pushed down, it will actually be evaluated before being sent to the connector */
+    /** defect 11630 - note that the lookup function is not pushed down, it will actually be evaluated before being sent to the connector */
     public void testLookupFunction() {
 
-        ProcessorPlan plan = helpPlan("SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 'value') IS NULL", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1', 'e1', 'e2', 'value') IS NULL"  }); //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1', 'e1', 'e2', 1) IS NULL"  }); //$NON-NLS-1$
 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
 
     }
     
     /** case 5213 - note here that the lookup cannot be pushed down since it is dependent upon an element symbol*/
-    public void testLookupFunction2() {
+    public void testLookupFunction2() throws Exception {
 
-        ProcessorPlan plan = helpPlan("SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', e1) IS NULL", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g2"  }); //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', e2) IS NULL", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e2, g_0.e1 FROM pm1.g2 AS g_0"  }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 
         checkNodeTypes(plan, new int[] {
             1,      // Access
@@ -3594,7 +3594,7 @@ public class TestOptimizer extends TestCase {
     
     /** defect 21965 */
     public void testLookupFunctionInSelect() {
-        ProcessorPlan plan = helpPlan("SELECT e1, LOOKUP('pm1.g1','e1', 'e2', 'value') FROM pm1.g2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        ProcessorPlan plan = helpPlan("SELECT e1, LOOKUP('pm1.g1','e1', 'e2', 1) FROM pm1.g2", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT e1 FROM pm1.g2"  }); //$NON-NLS-1$
 
         checkNodeTypes(plan, new int[] {

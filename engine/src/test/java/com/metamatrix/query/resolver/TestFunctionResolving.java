@@ -121,10 +121,26 @@ public class TestFunctionResolving {
 
 	private Function helpResolveFunction(String sql) throws QueryParserException,
 			QueryResolverException, MetaMatrixComponentException {
-		Function func = (Function)QueryParser.getQueryParser().parseExpression(sql);
-		ResolverVisitor.resolveLanguageObject(func, FakeMetadataFactory.example1Cached());
+		Function func = getFunction(sql);
     	assertEquals(DataTypeManager.DefaultDataClasses.STRING, func.getType());
     	return func;
 	}
+
+	private Function getFunction(String sql) throws QueryParserException,
+			MetaMatrixComponentException, QueryResolverException {
+		Function func = (Function)QueryParser.getQueryParser().parseExpression(sql);
+		ResolverVisitor.resolveLanguageObject(func, FakeMetadataFactory.example1Cached());
+		return func;
+	}
+	
+	/**
+	 * e1 is of type string, so 1 should be converted to string
+	 * @throws Exception
+	 */
+    @Test public void testLookupTypeConversion() throws Exception {
+    	String sql = "lookup('pm1.g1', 'e2', 'e1', 1)"; //$NON-NLS-1$
+    	Function f = getFunction(sql);
+    	assertEquals(DataTypeManager.DefaultDataClasses.STRING, f.getArg(3).getType());
+    }
 	
 }

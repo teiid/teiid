@@ -825,41 +825,42 @@ public class ResolverUtil {
 		Expression[] args = lookup.getArgs();
 		ResolvedLookup result = new ResolvedLookup();
 	    // Special code to handle setting return type of the lookup function to match the type of the return element
-	    if( args[0] instanceof Constant && args[1] instanceof Constant && args[2] instanceof Constant) {
-	        // If code table name in lookup function refers to virtual group, throws exception
-			GroupSymbol groupSym = new GroupSymbol((String) ((Constant)args[0]).getValue());
-			try {
-				groupSym.setMetadataID(metadata.getGroupID((String) ((Constant)args[0]).getValue()));
-				if (groupSym.getMetadataID() instanceof TempMetadataID) {
-					throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0065, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0065, ((Constant)args[0]).getValue()));
-				}
-			} catch(QueryMetadataException e) {
-				throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, ((Constant)args[0]).getValue()));
+	    if( !(args[0] instanceof Constant) || !(args[1] instanceof Constant) || !(args[2] instanceof Constant)) {
+		    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0063, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0063));
+	    }
+        // If code table name in lookup function refers to temp group throw exception
+		GroupSymbol groupSym = new GroupSymbol((String) ((Constant)args[0]).getValue());
+		try {
+			groupSym.setMetadataID(metadata.getGroupID((String) ((Constant)args[0]).getValue()));
+			if (groupSym.getMetadataID() instanceof TempMetadataID) {
+				throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0065, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0065, ((Constant)args[0]).getValue()));
 			}
-			result.setGroup(groupSym);
-			
-			List<GroupSymbol> groups = Arrays.asList(groupSym);
-			
-			String returnElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[1]).getValue(); //$NON-NLS-1$
-			ElementSymbol returnElement = new ElementSymbol(returnElementName);
-	        try {
-	            ResolverVisitor.resolveLanguageObject(returnElement, groups, metadata);
-	        } catch(QueryMetadataException e) {
-	            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, returnElementName));
-	        }
-			result.setReturnElement(returnElement);
-	        
-	        String keyElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[2]).getValue(); //$NON-NLS-1$
-	        ElementSymbol keyElement = new ElementSymbol(keyElementName);
-	        try {
-	            ResolverVisitor.resolveLanguageObject(keyElement, groups, metadata);
-	        } catch(QueryMetadataException e) {
-	            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, keyElementName));
-	        }
-			result.setKeyElement(keyElement);
-			return result;
-	    } 
-	    throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0063, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0063));
+		} catch(QueryMetadataException e) {
+			throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, ((Constant)args[0]).getValue()));
+		}
+		result.setGroup(groupSym);
+		
+		List<GroupSymbol> groups = Arrays.asList(groupSym);
+		
+		String returnElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[1]).getValue(); //$NON-NLS-1$
+		ElementSymbol returnElement = new ElementSymbol(returnElementName);
+        try {
+            ResolverVisitor.resolveLanguageObject(returnElement, groups, metadata);
+        } catch(QueryMetadataException e) {
+            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, returnElementName));
+        }
+		result.setReturnElement(returnElement);
+        
+        String keyElementName = (String) ((Constant)args[0]).getValue() + "." + (String) ((Constant)args[2]).getValue(); //$NON-NLS-1$
+        ElementSymbol keyElement = new ElementSymbol(keyElementName);
+        try {
+            ResolverVisitor.resolveLanguageObject(keyElement, groups, metadata);
+        } catch(QueryMetadataException e) {
+            throw new QueryResolverException(ErrorMessageKeys.RESOLVER_0062, QueryPlugin.Util.getString(ErrorMessageKeys.RESOLVER_0062, keyElementName));
+        }
+		result.setKeyElement(keyElement);
+		args[3] = convertExpression(args[3], DataTypeManager.getDataTypeName(keyElement.getType()));
+		return result;
 	}
 
 	private static QueryResolverException handleUnresolvedGroup(GroupSymbol symbol, String description) {

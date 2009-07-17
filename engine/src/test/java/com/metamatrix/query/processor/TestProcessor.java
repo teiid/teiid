@@ -7029,7 +7029,7 @@ public class TestProcessor {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         // Plan query
-        String sql = "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 'value') = e1";//$NON-NLS-1$
+        String sql = "SELECT e1 FROM pm1.g2 WHERE LOOKUP('pm1.g1','e1', 'e2', 1) = e1";//$NON-NLS-1$
         Command command = TestProcessor.helpParse(sql);   
         ProcessorPlan plan = helpGetPlan(command, FakeMetadataFactory.example1Cached(), capFinder);
         
@@ -7041,7 +7041,7 @@ public class TestProcessor {
         FakeDataManager dataManager = new FakeDataManager();
         sampleData1(dataManager);
         Map valueMap = new HashMap();
-        valueMap.put("value", "b"); //$NON-NLS-1$ //$NON-NLS-2$
+        valueMap.put(1, "b"); //$NON-NLS-1$ //$NON-NLS-2$
         dataManager.defineCodeTable("pm1.g1", "e2", "e1", valueMap); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         dataManager.setThrowBlocked(true);
         

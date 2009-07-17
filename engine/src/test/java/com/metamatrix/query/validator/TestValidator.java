@@ -1703,7 +1703,7 @@ public class TestValidator extends TestCase {
     
     public void testLookupKeyElementComparable() throws Exception {
     	QueryMetadataInterface metadata = exampleMetadata2();
-        String sql = "SELECT lookup('test.group', 'e2', 'e3', e2) AS x FROM test.group"; //$NON-NLS-1$
+        String sql = "SELECT lookup('test.group', 'e2', 'e3', convert(e2, blob)) AS x FROM test.group"; //$NON-NLS-1$
         Command command = QueryParser.getQueryParser().parseCommand(sql);
     	QueryResolver.resolveCommand(command, metadata); 
         

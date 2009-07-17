@@ -1458,20 +1458,20 @@ public class TestQueryRewriter extends TestCase {
     
     //base test.  no change is expected
     public void testRewriteLookupFunction1() {
-        String criteria = "lookup('pm1.g1','e1', 'e2', 'value') = 'ab'"; //$NON-NLS-1$
+        String criteria = "lookup('pm1.g1','e1', 'e2', 1) = 'ab'"; //$NON-NLS-1$
         CompareCriteria expected = (CompareCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
         helpTestRewriteCriteria(criteria, expected, FakeMetadataFactory.example1Cached());
     }
     
     public void testRewriteLookupFunction1b() {
-        helpTestRewriteCriteria("lookup('pm1.g1','e1', 'e2', pm1.g1.e1) = 'ab'", "lookup('pm1.g1','e1', 'e2', pm1.g1.e1) = 'ab'"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("lookup('pm1.g1','e1', 'e2', pm1.g1.e2) = 'ab'", "lookup('pm1.g1','e1', 'e2', pm1.g1.e2) = 'ab'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /** defect 11630 1 should still get rewritten as '1'*/
     public void testRewriteLookupFunctionCompoundCriteria() {
-        String criteria = "LOOKUP('pm1.g1','e1', 'e2', 'value') IS NULL AND pm1.g1.e1='1'"; //$NON-NLS-1$
+        String criteria = "LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL AND pm1.g1.e1='1'"; //$NON-NLS-1$
         CompoundCriteria expected = (CompoundCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
-        helpTestRewriteCriteria("LOOKUP('pm1.g1','e1', 'e2', 'value') IS NULL AND pm1.g1.e1=1", expected, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ 
+        helpTestRewriteCriteria("LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL AND pm1.g1.e1=1", expected, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ 
     }
 
     public void testSelectWithNoFrom() {
@@ -1680,9 +1680,9 @@ public class TestQueryRewriter extends TestCase {
     }
     
     public void testRewriteSearchedCaseExpr4() {
-        String criteria = "lookup('pm1.g1', 'e2', 'e1', null) = 0"; //$NON-NLS-1$
+        String criteria = "lookup('pm1.g1', 'e2', 'e1', '2') = 0"; //$NON-NLS-1$
         CompareCriteria expected = (CompareCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
-        helpTestRewriteCriteria("lookup('pm1.g1', 'e2', 'e1', case 0 when 1 then pm1.g1.e1 end) = 0", expected, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
+        helpTestRewriteCriteria("lookup('pm1.g1', 'e2', 'e1', case 0 when 1 then pm1.g1.e1 else 2 end) = 0", expected, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
     // First WHEN always false, so remove it
