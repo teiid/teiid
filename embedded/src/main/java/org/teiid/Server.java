@@ -32,6 +32,7 @@ import java.util.Properties;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.util.JMXUtil.FailedToRegisterException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 
@@ -69,10 +70,14 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 		}
 	}
 		
-	public static boolean duplicateProcess(Properties props) {
+	private static boolean duplicateProcess(Properties props) {
 		try {
-			String parent = new File(new File(props.getProperty(DQPEmbeddedProperties.BOOTURL)).getParent(), props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR)).getCanonicalPath();
-			File f = new File(parent, "teiid.pid"); //$NON-NLS-1$			
+			String teiidHome = props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
+			String workDir = props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR, "work"); //$NON-NLS-1$
+			String processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME); 
+			
+			String parent = new File(teiidHome, workDir).getCanonicalPath();
+			File f = new File(parent, "teiid_"+processName+".pid"); //$NON-NLS-1$ //$NON-NLS-2$ 			
 			FileChannel channel = new RandomAccessFile(f, "rw").getChannel(); //$NON-NLS-1$
 			return (channel.tryLock() == null); 
 		} catch (IOException e) {
@@ -98,7 +103,7 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 			// enable socket communication by default.
 			props.setProperty(DQPEmbeddedProperties.ENABLE_SOCKETS, Boolean.TRUE.toString());
 			props.setProperty(DQPEmbeddedProperties.BOOTURL, f.getCanonicalPath());
-			props.setProperty(DQPEmbeddedProperties.TEIID_HOME,f.getParentFile().getCanonicalPath());
+			props.setProperty(DQPEmbeddedProperties.TEIID_HOME, System.getProperty(DQPEmbeddedProperties.TEIID_HOME,f.getParentFile().getCanonicalPath()));
 		} catch (IOException e) {
 			System.out.println("Failed to load bootstrap properties file."); //$NON-NLS-1$
 			e.printStackTrace();
@@ -153,8 +158,9 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 		Properties props = loadConfiguration(args[0]);
 		
 		// check for duplicate process
+		String processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME);
 		if (duplicateProcess(props)) {
-			System.out.println("There is already another Server process running! Failed to start"); //$NON-NLS-1$
+			System.out.println(DQPEmbeddedPlugin.Util.getString("DQPEmbeddedManager.duplicate_process", processName)); //$NON-NLS-1$
 			System.exit(-2);			
 		}
 		
