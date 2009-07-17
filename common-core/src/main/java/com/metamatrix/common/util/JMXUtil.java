@@ -72,10 +72,15 @@ public class JMXUtil {
 			throw new FailedToRegisterException(e);
 		}
 	}
+
+	public MBeanServer getMBeanServer() {
+		return mbs;
+	}
 	
 	public static class FailedToRegisterException extends MetaMatrixCoreException{
 		public FailedToRegisterException(Throwable e) {
 			super(e);
 		}
 	}
+	
 }

@@ -31,6 +31,7 @@ import org.jboss.cache.eviction.FIFOAlgorithmConfig;
 import org.jboss.cache.eviction.LFUAlgorithmConfig;
 import org.jboss.cache.eviction.LRUAlgorithmConfig;
 import org.jboss.cache.eviction.MRUAlgorithmConfig;
+import org.jboss.cache.jmx.JmxRegistrationManager;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -49,18 +50,18 @@ public class JBossCacheFactory implements CacheFactory {
 	private static final String NAME = "Cache"; //$NON-NLS-1$
 	private org.jboss.cache.Cache cacheStore;
 	private volatile boolean destroyed = false;
-	private JMXUtil jmx; 
+	JmxRegistrationManager jmxManager;
 	
 	@Inject
 	public JBossCacheFactory(org.jboss.cache.Cache cacheStore, @Named("jmx") JMXUtil jmx) {
 		this.cacheStore =  cacheStore;
-//		try {
-//			this.jmx = jmx;
-//			//jmx.register(JMXUtil.MBeanType.SERVICE, NAME, cacheStore); 
-//			this.cacheStore =  cacheStore;
-//		} catch (FailedToRegisterException e) {
-//			throw new MetaMatrixRuntimeException(e.getCause());
-//		}
+		try {
+			this.cacheStore =  cacheStore;
+			jmxManager = new JmxRegistrationManager(jmx.getMBeanServer(), cacheStore, jmx.buildName(JMXUtil.MBeanType.SERVICE, NAME));
+			jmxManager.registerAllMBeans();
+		} catch (FailedToRegisterException e) {
+			throw new MetaMatrixRuntimeException(e.getCause());
+		}
 	}
 
 	/**
@@ -109,13 +110,6 @@ public class JBossCacheFactory implements CacheFactory {
 	}    
 	
 	public void destroy() {
-//		try {
-//			jmx.unregister(JMXUtil.MBeanType.SERVICE, NAME);
-//		} catch (FailedToRegisterException e) {
-//		} finally {
-//			this.cacheStore.destroy();
-//			this.destroyed = true;
-//		}
+		jmxManager.unregisterAllMBeans();
 	}	
-	
 }
