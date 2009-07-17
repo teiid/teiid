@@ -330,29 +330,27 @@ public class AliasGenerator extends PreOrderNavigator {
         for (int i = 0; i < obj.getVariableCount(); i++) {
             SingleElementSymbol element = obj.getVariable(i);
             String name = visitor.namingContext.getElementName(element, false);
-            boolean needsAlias = true;
-            
-            Expression expr = SymbolMap.getExpression(element);
-                        
-            if (!(expr instanceof SingleElementSymbol)) {
-                expr = new ExpressionSymbol(element.getShortName(), expr);
-            } else if (expr instanceof ElementSymbol) {
-                needsAlias = needsAlias(name, (ElementSymbol)expr);
-            } 
-                        
-            if (needsAlias) {
-                element = new AliasSymbol(element.getShortName(), (SingleElementSymbol)expr);
-                obj.getVariables().set(i, element);
+            if (name != null) {
+	            boolean needsAlias = true;
+	            
+	            Expression expr = SymbolMap.getExpression(element);
+	                        
+	            if (!(expr instanceof SingleElementSymbol)) {
+	                expr = new ExpressionSymbol(element.getShortName(), expr);
+	            } else if (expr instanceof ElementSymbol) {
+	                needsAlias = needsAlias(name, (ElementSymbol)expr);
+	            } 
+	                        
+	            if (needsAlias) {
+	                element = new AliasSymbol(element.getShortName(), (SingleElementSymbol)expr);
+	                obj.getVariables().set(i, element);
+	            }
+	            element.setOutputName(name);
             }
-            element.setOutputName(name);
-        }
-        
-        super.visit(obj);
-        
-        //we prefer to use the short name
-        for (int i = 0; i < obj.getVariableCount(); i++) {
-        	SingleElementSymbol element = obj.getVariable(i);
-        	if (element instanceof ElementSymbol) {
+            
+            visitNode(element);
+            
+            if (name != null && element instanceof ElementSymbol) {
         		element.setOutputName(SingleElementSymbol.getShortName(element.getOutputName()));
         	}
         }
