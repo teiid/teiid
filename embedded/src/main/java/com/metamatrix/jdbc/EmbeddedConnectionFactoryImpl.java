@@ -33,6 +33,7 @@ import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.URL;
 import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.Date;
 import java.util.Properties;
 
@@ -96,6 +97,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     private SocketTransport socketTransport;
     private JMXUtil jmxServer;
     private boolean restart = false;
+    private FileLock pidLock;
     
 	@Override
 	public ServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
@@ -205,7 +207,8 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 		try {
 			File f = new File(this.workspaceDirectory, "teiid_"+processName+".pid"); //$NON-NLS-1$ //$NON-NLS-2$			
 			FileChannel channel = new RandomAccessFile(f, "rw").getChannel(); //$NON-NLS-1$
-			return (channel.tryLock() == null); 
+			this.pidLock = channel.tryLock();
+			return (this.pidLock == null); 
 		} catch (Exception e) {
 			// ignore
 		}
@@ -370,6 +373,12 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
             this.shutdownInProgress = false;
             
             this.init = false;
+            
+            try {
+				this.pidLock.release();
+			} catch (IOException e) {
+				//ignore..
+			}
             
             this.restart = restart;
         }    	
