@@ -170,12 +170,12 @@ public class TestAccessPatterns extends TestCase {
     }
     
     public void testUnionWithAccessPattern() {
-        TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1 UNION select pm4.g1.e1 from pm4.g1 where pm4.g1.e1 = 'abc'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1 UNION ALL select pm4.g1.e1 from pm4.g1 where pm4.g1.e1 = 'abc'", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm4.g1.e1 FROM pm4.g1 WHERE pm4.g1.e1 = 'abc'" }); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testUnionWithAccessPattern2() {
-        TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1 UNION select pm4.g1.e1 from pm4.g1 where pm4.g1.e1 = 'abc' and pm4.g1.e2 = 1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
+        TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1 UNION ALL select pm4.g1.e1 from pm4.g1 where pm4.g1.e1 = 'abc' and pm4.g1.e2 = 1", FakeMetadataFactory.example1Cached(), //$NON-NLS-1$
             new String[] { "SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm4.g1.e1 FROM pm4.g1 WHERE (pm4.g1.e1 = 'abc') AND (pm4.g1.e2 = 1)" }); //$NON-NLS-1$ //$NON-NLS-2$
     }
 

@@ -32,6 +32,7 @@ import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.RuleStack;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
@@ -95,6 +96,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 	}
                     plan = removeUnnecessaryInlineView(plan, commandRoot);
                     QueryCommand queryCommand = createQuery(metadata, capFinder, accessNode, commandRoot);
+                    addSetOpDistinct(metadata, capFinder, accessNode, queryCommand);
                     command = queryCommand;
                     if (intoGroup != null) {
                     	Insert insertCommand = new Insert(intoGroup, ResolverUtil.resolveElementsInGroup(intoGroup, metadata), null);
@@ -108,6 +110,33 @@ public final class RuleCollapseSource implements OptimizerRule {
         }
        				
 		return plan;
+	}
+
+	private void addSetOpDistinct(QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, PlanNode accessNode,
+			QueryCommand queryCommand) throws QueryMetadataException,
+			MetaMatrixComponentException {
+		if (queryCommand.getLimit() != null && queryCommand.getOrderBy() != null) {
+			return; //TODO: could create an inline view
+		}
+		PlanNode parent = accessNode.getParent();
+		boolean dupRemoval = false;
+		while (parent != null && parent.getType() == NodeConstants.Types.SET_OP) {
+			if (!parent.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+				dupRemoval = true;
+			}
+			parent = parent.getParent();
+		}
+		if (!dupRemoval) {
+			return;
+		}
+		//TODO: we should also order the results and update the set processing logic
+		// this requires that we can guarantee null ordering
+		if (queryCommand instanceof SetQuery) {
+			((SetQuery)queryCommand).setAll(false);
+		} else if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
+			((Query)queryCommand).getSelect().setDistinct(true);
+		}
 	}
 
     private PlanNode removeUnnecessaryInlineView(PlanNode root, PlanNode accessNode) {

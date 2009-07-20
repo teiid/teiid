@@ -47,7 +47,6 @@ import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.StoredProcedure;
-import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
@@ -346,8 +345,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         
         for (PlanNode planNode : nodes) {
             if (planNode.getType() == NodeConstants.Types.DUP_REMOVE
-                || planNode.getProperty(NodeConstants.Info.SET_OPERATION).equals(Operation.UNION)
-                && planNode.getProperty(NodeConstants.Info.USE_ALL).equals(Boolean.FALSE)) {
+                || (planNode.getType() == NodeConstants.Types.SET_OP && Boolean.FALSE.equals(planNode.getProperty(NodeConstants.Info.USE_ALL)))) {
                 return true;
             }
         }

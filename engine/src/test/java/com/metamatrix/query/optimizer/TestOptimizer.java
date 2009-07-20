@@ -902,28 +902,28 @@ public class TestOptimizer extends TestCase {
     public void testPushingCriteriaThroughUnion1() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc'", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
     public void testPushingCriteriaThroughUnion2() { 
     	helpPlan("select e1 from vm1.u2 where e1='abc'", example1(), //$NON-NLS-1$
-			new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+			new String[] { "SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
     public void testPushingCriteriaThroughUnion3() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc' and e2=5", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') AND (pm1.g3.e2 = 5)", //$NON-NLS-1$
-							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') AND (pm1.g2.e2 = 5)", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') AND (pm1.g1.e2 = 5)" } ); //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') AND (pm1.g2.e2 = 5)", //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') AND (pm1.g1.e2 = 5)" } ); //$NON-NLS-1$
   	}
 
     public void testPushingCriteriaThroughUnion4() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc' or e2=5", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') OR (pm1.g3.e2 = 5)", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
-							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)" } ); //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)" } ); //$NON-NLS-1$
   	}
 
 	// expression in a subquery of the union
@@ -992,8 +992,8 @@ public class TestOptimizer extends TestCase {
     	ProcessorPlan plan = helpPlan("select vm1.u1.e1 from vm1.u1, pm1.g1 where vm1.u1.e1='abc' and vm1.u1.e1=pm1.g1.e1", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
                             "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             4,      // Access
             0,      // DependentAccess
@@ -1137,8 +1137,8 @@ public class TestOptimizer extends TestCase {
     
     public void testDefect5283() {        
         helpPlan("select * from vm1.a6", example1(), //$NON-NLS-1$
-            new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", //$NON-NLS-1$
-                            "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2" } ); //$NON-NLS-1$
+            new String[] { "SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", //$NON-NLS-1$
+                            "SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2" } ); //$NON-NLS-1$
     }
     
     public void testManyJoinsOverThreshold() throws Exception {
@@ -4789,239 +4789,6 @@ public class TestOptimizer extends TestCase {
 
         checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }        
-
-    public void testBusObjQuestion1() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);    
-        
-        capFinder.addCapabilities("db2model", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
-        
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
-
-        String sql = "SELECT Q1.S, Q2.C, Q1.PRODUCT, Q1.REGION AS Q1R, Q2.REGION AS Q2R FROM " + //$NON-NLS-1$
-            "(SELECT SUM(SALES) AS S, REGION, PRODUCT FROM DB2_TABLE WHERE PRODUCT IN ('GUNS', 'TOYS', 'VIDEOTAPES') GROUP BY REGION, PRODUCT) Q1 " + //$NON-NLS-1$
-            "FULL OUTER JOIN " +  //$NON-NLS-1$
-            "(SELECT SUM(COSTS) AS C, REGION FROM ORACLE_TABLE WHERE YEAR = '1999' GROUP BY REGION) Q2 " + //$NON-NLS-1$
-            "ON Q1.REGION = Q2.REGION"; //$NON-NLS-1$
-
-        ProcessorPlan plan = helpPlan(sql,  
-                                      metadata,
-                                      null, capFinder,
-                                      new String[] {"SELECT REGION, SUM(SALES), PRODUCT FROM db2model.DB2_TABLE WHERE PRODUCT IN ('GUNS', 'TOYS', 'VIDEOTAPES') GROUP BY REGION, PRODUCT", //$NON-NLS-1$
-                                                    "SELECT REGION, SUM(COSTS) FROM oraclemodel.Oracle_table WHERE YEAR = '1999' GROUP BY REGION"},  //$NON-NLS-1$
-                                      SHOULD_SUCCEED );
-
-        checkNodeTypes(plan, new int[] {
-                                        2,      // Access
-                                        0,      // DependentAccess
-                                        0,      // DependentSelect
-                                        0,      // DependentProject
-                                        0,      // DupRemove
-                                        0,      // Grouping
-                                        0,      // NestedLoopJoinStrategy
-                                        1,      // MergeJoinStrategy
-                                        0,      // Null
-                                        0,      // PlanExecution
-                                        1,      // Project
-                                        0,      // Select
-                                        0,      // Sort
-                                        0       // UnionAll
-                                    });
-    }        
-
-    public void testBusObjQuestion2() throws Exception {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);    
-        
-        capFinder.addCapabilities("db2model", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
-        
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
-
-        String sql = "SELECT SUM(F.SALES), G.REGION, T.YEAR " +  //$NON-NLS-1$
-            "FROM SALES F, GEOGRAPHY G, msModel.TIME T " + //$NON-NLS-1$
-            "WHERE (F.CITY = G.CITY) AND (F.MONTH = T.MONTH) " +  //$NON-NLS-1$
-            "AND G.REGION IN ('BORDEAUX', 'POLINESIA') AND T.YEAR = '1999' " +  //$NON-NLS-1$
-            "GROUP BY G.REGION, T.YEAR"; //$NON-NLS-1$
-
-        ProcessorPlan plan = helpPlan(sql,  
-                                      metadata,
-                                      null, capFinder,
-                                      new String[] {"SELECT g_0.MONTH, g_0.YEAR FROM msModel.\"TIME\" AS g_0 WHERE g_0.YEAR = '1999'", //$NON-NLS-1$
-                                                    "SELECT g_0.MONTH AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.MONTH IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.MONTH, g_0.CITY ORDER BY c_0, c_1", //$NON-NLS-1$ 
-                                                    "SELECT g_0.CITY, g_0.REGION FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA')"},  //$NON-NLS-1$
-                                      ComparisonMode.EXACT_COMMAND_STRING );
-
-        checkNodeTypes(plan, new int[] {
-                                        2,      // Access
-                                        1,      // DependentAccess
-                                        0,      // DependentSelect
-                                        0,      // DependentProject
-                                        0,      // DupRemove
-                                        1,      // Grouping
-                                        1,      // NestedLoopJoinStrategy
-                                        1,      // MergeJoinStrategy
-                                        0,      // Null
-                                        0,      // PlanExecution
-                                        1,      // Project
-                                        0,      // Select
-                                        0,      // Sort
-                                        0       // UnionAll
-                                    });
-    }   
-
-    public void testBusObjQuestion2Hint() throws Exception {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);    
-        
-        capFinder.addCapabilities("db2model", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
-        
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
-
-        String sql = "SELECT SUM(F.SALES), G.REGION, T.YEAR " +  //$NON-NLS-1$
-            "FROM SALES F MAKEDEP, GEOGRAPHY G, msModel.TIME T " + //$NON-NLS-1$
-            "WHERE (F.CITY = G.CITY) AND (F.MONTH = T.MONTH) " +  //$NON-NLS-1$
-            "AND G.REGION IN ('BORDEAUX', 'POLINESIA') AND T.YEAR = '1999' " +  //$NON-NLS-1$
-            "GROUP BY G.REGION, T.YEAR"; //$NON-NLS-1$
-
-        ProcessorPlan plan = helpPlan(sql,  
-                                      metadata,
-                                      null, capFinder,
-                                      new String[] {"SELECT g_0.MONTH, g_0.YEAR FROM msModel.\"TIME\" AS g_0 WHERE g_0.YEAR = '1999'", //$NON-NLS-1$
-                                          "SELECT g_0.MONTH AS c_0, g_0.CITY AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0 WHERE (g_0.MONTH IN (<dependent values>)) AND (g_0.CITY IN (<dependent values>)) GROUP BY g_0.MONTH, g_0.CITY ORDER BY c_0, c_1", //$NON-NLS-1$ 
-                                          "SELECT g_0.CITY, g_0.REGION FROM oraclemodel.GEOGRAPHY AS g_0 WHERE g_0.REGION IN ('BORDEAUX', 'POLINESIA')"},  //$NON-NLS-1$
-                                      ComparisonMode.EXACT_COMMAND_STRING );
-
-        checkNodeTypes(plan, new int[] {
-                                        2,      // Access
-                                        1,      // DependentAccess
-                                        0,      // DependentSelect
-                                        0,      // DependentProject
-                                        0,      // DupRemove
-                                        1,      // Grouping
-                                        1,      // NestedLoopJoinStrategy
-                                        1,      // MergeJoinStrategy
-                                        0,      // Null
-                                        0,      // PlanExecution
-                                        1,      // Project
-                                        0,      // Select
-                                        0,      // Sort
-                                        0       // UnionAll
-                                    });
-    } 
-
-    public void testBusObjQuestion2HintVariation() throws Exception {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);    
-        
-        capFinder.addCapabilities("db2model", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
-        
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
-
-        String sql = "SELECT SUM(F.SALES), G.REGION, T.YEAR " +  //$NON-NLS-1$
-            "FROM SALES F MAKEDEP, GEOGRAPHY2 G, msModel.TIME T " + //$NON-NLS-1$
-            "WHERE (F.CITY = G.CITY) AND (F.MONTH = T.MONTH) " +  //$NON-NLS-1$
-            "AND G.REGION IN ('BORDEAUX', 'POLINESIA') AND T.YEAR = '1999' " +  //$NON-NLS-1$
-            "GROUP BY G.REGION, T.YEAR"; //$NON-NLS-1$
-
-        ProcessorPlan plan = helpPlan(sql,  
-                                      metadata,
-                                      null, capFinder,
-                                      new String[] {"SELECT g_0.MONTH AS c_0, g_1.REGION AS c_1, SUM(g_0.SALES) AS c_2 FROM db2model.SALES AS g_0, db2model.GEOGRAPHY2 AS g_1 WHERE (g_0.CITY = g_1.CITY) AND (g_1.REGION IN ('BORDEAUX', 'POLINESIA')) AND (g_0.MONTH IN (<dependent values>)) GROUP BY g_0.MONTH, g_1.REGION ORDER BY c_0", //$NON-NLS-1$ 
-                                                    "SELECT g_0.MONTH AS c_0, g_0.YEAR AS c_1 FROM msModel.\"TIME\" AS g_0 WHERE g_0.YEAR = '1999' ORDER BY c_0"},  //$NON-NLS-1$
-                                                    ComparisonMode.EXACT_COMMAND_STRING );
-
-        checkNodeTypes(plan, new int[] {
-                                        1,      // Access
-                                        1,      // DependentAccess
-                                        0,      // DependentSelect
-                                        0,      // DependentProject
-                                        0,      // DupRemove
-                                        1,      // Grouping
-                                        0,      // NestedLoopJoinStrategy
-                                        1,      // MergeJoinStrategy
-                                        0,      // Null
-                                        0,      // PlanExecution
-                                        1,      // Project
-                                        0,      // Select
-                                        0,      // Sort
-                                        0       // UnionAll
-                                    });
-    } 
-
-    public void testBusObjQuestion3() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);    
-        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);    
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);    
-        
-        capFinder.addCapabilities("db2model", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("oraclemodel", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("msmodel", caps); //$NON-NLS-1$
-        
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBusObj();
-
-        String sql = "select sum(c0), sum(b0), c1, b2 FROM db2Table, OraTable where c2=b2 group by c1, b2"; //$NON-NLS-1$
-
-        ProcessorPlan plan = helpPlan(sql,  
-                                      metadata,
-                                      null, capFinder,
-                                      new String[] {"SELECT c2, c1, c0 FROM db2model.DB2TABLE", //$NON-NLS-1$
-                                                    "SELECT b2, sum(b0) FROM oraclemodel.OraTable GROUP BY b2 ORDER BY b2"},  //$NON-NLS-1$
-                                      SHOULD_SUCCEED );
-
-        checkNodeTypes(plan, new int[] {
-                                        2,      // Access
-                                        0,      // DependentAccess
-                                        0,      // DependentSelect
-                                        0,      // DependentProject
-                                        0,      // DupRemove
-                                        1,      // Grouping
-                                        0,      // NestedLoopJoinStrategy
-                                        1,      // MergeJoinStrategy
-                                        0,      // Null
-                                        0,      // PlanExecution
-                                        2,      // Project
-                                        0,      // Select
-                                        0,      // Sort
-                                        0       // UnionAll
-                                    });
-    } 
     
     public void testMultiUnionMergeVirtual() throws Exception {
         String sql = "SELECT * FROM " +  //$NON-NLS-1$

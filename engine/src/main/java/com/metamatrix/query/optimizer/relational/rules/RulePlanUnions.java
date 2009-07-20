@@ -169,7 +169,11 @@ public class RulePlanUnions implements OptimizerRule {
                                                  MetaMatrixComponentException {
         for (PlanNode child : unionNode.getChildren()) {
             if (child.getType() == NodeConstants.Types.SET_OP) {
-                if (all == child.hasBooleanProperty(NodeConstants.Info.USE_ALL) && setOp.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) && setOp != Operation.EXCEPT) { //keep collecting sources
+            	if (!all && Operation.UNION == child.getProperty(NodeConstants.Info.SET_OPERATION)) {
+            		//allow the parent to handle the dup removal
+            		child.setProperty(NodeConstants.Info.USE_ALL, Boolean.TRUE);
+            	}
+                if ((!all || child.hasBooleanProperty(NodeConstants.Info.USE_ALL)) && setOp.equals(child.getProperty(NodeConstants.Info.SET_OPERATION)) && setOp != Operation.EXCEPT) { //keep collecting sources
                     List accessNodes = NodeEditor.findAllNodes(child, NodeConstants.Types.ACCESS);
                     
                     Object id = getModelId(metadata, accessNodes, capabilitiesFinder);
