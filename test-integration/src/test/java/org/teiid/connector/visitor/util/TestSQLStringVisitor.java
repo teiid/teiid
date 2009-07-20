@@ -457,4 +457,26 @@ public class TestSQLStringVisitor  {
     	insert.setValueSource(command);
     	assertEquals("INSERT INTO g1 (e1, e2, e3, e4) SELECT g2.e1, g2.e2, g2.e3, g2.e4 FROM g2", insert.toString()); //$NON-NLS-1$
     }
+    
+    @Test public void testUnrelatedOrderBy() throws Exception {
+    	String sql = "select intkey from bqt1.smalla order by stringkey"; //$NON-NLS-1$ 
+    	
+    	ICommand command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY g_0.StringKey", command.toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testOrderByDerivedColumn() throws Exception {
+    	String sql = "select intkey as x from bqt1.smalla order by intkey"; //$NON-NLS-1$ 
+    	
+    	ICommand command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testOrderByAlias() throws Exception {
+    	String sql = "select intkey as x from bqt1.smalla order by x"; //$NON-NLS-1$ 
+    	
+    	ICommand command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	assertEquals("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY c_0", command.toString()); //$NON-NLS-1$
+    }
+
 }

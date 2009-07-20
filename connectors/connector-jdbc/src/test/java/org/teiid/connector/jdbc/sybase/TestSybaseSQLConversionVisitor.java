@@ -203,8 +203,8 @@ public class TestSybaseSQLConversionVisitor {
     @Test
     public void testDefect12120() {
         helpTestVisitor(getBQTVDB(),
-            "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.BooleanValue IN ({b'false'}, {b'true'}) ORDER BY IntKey", //$NON-NLS-1$
-            "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.BooleanValue IN (0, 1) ORDER BY IntKey"); //$NON-NLS-1$
+            "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA WHERE BQT1.SmallA.BooleanValue IN ({b'false'}, {b'true'})", //$NON-NLS-1$
+            "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.BooleanValue IN (0, 1)"); //$NON-NLS-1$
                 
     }
     

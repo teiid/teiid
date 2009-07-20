@@ -450,7 +450,11 @@ public class LanguageBridgeFactory {
             OrderByItemImpl orderByItem = null;                                
             if(symbol instanceof ElementSymbol){
                 IElement innerElement = translate((ElementSymbol)symbol);
-                orderByItem = new OrderByItemImpl(symbol.getOutputName(), direction, innerElement);
+                if (symbol.getOutputName() != null && symbol.getOutputName().indexOf(ElementSymbol.SEPARATOR) != -1) {
+                	orderByItem = new OrderByItemImpl(null, direction, innerElement);
+                } else {
+                	orderByItem = new OrderByItemImpl(symbol.getOutputName(), direction, innerElement);
+                }
             } else {
                 orderByItem = new OrderByItemImpl(symbol.getOutputName(), direction, null);                
             }
