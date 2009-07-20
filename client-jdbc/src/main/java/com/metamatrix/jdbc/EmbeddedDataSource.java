@@ -27,6 +27,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.protocol.URLHelper;
 
 /**
@@ -44,6 +45,8 @@ public class EmbeddedDataSource extends BaseDataSource {
     
     //  string constant for the embedded configuration file property
     public static final String DQP_BOOTSTRAP_FILE = "bootstrapFile"; //$NON-NLS-1$
+    
+    public static final String SHUTDOWN = MMURL.CONNECTION.SHUTDOWN;
     
     // The driver used to connect
     private final transient EmbeddedDriver driver = new EmbeddedDriver();

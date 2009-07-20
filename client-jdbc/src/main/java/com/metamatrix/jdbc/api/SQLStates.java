@@ -100,6 +100,8 @@ public class SQLStates {
 	// Class 38 - External Routine Exception (as defined by SQL spec):
     /** External routine exception. This is the default unknown code */
     public static final String DEFAULT = "38000"; //$NON-NLS-1$
+    
+    public static final String SUCESS = "00000"; //$NON-NLS-1$
 
     // Class 50 - Query execution errors
     public static final SQLStateClass CLASS_USAGE_ERROR = new SQLStateClass("50"); //$NON-NLS-1$

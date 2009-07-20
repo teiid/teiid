@@ -24,9 +24,6 @@ package com.metamatrix.common.comm.api;
 
 import java.util.Properties;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
-
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
 

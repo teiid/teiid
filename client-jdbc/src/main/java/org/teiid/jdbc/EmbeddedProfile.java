@@ -42,6 +42,9 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+
 import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
@@ -53,9 +56,11 @@ import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.BaseDataSource;
+import com.metamatrix.jdbc.EmbeddedDataSource;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.jdbc.MMConnection;
 import com.metamatrix.jdbc.MMSQLException;
+import com.metamatrix.jdbc.api.SQLStates;
 import com.metamatrix.jdbc.util.MMJDBCURL;
 
 
@@ -90,7 +95,6 @@ final class EmbeddedProfile {
      */
     public static Connection connect(String url, Properties info) 
         throws SQLException {
-        Connection conn = null;
         // create a properties obj if it is null
         if (info == null) {
             info = new Properties();
@@ -100,8 +104,21 @@ final class EmbeddedProfile {
 
         // parse the URL to add it's properties to properties object
         parseURL(url, info);            
-        conn = createConnection(info);
-
+        MMConnection conn = createConnection(info);
+        boolean shutdown = Boolean.parseBoolean(info.getProperty(EmbeddedDataSource.SHUTDOWN, "false")); //$NON-NLS-1$
+        if (shutdown) {
+        	Admin admin = conn.getAdminAPI();
+        	try {
+        		// this will make sure the user has permissions to do the shutdown.
+				admin.shutdown(0); 
+				shutdown();
+				throw new MMSQLException(getResourceMessage("EmbeddedDriver.shutdown_sucessful"), SQLStates.SUCESS); //$NON-NLS-1$
+			} catch (AdminException e) {
+				conn.close();
+				throw new MMSQLException(e, getResourceMessage("EmbeddedDriver.shutdown_failure"), SQLStates.DEFAULT); //$NON-NLS-1$
+			}
+        }
+        
         // logging
         String logMsg = JDBCPlugin.Util.getString("JDBCDriver.Connection_sucess"); //$NON-NLS-1$
         logger.fine(logMsg);
@@ -110,7 +127,7 @@ final class EmbeddedProfile {
 
     }
     
-    static Connection createConnection(Properties info) throws SQLException{
+    static MMConnection createConnection(Properties info) throws SQLException{
         
         // first validate the properties as this may called from the EmbeddedDataSource
         // and make sure we have all the properties we need.
@@ -126,7 +143,7 @@ final class EmbeddedProfile {
         // now create the connection
         EmbeddedTransport transport = getDQPTransport(dqpURL, info);                        
         
-        Connection conn = transport.createConnection(dqpURL, info);
+        MMConnection conn = transport.createConnection(dqpURL, info);
         
         return conn;
     }
@@ -183,7 +200,7 @@ final class EmbeddedProfile {
             String connectionURL = jdbcURL.getConnectionURL();
             if (connectionURL == null) {
                 connectionURL = getDefaultConnectionURL();
-                info.setProperty("vdb.definition", jdbcURL.getVDBName()+".vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+                info.setProperty(DQPEmbeddedProperties.VDB_DEFINITION, jdbcURL.getVDBName()+".vdb"); //$NON-NLS-1$
             }
             info.setProperty(DQPEmbeddedProperties.DQP_BOOTSTRAP_FILE, connectionURL);
                        
@@ -399,7 +416,7 @@ final class EmbeddedProfile {
          * @param info
          * @return Connection
          */
-        Connection createConnection(URL url, Properties info) throws SQLException {
+        MMConnection createConnection(URL url, Properties info) throws SQLException {
             ClassLoader current = null;            
             try {
                 current = Thread.currentThread().getContextClassLoader();             

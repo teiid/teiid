@@ -32,7 +32,7 @@ import java.util.StringTokenizer;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 
 /**
- * Class to encapsulate URL to a Clustered Metamatrix Server with multiple host
+ * Class defines the URL in the Teiid.
  * 
  * @since 4.2
  */
@@ -62,6 +62,12 @@ public class MMURL {
 		 * A plugable discovery strategy for the client.  Defaults to using the AdminApi. 
 		 */
 		public static final String DISCOVERY_STRATEGY = "discoveryStategy"; //$NON-NLS-1$
+		
+		/**
+		 * if "true" in  the embedded mode if there is a active instance that instance will be shutdown.
+		 */
+		public static final String SHUTDOWN = "shutdown"; //$NON-NLS-1$
+		
 		public static final String SERVER_URL = "serverURL"; //$NON-NLS-1$
 		/**
 		 * Non-secure MetaMatrix Protocol.

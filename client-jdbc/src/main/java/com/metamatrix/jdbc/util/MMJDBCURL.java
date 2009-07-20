@@ -62,7 +62,8 @@ public class MMJDBCURL {
         ConnectionProperties.PROP_CLIENT_SESSION_PAYLOAD,
         ConnectionProperties.PROP_CREDENTIALS,
         MMURL.CONNECTION.AUTO_FAILOVER,
-        MMURL.CONNECTION.DISCOVERY_STRATEGY
+        MMURL.CONNECTION.DISCOVERY_STRATEGY,
+        MMURL.CONNECTION.SHUTDOWN
     };
     
     private String vdbName;

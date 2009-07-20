@@ -56,6 +56,14 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
         super();
     }
     
+    public MMSQLException(String reason) {
+        super(reason, SQLStates.DEFAULT);
+    }
+
+    public MMSQLException(String reason, String state) {
+        super(reason, state);
+    }    
+    
     public static MMSQLException create(Throwable exception) {
         if (exception instanceof MMSQLException) {
             return (MMSQLException)exception;
@@ -63,6 +71,39 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
         return create(exception, exception.getMessage());
     }
         
+    /**
+     * Constructor used to wrap metamatrix exceptions into MMSQLExceptions.
+     * @param reason String object which is the description of the exception.
+     * @param ex Throwable object which needs to be wrapped.
+     */
+    public MMSQLException(Throwable ex, String reason, String sqlState) {
+        super(reason, sqlState); // passing the message to the super class constructor.
+        initCause(ex);
+    }
+    
+    /**
+     * Constructor used to wrap or copy a SQLException into a MMSQLException 
+     * @see com.metamatrix.common.util.exception.SQLEXceptionUnroller
+     * @param ex
+     * @param message
+     * @param addChildren
+     */
+    private MMSQLException(SQLException ex, String message, boolean addChildren) {
+        super(message, ex.getSQLState() == null ? SQLStates.DEFAULT : ex.getSQLState(), ex.getErrorCode());
+        
+        if (addChildren) {
+        	SQLException childException = ex; // this a child to the SQLException constructed from reason
+
+            while (childException != null) {
+                if (childException instanceof MMSQLException) {
+                    super.setNextException(ex);
+                    break;
+                } 
+                super.setNextException(new MMSQLException(childException, getMessage(childException, null),false));
+                childException = childException.getNextException();
+            }
+        }
+    }    
     public static MMSQLException create(Throwable exception, String message) {
 		message = getMessage(exception, message);
 		Throwable origException = exception;
@@ -79,7 +120,7 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
 		exception = findRootException(exception);
 
 		sqlState = determineSQLState(exception, sqlState);
-		return new MMSQLException(message, origException, sqlState);
+		return new MMSQLException(origException, message, sqlState);
 	}
 
     /** 
@@ -169,49 +210,8 @@ public class MMSQLException extends SQLException implements com.metamatrix.jdbc.
         }
         return message;
     }
-
-    /**
-     * Constructor used to wrap metamatrix exceptions into MMSQLExceptions.
-     * @param reason String object which is the description of the exception.
-     * @param ex Throwable object which needs to be wrapped.
-     */
-    private MMSQLException(String reason, Throwable ex, String sqlState) {
-        super(reason, sqlState); // passing the message to the super class constructor.
-        initCause(ex);
-    }
     
-    /**
-     * Constructor used to wrap or copy a SQLException into a MMSQLException 
-     * @see com.metamatrix.common.util.exception.SQLEXceptionUnroller
-     * @param ex
-     * @param message
-     * @param addChildren
-     */
-    private MMSQLException(SQLException ex, String message, boolean addChildren) {
-        super(message, ex.getSQLState() == null ? SQLStates.DEFAULT : ex.getSQLState(), ex.getErrorCode());
-        
-        if (addChildren) {
-        	SQLException childException = ex; // this a child to the SQLException constructed from reason
-
-            while (childException != null) {
-                if (childException instanceof MMSQLException) {
-                    super.setNextException(ex);
-                    break;
-                } 
-                super.setNextException(new MMSQLException(childException, getMessage(childException, null),false));
-                childException = childException.getNextException();
-            }
-        }
-    }
     
-    /**
-     * Constructor a MMSQLException object initialized with reason.
-     * @param reason String object which is the description of the exception.
-     */
-    public MMSQLException(String reason) {
-        super(reason, SQLStates.DEFAULT);
-    }
-
     /** 
      * @see java.lang.Throwable#getCause()
      * @since 4.3.2
