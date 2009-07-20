@@ -35,7 +35,7 @@ public class TestTeiidDriver {
     
     @Test public void testGetPropertyInfo1() throws Exception {        
         DriverPropertyInfo info[] = drv.getPropertyInfo("jdbc:teiid:vdb@mm://localhost:12345", null); //$NON-NLS-1$
-        assertEquals(19, info.length);
+        assertEquals(20, info.length);
     }
     
     @Test public void testAccepts() throws Exception {
