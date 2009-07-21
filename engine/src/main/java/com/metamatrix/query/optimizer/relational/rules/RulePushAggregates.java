@@ -141,12 +141,11 @@ public class RulePushAggregates implements
 	 * group [agg(agg(x)), {a, b}]
 	 *   source
 	 *     set op
-	 *       source
-	 *         project
-	 *           [select]
-	 *             group [agg(x), {a, b}]
-	 *               source
-	 *                 child 1
+	 *       project
+	 *         [select]
+	 *           group [agg(x), {a, b}]
+	 *             source
+	 *               child 1
 	 *       ...
 	 * 
 	 * Or if the child does not support pushdown we add dummy aggregate projection
