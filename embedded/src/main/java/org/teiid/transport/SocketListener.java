@@ -80,7 +80,7 @@ public class SocketListener implements ChannelListenerFactory {
         this.workerPool = WorkerPoolFactory.newWorkerPool("SocketWorker", maxWorkers); //$NON-NLS-1$
         this.nettyPool = Executors.newCachedThreadPool();
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SERVER, MessageLevel.DETAIL)) { 
-            LogManager.logDetail(LogConstants.CTX_SERVER, "server = " + this.server + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
+            LogManager.logDetail(LogConstants.CTX_SERVER, "server = " + bindAddress + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
         ChannelFactory factory = new NioServerSocketChannelFactory(nettyPool, nettyPool, Math.min(Runtime.getRuntime().availableProcessors(), maxWorkers));
