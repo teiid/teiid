@@ -26,11 +26,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.dqp.internal.process.DQPCore;
@@ -83,7 +83,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	private DQPCore dqpCore;
 	private VDBService vdbService;
 
-    private Map<MetaMatrixSessionID, MetaMatrixSessionInfo> sessionCache = new HashMap<MetaMatrixSessionID, MetaMatrixSessionInfo>();
+    private Map<MetaMatrixSessionID, MetaMatrixSessionInfo> sessionCache = new ConcurrentHashMap<MetaMatrixSessionID, MetaMatrixSessionInfo>();
     private Timer sessionMonitor;
     private AtomicLong idSequence = new AtomicLong();
     private SessionListener sessionListener;
