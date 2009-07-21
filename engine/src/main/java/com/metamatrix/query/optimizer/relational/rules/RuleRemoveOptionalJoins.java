@@ -23,7 +23,6 @@
 package com.metamatrix.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -43,7 +42,6 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;

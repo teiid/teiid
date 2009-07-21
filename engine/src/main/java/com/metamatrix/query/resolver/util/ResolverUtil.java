@@ -607,7 +607,7 @@ public class ResolverUtil {
         }
     }
 
-    public static void addTempGroup(TempMetadataAdapter metadata,
+    public static TempMetadataID addTempGroup(TempMetadataAdapter metadata,
                                     GroupSymbol symbol,
                                     List symbols, boolean tempTable) throws QueryResolverException {
         HashSet names = new HashSet();
@@ -622,7 +622,7 @@ public class ResolverUtil {
             resolveNullLiterals(symbols);
         }
         TempMetadataStore store = metadata.getMetadataStore();
-        store.addTempGroup(symbol.getName(), symbols, !tempTable, tempTable);
+        return store.addTempGroup(symbol.getName(), symbols, !tempTable, tempTable);
     }
     
     public static void addTempTable(TempMetadataAdapter metadata,

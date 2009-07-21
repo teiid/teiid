@@ -35,13 +35,24 @@ import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
 public class TestAggregatePushdown {
-    
+
+	public static BasicSourceCapabilities getAggregateCapabilities() {
+		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_HAVING, true);
+		return caps;
+	}
+
     private FakeCapabilitiesFinder getAggregatesFinder() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         capFinder.addCapabilities("m1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("m2", caps); //$NON-NLS-1$
 
@@ -50,13 +61,9 @@ public class TestAggregatePushdown {
 
     @Test public void testCase6327() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
@@ -90,12 +97,8 @@ public class TestAggregatePushdown {
      */
     @Test public void testAggregateOfJoinExpression() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -129,9 +132,7 @@ public class TestAggregatePushdown {
      */
     @Test public void testInvariantAggregate() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
@@ -163,10 +164,7 @@ public class TestAggregatePushdown {
      */
     @Test public void testCase6211() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
-        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -263,10 +261,7 @@ public class TestAggregatePushdown {
      */
     @Test public void testAvgAggregate() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
@@ -295,10 +290,7 @@ public class TestAggregatePushdown {
     
     @Test public void testCountAggregate() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
@@ -327,10 +319,7 @@ public class TestAggregatePushdown {
     
     @Test public void testOuterJoinPreventsPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
@@ -363,10 +352,7 @@ public class TestAggregatePushdown {
      */
     @Test public void testCase5724() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
@@ -399,12 +385,9 @@ public class TestAggregatePushdown {
 
     @Test public void testCase6210() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         caps.setFunctionSupport("/", true); //$NON-NLS-1$
@@ -745,6 +728,114 @@ public class TestAggregatePushdown {
                                         0,      // Sort
                                         0       // UnionAll
                                     });
-    } 
+    }
+    
+    @Test public void testPushDownOverUnion() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select e1, max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm1.g2) y group by e1", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT v_0.c_0, MAX(v_0.c_1) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$
+        	"SELECT v_0.c_0, MAX(v_0.c_1) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0) AS v_0 GROUP BY v_0.c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }); 
+    }
+    
+    @Test public void testPushDownOverUnion1() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm1.g2) z", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT MAX(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm1.g2 AS g_0) AS v_0 HAVING COUNT(*) > 0", //$NON-NLS-1$
+        	"SELECT MAX(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0) AS v_0 HAVING COUNT(*) > 0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }); 
+    }
+    
+    /**
+     * We won't do the pushdown here since the aggregate depends upon the cardinality
+     */
+    @Test public void testPushDownOverUnion2() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select count(e2) from (select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2) z", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT DISTINCT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", //$NON-NLS-1$
+        	"SELECT DISTINCT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            1,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }); 
+    }
+    
+    @Test public void testPushDownOverUnionMixed() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", FakeMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT MAX(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm1.g1 AS g_0) AS v_0 HAVING COUNT(*) > 0", //$NON-NLS-1$
+        	"SELECT g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            2,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }); 
+    }
         
 }

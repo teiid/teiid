@@ -775,7 +775,7 @@ public class QueryRewriter {
         rewriteExpressions(query.getSelect(), procCommand, metadata, context);
 
         if (query.getOrderBy() != null && !query.getIsXML()) {
-            makeSelectUnique(query, true);
+            makeSelectUnique(query.getSelect(), true);
             rewriteOrderBy(query, procCommand, metadata, context);
         }
         
@@ -947,7 +947,7 @@ public class QueryRewriter {
         setQuery.setRightQuery((QueryCommand)rewriteCommand(setQuery.getRightQuery(), procCommand, metadata, context, true));
 
         if (setQuery.getOrderBy() != null) {
-            makeSelectUnique(setQuery.getProjectedQuery(), true);
+            makeSelectUnique(setQuery.getProjectedQuery().getSelect(), true);
             rewriteOrderBy(setQuery, procCommand, metadata, context);
         }
         
@@ -2355,7 +2355,7 @@ public class QueryRewriter {
         TempMetadataStore store = new TempMetadataStore();
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);
         Query firstProject = nested.getProjectedQuery(); 
-        makeSelectUnique(firstProject, false);
+        makeSelectUnique(firstProject.getSelect(), false);
         
         store.addTempGroup(inlineGroup.getName(), nested.getProjectedSymbols());
         inlineGroup.setMetadataID(store.getTempGroupID(inlineGroup.getName()));
@@ -2367,9 +2367,7 @@ public class QueryRewriter {
             actualTypes.add(ses.getType());
         }
         List selectSymbols = SetQuery.getTypedProjectedSymbols(ResolverUtil.resolveElementsInGroup(inlineGroup, tma), actualTypes);
-        for (final Iterator iterator = selectSymbols.iterator(); iterator.hasNext();) {
-            select.addSymbol((SingleElementSymbol)((SingleElementSymbol)iterator.next()).clone());
-        } 
+        select.addSymbols(deepClone(selectSymbols, SingleElementSymbol.class));
         query.setFrom(from); 
         QueryResolver.resolveCommand(query, tma);
         query.setOption(nested.getOption());
@@ -2383,11 +2381,19 @@ public class QueryRewriter {
         return query;
     }    
     
-    public static void makeSelectUnique(Query query, boolean expressionSymbolsOnly) {
+    public static <S extends Expression, T extends S> List<S> deepClone(List<T> collection, Class<S> clazz) {
+    	ArrayList<S> result = new ArrayList<S>(collection.size());
+    	for (Expression expression : collection) {
+			result.add((S)expression.clone());
+		}
+    	return result;
+    }
+    
+    public static void makeSelectUnique(Select select, boolean expressionSymbolsOnly) {
         
-        query.getSelect().setSymbols(query.getSelect().getProjectedSymbols());
+        select.setSymbols(select.getProjectedSymbols());
         
-        List symbols = query.getSelect().getSymbols();
+        List symbols = select.getSymbols();
         
         HashSet<String> uniqueNames = new HashSet<String>();
         

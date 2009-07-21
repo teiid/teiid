@@ -96,7 +96,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 	}
                     plan = removeUnnecessaryInlineView(plan, commandRoot);
                     QueryCommand queryCommand = createQuery(metadata, capFinder, accessNode, commandRoot);
-                    addSetOpDistinct(metadata, capFinder, accessNode, queryCommand);
+                	addSetOpDistinct(metadata, capFinder, accessNode, queryCommand);
                     command = queryCommand;
                     if (intoGroup != null) {
                     	Insert insertCommand = new Insert(intoGroup, ResolverUtil.resolveElementsInGroup(intoGroup, metadata), null);
@@ -127,7 +127,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 			}
 			parent = parent.getParent();
 		}
-		if (!dupRemoval) {
+		if (!dupRemoval || NewCalculateCostUtil.usesKey(queryCommand.getProjectedSymbols(), metadata)) {
 			return;
 		}
 		//TODO: we should also order the results and update the set processing logic

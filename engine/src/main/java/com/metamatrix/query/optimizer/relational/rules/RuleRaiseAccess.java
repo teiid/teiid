@@ -85,7 +85,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     /**
      * @return null if nothing changed, and a new plan root if something changed
      */
-    PlanNode raiseAccessNode(PlanNode rootNode, PlanNode accessNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, boolean afterJoinPlanning) 
+    static PlanNode raiseAccessNode(PlanNode rootNode, PlanNode accessNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, boolean afterJoinPlanning) 
     throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
         
         PlanNode parentNode = accessNode.getParent();
@@ -683,7 +683,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         return accessModelID;    
     }
     
-    private boolean canRaiseOverSetQuery(PlanNode setOpNode,
+    private static boolean canRaiseOverSetQuery(PlanNode setOpNode,
                                      QueryMetadataInterface metadata,
                                      CapabilitiesFinder capFinder) throws QueryMetadataException, MetaMatrixComponentException {
         

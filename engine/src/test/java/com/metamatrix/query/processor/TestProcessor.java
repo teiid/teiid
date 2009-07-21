@@ -622,89 +622,6 @@ public class TestProcessor {
             fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
-
-    private void sampleDataBQT3(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
-    
-        try { 
-            // Group bqt1.smalla
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("bqt1.smalla"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            List[] tuples = new List[20];
-            for(int i=0; i<tuples.length; i++) {
-                tuples[i] = new ArrayList(17);
-                tuples[i].add(new Integer(i));
-                tuples[i].add("" + i); //$NON-NLS-1$
-                tuples[i].add(new Integer(i+1));
-                for(int j=0; j<14; j++) {
-                    tuples[i].add(null);    
-                }    
-            }
-        
-            dataMgr.registerTuples(groupID, elementSymbols, tuples);
-
-            // Group bqt2.mediumb
-            groupID = (FakeMetadataObject) metadata.getGroupID("bqt2.mediumb"); //$NON-NLS-1$
-            elementIDs = metadata.getElementIDsInGroupID(groupID);
-            elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            tuples = new List[20];
-            for(int i=0; i<tuples.length; i++) {
-                tuples[i] = new ArrayList(17);
-                tuples[i].add(new Integer(i));
-                for(int j=0; j<16; j++) {
-                    tuples[i].add(null);    
-                }    
-            }
-        
-            dataMgr.registerTuples(groupID, elementSymbols, tuples);
-
-        }catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
-        }
-    }   
-    
-    private void sampleDataBQT_defect9842(FakeDataManager dataMgr) {
-        FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
-    
-        try { 
-            // Group bqt1.smalla
-            FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("bqt1.smalla"); //$NON-NLS-1$
-            List elementIDs = metadata.getElementIDsInGroupID(groupID);
-            List elementSymbols = FakeDataStore.createElements(elementIDs);
-        
-            List[] tuples = new List[5];
-            for(int i=0; i<tuples.length; i++) {
-                int k = i + 10;
-                tuples[i] = new ArrayList(17);
-                if (i<2){
-                    tuples[i].add(new Integer(1)); //need duplicate values
-                } else {
-                    tuples[i].add(new Integer(2)); //need duplicate values
-                }
-                tuples[i].add("" + k); //$NON-NLS-1$
-                tuples[i].add(new Integer(k+1));
-                tuples[i].add("" + (k+1)); //$NON-NLS-1$
-                tuples[i].add(new Float(0.5));
-                for(int j=0; j<8; j++) {
-                    tuples[i].add(null);    
-                }    
-                tuples[i].add(new Short((short)k));
-                tuples[i].add(null);
-                tuples[i].add(new BigDecimal("" + k)); //$NON-NLS-1$
-                tuples[i].add(null);
-            }
-        
-            dataMgr.registerTuples(groupID, elementSymbols, tuples);
-
-        }catch(Throwable e) { 
-            e.printStackTrace();
-            fail("Exception building test data (" + e.getClass().getName() + "): " + e.getMessage());    //$NON-NLS-1$ //$NON-NLS-2$
-        }
-    }
     
     /**
      * Just want to register two rows of all the integral types to test AVG 
@@ -4288,96 +4205,6 @@ public class TestProcessor {
        // Run query
        helpProcess(plan, dataManager, expected);
    }
-
-   // SELECT IntKey, SUM(IntNum) FROM BQT1.SmallA GROUP BY IntKey, IntNum HAVING IntNum > 10 ORDER BY IntKey
-   @Test public void testAggregateOnBQT() {
-       // Create query
-       String sql = "SELECT IntKey, SUM(IntNum) FROM BQT1.SmallA GROUP BY IntKey, IntNum HAVING IntNum > 10 ORDER BY IntKey"; //$NON-NLS-1$
-
-       // Create expected results
-       List[] expected = new List[] {
-           Arrays.asList(new Object[] { new Integer(10), new Long(11) }),
-           Arrays.asList(new Object[] { new Integer(11), new Long(12) }),
-           Arrays.asList(new Object[] { new Integer(12), new Long(13) }),
-           Arrays.asList(new Object[] { new Integer(13), new Long(14) }),
-           Arrays.asList(new Object[] { new Integer(14), new Long(15) }),
-           Arrays.asList(new Object[] { new Integer(15), new Long(16) }),
-           Arrays.asList(new Object[] { new Integer(16), new Long(17) }),
-           Arrays.asList(new Object[] { new Integer(17), new Long(18) }),
-           Arrays.asList(new Object[] { new Integer(18), new Long(19) }),
-           Arrays.asList(new Object[] { new Integer(19), new Long(20) })       };
-
-       // Construct data manager with data
-       FakeDataManager dataManager = new FakeDataManager();
-       sampleDataBQT3(dataManager);
-
-       // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
-
-       // Run query
-       helpProcess(plan, dataManager, expected);
-   }   
-   
-   // SELECT IntNum, IsNotNull FROM (SELECT IntNum, LongNum, COUNT(IntNum) AS IsNotNull FROM BQT2.SmallB GROUP BY IntNum, LongNum HAVING LongNum >= 0 ) AS x ORDER BY IntNum, IsNotNull
-   @Test public void testAggregateOnBQT2() {
-       // Create query
-       String sql = "SELECT IntNum, IsNotNull FROM (SELECT IntNum, LongNum, COUNT(IntNum) AS IsNotNull FROM BQT1.SmallA GROUP BY IntNum, LongNum HAVING LongNum IS NULL ) AS x ORDER BY IntNum, IsNotNull"; //$NON-NLS-1$
-
-       // Create expected results
-       List[] expected = new List[] {
-           Arrays.asList(new Object[] { new Integer(1), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(2), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(3), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(4), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(5), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(6), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(7), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(8), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(9), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(10), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(11), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(12), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(13), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(14), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(15), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(16), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(17), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(18), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(19), new Integer(1) }),
-           Arrays.asList(new Object[] { new Integer(20), new Integer(1) })      };
-
-       // Construct data manager with data
-       FakeDataManager dataManager = new FakeDataManager();
-       sampleDataBQT3(dataManager);
-
-       // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
-
-       // Run query
-       helpProcess(plan, dataManager, expected);
-   }  
-
-   @Test public void testAggregateOnBQT_defect9842(){
-       // Create query
-       String sql = "SELECT IntKey, SUM((BigDecimalValue)*(ShortValue)-(BigDecimalValue)*(ShortValue)*(FloatNum)) " + //$NON-NLS-1$
-                    "AS MySum FROM BQT1.SmallA GROUP BY IntKey ORDER BY IntKey"; //$NON-NLS-1$
-
-       // Create expected results
-       List[] expected = new List[] {
-           Arrays.asList(new Object[] { new Integer(1), new BigDecimal("110.5") }), //$NON-NLS-1$
-           Arrays.asList(new Object[] { new Integer(2), new BigDecimal("254.5") }) //$NON-NLS-1$
-                         };
-
-       // Construct data manager with data
-       FakeDataManager dataManager = new FakeDataManager();
-       sampleDataBQT_defect9842(dataManager);
-
-       // Plan query
-       ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.exampleBQTCached());
-
-       // Run query
-       helpProcess(plan, dataManager, expected);        
-   }
    
    @Test public void testSelectWithNoFrom() { 
        // Create query 
@@ -6075,7 +5902,7 @@ public class TestProcessor {
         
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
-        sampleDataBQT3(dataManager);
+        sampleDataBQT1(dataManager);
 
         // Run query
         helpProcess(plan, dataManager, expectedResults);        
@@ -7655,32 +7482,6 @@ public class TestProcessor {
         
         //we expect 2 queries, 1 for the outer and 1 for the subquery
         assertEquals(2, dataManager.getCommandHistory().size());
-    }
-
-
-    @Test public void testCase186260() {
-        /*
-         * This case revealed that an expression like "COUNT( DISTINCT e1 )", where the type of e1 is 
-         * anything but integer, was not handled properly.  We tried to use "integer" (the type of the
-         * COUNT expression) to work with the e1 tuples.
-         */
-        // Create query 
-        String sql = "SELECT COUNT(DISTINCT pm1.g2.e1), COUNT(DISTINCT pm1.g3.e1) FROM pm1.g2, pm1.g3"; //$NON-NLS-1$
-        
-        // Create expected results
-        List[] expected = new List[] { 
-            Arrays.asList(new Object[] { new Integer(3), new Integer(3) }),
-        };    
-    
-        // Construct data manager with data
-        FakeDataManager dataManager = new FakeDataManager();
-        sampleData1(dataManager);
-        
-        // Plan query
-        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
-        
-        // Run query
-        helpProcess(plan, dataManager, expected);
     }
     
     @Test public void testOrderByOutsideOfSelect() {

@@ -159,7 +159,6 @@ public class RulePlanUnions implements OptimizerRule {
 
     /**
      * TODO: union and intersect are associative
-     * TODO: the not all flag should be raised to its highest point
      */
     private void collectUnionSources(QueryMetadataInterface metadata,
                                      CapabilitiesFinder capabilitiesFinder,
