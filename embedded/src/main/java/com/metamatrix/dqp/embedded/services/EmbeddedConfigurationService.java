@@ -345,17 +345,38 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         	vdbFile = getNewVDBLocation(srcVdb);
         	VDBConfigurationWriter.write(srcVdb, vdbFile);
         	srcVdb = VDBConfigurationReader.loadVDB(vdbFile, getDeployDir());
-        	try {
-				loadVDB(vdbFile, srcVdb);
-			} catch (ApplicationInitializationException e) {
-				throw new MetaMatrixComponentException(e);
-			}
+			deployVDB(vdbFile, srcVdb);
         	notifyVDBLoad(def.getName(), def.getVersion());
         } 
         
         DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.vdb_saved", new Object[] {def.getName(), def.getVersion(), vdbFile}); //$NON-NLS-1$
     }
 
+    private VDBArchive loadVDB(VDBArchive vdb, boolean replaceBindings) throws MetaMatrixComponentException {
+        // check if this is a valid VDB
+        if (!isValidVDB(vdb)) {
+        	throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.invalid_vdb", vdb.getName())); //$NON-NLS-1$
+        }
+                                      
+        // add connector types from the VDB to the configuration
+        addConnectorTypesInVDB(vdb, replaceBindings);
+        
+        // now try to add the connector bindings in the VDB to the configuration service
+        addConnectorBindingsInVDB(vdb, replaceBindings);
+        
+        // make sure we have all the bindings, otherwise this is incomplete VDB
+        if (!isFullyConfiguredVDB(vdb)) {
+            // mark as in-active
+            vdb.setStatus(VDBStatus.INCOMPLETE);                                
+        }
+        else {
+            vdb.setStatus(VDBStatus.ACTIVE);
+            DQPEmbeddedPlugin.logInfo("VDBService.vdb_active", new Object[] {vdb.getName(), vdb.getVersion()}); //$NON-NLS-1$                                
+        }    	
+        
+        return vdb;
+    }
+    
     /**  
      * @see com.metamatrix.dqp.service.ConfigurationService#addVDB(com.metamatrix.common.vdb.api.VDBDefn, boolean)
      */
@@ -363,33 +384,15 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         if (vdb != null) {             
             boolean exists = false;
 
-            // check if this is a valid VDB
-            if (!isValidVDB(vdb)) {
-            	throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.invalid_vdb", vdb.getName())); //$NON-NLS-1$
-            }
-            
             // check to see if we already have vdb with same name and version.
             VDBArchive existingVdb = getVDB(vdb.getName(), vdb.getVersion());
             if (existingVdb != null) {                
                 exists = true;
                 DQPEmbeddedPlugin.logWarning("VDBService.vdb_already_exists", new Object[] {existingVdb.getName(), existingVdb.getVersion()}); //$NON-NLS-1$ 
             } 
-                                    
-            // add connector types from the VDB to the configuration
-            addConnectorTypesInVDB(vdb, replaceBindings);
             
-            // now try to add the connector bindings in the VDB to the configuration service
-            addConnectorBindingsInVDB(vdb, replaceBindings);
-            
-            // make sure we have all the bindings, otherwise this is incomplete VDB
-            if (!isFullyConfiguredVDB(vdb)) {
-                // mark as in-active
-                vdb.setStatus(VDBStatus.INCOMPLETE);                                
-            }
-            else {
-                vdb.setStatus(VDBStatus.ACTIVE);
-                DQPEmbeddedPlugin.logInfo("VDBService.vdb_active", new Object[] {vdb.getName(), vdb.getVersion()}); //$NON-NLS-1$                                
-            }
+            // load the vdb an its connector bindings
+            vdb = loadVDB(vdb, replaceBindings);
             
             // Now save the VDB for future use using the Configuration.
             // configuration may alter the connector bindings on VDB based
@@ -429,7 +432,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             // as bindings are vdb scoped they will never find one, unless there is shared one, 
             // then we need to use that one
             if (existing == null || replace) {
-                saveConnectorBinding(deployedBindingName, binding);
+                saveConnectorBinding(deployedBindingName, binding, false);
             }
             else {
                 // if the not being replaced, need to use the current one, then
@@ -455,7 +458,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             ConnectorBindingType localType = getConnectorType(typeName);
             if (localType == null || replace) {
                 final ConnectorBindingType type = (ConnectorBindingType)types.get(typeName);
-                saveConnectorType(type);
+               	saveConnectorType(type, false);
             }                        
         } // for
     }
@@ -611,9 +614,8 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @param binding
      * @return properties for the connector binding given
      */   
-    public Properties getDefaultProperties(ConnectorBinding binding) { 
-        ComponentTypeID id = binding.getComponentTypeID();
-        return configurationModel.getDefaultPropertyValues(id);
+    public Properties getDefaultProperties(ConnectorBindingType type) { 
+        return configurationModel.getDefaultPropertyValues((ComponentTypeID)type.getID());
     }
     
     /**
@@ -674,7 +676,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             ComponentType type = getConnectorType(typeName);           
             if (type != null) {
                 // Ask the Configuration Manager to save the connector Binding
-                binding = saveConnectorBinding(deployedBindingName, binding);
+                binding = saveConnectorBinding(deployedBindingName, binding, true);
                 DQPEmbeddedPlugin.logInfo("DataService.Connector_Added", new Object[] {binding.getDeployedName()}); //$NON-NLS-1$                
                 return binding;
             }
@@ -688,13 +690,13 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      */
     public ConnectorBinding updateConnectorBinding(ConnectorBinding binding) 
         throws MetaMatrixComponentException {
-       return saveConnectorBinding(binding.getDeployedName(), binding); 
+       return saveConnectorBinding(binding.getDeployedName(), binding, false); 
     }
     
     /**
      * Save the Connector Binding to the internal list.  
      */
-    ConnectorBinding saveConnectorBinding(String deployedBindingName, ConnectorBinding binding) 
+    ConnectorBinding saveConnectorBinding(String deployedBindingName, ConnectorBinding binding, boolean updateConfiguration) 
         throws MetaMatrixComponentException {        
         
         if (binding != null) {         
@@ -707,9 +709,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             boolean used = (usedVDBs != null && !usedVDBs.isEmpty());
             if (used) {
                 for (VDBArchive vdb:usedVDBs) {
-                    // Defect 21396 - a call to addConnectorBinding is an implicit replace in case where the
-                    // binding already exists, so there should be to license check here because we're updating
-                    // all the deployed VDBs that are using this connector binding.
+
                 	BasicVDBDefn def = vdb.getConfigurationDef();
                 	def.addConnectorBinding(binding);
                 	
@@ -718,15 +718,20 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 }
             }
             
-            this.configurationModel = ServerConfigFileWriter.addConnectorBinding(configurationModel, binding);
-            saveSystemConfiguration(this.configurationModel);
-            
-            DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connector_save", new Object[] {deployedBindingName}); //$NON-NLS-1$            
+            if (updateConfiguration || isGlobalConnectorBinding(binding)) {
+	            this.configurationModel = ServerConfigFileWriter.addConnectorBinding(configurationModel, binding);
+	            saveSystemConfiguration(this.configurationModel);
+	            DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connector_save", new Object[] {deployedBindingName}); //$NON-NLS-1$
+            }
         }        
         return binding;
     }
     
-    /** 
+    private boolean isGlobalConnectorBinding(ConnectorBinding binding) {
+    	return ServerConfigFileReader.containsBinding(this.configurationModel, binding.getFullName());
+	}
+
+	/** 
      * @see com.metamatrix.dqp.service.ConfigurationService#deleteConnectorBinding(java.lang.String)
      * @since 4.3
      */
@@ -839,13 +844,20 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @since 4.3
      */
     public void saveConnectorType(ConnectorBindingType type) throws MetaMatrixComponentException {
-        loadedConnectorTypes.put(type.getName(), ServerConfigFileReader.resolvePropertyDefns(type, this.configurationModel));
-
-        // Also add binding type to the configuration and save.        
-        DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connector_type_save", new Object[] {type.getName()}); //$NON-NLS-1$
-        this.configurationModel = ServerConfigFileWriter.addConnectorType(configurationModel, type);
-        saveSystemConfiguration(this.configurationModel);                            
+    	saveConnectorType(type, true);
     }
+    
+    private void saveConnectorType(ConnectorBindingType type, boolean updateConfiguration) throws MetaMatrixComponentException {
+    	type = (ConnectorBindingType)ServerConfigFileReader.resolvePropertyDefns(type, this.configurationModel);
+        loadedConnectorTypes.put(type.getName(), type);
+
+        if (updateConfiguration) {
+	        // Also add binding type to the configuration and save.        
+	        DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connector_type_save", new Object[] {type.getName()}); //$NON-NLS-1$
+	        this.configurationModel = ServerConfigFileWriter.addConnectorType(configurationModel, type);
+	        saveSystemConfiguration(this.configurationModel);
+        }
+    }    
 
     /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#deleteConnectorType(java.lang.String)
@@ -959,20 +971,17 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             
             // Add all the connector types.
             Map connectorTypes = configReader.getConnectorTypes();
-                        
+            
+            // load the connector bindings
+            loadConnectorBindings(connectorBindings, connectorTypes);
+            
             // Load the User defined functions 
             loadUDF();
                         
             // Find all the VDB File in the configuration
             // Load them the available VDBs
             loadVDBs();
-            
-            // load the connector bindings
-            loadConnectorBindings(connectorBindings, connectorTypes);
-            
-            // validate the VDBS and make them active if they are not already active based 
-            // on their binding status
-            validateVDBs(loadedVDBs.values());
+                        
         } catch (MetaMatrixComponentException e) {
             throw new ApplicationInitializationException(e);
         } 
@@ -1044,40 +1053,13 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
 				binding.setDeployedName(binding.getFullName());
 			}
 			deployConnectorBinding(binding.getDeployedName(), binding);
-		}
- 	 	
-        // Loop through all the loaded VDBs and collect what connector bindings
-        // connector types are needed for the dqp to start.
-        for (VDBArchive vdb: loadedVDBs.values()) {
-            
-        	VDBDefn def = vdb.getConfigurationDef();
-        	
-            // load new connector types from vdb
-            for (Iterator it = def.getConnectorTypes().values().iterator(); it.hasNext();) {
-                ConnectorBindingType type= (ConnectorBindingType)it.next();
-                if (!loadedConnectorTypes.containsKey(type.getName())) {
-                    loadedConnectorTypes.put(type.getName(), ServerConfigFileReader.resolvePropertyDefns(type, this.configurationModel));
-                }
-            }                        
-            
-            // Load new bindings from the vdb
-            for (Iterator it = def.getConnectorBindings().values().iterator(); it.hasNext();) {
-                BasicConnectorBinding binding = (BasicConnectorBinding)it.next();
-                String deployName = binding.getDeployedName();
-                if (deployName == null) {
-                	deployName = binding.getFullName();
-                }
-                if (!loadedConnectorBindings.containsKey(deployName)) {
-                	deployConnectorBinding(deployName, binding);
-                }
-            }
-        }
+		} 	 	
     }
 
 
 
 	/** 
-     * Add the connnector binding with new deployment name
+     * Add the connector binding with new deployment name
      * @param binding
      * @param deployedName
      */
@@ -1096,6 +1078,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         deployedBinding.setDeployedName(deployedName);
         loadedConnectorBindings.put(deployedName, deployedBinding);
         notifyConnectorBindingLoad(deployedName);
+        DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connector_binding_deployed", new Object[] {deployedName}); //$NON-NLS-1$        
         return deployedBinding;
     }
                 
@@ -1105,7 +1088,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @throws ApplicationInitializationException
      * @since 4.3
      */
-    void loadVDBs() throws ApplicationInitializationException{
+    void loadVDBs() throws ApplicationInitializationException, MetaMatrixComponentException {
         // Get the files to load
         HashMap<URL, VDBArchive> vdbFiles;
 		try {
@@ -1119,20 +1102,19 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             VDBArchive vdb = vdbFiles.get(vdbURL);
             
             if (vdb != null) {
-            
-                loadVDB(vdbURL, vdb);
+            	// Check to make sure there are two identical VDBs with same version 
+        		// being loaded into DQP
+        		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
+        		    throw new ApplicationInitializationException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.duplicate_vdb_found", new Object[] {vdbURL})); //$NON-NLS-1$
+        		}
+            	
+            	vdb = loadVDB(vdb, false);
+                deployVDB(vdbURL, vdb);
             }
         }
     }
 
-	private void loadVDB(URL vdbURL, VDBArchive vdb)
-			throws ApplicationInitializationException {
-		// Check to make sure there are two identical VDBs with same version 
-		// being loaded into DQP
-		if (loadedVDBs.get(vdbId(vdb)) != null) {
-		    throw new ApplicationInitializationException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.duplicate_vdb_found", new Object[] {vdbURL})); //$NON-NLS-1$
-		}
-		
+	private void deployVDB(URL vdbURL, VDBArchive vdb) {		
 		// add vdb to loaded VDBS
 		loadedVDBs.put(vdbId(vdb), vdb);
 		availableVDBFiles.put(vdbId(vdb), vdbURL);
@@ -1285,23 +1267,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             DQPEmbeddedPlugin.logError(e, "EmbeddedConfigurationService.vdb_delete_failed", new Object[] {vdbName, vdbVersion}); //$NON-NLS-1$
         }
     }
-    
-   
-    /**
-     * Validate all the VDBs and make them active 
-     * @param vdbs
-     * @since 4.3.2
-     */
-    void validateVDBs(Collection<VDBArchive> vdbList) throws MetaMatrixComponentException {
-        for (VDBArchive vdb:vdbList) {
-            if (vdb.getStatus() != VDBStatus.ACTIVE && vdb.getStatus() != VDBStatus.ACTIVE_DEFAULT &&
-            		isValidVDB(vdb) && isFullyConfiguredVDB(vdb)) {
-                vdb.setStatus(VDBStatus.ACTIVE);
-                DQPEmbeddedPlugin.logInfo("VDBService.vdb_loded", new Object[] {vdb.getName(), vdb.getVersion()}); //$NON-NLS-1$                                
-            }
-        }
-    }
-    
+          
     public boolean isFullyConfiguredVDB(VDBArchive vdb) throws MetaMatrixComponentException{
     	VDBDefn def = vdb.getConfigurationDef();
     	Collection models = def.getModels();

@@ -47,6 +47,7 @@ import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConnectorBinding;
+import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -130,7 +131,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     	VDBService vdbService = (VDBService)this.lookupService(DQPServiceNames.VDB_SERVICE);
     	List<String> bindingNames = vdbService.getConnectorBindingNames(vdbName, vdbVersion, modelName);
     	if (bindingNames.isEmpty()) {
-    		throw new MetaMatrixComponentException("No connectors defined for binding");
+    		throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("DataService.no_connectors_defined")); //$NON-NLS-1$
     	}
     	String deployedConnectorBindingName = bindingNames.get(0);
     	ConnectorID connector = selectConnector(deployedConnectorBindingName);
@@ -505,21 +506,21 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         Properties decryptedProperties = new Properties();        
         
         // Get all the default properties for the connector type, so that
-        // if the connector binding does not have all the proeprties then these
+        // if the connector binding does not have all the properties then these
         // will take over, otherwise the connector binding ones overwrite
         ComponentTypeID id = binding.getComponentTypeID();
-        ComponentType type = getConfigurationService().getConnectorType(id.getName());
-        
-        Properties props = getConfigurationService().getDefaultProperties(binding);
-        if (props == null || props.isEmpty()) {
-            ComponentType defaultType = getConfigurationService().getConnectorType("Connector"); //$NON-NLS-1$
-            if (defaultType != null) {
-                props = defaultType.getDefaultPropertyValues();
-            }
-        }
-        
-        if (props != null && !props.isEmpty()) {
-            decryptedProperties.putAll(props);
+        ConnectorBindingType type = getConfigurationService().getConnectorType(id.getName());
+
+        // Index connector has no formal definition in the configuration file. 
+        if (type != null) {
+	        Properties props = getConfigurationService().getDefaultProperties(type);
+	        if (props == null || props.isEmpty()) {
+	        	props = type.getDefaultPropertyValues();
+	        }
+	        
+	        if (props != null && !props.isEmpty()) {
+	            decryptedProperties.putAll(props);
+	        }
         }
         
         // now overlay the custom properties from the default properties.

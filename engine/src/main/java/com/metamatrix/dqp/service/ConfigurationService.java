@@ -179,11 +179,11 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
         throws MetaMatrixComponentException;
 
     /**
-     * Get the default properties for the Connector binding 
-     * @param binding
+     * Get the default properties for the Connector type 
+     * @param type
      * @return properties
      */
-    public Properties getDefaultProperties(ConnectorBinding binding);
+    public Properties getDefaultProperties(ConnectorBindingType type);
     
     /** 
      * Update the Connector Binding, the assumption here that we kept the name same 

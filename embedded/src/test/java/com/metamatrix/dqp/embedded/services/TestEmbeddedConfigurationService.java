@@ -356,7 +356,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
         BasicConnectorBinding binding = (BasicConnectorBinding)service.getConnectorBinding("QT_ORA9DS_1.BQT2 Oracle 9i Simple Cap"); //$NON-NLS-1$
         binding.setDescription(msg);
         
-        service.saveConnectorBinding(binding.getFullName(), binding);
+        service.saveConnectorBinding(binding.getFullName(), binding, true);
         
         // Test and make sure the VDB updated
         VDBArchive vdb = service.getVDB("QT_Ora9DS", "1"); //$NON-NLS-1$ //$NON-NLS-2$

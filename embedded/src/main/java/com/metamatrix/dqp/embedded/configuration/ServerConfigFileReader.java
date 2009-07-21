@@ -34,6 +34,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import com.metamatrix.common.config.api.ComponentType;
+import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.Configuration;
 import com.metamatrix.common.config.api.ConfigurationModelContainer;
@@ -41,7 +42,6 @@ import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.model.BasicComponentType;
 import com.metamatrix.common.config.model.ConfigurationModelContainerAdapter;
-import com.metamatrix.common.object.PropertyDefinition;
 
 /**
  * This class loades the server configuration file <code>ServerConfig.xml</code>
@@ -151,11 +151,32 @@ public class ServerConfigFileReader {
     	}
     		
 		if (c != null && !c.isEmpty()) {
-			Set<PropertyDefinition> defns = new HashSet<PropertyDefinition>();
+			Set<ComponentTypeDefn> defns = new HashSet<ComponentTypeDefn>();
 			defns.addAll(c);
-			defns.addAll(type.getComponentTypeDefinitions());
+			
+			// Hashset does not add, if the object is already present in the collection through addall
+			// so they need to added one by one.
+			Collection<ComponentTypeDefn> overwriteDefns = type.getComponentTypeDefinitions();
+			for (ComponentTypeDefn pd:overwriteDefns) {
+				if (defns.contains(pd)) {
+					defns.remove(pd);
+				}
+				defns.add(pd);
+			}
+			
 			baseType.setComponentTypeDefinitions(defns);
 		}
 		return baseType;
+	}
+
+	public static boolean containsBinding(ConfigurationModelContainer configuration, String name) {
+        // Load connector bindings, do we ever need connector types?
+        Collection<ConnectorBinding> bindings = configuration.getConfiguration().getConnectorBindings();
+        for(ConnectorBinding binding:bindings) {
+        	if (binding.getFullName().equalsIgnoreCase(name)) {
+        		return true;
+        	}
+        }
+        return false;
 	}    
 }
