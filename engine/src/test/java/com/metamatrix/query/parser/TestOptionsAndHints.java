@@ -689,7 +689,7 @@ public class TestOptionsAndHints extends TestCase {
         
         Query query2 = new Query();
         select = new Select();
-        select.addSymbol(new ElementSymbol("a"));//$NON-NLS-1$
+        select.addSymbol(new AllSymbol());
         From from2 = new From();
         from2.addGroup(new GroupSymbol("t1")); //$NON-NLS-1$
         from2.addGroup(new GroupSymbol("t2")); //$NON-NLS-1$

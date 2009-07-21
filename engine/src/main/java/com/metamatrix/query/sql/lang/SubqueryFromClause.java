@@ -134,7 +134,7 @@ public class SubqueryFromClause extends FromClause implements SubqueryContainer{
 		SubqueryFromClause sfc = (SubqueryFromClause) obj;
 		
         return this.getName().equalsIgnoreCase(sfc.getName()) &&
-            sfc.isOptional() == this.isOptional();
+            sfc.isOptional() == this.isOptional() && this.command.equals(sfc.command);
 	}
 	
 	/**

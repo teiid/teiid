@@ -113,10 +113,10 @@ public class TestSubqueryFromClause extends TestCase {
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
    
-    public void testEquivalenceSameName(){
+    public void testCommandNonEquivalence(){
         Object s1 = example1();
         Object s2 = example2();
-        int equals = 0;
+        int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, s1, s2);
     }
     

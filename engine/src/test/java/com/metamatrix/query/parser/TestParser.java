@@ -5271,16 +5271,10 @@ public class TestParser extends TestCase {
         query.setSelect(select);
         From from = new From();
         from.addClause(new UnaryFromClause(new GroupSymbol("newModel2.Table1")));         //$NON-NLS-1$
-        Query subquery = new Query();
+        StoredProcedure subquery = new StoredProcedure();
+        subquery.setProcedureName("NewVirtual.StoredQuery");
         from.addClause(new SubqueryFromClause("a", subquery)); //$NON-NLS-1$
         query.setFrom(from);
-        
-        Select select2 = new Select();
-        select2.addSymbol(new AllSymbol());
-        subquery.setSelect(select2);
-        From from2 = new From();
-        from2.addClause(new UnaryFromClause(new GroupSymbol("a", "NewVirtual.StoredQuery"))); //$NON-NLS-1$ //$NON-NLS-2$
-        subquery.setFrom(from2);
                         
         helpTest("SELECT * FROM newModel2.Table1, (EXEC NewVirtual.StoredQuery()) AS a",  //$NON-NLS-1$
             "SELECT * FROM newModel2.Table1, (EXEC NewVirtual.StoredQuery()) AS a", //$NON-NLS-1$
