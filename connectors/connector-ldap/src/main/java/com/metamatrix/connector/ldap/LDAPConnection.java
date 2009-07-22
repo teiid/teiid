@@ -59,6 +59,7 @@ public class LDAPConnection extends BasicConnection {
 	private String ldapAdminUserDN;
 	private String ldapAdminUserPass;
 	private String ldapTxnTimeoutInMillis;
+	private String jndiLdapCtxFactory;
 
     /**
      * Constructor.
@@ -67,11 +68,16 @@ public class LDAPConnection extends BasicConnection {
      * @param logger
      */
 	public LDAPConnection(ExecutionContext ctx, Properties props, ConnectorLogger logger) throws ConnectorException {
+		this(ctx, props, logger, LDAPConnectorConstants.JNDI_LDAP_CTX_FACTORY);
+	}
+	
+	public LDAPConnection(ExecutionContext ctx, Properties props, ConnectorLogger logger, String jndiLdapCtxFactory) throws ConnectorException {
 		this.logger = logger;
 		this.props = props;
+		this.jndiLdapCtxFactory = jndiLdapCtxFactory;
 			
-		
-		
+		parseProperties(props);
+
 		// Create initial LDAP connection.
 		try {
 			this.initCtx = initializeLDAPContext();
@@ -79,9 +85,12 @@ public class LDAPConnection extends BasicConnection {
             final String msg = LDAPPlugin.Util.getString("LDAPConnection.contextInitFailed"); //$NON-NLS-1$
 			throw new ConnectorException(ce, msg);
 		}
+
 		logger.logDetail("LDAP Connection has been newly created."); //$NON-NLS-1$
-		
-		parseProperties(props);
+	}
+	
+	public void setJndiLdapCtxFactory(String jndiLdapCtxFactory) {
+		this.jndiLdapCtxFactory = jndiLdapCtxFactory;
 	}
 	
     /**
@@ -122,7 +131,7 @@ public class LDAPConnection extends BasicConnection {
 		InitialLdapContext initContext;
 
 		Hashtable connenv = new Hashtable();
-		connenv.put(Context.INITIAL_CONTEXT_FACTORY, LDAPConnectorConstants.JNDI_LDAP_CTX_FACTORY);
+		connenv.put(Context.INITIAL_CONTEXT_FACTORY, jndiLdapCtxFactory);
 		connenv.put(Context.PROVIDER_URL, this.ldapURL);
 		connenv.put(Context.REFERRAL, LDAP_REFERRAL_MODE);
 		// If username is blank, we will perform an anonymous bind.

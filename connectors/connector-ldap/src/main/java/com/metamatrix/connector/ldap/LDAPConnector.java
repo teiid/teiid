@@ -41,8 +41,6 @@ public class LDAPConnector extends BasicConnector {
 	private ConnectorLogger logger;
 	private Properties props;
 	private LDAPConnectorCapabilities myCaps;
-	private int ldapMaxCriteria;
-
 
 	@Override
 	public ConnectorCapabilities getCapabilities() {

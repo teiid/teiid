@@ -27,16 +27,13 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.teiid.connector.api.CacheScope;
 import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.dqp.internal.cache.DQPContextCache;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.cache.Cache;
 import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.core.util.HashCodeUtil;
-import com.metamatrix.dqp.service.BufferService;
 
 /**
  */
