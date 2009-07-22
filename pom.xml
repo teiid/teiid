@@ -81,8 +81,8 @@
 							<descriptors>
 								<descriptor>build/assembly/src.xml</descriptor>
 								<descriptor>build/assembly/client-jar.xml</descriptor>
-								<descriptor>build/assembly/embedded/embedded-dependencies.xml</descriptor>
-								<descriptor>build/assembly/embedded/embedded-dist.xml</descriptor>
+								<descriptor>build/assembly/runtime/dependencies.xml</descriptor>
+								<descriptor>build/assembly/runtime/dist.xml</descriptor>
 								<descriptor>build/assembly/cdk/cdk-dependencies.xml</descriptor>
 								<descriptor>build/assembly/cdk/cdk-dist.xml</descriptor>
                                 <descriptor>build/assembly/adminshell/adminshell-dependencies.xml</descriptor>
