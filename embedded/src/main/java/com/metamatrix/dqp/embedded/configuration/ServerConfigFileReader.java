@@ -173,7 +173,11 @@ public class ServerConfigFileReader {
         // Load connector bindings, do we ever need connector types?
         Collection<ConnectorBinding> bindings = configuration.getConfiguration().getConnectorBindings();
         for(ConnectorBinding binding:bindings) {
-        	if (binding.getFullName().equalsIgnoreCase(name)) {
+        	String deployedName = binding.getDeployedName();
+        	if (deployedName == null) {
+        		deployedName = binding.getFullName();
+        	}
+        	if (deployedName.equalsIgnoreCase(name)) {
         		return true;
         	}
         }

@@ -728,7 +728,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     }
     
     private boolean isGlobalConnectorBinding(ConnectorBinding binding) {
-    	return ServerConfigFileReader.containsBinding(this.configurationModel, binding.getFullName());
+    	return ServerConfigFileReader.containsBinding(this.configurationModel, binding.getDeployedName());
 	}
 
 	/** 
@@ -755,9 +755,11 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.connector_delete", new Object[] {binding.getDeployedName()}); //$NON-NLS-1$            
             loadedConnectorBindings.remove(binding.getDeployedName());
 
-            // only save to the configuration xml only if the shared tag is set to true
-            this.configurationModel = ServerConfigFileWriter.deleteConnectorBinding(configurationModel, binding);
-            saveSystemConfiguration(this.configurationModel);          
+            if (isGlobalConnectorBinding(binding)) {
+	            // only save to the configuration xml only if the shared tag is set to true
+	            this.configurationModel = ServerConfigFileWriter.deleteConnectorBinding(configurationModel, binding);
+	            saveSystemConfiguration(this.configurationModel);
+            }
         }
         else {
             throw new MetaMatrixComponentException(DQPEmbeddedPlugin.Util.getString("EmbeddedConfigurationService.connector_binding_delete_failed", deployedConnectorBindingName)); //$NON-NLS-1$

@@ -140,7 +140,7 @@ public class TestEmbeddedConfigurationService extends TestCase {
     public void testGetDirectoryToStoreVDBS() throws Exception {
         Properties p = EmbeddedTestUtil.getProperties(); 
         service.setUserPreferences(p);  
-        assertTrue(service.getVDBSaveLocation().toString().endsWith("dqp/config/")); //$NON-NLS-1$
+        assertTrue(service.getVDBSaveLocation().toString().endsWith("dqp/config/QT_Ora9DS.vdb")); //$NON-NLS-1$
     }
 
     public void testGetDirectoryToStoreVDBSByVDBName() throws Exception {
