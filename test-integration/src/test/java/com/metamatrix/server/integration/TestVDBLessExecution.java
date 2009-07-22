@@ -52,7 +52,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     @Test public void testIntegrationExecution() {
     	getConnection(VDB, DQP_PROP_FILE);
     	executeAndAssertResults("select * from Example, Smalla where notional = intkey", new String[] { //$NON-NLS-1$
-    			"TRADEID[string]    NOTIONAL[integer]    INTKEY[integer]    STRINGKEY[string]    INTNUM[integer]    STRINGNUM[string]    FLOATNUM[float]    LONGNUM[long]    DOUBLENUM[double]    BYTENUM[short]    DATEVALUE[date]    TIMEVALUE[time]    TIMESTAMPVALUE[timestamp]    BOOLEANVALUE[short]    CHARVALUE[char]    SHORTVALUE[short]    BIGINTEGERVALUE[long]    BIGDECIMALVALUE[bigdecimal]    OBJECTVALUE[string]", //$NON-NLS-1$
+    			"TRADEID[string]    NOTIONAL[integer]    INTKEY[integer]    STRINGKEY[string]    INTNUM[integer]    STRINGNUM[string]    FLOATNUM[float]    LONGNUM[long]    DOUBLENUM[double]    BYTENUM[short]    DATEVALUE[date]    TIMEVALUE[time]    TIMESTAMPVALUE[timestamp]    BOOLEANVALUE[short]    CHARVALUE[string]    SHORTVALUE[short]    BIGINTEGERVALUE[long]    BIGDECIMALVALUE[bigdecimal]    OBJECTVALUE[string]", //$NON-NLS-1$
                 "x    1    1    1    -23    null    -23.0    -23    -23.0    -127    2000-01-02    01:00:00    2000-01-01 00:00:01.0    1    0    -32767    -23    -23    -23", //$NON-NLS-1$
                 "y    2    2    2    -22    -22    null    -22    -22.0    -126    2000-01-03    02:00:00    2000-01-01 00:00:02.0    0    1    -32766    -22    -22    -22", //$NON-NLS-1$
     	});
@@ -125,7 +125,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     			"null    VDBLess    Derby.SMALLA    TIMEVALUE    92    time    8    null    0    10    1    null    null    null    null    0    10    NO    null    null    null    null    NO", //$NON-NLS-1$
     			"null    VDBLess    Derby.SMALLA    TIMESTAMPVALUE    93    timestamp    29    null    0    10    1    null    null    null    null    0    11    NO    null    null    null    null    NO", //$NON-NLS-1$
     			"null    VDBLess    Derby.SMALLA    BOOLEANVALUE    5    short    5    null    0    10    1    null    null    null    null    0    12    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    CHARVALUE    1    char    1    null    0    0    1    null    null    null    null    2    13    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    CHARVALUE    12    string    4000    null    0    0    1    null    null    null    null    2    13    NO    null    null    null    null    NO", //$NON-NLS-1$
     			"null    VDBLess    Derby.SMALLA    SHORTVALUE    5    short    5    null    0    10    1    null    null    null    null    0    14    NO    null    null    null    null    NO", //$NON-NLS-1$
     			"null    VDBLess    Derby.SMALLA    BIGINTEGERVALUE    -5    long    19    null    0    10    1    null    null    null    null    0    15    NO    null    null    null    null    NO", //$NON-NLS-1$
     			"null    VDBLess    Derby.SMALLA    BIGDECIMALVALUE    2    bigdecimal    20    null    0    10    1    null    null    null    null    0    16    NO    null    null    null    null    NO", //$NON-NLS-1$

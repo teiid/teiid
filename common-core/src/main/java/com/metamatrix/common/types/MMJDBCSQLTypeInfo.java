@@ -99,30 +99,25 @@ public final class MMJDBCSQLTypeInfo {
     private static Map<String, String> CLASSNAME_TO_NAME = new HashMap<String, String>();
     
     static {
-        addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR);
-        TYPE_TO_NAME_MAP.put(Types.LONGVARCHAR, STRING);
+        addTypeMapping(STRING, STRING_CLASS, Types.VARCHAR, Types.LONGVARCHAR, Types.CHAR);
+        addTypeMapping(CHAR, CHAR_CLASS, Types.CHAR, false);
         addTypeMapping(BOOLEAN, BOOLEAN_CLASS, Types.BIT);
         addTypeMapping(TIME, TIME_CLASS, Types.TIME);
         addTypeMapping(DATE, DATE_CLASS, Types.DATE);
         addTypeMapping(TIMESTAMP, TIMESTAMP_CLASS, Types.TIMESTAMP);
         addTypeMapping(INTEGER, INTEGER_CLASS, Types.INTEGER);
         addTypeMapping(FLOAT, FLOAT_CLASS, Types.REAL);
-        addTypeMapping(DOUBLE, DOUBLE_CLASS, Types.DOUBLE);
-        TYPE_TO_NAME_MAP.put(Types.FLOAT, DOUBLE);
-        addTypeMapping(BIGDECIMAL, BIGDECIMAL_CLASS, Types.NUMERIC);
-        TYPE_TO_NAME_MAP.put(Types.DECIMAL, BIGDECIMAL);
-        NAME_TO_CLASSNAME.put(BIGINTEGER, BIGINTEGER_CLASS);
-        CLASSNAME_TO_NAME.put(BIGINTEGER_CLASS, BIGINTEGER);
-        NAME_TO_TYPE_MAP.put(BIGINTEGER, Types.NUMERIC);
+        addTypeMapping(DOUBLE, DOUBLE_CLASS, Types.DOUBLE, Types.FLOAT);
+        addTypeMapping(BIGDECIMAL, BIGDECIMAL_CLASS, Types.NUMERIC, Types.DECIMAL);
+        addTypeMapping(BIGINTEGER, BIGINTEGER_CLASS, Types.NUMERIC, false);
         addTypeMapping(BYTE, BYTE_CLASS, Types.TINYINT);
         addTypeMapping(SHORT, SHORT_CLASS, Types.SMALLINT);
         addTypeMapping(LONG, LONG_CLASS, Types.BIGINT);
-        addTypeMapping(CHAR, CHAR_CLASS, Types.CHAR);
         addTypeMapping(OBJECT, OBJECT_CLASS, Types.JAVA_OBJECT);
         addTypeMapping(CLOB, CLOB_CLASS, Types.CLOB);
-        addTypeMapping(BLOB, BLOB_CLASS, Types.BLOB);
+        addTypeMapping(BLOB, BLOB_CLASS, Types.BLOB, Types.BINARY, Types.VARBINARY, Types.LONGVARBINARY);
         
-        addTypeMapping(NULL, null, Types.NUMERIC);
+        addTypeMapping(NULL, null, Types.NULL);
         
         //## JDBC4.0-begin ##
         addTypeMapping(XML, XML_CLASS, Types.SQLXML);
@@ -137,9 +132,18 @@ public final class MMJDBCSQLTypeInfo {
 	    ## JDBC3.0-JDK1.5-end ##*/
     }
 
-	private static void addTypeMapping(String typeName, String javaClass, int sqlType) {
+	private static void addTypeMapping(String typeName, String javaClass, int sqlType, int ... secondaryTypes) {
+		addTypeMapping(typeName, javaClass, sqlType, true);
+		for (int type : secondaryTypes) {
+			TYPE_TO_NAME_MAP.put(type, typeName);
+		}
+	}
+
+	private static void addTypeMapping(String typeName, String javaClass, int sqlType, boolean preferedType) {
 		NAME_TO_TYPE_MAP.put(typeName, sqlType);
-		TYPE_TO_NAME_MAP.put(sqlType, typeName);
+		if (preferedType) {
+			TYPE_TO_NAME_MAP.put(sqlType, typeName);
+		}
 		if (javaClass != null) {
 			NAME_TO_CLASSNAME.put(typeName, javaClass);
 			CLASSNAME_TO_NAME.put(javaClass, typeName);

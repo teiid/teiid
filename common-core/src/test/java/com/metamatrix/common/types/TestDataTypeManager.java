@@ -185,8 +185,12 @@ public class TestDataTypeManager extends TestCase {
             }
         }
         
-        assertEquals(MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.TIMESTAMP), Types.TIMESTAMP);
-        assertEquals(MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.XML), Types.SQLXML);
+        assertEquals(Types.TIMESTAMP, MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.TIMESTAMP));
+        //## JDBC4.0-begin ##
+        assertEquals(Types.SQLXML, MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.XML));
+        //## JDBC4.0-end ##
+        assertEquals(DataTypeManager.DefaultDataTypes.STRING, MMJDBCSQLTypeInfo.getTypeName(Types.CHAR));
+        assertEquals(Types.CHAR, MMJDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.CHAR));
     }
     
     public void testRuntimeTypeConversion() throws Exception {
