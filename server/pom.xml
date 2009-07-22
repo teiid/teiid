@@ -57,7 +57,7 @@
 		</dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-embedded</artifactId>
+            <artifactId>teiid-runtime</artifactId>
             <version>${pom.version}</version>
         </dependency>
 		<dependency>

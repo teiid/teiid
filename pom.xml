@@ -460,7 +460,7 @@
 		<module>txn-jbossts</module>
 		<module>connector-sdk</module>
 		<module>server</module>
-		<module>embedded</module>
+		<module>runtime</module>
 		<module>adminshell</module>
 		<module>test-integration</module>
 		<module>connector-metadata</module>

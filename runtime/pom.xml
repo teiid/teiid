@@ -7,9 +7,9 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jboss.teiid</groupId>
-  <artifactId>teiid-embedded</artifactId>
-  <name>Embedded Engine</name>
-  <description>Embedded implementation of the engine</description>
+  <artifactId>teiid-runtime</artifactId>
+  <name>Runtime Engine</name>
+  <description>Teiid Runtime Engine</description>
   <dependencies>
     <dependency>
       <groupId>org.jboss.teiid</groupId>

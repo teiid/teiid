@@ -64,12 +64,12 @@
 		<!-- internal dependencies that are only used by integration testing -->
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-embedded</artifactId>
+			<artifactId>teiid-runtime</artifactId>
 			<version>${project.version}</version>
 		</dependency>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
-            <artifactId>teiid-embedded</artifactId>
+            <artifactId>teiid-runtime</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>
         </dependency>        

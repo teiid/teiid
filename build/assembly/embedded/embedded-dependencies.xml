@@ -1,14 +1,14 @@
 <!--This script builds a JAR for the Embedded Server Installation -->
 <assembly>
   
-  <id>embedded-dependencies</id>
+  <id>runtime-dependencies</id>
   
   <formats>
     <format>dir</format>
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
-  <baseDirectory>teiid-embedded</baseDirectory>
+  <baseDirectory>teiid</baseDirectory>
     
   <moduleSets>
     <moduleSet>
@@ -20,7 +20,7 @@
     	
         	<include>org.jboss.teiid:teiid-connector-api</include>
         	<include>org.jboss.teiid:teiid-connector-metadata</include>
-            <include>org.jboss.teiid:teiid-embedded</include>
+            <include>org.jboss.teiid:teiid-runtime</include>
         	<include>org.jboss.teiid:teiid-engine</include>
         	<include>org.jboss.teiid:teiid-metadata</include>
         	<include>org.jboss.teiid:teiid-txn-jbossts</include>        	
