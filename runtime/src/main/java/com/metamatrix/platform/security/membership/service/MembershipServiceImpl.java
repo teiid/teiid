@@ -183,13 +183,13 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
             String domainName = ((String) domainNameItr.next()).trim();
             try {
                 Properties domainProps = PropertiesUtils.getProperties(domainName + ".*", env); //$NON-NLS-1$
-                if (!Boolean.valueOf(domainProps.getProperty(DOMAIN_ACTIVE)).booleanValue()) {
+                if (!Boolean.valueOf(domainProps.getProperty(DOMAIN_ACTIVE, "true")).booleanValue()) { //$NON-NLS-1$
                     LogManager.logDetail(LogConstants.CTX_MEMBERSHIP, "Skipping initilization of inactive domain " + domainName); //$NON-NLS-1$
                     continue;
                 }
                 MembershipDomain newDomain = createDomain(domainName, domainProps);
-                LogManager.logInfo(LogConstants.CTX_MEMBERSHIP, DQPEmbeddedPlugin.Util.getString("MembershipServiceImpl.loaded", domainName)); //$NON-NLS-1$
                 if(newDomain!=null) {
+                	LogManager.logInfo(LogConstants.CTX_MEMBERSHIP, DQPEmbeddedPlugin.Util.getString("MembershipServiceImpl.loaded", domainName)); //$NON-NLS-1$
                     this.domains.add(new MembershipDomainHolder(newDomain, domainName));
                 }
             } catch (Exception e){
@@ -213,35 +213,47 @@ public class MembershipServiceImpl implements MembershipServiceInterface {
     private MembershipDomain createDomain(String domainName, Properties properties) throws ApplicationInitializationException, MalformedURLException, IOException, MembershipSourceException {
 
         MembershipDomain domain = null;
-        String className = properties.getProperty(AuthenticationProviderType.Attributes.AUTHDOMAIN_CLASS); 
-        
-        if (className != null && className.length() > 0) {
-            try {
-                domain = (MembershipDomain) Thread.currentThread().getContextClassLoader().loadClass(className).newInstance();
-            } catch (Throwable e) {
-                throw new ApplicationInitializationException(e, DQPEmbeddedPlugin.Util.getString("MembershipServiceImpl.failed_to_create", className)); //$NON-NLS-1$
-            }
-        } else {
-            throw new ApplicationInitializationException(DQPEmbeddedPlugin.Util.getString("MembershipServiceImpl.unable_to_create", domainName)); //$NON-NLS-1$
-        }
-        
         properties.setProperty(DOMAIN_NAME, domainName);
         
-        String propsString = properties.getProperty(DOMAIN_PROPERTIES); 
-        
+        // load properties file that defines the custom properties
+        URL url = null;
+        String propsString = properties.getProperty(DOMAIN_PROPERTIES);
         if (propsString != null) {
-        	URL url = URLHelper.buildURL(this.dqpURL, propsString);
-            Properties customProps = PropertiesUtils.loadFromURL(url);
-            properties.putAll(customProps);
-            
-            // Using this URL the Membership providers can further define and files that are in relative context to this file
-            properties.put(DOMAIN_PROPERTIES, url);
+        	url = URLHelper.buildURL(this.dqpURL, propsString);        	
         }
-                
-        domain.initialize(properties);
-
-        return domain;
+        else {
+        	url = this.getClass().getClassLoader().getResource("membership-"+domainName+".properties"); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        
+        if (url != null) {
+	        Properties customProps = PropertiesUtils.loadFromURL(url);
+	        properties.putAll(customProps);
+	        
+	        // Using this URL the Membership providers can further define and files that are in relative context to this file
+	        properties.put(DOMAIN_PROPERTIES, url);        
+	        
+	        boolean activate = PropertiesUtils.getBooleanProperty(properties, DOMAIN_ACTIVE, false);
+	        if (activate) {
+		        String className = properties.getProperty(AuthenticationProviderType.Attributes.AUTHDOMAIN_CLASS); 
+		        
+		        if (className != null && className.length() > 0) {
+		            try {
+		                domain = (MembershipDomain) Thread.currentThread().getContextClassLoader().loadClass(className).newInstance();
+		            } catch (Throwable e) {
+		                throw new ApplicationInitializationException(e, DQPEmbeddedPlugin.Util.getString("MembershipServiceImpl.failed_to_create", className)); //$NON-NLS-1$
+		            }
+		        } else {
+		            throw new ApplicationInitializationException(DQPEmbeddedPlugin.Util.getString("MembershipServiceImpl.unable_to_create", domainName)); //$NON-NLS-1$
+		        }
+		                
+		        domain.initialize(properties);
+		        return domain;
+	        }
+        }
+        return null;
     }
+
+
 
     private void shutdownDomains() {
         // Shut down the domain(s) ...
