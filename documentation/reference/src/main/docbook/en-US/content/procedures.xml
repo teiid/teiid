@@ -68,7 +68,7 @@ DECLARE string criteria = 'Customer.Accounts.Last = USING.LastName';
 DECLARE string sql_string = 'SELECT ID, First || ‘‘ ‘‘ || Last AS Name, Birthdate FROM Customer.Accounts WHERE ' || criteria; 
 /* The execution of the SQL string will create the #temp table with the columns (ID, Name, Birthdate). 
   Note that we also have the USING clause to bind a value to LastName, which is referenced in the criteria. */ 
-EXECUTE STRING sql_string; AS ID integer, Name string, Birthdate date INTO #temp USING LastName='some name'; 
+EXECUTE STRING sql_string AS ID integer, Name string, Birthdate date INTO #temp USING LastName='some name'; 
 /* The temp table can now be used with the values from the Dynamic SQL */ 
 loop on (SELCT ID from #temp) as myCursor 
 ...</programlisting>
