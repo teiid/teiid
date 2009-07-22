@@ -49,7 +49,7 @@
     </fileSet>      
     
     <fileSet>
-        <directory>build/target/kit-embedded</directory>
+        <directory>build/target/kit-runtime</directory>
         <outputDirectory>/</outputDirectory>
         <excludes>
           <exclude>**/run.*</exclude>
@@ -57,7 +57,7 @@
     </fileSet>
     
     <fileSet>
-        <directory>build/target/kit-embedded</directory>
+        <directory>build/target/kit-runtime</directory>
         <outputDirectory>/</outputDirectory>
         <includes>
           <include>**/run.*</include>

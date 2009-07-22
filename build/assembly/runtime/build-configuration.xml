@@ -1,13 +1,13 @@
 <project default="main" name="teiid-configuration-build" basedir=".">
 
-	<property name="kit.dir" value="${basedir}/target/kit-embedded"/>
+	<property name="kit.dir" value="${basedir}/target/kit-runtime"/>
 	<property name="extensions.dir" value="${basedir}/target/dependency"/>
 
 
 	<target name="main" >
 
 		<copy todir="${kit.dir}">
-			<fileset dir="${basedir}/kit-embedded"/>
+			<fileset dir="${basedir}/kit-runtime"/>
 		</copy>
 
 		<!-- unzip the connector zip files in to directory and move the jar files into extensions directory -->
