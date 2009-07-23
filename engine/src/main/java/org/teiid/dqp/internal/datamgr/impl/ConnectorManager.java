@@ -348,7 +348,8 @@ public class ConnectorManager implements ApplicationService {
         connectorWorkerPool = WorkerPoolFactory.newWorkerPool(connectorName, maxThreads);
 
         // Create the Connector env
-        Properties clonedProps = PropertiesUtils.clone(props);
+        Properties clonedProps = PropertiesUtils.resolveNestedProperties(props);
+        
         ConnectorEnvironment connectorEnv = new ConnectorEnvironmentImpl(clonedProps, new DefaultConnectorLogger(connectorID), env, connectorWorkerPool);
 
         // Get the metadata service
