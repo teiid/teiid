@@ -64,15 +64,8 @@ echo.
 echo ===============================================================================
 echo.
 
-:RESTART
 "%JAVA%" %JAVA_OPTS% ^
-   -classpath "%JBOSS_CLASSPATH%" ^
+   -classpath "%TEIID_CLASSPATH%" ^
    -server ^
    org.teiid.Shutdown %TEIID_HOME%\deploy.properties %JMX_PORT% %*
 
-if ERRORLEVEL 10 goto RESTART
-
-:END
-if "x%NOPAUSE%" == "x" pause
-
-:END_NO_PAUSE
