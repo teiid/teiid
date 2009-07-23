@@ -4,7 +4,7 @@
   <title>Download</title>
   <para>
     You need to download the binaries for
-    <ulink url="http://teiid.org/Download.html">Teiid Embedded</ulink>
+    <ulink url="http://teiid.org/Download.html">Teiid</ulink>
     . Note that there are three different artifacts are available for download.
   </para>
   <orderedlist>
@@ -12,34 +12,34 @@
       <para>Teiid Source - contains all the source code for all modules</para>
     </listitem>
     <listitem>
-      <para>Teiid Binary - contains all the binary code for all modules</para>
+      <para>Teiid Adminshell - contains the admin client binary code</para>
     </listitem>
     <listitem>
-      <para>Teiid Embedded Kit - contains only required modules and their required 3rd party
+      <para>Teiid Kit - contains only required modules and their required 3rd party
         dependencies</para>
     </listitem>
   </orderedlist>
   <para>
     For this Quick Start, download the
-    <emphasis>Teiid Embedded Kit</emphasis>
+    <emphasis>Teiid Kit</emphasis>
     and extract this tar/zip file to a directory you can access.
   </para>
-  <para>In the expanded directory, you will find "teiid-${version}-client.jar", which is the main client binary jar
-    file for Teiid Embedded, and the "lib" and "extension" directories containing binaries either directly or indirectly
-    required to execute Teiid Embedded. Later sections describe installing these artifacts.</para>
+  <para>In the expanded directory, you will find "client/teiid-${version}-client.jar", which is the main client binary jar
+    file for Teiid, and the "lib" and "extension" directories containing binaries either directly or indirectly
+    required to execute Teiid. Later sections describe installing these artifacts.</para>
   <note>
-    <para>Teiid Embedded requires <ulink url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.
+    <para>Teiid requires <ulink url="http://java.sun.com/javase/downloads">Java 6</ulink> to run.
     </para>
   	<para>
       Access to physical data sources such as Oracle, MS-SQL Server, DB2, and Sybase through Teiid relies upon
-      the user supplying their own JDBC drivers in the deployment. Teiid Embedded
+      the user supplying their own JDBC drivers in the deployment. Teiid
       has been tested extensively with
       <ulink url="http://www.datadirect.com">DataDirect</ulink>
        If you have access to these JDBC drivers, we recommend their use.
     </para>
     <!-- 
     <para>Free open source software JDBC drivers for MySQL, Postgres,and Derby are included in the "lib" folder as the LGPL
-      license permits them to be included with the Teiid Embedded kit.</para>
+      license permits them to be included with the Teiid kit.</para>
     -->
   </note>
 </chapter>

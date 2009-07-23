@@ -2,26 +2,29 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <chapter id="OpenConnection">
   <title>Connecting to a VDB through JDBC</title>
-  <para>At this point you have deployed Teiid Embedded and your VDB. Now it's time to connect the sample application
+  <para>At this point you have deployed Teiid and your VDB. Now it's time to connect the sample application
    to this VDB, issue SQL queries, and view the returned, integrated data. Note that
     this process is no different than connecting to any other JDBC source.</para>
   <sect1>
     <title>Stand-alone Java Application Deployment</title>
     <para>
       For a Java application to connect to a JDBC source, it needs a URL, user-id, and password. To
-      connect to your VDB all you need is URL and any additional optional properties that you would like to set
-      such as log file, number of threads etc. Currently the Teiid Embedded is not associated with any user
-      authentication system, so user-id and password are not required. The JDBC connection is supported through
-      <emphasis>"com.metamatrix.jdbc.EmbeddedDriver"</emphasis>
-      driver requires the URL syntax of
+      connect to your VDB all you need is a URL and any additional optional properties that you would like to set.
+       Teiid defaults to allowing the admin user with password teiid.  Additional user accounts can be added through
+       Teiid extensible MembershipDomain mechanism.  A JDBC connection can be obtained through the Teiid driver
+      <emphasis>"org.teiid.jdbc.TeiidDriver"</emphasis>
+      with the URL syntax of
     </para>
     <para>
-      <emphasis>jdbc:metamatrix:&lt;VDB-Name&gt;</emphasis>
+      <emphasis>jdbc:teiid:&lt;VDB-Name&gt;@((mm|mms)://&lt;host name&gt;:&lt;port&gt;)|(&lt;path to deploy.properties&gt;)</emphasis>
     </para>
-    <para/>
-    <para>to connect to the VDB. You can add any additional optional properties at the end after the semi-colon(;) using name=value
-      format. If multiple properties are defined, they should be separated additional semi-colons. For example</para>
-    <para />
+	<para>When the path to deploy.properties is specified Teiid operates in
+		embedded mode and runs in the same VM as the application.
+    </para>
+	<para>
+		You can add optional properties at the end of the URL using a semi-colon(;) name=value
+		format. For example</para>
+	<para />
     <para>
       <emphasis>jdbc:metamatrix:&lt;VDB-Name&gt;;dqp.logFile=/home/query.log</emphasis>
     </para>
@@ -32,14 +35,14 @@
     </para>
     <programlisting><![CDATA[
       public void execute() throws SQLException {
-          String url = "jdbc:metamatrix:Accounts";
+          String url = "jdbc:metamatrix:Portfolio@mm://localhost:31000";
           String sql = "select firstname, lastname from customer";
           
-          Class.forName("com.metamatrix.jdbc.EmbeddedDriver");
+          Class.forName("org.teiid.jdbc.TeiidDriver");
           
           Connection connection;
           try{
-              connection = DriverManager.getConnection(url);
+              connection = DriverManager.getConnection(url, "admin", "teiid");
               Statement statement = connection.createStatement();
               ResultSet results = statement.executeQuery(sql);
               while(results.next()) {
@@ -61,42 +64,43 @@
           }
       }      
     ]]></programlisting>
-    <para>You can also use <emphasis>com.metamatrix.jdbc.EmbeddedDataSource</emphasis>
+    <para>You can also use <emphasis>org.teiid.jdbc.TeiidDataSource</emphasis>
       to make connection in your Java application. For example, you can use following code fragment to make a 
       connection to the VDB and issuing the query exactly same as in the above example</para>
       <programlisting><![CDATA[
-        EmbeddedDataSource ds = new EmbeddedDataSource(); 
-        ds.setDatabaseName("Accounts");
+        TeiidDataSource ds = new TeiidDataSource(); 
+        ds.setDatabaseName("Portfolio");
+        ds.setEmbeddedBootstrapFile("<teiid home>/deploy.properties");
+        ds.setUser("admin");
+        ds.setPassword("teiid");
         
         Connection connection = ds.getConnection();
         ...
       ]]></programlisting>
-      <para>EmbeddedData source also provides an option to set optional parameters using the "set" methods on the 
+      <para>TeiidDataSource source also provides an option to set optional parameters using the "set" methods on the 
        data source look. For all the allowable properties at the 
        <ulink url="https://www.jboss.org/community/docs/DOC-13158">data source properties</ulink>.</para>       
   </sect1>
   <sect1>
-  <title>Testing Your Teiid Embedded Deployment</title>
-  <para>The Teiid Embedded installation includes a simple Java class which demonstrates JDBC access of the deployed VDB.
+  <title>Testing Your Teiid Deployment</title>
+  <para>The Teiid installation includes a simple Java class which demonstrates JDBC access of the deployed VDB.
   To execute this demonstration, follow these steps:</para> 
   <orderedlist numeration="arabic">
     <listitem><para>Ensure Derby is running</para></listitem>
-    <listitem><para>Change to the /examples/portfolio directory within your Teiid Embedded installation</para></listitem>
+    <listitem><para>Change to the /examples/portfolio directory within your Teiid installation</para></listitem>
     <listitem><para>Execute the run script (either for Linux or Windows)</para></listitem>
   </orderedlist>
     <para>The sample query, "select * from CustomerAccount", queries the view model and, from that, queries the two underlying
     data sources: one relational, one file-based. All the sample Java class does is connect to the VDB, issue the query, 
-    and print the results. Teiid Embedded does the "heavy lifting". 
+    and print the results. Teiid does the "heavy lifting" of integrating the results. 
     (For the complete code used in this example, look in the "examples/portfolio" directory.)</para>
     <para>
-    You are encouraged to experiment with queries that go beyond the simple "select * from CustomerAccount". Additionally,
-    there is a sample Yahoo connector that returns stock market data. It can be used in place of the text file so the 
-    market data is more timely. Go to the Teiid Connector Sandbox projects for more information. 
+    You are encouraged to experiment with queries that go beyond the simple "select * from CustomerAccount". 
    </para>
      
-  <para>If your application is Web based, you can also deploy Teiid Embedded in an application server 
+  <para>If your application is Web based, you can also deploy Teiid in an application server 
   and treat it as any other JDBC source by creating a connection pool with the 
-  <emphasis>com.metamatrix.jdbc.EmbeddedDataSource</emphasis> and assigning it a JNDI name. 
+  <emphasis>org.teiid.jdbc.TeiidDataSource</emphasis> and assigning it a JNDI name. 
   Refer to <ulink url="https://www.jboss.org/community/docs/DOC-13183">deployment to application server</ulink> for more information.</para>
   </sect1>   
 </chapter>

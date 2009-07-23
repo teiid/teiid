@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VDB>
+    <VDBInfo>
+<!--
+  Name and version will determine the deploy location, which is of the form
+  <Teiid Home>/deploy/<vdb name>/<vdb version>
+-->
+        <Property Name="Name" Value="VDBLessPortfolio" />
+        <Property Name="Version" Value="1" />        
+<!-- 
+  Setting to use connector supplied metadata. Can be "true" or "cached".  
+  "true" will obtain metadata once for every launch of Teiid. 
+  "cached" will save a file containing the metadata into 
+  the deploy/<vdb name>/<vdb version/META-INF directory
+-->
+        <Property Name="UseConnectorMetadata" Value="cached" />
+    </VDBInfo>
+    
+<!-- 
+  Each model represents a access to one or more connector bindings.
+  The name of the model will be used as a top level schema name
+  for all of the metadata imported from the connector.
+
+  NOTE: Multiple model, with different import settings, can be bound to 
+  the same connector binding and will be treated as the same source at
+  runtime. 
+-->        
+    <Model>
+        <Property Name="Name" Value="MarketData" />
+        <ConnectorBindings>
+            <Connector Name="Text Connector" />
+        </ConnectorBindings>
+    </Model>
+    <Model>
+        <Property Name="Name" Value="Accounts" />
+        
+        <ConnectorBindings>
+            <Connector Name="Derby Connector" />
+        </ConnectorBindings>
+        
+<!-- 
+  JDBC Import settings 
+  
+  importer.useFullSchemaName directs the importer to drop the source 
+  schema from the Teiid object name, so that the Teiid fully qualified name
+  will be in the form of <model name>.<table name>
+-->
+        <Property Name="importer.useFullSchemaName" Value="false"/>
+    </Model>
+    
+<!-- 
+  Connector bindings follow the ComponentTypes defined in <Teiid home>/deploy/configuration.xml
+  Defining connector bindings in the .def file makes them local to this VDB.  
+  Connector bindings can also be defined in the configuration.xml file after the ComponentDefinitions
+  and will be available for use by all vdbs.
+-->    
+    <ConnectorBindings>
+        <Connector Name="Text Connector" ComponentType="Text File Connector">
+            <Properties>
+                <Property Name="Immutable">true</Property>
+                <Property Name="DescriptorFile">${teiid.home}/examples/portfolio/marketdata-def.txt</Property>
+            </Properties>
+        </Connector>
+        <Connector Name="Derby Connector" ComponentType="Apache Derby Embedded Connector">
+            <Properties>
+                <Property Name="URL">jdbc:derby://localhost:1527/teiid/accounts</Property>
+                <Property Name="ConnectorClassPath">extensionjar:derbyclient.jar</Property>
+            </Properties>
+        </Connector>
+    </ConnectorBindings>
+</VDB>

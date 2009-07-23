@@ -24,14 +24,14 @@
 
 -->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-        <!ENTITY versionNumber "6.0.0">
-        <!ENTITY copyrightYear "2008">
-        <!ENTITY copyrightHolder "Red Hat, Inc.">
+<!ENTITY % CustomDTD SYSTEM "../../../../../custom.dtd">
+%CustomDTD;
 ]>
+
 <book>
   <bookinfo>
     <title>Teiid - Scalable Information Integration</title>
-    <subtitle>Teiid Embedded Quick Start Example</subtitle>
+    <subtitle>Teiid Quick Start Example</subtitle>
     <releaseinfo>&versionNumber;
     </releaseinfo>
     <productnumber>&versionNumber;

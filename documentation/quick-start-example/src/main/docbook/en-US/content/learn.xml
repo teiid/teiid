@@ -15,8 +15,8 @@
       returns the top level results to the application.</para>
   </sect1>
   <sect1>
-    <title>What is Teiid Embedded?</title>
-    <para> Teiid Embedded is a container for deploying your VDB. Before you can access your data in a federated
+    <title>What is Teiid?</title>
+    <para> Teiid is runtime for executing queries against a VDB. Before you can access your data in a federated
       manner, use the Teiid Designer to build a VDB. This picture shows the relationship between the tools
       involved.</para>
     <figure id="lifecycle">

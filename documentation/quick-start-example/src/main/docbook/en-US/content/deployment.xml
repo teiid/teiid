@@ -6,13 +6,13 @@
   Note there are two steps involved in this deployment:</para>
   <orderedlist>
     <listitem>
-      <para>Deploying Teiid Embedded</para>
+      <para>Deploying Teiid</para>
     </listitem>
     <listitem>
-      <para>Deploying VDB</para>
+      <para>Deploying a VDB</para>
     </listitem>
   </orderedlist>
-  <para> Teiid Embedded is typically used in one of two manners:</para>
+  <para> Teiid is typically used in one of two manners:</para>
   <itemizedlist>
     <listitem>
       <para>
@@ -26,17 +26,17 @@
     </listitem>
   </itemizedlist>
   <para />
-  <para>This example deploys Teiid Embedded as a stand-alone Java application. The sample deployment is shown below.
+  <para>This example deploys Teiid within a stand-alone Java application. The sample deployment is shown below.
   You can find more details about deploying to application servers on the Teiid web-site</para>
   <para />
   <sect1 id="stand-alone-deployment">
     <title>Stand-alone Application Deployment</title>
     <orderedlist>
       <listitem>
-        <para>Add the "${embedded root}/teiid-${version}-client.jar" to your application classpath</para>
+        <para>Add the "${teiid.home}/client/teiid-${version}-client.jar" to your application classpath</para>
       </listitem>
       <listitem>
-        <para>Place your VDB in a the "${embedded root}/deploy" or another location referenced by the deploy.properties file. 
+        <para>Place your VDB in a the "${teiid.home}/deploy". 
         </para>
       </listitem>
       <listitem>

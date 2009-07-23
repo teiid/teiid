@@ -8,7 +8,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>quick-start-guide</artifactId>
   <packaging>jdocbook</packaging>
-  <name>Quick Start Embedded Guide</name>
+  <name>Quick Start Guide</name>
   <description>The Teiid Quick Start guide</description>
   <build>
     <plugins>

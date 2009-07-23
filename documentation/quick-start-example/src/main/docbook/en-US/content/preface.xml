@@ -2,12 +2,12 @@
 <!DOCTYPE preface PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
 <preface>
   <title>Preface</title>
-  <para> Teiid Embedded offers the power of a federated relational query engine for use with any Java
+  <para> Teiid offers the power of a federated relational query engine for use with any Java
     application - without the need for a separate server process. Accessing your federated data is as easy as
     making a JDBC connection to any relational data source. This guide will take you through</para>
   <itemizedlist>
     <listitem>
-      <para>Deployment of Teiid Embedded in your environment</para>
+      <para>Deployment of Teiid in your environment</para>
     </listitem>
     <listitem>
       <para>Building and deploying a Virtual Database(VDB)</para>
@@ -22,8 +22,8 @@
     Platform.</para>
   <sect1>
     <title>What is This Guide About?</title>
-    <para>This guide takes you through an introduction to the concepts important to Teiid Embedded, 
-    downloading the software,  and building and deploying a demonstration virtual database in 60 minutes.
+    <para>This guide takes you through an introduction to the concepts important to Teiid, 
+    downloading the software, and building and deploying a demonstration virtual database in 60 minutes.
     There is a lot to cover, so let's begin!</para>
   </sect1>
   <note>

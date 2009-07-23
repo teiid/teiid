@@ -2,10 +2,13 @@ Install a recent version of Derby - see http://db.apache.org/derby/derby_downloa
 
 Create the example dataset in Derby by running <derby home>/bin/ij customer-schema.sql
 
-Put the <derby home>/lib/derbyclient.jar to the <teiid embedded home>/extensions directory.
+Put the <derby home>/lib/derbyclient.jar to the <teiid home>/extensions directory.
 
-Run the demo with run.bat or run.sh.
+Copy the PortfolioModel/Portolio.vdb file to the <teiid home>/deploy directory.
 
-This will execute the query contained in the run script against a vdb that integrates the
-Derby datasource with file based data contained in the marketdata-price.txt file. 
+Use the simple client example run script i.e. 
+
+$run.sh portfolio "select * from CustomerAccount"
+
+That will execute the query against the CustomerAccount view in the Portfolio VDB running in Teiid embedded mode. 
 
