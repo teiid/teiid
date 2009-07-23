@@ -156,14 +156,12 @@ public class DQPCore extends Application implements ClientSideDQP {
     private ServiceLoader loader = new ServiceLoader();
 
     /**
-     * perform a graceful shutdown by allowing in process work to complete
-     * TODO: this is not quite correct from a request perspective, since we need to re-queue in many instances,
-     * which will now result in an exception
+     * perform a full shutdown and wait for 10 seconds for all threads to finish
      * @throws ApplicationLifecycleException 
      */
 	@Override
     public void stop() throws ApplicationLifecycleException {
-    	processWorkerPool.shutdown();
+    	processWorkerPool.shutdownNow();
     	try {
 			processWorkerPool.awaitTermination(10, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
