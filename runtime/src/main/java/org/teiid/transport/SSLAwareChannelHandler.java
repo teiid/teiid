@@ -54,9 +54,10 @@ import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
 import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 import org.jboss.netty.handler.ssl.SslHandler;
 
-import com.metamatrix.common.comm.exception.SingleInstanceCommunicationException;
 import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.common.comm.platform.socket.ObjectChannel;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.LogConstants;
 
 /**
  * Main class for creating Netty Nio Channels 
@@ -216,7 +217,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 			ChannelStateEvent e) throws Exception {
 		ChannelListener listener = this.listeners.remove(e.getChannel());
 		if (listener != null) {
-			listener.exceptionOccurred(new SingleInstanceCommunicationException(CommPlatformPlugin.Util.getString("SSLAwareChannelHandler.channel_closed"))); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_SERVER, CommPlatformPlugin.Util.getString("SSLAwareChannelHandler.channel_closed")); //$NON-NLS-1$
 		}
 	}
 

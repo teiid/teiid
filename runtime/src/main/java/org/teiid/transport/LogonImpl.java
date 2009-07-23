@@ -144,9 +144,19 @@ public class LogonImpl implements ILogon {
 		return sessionID;
 	}
 	
+	private void resetDQPContext() {
+		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		workContext.setSessionToken(null);
+		workContext.setAppName(null);
+		workContext.setTrustedPayload(null);
+		workContext.setVdbName(null);
+		workContext.setVdbVersion(null);
+	}	
+	
 	public ResultsFuture<?> logoff() throws InvalidSessionException, MetaMatrixComponentException {
 		try {
 			this.service.closeSession(DQPWorkContext.getWorkContext().getSessionId());
+			resetDQPContext();
 		} catch (SessionServiceException e) {
 			throw new MetaMatrixComponentException(e);
 		} 
@@ -154,7 +164,12 @@ public class LogonImpl implements ILogon {
 	}
 
 	public ResultsFuture<?> ping() throws InvalidSessionException,MetaMatrixComponentException {
-		this.service.pingServer(DQPWorkContext.getWorkContext().getSessionId());
+		// ping is double used to alert the aliveness of the client, as well as check the server instance is 
+		// alive by socket server instance, so that they can be cached.
+		MetaMatrixSessionID id = DQPWorkContext.getWorkContext().getSessionId();
+		if (id != null) {
+			this.service.pingServer(id);
+		}
 		return null;
 	}
 
