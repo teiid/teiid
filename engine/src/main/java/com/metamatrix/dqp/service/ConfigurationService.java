@@ -306,14 +306,6 @@ public interface ConfigurationService extends ApplicationService, ClassLoaderMan
     public void unregister(ConnectorBindingLifeCycleListener listener);
         
     /**
-     * Get the URL to the "metamatrixpki.keystore" file 
-     * @return URL to the "metamatrixpki.keystore" file; null if not defined 
-     * @since 4.4
-     */
-    public URL getEncryptionKeyStore();
-    
-
-    /**
      * Gets the reference URL to the Configuration File for the DQP.
      * @return URL to configuration file; null otherwise
      * @since 4.4
