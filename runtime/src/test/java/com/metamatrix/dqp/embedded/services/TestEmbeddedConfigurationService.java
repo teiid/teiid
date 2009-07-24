@@ -122,14 +122,6 @@ public class TestEmbeddedConfigurationService extends TestCase {
         assertTrue(service.getConnectorBinding(binding.getFullName())==alternatebinding);
     }    
     
-    public void defer_testInitializeEncryption() throws Exception {
-        Properties p = EmbeddedTestUtil.getProperties(); 
-        p.setProperty(DQPEmbeddedProperties.DQP_KEYSTORE, "Cluster.key"); //$NON-NLS-1$
-        service.setUserPreferences(p);
-        service.initializeEncryption();        
-        assertFalse(CryptoUtil.getDecryptor() instanceof NullCryptor);        
-    }
-    
     public void testGetDefaultExtensionPath()  throws Exception {
         Properties p = EmbeddedTestUtil.getProperties(); 
         p.remove(DQPEmbeddedProperties.DQP_EXTENSIONS);
