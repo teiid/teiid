@@ -45,7 +45,7 @@ private Connection connectURL (String url, String driver) {
             currentContext().internalPrompt = contextName+"["+extractVDBName(url)+"@"+extractHost(url)+"] $ ";
             currentContext().internalAdmin = createExceptionHandlingProxy(mmConn.getAdminAPI());
     		return mmConn;        	
-        } catch(SQLException e) {
+        } catch(e) {
         	print("Failed to connect: "+e.getMessage());
         }
     }
