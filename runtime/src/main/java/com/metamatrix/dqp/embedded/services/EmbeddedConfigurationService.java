@@ -958,9 +958,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                         
             DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.dqp_loading", new Object[] {getProcessName()}); //$NON-NLS-1$
             
-            // initialize encryption
-            initializeEncryption();
-            
             // load the configuration file.
             this.configurationModel = getSystemConfiguration();        
             ServerConfigFileReader configReader = loadServerConfigFile();
@@ -1188,29 +1185,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         throw new MetaMatrixRuntimeException("bad configuration"); //$NON-NLS-1$
     }    
         
-    void initializeEncryption() throws ApplicationInitializationException {        
-        try {
-            URL keyStoreFile = getEncryptionKeyStore();
-            if (keyStoreFile != null) {                               
-                CryptoUtil.init(keyStoreFile);
-            }
-            DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.init_encryption", new Object[] {}); //$NON-NLS-1$
-        } catch (CryptoException ex) {
-            throw new ApplicationInitializationException(ex);
-        }
-    }
-        
-    /**  
-     * @see com.metamatrix.dqp.service.ConfigurationService#getEncryptionKeyStore()
-     */
-    public URL getEncryptionKeyStore() {
-        String keyStoreFile = getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_KEYSTORE);
-        if (valid(keyStoreFile)) {
-            return getFullyQualifiedPath(keyStoreFile);
-        }
-        return null;
-    }
-    
     /** 
      * @see com.metamatrix.dqp.service.ConfigurationService#getConnectionListener()
      * @since 4.3.2

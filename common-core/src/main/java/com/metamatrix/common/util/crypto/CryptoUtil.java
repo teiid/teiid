@@ -282,7 +282,7 @@ public class CryptoUtil {
 	
 	    if (CRYPTOR == null) {
 	        // If encryption is not enabled then do nothing.
-	        if (!isEncryptionEnabled()) {
+	        if (!isEncryptionEnabled() || keyResource == null) {
 	            CRYPTOR = new NullCryptor();
 	            return;
 	        }
