@@ -20,25 +20,22 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.connector.jdbc.oracle;
+package org.teiid.connector.jdbc.translator;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.jdbc.oracle.ExtractFunctionModifier;
-import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
-import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.ILanguageFactory;
 import org.teiid.connector.language.ILiteral;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
@@ -63,13 +60,10 @@ public class TestExtractFunctionModifier extends TestCase {
             Arrays.asList(c),
             Integer.class);
         
-        ExtractFunctionModifier mod = new ExtractFunctionModifier (target);
+        ExtractFunctionModifier mod = new ExtractFunctionModifier ();
         IExpression expr = mod.modify(func);
-        List<?> parts = mod.translate(func);
-        assertEquals(7, parts.size());
-        assertFalse(parts.get(5) instanceof String);
-        OracleSQLTranslator trans = new OracleSQLTranslator();
-        trans.registerFunctionModifier("extract", mod);
+        Translator trans = new Translator();
+        trans.registerFunctionModifier(target, mod);
         trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
@@ -112,6 +106,12 @@ public class TestExtractFunctionModifier extends TestCase {
         IGroup group = LANG_FACTORY.createGroup(null, "group", null); //$NON-NLS-1$
         IElement elem = LANG_FACTORY.createElement("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
         helpTestMod(elem, "EXTRACT(DAY FROM col)", "dayofmonth"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    public void test12() throws Exception {
+        IGroup group = LANG_FACTORY.createGroup(null, "group", null); //$NON-NLS-1$
+        IElement elem = LANG_FACTORY.createElement("col", group, null, TypeFacility.RUNTIME_TYPES.DATE); //$NON-NLS-1$
+        helpTestMod(elem, "(EXTRACT(DOW FROM col) + 1)", SourceSystemFunctions.DAYOFWEEK); //$NON-NLS-1$
     }
     
 }

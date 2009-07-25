@@ -263,7 +263,7 @@ public class Translator {
      */
     public String translateLiteralTime(Time timeValue) {
     	if (!hasTimeType()) {
-    		return "{ts'1970-01-01 " + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
+    		return "{ts'"+ getDefaultTimeYMD()+ " " + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	}
         return "{t'" + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -348,6 +348,10 @@ public class Translator {
      */
     public boolean hasTimeType() {
     	return true;
+    }
+    
+    public String getDefaultTimeYMD() {
+    	return "1970-01-01"; //$NON-NLS-1$
     }
     
     /**

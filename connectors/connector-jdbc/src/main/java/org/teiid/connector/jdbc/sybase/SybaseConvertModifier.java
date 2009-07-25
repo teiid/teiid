@@ -28,7 +28,6 @@ import java.util.List;
 
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.DropFunctionModifier;
-import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;

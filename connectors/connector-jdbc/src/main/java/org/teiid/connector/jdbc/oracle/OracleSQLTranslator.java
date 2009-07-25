@@ -40,6 +40,7 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.translator.AliasModifier;
+import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IElement;
@@ -72,12 +73,12 @@ public class OracleSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
         registerFunctionModifier(SourceSystemFunctions.CONVERT, new OracleConvertModifier(getLanguageFactory(), getEnvironment().getLogger())); 
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier("HOUR"));//$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier("YEAR"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier("MINUTE"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier("SECOND"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier("MONTH"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier("DAY"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "WW"));//$NON-NLS-1$ 

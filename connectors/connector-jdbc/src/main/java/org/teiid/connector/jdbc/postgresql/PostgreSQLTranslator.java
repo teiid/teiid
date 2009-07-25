@@ -37,6 +37,7 @@ import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.connector.jdbc.oracle.MonthOrDayNameFunctionModifier;
 import org.teiid.connector.jdbc.translator.AliasModifier;
+import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.IAggregate;
 import org.teiid.connector.language.ICommand;
@@ -47,15 +48,21 @@ import org.teiid.connector.visitor.util.SQLReservedWords;
 
 
 /** 
+ * Translator class for PostgreSQL.  Updated to expect a 8.0+ jdbc client
  * @since 4.3
  */
 public class PostgreSQLTranslator extends Translator {
 
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
-        
+        //TODO: all of the functions (except for convert) can be handled through just the escape syntax
         super.initialize(env);
         registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOG10, new AliasModifier("log")); //$NON-NLS-1$ 
+        
+        registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("&")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.BITNOT, new AliasModifier("~")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("|")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.BITXOR, new AliasModifier("#")); //$NON-NLS-1$ 
         
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new AliasModifier("||")); //$NON-NLS-1$ 
@@ -66,20 +73,24 @@ public class PostgreSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("upper")); //$NON-NLS-1$ 
         
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ModifiedDatePartFunctionModifier(getLanguageFactory(), "dow", "+", new Integer(1)));//$NON-NLS-1$ //$NON-NLS-2$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new DatePartFunctionModifier(getLanguageFactory(), "day"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DatePartFunctionModifier(getLanguageFactory(), "doy"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new DatePartFunctionModifier(getLanguageFactory(), "hour"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DatePartFunctionModifier(getLanguageFactory(), "minute"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.MONTH, new DatePartFunctionModifier(getLanguageFactory(), "month"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DatePartFunctionModifier(getLanguageFactory(), "quarter"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new DatePartFunctionModifier(getLanguageFactory(), "second"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new DatePartFunctionModifier(getLanguageFactory(), "week"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.YEAR, new DatePartFunctionModifier(getLanguageFactory(), "year"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
+        
+        //specific to 8.2 client or later
+        //registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
+        //registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
         
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new PostgreSQLConvertModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new PostgreSQLConvertModifier(getLanguageFactory()));        
     }    
     
     @Override

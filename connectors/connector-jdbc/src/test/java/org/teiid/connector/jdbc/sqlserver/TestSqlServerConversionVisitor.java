@@ -113,5 +113,15 @@ public class TestSqlServerConversionVisitor {
             input, 
             output);        
     }
+    
+    @Test
+    public void testDateFunctions() throws Exception {
+        String input = "select dayName(timestampValue), dayOfWeek(timestampValue), quarter(timestampValue) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT {fn dayName(SmallA.TimestampValue)}, {fn dayOfWeek(SmallA.TimestampValue)}, {fn quarter(SmallA.TimestampValue)} FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
        
 }

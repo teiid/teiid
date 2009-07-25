@@ -88,20 +88,20 @@ public class SqlServerCapabilities extends JDBCCapabilities {
         supportedFunctions.add("UPPER"); //$NON-NLS-1$
         //supportedFunctons.add("CURDATE"); //$NON-NLS-1$
         //supportedFunctons.add("CURTIME"); //$NON-NLS-1$
-        //supportedFunctons.add("DAYNAME"); //$NON-NLS-1$
+        supportedFunctions.add("DAYNAME"); //$NON-NLS-1$
         supportedFunctions.add("DAYOFMONTH"); //$NON-NLS-1$
-        //supportedFunctons.add("DAYOFWEEK"); //$NON-NLS-1$
-        //supportedFunctons.add("DAYOFYEAR"); //$NON-NLS-1$
-        //supportedFunctons.add("HOUR"); //$NON-NLS-1$
-        //supportedFunctons.add("MINUTE"); //$NON-NLS-1$
+        supportedFunctions.add("DAYOFWEEK"); //$NON-NLS-1$
+        supportedFunctions.add("DAYOFYEAR"); //$NON-NLS-1$
+        supportedFunctions.add("HOUR"); //$NON-NLS-1$
+        supportedFunctions.add("MINUTE"); //$NON-NLS-1$
         supportedFunctions.add("MONTH"); //$NON-NLS-1$
-        //supportedFunctons.add("MONTHNAME"); //$NON-NLS-1$
-        //supportedFunctons.add("NOW"); //$NON-NLS-1$
-        //supportedFunctons.add("QUARTER"); //$NON-NLS-1$
-        //supportedFunctons.add("SECOND"); //$NON-NLS-1$
-        //supportedFunctons.add("TIMESTAMPADD"); //$NON-NLS-1$
-        //supportedFunctons.add("TIMESTAMPDIFF"); //$NON-NLS-1$
-        //supportedFunctons.add("WEEK"); //$NON-NLS-1$
+        supportedFunctions.add("MONTHNAME"); //$NON-NLS-1$
+        //supportedFunctions.add("NOW"); //$NON-NLS-1$
+        supportedFunctions.add("QUARTER"); //$NON-NLS-1$
+        supportedFunctions.add("SECOND"); //$NON-NLS-1$
+        supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
+        supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
+        supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$

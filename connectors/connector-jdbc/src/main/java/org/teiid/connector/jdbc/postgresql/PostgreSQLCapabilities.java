@@ -44,11 +44,10 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
         supportedFunctions.add("ASIN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN2"); //$NON-NLS-1$
-        // These are executed within the server and never pushed down
-//        supportedFunctions.add("BITAND"); //$NON-NLS-1$
-//        supportedFunctions.add("BITNOT"); //$NON-NLS-1$
-//        supportedFunctions.add("BITOR"); //$NON-NLS-1$
-//        supportedFunctions.add("BITXOR"); //$NON-NLS-1$
+        supportedFunctions.add("BITAND"); //$NON-NLS-1$
+        supportedFunctions.add("BITNOT"); //$NON-NLS-1$
+        supportedFunctions.add("BITOR"); //$NON-NLS-1$
+        supportedFunctions.add("BITXOR"); //$NON-NLS-1$
         supportedFunctions.add("CEILING"); //$NON-NLS-1$
         supportedFunctions.add("COS"); //$NON-NLS-1$
         supportedFunctions.add("COT"); //$NON-NLS-1$

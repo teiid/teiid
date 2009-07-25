@@ -75,6 +75,11 @@ public class SybaseSQLTranslator extends Translator {
     }
     
     @Override
+    public String getDefaultTimeYMD() {
+    	return "1900-01-01"; //$NON-NLS-1$
+    }
+    
+    @Override
     public List<?> translateCommand(ICommand command, ExecutionContext context) {
     	if (!(command instanceof IQueryCommand)) {
     		return null;

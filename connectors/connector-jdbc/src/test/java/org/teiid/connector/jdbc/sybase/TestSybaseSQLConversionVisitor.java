@@ -190,7 +190,7 @@ public class TestSybaseSQLConversionVisitor {
     public void testTimeLiteral() {
         helpTestVisitor(getTestVDB(),
             "select {t'13:59:59'} FROM parts", //$NON-NLS-1$
-            "SELECT {ts'1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
+            "SELECT {ts'1900-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
 
     @Test

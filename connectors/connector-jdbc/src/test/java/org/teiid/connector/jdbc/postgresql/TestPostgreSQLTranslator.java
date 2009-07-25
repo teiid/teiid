@@ -289,7 +289,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     
     public void testDayOfWeek() throws Exception {
         String input = "SELECT dayofweek(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT (date_part('dow', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) + 1) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT (EXTRACT(DOW FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) + 1) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -298,7 +298,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testDayOfMonth() throws Exception {
         String input = "SELECT dayofmonth(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('day', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(DAY FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -307,7 +307,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testDayOfYear() throws Exception {
         String input = "SELECT dayofyear(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('doy', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(DOY FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -316,7 +316,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testHour() throws Exception {
         String input = "SELECT hour(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('hour', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(HOUR FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -325,7 +325,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testMinute() throws Exception {
         String input = "SELECT minute(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('minute', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(MINUTE FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -334,7 +334,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testMonth() throws Exception {
         String input = "SELECT month(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('month', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(MONTH FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -343,7 +343,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testQuarter() throws Exception {
         String input = "SELECT quarter(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('quarter', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(QUARTER FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -352,7 +352,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testSecond() throws Exception {
         String input = "SELECT second(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('second', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(SECOND FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -361,7 +361,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testWeek() throws Exception {
         String input = "SELECT week(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('week', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(WEEK FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -370,7 +370,7 @@ public class TestPostgreSQLTranslator extends TestCase {
     }
     public void testYear() throws Exception {
         String input = "SELECT year(convert(PART_WEIGHT, timestamp)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT date_part('year', to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT EXTRACT(YEAR FROM to_timestamp(PARTS.PART_WEIGHT, 'YYYY-MM-DD HH24:MI:SS.UF')) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -449,5 +449,16 @@ public class TestPostgreSQLTranslator extends TestCase {
             MODIFIERS,
             output);        
     }    
+    
+    public void testBitFunctions() throws Exception {
+        String input = "select bitand(intkey, intnum), bitnot(intkey), bitor(intnum, intkey), bitxor(intnum, intkey) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT (SmallA.IntKey & SmallA.IntNum), ~(SmallA.IntKey), (SmallA.IntNum | SmallA.IntKey), (SmallA.IntNum # SmallA.IntKey) FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getTestBQTVDB(),
+            input, 
+            MODIFIERS,
+            output);        
+    }
+    
     
 }

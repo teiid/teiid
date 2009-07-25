@@ -171,7 +171,7 @@ public class TestSybaseConvertModifier extends TestCase {
                 LANG_FACTORY.createLiteral("timestamp", String.class)}, //$NON-NLS-1$
             java.sql.Timestamp.class);
         
-        helpGetString1(func,  "convert(datetime, {ts'1970-01-01 12:02:03'})");  //$NON-NLS-1$
+        helpGetString1(func,  "convert(datetime, {ts'1900-01-01 12:02:03'})");  //$NON-NLS-1$
     }
         
     public void testDateToTimestamp() throws Exception {
@@ -236,7 +236,7 @@ public class TestSybaseConvertModifier extends TestCase {
                 LANG_FACTORY.createLiteral("string", String.class)}, //$NON-NLS-1$
             String.class);
         
-        helpGetString1(func,  "convert(varchar, {ts'1970-01-01 03:10:01'}, 108)");  //$NON-NLS-1$
+        helpGetString1(func,  "convert(varchar, {ts'1900-01-01 03:10:01'}, 108)");  //$NON-NLS-1$
     }    
     
     public void testBigDecimalToString() throws Exception {

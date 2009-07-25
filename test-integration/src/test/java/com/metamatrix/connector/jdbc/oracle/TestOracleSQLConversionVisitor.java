@@ -22,20 +22,19 @@
 
 package com.metamatrix.connector.jdbc.oracle;
 
+import static org.junit.Assert.*;
+
 import java.util.Properties;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.language.ICommand;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
-import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
@@ -48,19 +47,9 @@ import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.unittest.FakeMetadataStore;
 
-/**
- */
-public class TestOracleSQLConversionVisitor extends TestCase {
+public class TestOracleSQLConversionVisitor {
     private static ExecutionContext EMPTY_CONTEXT = new FakeExecutionContextImpl();
     
-    /**
-     * Constructor for TestOracleSQLConversionVisitor.
-     * @param name
-     */
-    public TestOracleSQLConversionVisitor(String name) {
-        super(name);
-    }
-
     private String getTestVDB() {
         return UnitTestUtil.getTestDataPath() + "/PartsSupplierOracle.vdb"; //$NON-NLS-1$
     }
@@ -77,7 +66,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         // Convert from sql to objects
         TranslationUtility util = new TranslationUtility(vdb);
         ICommand obj =  util.parseCommand(input, correctNaming, true);        
-		this.helpTestVisitor(obj, util.createRuntimeMetadata(), context, dbmsTimeZone, expectedOutput);
+		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
     }
 
     /** Helper method takes a QueryMetadataInterface impl instead of a VDB filename 
@@ -87,11 +76,10 @@ public class TestOracleSQLConversionVisitor extends TestCase {
         // Convert from sql to objects
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         ICommand obj = commandBuilder.getCommand(input);
-        RuntimeMetadata runtimeMetadata = new RuntimeMetadataImpl(metadata);
-		this.helpTestVisitor(obj, runtimeMetadata, context, dbmsTimeZone, expectedOutput);
+		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
     }
     
-    private void helpTestVisitor(ICommand obj, RuntimeMetadata metadata, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
+    private void helpTestVisitor(ICommand obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws ConnectorException {
 
         
         // Apply function replacement
@@ -124,7 +112,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
     }
     
     /** defect 21775 */
-    public void testDateStuff() throws Exception {
+    @Test public void testDateStuff() throws Exception {
         String input = "SELECT ((CASE WHEN month(datevalue) < 10 THEN ('0' || convert(month(datevalue), string)) ELSE convert(month(datevalue), string) END || CASE WHEN dayofmonth(datevalue) < 10 THEN ('0' || convert(dayofmonth(datevalue), string)) ELSE convert(dayofmonth(datevalue), string) END) || convert(year(datevalue), string)), SUM(intkey) FROM bqt1.SMALLA GROUP BY datevalue"; //$NON-NLS-1$
         String output = "SELECT CASE WHEN (CASE WHEN (CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL) OR (CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL) THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END IS NULL) OR (to_char(EXTRACT(YEAR FROM SmallA.DateValue)) IS NULL) THEN NULL ELSE concat(CASE WHEN (CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END IS NULL) OR (CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END IS NULL) THEN NULL ELSE concat(CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(MONTH FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(MONTH FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END, CASE WHEN EXTRACT(DAY FROM SmallA.DateValue) < 10 THEN CASE WHEN to_char(EXTRACT(DAY FROM SmallA.DateValue)) IS NULL THEN NULL ELSE concat('0', to_char(EXTRACT(DAY FROM SmallA.DateValue))) END ELSE to_char(EXTRACT(DAY FROM SmallA.DateValue)) END) END, to_char(EXTRACT(YEAR FROM SmallA.DateValue))) END, SUM(SmallA.IntKey) FROM SmallA GROUP BY SmallA.DateValue"; //$NON-NLS-1$
         
@@ -148,7 +136,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                 EMPTY_CONTEXT, null, output);
     }
     
-    public void testCharFunction() throws Exception {
+    @Test public void testCharFunction() throws Exception {
         String input = "SELECT char(CONVERT(PART_ID, INTEGER)) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT chr(to_number(PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
         
@@ -158,7 +146,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }    
 
-    public void testLcaseFunction() throws Exception {
+    @Test public void testLcaseFunction() throws Exception {
         String input = "SELECT lcase(PART_NAME) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT lower(PARTS.PART_NAME) FROM PARTS"; //$NON-NLS-1$
     
@@ -168,7 +156,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testUcaseFunction() throws Exception {
+    @Test public void testUcaseFunction() throws Exception {
         String input = "SELECT ucase(PART_NAME) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT upper(PARTS.PART_NAME) FROM PARTS"; //$NON-NLS-1$
     
@@ -178,7 +166,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testIfnullFunction() throws Exception {
+    @Test public void testIfnullFunction() throws Exception {
         String input = "SELECT ifnull(PART_NAME, 'x') FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT nvl(PARTS.PART_NAME, 'x') FROM PARTS"; //$NON-NLS-1$
     
@@ -188,7 +176,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testLogFunction() throws Exception {
+    @Test public void testLogFunction() throws Exception {
         String input = "SELECT log(CONVERT(PART_ID, INTEGER)) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT ln(to_number(PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
     
@@ -198,7 +186,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testLog10Function() throws Exception {
+    @Test public void testLog10Function() throws Exception {
         String input = "SELECT log10(CONVERT(PART_ID, INTEGER)) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT log(10, to_number(PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
     
@@ -208,7 +196,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testConvertFunctionInteger() throws Exception {
+    @Test public void testConvertFunctionInteger() throws Exception {
         String input = "SELECT convert(PARTS.PART_ID, integer) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT to_number(PARTS.PART_ID) FROM PARTS"; //$NON-NLS-1$
     
@@ -219,7 +207,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testConvertFunctionChar() throws Exception {
+    @Test public void testConvertFunctionChar() throws Exception {
         String input = "SELECT convert(PARTS.PART_ID, char) FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
     
@@ -229,7 +217,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testConvertFunctionBoolean() throws Exception {
+    @Test public void testConvertFunctionBoolean() throws Exception {
         String input = "SELECT convert(PARTS.PART_ID, boolean) FROM PARTS"; //$NON-NLS-1$
         //String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT decode(PARTS.PART_ID, 'true', 1, 'false', 0) FROM PARTS"; //$NON-NLS-1$
@@ -240,7 +228,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testConvertFunctionDate() throws Exception {
+    @Test public void testConvertFunctionDate() throws Exception {
         String input = "SELECT convert(PARTS.PART_ID, date) FROM PARTS"; //$NON-NLS-1$
         //String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT to_date(PARTS.PART_ID, 'YYYY-MM-DD') FROM PARTS";  //$NON-NLS-1$
@@ -250,7 +238,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testConvertFunctionTime() throws Exception {
+    @Test public void testConvertFunctionTime() throws Exception {
         String input = "SELECT convert(PARTS.PART_ID, time) FROM PARTS"; //$NON-NLS-1$
         //String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT to_date(('1970-01-01 ' || to_char(PARTS.PART_ID, 'HH24:MI:SS')), 'YYYY-MM-DD HH24:MI:SS') FROM PARTS"; //$NON-NLS-1$ 
@@ -261,7 +249,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testConvertFunctionTimestamp() throws Exception {
+    @Test public void testConvertFunctionTimestamp() throws Exception {
         String input = "SELECT convert(PARTS.PART_ID, timestamp) FROM PARTS"; //$NON-NLS-1$
         //String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
         String output = "SELECT to_timestamp(PARTS.PART_ID, 'YYYY-MM-DD HH24:MI:SS.FF') FROM PARTS"; //$NON-NLS-1$
@@ -272,7 +260,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
             output);
     }
     
-    public void testExtractFunctionTimestamp() throws Exception {
+    @Test public void testExtractFunctionTimestamp() throws Exception {
         String input = "SELECT month(TIMESTAMPVALUE) FROM BQT1.Smalla"; //$NON-NLS-1$
         String output = "SELECT EXTRACT(MONTH FROM SmallA.TimestampValue) FROM SmallA"; //$NON-NLS-1$
                
@@ -281,58 +269,58 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                 EMPTY_CONTEXT, null, output);
     }
 
-    public void testAliasedGroup() throws Exception {
+    @Test public void testAliasedGroup() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select y.part_name from parts as y", //$NON-NLS-1$
             null,
             "SELECT y.PART_NAME FROM PARTS y"); //$NON-NLS-1$
     }
     
-    public void testDateLiteral() throws Exception {
+    @Test public void testDateLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select {d'2002-12-31'} FROM parts", //$NON-NLS-1$
             null,
             "SELECT {d'2002-12-31'} FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testTimeLiteral() throws Exception {
+    @Test public void testTimeLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select {t'13:59:59'} FROM parts", //$NON-NLS-1$
             null,
             "SELECT {ts'1970-01-01 13:59:59'} FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testTimestampLiteral() throws Exception {
+    @Test public void testTimestampLiteral() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select {ts'2002-12-31 13:59:59'} FROM parts", //$NON-NLS-1$
             null,
             "SELECT {ts'2002-12-31 13:59:59.0'} FROM PARTS"); //$NON-NLS-1$
     }
 
-    public void testUnionOrderByWithThreeBranches() throws Exception {
+    @Test public void testUnionOrderByWithThreeBranches() throws Exception {
         helpTestVisitor(getTestVDB(),
                         "select part_id id FROM parts UNION ALL select part_name FROM parts UNION ALL select part_id FROM parts ORDER BY id", //$NON-NLS-1$
                         null,
-                        "(SELECT g_2.PART_ID AS c_0 FROM PARTS g_2 UNION ALL SELECT g_1.PART_NAME AS c_0 FROM PARTS g_1) UNION ALL SELECT g_0.PART_ID AS c_0 FROM PARTS g_0 ORDER BY c_0",
-                        true); //$NON-NLS-1$
+                        "(SELECT g_2.PART_ID AS c_0 FROM PARTS g_2 UNION ALL SELECT g_1.PART_NAME AS c_0 FROM PARTS g_1) UNION ALL SELECT g_0.PART_ID AS c_0 FROM PARTS g_0 ORDER BY c_0", //$NON-NLS-1$
+                        true); 
     }
     
-    public void testUnionOrderBy() throws Exception {
+    @Test public void testUnionOrderBy() throws Exception {
         helpTestVisitor(getTestVDB(),
                         "select part_id FROM parts UNION ALL select part_name FROM parts ORDER BY part_id", //$NON-NLS-1$
                         null,
-                        "SELECT g_1.PART_ID AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_NAME AS c_0 FROM PARTS g_0 ORDER BY c_0",
-                        true); //$NON-NLS-1$
+                        "SELECT g_1.PART_ID AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_NAME AS c_0 FROM PARTS g_0 ORDER BY c_0", //$NON-NLS-1$
+                        true); 
     }
 
-    public void testUnionOrderBy2() throws Exception {
+    @Test public void testUnionOrderBy2() throws Exception {
         helpTestVisitor(getTestVDB(),
                         "select part_id as p FROM parts UNION ALL select part_name FROM parts ORDER BY p", //$NON-NLS-1$
                         null,
                         "SELECT PARTS.PART_ID AS p FROM PARTS UNION ALL SELECT PARTS.PART_NAME FROM PARTS ORDER BY p"); //$NON-NLS-1$
     }
 
-    public void testUpdateWithFunction() throws Exception {
+    @Test public void testUpdateWithFunction() throws Exception {
         String input = "UPDATE bqt1.smalla SET intkey = intkey + 1"; //$NON-NLS-1$
         String output = "UPDATE SmallA SET IntKey = (SmallA.IntKey + 1)"; //$NON-NLS-1$
         
@@ -351,7 +339,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
      * 
      * @since 4.3
      */
-    public void testDUAL() throws Exception {
+    @Test public void testDUAL() throws Exception {
         String input = "SELECT something FROM DUAL"; //$NON-NLS-1$
         String output = "SELECT something FROM DUAL"; //$NON-NLS-1$
                
@@ -369,7 +357,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
      * 
      * @since 4.3
      */
-    public void testROWNUM() throws Exception {
+    @Test public void testROWNUM() throws Exception {
         String input = "SELECT part_name, rownum FROM parts"; //$NON-NLS-1$
         String output = "SELECT PARTS.PART_NAME, ROWNUM FROM PARTS"; //$NON-NLS-1$
                
@@ -386,7 +374,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
      * 
      * @since 4.3
      */
-    public void testROWNUM2() throws Exception {
+    @Test public void testROWNUM2() throws Exception {
         String input = "SELECT part_name FROM parts where rownum < 100"; //$NON-NLS-1$
         String output = "SELECT PARTS.PART_NAME FROM PARTS WHERE ROWNUM < 100"; //$NON-NLS-1$
                
@@ -402,7 +390,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
      * 
      * @since 4.3
      */
-    public void testOracleCommentPayload() throws Exception {
+    @Test public void testOracleCommentPayload() throws Exception {
         String input = "SELECT part_name, rownum FROM parts"; //$NON-NLS-1$
         String output = "SELECT /*+ ALL_ROWS */ PARTS.PART_NAME, ROWNUM FROM PARTS"; //$NON-NLS-1$
                
@@ -421,7 +409,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
      * reproducing this case relies on the name in source for the table being different from
      * the name
      */
-    public void testCase3845() throws Exception {
+    @Test public void testCase3845() throws Exception {
         
         String input = "SELECT (DoubleNum * 1.0) FROM BQT1.Smalla"; //$NON-NLS-1$
         String output = "SELECT (SmallishA.DoubleNum * 1.0) FROM SmallishA"; //$NON-NLS-1$
@@ -450,7 +438,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
 		helpTestVisitor(vdb, input, null, expectedOutput);
 	}
 
-    public void testRowLimit2() throws Exception {
+    @Test public void testRowLimit2() throws Exception {
         String input = "select intkey from bqt1.smalla limit 100"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT SmallA.IntKey FROM SmallA) WHERE ROWNUM <= 100"; //$NON-NLS-1$
                
@@ -459,7 +447,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                 EMPTY_CONTEXT, null, output);        
     }
     
-    public void testRowLimit3() throws Exception {
+    @Test public void testRowLimit3() throws Exception {
         String input = "select intkey from bqt1.smalla limit 50, 100"; //$NON-NLS-1$
         String output = "SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT SmallA.IntKey FROM SmallA) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50"; //$NON-NLS-1$
                
@@ -468,7 +456,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                 EMPTY_CONTEXT, null, output);        
     }
             
-    public void testLimitWithNestedInlineView() throws Exception {
+    @Test public void testLimitWithNestedInlineView() throws Exception {
         String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by intkey"; //$NON-NLS-1$
         String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY intkey) WHERE ROWNUM <= 100) x GROUP BY x.intkey"; //$NON-NLS-1$
                
@@ -477,7 +465,7 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                 EMPTY_CONTEXT, null, output);        
     }
     
-    public void testExceptAsMinus() throws Exception {
+    @Test public void testExceptAsMinus() throws Exception {
         String input = "select intkey, intnum from bqt1.smalla except select intnum, intkey from bqt1.smallb"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey, SmallA.IntNum FROM SmallA MINUS SELECT SmallB.IntNum, SmallB.IntKey FROM SmallB"; //$NON-NLS-1$
                
@@ -486,27 +474,27 @@ public class TestOracleSQLConversionVisitor extends TestCase {
                 EMPTY_CONTEXT, null, output);        
     }
     
-    public void testConcat2_useLiteral() throws Exception {
+    @Test public void testConcat2_useLiteral() throws Exception {
         String sql = "select concat2(stringnum,'_xx') from BQT1.Smalla"; //$NON-NLS-1$       
         String expected = "SELECT concat(nvl(SmallA.StringNum, ''), '_xx') FROM SmallA"; //$NON-NLS-1$
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
 
-    public void testConcat2() throws Exception {
+    @Test public void testConcat2() throws Exception {
         String sql = "select concat2(stringnum, stringnum) from BQT1.Smalla"; //$NON-NLS-1$       
-        String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(nvl(SmallA.StringNum, ''), nvl(SmallA.StringNum, '')) END FROM SmallA";
+        String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(nvl(SmallA.StringNum, ''), nvl(SmallA.StringNum, '')) END FROM SmallA"; //$NON-NLS-1$
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
     
-    public void testConcat() throws Exception {
+    @Test public void testConcat() throws Exception {
         String sql = "select concat(stringnum, stringkey) from BQT1.Smalla"; //$NON-NLS-1$       
-        String expected = "SELECT CASE WHEN (SmallA.StringNum IS NULL) OR (SmallA.StringKey IS NULL) THEN NULL ELSE concat(SmallA.StringNum, SmallA.StringKey) END FROM SmallA";
+        String expected = "SELECT CASE WHEN (SmallA.StringNum IS NULL) OR (SmallA.StringKey IS NULL) THEN NULL ELSE concat(SmallA.StringNum, SmallA.StringKey) END FROM SmallA"; //$NON-NLS-1$
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
     
-    public void testConcat_withLiteral() throws Exception {
+    @Test public void testConcat_withLiteral() throws Exception {
         String sql = "select stringnum || '1' from BQT1.Smalla"; //$NON-NLS-1$       
-        String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(SmallA.StringNum, '1') END FROM SmallA";
+        String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(SmallA.StringNum, '1') END FROM SmallA"; //$NON-NLS-1$
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
     }
 

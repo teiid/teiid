@@ -30,9 +30,10 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.sybase.SybaseSQLTranslator;
 import org.teiid.connector.jdbc.translator.AliasModifier;
-
+import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
 
 /**
+ * Updated to assume the use of the DataDirect, 2005 driver, or later.
  */
 public class SqlServerSQLTranslator extends SybaseSQLTranslator {
 
@@ -41,6 +42,17 @@ public class SqlServerSQLTranslator extends SybaseSQLTranslator {
         //TEIID-31 remove mod modifier for SQL Server 2008
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.REPEAT, new AliasModifier("replicate")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
+        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
     }
     
     @Override
