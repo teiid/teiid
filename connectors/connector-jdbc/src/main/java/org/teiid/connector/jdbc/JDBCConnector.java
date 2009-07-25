@@ -62,8 +62,6 @@ import com.metamatrix.core.util.ReflectionHelper;
 @ConnectionPooling
 public class JDBCConnector extends BasicConnector implements XAConnector, MetadataProvider {
 	
-    public static final String INVALID_AUTHORIZATION_SPECIFICATION_NO_SUBCLASS = "28000"; //$NON-NLS-1$
-
 	static final int NO_ISOLATION_LEVEL_SET = Integer.MIN_VALUE;
 
 	enum TransactionIsolationLevel {
@@ -130,29 +128,7 @@ public class JDBCConnector extends BasicConnector implements XAConnector, Metada
         
         createDataSources(dataSourceClassName, connectionProps);
         
-        if (areAdminConnectionsAllowed()) {
-        	testConnection();
-        }
-
         logger.logInfo(JDBCPlugin.Util.getString("JDBCConnector.JDBCConnector_started._4")); //$NON-NLS-1$
-    }
-    
-    private void testConnection() throws ConnectorException {
-    	Connection connection = null;
-        try {
-            connection = getConnection(null);
-        } catch (ConnectorException e) {
-            SQLException ex = (SQLException)e.getCause();
-            String sqlState = ex.getSQLState();
-            if (sqlState != null && INVALID_AUTHORIZATION_SPECIFICATION_NO_SUBCLASS.equals(sqlState)) {
-                throw e;
-            }
-            this.logger.logError(e.getMessage(), e);
-        } finally {
-        	if (connection != null) {
-        		connection.close();
-        	}
-        }
     }
     
 	@Override
