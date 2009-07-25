@@ -96,7 +96,7 @@ public class ConnectionPool {
     static final int DEFAULT_WAIT_FOR_SOURCE_TIME = 120000;
     static final int DEFAULT_CLEANING_INTERVAL = 60;
     static final boolean DEFAULT_ENABLE_SHRINKING = true; 
-    static final int DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL = 600;  //10 minutes 
+    public static final int DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL = 600;  //10 minutes 
 
     private static class ConnectionsForId {
         LinkedList<ConnectionWrapper> used = new LinkedList<ConnectionWrapper>();
@@ -179,7 +179,7 @@ public class ConnectionPool {
         waitForSourceTime = PropertiesUtils.getIntProperty(poolProperties, WAIT_FOR_SOURCE_TIME, DEFAULT_WAIT_FOR_SOURCE_TIME);
         cleaningInterval = PropertiesUtils.getIntProperty(poolProperties, CLEANING_INTERVAL, DEFAULT_CLEANING_INTERVAL) * 1000;
         enableShrinking = PropertiesUtils.getBooleanProperty(poolProperties, ENABLE_SHRINKING, DEFAULT_ENABLE_SHRINKING);
-        testConnectInterval = PropertiesUtils.getIntProperty(poolProperties, SOURCE_CONNECTION_TEST_INTERVAL, DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL);
+        testConnectInterval = PropertiesUtils.getIntProperty(poolProperties, SOURCE_CONNECTION_TEST_INTERVAL, DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL) * 1000;
         
         if (enableShrinking && !this.shuttingDownPool) {
         	env.scheduleAtFixedRate(new Runnable() {

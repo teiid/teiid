@@ -32,7 +32,6 @@ public interface DQPEmbeddedProperties {
     public static final String VDB_DEFINITION = "vdb.definition"; //$NON-NLS-1$
     public static final String USER_DEFINED_FUNCTIONS = "dqp.userDefinedFunctionsFile"; //$NON-NLS-1$
     public static final String COMMON_EXTENSION_CLASPATH = "dqp.extension.CommonClasspath"; //$NON-NLS-1$
-    public static final String DQP_KEYSTORE = "dqp.keystore"; //$NON-NLS-1$
     public static final String DQP_WORKDIR = "dqp.workdir"; //$NON-NLS-1$
     public static final String DQP_DEPLOYDIR = "dqp.deploydir"; //$NON-NLS-1$
     public static final String DQP_LIBDIR = "dqp.lib"; //$NON-NLS-1$

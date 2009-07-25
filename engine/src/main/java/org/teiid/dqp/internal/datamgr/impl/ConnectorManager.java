@@ -102,7 +102,6 @@ import com.metamatrix.query.sql.lang.Command;
  */
 public class ConnectorManager implements ApplicationService {
 
-    private static final int TIME_BETWEEN_STATUS_CHECKS = 5000;
 	public static final int DEFAULT_MAX_THREADS = 20;
     private static final String DEFAULT_MAX_RESULTSET_CACHE_SIZE = "20"; //$NON-NLS-1$
     private static final String DEFAULT_MAX_RESULTSET_CACHE_AGE = "3600000"; //$NON-NLS-1$
@@ -119,13 +118,13 @@ public class ConnectorManager implements ApplicationService {
     private boolean synchWorkers;
     private boolean isXa;
     private boolean isImmutable;
+    
+    private volatile ConnectorStatus state = ConnectorStatus.NOT_INITIALIZED;
 
     //services acquired in start
     private MetadataService metadataService;
     private TransactionService transactionService;
     private BufferService bufferService;
-    
-    private volatile Boolean started;
     
     private ClassLoaderManager clManager;
 
@@ -134,9 +133,6 @@ public class ConnectorManager implements ApplicationService {
 
     private Properties props;
 	private ClassLoader classloader;
-	private ConnectorStatus previousStatus;
-	private long lastStatusCheck = -1;
-	
     
     public void initialize(Properties props) {
     	this.props = props;
@@ -297,35 +293,29 @@ public class ConnectorManager implements ApplicationService {
         return requestStates.size();
     }
     
-    /**
-     * @see com.metamatrix.dqp.internal.datamgr.ConnectorManager#isAlive()
-     */
     public ConnectorStatus getStatus() {
-    	if (this.connector == null) {
-    		return ConnectorStatus.NOT_INITIALIZED;
+    	ConnectorWrapper connectorWrapper = this.connector;
+    	ConnectorStatus result = this.state;
+    	if (result != ConnectorStatus.OPEN) {
+    		return result;
     	}
-    	
-    	// we want to avoid repeated calls to status, as they may be expensive to make. 
-    	if (lastStatusCheck == -1 || (System.currentTimeMillis() - lastStatusCheck >= TIME_BETWEEN_STATUS_CHECKS)) {
-	        ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
-	        try {
-	        	Thread.currentThread().setContextClassLoader(classloader);
-	            this.previousStatus = this.connector.getStatus();
-	            this.lastStatusCheck = System.currentTimeMillis();
-	        } finally {
-	        	Thread.currentThread().setContextClassLoader(contextloader);
-	        }
-    	}
-        return this.previousStatus;
+        ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
+        try {
+        	Thread.currentThread().setContextClassLoader(classloader);
+            return connectorWrapper.getStatus();
+        } finally {
+        	Thread.currentThread().setContextClassLoader(contextloader);
+        }
     }
     
     /**
      * initialize this <code>ConnectorManager</code>.
      */
     public synchronized void start(ApplicationEnvironment env) throws ApplicationLifecycleException {
-    	if (this.started != null) {
-    		throw new ApplicationLifecycleException("ConnectorManager.cannot_restart"); //$NON-NLS-1$
+    	if (this.state != ConnectorStatus.NOT_INITIALIZED) {
+    		return;
     	}
+    	this.state = ConnectorStatus.INIT_FAILED;
         connectorName = props.getProperty(ConnectorPropertyNames.CONNECTOR_BINDING_NAME, "Unknown_Binding_Name"); //$NON-NLS-1$
         String connIDStr = props.getProperty(ConnectorPropertyNames.CONNECTOR_ID);
         connectorID = new ConnectorID(connIDStr);
@@ -374,7 +364,7 @@ public class ConnectorManager implements ApplicationService {
     		this.rsCache = createResultSetCache(rsCacheProps);
         }
 		this.workItemFactory = new ConnectorWorkItemFactory(this, this.rsCache, synchWorkers);
-        this.started = true;
+    	this.state = ConnectorStatus.OPEN;
     }
     
 	private String buildClasspath(Properties connectorProperties) {
@@ -534,26 +524,14 @@ public class ConnectorManager implements ApplicationService {
 	}
 
     /**
-     * Queries the Connector Manager, if it already has been started. 
-     * @return
-     * @since 4.3
-     */
-    public boolean started() {
-    	if (this.started != null) {
-    		return this.started;
-    	}
-        return false;
-    }
-    
-    /**
      * Stop this connector.
      */
     public void stop() throws ApplicationLifecycleException {        
         synchronized (this) {
-        	if (this.started == null || this.started == false) {
+        	if (this.state == ConnectorStatus.CLOSED) {
         		return;
         	}
-            this.started = false;
+            this.state= ConnectorStatus.CLOSED;
 		}
         if (this.connectorWorkerPool != null) {
         	this.connectorWorkerPool.shutdownNow();

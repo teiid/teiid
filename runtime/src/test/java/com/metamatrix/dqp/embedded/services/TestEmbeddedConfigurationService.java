@@ -45,8 +45,6 @@ import com.metamatrix.common.config.api.ExtensionModule;
 import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.config.model.BasicConnectorBindingType;
 import com.metamatrix.common.config.model.BasicExtensionModule;
-import com.metamatrix.common.util.crypto.CryptoUtil;
-import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
 import com.metamatrix.core.util.FileUtils;

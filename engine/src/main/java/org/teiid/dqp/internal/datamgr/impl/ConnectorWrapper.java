@@ -22,6 +22,8 @@
 
 package org.teiid.dqp.internal.datamgr.impl;
 
+import java.util.concurrent.TimeUnit;
+
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorCapabilities;
@@ -34,7 +36,9 @@ import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
+import org.teiid.dqp.internal.pooling.connector.ConnectionPool;
 
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.dqp.service.ConnectorStatus;
 
 /**
@@ -44,7 +48,7 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 	
 	private Connector actualConnector;
 	private String name;
-	
+	private volatile ConnectorStatus status = ConnectorStatus.UNABLE_TO_CHECK;
 	
 	public ConnectorWrapper(Connector actualConnector){
 		this.actualConnector = actualConnector;
@@ -53,6 +57,19 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 	public void start(ConnectorEnvironment environment) throws ConnectorException {
 		name = environment.getConnectorName();
 		actualConnector.start(environment);
+		int interval = PropertiesUtils.getIntProperty(environment.getProperties(), ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, ConnectionPool.DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL);
+		if (interval > 0 && isConnectionTestable()) {
+			environment.scheduleAtFixedRate(new Runnable() {
+				@Override
+				public void run() {
+					updateStatus();
+				}
+			}, 0, interval, TimeUnit.SECONDS);
+		}
+	}
+	
+	protected boolean isConnectionTestable() {
+		return supportsSingleIdentity();
 	}
 
 	public void stop() {
@@ -97,13 +114,21 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 	}
 	
 	public final ConnectorStatus getStatus() {
+		return status;
+	}
+	
+	protected void updateStatus() {
+		this.status = testConnection();
+	}
+
+	protected ConnectorStatus testConnection() {
 		if (supportsSingleIdentity()) {
 			Connection conn = null;
 			try {
 				conn = this.getConnection(null);
 				return conn.isAlive()?ConnectorStatus.OPEN:ConnectorStatus.DATA_SOURCE_UNAVAILABLE;
 			} catch (ConnectorException e) {
-				return ConnectorStatus.INIT_FAILED;
+				return ConnectorStatus.DATA_SOURCE_UNAVAILABLE;
 			} finally {
 				if (conn != null) {
 					conn.close();

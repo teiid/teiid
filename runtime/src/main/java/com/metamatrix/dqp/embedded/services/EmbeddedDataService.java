@@ -263,7 +263,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         ConnectorBinding binding = getConnectorBinding(deployedConnectorBindingName);
         if (binding != null) {
             ConnectorManager mgr = getConnectorManager(binding);
-            if (mgr != null && !mgr.started()) {
+            if (mgr != null && mgr.getStatus() == ConnectorStatus.NOT_INITIALIZED) {
                 // Start the manager
                 mgr.start(env);
                 
@@ -292,17 +292,15 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         if (binding != null) {
             ConnectorManager mgr = getConnectorManager(binding, false);
             if (mgr != null ) {
-                if (mgr.started()) {
-                    // Run the stop command no matter what state they are in, since the Alive status is not
-                    // always reliable, it is only based on the Connector implementation. This is fool proof. 
-                    mgr.stop();
-                    
-                    // remove from the local configuration. We want to create a new connector binding each time
-                    // we start, so that we can initialize with correct properties, in case they chnaged.
-                    removeConnectorBinding(binding.getDeployedName());
-                    
-                    DQPEmbeddedPlugin.logInfo("DataService.Connector_Stopped", new Object[] {binding.getDeployedName()}); //$NON-NLS-1$
-                }
+                // Run the stop command no matter what state they are in, since the Alive status is not
+                // always reliable, it is only based on the Connector implementation. This is fool proof. 
+                mgr.stop();
+                
+                // remove from the local configuration. We want to create a new connector binding each time
+                // we start, so that we can initialize with correct properties, in case they chnaged.
+                removeConnectorBinding(binding.getDeployedName());
+                
+                DQPEmbeddedPlugin.logInfo("DataService.Connector_Stopped", new Object[] {binding.getDeployedName()}); //$NON-NLS-1$
             }
         }
         else {

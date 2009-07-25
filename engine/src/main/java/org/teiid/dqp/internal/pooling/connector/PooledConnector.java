@@ -43,6 +43,7 @@ import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWrapper;
 
 import com.metamatrix.common.stats.ConnectionPoolStats;
+import com.metamatrix.dqp.service.ConnectorStatus;
 
 
 /**
@@ -177,7 +178,7 @@ public class PooledConnector extends ConnectorWrapper {
         return conn;
 	}
 
-	public Collection <ConnectionPoolStats>getConnectionPoolStats() {
+	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
 		Collection<ConnectionPoolStats> pools = new ArrayList<ConnectionPoolStats>(2);
 
 		setStats(pool, poolStats);
@@ -190,6 +191,20 @@ public class PooledConnector extends ConnectorWrapper {
 		
 		return pools;
 	}
+
+	@Override
+	protected boolean isConnectionTestable() {
+		return true;
+	}
+	
+	@Override
+	protected ConnectorStatus testConnection() {
+		if (this.pool.getNumberOfConnectionsInUse() > 0) {
+			return ConnectorStatus.OPEN;
+		}
+		//TODO: call is alive on an unused connection
+		return super.testConnection();
+	}
 	
 	private void setStats(ConnectionPool connpool, ConnectionPoolStats stats) {
 
@@ -198,8 +213,6 @@ public class PooledConnector extends ConnectorWrapper {
 		stats.setConnectionsDestroyed(connpool.getTotalDestroyedConnectionCount());
 		stats.setConnectionsInUse(connpool.getNumberOfConnectionsInUse());
 		stats.setTotalConnections(connpool.getTotalConnectionCount());
-		
-	
 	}
 
 }
