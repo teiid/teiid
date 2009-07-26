@@ -40,8 +40,8 @@ public class DB2Capabilities extends JDBCCapabilities {
     /**
      * @see com.metamatrix.data.ConnectorCapabilities#getSupportedFunctions()
      */
-    public List getSupportedFunctions() {
-        List supportedFunctions = new ArrayList();
+    public List<String> getSupportedFunctions() {
+        List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
         supportedFunctions.add("ABS"); //$NON-NLS-1$
         supportedFunctions.add("ACOS"); //$NON-NLS-1$

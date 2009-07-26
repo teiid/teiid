@@ -33,50 +33,63 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
  * @since 5.0
  */
 public class DerbyCapabilities extends JDBCCapabilities {
+	
+	public static final String TEN_1 = "10.1"; //$NON-NLS-1$
+	public static final String TEN_2 = "10.2"; //$NON-NLS-1$
+	public static final String TEN_4 = "10.4"; //$NON-NLS-1$
+	public static final String TEN_5 = "10.5"; //$NON-NLS-1$
+	
+	private String version = TEN_1;
 
-    public List getSupportedFunctions() {
-        List supportedFunctions = new ArrayList();
+    public List<String> getSupportedFunctions() {
+        List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
 
         supportedFunctions.add("ABS"); //$NON-NLS-1$
-        //supportedFunctions.add("ACOS"); //$NON-NLS-1$
-        //supportedFunctions.add("ASIN"); //$NON-NLS-1$
-        //supportedFunctions.add("ATAN"); //$NON-NLS-1$
-        //supportedFunctions.add("ATAN2"); //$NON-NLS-1$
+        if (version.compareTo(TEN_2) >= 0) {
+        	supportedFunctions.add("ACOS"); //$NON-NLS-1$
+        	supportedFunctions.add("ASIN"); //$NON-NLS-1$
+        	supportedFunctions.add("ATAN"); //$NON-NLS-1$
+        }
+        if (version.compareTo(TEN_4) >= 0) {
+        	supportedFunctions.add("ATAN2"); //$NON-NLS-1$
+        }
         // These are executed within the server and never pushed down
         //supportedFunctions.add("BITAND"); //$NON-NLS-1$
         //supportedFunctions.add("BITNOT"); //$NON-NLS-1$
         //supportedFunctions.add("BITOR"); //$NON-NLS-1$
         //supportedFunctions.add("BITXOR"); //$NON-NLS-1$
-        //supportedFunctions.add("CEILING"); //$NON-NLS-1$
-        //supportedFunctions.add("COS"); //$NON-NLS-1$
-        //supportedFunctions.add("COT"); //$NON-NLS-1$
-        //supportedFunctions.add("DEGREES"); //$NON-NLS-1$
-        //supportedFunctions.add("EXP"); //$NON-NLS-1$
-        //supportedFunctions.add("FLOOR"); //$NON-NLS-1$
-        //supportedFunctions.add("LOG"); //$NON-NLS-1$
-        //supportedFunctions.add("LOG10"); //$NON-NLS-1$
+        if (version.compareTo(TEN_2) >= 0) {
+	        supportedFunctions.add("CEILING"); //$NON-NLS-1$
+	        supportedFunctions.add("COS"); //$NON-NLS-1$
+	        supportedFunctions.add("COT"); //$NON-NLS-1$
+	        supportedFunctions.add("DEGREES"); //$NON-NLS-1$
+	        supportedFunctions.add("EXP"); //$NON-NLS-1$
+	        supportedFunctions.add("FLOOR"); //$NON-NLS-1$
+	        supportedFunctions.add("LOG"); //$NON-NLS-1$
+	        supportedFunctions.add("LOG10"); //$NON-NLS-1$
+        }
         supportedFunctions.add("MOD"); //$NON-NLS-1$
-        //supportedFunctions.add("PI"); //$NON-NLS-1$
-        //supportedFunctions.add("POWER"); //$NON-NLS-1$
-        //supportedFunctions.add("RADIANS"); //$NON-NLS-1$
-        //supportedFunctions.add("ROUND"); //$NON-NLS-1$
-        //supportedFunctions.add("SIGN"); //$NON-NLS-1$
-        //supportedFunctions.add("SIN"); //$NON-NLS-1$
+        if (version.compareTo(TEN_2) >= 0) {
+        	supportedFunctions.add("PI"); //$NON-NLS-1$
+        	//supportedFunctions.add("POWER"); //$NON-NLS-1$
+        	supportedFunctions.add("RADIANS"); //$NON-NLS-1$
+        	//supportedFunctions.add("ROUND"); //$NON-NLS-1$
+        	supportedFunctions.add("SIGN"); //$NON-NLS-1$
+        	supportedFunctions.add("SIN"); //$NON-NLS-1$
+        }
         supportedFunctions.add("SQRT"); //$NON-NLS-1$
         //supportedFunctions.add("TAN"); //$NON-NLS-1$
         
         //supportedFunctions.add("ASCII"); //$NON-NLS-1$
         //supportedFunctions.add("CHR"); //$NON-NLS-1$
         //supportedFunctions.add("CHAR"); //$NON-NLS-1$
-        supportedFunctions.add("||"); //$NON-NLS-1$
         supportedFunctions.add("CONCAT"); //$NON-NLS-1$
         //supportedFunctions.add("INSERT"); //$NON-NLS-1$
         supportedFunctions.add("LCASE"); //$NON-NLS-1$
-        //supportedFunctions.add("LEFT"); //$NON-NLS-1$
+        supportedFunctions.add("LEFT"); //$NON-NLS-1$
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
         supportedFunctions.add("LOCATE"); //$NON-NLS-1$
-        supportedFunctions.add("LOWER"); //$NON-NLS-1$
         //supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
         //supportedFunctions.add("REPEAT"); //$NON-NLS-1$
@@ -86,7 +99,6 @@ public class DerbyCapabilities extends JDBCCapabilities {
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
-        supportedFunctions.add("UPPER"); //$NON-NLS-1$
         
         // These are executed within the server and never pushed down
         //supportedFunctions.add("CURDATE"); //$NON-NLS-1$
@@ -117,13 +129,15 @@ public class DerbyCapabilities extends JDBCCapabilities {
         //supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
         
-        supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
-        supportedFunctions.add("NVL"); //$NON-NLS-1$
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
         return supportedFunctions;
     }
+    
+    public void setVersion(String version) {
+		this.version = version;
+	}
 
     /**
      * Derby supports only SearchedCaseExpression, not CaseExpression. 
@@ -152,11 +166,6 @@ public class DerbyCapabilities extends JDBCCapabilities {
         return true;
     }
     
-    @Override
-    public boolean supportsSetQueryOrderBy() {
-    	return false;
-    }
-    
     /** 
      * @see org.teiid.connector.basic.BasicConnectorCapabilities#supportsExcept()
      */
@@ -171,6 +180,11 @@ public class DerbyCapabilities extends JDBCCapabilities {
     @Override
     public boolean supportsIntersect() {
         return true;
+    }
+    
+    @Override
+    public boolean supportsRowLimit() {
+    	return this.version.compareTo(TEN_5) >= 0;
     }
 
 }

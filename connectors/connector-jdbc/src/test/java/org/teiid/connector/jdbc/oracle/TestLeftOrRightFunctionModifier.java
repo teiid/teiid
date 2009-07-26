@@ -25,15 +25,13 @@ package org.teiid.connector.jdbc.oracle;
 import java.util.Arrays;
 import java.util.Properties;
 
-import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
-import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
+import junit.framework.TestCase;
+
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 import org.teiid.connector.language.ILiteral;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;

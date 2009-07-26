@@ -35,8 +35,8 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
 public class PostgreSQLCapabilities extends JDBCCapabilities {
     
     
-    public List getSupportedFunctions() {
-        List supportedFunctions = new ArrayList();
+    public List<String> getSupportedFunctions() {
+        List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
     
         supportedFunctions.add("ABS"); //$NON-NLS-1$

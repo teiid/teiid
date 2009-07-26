@@ -26,28 +26,30 @@ import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
-import org.teiid.connector.jdbc.translator.AliasModifier;
+import org.teiid.connector.jdbc.db2.DB2SQLTranslator;
+import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
-import org.teiid.connector.jdbc.translator.Translator;
 
 
 
 /** 
  * @since 4.3
  */
-public class DerbySQLTranslator extends Translator {
+public class DerbySQLTranslator extends DB2SQLTranslator {
+	
+	public static final String DATABASE_VERSION = "DatabaseVersion"; //$NON-NLS-1$
 
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
 		super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 
+		//additional derby functions
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier()); 
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        
+        //overrides of db2 functions
+        registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier()); 
         registerFunctionModifier(SourceSystemFunctions.CONVERT, new DerbyConvertModifier(getLanguageFactory())); 
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.COALESCE, new AliasModifier("coalesce")); //$NON-NLS-1$ 
     }  
  
     @Override
@@ -63,6 +65,16 @@ public class DerbySQLTranslator extends Translator {
     @Override
     public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
     	return DerbyCapabilities.class;
+    }
+    
+    @Override
+    public ConnectorCapabilities getConnectorCapabilities()
+    		throws ConnectorException {
+    	ConnectorCapabilities capabilities = super.getConnectorCapabilities();
+    	if (capabilities instanceof DerbyCapabilities) {
+    		((DerbyCapabilities)capabilities).setVersion(getEnvironment().getProperties().getProperty(DATABASE_VERSION, DerbyCapabilities.TEN_1));
+    	}
+    	return capabilities;
     }
 
 }

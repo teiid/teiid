@@ -29,14 +29,17 @@ import java.util.List;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.DropFunctionModifier;
-import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.*;
+import org.teiid.connector.language.ICompareCriteria;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.ICompareCriteria.Operator;
 
 
 /**
  */
-public class DB2ConvertModifier extends BasicFunctionModifier implements FunctionModifier {
+public class DB2ConvertModifier extends BasicFunctionModifier {
 
     private static DropFunctionModifier DROP_MODIFIER = new DropFunctionModifier();
 
@@ -227,7 +230,7 @@ public class DB2ConvertModifier extends BasicFunctionModifier implements Functio
         return null;
     }
 
-    private IExpression convertToReal(IExpression expression, Class sourceType) {
+    protected IExpression convertToReal(IExpression expression, Class sourceType) {
         
         if(sourceType.equals(TypeFacility.RUNTIME_TYPES.STRING) ||
                         sourceType.equals(TypeFacility.RUNTIME_TYPES.DOUBLE) || 
@@ -243,7 +246,7 @@ public class DB2ConvertModifier extends BasicFunctionModifier implements Functio
         return null;
     }
 
-    private IExpression convertToDouble(IExpression expression, Class sourceType) {
+    protected IExpression convertToDouble(IExpression expression, Class sourceType) {
         
         if(sourceType.equals(TypeFacility.RUNTIME_TYPES.STRING)){
 
@@ -257,7 +260,7 @@ public class DB2ConvertModifier extends BasicFunctionModifier implements Functio
         return null;
     }
 
-    private IExpression convertToBigDecimal(IExpression expression, Class sourceType) {
+    protected IExpression convertToBigDecimal(IExpression expression, Class sourceType) {
         
         if(sourceType.equals(TypeFacility.RUNTIME_TYPES.STRING)){
 

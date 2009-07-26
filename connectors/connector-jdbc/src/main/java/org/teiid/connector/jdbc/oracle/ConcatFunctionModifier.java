@@ -40,7 +40,6 @@ import org.teiid.connector.language.ICompoundCriteria.Operator;
 
 /**
  * This Function modifier used to support ANSI concat on Oracle 9i.
- * TODO: this is no longer necessary on Oracle 10g and later. 
  * <code>
  * CONCAT(a, b) ==> CASE WHEN (a is NULL OR b is NULL) THEN NULL ELSE CONCAT(a, b)
  * </code>   

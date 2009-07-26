@@ -58,7 +58,7 @@ public class TestDB2SqlTranslator {
         // Convert from sql to objects
         ICommand obj = util.parseCommand(input);
         
-        ExecutionContext context = EnvironmentUtility.createSecurityContext("user");
+        ExecutionContext context = EnvironmentUtility.createSecurityContext("user"); //$NON-NLS-1$
                 
         TranslatedCommand tc = new TranslatedCommand(context, TRANSLATOR);
         tc.translateCommand(obj);
@@ -106,5 +106,16 @@ public class TestDB2SqlTranslator {
                 input, 
                 output);
     }    
+    
+    @Test
+    public void testSelectNullLiteral() throws Exception {
+        String input = "select null + 1 as x, null || 'a' from BQT1.Smalla"; //$NON-NLS-1$       
+        String output = "SELECT CAST(NULL AS INTEGER) AS x, CAST(NULL AS CHAR) FROM SmallA";  //$NON-NLS-1$
+        
+        helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
+                input, 
+                output);
+    }    
+
 
 }
