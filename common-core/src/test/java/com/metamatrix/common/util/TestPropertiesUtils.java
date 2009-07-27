@@ -646,29 +646,29 @@ public class TestPropertiesUtils extends TestCase {
     public void testOverrideProperties() {
         Properties p = new Properties();
         
-        p.setProperty("foo", "bar"); 
-        p.setProperty("foo1", "bar1");
-        p.setProperty("foo2", "bar2");
+        p.setProperty("foo", "bar");  //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty("foo1", "bar1"); //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty("foo2", "bar2"); //$NON-NLS-1$ //$NON-NLS-2$
         
         Properties p1 = new Properties(p);
         
-        p1.setProperty("foo", "x");
+        p1.setProperty("foo", "x"); //$NON-NLS-1$ //$NON-NLS-2$
         
         PropertiesUtils.setOverrideProperies(p1, p);
         
-        assertEquals("bar", p1.getProperty("foo"));
+        assertEquals("bar", p1.getProperty("foo")); //$NON-NLS-1$ //$NON-NLS-2$
         
         assertEquals(1, p1.size());
     }
     
     public void testGetInvalidInt() {
     	Properties p = new Properties();
-    	p.setProperty("x", "y");
+    	p.setProperty("x", "y"); //$NON-NLS-1$ //$NON-NLS-2$
     	try {
-    		PropertiesUtils.getIntProperty(p, "x", 1);
-    		fail("expected exception");
+    		PropertiesUtils.getIntProperty(p, "x", 1); //$NON-NLS-1$
+    		fail("expected exception"); //$NON-NLS-1$
     	} catch (InvalidPropertyException e) {
-    		assertEquals("Property 'x' with value 'y' is not a valid Integer.", e.getMessage());
+    		assertEquals("Property 'x' with value 'y' is not a valid Integer.", e.getMessage()); //$NON-NLS-1$
     	}
     }
     
@@ -707,25 +707,31 @@ public class TestPropertiesUtils extends TestCase {
     public void testSetBeanProperties() {
     	Bean bean = new Bean();
     	Properties p = new Properties();
-    	p.setProperty("prop", "0");
-    	p.setProperty("prop1", "1");
-    	p.setProperty("prop2", "2");
-    	p.setProperty("prop3", "3");
+    	p.setProperty("prop", "0");  //$NON-NLS-1$//$NON-NLS-2$
+    	p.setProperty("prop1", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+    	p.setProperty("prop2", "2"); //$NON-NLS-1$ //$NON-NLS-2$
+    	p.setProperty("prop3", "3"); //$NON-NLS-1$ //$NON-NLS-2$
     	
     	PropertiesUtils.setBeanProperties(bean, p, null);
     	
     	assertEquals(0, bean.getProp());
-    	assertEquals("1", bean.getProp1());
+    	assertEquals("1", bean.getProp1()); //$NON-NLS-1$
     	assertEquals(2d, bean.getProp2());
-    	assertEquals(Arrays.asList("3"), bean.getProp3());
+    	assertEquals(Arrays.asList("3"), bean.getProp3()); //$NON-NLS-1$
     	
-    	p.setProperty("prop", "?");
+    	p.setProperty("prop", "?"); //$NON-NLS-1$ //$NON-NLS-2$
     	
     	try {
     		PropertiesUtils.setBeanProperties(bean, p, null);
-    		fail("expected exception");
+    		fail("expected exception"); //$NON-NLS-1$
     	} catch (InvalidPropertyException e) {
     		
     	}
+    }
+    
+    public void testGetInt() {
+    	Properties p = new Properties();
+    	p.setProperty("prop", "0  "); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertEquals(PropertiesUtils.getIntProperty(p, "prop", -1), 0); //$NON-NLS-1$
     }
 }

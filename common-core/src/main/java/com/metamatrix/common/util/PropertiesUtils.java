@@ -42,7 +42,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.common.properties.UnmodifiableProperties;
-import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ArgCheck;
@@ -346,63 +345,83 @@ public final class PropertiesUtils {
     }
 
     public static int getIntProperty(Properties props, String propName, int defaultValue) throws InvalidPropertyException {
-        int val = defaultValue;
         String stringVal = props.getProperty(propName);
-        if(stringVal != null && stringVal.trim().length() > 0) {
-            try {
-                val = Integer.parseInt(stringVal);
-            } catch(NumberFormatException e) {
-                throw new InvalidPropertyException(propName, stringVal, Integer.class, e);
-            }
+        if(stringVal == null) {
+        	return defaultValue;
         }
-        return val;
+    	stringVal = stringVal.trim();
+    	if (stringVal.length() == 0) {
+    		return defaultValue;
+    	}
+        try {
+            return Integer.parseInt(stringVal);
+        } catch(NumberFormatException e) {
+            throw new InvalidPropertyException(propName, stringVal, Integer.class, e);
+        }
     }
 
     public static long getLongProperty(Properties props, String propName, long defaultValue) {
-        long val = defaultValue;
         String stringVal = props.getProperty(propName);
-        if(stringVal != null && stringVal.trim().length() > 0) {
-            try {
-                val = Long.parseLong(props.getProperty(propName));
-            } catch(NumberFormatException e) {
-            	throw new InvalidPropertyException(propName, stringVal, Integer.class, e);
-            }
+        if(stringVal == null) {
+        	return defaultValue;
         }
-        return val;
+    	stringVal = stringVal.trim();
+    	if (stringVal.length() == 0) {
+    		return defaultValue;
+    	}
+        try {
+            return Long.parseLong(stringVal);
+        } catch(NumberFormatException e) {
+        	throw new InvalidPropertyException(propName, stringVal, Long.class, e);
+        }
     }
 
     public static float getFloatProperty(Properties props, String propName, float defaultValue) {
-        float val = defaultValue;
-        if(props.containsKey(propName)) {
-            try {
-                Float f = new Float(props.getProperty(propName));
-                val = f.floatValue();
-            } catch(NumberFormatException e) {
-                // ignore
-            }
+        String stringVal = props.getProperty(propName);
+        if(stringVal == null) {
+        	return defaultValue;
         }
-        return val;
+    	stringVal = stringVal.trim();
+    	if (stringVal.length() == 0) {
+    		return defaultValue;
+    	}
+        try {
+            return Float.parseFloat(stringVal);
+        } catch(NumberFormatException e) {
+        	throw new InvalidPropertyException(propName, stringVal, Float.class, e);
+        }
     }
 
     public static double getDoubleProperty(Properties props, String propName, double defaultValue) {
-        double val = defaultValue;
-        if(props.containsKey(propName)) {
-            try {
-                Double d = new Double(props.getProperty(propName));
-                val = d.doubleValue();
-            } catch(NumberFormatException e) {
-                // ignore
-            }
+        String stringVal = props.getProperty(propName);
+        if(stringVal == null) {
+        	return defaultValue;
         }
-        return val;
+    	stringVal = stringVal.trim();
+    	if (stringVal.length() == 0) {
+    		return defaultValue;
+    	}
+        try {
+            return Double.parseDouble(stringVal);
+        } catch(NumberFormatException e) {
+        	throw new InvalidPropertyException(propName, stringVal, Double.class, e);
+        }
     }
 
     public static boolean getBooleanProperty(Properties props, String propName, boolean defaultValue) {
-        boolean val = defaultValue;
-        if(props.containsKey(propName)) {
-            val = Boolean.valueOf(props.getProperty(propName)).booleanValue();
+        String stringVal = props.getProperty(propName);
+        if(stringVal == null) {
+        	return defaultValue;
         }
-        return val;
+    	stringVal = stringVal.trim();
+    	if (stringVal.length() == 0) {
+    		return defaultValue;
+    	}
+        try {
+            return Boolean.valueOf(stringVal);
+        } catch(NumberFormatException e) {
+        	throw new InvalidPropertyException(propName, stringVal, Float.class, e);
+        }
     }
 
     /**
