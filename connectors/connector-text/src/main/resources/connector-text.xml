@@ -7,5 +7,6 @@
             <PropertyDefinition Name="EnforceColumnCount" DisplayName="Enforce Column Count" ShortDescription="This forces the number of columns in text file to match what was modeled" DefaultValue="false" PropertyType="Boolean"  />
             <PropertyDefinition Name="DateResultFormatsDelimiter" DisplayName="Date Result Formats Delimiter" ShortDescription="" IsExpert="true" />
             <PropertyDefinition Name="DateResultFormats" DisplayName="Date Result Formats" ShortDescription="" IsExpert="true" />
+            <PropertyDefinition Name="Immutable" DisplayName="Is Immutable" ShortDescription="True if the source never changes." DefaultValue="true" IsRequired="true" PropertyType="Boolean" IsExpert="true" />
         </ComponentType>
         

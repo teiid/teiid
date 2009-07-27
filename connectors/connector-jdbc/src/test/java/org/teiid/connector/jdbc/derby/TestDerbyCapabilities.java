@@ -37,9 +37,9 @@ public class TestDerbyCapabilities {
 	
 	@Test public void testFunctionSupport() {
 		DerbyCapabilities derbyCapabilities = new DerbyCapabilities();
-		assertEquals(32, derbyCapabilities.getSupportedFunctions().size());
+		assertEquals(27, derbyCapabilities.getSupportedFunctions().size());
 		derbyCapabilities.setVersion(DerbyCapabilities.TEN_4);
-		assertEquals(48, derbyCapabilities.getSupportedFunctions().size());
+		assertEquals(43, derbyCapabilities.getSupportedFunctions().size());
 	}
 
 }

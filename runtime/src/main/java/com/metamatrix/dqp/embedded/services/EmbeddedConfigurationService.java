@@ -54,8 +54,6 @@ import com.metamatrix.common.config.model.BasicConnectorBinding;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.common.util.crypto.CryptoException;
-import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
