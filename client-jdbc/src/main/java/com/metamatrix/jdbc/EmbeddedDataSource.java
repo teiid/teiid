@@ -22,99 +22,16 @@
 
 package com.metamatrix.jdbc;
 
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Properties;
-
-import com.metamatrix.common.api.MMURL;
-import com.metamatrix.common.protocol.URLHelper;
+import org.teiid.jdbc.TeiidDataSource;
 
 /**
  * @since 4.3
  */
-public class EmbeddedDataSource extends BaseDataSource {
+public class EmbeddedDataSource extends TeiidDataSource {
 	
-    //*************************** EmbeddedDataSource Specific Properties
-    /**
-     * configFile - 
-     * The path and file name to which embedded DQP configuration info will be read. This property is <i>optional</i>; if none is
-     * specified, then embedded DQP access cannot be used.
-     */
-    private String bootstrapFile;
-    
-    //  string constant for the embedded configuration file property
-    public static final String DQP_BOOTSTRAP_FILE = "bootstrapFile"; //$NON-NLS-1$
-    
-    public static final String SHUTDOWN = MMURL.CONNECTION.SHUTDOWN;
-    
-    // The driver used to connect
-    private final transient EmbeddedDriver driver = new EmbeddedDriver();
-    
-    /**
-     * Constructor for EmbeddedDataSource.
-     */
     public EmbeddedDataSource() {
         
     }
-    
-    protected Properties buildProperties(final String userName,
-                                         final String password) {
-        Properties props = super.buildProperties(userName, password);
-
-    	if (this.getBootstrapFile().equals(EmbeddedDriver.getDefaultConnectionURL())) {
-    		props.put("vdb.definition", getDatabaseName() +".vdb"); //$NON-NLS-1$ //$NON-NLS-2$
-    	}
-    	props.put(DQP_BOOTSTRAP_FILE, this.bootstrapFile);
-        return props;
-    }
-
-    protected void validateProperties(final String userName,
-                                      final String password) throws java.sql.SQLException {
-        super.validateProperties(userName, password);
-
-        // we do not have bootstrap file, make sure we have a default one.
-        if (getBootstrapFile() == null && getDatabaseName() != null) {
-            setBootstrapFile(EmbeddedDriver.getDefaultConnectionURL());
-        }
-        
-        String reason = reasonWhyInvalidConfigFile(this.bootstrapFile);
-        if (reason != null) {
-            throw new SQLException(reason);
-        }
-    }
-
-    /**
-     * Return the reason why the supplied config file may be invalid, or null if it is considered valid.
-     * 
-     * @param configFile
-     *            a possible value for the property
-     * @return the reason why the property is invalid, or null if it is considered valid
-     * @see #setBootstrapFile(String)
-     */
-    public static String reasonWhyInvalidConfigFile(final String configFile) {
-        if(configFile == null) {
-            return getResourceMessage("EmbeddedDataSource.The_configFile_property_is_null"); //$NON-NLS-1$
-        }
-        
-        try {
-            URL url = URLHelper.buildURL(configFile);
-            url.openStream();
-        } catch (Exception e) {
-            return getResourceMessage("EmbeddedDataSource.The_configFile_does_not_exist_or_cant_be_read"); //$NON-NLS-1$
-        }        
-        return null;
-    }
-
-    /**
-     * @see com.metamatrix.jdbc.BaseDataSource#getConnection(java.lang.String, java.lang.String)
-     * @since 4.3
-     */
-    public Connection getConnection(String userName, String password) throws SQLException {
-        validateProperties(userName, password);
-        final Properties props = buildProperties(userName, password);
-        return this.driver.createConnection(props);
-     }
     
     /**
      * Returns the path and file name from which embedded DQP configuration information will be read.
@@ -122,7 +39,7 @@ public class EmbeddedDataSource extends BaseDataSource {
      * @return the name of the config file for this data source; may be null
      */
     public String getBootstrapFile() {
-        return bootstrapFile;
+        return getEmbeddedBootstrapFile();
     }
 
     /**
@@ -132,7 +49,7 @@ public class EmbeddedDataSource extends BaseDataSource {
      *            The name of the config file name to set
      */
     public void setBootstrapFile(final String configFile) {
-        this.bootstrapFile = configFile;
+        setEmbeddedBootstrapFile(configFile);
     }
             
 }

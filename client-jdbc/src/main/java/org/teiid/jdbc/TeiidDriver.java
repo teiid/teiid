@@ -50,7 +50,7 @@ import com.metamatrix.jdbc.util.MMJDBCURL;
  *  Look at {@link MMJDBCURL} KNOWN_PROPERTIES for list of known properties allowed.
  */
 
-public final class TeiidDriver implements Driver {
+public class TeiidDriver implements Driver {
 	
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	static final String DRIVER_NAME = "Teiid JDBC Driver"; //$NON-NLS-1$

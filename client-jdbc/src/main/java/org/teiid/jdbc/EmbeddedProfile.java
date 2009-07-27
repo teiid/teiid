@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 
+import com.metamatrix.common.api.MMURL;
 import com.metamatrix.common.classloader.PostDelegatingClassLoader;
 import com.metamatrix.common.comm.api.ServerConnection;
 import com.metamatrix.common.comm.api.ServerConnectionFactory;
@@ -56,7 +57,6 @@ import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.BaseDataSource;
-import com.metamatrix.jdbc.EmbeddedDataSource;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.jdbc.MMConnection;
 import com.metamatrix.jdbc.MMSQLException;
@@ -105,7 +105,7 @@ final class EmbeddedProfile {
         // parse the URL to add it's properties to properties object
         parseURL(url, info);            
         MMConnection conn = createConnection(info);
-        boolean shutdown = Boolean.parseBoolean(info.getProperty(EmbeddedDataSource.SHUTDOWN, "false")); //$NON-NLS-1$
+        boolean shutdown = Boolean.parseBoolean(info.getProperty(MMURL.CONNECTION.SHUTDOWN, "false")); //$NON-NLS-1$
         if (shutdown) {
         	Admin admin = conn.getAdminAPI();
         	try {
