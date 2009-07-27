@@ -121,12 +121,12 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     	}
         
         URL bootstrapURL = null;
-        Properties props = info;
+        Properties props = new Properties(System.getProperties());
         String processName = "embedded"; //$NON-NLS-1$
         
         try {
 			bootstrapURL = URLHelper.buildURL(info.getProperty(DQPEmbeddedProperties.BOOTURL));
-			props = PropertiesUtils.loadFromURL(bootstrapURL);
+			props.putAll(PropertiesUtils.loadFromURL(bootstrapURL));
 			props.putAll(info);
 			props = PropertiesUtils.resolveNestedProperties(props);
 			

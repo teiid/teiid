@@ -118,6 +118,8 @@ public interface ConfigurationModelContainer extends Cloneable {
      */
     Properties getDefaultPropertyValues(ComponentTypeID componentTypeID) ;
     
+    Properties getDefaultPropertyValues(Properties defaultProperties, ComponentTypeID componentTypeID) ;
+    
     
     /**
      * Return a collection of objects of type <code>ResourceDescriptor</code>.

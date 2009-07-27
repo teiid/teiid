@@ -113,6 +113,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     private ArrayList<VDBLifeCycleListener> vdbLifeCycleListeners = new ArrayList<VDBLifeCycleListener>();
     private ArrayList<ConnectorBindingLifeCycleListener> connectorBindingLifeCycleListeners = new ArrayList<ConnectorBindingLifeCycleListener>();
     private UDFSource udfSource;
+    private Map<ConnectorBindingType, Properties> defaultConnectorTypePropertiesCache = new HashMap<ConnectorBindingType, Properties>();
     
     private AbstractClassLoaderManager classLoaderManager = new AbstractClassLoaderManager(Thread.currentThread().getContextClassLoader(), true, true) {
     	
@@ -612,8 +613,23 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @param binding
      * @return properties for the connector binding given
      */   
-    public Properties getDefaultProperties(ConnectorBindingType type) { 
-        return configurationModel.getDefaultPropertyValues((ComponentTypeID)type.getID());
+    public Properties getDefaultProperties(ConnectorBindingType type) {
+    	if (type != null) {
+	    	Properties props = null;
+	    	synchronized (this.defaultConnectorTypePropertiesCache) {
+	    		props = this.defaultConnectorTypePropertiesCache.get(type);
+	    		if (props == null) {
+	    	    	props = new Properties(getUserPreferences());
+	    	        props = configurationModel.getDefaultPropertyValues(props, (ComponentTypeID)type.getID());
+	    	        if (props.isEmpty()) {
+	    	        	props = type.getDefaultPropertyValues(props);
+	    	        }      
+	    	        this.defaultConnectorTypePropertiesCache.put(type, props);
+	    		}
+			}
+	        return props;
+    	}
+    	return new Properties(getUserPreferences());
     }
     
     /**
@@ -952,7 +968,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         throws ApplicationInitializationException {
         
         try {
-            this.setUserPreferences(PropertiesUtils.clone(properties));
+            this.setUserPreferences(properties);
                         
             DQPEmbeddedPlugin.logInfo("EmbeddedConfigurationService.dqp_loading", new Object[] {getProcessName()}); //$NON-NLS-1$
             

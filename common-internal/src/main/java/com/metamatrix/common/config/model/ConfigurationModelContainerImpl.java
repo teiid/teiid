@@ -302,8 +302,15 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
     
     public Properties getDefaultPropertyValues(ComponentTypeID componentTypeID) {
         Properties result = new Properties();
+        result = getDefaultPropertyValues(result, componentTypeID);
+        return result; 
+         
+     }
+    
+    public Properties getDefaultPropertyValues(Properties defaultProperties, ComponentTypeID componentTypeID) {
+    	Properties result = new Properties(defaultProperties);
         
-        Collection defns = getAllComponentTypeDefinitions(componentTypeID);
+    	Collection defns = getAllComponentTypeDefinitions(componentTypeID);
         
         for (Iterator it=defns.iterator(); it.hasNext();) {
             ComponentTypeDefn ctd = (ComponentTypeDefn) it.next();
@@ -321,10 +328,8 @@ private Collection getSuperComponentTypeDefinitions(Map defnMap, Collection defn
                     }
             }   
         }
-        
-        return result; 
-         
-     }
+        return result;     	
+    }
     
     
 

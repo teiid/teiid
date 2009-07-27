@@ -134,7 +134,12 @@ public class BasicComponentType extends BasicObject implements ComponentType, Se
     
     public Properties getDefaultPropertyValues() {
         Properties result = new Properties();
-        
+        result = getDefaultPropertyValues(result);
+        return result; 
+         
+     }
+    
+    public Properties getDefaultPropertyValues(Properties props) {
         Collection defns = getComponentTypeDefinitions();
         
         for (Iterator it=defns.iterator(); it.hasNext();) {
@@ -145,18 +150,16 @@ public class BasicComponentType extends BasicObject implements ComponentType, Se
                     if (value instanceof String) {
                         String v = (String) value;
                         if (v.trim().length() > 0) {
-                        result.put(ctd.getPropertyDefinition().getName(), v );
+                        props.put(ctd.getPropertyDefinition().getName(), v );
                         }
                     } else {
-                    result.put(ctd.getPropertyDefinition().getName(), value.toString() );
+                    props.put(ctd.getPropertyDefinition().getName(), value.toString() );
                         
                     }
             }   
         }
-        
-        return result; 
-         
-     }
+        return props;     	
+    }
     
     
     /** 

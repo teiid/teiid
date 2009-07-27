@@ -48,6 +48,7 @@ import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
 import com.metamatrix.common.util.crypto.CryptoUtil;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -499,9 +500,8 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
 
     Properties getDecryptedProperties(ConnectorBinding binding) 
         throws MetaMatrixComponentException{
-        
-        Properties bindingProperties = binding.getProperties();
-        Properties decryptedProperties = new Properties();        
+                
+        Properties decryptedProperties = null;        
         
         // Get all the default properties for the connector type, so that
         // if the connector binding does not have all the properties then these
@@ -510,16 +510,9 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         ConnectorBindingType type = getConfigurationService().getConnectorType(id.getName());
 
         // Index connector has no formal definition in the configuration file. 
-        if (type != null) {
-	        Properties props = getConfigurationService().getDefaultProperties(type);
-	        if (props == null || props.isEmpty()) {
-	        	props = type.getDefaultPropertyValues();
-	        }
-	        
-	        if (props != null && !props.isEmpty()) {
-	            decryptedProperties.putAll(props);
-	        }
-        }
+        decryptedProperties = new Properties(getConfigurationService().getDefaultProperties(type));
+
+        Properties bindingProperties = binding.getProperties();
         
         // now overlay the custom properties from the default properties.
         decryptedProperties.putAll(bindingProperties);
@@ -536,7 +529,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
                 }
             }
         }
-        return decryptedProperties;
+        return PropertiesUtils.resolveNestedProperties(decryptedProperties);
     }
     
     /**

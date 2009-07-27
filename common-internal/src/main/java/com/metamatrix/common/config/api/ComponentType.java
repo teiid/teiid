@@ -74,6 +74,8 @@ public interface ComponentType extends BaseObject {
      */
     Properties getDefaultPropertyValues();
     
+    Properties getDefaultPropertyValues(Properties props);
+    
     /**
      * Returns the List <String> of properties that are defined as 
      * masked for this component type.

@@ -387,7 +387,7 @@ final class EmbeddedProfile {
             InputStream in = null;
             try{
                 in = dqpURL.openStream();
-                Properties props = new Properties();
+                Properties props = new Properties(System.getProperties());
                 props.load(in);
                 
                 String logMsg = getResourceMessage("EmbeddedDriver.use_properties"); //$NON-NLS-1$

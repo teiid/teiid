@@ -625,13 +625,12 @@ public class TestPropertiesUtils extends TestCase {
     public void testNestedProperties() throws Exception {
         System.setProperty("testdirectory", "c:/metamatrix/testdirectory"); //$NON-NLS-1$ //$NON-NLS-2$ 
         
-        Properties p = new Properties();
+        Properties p = new Properties(System.getProperties());
         p.setProperty("key1", "value1"); //$NON-NLS-1$ //$NON-NLS-2$
         p.setProperty("key2", "${key1}/value2"); //$NON-NLS-1$ //$NON-NLS-2$
         p.put("key3", new Integer(-234)); //$NON-NLS-1$
         p.setProperty("key4", "${key2}/value4"); //$NON-NLS-1$ //$NON-NLS-2$
         p.setProperty("key5", "${testdirectory}/testdata"); //$NON-NLS-1$ //$NON-NLS-2$
-        p.setProperty("key6", "${foo}"); //$NON-NLS-1$ //$NON-NLS-2$
         p.setProperty("key7", "anotherdir/${testdirectory}/${key1}"); //$NON-NLS-1$ //$NON-NLS-2$
         
         Properties m = PropertiesUtils.resolveNestedProperties(p);
@@ -639,8 +638,19 @@ public class TestPropertiesUtils extends TestCase {
         assertEquals(new Integer(-234), m.get("key3")); //$NON-NLS-1$ 
         assertEquals("value1/value2/value4", m.getProperty("key4")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("c:/metamatrix/testdirectory/testdata", m.getProperty("key5")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(null, m.getProperty("key6")); //$NON-NLS-1$ 
         assertEquals("anotherdir/c:/metamatrix/testdirectory/value1", m.getProperty("key7")); //$NON-NLS-1$ //$NON-NLS-2$
+        assertTrue(p == m); // no cloning.
+
+        
+        p.setProperty("key6", "${foo}"); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        try {
+        	m = PropertiesUtils.resolveNestedProperties(p);
+        	fail("must have failed to resovle as {foo} does not exist"); //$NON-NLS-1$
+        } catch(RuntimeException e) {
+        	// pass
+        }
+
     }
     
     public void testOverrideProperties() {

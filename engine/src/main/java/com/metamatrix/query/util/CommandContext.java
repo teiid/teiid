@@ -140,7 +140,7 @@ public class CommandContext implements Cloneable {
         setCommandPayload(context.commandPayload);
         setVdbName(context.vdbName);
         setVdbVersion(context.vdbVersion);   
-        setEnvironmentProperties(PropertiesUtils.clone(context.environmentProperties)); 
+        setEnvironmentProperties(context.environmentProperties); 
         setProcessDebug(context.processDebug);
         setProcessorBatchSize(context.processorBatchSize);
         setConnectorBatchSize(context.connectorBatchSize);

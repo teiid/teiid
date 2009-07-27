@@ -777,7 +777,7 @@ public final class PropertiesUtils {
     }
 
     /**
-     * The speciality of nested properties is, in a given property file 
+     * The specialty of nested properties is, in a given property file 
      * there can be values with pattern like "${...}"
      * <code>
      *  key1=value1
@@ -785,24 +785,20 @@ public final class PropertiesUtils {
      * </code> 
      * where the value of the <code>key2</code> should resolve to <code>value1/value2</code>
      * also if the property in the pattern <code>${..}</code> is not found in the loaded 
-     * properties, then it will look up for the property value in the <code>System</code>
-     * properties. Multiple nesting is OK, however recursive nested is not good, and 
-     * behaviour is undocumented in this case.    
+     * properties, an exception is thrown. Multiple nesting is OK, however recursive nested is not supported.
      * @param original - Original properties to be resolved
      * @return resolved properties object.
      * @since 4.4
      */
     public static Properties resolveNestedProperties(Properties original) {
-        Properties modified = new Properties();
         
-        for(Enumeration e = original.keys(); e.hasMoreElements();) {
+        for(Enumeration e = original.propertyNames(); e.hasMoreElements();) {
             String key = (String)e.nextElement();
             String value = original.getProperty(key);
 
             // this will take care of the if there are any non-string properties, 
             // no nesting allowed on these.
             if (value == null) {
-                modified.put(key, original.get(key));
                 continue;
             }
 
@@ -819,31 +815,17 @@ public final class PropertiesUtils {
                 if (matched) {
                     String nestedkey = value.substring(start+2, end);
                     String nestedvalue = original.getProperty(nestedkey);
-                    if (nestedvalue == null) {
-                        nestedvalue = System.getProperty(nestedkey);
-                    }
                     
                     // this will handle case where we did not resolve, mark it blank
                     if (nestedvalue == null) {
-                        value = null; 
-                        break;
+                    	throw new MetaMatrixRuntimeException(CorePlugin.Util.getString("PropertiesUtils.failed_to_resolve_property", nestedkey)); //$NON-NLS-1$
                     }                    
                     value = value.substring(0,start)+nestedvalue+value.substring(end+1);
                 }
-                else {
-                    break;
-                }
             }
-            if (value != null) {
-                // now add to the modified property list
-                modified.setProperty(key, value);
-            }
-            else {
-                // since we do not have this property, remove it..
-                modified.remove(key);
-            }
+            original.setProperty(key, value);
         }
-        return modified;
+        return original;
     }
     
  // ======================================================
@@ -879,7 +861,7 @@ public final class PropertiesUtils {
 
         boolean bPass               = false;
 
-        String sMatchFrag           = "";
+        String sMatchFrag           = ""; //$NON-NLS-1$
 //        List propNames              = new ArrayList();
 
 
@@ -890,7 +872,7 @@ public final class PropertiesUtils {
         //  which means anything passes.
         pattern.trim();
         if ( pattern.length() == 0 )
-            pattern = "*";
+            pattern = "*"; //$NON-NLS-1$
 
         int iFirstStar  =   pattern.indexOf( chStar );
         int iLastStar   =   pattern.lastIndexOf( chStar );
