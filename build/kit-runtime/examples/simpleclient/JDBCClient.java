@@ -56,7 +56,7 @@ public class JDBCClient {
 		ds.setDatabaseName(vdb);
 		ds.setUser("admin");
 		ds.setPassword("teiid");
-		ds.setEmbeddedBootstrapFile("../.../deploy.properties");
+		ds.setEmbeddedBootstrapFile("../../deploy.properties");
 		/* Alternatively server mode would be		
 		 * ds.setServerName("localhost");
 		 * ds.setPortNumber(31000);

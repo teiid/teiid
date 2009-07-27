@@ -61,7 +61,7 @@
                 <Property Name="DescriptorFile">${teiid.home}/examples/portfolio/marketdata-def.txt</Property>
             </Properties>
         </Connector>
-        <Connector Name="Derby Connector" ComponentType="Apache Derby Embedded Connector">
+        <Connector Name="Derby Connector" ComponentType="Apache Derby Network Connector">
             <Properties>
                 <Property Name="URL">jdbc:derby://localhost:1527/teiid/accounts</Property>
                 <Property Name="ConnectorClassPath">extensionjar:derbyclient.jar</Property>
