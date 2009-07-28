@@ -1,6 +1,8 @@
 @echo off
 rem -------------------------------------------------------------------------
-rem Teiid Bootstrap Script for Windows (borrowed & modified from JBoss AS)
+rem This script starts the Teiid in stand alone Server mode. Once started 
+rem successfully JDBC clients can connect to the server over socket transport.
+rem Check the documentation to use Teiid in embedded mode.
 rem -------------------------------------------------------------------------
 
 

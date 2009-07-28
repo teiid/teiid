@@ -1,8 +1,7 @@
 #!/bin/sh
 ### ====================================================================== ###
-##                                                                          ##
-##  Teiid Bootstrap Script                                                  ##
-##  (script borrowed from JBossAS)                                          ##
+###  This scripts sends a shuts down signal to the running Teiid Server on ###
+###  the local machine.                                                    ###
 ### ====================================================================== ###
 
 DIRNAME=`dirname $0`

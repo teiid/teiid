@@ -1,9 +1,9 @@
 #!/bin/sh
-### ====================================================================== ###
-##                                                                          ##
-##  Teiid Bootstrap Script                                                  ##
-##  (script borrowed from JBossAS)                                          ##
-### ====================================================================== ###
+### ========================================================================== ###
+### This script starts the Teiid in stand alone Server mode. Once started      ###
+### successfully JDBC clients can connect to the server over socket transport. ###
+### Check the documentation to use Teiid in embedded mode.                     ###
+### ========================================================================== ###
 
 DIRNAME=`dirname $0`
 

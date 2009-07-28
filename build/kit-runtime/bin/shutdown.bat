@@ -1,6 +1,7 @@
 @echo off
 rem -------------------------------------------------------------------------
-rem Teiid Bootstrap Script for Windows (borrowed & modified from JBoss AS)
+rem This scripts sends a shuts down signal to the running Teiid Server on 
+rem the local machine.
 rem -------------------------------------------------------------------------
 
 
