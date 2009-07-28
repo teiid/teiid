@@ -43,7 +43,7 @@ public class StringToByteTransform extends AbstractTransform {
 		}
 
 		try {
-			return Byte.valueOf((String)value);
+			return Byte.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
 			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0016, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0016, value));
 		}

@@ -42,7 +42,7 @@ public class StringToBooleanTransform extends AbstractTransform {
 		if(value == null) {
 			return value;
 		}
-		String str = (String)value;
+		String str = ((String)value).trim();
         if (TRUE.equals(str)) {
             return Boolean.TRUE;
         }

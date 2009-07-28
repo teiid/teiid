@@ -62,6 +62,7 @@ import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.FunctionMethods;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
@@ -1829,19 +1830,17 @@ public class QueryRewriter {
        
        // Passed all the checks, so build the optimized version
        try {
-           SimpleDateFormat timestampFormatter = new SimpleDateFormat(dateFormat + timeFormat);
-           java.util.Date parsedTimestamp = timestampFormatter.parse(timestampValue);
-
-           Constant dateConstant = new Constant(TimestampWithTimezone.createDate(parsedTimestamp));
+    	   Timestamp ts = FunctionMethods.parseTimestamp(timestampValue, dateFormat + timeFormat);
+           Constant dateConstant = new Constant(TimestampWithTimezone.createDate(ts));
            CompareCriteria dateCompare = new CompareCriteria(formatDateFunction.getArgs()[0], CompareCriteria.EQ, dateConstant);
 
-           Constant timeConstant = new Constant(TimestampWithTimezone.createTime(parsedTimestamp));
+           Constant timeConstant = new Constant(TimestampWithTimezone.createTime(ts));
            CompareCriteria timeCompare = new CompareCriteria(formatTimeFunction.getArgs()[0], CompareCriteria.EQ, timeConstant);
            
            CompoundCriteria compCrit = new CompoundCriteria(CompoundCriteria.AND, dateCompare, timeCompare);
            return compCrit;
            
-       } catch(ParseException e) {
+       } catch(FunctionExecutionException e) {
            return criteria;        
        }
     }
@@ -1983,7 +1982,6 @@ public class QueryRewriter {
 		
 		//space(x) => repeat(' ', x)
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.SPACE)) {
-			//change the function into timestampadd
 			Function result = new Function(SourceSystemFunctions.REPEAT,
 					new Expression[] {new Constant(" "), function.getArg(0)}); //$NON-NLS-1$
 			//resolve the function
@@ -1996,7 +1994,6 @@ public class QueryRewriter {
 		
 		//from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0)) 
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.FROM_UNIXTIME)) {
-			//change the function into timestampadd
 			Function result = new Function(FunctionLibrary.TIMESTAMPADD,
 					new Expression[] {new Constant(ReservedWords.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
 			//resolve the function
@@ -2007,7 +2004,7 @@ public class QueryRewriter {
 			return rewriteFunction(result, procCommand, context, metadata);
 		}
 		
-		//rewrite nullif => case when (a = b) then null else a
+		//rewrite nullif(a, b) => case when (a = b) then null else a
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.NULLIF)) {
 			List when = Arrays.asList(new Criteria[] {new CompareCriteria(function.getArg(0), CompareCriteria.EQ, function.getArg(1))});
 			Constant nullConstant = new Constant(null, function.getType());

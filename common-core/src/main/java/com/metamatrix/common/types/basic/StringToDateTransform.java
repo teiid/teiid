@@ -43,12 +43,17 @@ public class StringToDateTransform extends AbstractTransform {
 		if(value == null) {
 			return value;
 		}
-
+		value = ((String) value).trim();
+		Date result = null;
 		try {
-			return Date.valueOf( (String) value );
+			result = Date.valueOf( (String) value );
 		} catch(Exception e) {
 			throw new TransformationException(e, ErrorMessageKeys.TYPES_ERR_0018, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0018, value));
 		}
+		if (!result.toString().equals(value)) {
+			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
+		}
+		return result;
 	}
 
 	/**

@@ -45,7 +45,7 @@ public class StringToBigDecimalTransform extends AbstractTransform {
 		}
 
 		try {
-			return new BigDecimal((String)value);
+			return new BigDecimal(((String)value).trim());
 		} catch(NumberFormatException e) {
 			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0014, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0014, value));
 		}

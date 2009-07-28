@@ -43,12 +43,18 @@ public class StringToTimestampTransform extends AbstractTransform {
 		if(value == null) {
 			return value;
 		}
-
+		value = ((String) value).trim();
+		Timestamp result = null;
 		try {
-			return Timestamp.valueOf( (String) value );
+			result = Timestamp.valueOf( (String) value );
 		} catch(Exception e) {
 			throw new TransformationException(e, ErrorMessageKeys.TYPES_ERR_0024, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0024, value));
 		}
+		//validate everything except for fractional seconds
+		if (!((String)value).startsWith(result.toString().substring(0, 19))) {
+			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
+		}
+		return result;
 	}
 
 	/**

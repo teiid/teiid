@@ -22,13 +22,15 @@
 
 package com.metamatrix.common.types.basic;
 
+import static org.junit.Assert.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
@@ -39,12 +41,13 @@ import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
 import com.metamatrix.common.types.DataTypeManager.DefaultDataTypes;
+import com.metamatrix.query.unittest.TimestampUtil;
 
 
 /** 
  * @since 4.2
  */
-public class TestTransforms extends TestCase {
+public class TestTransforms {
     
     private static void helpTestTransform(Object value, Object expectedValue) throws TransformationException {
         Transform transform = DataTypeManager.getTransform(value.getClass(), expectedValue.getClass());
@@ -64,21 +67,27 @@ public class TestTransforms extends TestCase {
         }
     }    
 
-    private static void helpTransformException(Object value, Object expectedValue) {
+    private static void helpTransformException(Object value, Class<?> target) {
+    	helpTransformException(value, target, null);
+    }
+    
+    private static void helpTransformException(Object value, Class<?> target, String msg) {
         try {
-            Transform transform = DataTypeManager.getTransform(value.getClass(), expectedValue.getClass());
+            Transform transform = DataTypeManager.getTransform(value.getClass(), target);
             transform.transform(value);
             fail("Expected to get an exception during the transformation"); //$NON-NLS-1$
         } catch (TransformationException e) {
-            assertTrue(true);
+        	if (msg != null) {
+        		assertEquals(msg, e.getMessage());
+        	}
         }
     }    
     
-    public void testBigDecimalToBigInteger_Defect16875() throws TransformationException {
+    @Test public void testBigDecimalToBigInteger_Defect16875() throws TransformationException {
         helpTestTransform(new BigDecimal("0.5867"), new BigInteger("0")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testString2Boolean() throws TransformationException {
+    @Test public void testString2Boolean() throws TransformationException {
         helpTestTransform(new String("1"), Boolean.TRUE); //$NON-NLS-1$
         helpTestTransform(new String("0"), Boolean.FALSE); //$NON-NLS-1$
         helpTestTransform(new String("true"), Boolean.TRUE); //$NON-NLS-1$
@@ -86,34 +95,34 @@ public class TestTransforms extends TestCase {
         helpTestTransform(new String("foo"), Boolean.FALSE); //$NON-NLS-1$
     }
     
-    public void testByte2Boolean() throws TransformationException {
+    @Test public void testByte2Boolean() throws TransformationException {
         helpTestTransform(new Byte((byte)1), Boolean.TRUE);
         helpTestTransform(new Byte((byte)0), Boolean.FALSE);
-        helpTransformException(new Byte((byte)12), Boolean.FALSE);
+        helpTransformException(new Byte((byte)12), DataTypeManager.DefaultDataClasses.BOOLEAN);
     }
 
-    public void testShort2Boolean() throws TransformationException {
+    @Test public void testShort2Boolean() throws TransformationException {
         helpTestTransform(new Short((short)1), Boolean.TRUE);
         helpTestTransform(new Short((short)0), Boolean.FALSE);
-        helpTransformException(new Short((short)12), Boolean.FALSE);
+        helpTransformException(new Short((short)12), DataTypeManager.DefaultDataClasses.BOOLEAN);
     }
 
-    public void testInteger2Boolean() throws TransformationException {
+    @Test public void testInteger2Boolean() throws TransformationException {
         helpTestTransform(new Integer(1), Boolean.TRUE);
         helpTestTransform(new Integer(0), Boolean.FALSE);
-        helpTransformException(new Integer(12), Boolean.FALSE);
+        helpTransformException(new Integer(12), DataTypeManager.DefaultDataClasses.BOOLEAN);
     }
 
-    public void testLong2Boolean() throws TransformationException {
+    @Test public void testLong2Boolean() throws TransformationException {
         helpTestTransform(new Long(1), Boolean.TRUE);
         helpTestTransform(new Long(0), Boolean.FALSE);
-        helpTransformException(new Long(12), Boolean.FALSE);
+        helpTransformException(new Long(12), DataTypeManager.DefaultDataClasses.BOOLEAN);
     }
     
-    public void testBigInteger2Boolean() throws TransformationException {
+    @Test public void testBigInteger2Boolean() throws TransformationException {
         helpTestTransform(new BigInteger("1"), Boolean.TRUE); //$NON-NLS-1$
         helpTestTransform(new BigInteger("0"), Boolean.FALSE); //$NON-NLS-1$
-        helpTransformException(new BigInteger("12"), Boolean.FALSE); //$NON-NLS-1$
+        helpTransformException(new BigInteger("12"), DataTypeManager.DefaultDataClasses.BOOLEAN); //$NON-NLS-1$
     }
     
     static Object[][] testData = {
@@ -155,7 +164,7 @@ public class TestTransforms extends TestCase {
             || (src.equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[10][2]);             
     }
     
-    public void testAllConversions() throws TransformationException {
+    @Test public void testAllConversions() throws TransformationException {
         for (int src = 0; src < dataTypes.length; src++) {
             for (int tgt =0; tgt < dataTypes.length; tgt++) {
                 char c = conversions[src][tgt];
@@ -173,7 +182,7 @@ public class TestTransforms extends TestCase {
         }        
     }
     
-    public void testAllConversionsAsObject() throws TransformationException {
+    @Test public void testAllConversionsAsObject() throws TransformationException {
         for (int src = 0; src < dataTypes.length; src++) {
             for (int tgt =0; tgt < dataTypes.length; tgt++) {
                 char c = conversions[src][tgt];
@@ -191,7 +200,7 @@ public class TestTransforms extends TestCase {
         }        
     }
     
-    public void testObjectToAnyTransformFailure() {
+    @Test public void testObjectToAnyTransformFailure() {
         Transform transform = DataTypeManager.getTransform(DefaultDataClasses.OBJECT, DefaultDataClasses.TIME);
         try {
             transform.transform("1"); //$NON-NLS-1$
@@ -201,7 +210,7 @@ public class TestTransforms extends TestCase {
         }
     }
     
-    public void testSQLXMLToStringTransform() throws Exception {
+    @Test public void testSQLXMLToStringTransform() throws Exception {
         StringBuffer xml = new StringBuffer();
         int iters = DataTypeManager.MAX_STRING_LENGTH/10;
         for (int i = 0; i < iters; i++) {
@@ -217,4 +226,17 @@ public class TestTransforms extends TestCase {
                 
         helpTestTransform(new StringToSQLXMLTransform().transform(xml.toString()), expected);
     }
+    
+    @Test public void testStringToTimestampOutOfRange() throws Exception {
+    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, "The string representation '2005-13-01 11:13:01' of a Timestamp value is out of range."); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testStringToTimeTimestampWithWS() throws Exception {
+    	helpTestTransform(" 2005-12-01 11:13:01 ", TimestampUtil.createTimestamp(105, 11, 1, 11, 13, 1, 0)); //$NON-NLS-1$ 
+    }
+    
+    @Test public void testStringToLongWithWS() throws Exception {
+    	helpTestTransform(" 1 ", Long.valueOf(1)); //$NON-NLS-1$ 
+    }
+    
 }

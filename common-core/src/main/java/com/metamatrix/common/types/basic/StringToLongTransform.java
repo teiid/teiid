@@ -43,7 +43,7 @@ public class StringToLongTransform extends AbstractTransform {
 		}
 
 		try {
-			return Long.valueOf((String)value);
+			return Long.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
 			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0022, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0022, value));
 		}

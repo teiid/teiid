@@ -43,7 +43,7 @@ public class StringToIntegerTransform extends AbstractTransform {
 		}
 
 		try {
-			return Integer.valueOf((String)value);
+			return Integer.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
 			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0021, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0021, value));
 		}

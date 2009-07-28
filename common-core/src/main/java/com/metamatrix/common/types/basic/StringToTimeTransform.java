@@ -43,12 +43,17 @@ public class StringToTimeTransform extends AbstractTransform {
 		if(value == null) {
 			return value;
 		}
-
+		value = ((String) value).trim();
+		Time result = null;
 		try {
-			return Time.valueOf( (String) value );
+			result = Time.valueOf((String)value);
 		} catch(Exception e) {
 			throw new TransformationException(e, ErrorMessageKeys.TYPES_ERR_0025, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0025, value));
 		}
+		if (!result.toString().equals(value)) {
+			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
+		}
+		return result;
 	}
 
 	/**

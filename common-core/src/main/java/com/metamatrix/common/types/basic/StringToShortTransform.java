@@ -43,7 +43,7 @@ public class StringToShortTransform extends AbstractTransform {
 		}
 
 		try {
-			return Short.valueOf((String)value);
+			return Short.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
 			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0023, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0023, value));
 		}

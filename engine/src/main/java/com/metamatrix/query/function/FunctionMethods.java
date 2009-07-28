@@ -29,6 +29,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -1120,42 +1121,32 @@ public final class FunctionMethods {
 	}
 
 	//	================== Parse String TO date/time/timestamp  ==================
-	public static Object parseDate(String date, String format)
-		throws FunctionExecutionException {
-		try {
-			DateFormat df= new SimpleDateFormat(format);
-			Date parsedDate = df.parse(date);
-            return TimestampWithTimezone.createDate(parsedDate);
-		} catch (java.text.ParseException pe) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
-				date, format));
+	private static Date parseDateHelper(String date, String format)
+			throws FunctionExecutionException {
+		date = date.trim();
+		DateFormat df = new SimpleDateFormat(format);
+		df.setLenient(false);
+		ParsePosition pp = new ParsePosition(0);
+		Date parsedDate = df.parse(date, pp);
+		if (parsedDate == null || pp.getIndex() < date.length()) {
+			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043, date, format));
 		}
+		return parsedDate;
+	}
+	
+	public static Date parseDate(String date, String format)
+		throws FunctionExecutionException {
+        return TimestampWithTimezone.createDate(parseDateHelper(date, format));
 	}
 
-	public static Object parseTime(String time, String format)
+	public static Time parseTime(String time, String format)
 		throws FunctionExecutionException {
-
-		try {
-			DateFormat df= new SimpleDateFormat(format);
-			Date date = df.parse(time);
-            return TimestampWithTimezone.createTime(date);
-		} catch (java.text.ParseException pe) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
-				time,format));
-		}
+        return TimestampWithTimezone.createTime(parseDateHelper(time, format));
 	}
 
-	public static Object parseTimestamp(String timestamp, String format)
+	public static Timestamp parseTimestamp(String timestamp, String format)
 		throws FunctionExecutionException {
-
-		try {
-			DateFormat df= new SimpleDateFormat(format);
-			Date date = df.parse(timestamp);
-            return new Timestamp(date.getTime());
-		} catch (java.text.ParseException pe) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
-				timestamp,format));
-		}
+        return new Timestamp(parseDateHelper(timestamp, format).getTime());
 	}
 
 	//	================== Format number TO String ==================
@@ -1189,37 +1180,37 @@ public final class FunctionMethods {
 	}
 
 	//	================== Parse String TO numbers ==================
-	public static Object parseInteger(Object number, Object format)
+	public static Object parseInteger(String number, String format)
 		throws FunctionExecutionException {
 		Number intNum = parseNumberHelper(number, format);
 		return new Integer(intNum.intValue());
 	}
 
-	public static Object parseLong(Object number, Object format)
+	public static Object parseLong(String number, String format)
 		throws FunctionExecutionException {
 		Number longNum = parseNumberHelper(number, format);
 		return new Long(longNum.longValue());
 	}
 
-	public static Object parseDouble(Object number, Object format)
+	public static Object parseDouble(String number, String format)
 		throws FunctionExecutionException {
 		Number doubleNum = parseNumberHelper(number, format);
 		return new Double(doubleNum.doubleValue());
 	}
 
-	public static Object parseFloat(Object number, Object format)
+	public static Object parseFloat(String number, String format)
 		throws FunctionExecutionException {
 		Number longNum = parseNumberHelper(number, format);
 		return new Float(longNum.floatValue());
 	}
 
-	public static Object parseBigInteger(Object number, Object format)
+	public static Object parseBigInteger(String number, String format)
 		throws FunctionExecutionException {
 		Number bigIntegerNum = parseNumberHelper(number, format);
 		return new BigInteger(bigIntegerNum.toString());
 	}
 
-	public static Object parseBigDecimal(Object number, Object format)
+	public static Object parseBigDecimal(String number, String format)
 		throws FunctionExecutionException {
 		Number bigDecimalNum = parseNumberHelper(number, format);
 		return new BigDecimal(bigDecimalNum.toString());
@@ -1241,24 +1232,16 @@ public final class FunctionMethods {
 		}
 	}
 
-	private static Number parseNumberHelper(Object number, Object format)
+	private static Number parseNumberHelper(String number, String format)
 		throws FunctionExecutionException {
-
-		Number num = null;
-		if (number == null || format == null) {
-			return null;
-		}
-
-		if (number instanceof String && format instanceof String) {
-			try {
-				DecimalFormat df= new DecimalFormat((String) format);
-				num = df.parse((String) number);
-			} catch (java.text.ParseException pe) {
-				throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
+		number = number.trim();
+		DecimalFormat df= new DecimalFormat(format);
+		ParsePosition pp = new ParsePosition(0);
+		Number num = df.parse(number, pp);
+		if (num == null || pp.getIndex() < number.length()) {
+			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
 					number,format));
-			}
 		}
-
 		return num;
 	}
 

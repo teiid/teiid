@@ -45,7 +45,7 @@ public class StringToBigIntegerTransform extends AbstractTransform {
 		}
 
 		try {
-			return new BigInteger((String)value);
+			return new BigInteger(((String)value).trim());
 		} catch(NumberFormatException e) {
 			throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0015, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0015, value));
 		}

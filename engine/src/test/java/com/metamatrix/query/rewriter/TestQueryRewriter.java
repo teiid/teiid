@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.rewriter;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -30,7 +32,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -71,16 +73,10 @@ import com.metamatrix.query.unittest.FakeMetadataObject;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ContextProperties;
 
-public class TestQueryRewriter extends TestCase {
+public class TestQueryRewriter {
 
     private static final String TRUE_STR = "1 = 1"; //$NON-NLS-1$
     private static final String FALSE_STR = "1 = 0"; //$NON-NLS-1$
-
-    // ################################## FRAMEWORK ################################
-    
-    public TestQueryRewriter(String name) { 
-        super(name);
-    }
 
     // ################################## TEST HELPERS ################################
     
@@ -182,55 +178,55 @@ public class TestQueryRewriter extends TestCase {
         return rewriteCommand;
     }
     
-    public void testRewriteUnknown() {
+    @Test public void testRewriteUnknown() {
         helpTestRewriteCriteria("pm1.g1.e1 = '1' and '1' = convert(null, string)", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteUnknown1() {
+    @Test public void testRewriteUnknown1() {
         helpTestRewriteCriteria("pm1.g1.e1 = '1' or '1' = convert(null, string)", "pm1.g1.e1 = '1'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteUnknown2() {
+    @Test public void testRewriteUnknown2() {
         helpTestRewriteCriteria("not('1' = convert(null, string))", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteUnknown3() {
+    @Test public void testRewriteUnknown3() {
         helpTestRewriteCriteria("pm1.g1.e1 like convert(null, string))", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteUnknown4() {
+    @Test public void testRewriteUnknown4() {
         helpTestRewriteCriteria("null in ('a', 'b', 'c')", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteUnknown5() {
+    @Test public void testRewriteUnknown5() {
         helpTestRewriteCriteria("(null <> null) and 1 = 0", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteUnknown6() {
+    @Test public void testRewriteUnknown6() {
         helpTestRewriteCriteria("not(pm1.g1.e1 = '1' and '1' = convert(null, string))", "NOT ((pm1.g1.e1 = '1') and (NULL <> NULL))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
         
-    public void testRewriteUnknown7() {
+    @Test public void testRewriteUnknown7() {
         helpTestRewriteCriteria("not(pm1.g1.e1 = '1' or '1' = convert(null, string))", "NOT ((pm1.g1.e1 = '1') or (NULL <> NULL))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteUnknown8() {
+    @Test public void testRewriteUnknown8() {
         helpTestRewriteCriteria("pm1.g1.e1 in (2, null)", "pm1.g1.e1 = '2'"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
-    public void testRewriteInCriteriaWithRepeats() {
+    @Test public void testRewriteInCriteriaWithRepeats() {
         helpTestRewriteCriteria("pm1.g1.e1 in ('1', '1', '2')", "pm1.g1.e1 IN ('1', '2')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteInCriteriaWithSingleValue() {
+    @Test public void testRewriteInCriteriaWithSingleValue() {
         helpTestRewriteCriteria("pm1.g1.e1 in ('1')", "pm1.g1.e1 = '1'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteInCriteriaWithSingleValue1() {
+    @Test public void testRewriteInCriteriaWithSingleValue1() {
         helpTestRewriteCriteria("pm1.g1.e1 not in ('1')", "pm1.g1.e1 != '1'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteInCriteriaWithNoValues() throws Exception {
+    @Test public void testRewriteInCriteriaWithNoValues() throws Exception {
         Criteria crit = new SetCriteria(new ElementSymbol("e1"), Collections.EMPTY_LIST); //$NON-NLS-1$
         
         Criteria actual = QueryRewriter.rewriteCriteria(crit, null, null, null);
@@ -238,59 +234,59 @@ public class TestQueryRewriter extends TestCase {
         assertEquals(QueryRewriter.FALSE_CRITERIA, actual);
     }
         
-    public void testRewriteBetweenCriteria1() {
+    @Test public void testRewriteBetweenCriteria1() {
         helpTestRewriteCriteria("pm1.g1.e1 BETWEEN 1000 AND 2000", "(pm1.g1.e1 >= '1000') AND (pm1.g1.e1 <= '2000')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteBetweenCriteria2() {
+    @Test public void testRewriteBetweenCriteria2() {
         helpTestRewriteCriteria("pm1.g1.e1 NOT BETWEEN 1000 AND 2000", "(pm1.g1.e1 < '1000') OR (pm1.g1.e1 > '2000')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCrit1() {
+    @Test public void testRewriteCrit1() {
         helpTestRewriteCriteria("concat('a','b') = 'ab'", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCrit2() {
+    @Test public void testRewriteCrit2() {
         helpTestRewriteCriteria("'x' = pm1.g1.e1", "(pm1.g1.e1 = 'x')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCrit3() {
+    @Test public void testRewriteCrit3() {
         helpTestRewriteCriteria("pm1.g1.e1 = convert('a', string)", "pm1.g1.e1 = 'a'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCrit4() {
+    @Test public void testRewriteCrit4() {
         helpTestRewriteCriteria("pm1.g1.e1 = CONVERT('a', string)", "pm1.g1.e1 = 'a'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCrit5() {
+    @Test public void testRewriteCrit5() {
         helpTestRewriteCriteria("pm1.g1.e1 in ('a')", "pm1.g1.e1 = 'a'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCrit6() {
+    @Test public void testRewriteCrit6() {
         helpTestRewriteCriteria("1 = convert(pm1.g1.e1,integer) + 10", "pm1.g1.e1 = '-9'"); //$NON-NLS-1$ //$NON-NLS-2$
     } 
     
-    public void testRewriteCrit7() {
+    @Test public void testRewriteCrit7() {
         helpTestRewriteCriteria("((pm1.g1.e1 = 1) and (pm1.g1.e1 = 1))", "pm1.g1.e1 = '1'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteMatchCritEscapeChar1() {
+    @Test public void testRewriteMatchCritEscapeChar1() {
         helpTestRewriteCriteria("pm1.g1.e1 LIKE 'x_' ESCAPE '\\'", "pm1.g1.e1 LIKE 'x_'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteMatchCritEscapeChar2() {
+    @Test public void testRewriteMatchCritEscapeChar2() {
         helpTestRewriteCriteria("pm1.g1.e1 LIKE '#%x' ESCAPE '#'", "pm1.g1.e1 LIKE '#%x' ESCAPE '#'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteMatchCritEscapeChar3() {
+    @Test public void testRewriteMatchCritEscapeChar3() {
         helpTestRewriteCriteria("pm1.g1.e1 LIKE '#%x'", "pm1.g1.e1 LIKE '#%x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteMatchCritEscapeChar4() {
+    @Test public void testRewriteMatchCritEscapeChar4() {
         helpTestRewriteCriteria("pm1.g1.e1 LIKE pm1.g1.e1 ESCAPE '#'", "pm1.g1.e1 LIKE pm1.g1.e1 ESCAPE '#'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteMatchCritEscapeChar5() throws Exception {
+    @Test public void testRewriteMatchCritEscapeChar5() throws Exception {
         MatchCriteria mcrit = new MatchCriteria(new ElementSymbol("pm1.g1.e1"), new Constant(null, DataTypeManager.DefaultDataClasses.STRING), '#'); //$NON-NLS-1$
         Criteria expected = QueryRewriter.UNKNOWN_CRITERIA; 
                 
@@ -298,114 +294,114 @@ public class TestQueryRewriter extends TestCase {
         assertEquals("Did not get expected rewritten criteria", expected, actual); //$NON-NLS-1$
     }
     
-    public void testRewriteMatchCrit1() {
+    @Test public void testRewriteMatchCrit1() {
         helpTestRewriteCriteria("pm1.g1.e1 LIKE 'x' ESCAPE '\\'", "pm1.g1.e1 = 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteMatchCrit2() {
+    @Test public void testRewriteMatchCrit2() {
         helpTestRewriteCriteria("pm1.g1.e1 NOT LIKE 'x'", "pm1.g1.e1 <> 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteMatchCrit3() {
+    @Test public void testRewriteMatchCrit3() {
         helpTestRewriteCriteria("pm1.g1.e1 NOT LIKE '%'", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCritTimestampCreate1() {
+    @Test public void testRewriteCritTimestampCreate1() {
         helpTestRewriteCriteria("timestampCreate(pm3.g1.e2, pm3.g1.e3) = {ts'2004-11-23 09:25:00'}", "(pm3.g1.e2 = {d'2004-11-23'}) AND (pm3.g1.e3 = {t'09:25:00'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritTimestampCreate2() {
+    @Test public void testRewriteCritTimestampCreate2() {
         helpTestRewriteCriteria("{ts'2004-11-23 09:25:00'} = timestampCreate(pm3.g1.e2, pm3.g1.e3)", "(pm3.g1.e2 = {d'2004-11-23'}) AND (pm3.g1.e3 = {t'09:25:00'})"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritSwap1() {
+    @Test public void testRewriteCritSwap1() {
         helpTestRewriteCriteria("'x' = pm1.g1.e1", "pm1.g1.e1 = 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritSwap2() {
+    @Test public void testRewriteCritSwap2() {
         helpTestRewriteCriteria("'x' <> pm1.g1.e1", "pm1.g1.e1 <> 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritSwap3() {
+    @Test public void testRewriteCritSwap3() {
         helpTestRewriteCriteria("'x' < pm1.g1.e1", "pm1.g1.e1 > 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritSwap4() {
+    @Test public void testRewriteCritSwap4() {
         helpTestRewriteCriteria("'x' <= pm1.g1.e1", "pm1.g1.e1 >= 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritSwap5() {
+    @Test public void testRewriteCritSwap5() {
         helpTestRewriteCriteria("'x' > pm1.g1.e1", "pm1.g1.e1 < 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritSwap6() {
+    @Test public void testRewriteCritSwap6() {
         helpTestRewriteCriteria("'x' >= pm1.g1.e1", "pm1.g1.e1 <= 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_op1() {
+    @Test public void testRewriteCritExpr_op1() {
         helpTestRewriteCriteria("pm1.g1.e2 + 5 = 10", "pm1.g1.e2 = 5"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_op2() {
+    @Test public void testRewriteCritExpr_op2() {
         helpTestRewriteCriteria("pm1.g1.e2 - 5 = 10", "pm1.g1.e2 = 15"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_op3() {
+    @Test public void testRewriteCritExpr_op3() {
         helpTestRewriteCriteria("pm1.g1.e2 * 5 = 10", "pm1.g1.e2 = 2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_op4() {
+    @Test public void testRewriteCritExpr_op4() {
         helpTestRewriteCriteria("pm1.g1.e2 / 5 = 10", "pm1.g1.e2 = 50"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_signFlip1() {
+    @Test public void testRewriteCritExpr_signFlip1() {
         helpTestRewriteCriteria("pm1.g1.e2 * -5 > 10", "pm1.g1.e2 < -2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_signFlip2() {
+    @Test public void testRewriteCritExpr_signFlip2() {
         helpTestRewriteCriteria("pm1.g1.e2 * -5 >= 10", "pm1.g1.e2 <= -2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCritExpr_signFlip3() {
+    @Test public void testRewriteCritExpr_signFlip3() {
         helpTestRewriteCriteria("pm1.g1.e2 * -5 < 10", "pm1.g1.e2 > -2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_signFlip4() {
+    @Test public void testRewriteCritExpr_signFlip4() {
         helpTestRewriteCriteria("pm1.g1.e2 * -5 <= 10", "pm1.g1.e2 >= -2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCritExpr_backwards1() {
+    @Test public void testRewriteCritExpr_backwards1() {
         helpTestRewriteCriteria("5 + pm1.g1.e2 <= 10", "pm1.g1.e2 <= 5"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_backwards2() {
+    @Test public void testRewriteCritExpr_backwards2() {
         helpTestRewriteCriteria("-5 * pm1.g1.e2 <= 10", "pm1.g1.e2 >= -2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCritExpr_unhandled1() {
+    @Test public void testRewriteCritExpr_unhandled1() {
         helpTestRewriteCriteria("5 / pm1.g1.e2 <= 10", "5 / pm1.g1.e2 <= 10"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCritExpr_unhandled2() {
+    @Test public void testRewriteCritExpr_unhandled2() {
         helpTestRewriteCriteria("5 - pm1.g1.e2 <= 10", "5 - pm1.g1.e2 <= 10"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCrit_parseDate() {
+    @Test public void testRewriteCrit_parseDate() {
         helpTestRewriteCriteria("PARSEDATE(pm3.g1.e1, 'yyyyMMdd') = {d'2003-05-01'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '20030501'" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_parseDate1() {
+    @Test public void testRewriteCrit_parseDate1() {
         helpTestRewriteCriteria("PARSEDATE(pm3.g1.e1, 'yyyyMM') = {d'2003-05-01'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '200305'" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_parseDate2() {
+    @Test public void testRewriteCrit_parseDate2() {
         helpTestRewriteCriteria("PARSEDATE(pm3.g1.e1, 'yyyyMM') = {d'2003-05-02'}", //$NON-NLS-1$
                                 "1 = 0" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_invalidParseDate() {
+    @Test public void testRewriteCrit_invalidParseDate() {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         Criteria origCrit = parseCriteria("PARSEDATE(pm3.g1.e1, '''') = {d'2003-05-01'}", metadata); //$NON-NLS-1$
         
@@ -417,136 +413,136 @@ public class TestQueryRewriter extends TestCase {
         }
     }
     
-    public void testRewriteCrit_parseTime() {
+    @Test public void testRewriteCrit_parseTime() {
         helpTestRewriteCriteria("PARSETIME(pm3.g1.e1, 'HH mm ss') = {t'13:25:04'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '13 25 04'" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_parseTimestamp() {
+    @Test public void testRewriteCrit_parseTimestamp() {
         helpTestRewriteCriteria("PARSETimestamp(pm3.g1.e1, 'yyyy dd mm') = {ts'2003-05-01 13:25:04.5'}", //$NON-NLS-1$
                                 "1 = 0" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_parseTimestamp1() {
+    @Test public void testRewriteCrit_parseTimestamp1() {
         helpTestRewriteCriteria("PARSETimestamp(pm3.g1.e1, 'yyyy dd mm') = {ts'2003-01-01 00:25:00.0'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '2003 01 25'" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_parseTimestamp2() {
+    @Test public void testRewriteCrit_parseTimestamp2() {
         helpTestRewriteCriteria("PARSETimestamp(CONVERT(pm3.g1.e2, string), 'yyyy-MM-dd') = {ts'2003-05-01 13:25:04.5'}", //$NON-NLS-1$
                                 "1 = 0" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_parseTimestamp3() {
+    @Test public void testRewriteCrit_parseTimestamp3() {
         helpTestRewriteCriteria("PARSETimestamp(pm3.g1.e1, 'yyyy dd mm') <> {ts'2003-05-01 13:25:04.5'}", //$NON-NLS-1$
                                 "1 = 1" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_parseTimestamp4() {
+    @Test public void testRewriteCrit_parseTimestamp4() {
         helpTestRewriteCriteria("PARSETimestamp(CONVERT(pm3.g1.e2, string), 'yyyy-MM-dd') = {ts'2003-05-01 00:00:00.0'}", //$NON-NLS-1$
                                 "pm3.g1.e2 = {d'2003-05-01'}" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_parseTimestamp_notEquality() {
+    @Test public void testRewriteCrit_parseTimestamp_notEquality() {
         helpTestRewriteCriteria("PARSETimestamp(pm3.g1.e1, 'yyyy dd mm') > {ts'2003-05-01 13:25:04.5'}", //$NON-NLS-1$
                                 "PARSETimestamp(pm3.g1.e1, 'yyyy dd mm') > {ts'2003-05-01 13:25:04.5'}" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_parseTimestamp_decompose() {
+    @Test public void testRewriteCrit_parseTimestamp_decompose() {
         helpTestRewriteCriteria("PARSETIMESTAMP(CONCAT(FORMATDATE(pm3.g1.e2, 'yyyyMMdd'), FORMATTIME(pm3.g1.e3, 'HHmmss')), 'yyyyMMddHHmmss') = PARSETIMESTAMP('19690920183045', 'yyyyMMddHHmmss')", //$NON-NLS-1$
         "(pm3.g1.e2 = {d'1969-09-20'}) AND (pm3.g1.e3 = {t'18:30:45'})" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_timestampCreate_decompose() {
+    @Test public void testRewriteCrit_timestampCreate_decompose() {
         helpTestRewriteCriteria("timestampCreate(pm3.g1.e2, pm3.g1.e3) = PARSETIMESTAMP('19690920183045', 'yyyyMMddHHmmss')", //$NON-NLS-1$
         "(pm3.g1.e2 = {d'1969-09-20'}) AND (pm3.g1.e3 = {t'18:30:45'})" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_parseInteger() {
+    @Test public void testRewriteCrit_parseInteger() {
         helpTestRewriteCriteria("parseInteger(pm1.g1.e1, '#,##0') = 1234", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234'" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_parseLong() {
+    @Test public void testRewriteCrit_parseLong() {
         helpTestRewriteCriteria("parseLong(pm1.g1.e1, '#,##0') = convert(1234, long)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234'" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_parseBigInteger() {
+    @Test public void testRewriteCrit_parseBigInteger() {
         helpTestRewriteCriteria("parseBigInteger(pm1.g1.e1, '#,##0') = convert(1234, biginteger)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234'" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_parseFloat() {
+    @Test public void testRewriteCrit_parseFloat() {
         helpTestRewriteCriteria("parseFloat(pm1.g1.e1, '#,##0.###') = convert(1234.1234, float)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234.123'" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_parseDouble() {
+    @Test public void testRewriteCrit_parseDouble() {
         helpTestRewriteCriteria("parseDouble(pm1.g1.e1, '$#,##0.00') = convert(1234.5, double)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '$1,234.50'" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_parseBigDecimal() {
+    @Test public void testRewriteCrit_parseBigDecimal() {
         helpTestRewriteCriteria("parseBigDecimal(pm1.g1.e1, '#,##0.###') = convert(1234.1234, bigdecimal)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234.123'" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatDate() {
+    @Test public void testRewriteCrit_formatDate() {
         helpTestRewriteCriteria("formatDate(pm3.g1.e2, 'yyyyMMdd') = '20030501'", //$NON-NLS-1$
                                 "pm3.g1.e2 = {d'2003-05-01'}" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatTime() {
+    @Test public void testRewriteCrit_formatTime() {
         helpTestRewriteCriteria("formatTime(pm3.g1.e3, 'HH mm ss') = '13 25 04'", //$NON-NLS-1$
                                 "pm3.g1.e3 = {t'13:25:04'}" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatTimestamp() {
+    @Test public void testRewriteCrit_formatTimestamp() {
         helpTestRewriteCriteria("formatTimestamp(pm3.g1.e4, 'MM dd, yyyy - HH:mm:ss') = '05 01, 1974 - 07:00:00'", //$NON-NLS-1$
                                 "formatTimestamp(pm3.g1.e4, 'MM dd, yyyy - HH:mm:ss') = '05 01, 1974 - 07:00:00'" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_formatTimestamp1() {
+    @Test public void testRewriteCrit_formatTimestamp1() {
         helpTestRewriteCriteria("formatTimestamp(pm3.g1.e4, 'MM dd, yyyy - HH:mm:ss.S') = '05 01, 1974 - 07:00:00.0'", //$NON-NLS-1$
                                 "pm3.g1.e4 = {ts'1974-05-01 07:00:00.0'}" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatInteger() {
+    @Test public void testRewriteCrit_formatInteger() {
         helpTestRewriteCriteria("formatInteger(pm1.g1.e2, '#,##0') = '1,234'", //$NON-NLS-1$
                                 "pm1.g1.e2 = 1234" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_formatInteger1() {
+    @Test public void testRewriteCrit_formatInteger1() {
         helpTestRewriteCriteria("formatInteger(pm1.g1.e2, '#5') = '105'", //$NON-NLS-1$
                                 "formatInteger(pm1.g1.e2, '#5') = '105'" );         //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatLong() {
+    @Test public void testRewriteCrit_formatLong() {
         helpTestRewriteCriteria("formatLong(convert(pm1.g1.e2, long), '#,##0') = '1,234,567,890,123'", //$NON-NLS-1$
                                 "1 = 0" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_formatLong1() {
+    @Test public void testRewriteCrit_formatLong1() {
         helpTestRewriteCriteria("formatLong(convert(pm1.g1.e2, long), '#,##0') = '1,234,567,890'", //$NON-NLS-1$
                                 "pm1.g1.e2 = 1234567890" );         //$NON-NLS-1$
     }
     
-    public void testRewriteCrit_formatTimestampInvert() { 
+    @Test public void testRewriteCrit_formatTimestampInvert() { 
         String original = "formatTimestamp(pm3.g1.e4, 'MM dd, yyyy - HH:mm:ss.S') = ?"; //$NON-NLS-1$ 
         String expected = "pm3.g1.e4 = parseTimestamp(?, 'MM dd, yyyy - HH:mm:ss.S')"; //$NON-NLS-1$ 
          
         helpTestRewriteCriteria(original, expected); 
     } 
      
-    public void testRewriteCrit_plusInvert() { 
+    @Test public void testRewriteCrit_plusInvert() { 
         String original = "pm1.g1.e2 + 1.1 = ?"; //$NON-NLS-1$ 
         String expected = "pm1.g1.e2 = ? - 1.1"; //$NON-NLS-1$ 
          
         helpTestRewriteCriteria(original, expected);
     } 
 
-    public void testRewriteCrit_formatBigInteger() throws Exception {
+    @Test public void testRewriteCrit_formatBigInteger() throws Exception {
         String original = "formatBigInteger(convert(pm1.g1.e2, biginteger), '#,##0') = '1,234,567,890'"; //$NON-NLS-1$
         String expected = "pm1.g1.e2 = 1234567890"; //$NON-NLS-1$
         
@@ -559,7 +555,7 @@ public class TestQueryRewriter extends TestCase {
         assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatFloat() throws Exception {
+    @Test public void testRewriteCrit_formatFloat() throws Exception {
         String original = "formatFloat(convert(pm1.g1.e4, float), '#,##0.###') = '1,234.123'"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = 1234.123046875"; //$NON-NLS-1$
         
@@ -571,7 +567,7 @@ public class TestQueryRewriter extends TestCase {
         assertEquals("Did not rewrite correctly: ", expected, actual.toString()); //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatDouble() throws Exception {
+    @Test public void testRewriteCrit_formatDouble() throws Exception {
         String original = "formatDouble(convert(pm1.g1.e4, double), '$#,##0.00') = '$1,234.50'"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = '1234.5'"; //$NON-NLS-1$
         
@@ -585,7 +581,7 @@ public class TestQueryRewriter extends TestCase {
         assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
     }
 
-    public void testRewriteCrit_formatBigDecimal() throws Exception {
+    @Test public void testRewriteCrit_formatBigDecimal() throws Exception {
         String original = "formatBigDecimal(convert(pm1.g1.e4, bigdecimal), '#,##0.###') = convert(1234.5, bigdecimal)"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = 1234.5"; //$NON-NLS-1$
         
@@ -598,207 +594,207 @@ public class TestQueryRewriter extends TestCase {
         assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
     }
     
-    public void testRewriteCritTimestampDiffDate1() {
+    @Test public void testRewriteCritTimestampDiffDate1() {
         helpTestRewriteCriteria("timestampdiff(SQL_TSI_DAY, {d'2003-05-15'}, {d'2003-05-17'} ) = 2", TRUE_STR); //$NON-NLS-1$
     }
     
-    public void testRewriteCritTimestampDiffDate2() {
+    @Test public void testRewriteCritTimestampDiffDate2() {
         helpTestRewriteCriteria("timestampdiff(SQL_TSI_DAY, {d'2003-06-02'}, {d'2003-05-17'} ) = -16", TRUE_STR); //$NON-NLS-1$
     }
     
-    public void testRewriteCritTimestampDiffDate3() {
+    @Test public void testRewriteCritTimestampDiffDate3() {
         helpTestRewriteCriteria("timestampdiff(SQL_TSI_QUARTER, {d'2002-01-25'}, {d'2003-06-01'} ) = 5", TRUE_STR); //$NON-NLS-1$
     }
     
-    public void testRewriteCritTimestampDiffTime1() {
+    @Test public void testRewriteCritTimestampDiffTime1() {
         helpTestRewriteCriteria("timestampdiff(SQL_TSI_HOUR, {t'03:04:45'}, {t'05:05:36'} ) = 2", TRUE_STR); //$NON-NLS-1$
     }
     
-    public void testRewriteCritTimestampDiffTime1_ignorecase() {
+    @Test public void testRewriteCritTimestampDiffTime1_ignorecase() {
         helpTestRewriteCriteria("timestampdiff(SQL_tsi_HOUR, {t'03:04:45'}, {t'05:05:36'} ) = 2", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteOr1() {
+    @Test public void testRewriteOr1() {
         helpTestRewriteCriteria("(5 = 5) OR (0 = 1)", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteOr2() {
+    @Test public void testRewriteOr2() {
         helpTestRewriteCriteria("(0 = 1) OR (5 = 5)", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteOr3() {
+    @Test public void testRewriteOr3() {
         helpTestRewriteCriteria("(1 = 1) OR (5 = 5)", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteOr4() {
+    @Test public void testRewriteOr4() {
         helpTestRewriteCriteria("(0 = 1) OR (4 = 5)", FALSE_STR); //$NON-NLS-1$
     }
     
-    public void testRewriteOr5() {
+    @Test public void testRewriteOr5() {
         helpTestRewriteCriteria("(0 = 1) OR (4 = 5) OR (pm1.g1.e1 = 'x')", "(pm1.g1.e1 = 'x')");         //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteOr6() {
+    @Test public void testRewriteOr6() {
         helpTestRewriteCriteria("(0 = 1) OR (4 = 5) OR (pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')", "(pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteOr7() {
+    @Test public void testRewriteOr7() {
         helpTestRewriteCriteria("(pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')", "(pm1.g1.e1 = 'x') OR (pm1.g1.e1 = 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteAnd1() {
+    @Test public void testRewriteAnd1() {
         helpTestRewriteCriteria("(5 = 5) AND (0 = 1)", FALSE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteAnd2() {
+    @Test public void testRewriteAnd2() {
         helpTestRewriteCriteria("(0 = 1) AND (5 = 5)", FALSE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteAnd3() {
+    @Test public void testRewriteAnd3() {
         helpTestRewriteCriteria("(1 = 1) AND (5 = 5)", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteAnd4() {
+    @Test public void testRewriteAnd4() {
         helpTestRewriteCriteria("(0 = 1) AND (4 = 5)", FALSE_STR); //$NON-NLS-1$
     }
     
-    public void testRewriteAnd5() { 
+    @Test public void testRewriteAnd5() { 
         helpTestRewriteCriteria("(1 = 1) AND (5 = 5) AND (pm1.g1.e1 = 'x')", "(pm1.g1.e1 = 'x')");             //$NON-NLS-1$ //$NON-NLS-2$
     }
  
-    public void testRewriteAnd6() { 
+    @Test public void testRewriteAnd6() { 
         helpTestRewriteCriteria("(1 = 1) AND (5 = 5) AND (pm1.g1.e1 = 'x') and (pm1.g1.e1 = 'y')", "(pm1.g1.e1 = 'x') AND (pm1.g1.e1 = 'y')");             //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteAnd7() {
+    @Test public void testRewriteAnd7() {
         helpTestRewriteCriteria("(pm1.g1.e1 = 'x') AND (pm1.g1.e1 = 'y')", "(pm1.g1.e1 = 'x') AND (pm1.g1.e1 = 'y')");     //$NON-NLS-1$ //$NON-NLS-2$
     }
         
-    public void testRewriteMixed1() {
+    @Test public void testRewriteMixed1() {
         helpTestRewriteCriteria("((1=1) AND (1=1)) OR ((1=1) AND (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed2() {
+    @Test public void testRewriteMixed2() {
         helpTestRewriteCriteria("((1=2) AND (1=1)) OR ((1=1) AND (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed3() {
+    @Test public void testRewriteMixed3() {
         helpTestRewriteCriteria("((1=1) AND (1=2)) OR ((1=1) AND (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed4() {
+    @Test public void testRewriteMixed4() {
         helpTestRewriteCriteria("((1=1) AND (1=1)) OR ((1=2) AND (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed5() {
+    @Test public void testRewriteMixed5() {
         helpTestRewriteCriteria("((1=1) AND (1=1)) OR ((1=1) AND (1=2))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed6() {
+    @Test public void testRewriteMixed6() {
         helpTestRewriteCriteria("((1=2) AND (1=1)) OR ((1=2) AND (1=1))", FALSE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed7() {
+    @Test public void testRewriteMixed7() {
         helpTestRewriteCriteria("((1=1) AND (1=2)) OR ((1=1) AND (1=2))", FALSE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed8() {
+    @Test public void testRewriteMixed8() {
         helpTestRewriteCriteria("((1=2) AND (1=2)) OR ((1=2) AND (1=2))", FALSE_STR); //$NON-NLS-1$
     }
     
-    public void testRewriteMixed9() {
+    @Test public void testRewriteMixed9() {
         helpTestRewriteCriteria("((1=1) OR (1=1)) AND ((1=1) OR (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed10() {
+    @Test public void testRewriteMixed10() {
         helpTestRewriteCriteria("((1=2) OR (1=1)) AND ((1=1) OR (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed11() {
+    @Test public void testRewriteMixed11() {
         helpTestRewriteCriteria("((1=1) OR (1=2)) AND ((1=1) OR (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed12() {
+    @Test public void testRewriteMixed12() {
         helpTestRewriteCriteria("((1=1) OR (1=1)) AND ((1=2) OR (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed13() {
+    @Test public void testRewriteMixed13() {
         helpTestRewriteCriteria("((1=1) OR (1=1)) AND ((1=1) OR (1=2))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed14() {
+    @Test public void testRewriteMixed14() {
         helpTestRewriteCriteria("((1=2) OR (1=1)) AND ((1=2) OR (1=1))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed15() {
+    @Test public void testRewriteMixed15() {
         helpTestRewriteCriteria("((1=1) OR (1=2)) AND ((1=1) OR (1=2))", TRUE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteMixed16() {
+    @Test public void testRewriteMixed16() {
         helpTestRewriteCriteria("((1=2) OR (1=2)) AND ((1=2) OR (1=2))", FALSE_STR); //$NON-NLS-1$
     }
 
-    public void testRewriteNot1() {
+    @Test public void testRewriteNot1() {
         helpTestRewriteCriteria("NOT (1=1)", FALSE_STR);     //$NON-NLS-1$
     }   
 
-    public void testRewriteNot2() {
+    @Test public void testRewriteNot2() {
         helpTestRewriteCriteria("NOT (1=2)", TRUE_STR);     //$NON-NLS-1$
     }   
     
-    public void testRewriteNot3() {
+    @Test public void testRewriteNot3() {
         helpTestRewriteCriteria("NOT (pm1.g1.e1='x')", "NOT (pm1.g1.e1 = 'x')");     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteDefect1() {
+    @Test public void testRewriteDefect1() {
         helpTestRewriteCriteria("(('DE' = 'LN') AND (null > '2002-01-01')) OR (('DE' = 'DE') AND (pm1.g1.e1 > '9000000'))", "(pm1.g1.e1 > '9000000')");         //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteQueryCriteriaAlwaysTrue() {
+    @Test public void testRewriteQueryCriteriaAlwaysTrue() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE 0 = 0", //$NON-NLS-1$
                                 "SELECT e1 FROM pm1.g1"); //$NON-NLS-1$
     }
     
-    public void testSubquery1() {
+    @Test public void testSubquery1() {
         helpTestRewriteCommand("SELECT e1 FROM (SELECT e1 FROM pm1.g1 WHERE (1 - 1) = (0 + 0)) AS x", //$NON-NLS-1$
                                 "SELECT e1 FROM (SELECT e1 FROM pm1.g1) AS x"); //$NON-NLS-1$
     }
 
-    public void testExistsSubquery() {
+    @Test public void testExistsSubquery() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE EXISTS (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
                                 "SELECT e1 FROM pm1.g1 WHERE EXISTS (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
     }
 
-    public void testCompareSubqueryANY() {
+    @Test public void testCompareSubqueryANY() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE '3' = ANY (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
                                 "SELECT e1 FROM pm1.g1 WHERE '3' = SOME (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
     }
 
-    public void testCompareSubquery() {
+    @Test public void testCompareSubquery() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE '3' = SOME (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
                                 "SELECT e1 FROM pm1.g1 WHERE '3' = SOME (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
     }
     
-    public void testCompareSubqueryUnknown() {
+    @Test public void testCompareSubqueryUnknown() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE null = SOME (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
                                 "SELECT e1 FROM pm1.g1 WHERE null <> null"); //$NON-NLS-1$
     }
 
-    public void testINClauseSubquery() {
+    @Test public void testINClauseSubquery() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE '3' IN (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
                                 "SELECT e1 FROM pm1.g1 WHERE '3' IN (SELECT e1 FROM pm1.g2)"); //$NON-NLS-1$
     }
 
-    public void testRewriteXMLCriteria1() {
+    @Test public void testRewriteXMLCriteria1() {
         helpTestRewriteCriteria("context(pm1.g1.e1, pm1.g1.e1) = convert(5, string)", "context(pm1.g1.e1, pm1.g1.e1) = '5'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteXMLCriteria2() {
+    @Test public void testRewriteXMLCriteria2() {
         helpTestRewriteCriteria("context(pm1.g1.e1, convert(5, string)) = 2+3", "context(pm1.g1.e1, '5') = '5'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     // HAS Criteria
-    public void testRewriteProcedure1() {
+    @Test public void testRewriteProcedure1() {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -821,7 +817,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     // HAS Criteria
-    public void testRewriteProcedure2() {
+    @Test public void testRewriteProcedure2() {
     	
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -849,7 +845,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     // HAS Criteria
-    public void testRewriteProcedure3() {
+    @Test public void testRewriteProcedure3() {
     	
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -876,7 +872,7 @@ public class TestQueryRewriter extends TestCase {
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
     
-    public void testRewriteProcedure4() {
+    @Test public void testRewriteProcedure4() {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -900,7 +896,7 @@ public class TestQueryRewriter extends TestCase {
     }    
     
     // CHANGING
-    public void testRewriteProcedure5() {
+    @Test public void testRewriteProcedure5() {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -923,7 +919,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     // CHANGING
-    public void testRewriteProcedure6() {
+    @Test public void testRewriteProcedure6() {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -945,7 +941,7 @@ public class TestQueryRewriter extends TestCase {
     }     
     
     // TRANSLATE CRITERIA
-    public void testRewriteProcedure7() {
+    @Test public void testRewriteProcedure7() {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -969,7 +965,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     // TRANSLATE CRITERIA
-    public void testRewriteProcedure8() {
+    @Test public void testRewriteProcedure8() {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -993,7 +989,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
     // rewrite input/ changing variables
-    public void testRewriteProcedure9() {
+    @Test public void testRewriteProcedure9() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "Declare String var1;\n"; //$NON-NLS-1$
@@ -1021,7 +1017,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-    public void testRewriteProcedure10() {
+    @Test public void testRewriteProcedure10() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1043,7 +1039,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
 	// virtual group elements used in procedure in if statement(HAS CRITERIA)
-    public void testRewriteProcedure11() {
+    @Test public void testRewriteProcedure11() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
@@ -1066,7 +1062,7 @@ public class TestQueryRewriter extends TestCase {
     
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
 	// with complex query transform
-    public void testRewriteProcedure12() {
+    @Test public void testRewriteProcedure12() {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1089,7 +1085,7 @@ public class TestQueryRewriter extends TestCase {
     
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
 	// with complex query transform
-    public void testRewriteProcedure13() {
+    @Test public void testRewriteProcedure13() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1111,7 +1107,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-    public void testRewriteProcedure14() {
+    @Test public void testRewriteProcedure14() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1133,7 +1129,7 @@ public class TestQueryRewriter extends TestCase {
 	}
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-    public void testRewriteProcedure15() {
+    @Test public void testRewriteProcedure15() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1155,7 +1151,7 @@ public class TestQueryRewriter extends TestCase {
 	}
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-    public void testRewriteProcedure16() {
+    @Test public void testRewriteProcedure16() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1177,7 +1173,7 @@ public class TestQueryRewriter extends TestCase {
 	}
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-    public void testRewriteProcedure17() {
+    @Test public void testRewriteProcedure17() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1199,7 +1195,7 @@ public class TestQueryRewriter extends TestCase {
 	}
 	
 	// Bug 8212 elements in INPUT and CHANGING special groups are cese sensitive
-    public void testRewriteProcedure18() {
+    @Test public void testRewriteProcedure18() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "Select Input.E1, Input.e2, CHANGING.e2, CHANGING.E1 from pm1.g1;\n"; //$NON-NLS-1$
@@ -1220,7 +1216,7 @@ public class TestQueryRewriter extends TestCase {
 	
 	// elements being set in updates are dropped if INPUT var is not available, unless a default is available
     // Note that this test is a little odd in that it is an update inside of an insert
-    public void testRewriteProcedure19() {
+    @Test public void testRewriteProcedure19() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "update pm1.g1 set e1=Input.E1, e2=Input.e2, e3=Input.e3;\n"; //$NON-NLS-1$
@@ -1242,7 +1238,7 @@ public class TestQueryRewriter extends TestCase {
 	// elements being set in updates are dropped if INPUT var is not available, unless a default is supplied
     
     //this test fails because the default for E1 'xyz' cannot be converted into a integer
-    public void testRewriteProcedure21() {
+    @Test public void testRewriteProcedure21() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "update pm1.g1 set e1=convert(Input.E1, integer)+INPUT.E2, e2=Input.e2, e3=Input.e3;\n"; //$NON-NLS-1$
@@ -1258,7 +1254,7 @@ public class TestQueryRewriter extends TestCase {
 		this.helpFailUpdateProcedure(procedure, userQuery, FakeMetadataObject.Props.INSERT_PROCEDURE);
 	}
     
-    public void testRewriteProcedure21a() {
+    @Test public void testRewriteProcedure21a() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "update pm1.g1 set e1=convert(Input.E1, integer)+INPUT.E2, e2=Input.e2, e3=Input.e3;\n"; //$NON-NLS-1$
@@ -1279,7 +1275,7 @@ public class TestQueryRewriter extends TestCase {
 
 	
 	// none of input variables on update statement changing
-    public void testRewriteProcedure22() {
+    @Test public void testRewriteProcedure22() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "update pm1.g1 set e1=convert(Input.E1, integer)+INPUT.E2, e2=Input.e2;\n"; //$NON-NLS-1$
@@ -1298,7 +1294,7 @@ public class TestQueryRewriter extends TestCase {
 	}
 	
 	// none of input variables on update statement changing
-    public void testRewriteProcedure23() {
+    @Test public void testRewriteProcedure23() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "update pm1.g1 set e2=Input.e2, e3=Input.e3;\n"; //$NON-NLS-1$
@@ -1317,7 +1313,7 @@ public class TestQueryRewriter extends TestCase {
 	}
     
     //with an insert, defaults are used
-    public void testRewriteProcedure23a() {
+    @Test public void testRewriteProcedure23a() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "update pm1.g1 set e2=Input.e2, e3=Input.e3;\n"; //$NON-NLS-1$
@@ -1337,7 +1333,7 @@ public class TestQueryRewriter extends TestCase {
     }
     
 	// elements being set in updates are dropped if INPUT var is not available
-    public void testRewriteProcedure24() {
+    @Test public void testRewriteProcedure24() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "UPDATE pm1.g1 SET e2=Input.e2 WHERE TRANSLATE LIKE CRITERIA ON (e1) WITH (e1=concat(pm1.g1.e1, \"%\"));\n"; //$NON-NLS-1$
@@ -1357,7 +1353,7 @@ public class TestQueryRewriter extends TestCase {
 	}
 
 	// INPUT vars in insert statements replaced by default variable when user's inser ignores values
-    public void testRewriteProcedure25() {
+    @Test public void testRewriteProcedure25() {
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "INSERT into pm1.g1 (e1,e2,e3,e4) values (Input.e1, Input.e2, Input.e3, Input.e4);"; //$NON-NLS-1$
@@ -1377,7 +1373,7 @@ public class TestQueryRewriter extends TestCase {
 	}
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-	public void testRewriteProcedure26() {
+	@Test public void testRewriteProcedure26() {
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1399,7 +1395,7 @@ public class TestQueryRewriter extends TestCase {
 	}
 	
 	// virtual group elements used in procedure in if statement(TRANSLATE CRITERIA)
-	public void testRewriteProcedure27() {
+	@Test public void testRewriteProcedure27() {
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1430,7 +1426,7 @@ public class TestQueryRewriter extends TestCase {
      * descriptor couldn't be found for the "minus" operation for the two types 
      * integer and MetaMatrix's null type.
      */
-    public void testRewriteProcedure_9380() {
+    @Test public void testRewriteProcedure_9380() {
         
         String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1457,29 +1453,29 @@ public class TestQueryRewriter extends TestCase {
     }
     
     //base test.  no change is expected
-    public void testRewriteLookupFunction1() {
+    @Test public void testRewriteLookupFunction1() {
         String criteria = "lookup('pm1.g1','e1', 'e2', 1) = 'ab'"; //$NON-NLS-1$
         CompareCriteria expected = (CompareCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
         helpTestRewriteCriteria(criteria, expected, FakeMetadataFactory.example1Cached());
     }
     
-    public void testRewriteLookupFunction1b() {
+    @Test public void testRewriteLookupFunction1b() {
         helpTestRewriteCriteria("lookup('pm1.g1','e1', 'e2', pm1.g1.e2) = 'ab'", "lookup('pm1.g1','e1', 'e2', pm1.g1.e2) = 'ab'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /** defect 11630 1 should still get rewritten as '1'*/
-    public void testRewriteLookupFunctionCompoundCriteria() {
+    @Test public void testRewriteLookupFunctionCompoundCriteria() {
         String criteria = "LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL AND pm1.g1.e1='1'"; //$NON-NLS-1$
         CompoundCriteria expected = (CompoundCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
         helpTestRewriteCriteria("LOOKUP('pm1.g1','e1', 'e2', 1) IS NULL AND pm1.g1.e1=1", expected, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ 
     }
 
-    public void testSelectWithNoFrom() {
+    @Test public void testSelectWithNoFrom() {
         helpTestRewriteCommand("SELECT 5", "SELECT 5"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     //defect 9822
-    public void testStoredProcedure_9822() throws Exception {
+    @Test public void testStoredProcedure_9822() throws Exception {
 
         QueryParser parser = new QueryParser();
         Command command = parser.parseCommand("exec pm1.sp4(5)");             //$NON-NLS-1$
@@ -1501,7 +1497,7 @@ public class TestQueryRewriter extends TestCase {
         }  
     }
     
-    public void testRewriteRecursive() {
+    @Test public void testRewriteRecursive() {
         Command c = helpTestRewriteCommand("SELECT e2 FROM vm1.g33", "SELECT e2 FROM vm1.g33"); //$NON-NLS-1$ //$NON-NLS-2$
         Command innerCommand = (Command) c.getSubCommands().get(0);
         
@@ -1509,7 +1505,7 @@ public class TestQueryRewriter extends TestCase {
         
     }
     
-    public void testRewriteFunctionThrowsEvaluationError() {
+    @Test public void testRewriteFunctionThrowsEvaluationError() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria("5 / 0 = 5", metadata); //$NON-NLS-1$
         
@@ -1523,7 +1519,7 @@ public class TestQueryRewriter extends TestCase {
         }       
     }
     
-    public void testRewriteConvertThrowsEvaluationError() {
+    @Test public void testRewriteConvertThrowsEvaluationError() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
         Criteria origCrit = parseCriteria("convert('x', integer) = 0", metadata); //$NON-NLS-1$
         
@@ -1536,7 +1532,7 @@ public class TestQueryRewriter extends TestCase {
         }       
     }
     
-    public void testDefect13458() {
+    @Test public void testDefect13458() {
     	
 		String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n";		 //$NON-NLS-1$
@@ -1558,15 +1554,15 @@ public class TestQueryRewriter extends TestCase {
         assertEquals("Rewritten command was not expected", rewritProc, procReturned); //$NON-NLS-1$
     }
     
-    public void testRewriteCase1954() {
+    @Test public void testRewriteCase1954() {
         helpTestRewriteCriteria("convert(pm1.g1.e2, string) = '3'", "pm1.g1.e2 = 3"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCase1954a() {
+    @Test public void testRewriteCase1954a() {
         helpTestRewriteCriteria("cast(pm1.g1.e2 as string) = '3'", "pm1.g1.e2 = 3"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCase1954b() throws Exception{
+    @Test public void testRewriteCase1954b() throws Exception{
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
 
         // Have to hand-build the criteria, because 3.0 gets parsed as a Float by default
@@ -1582,143 +1578,143 @@ public class TestQueryRewriter extends TestCase {
         helpTestRewriteCriteria("convert(pm1.g1.e4, string) = '3'", expected, metadata); //$NON-NLS-1$ 
     }    
 
-    public void testRewriteCase1954c() {
+    @Test public void testRewriteCase1954c() {
         helpTestRewriteCriteria("convert(pm1.g1.e1, string) = 'x'", "pm1.g1.e1 = 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
-    public void testRewriteCase1954d() {
+    @Test public void testRewriteCase1954d() {
         helpTestRewriteCriteria("convert(pm1.g1.e1, timestamp) = {ts '2005-01-03 00:00:00.0'}", "pm1.g1.e1 = '2005-01-03 00:00:00.0'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCase1954e() {
+    @Test public void testRewriteCase1954e() {
         helpTestRewriteCriteria("convert(pm1.g1.e4, integer) = 2", "pm1.g1.e4 = 2.0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /** Check that this fails, x is not convertable to an int */
-    public void testRewriteCase1954f() {
+    @Test public void testRewriteCase1954f() {
         helpTestRewriteCriteria("convert(pm1.g1.e2, string) = 'x'", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     /** Check that this returns true, x is not convertable to an int */
-    public void testRewriteCase1954f1() {
+    @Test public void testRewriteCase1954f1() {
         helpTestRewriteCriteria("convert(pm1.g1.e2, string) != 'x'", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCase1954Set() {
+    @Test public void testRewriteCase1954Set() {
         helpTestRewriteCriteria("convert(pm1.g1.e2, string) in ('2', '3')", "pm1.g1.e2 IN (2,3)"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
-    public void testRewriteCase1954SetA() {
+    @Test public void testRewriteCase1954SetA() {
         helpTestRewriteCriteria("convert(pm1.g1.e2, string) in ('2', 'x')", "pm1.g1.e2 = 2"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
-    public void testRewriteCase1954SetB() {
+    @Test public void testRewriteCase1954SetB() {
         helpTestRewriteCriteria("cast(pm1.g1.e2 as string) in ('2', '3')", "pm1.g1.e2 IN (2,3)"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
     
-    public void testRewriteCase1954SetC() {
+    @Test public void testRewriteCase1954SetC() {
         helpTestRewriteCriteria("concat(pm1.g1.e2, 'string') in ('2', '3')", "concat(pm1.g1.e2, 'string') in ('2', '3')"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
-    public void testRewriteCase1954SetD() {
+    @Test public void testRewriteCase1954SetD() {
         helpTestRewriteCriteria("convert(pm1.g1.e2, string) in ('2', pm1.g1.e1)", "convert(pm1.g1.e2, string) in ('2', pm1.g1.e1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }      
     
     // First WHEN always true, so rewrite as THEN expression
-    public void testRewriteCaseExpr1() {
+    @Test public void testRewriteCaseExpr1() {
         helpTestRewriteCriteria("case when 0=0 then 1 else 2 end = 1", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // First WHEN always false, so rewrite as ELSE expression
-    public void testRewriteCaseExpr2() {
+    @Test public void testRewriteCaseExpr2() {
         helpTestRewriteCriteria("case when 0=1 then 1 else 2 end = 1", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // First WHEN can't be rewritten, so no changes
-    public void testRewriteCaseExpr3() {
+    @Test public void testRewriteCaseExpr3() {
         helpTestRewriteCriteria("case when 0 = pm1.g1.e2 then 1 else 2 end = 1", "CASE WHEN pm1.g1.e2 = 0 THEN 1 ELSE 2 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCaseExpr4() {
+    @Test public void testRewriteCaseExpr4() {
         helpTestRewriteCriteria("lookup('pm1.g1', 'e2', 'e1', case when 1=1 then pm1.g1.e1 end) = 0", "lookup('pm1.g1', 'e2', 'e1', pm1.g1.e1) = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // First WHEN always false, so remove it
-    public void testRewriteCaseExpr5() {
+    @Test public void testRewriteCaseExpr5() {
         helpTestRewriteCriteria("case when 0=1 then 1 when 0 = pm1.g1.e2 then 2 else 3 end = 1", "CASE WHEN pm1.g1.e2 = 0 THEN 2 ELSE 3 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCaseExprForCase5413aFrom502() {
+    @Test public void testRewriteCaseExprForCase5413aFrom502() {
         helpTestRewriteCriteria("pm1.g2.e1 = case when 0 = pm1.g1.e2 then 2 else 2 end", "pm1.g2.e1 = '2'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCaseExprForCase5413bFrom502() {
+    @Test public void testRewriteCaseExprForCase5413bFrom502() {
         helpTestRewriteCriteria("case when 0 = pm1.g1.e2 then null else null end IS NULL", TRUE_STR); //$NON-NLS-1$ 
     }
     
     
-    public void testRewriteCaseExprForCase5413a() {
+    @Test public void testRewriteCaseExprForCase5413a() {
         helpTestRewriteCriteria("pm1.g2.e1 = case when 0 = pm1.g1.e2 then 2 else 2 end", "pm1.g2.e1 = '2'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteCaseExprForCase5413b() {
+    @Test public void testRewriteCaseExprForCase5413b() {
         helpTestRewriteCriteria("case when 0 = pm1.g1.e2 then null else null end IS NULL", TRUE_STR); //$NON-NLS-1$ 
     }
 
     // First WHEN always true, so rewrite as THEN expression
-    public void testRewriteSearchedCaseExpr1() {
+    @Test public void testRewriteSearchedCaseExpr1() {
         helpTestRewriteCriteria("case 0 when 0 then 1 else 2 end = 1", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // First WHEN always false, so rewrite as ELSE expression
-    public void testRewriteSearchedCaseExpr2() {
+    @Test public void testRewriteSearchedCaseExpr2() {
         helpTestRewriteCriteria("case 0 when 1 then 1 else 2 end = 1", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteSearchedCaseExpr3() {
+    @Test public void testRewriteSearchedCaseExpr3() {
         helpTestRewriteCriteria("case 0 when pm1.g1.e2 then 1 else 2 end = 1", "CASE WHEN pm1.g1.e2 = 0 THEN 1 ELSE 2 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteSearchedCaseExpr4() {
+    @Test public void testRewriteSearchedCaseExpr4() {
         String criteria = "lookup('pm1.g1', 'e2', 'e1', '2') = 0"; //$NON-NLS-1$
         CompareCriteria expected = (CompareCriteria)parseCriteria(criteria, FakeMetadataFactory.example1Cached()); 
         helpTestRewriteCriteria("lookup('pm1.g1', 'e2', 'e1', case 0 when 1 then pm1.g1.e1 else 2 end) = 0", expected, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
     // First WHEN always false, so remove it
-    public void testRewriteSearchedCaseExpr5() {
+    @Test public void testRewriteSearchedCaseExpr5() {
         helpTestRewriteCriteria("case 0 when 1 then 1 when pm1.g1.e2 then 2 else 3 end = 1", "CASE WHEN pm1.g1.e2 = 0 THEN 2 ELSE 3 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testDefect16879_1(){
+    @Test public void testDefect16879_1(){
     	helpTestRewriteCommand("SELECT decodestring(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testDefect16879_2(){
+    @Test public void testDefect16879_2(){
     	helpTestRewriteCommand("SELECT decodestring(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testDefect16879_3(){
+    @Test public void testDefect16879_3(){
     	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testDefect16879_4(){
+    @Test public void testDefect16879_4(){
     	helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testDefect16879_5(){
+    @Test public void testDefect16879_5(){
         helpTestRewriteCommand("SELECT decodeinteger(e1, 'null, b, c, d') FROM pm1.g1", "SELECT CASE WHEN e1 IS NULL THEN 'b' WHEN e1 = 'c' THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testDefect16879_6(){
+    @Test public void testDefect16879_6(){
         helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE e1 END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testDefect16879_7(){
+    @Test public void testDefect16879_7(){
         helpTestRewriteCommand("SELECT decodeinteger(e1, 'a, b, null, d, e') FROM pm1.g1", "SELECT CASE WHEN e1 = 'a' THEN 'b' WHEN e1 IS NULL THEN 'd' ELSE 'e' END FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testCaseExpressionThatResolvesToNull() {
+    @Test public void testCaseExpressionThatResolvesToNull() {
         String sqlBefore = "SELECT CASE 'x' WHEN 'Old Inventory System' THEN NULL WHEN 'New Inventory System' THEN NULL END"; //$NON-NLS-1$
         String sqlAfter = "SELECT null"; //$NON-NLS-1$
 
@@ -1730,7 +1726,7 @@ public class TestQueryRewriter extends TestCase {
 
 
     //note that the env is now treated as deterministic, however it is really only deterministic within a session
-    public void testRewriteExecEnv() throws Exception {
+    @Test public void testRewriteExecEnv() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("exec pm1.sq2(env('sessionid'))");             //$NON-NLS-1$
         
         QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
@@ -1744,7 +1740,7 @@ public class TestQueryRewriter extends TestCase {
         assertEquals("SELECT e1, e2 FROM pm1.g1 WHERE e1 = '1'", rewriteCommand.toString()); //$NON-NLS-1$
     }
 
-    public void testRewriteExecCase6455() throws Exception {
+    @Test public void testRewriteExecCase6455() throws Exception {
         Command command = QueryParser.getQueryParser().parseCommand("exec pm1.sq2(env('sessionid')) OPTION PLANONLY DEBUG");             //$NON-NLS-1$
         
         QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
@@ -1759,23 +1755,23 @@ public class TestQueryRewriter extends TestCase {
     }
 
 
-    public void testRewriteNestedFunctions() {
+    @Test public void testRewriteNestedFunctions() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 where convert(parsedate(e1, 'yyyy-MM-dd'), string) = '2006-07-01'", "SELECT e1 FROM pm1.g1 WHERE e1 = '2006-07-01'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteWithReference() {
+    @Test public void testRewriteWithReference() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 where parsetimestamp(e1, 'yyyy-MM-dd') != ?", "SELECT e1 FROM pm1.g1 WHERE e1 <> formattimestamp(?, 'yyyy-MM-dd')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewiteJoinCriteria() {
+    @Test public void testRewiteJoinCriteria() {
         helpTestRewriteCommand("SELECT pm1.g1.e1 FROM pm1.g1 inner join pm1.g2 on (pm1.g1.e1 = null)", "SELECT pm1.g1.e1 FROM pm1.g1 INNER JOIN pm1.g2 ON 1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewiteCompoundCriteria() {
+    @Test public void testRewiteCompoundCriteria() {
         helpTestRewriteCriteria("(pm1.g1.e1 = 1 and pm1.g1.e2 = 2) and (pm1.g1.e3 = 1 and pm1.g1.e4 = 2)", "(pm1.g1.e1 = '1') AND (pm1.g1.e2 = 2) AND (pm1.g1.e3 = TRUE) AND (pm1.g1.e4 = 2.0)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteWhile() throws Exception {
+    @Test public void testRewriteWhile() throws Exception {
         
         String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
@@ -1802,7 +1798,7 @@ public class TestQueryRewriter extends TestCase {
                 
     }
     
-    public void testRewriteWhile1() {
+    @Test public void testRewriteWhile1() {
         
         String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
@@ -1827,7 +1823,7 @@ public class TestQueryRewriter extends TestCase {
     /**
      * Tests that VariableSubstitutionVisitor does not cause an NPE on count(*)
      */
-    public void testRewriteProcedureWithCount() {
+    @Test public void testRewriteProcedureWithCount() {
         
         String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
@@ -1850,7 +1846,7 @@ public class TestQueryRewriter extends TestCase {
     /**
      * Test to ensure the update changing list retains e1 = ?
      */
-    public void testVariableSubstitutionVisitor() throws Exception {
+    @Test public void testVariableSubstitutionVisitor() throws Exception {
         String procedure1 = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure1 += "BEGIN\n"; //$NON-NLS-1$
         procedure1 += "DECLARE string var1 = INPUT.e1;\n"; //$NON-NLS-1$
@@ -1877,7 +1873,7 @@ public class TestQueryRewriter extends TestCase {
         assertEquals(expected, command.getSubCommand().toString());
     }
     
-    public void testRemoveEmptyLoop() {
+    @Test public void testRemoveEmptyLoop() {
         String procedure1 = "CREATE virtual PROCEDURE  "; //$NON-NLS-1$
         procedure1 += "BEGIN\n"; //$NON-NLS-1$
         procedure1 += "loop on (select e1 from pm1.g1) as myCursor\n"; //$NON-NLS-1$
@@ -1891,7 +1887,7 @@ public class TestQueryRewriter extends TestCase {
         helpTestRewriteCommand(procedure1, expected);
     }
     
-    public void testRewriteDeclare() {
+    @Test public void testRewriteDeclare() {
         String procedure1 = "CREATE virtual PROCEDURE  "; //$NON-NLS-1$
         procedure1 += "BEGIN\n"; //$NON-NLS-1$
         procedure1 += "declare integer x = 1 + 1;\n"; //$NON-NLS-1$
@@ -1902,26 +1898,26 @@ public class TestQueryRewriter extends TestCase {
         helpTestRewriteCommand(procedure1, expected);
     }
       
-    public void testRewriteUnionJoin() {
+    @Test public void testRewriteUnionJoin() {
         String sql = "select pm1.g1.e1 from pm1.g1 union join pm1.g2 where g1.e1 = 1"; //$NON-NLS-1$
         String expected = "SELECT pm1.g1.e1 FROM pm1.g1 FULL OUTER JOIN pm1.g2 ON 1 = 0 WHERE g1.e1 = '1'"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
 
-    public void testRewriteNonNullDependentFunction() {
+    @Test public void testRewriteNonNullDependentFunction() {
         helpTestRewriteCriteria("pm1.g1.e1 = concat(null, pm1.g1.e2)", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteInWithNull() {
+    @Test public void testRewriteInWithNull() {
         helpTestRewriteCriteria("convert(null, string) in (pm1.g1.e1, pm1.g1.e2)", "null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteXMLCriteriaCases5630And5640() {
+    @Test public void testRewriteXMLCriteriaCases5630And5640() {
         helpTestRewriteCommand("select * from xmltest.doc1 where node1 = null", "SELECT * FROM xmltest.doc1 WHERE node1 = null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCorrelatedSubqueryInHaving() {
+    @Test public void testRewriteCorrelatedSubqueryInHaving() {
         String sql = "select pm1.g1.e1 from pm1.g1 group by pm1.g1.e1 having pm1.g1.e1 in (select pm1.g1.e1 from pm1.g2)"; //$NON-NLS-1$
         String expected = "SELECT pm1.g1.e1 FROM pm1.g1 GROUP BY pm1.g1.e1 HAVING pm1.g1.e1 IN (SELECT pm1.g1.e1 FROM pm1.g2)"; //$NON-NLS-1$
                 
@@ -1934,7 +1930,7 @@ public class TestQueryRewriter extends TestCase {
         assertEquals(1, refs.size());
     }
     
-    public void testRewriteSelectInto() {
+    @Test public void testRewriteSelectInto() {
         String sql = "select distinct pm1.g1.e1 into #temp from pm1.g1"; //$NON-NLS-1$
         String expected = "SELECT DISTINCT pm1.g1.e1 INTO #temp FROM pm1.g1"; //$NON-NLS-1$
                 
@@ -1944,34 +1940,34 @@ public class TestQueryRewriter extends TestCase {
     /**
      * Accounts for type change with duplicate names
      */
-    public void testRewriteSelectInto1() {
+    @Test public void testRewriteSelectInto1() {
         String sql = "select distinct e2, e2, e3, e4 into pm1.g1 from pm1.g2"; //$NON-NLS-1$
         String expected = "SELECT PM1_G1_1.E2 AS E2, PM1_G1_1.E2_0, PM1_G1_1.E3, PM1_G1_1.E4 INTO pm1.g1 FROM (SELECT DISTINCT e2, e2 AS E2_0, e3, e4 FROM pm1.g2) AS pm1_g1_1"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
     
-    public void testUnionQueryNullInOneBranch() throws Exception {
+    @Test public void testUnionQueryNullInOneBranch() throws Exception {
         verifyProjectedTypesOnUnionBranches("SELECT e1, e2 FROM pm1.g1 UNION ALL SELECT e1, null FROM pm1.g2", //$NON-NLS-1$
                                             new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER });
     }
     
-    public void testUnionQueryNullInOneBranch2() throws Exception {
+    @Test public void testUnionQueryNullInOneBranch2() throws Exception {
         verifyProjectedTypesOnUnionBranches("SELECT e1, e2 FROM pm1.g1 UNION ALL SELECT e1, e2 FROM pm1.g2 UNION ALL SELECT e1, null FROM pm1.g2", //$NON-NLS-1$
                                             new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER });
     }
 
-    public void testUnionQueryNullInOneBranch3() throws Exception {
+    @Test public void testUnionQueryNullInOneBranch3() throws Exception {
         verifyProjectedTypesOnUnionBranches("SELECT e1, null FROM pm1.g1 UNION ALL SELECT e1, null FROM pm1.g2 UNION ALL SELECT e1, e2 FROM pm1.g2", //$NON-NLS-1$
                                             new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER });
     }
 
-    public void testUnionQueryNullInAllBranches() throws Exception {
+    @Test public void testUnionQueryNullInAllBranches() throws Exception {
         verifyProjectedTypesOnUnionBranches("SELECT e1, null FROM pm1.g1 UNION ALL SELECT e1, null FROM pm1.g2 UNION ALL SELECT e1, null FROM pm1.g2", //$NON-NLS-1$
                                             new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
     }
     
-    public void testUnionQueryWithTypeConversion() throws Exception {
+    @Test public void testUnionQueryWithTypeConversion() throws Exception {
         verifyProjectedTypesOnUnionBranches("SELECT e1 FROM pm1.g1 UNION ALL SELECT e2 FROM pm1.g2", //$NON-NLS-1$
                                             new Class[] { DataTypeManager.DefaultDataClasses.STRING});
     }
@@ -1990,11 +1986,11 @@ public class TestQueryRewriter extends TestCase {
         }
     }
     
-    public void testRewiteOrderBy() {
+    @Test public void testRewiteOrderBy() {
         helpTestRewriteCommand("SELECT 1+1 as a FROM pm1.g1 order by a", "SELECT 2 AS a FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewiteOrderBy1() {
+    @Test public void testRewiteOrderBy1() {
         helpTestRewriteCommand("SELECT 1+1 as a FROM pm1.g1 union select pm1.g2.e1 from pm1.g2 order by a", "SELECT '2' AS a FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY a"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
@@ -2003,7 +1999,7 @@ public class TestQueryRewriter extends TestCase {
      * 
      * It also ensures that all project symbols are uniquely named in the inline view
      */
-    public void testSelectIntoWithOrderByAndTypeConversion() throws Exception {
+    @Test public void testSelectIntoWithOrderByAndTypeConversion() throws Exception {
         String procedure = "CREATE VIRTUAL PROCEDURE\n"; //$NON-NLS-1$
         procedure += "BEGIN\n";       //$NON-NLS-1$
         procedure += "CREATE local temporary table temp (x string, y integer, z integer);\n";       //$NON-NLS-1$
@@ -2015,23 +2011,23 @@ public class TestQueryRewriter extends TestCase {
     }
     
     
-    public void testInsertWithQuery() throws Exception {
+    @Test public void testInsertWithQuery() throws Exception {
         String sql = "insert into pm1.g1 select e1, e2, e3, e4 from pm1.g2 union select e1, e2, e3, e4 from pm1.g2"; //$NON-NLS-1$
         
         helpTestRewriteCommand(sql, "SELECT PM1_G1_1.E1, PM1_G1_1.E2, PM1_G1_1.E3, PM1_G1_1.E4 INTO pm1.g1 FROM (SELECT e1, e2, e3, e4 FROM pm1.g2 UNION SELECT e1, e2, e3, e4 FROM pm1.g2) AS pm1_g1_1"); //$NON-NLS-1$
     }
     
-    public void testRewriteNot() {
+    @Test public void testRewriteNot() {
         helpTestRewriteCriteria("not(not(pm1.g1.e1 = 1 + 1))", "pm1.g1.e1 = '2'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteQueryWithNoFrom() {
+    @Test public void testRewriteQueryWithNoFrom() {
         String sql = "select 1 as a order by a"; //$NON-NLS-1$
         
         helpTestRewriteCommand(sql, "SELECT 1 AS a"); //$NON-NLS-1$
     }
     
-    public void testOrderByDuplicateRemoval() {
+    @Test public void testOrderByDuplicateRemoval() {
         String sql = "SELECT pm1.g1.e1, pm1.g1.e1 as c1234567890123456789012345678901234567890 FROM pm1.g1 ORDER BY c1234567890123456789012345678901234567890, e1 "; //$NON-NLS-1$
         helpTestRewriteCommand(sql, "SELECT pm1.g1.e1, pm1.g1.e1 AS c1234567890123456789012345678901234567890 FROM pm1.g1 ORDER BY c1234567890123456789012345678901234567890"); //$NON-NLS-1$
     }
@@ -2039,7 +2035,7 @@ public class TestQueryRewriter extends TestCase {
     /**
      * Case 4814
      */
-    public void testVirtualRightOuterJoinSwap() throws Exception {
+    @Test public void testVirtualRightOuterJoinSwap() throws Exception {
         String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (select * from BQT1.smalla) sa RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
         helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN (SELECT * FROM BQT1.smalla) AS sa ON sa.IntKey = mb.IntKey", FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
@@ -2047,36 +2043,36 @@ public class TestQueryRewriter extends TestCase {
     /**
      * Case 4814
      */
-    public void testVirtualRightOuterJoinSwap1() throws Exception {
+    @Test public void testVirtualRightOuterJoinSwap1() throws Exception {
         String sql = "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM ((select * from BQT1.smalla) sa inner join BQT1.smallb on sa.intkey = smallb.intkey) RIGHT OUTER JOIN (select BQT1.mediumb.intkey from BQT1.mediumb) mb ON sa.IntKey = mb.IntKey"; //$NON-NLS-1$
         helpTestRewriteCommand(sql, "SELECT sa.IntKey AS sa_IntKey, mb.IntKey AS mb_IntKey FROM (SELECT BQT1.mediumb.intkey FROM BQT1.mediumb) AS mb LEFT OUTER JOIN ((SELECT * FROM BQT1.smalla) AS sa INNER JOIN BQT1.smallb ON sa.intkey = smallb.intkey) ON sa.IntKey = mb.IntKey", FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$
     }
     
-    public void testRewriteConcat2() {
+    @Test public void testRewriteConcat2() {
         helpTestRewriteCriteria("concat2('a','b') = 'ab'", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteConcat2_1() {
+    @Test public void testRewriteConcat2_1() {
         helpTestRewriteCriteria("concat2(null, null) is null", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteConcat2_2() throws Exception {
+    @Test public void testRewriteConcat2_2() throws Exception {
         helpTestRewriteCriteria("concat2(pm1.g1.e1, null) = 'xyz'", "CASE WHEN pm1.g1.e1 IS NULL THEN null ELSE concat(ifnull(pm1.g1.e1, ''), '') END = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteConcat2_3() throws Exception {
+    @Test public void testRewriteConcat2_3() throws Exception {
         helpTestRewriteCriteria("concat2(pm1.g1.e1, convert(pm1.g1.e2, string)) = 'xyz'", "CASE WHEN (pm1.g1.e1 IS NULL) AND (convert(pm1.g1.e2, string) IS NULL) THEN null ELSE concat(ifnull(pm1.g1.e1, ''), ifnull(convert(pm1.g1.e2, string), '')) END = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testRewriteConcat2_4() throws Exception {
+    @Test public void testRewriteConcat2_4() throws Exception {
         helpTestRewriteCriteria("concat2('a', pm1.g1.e1) = 'xyz'", "concat('a', ifnull(pm1.g1.e1, '')) = 'xyz'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewiteEvaluatableAggregate() {
+    @Test public void testRewiteEvaluatableAggregate() {
     	helpTestRewriteCommand("select pm1.g1.e1, max(1) from pm1.g1", "SELECT pm1.g1.e1, 1 FROM pm1.g1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteFromUnixTime() throws Exception {
+    @Test public void testRewriteFromUnixTime() throws Exception {
     	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
     	try {
     		helpTestRewriteCriteria("from_unixtime(pm1.g1.e2) = '1992-12-01 07:00:00'", "timestampadd(SQL_TSI_SECOND, pm1.g1.e2, {ts'1969-12-31 18:00:00.0'}) = {ts'1992-12-01 07:00:00.0'}"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -2085,15 +2081,15 @@ public class TestQueryRewriter extends TestCase {
     	}
     }
     
-    public void testRewriteNullIf() throws Exception {
+    @Test public void testRewriteNullIf() throws Exception {
     	helpTestRewriteCriteria("nullif(pm1.g1.e2, pm1.g1.e4) = 1", "CASE WHEN pm1.g1.e2 = pm1.g1.e4 THEN convert(null, double) ELSE pm1.g1.e2 END = 1.0", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testRewriteCoalesce() throws Exception {
+    @Test public void testRewriteCoalesce() throws Exception {
     	helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "ifnull(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testProcWithNull() throws Exception {
+    @Test public void testProcWithNull() throws Exception {
         String sql = "exec pm1.vsp26(1, null)"; //$NON-NLS-1$
         
         try {
@@ -2133,7 +2129,7 @@ public class TestQueryRewriter extends TestCase {
      * @see com.metamatrix.query.sql.symbol.AggregateSymbol
      * @see com.metamatrix.query.sql.symbol.SearchedCaseExpression
      */
-    public void testAggregateWithBetweenInCaseInSelect() {
+    @Test public void testAggregateWithBetweenInCaseInSelect() {
     	// Define a list of aggregates to test against
     	List<String> aggregateCommands = Arrays.asList( new String[] { "SUM", "MAX", "MIN", "AVG", "COUNT" } ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
     	
@@ -2178,7 +2174,7 @@ public class TestQueryRewriter extends TestCase {
      * @see com.metamatrix.query.sql.lang.CompoundCriteria
      * @see com.metamatrix.query.sql.symbol.SearchedCaseExpression
      */
-    public void testBetweenInCaseInSelect() {
+    @Test public void testBetweenInCaseInSelect() {
     	String sqlBefore = "SELECT CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
     	String sqlAfter = "SELECT CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END FROM pm1.g1"; //$NON-NLS-1$
     	
@@ -2210,7 +2206,7 @@ public class TestQueryRewriter extends TestCase {
      * @see com.metamatrix.query.sql.lang.CompoundCriteria
      * @see com.metamatrix.query.sql.symbol.SearchedCaseExpression
      */
-    public void testBetweenInCase() {
+    @Test public void testBetweenInCase() {
     	String sqlBefore = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN e2 BETWEEN 3 AND 5 THEN e2 ELSE -1 END"; //$NON-NLS-1$
     	String sqlAfter = "SELECT * FROM pm1.g1 WHERE e3 = CASE WHEN (e2 >= 3) AND (e2 <= 5) THEN e2 ELSE -1 END"; //$NON-NLS-1$
     	
@@ -2219,5 +2215,5 @@ public class TestQueryRewriter extends TestCase {
     	assertEquals( "e2 >= 3", ccrit.getCriteria(0).toString() ); //$NON-NLS-1$
     	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
     }
-
+    
 }
