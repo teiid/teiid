@@ -60,6 +60,9 @@ if [ "x$JAVA" = "x" ]; then
     fi
 fi
 
+# JPDA options. Uncomment and modify as appropriate to enable remote debugging.
+# JAVA_OPTS="$JAVA_OPTS -Xdebug -Xrunjdwp:transport=dt_socket,address=8787,server=y,suspend=n"
+
 TEIID_CLASSPATH="$TEIID_HOME/lib/patches/*:$TEIID_HOME/lib/*"
 JAVA_OPTS="$JAVA_OPTS -Xms128m -Xmx256m -XX:MaxPermSize=256m"
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=log.properties"
