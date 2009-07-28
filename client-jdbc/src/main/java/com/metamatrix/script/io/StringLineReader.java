@@ -31,7 +31,6 @@ import java.io.Reader;
  * The derived classes just need to extend this class and implement the "nextLine()"
  * method to get the full "Reader" functionality.
  * 
- * @author <a href="mailto:rreddy@metamatrix.com">Ramesh Reddy</a>
  */
 public abstract class StringLineReader extends Reader {
 

@@ -27,7 +27,6 @@ import java.io.IOException;
 
 /** 
  * Converts a String Array object into a Reader object.
- * @author <a href="mailto:rreddy@metamatrix.com">Ramesh Reddy</a>
  */
 public class StringArrayReader extends StringLineReader {
     String[] source = null;

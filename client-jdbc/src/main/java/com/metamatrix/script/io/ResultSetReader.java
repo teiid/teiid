@@ -22,11 +22,20 @@
 
 package com.metamatrix.script.io;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.sql.Types;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 
 /** 
@@ -37,7 +46,6 @@ import java.sql.Types;
  * <p>PS: remember this is a Reader not InputStream, so all the fields read
  * going to be converted to strings before they returned.
  * 
- * @author <a href="mailto:rreddy@metamatrix.com">Ramesh Reddy</a>
  * @since 4.3
  */
 public class ResultSetReader extends StringLineReader {
@@ -75,7 +83,7 @@ public class ResultSetReader extends StringLineReader {
     }
 
     /**
-     * Get the next line of restuls from the ResultSet. The first line will be the 
+     * Get the next line of results from the ResultSet. The first line will be the 
      * metadata of the resultset and then followed by the result rows. Each row will be 
      * returned as one line.  
      * @return next result line from result set.
@@ -100,11 +108,14 @@ public class ResultSetReader extends StringLineReader {
                 for (int col = 1; col <= columnCount; col++) {
                     Object anObj = source.getObject(col);
                     if (columnTypes[col-1] == Types.CLOB) {
-                        //sb.append(anObj != null ? "CLOB" : "null"); //$NON-NLS-1$ //$NON-NLS-2$
                         sb.append(anObj != null ? anObj : "null"); //$NON-NLS-1$
                     }
                     else if (columnTypes[col-1] == Types.BLOB) {
                         sb.append(anObj != null ? "BLOB" : "null"); //$NON-NLS-1$ //$NON-NLS-2$
+                    }
+                    else if (columnTypes[col-1] == Types.SQLXML) {
+                    	SQLXML xml = (SQLXML)anObj;
+                    	sb.append(anObj != null ? prettyPrint(xml) : "null"); //$NON-NLS-1$
                     }
                     else {
                         sb.append(anObj != null ? anObj : "null"); //$NON-NLS-1$
@@ -123,7 +134,7 @@ public class ResultSetReader extends StringLineReader {
     }
     
     /**
-     * Get the first line from the result set. This is the resutlset metadata line where
+     * Get the first line from the result set. This is the resultset metadata line where
      * we gather the column names and their types. 
      * @return 
      * @throws SQLException
@@ -142,4 +153,27 @@ public class ResultSetReader extends StringLineReader {
         sb.append("\n"); //$NON-NLS-1$
         return sb.toString();        
     }
+    
+	String prettyPrint(SQLXML xml) throws SQLException {
+		try {
+			TransformerFactory transFactory = TransformerFactory.newInstance();
+			transFactory.setAttribute("indent-number", new Integer(2)); //$NON-NLS-1$
+			
+			Transformer tf = transFactory.newTransformer();
+			tf.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes"); //$NON-NLS-1$
+			tf.setOutputProperty(OutputKeys.ENCODING, "UTF-8");//$NON-NLS-1$
+			tf.setOutputProperty(OutputKeys.INDENT, "yes");//$NON-NLS-1$
+			tf.setOutputProperty(OutputKeys.METHOD, "xml");//$NON-NLS-1$
+			tf.setOutputProperty(OutputKeys.STANDALONE, "yes");//$NON-NLS-1$
+			tf.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4"); //$NON-NLS-1$ //$NON-NLS-2$
+			
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			StreamResult xmlOut = new StreamResult(new BufferedOutputStream(out));
+			tf.transform(xml.getSource(StreamSource.class), xmlOut);
+			
+			return out.toString();
+		} catch (Exception e) {
+			return xml.getString();
+		}
+	}   
 }

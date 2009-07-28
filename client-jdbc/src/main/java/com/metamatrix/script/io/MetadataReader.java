@@ -61,14 +61,14 @@ public class MetadataReader extends StringLineReader {
 	
     String firstLine() {
         StringBuffer sb = new StringBuffer();
-        sb.append("ColumnName").append(delimiter);
-        sb.append("ColumnType").append(delimiter);
-        sb.append("ColumnTypeName").append(delimiter);
-        sb.append("ColumnClassName").append(delimiter);
-        sb.append("isNullable").append(delimiter);
-        sb.append("TableName").append(delimiter);
-        sb.append("SchemaName").append(delimiter);
-        sb.append("CatalogName").append(delimiter);
+        sb.append("ColumnName").append(delimiter); //$NON-NLS-1$
+        sb.append("ColumnType").append(delimiter); //$NON-NLS-1$
+        sb.append("ColumnTypeName").append(delimiter); //$NON-NLS-1$
+        sb.append("ColumnClassName").append(delimiter); //$NON-NLS-1$
+        sb.append("isNullable").append(delimiter); //$NON-NLS-1$
+        sb.append("TableName").append(delimiter); //$NON-NLS-1$
+        sb.append("SchemaName").append(delimiter); //$NON-NLS-1$
+        sb.append("CatalogName").append(delimiter); //$NON-NLS-1$
         sb.append("\n"); //$NON-NLS-1$
         return sb.toString();        
     }	
