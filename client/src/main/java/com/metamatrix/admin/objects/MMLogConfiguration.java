@@ -22,7 +22,6 @@
 
 package com.metamatrix.admin.objects;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,6 +34,7 @@ import org.teiid.adminapi.LogConfiguration;
  */
 public class MMLogConfiguration extends MMAdminObject implements LogConfiguration {
 
+	private static final long serialVersionUID = -4585962928702271706L;
 	Map<String, Integer> contextMap = null;
 	
 	public MMLogConfiguration(Map<String, Integer> contextMap) {

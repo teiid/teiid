@@ -34,8 +34,8 @@ import com.metamatrix.admin.AdminPlugin;
  * @since 4.3
  */
 public class MMPropertyDefinition extends MMAdminObject implements PropertyDefinition {
-
-    private String value = null;
+	private static final long serialVersionUID = 6612838530524627205L;
+	private String value = null;
     private Collection allowedValues = new ArrayList();
     private Object defaultValue = null;
     private String description = null;

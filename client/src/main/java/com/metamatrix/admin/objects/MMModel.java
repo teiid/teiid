@@ -32,8 +32,9 @@ import com.metamatrix.admin.AdminPlugin;
 /**
  */
 public class MMModel extends MMAdminObject implements Model {
-    
-    private List connectorBindingNames = new ArrayList(); 
+
+	private static final long serialVersionUID = 3714234763056162230L;
+	private List connectorBindingNames = new ArrayList(); 
     private String modelType = ""; //$NON-NLS-1$
 	private String modelURI = ""; //$NON-NLS-1$
     private boolean isMaterialization = false;

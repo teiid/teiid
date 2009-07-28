@@ -24,7 +24,6 @@ package com.metamatrix.admin.objects;
 
 import java.util.Date;
 
-import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.Service;
 
 import com.metamatrix.admin.AdminPlugin;
@@ -35,8 +34,9 @@ import com.metamatrix.admin.AdminPlugin;
  * 
  */
 public class MMService extends MMAdminObject implements Service {
-	
-    private String description = ""; //$NON-NLS-1$
+
+	private static final long serialVersionUID = -338643922496948824L;
+	private String description = ""; //$NON-NLS-1$
     private String componentTypeName = ""; //$NON-NLS-1$
     private int currentState;
     private Date stateChangedTime;

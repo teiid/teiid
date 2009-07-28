@@ -36,7 +36,8 @@ import com.metamatrix.core.util.HashCodeUtil;
  */
 public final class MMVDB extends MMAdminObject implements VDB, Comparable {
 
-    /**VDB is registered but incomplete*/
+	private static final long serialVersionUID = -3755957080991586389L;
+	/**VDB is registered but incomplete*/
     public static final int STATUS_INCOMPLETE = 1;
     /**VDB is deployed but inactive*/
     public static final int STATUS_INACTIVE   = 2;

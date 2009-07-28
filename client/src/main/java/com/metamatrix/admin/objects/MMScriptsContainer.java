@@ -45,8 +45,9 @@ import com.metamatrix.core.util.FileUtils;
  */
 public class MMScriptsContainer implements
                                ScriptsContainer {
-    
-    // <String> fileName => <byte[]> file contents
+
+	private static final long serialVersionUID = 1262888652939367623L;
+	// <String> fileName => <byte[]> file contents
     private Map fileMap;
     
     /** 

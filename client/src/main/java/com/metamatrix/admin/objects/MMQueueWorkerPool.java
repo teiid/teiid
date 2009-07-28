@@ -30,8 +30,8 @@ import com.metamatrix.admin.AdminPlugin;
  * Dataholder for all the statistics gathered about a worker pool.
  */
 public class MMQueueWorkerPool extends MMAdminObject implements QueueWorkerPool {
-
-    // Current state    
+	private static final long serialVersionUID = 454595217325824487L;
+	// Current state    
     private int queued = 0;
     private int threads = 0;
     

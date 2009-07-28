@@ -40,7 +40,8 @@ import com.metamatrix.core.MetaMatrixCoreException;
  */
 public abstract class AdminException extends MetaMatrixCoreException {
 
-   // List of Admin exceptions in
+	private static final long serialVersionUID = -4446936145500241358L;
+	// List of Admin exceptions in
     // case of multiple failure
     private List children;
 

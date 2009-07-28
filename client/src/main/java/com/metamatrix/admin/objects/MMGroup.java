@@ -28,10 +28,10 @@ import org.teiid.adminapi.Group;
 /** 
  * @since 4.3
  */
-public class MMGroup extends MMPrincipal implements
-                                        Group {
+public class MMGroup extends MMPrincipal implements Group {
+	private static final long serialVersionUID = 1102507655851078982L;
 
-    /** 
+	/** 
      * @param principalName
      * @since 4.3
      */

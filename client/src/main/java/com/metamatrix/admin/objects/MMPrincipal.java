@@ -30,7 +30,9 @@ import org.teiid.adminapi.Principal;
  */
 public class MMPrincipal extends MMAdminObject implements Principal {
 
-    private static final String[] TYPE_NAMES = new String[] { TYPE_LABEL_USER, TYPE_LABEL_GROUP, TYPE_LABEL_ADMIN };
+	private static final long serialVersionUID = -1383265398519744688L;
+
+	private static final String[] TYPE_NAMES = new String[] { TYPE_LABEL_USER, TYPE_LABEL_GROUP, TYPE_LABEL_ADMIN };
 
     private int type;
 

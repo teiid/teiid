@@ -34,8 +34,8 @@ import com.metamatrix.core.util.DateUtil;
  */
 public class MMSystem extends MMAdminObject implements SystemObject {
 
-    
-    Date startTime;
+	private static final long serialVersionUID = 7913646658641775637L;
+	Date startTime;
     boolean isStarted;
     
     

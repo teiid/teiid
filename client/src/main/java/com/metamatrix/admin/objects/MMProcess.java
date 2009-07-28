@@ -34,6 +34,7 @@ import com.metamatrix.admin.AdminPlugin;
  * Data holder for information about a Process.
  */
 public final class MMProcess extends MMAdminObject implements ProcessObject {
+	private static final long serialVersionUID = 8454606907083408662L;
 	private long freeMemory = 0;
     private String hostIdentifier = "";  //$NON-NLS-1$
     private InetAddress inetAddress = null;

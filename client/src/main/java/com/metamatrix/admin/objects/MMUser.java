@@ -29,8 +29,9 @@ import org.teiid.adminapi.User;
  * @since 4.3
  */
 public class MMUser extends MMPrincipal implements User {
+	private static final long serialVersionUID = -5201466263343170010L;
 
-    /** 
+	/** 
      * @param identifierParts
      * @since 4.3
      */

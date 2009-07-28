@@ -25,8 +25,8 @@ package com.metamatrix.platform.security.api;
 import java.io.Serializable;
 
 public class MetaMatrixPrincipalName implements Serializable {
-
-    private int type;
+	private static final long serialVersionUID = 4630832657093482302L;
+	private int type;
     private String name;
 
     public MetaMatrixPrincipalName( String name, int type ) {

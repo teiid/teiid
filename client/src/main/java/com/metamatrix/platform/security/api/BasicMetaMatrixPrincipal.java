@@ -32,8 +32,8 @@ import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 
 public class BasicMetaMatrixPrincipal implements MetaMatrixPrincipal, Serializable {
-
-    private int type;
+	private static final long serialVersionUID = -3458004182869226507L;
+	private int type;
     private String name;
     private Set unmodifiableGroupNames;
 

@@ -36,7 +36,8 @@ import java.util.TimeZone;
  */
 public class LogonResult implements Serializable {
         
-    private TimeZone timeZone = TimeZone.getDefault();
+	private static final long serialVersionUID = 4481443514871448269L;
+	private TimeZone timeZone = TimeZone.getDefault();
     private final Properties productInfo;
     private String clusterName;
     private SessionToken sessionToken;

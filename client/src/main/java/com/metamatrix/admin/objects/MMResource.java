@@ -31,7 +31,8 @@ import com.metamatrix.admin.AdminPlugin;
  */
 public class MMResource extends MMAdminObject implements Resource {
 
-    private String resourceType;
+	private static final long serialVersionUID = -8732882869479091774L;
+	private String resourceType;
 	    
     /**
      * Constructor

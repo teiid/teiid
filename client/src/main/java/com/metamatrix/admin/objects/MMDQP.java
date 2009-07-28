@@ -36,10 +36,9 @@ import com.metamatrix.admin.AdminPlugin;
  * May are may not be assigned to a VDB
  */
 public class MMDQP extends MMAdminObject implements DQP {
-	
-    
 
-    private String description = ""; //$NON-NLS-1$
+	private static final long serialVersionUID = -3212002022690786890L;
+	private String description = ""; //$NON-NLS-1$
     private int currentState;
     private Date stateChangedTime;
     private long serviceID = -1;

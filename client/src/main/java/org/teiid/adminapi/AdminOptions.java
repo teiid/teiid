@@ -48,8 +48,9 @@ public class AdminOptions implements Serializable {
     // add the corresponding string to the toString() method
     // and to the ALLOWABLE_OPTIONS bitmask below.
     // *************************************************************************
-        
-    /**
+	private static final long serialVersionUID = 2809137776857876224L;
+
+	/**
      * In the case when adding resource to the system, if the resource already 
      * exists in the system, these modes define how to handle the situation.  
      */

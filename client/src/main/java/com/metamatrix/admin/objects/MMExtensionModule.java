@@ -30,8 +30,8 @@ import com.metamatrix.admin.AdminPlugin;
  * A simple Extension Modules for the Admin API
  */
 public final class MMExtensionModule extends MMAdminObject implements ExtensionModule {
-
-    private String description;
+	private static final long serialVersionUID = -3250813293338474584L;
+	private String description;
     private byte[] fileContents;
     private String moduleType;
 

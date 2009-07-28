@@ -36,8 +36,9 @@ import com.metamatrix.admin.AdminPlugin;
  * May are may not be assigned to a VDB
  */
 public class MMConnectorBinding extends MMAdminObject implements ConnectorBinding {
-	
-    private String routingUUID = "";  //$NON-NLS-1$
+
+	private static final long serialVersionUID = 6919562861762280546L;
+	private String routingUUID = "";  //$NON-NLS-1$
     private String description = ""; //$NON-NLS-1$
     private String connectorTypeName = ""; //$NON-NLS-1$
     private int currentState;

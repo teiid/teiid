@@ -34,6 +34,8 @@ import com.metamatrix.core.util.DateUtil;
  * 
  */
 public class MMSession extends MMAdminObject implements Session {
+
+	private static final long serialVersionUID = 4939105946380675244L;
 	private String userName = ""; //$NON-NLS-1$;
 	private String applicationName = ""; //$NON-NLS-1$
 	private String sessionID;

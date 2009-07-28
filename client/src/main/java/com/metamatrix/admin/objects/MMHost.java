@@ -32,6 +32,7 @@ import com.metamatrix.admin.AdminPlugin;
  */
 public final class MMHost extends MMAdminObject implements Host {
 
+	private static final long serialVersionUID = -779866213549875450L;
 	private boolean running = false;
 	
    

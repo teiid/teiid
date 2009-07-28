@@ -31,8 +31,8 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
  * XA transaction-related.
  */
 public class XATransactionException extends MetaMatrixProcessingException {
-
-    private int errorCode = XAException.XAER_RMERR;
+	private static final long serialVersionUID = 5685144848609237877L;
+	private int errorCode = XAException.XAER_RMERR;
     
     /**
      * No-Arg Constructor

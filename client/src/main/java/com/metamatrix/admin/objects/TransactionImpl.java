@@ -30,7 +30,8 @@ import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.common.xa.MMXid;
 
 public class TransactionImpl extends MMAdminObject implements Transaction {
-	
+
+	private static final long serialVersionUID = -8588785315218789068L;
 	private String associatedSession;
 	private String scope;
 	private MMXid xid;

@@ -34,8 +34,8 @@ import com.metamatrix.admin.AdminPlugin;
  * @since 4.3
  */
 public class MMAdminStatus implements AdminStatus, Serializable {
-
-    private int code = AdminStatus.CODE_UNKNOWN;
+	private static final long serialVersionUID = -3111591335358837218L;
+	private int code = AdminStatus.CODE_UNKNOWN;
     private String message = null;
     
     

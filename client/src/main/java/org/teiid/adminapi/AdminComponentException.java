@@ -32,11 +32,9 @@ package org.teiid.adminapi;
  */
 public final class AdminComponentException extends AdminException {
 
-    /**
-     * No-arg ctor.
-     *
-     * @since 4.3
-     */
+	private static final long serialVersionUID = 7117721841515240902L;
+
+
     public AdminComponentException() {
         super();
     }

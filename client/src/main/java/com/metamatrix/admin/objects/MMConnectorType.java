@@ -30,11 +30,9 @@ import com.metamatrix.admin.AdminPlugin;
  * Dataholder for a connector type.
  */
 public class MMConnectorType extends MMAdminObject implements ConnectorType {
+	private static final long serialVersionUID = -3029541826277765764L;
 
-    
-	
-    
-    /**
+	/**
      * Constructor
      * @param identifierParts of the Conenctor Type
      */

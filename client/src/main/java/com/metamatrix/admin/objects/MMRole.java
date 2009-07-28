@@ -32,7 +32,10 @@ import org.teiid.adminapi.Role;
  * @since 4.3
  */
 public class MMRole extends MMAdminObject implements Role {
-    /** 
+
+	private static final long serialVersionUID = -768301010301417417L;
+
+	/** 
      * Ctor
      * @param identifier the role identifier should contain the whole
      * dotted notation in one field of the identifier so that the name

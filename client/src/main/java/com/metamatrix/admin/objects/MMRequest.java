@@ -34,6 +34,7 @@ import com.metamatrix.core.util.DateUtil;
  */
 public class MMRequest extends MMAdminObject implements Request{
 	
+	private static final long serialVersionUID = -6271863624581160147L;
 	String userName = ""; //$NON-NLS-1$;
 	String sessionID;
     String requestID;

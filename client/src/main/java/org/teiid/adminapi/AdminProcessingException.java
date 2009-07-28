@@ -33,7 +33,9 @@ package org.teiid.adminapi;
  */
 public final class AdminProcessingException extends AdminException {
 
-    /**
+	private static final long serialVersionUID = -878521636838205857L;
+
+	/**
      * No-arg ctor.
      *
      * @since 4.3

@@ -26,7 +26,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 public class MetadataResult implements Serializable {
-
+	private static final long serialVersionUID = -1520482281079030324L;
 	private Map[] columnMetadata;
 	private int parameterCount;
 	
