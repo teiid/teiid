@@ -42,6 +42,8 @@ import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.aggregate.AggregateFunction;
+import com.metamatrix.query.function.aggregate.NullFilter;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.FakeTupleSource;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
@@ -173,6 +175,12 @@ public class TestGroupingNode extends TestCase {
         };
         
         helpProcess(mgr, node, context, expected);
+        
+        //ensure that the distinct input type is correct
+        AggregateFunction[] functions = node.getFunctions();
+        AggregateFunction countDist = functions[5];
+        DuplicateFilter dup = (DuplicateFilter)((NullFilter)countDist).getProxy();
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((ElementSymbol)dup.getElements().get(0)).getType());
 	}
 
     public void test2() throws Exception {

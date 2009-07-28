@@ -69,6 +69,10 @@ public class DuplicateFilter implements AggregateFunction {
         this.mgr = mgr;
         this.groupName = groupName;
     }
+    
+    public List getElements() {
+		return elements;
+	}
 
     /**
      * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String, Class)

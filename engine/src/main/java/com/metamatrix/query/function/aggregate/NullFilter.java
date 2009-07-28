@@ -42,6 +42,10 @@ public class NullFilter implements AggregateFunction {
         
         this.proxy = proxy;
     }
+    
+    public AggregateFunction getProxy() {
+		return proxy;
+	}
 
     /**
      * @see com.metamatrix.query.function.aggregate.AggregateFunction#initialize(String, Class)

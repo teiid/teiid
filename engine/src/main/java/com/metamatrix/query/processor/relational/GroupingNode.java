@@ -218,14 +218,18 @@ public class GroupingNode extends RelationalNode {
                     }
                     
                     functions[i] = new NullFilter(functions[i]);
-                    outputType = aggSymbol.getType();
+                    inputType = aggSymbol.getExpression().getType();
                 }
             } else {
                 functions[i] = new ConstantFunction();
             }
             functions[i].initialize(outputType, inputType);
         }
-    }    
+    } 
+    
+    AggregateFunction[] getFunctions() {
+		return functions;
+	}
 
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, MetaMatrixComponentException, MetaMatrixProcessingException {
