@@ -46,11 +46,13 @@ private Connection connectURL (String url, String driver) {
             currentContext().internalAdmin = createExceptionHandlingProxy(mmConn.getAdminAPI());
     		return mmConn;        	
         } catch(e) {
-        	print("Failed to connect: "+e.getMessage());
+        	print("Failed to connect: {"+e.getMessage()+"}");
+        	return null;
         }
     }
     else {
         print("Wrong syntax for the URL.. connection failed");
+        return null;
     }
 }
 

@@ -183,12 +183,11 @@ class ExceptionHandler implements InvocationHandler{
 			if (ex instanceof AdminException) {
 				print("Error:"+ex.getMessage());
 			}
-		} catch(AdminComponentException e) {
-			print(e.getClass().getName() +" Error:"+e.getMessage());
-		} catch (AdminProcessingException e) {
-			print(e.getClass().getName() +" Error:"+e.getMessage());
 		} catch(Throwable t) {
-			print(t.getClass().getName() +" Error:"+e.getMessage());
+			msg = t.getMessage();
+			if (msg != null) {
+				print(msg);
+			}
 		}
 		return null;
 	}	

@@ -57,6 +57,7 @@ set TEIID_CLASSPATH=%TEIID_HOME%\lib\patches\*;%TEIID_HOME%\lib\*;
 
 rem JVM memory allocation pool parameters. Modify as appropriate.
 set JAVA_OPTS=%JAVA_OPTS% -Xms128m -Xmx256m -XX:MaxPermSize=256m
+set JAVA_OPTS=%JAVA_OPTS% -Djava.util.logging.config.file=log.properties
 
 echo ===============================================================================
 echo.
