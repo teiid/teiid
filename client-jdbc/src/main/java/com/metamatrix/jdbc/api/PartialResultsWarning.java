@@ -38,7 +38,8 @@ import java.util.Map;
  */
 public class PartialResultsWarning extends SQLWarning {
 
-    private Map failures; 
+	private static final long serialVersionUID = 5301215068719177369L;
+	private Map failures; 
 
     /**
      * Construct partial results warning.
