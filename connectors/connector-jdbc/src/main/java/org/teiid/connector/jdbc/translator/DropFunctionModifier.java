@@ -34,7 +34,7 @@ import org.teiid.connector.language.*;
  * can be overridden.  This modifier should only be used with functions having the
  * minimum or more number of arguments. 
  */
-public class DropFunctionModifier extends BasicFunctionModifier implements FunctionModifier {
+public class DropFunctionModifier extends BasicFunctionModifier {
 
     private int replaceIndex = 0;
     

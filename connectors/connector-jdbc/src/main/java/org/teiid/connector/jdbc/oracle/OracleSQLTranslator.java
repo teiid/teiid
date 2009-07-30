@@ -49,6 +49,7 @@ import org.teiid.connector.language.IInsert;
 import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.ILimit;
 import org.teiid.connector.language.IQueryCommand;
+import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.language.ISetQuery.Operation;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.visitor.util.SQLReservedWords;
@@ -166,10 +167,34 @@ public class OracleSQLTranslator extends Translator {
 		ILimit limit = queryCommand.getLimit();
 		queryCommand.setLimit(null);
     	List<Object> parts = new ArrayList<Object>();
+    	parts.add("SELECT "); //$NON-NLS-1$
+    	/*
+    	 * if all of the columns are aliased, assume that names matter - it actually only seems to matter for
+    	 * the first query of a set op when there is a order by.  Rather than adding logic to traverse up,
+    	 * we just use the projected names 
+    	 */
+    	boolean allAliased = true;
+    	for (ISelectSymbol selectSymbol : queryCommand.getProjectedQuery().getSelect().getSelectSymbols()) {
+			if (!selectSymbol.hasAlias()) {
+				allAliased = false;
+				break;
+			}
+		}
+    	if (allAliased) {
+	    	String[] columnNames = queryCommand.getColumnNames();
+	    	for (int i = 0; i < columnNames.length; i++) {
+	    		if (i > 0) {
+	    			parts.add(", "); //$NON-NLS-1$
+	    		}
+	    		parts.add(columnNames[i]);
+			}
+    	} else {
+        	parts.add("*"); //$NON-NLS-1$
+    	}
 		if (limit.getRowOffset() > 0) {
-			parts.add("SELECT * FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM ("); //$NON-NLS-1$
+			parts.add(" FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM ("); //$NON-NLS-1$
 		} else {
-			parts.add("SELECT * FROM ("); //$NON-NLS-1$ 
+			parts.add(" FROM ("); //$NON-NLS-1$ 
 		}
 		parts.add(queryCommand);
 		if (limit.getRowOffset() > 0) {

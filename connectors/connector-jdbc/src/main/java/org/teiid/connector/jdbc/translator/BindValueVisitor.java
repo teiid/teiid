@@ -27,7 +27,6 @@ import org.teiid.connector.language.IExistsCriteria;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.IInCriteria;
 import org.teiid.connector.language.IInlineView;
-import org.teiid.connector.language.IInsert;
 import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.language.ILikeCriteria;

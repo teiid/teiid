@@ -457,8 +457,8 @@ public class TestOracleSQLConversionVisitor {
     }
             
     @Test public void testLimitWithNestedInlineView() throws Exception {
-        String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by intkey"; //$NON-NLS-1$
-        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY intkey) WHERE ROWNUM <= 100) x GROUP BY x.intkey"; //$NON-NLS-1$
+        String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by stringkey"; //$NON-NLS-1$
+        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY intkey) WHERE ROWNUM <= 100) x GROUP BY x.stringkey"; //$NON-NLS-1$
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
@@ -496,6 +496,15 @@ public class TestOracleSQLConversionVisitor {
         String sql = "select stringnum || '1' from BQT1.Smalla"; //$NON-NLS-1$       
         String expected = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(SmallA.StringNum, '1') END FROM SmallA"; //$NON-NLS-1$
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(), sql, EMPTY_CONTEXT, null, expected);
+    }
+    
+    @Test public void testRowLimitWithUnionOrderBy() throws Exception {
+        String input = "(select intkey from bqt1.smalla limit 50, 100) union select intnum from bqt1.smalla order by intkey"; //$NON-NLS-1$
+        String output = "SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50 UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0"; //$NON-NLS-1$
+               
+        CommandBuilder commandBuilder = new CommandBuilder(FakeMetadataFactory.exampleBQTCached());
+        ICommand obj = commandBuilder.getCommand(input, true, true);
+		this.helpTestVisitor(obj, EMPTY_CONTEXT, null, output);
     }
 
 }
