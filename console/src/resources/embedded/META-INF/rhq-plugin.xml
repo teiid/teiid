@@ -1,0 +1,635 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */-->
+
+<plugin name="TeiidPlugin" displayName="Teiid Plugin"
+	package="org.teiid.rhq.plugin" version="2.0.0"	
+	description="Supports management and monitoring of JBoss Teiid DataServices version 6.2"
+
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="urn:xmlns:rhq-plugin" 
+	xmlns:c="urn:xmlns:rhq-configuration">
+
+	<server name="Teiid Data Services"
+		discovery="PlatformDiscoveryComponent"
+		class="PlatformComponent" 
+		description="JBoss Teiid DataServices"
+		supportsManualAdd="true"
+		singleton="true">
+
+
+     <subcategories>
+         <subcategory name="Runtime"/>
+         <subcategory name="Resources"/>
+      </subcategories>
+
+		<resource-configuration>
+        	<c:group name="connection" displayName="Connection Info">
+        	<c:description>Connection</c:description>
+         	<c:simple-property name="url" displayName="Teiid URL"			
+                            description="The URL with which to connect to the Teiid Data Service instance (e.g. mm://localhost:31000)."
+                            default="mm://localhost:31000"/>
+         <c:simple-property name="username" required="true" description="The name of the administrative principal (i.e. user) to authenticate."/>
+         <c:simple-property name="password" type="password" required="true"
+                            description="The credentials (i.e. password) that should be used to authenticate the administrative principal."/>		            
+     	</c:group>
+       </resource-configuration> 
+
+
+		<server name="Sessions"
+			subCategory="Runtime"
+			discovery="NodeDiscoveryComponent"
+			description="Active / Inactive sessions connected to the Teidd Server"
+			class="SessionComponent"
+			singleton="true">
+
+<!--
+	group name = operation name or query name
+	
+	simple-property name = the method name on the object to get the value
+-->  
+			<resource-configuration>
+    			<c:group name="getSessions" displayName="Sessions">
+
+	                  <c:list-property name="list"
+	                                     displayName="Current Sessions"
+	                                     description="Sessions currently connected to the Teiid"
+	                                     required="false">
+	                        <c:map-property name="map">
+								<c:simple-property displayName="Session ID"
+									name="getSessionID" type="string" readOnly="true"
+									description="The id for this session" />
+								<c:simple-property displayName="User Name"
+									name="getUserName" type="string" readOnly="true"
+									description="The username for the user of this session" />
+								<c:simple-property
+									displayName="Application Name" name="getApplicationName"
+									type="string" readOnly="true"
+									description="The name of the application this user is accessing Teiid through" />
+								<c:simple-property displayName="VDB Name"
+									name="getVDBName" type="string" readOnly="true"
+									description="The name of the VDB the user is connected to" />
+								<c:simple-property displayName="VDB Version"
+									name="getVDBVersion" type="string" readOnly="true"
+									description="The version of the VDB the user is connected to" />
+		
+								<c:simple-property displayName="State"
+									name="getStateAsString" type="string" readOnly="true"
+									description="The current state of this session" />
+		
+								<c:simple-property displayName="IP Address"
+									name="getIPAddress" type="string" readOnly="true"
+									description="The IP Address for this user's connection" />
+								<c:simple-property displayName="Host Name"
+									name="getHostName" type="string" readOnly="true"
+									description="The host machine from which this user connected" />
+	                        </c:map-property>
+	                    </c:list-property>
+	
+	                </c:group>
+	            </resource-configuration>
+	            
+		</server>
+
+		<server name="Queries"
+			subCategory="Runtime"
+			discovery="NodeDiscoveryComponent"
+			description="Current queries executing against the Teiid Server"
+			class="QueriesComponent"
+			singleton="true">
+
+<!--
+	group name = operation name or query name
+	
+	simple-property name = the method name on the object to get the value
+-->  
+			<resource-configuration>
+    			<c:group name="listQueries" displayName="Executing Queries">
+
+	                  <c:list-property name="list"
+	                                     displayName="Executing Queries"
+	                                     description="Current queries executing in the Teiid system"
+	                                     required="false">
+	                        <c:map-property name="map">
+								<c:simple-property displayName="User Name"
+									name="getUserName" type="string"
+									description="The username for the user that submitted this query" />
+								<c:simple-property displayName="Session ID"
+									name="getSessionID" type="string"
+									description="The id for the session" />
+								<c:simple-property displayName="Request ID"
+									name="getRequestID" type="string"
+									description="The id for the request" />
+								<c:simple-property displayName="Start Time"
+									name="getCreated" type="string"
+									description="The time this query has been running" />
+								<c:simple-property displayName="Transaction ID"
+									name="getTransactionID" type="string"
+									description="The version of the VDB the user is connected to" />
+								<c:simple-property displayName="SQL String"
+									name="getSqlCommand" type="string"
+									description="The SQL string for this query" />
+								<c:simple-property
+									displayName="Connector Binding Name"
+									name="getConnectorBindingName" type="string"
+									description="The IP Address for this user's connection" />
+								<c:simple-property displayName="Node ID"
+									name="getNodeID" type="string"
+									description="The node ID of this query" />
+								<c:simple-property displayName="Source Request"
+									name="isSource" type="string"
+									description="If false this is the top level query. If true this a physical source query." />
+	                        </c:map-property>
+	                    </c:list-property>
+	
+	                </c:group>
+			</resource-configuration>
+	            
+		</server>
+
+
+
+
+
+	<server name="System"
+		subCategory="Runtime"
+		discovery="NodeDiscoveryComponent"
+		class="SystemComponent" 
+		description="Operational System"
+		supportsManualAdd="true"
+		singleton="true">
+
+ 
+		<operation name="bounceSystem"
+			displayName="Bounce System"
+			description="Stop and restart the system">
+			<parameters>
+				<c:simple-property name="waitUntilFinished"
+					type="boolean" default="false"
+					description="If true, this method waits until the operation is finished before returning. This may take a long time to complete.  If false, this method returns immediately, even though the operation may not be finished." />
+			</parameters>
+		</operation>
+<!--
+		<operation name="listUsers"
+			displayName="View current user sessions"
+			description="List current user sessions connected to this Teiid System">
+			<results>
+				<c:list-property name="list">
+					<c:map-property name="map">
+						<c:simple-property displayName="User Name"
+							name="getUserName" type="string"
+							description="The username for the user of this session" />
+						<c:simple-property
+							displayName="Application Name" name="getApplicationName"
+							type="string"
+							description="The name of the application this user is accessing Teiid through" />
+						<c:simple-property displayName="Session ID"
+							name="getSessionID" type="string"
+							description="The id for this session" />
+						<c:simple-property displayName="VDB Name"
+							name="getVDBName" type="string"
+							description="The name of the VDB the user is connected to" />
+						<c:simple-property displayName="VDB Version"
+							name="getVDBVersion" type="string"
+							description="The version of the VDB the user is connected to" />
+						<c:simple-property displayName="Product Name"
+							name="getProductName" type="string"
+							description="The product name" />
+						<c:simple-property displayName="IP Address"
+							name="getIPAddress" type="string"
+							description="The IP Address for this user's connection" />
+						<c:simple-property displayName="Host Name"
+							name="getHostName" type="string"
+							description="The host name for this user's connection" />
+						<c:simple-property displayName="Last Ping Time"
+							name="getLastPingTime" type="string"
+							description="The last time this client was ping'd" />
+						<c:simple-property displayName="State"
+							name="getStateAsString" type="string"
+							description="The current state of this session" />
+					</c:map-property>
+				</c:list-property>
+			</results>
+		</operation>
+-->
+
+<!--
+		<operation name="listQueries" displayName="View current queries"
+			description="List current queries executing against the Teiid System">
+			<parameters>
+				<c:simple-property name="includeSourceQueries"
+					type="boolean" default="true"
+					description="If true, source queries will be included in the results.  If false, only top-level queries will be included in the results." />
+			</parameters>
+			<results>
+				<c:list-property name="list">
+					<c:map-property name="map">
+						<c:simple-property displayName="User Name"
+							name="getUserName" type="string"
+							description="The username for the user that submitted this query" />
+						<c:simple-property displayName="Session ID"
+							name="getSessionID" type="string"
+							description="The id for the session" />
+						<c:simple-property displayName="Request ID"
+							name="getRequestID" type="string"
+							description="The id for the request" />
+						<c:simple-property displayName="Start Time"
+							name="getCreated" type="string"
+							description="The time this query has been running" />
+						<c:simple-property displayName="Transaction ID"
+							name="getTransactionID" type="string"
+							description="The version of the VDB the user is connected to" />
+						<c:simple-property displayName="SQL String"
+							name="getSqlCommand" type="string"
+							description="The SQL string for this query" />
+						<c:simple-property
+							displayName="Connector Binding Name"
+							name="getConnectorBindingName" type="string"
+							description="The IP Address for this user's connection" />
+						<c:simple-property displayName="Node ID"
+							name="getNodeID" type="string"
+							description="The node ID of this query" />
+						<c:simple-property displayName="Source Request"
+							name="isSource" type="string"
+							description="If false this is the top level query. If true this a physical source query." />
+					</c:map-property>
+				</c:list-property>
+			</results>
+		</operation>
+-->
+		<operation name="listLongRunningQueries"
+			displayName="View current long running queries"
+			description="List current queries executing against the Teiid System that have surpassed the long running query threshhold">
+			<parameters>
+				<c:simple-property name="includeSourceQueries"
+					type="boolean" default="true"
+					description="If true, source queries will be included in the results.  If false, only top-level queries will be included in the results." />
+			</parameters>
+			<results>
+				<c:list-property name="list">
+					<c:map-property name="map">
+						<c:simple-property displayName="User Name"
+							name="getUserName" type="string"
+							description="The username for the user that submitted this query" />
+						<c:simple-property displayName="Session ID"
+							name="getSessionID" type="string"
+							description="The name of the resource whose availability is being reported" />
+						<c:simple-property displayName="Request ID"
+							name="getRequestID" type="string"
+							description="The id for the request" />
+						<c:simple-property displayName="Start Time"
+							name="getCreated" type="string"
+							description="The time this query has been running" />
+						<c:simple-property displayName="Transaction ID"
+							name="getTransactionID" type="string"
+							description="The version of the VDB the user is connected to" />
+						<c:simple-property displayName="SQL String"
+							name="getSqlCommand" type="string"
+							description="The SQL string for this query" />
+						<c:simple-property
+							displayName="Connector Binding Name"
+							name="getConnectorBindingName" type="string"
+							description="The IP Address for this user's connection" />
+						<c:simple-property displayName="Node ID"
+							name="getNodeID" type="string"
+							description="The node ID of this query" />
+						<c:simple-property displayName="Source Request"
+							name="isSource" type="string"
+							description="If false this is the top level query. If true this a physical source query." />
+					</c:map-property>
+				</c:list-property>
+			</results>
+		</operation>
+
+		<operation name="killRequest" displayName="Terminate query"
+			description="Terminate the processing of a query and it's source queries">
+			<parameters>
+				<c:simple-property displayName="SessionID|RequestID"
+					name="requestID" type="string" required="true"
+					description="The IDs of the session|request to terminate (use format = sessionID|requestID)" />
+			</parameters>
+		</operation>
+
+
+		<metric displayName="Query Count" defaultOn="true"
+			displayType="summary" category="throughput" property="queryCount"
+			description="The number of queries for a given point in time" />
+
+		<metric displayName="Long Running Queries" defaultOn="true"
+			displayType="summary" category="performance"
+			property="longRunningQueries"
+			description="The number of queries that have been running longer than the limit set for queries. The default is 60 minutes, but this may be overridden by the 'longRunningQueryTime' system variable." />
+
+		<metric displayName="Session Count" defaultOn="true"
+			displayType="summary" category="throughput" property="sessionCount"
+			description="The number of user connections for a given point in time" />
+
+		<resource-configuration>
+         <c:group name="general" displayName="General" hiddenByDefault="false">
+            <c:description>Query Configuration</c:description>
+            <c:simple-property name="longRunningQueryLimit" type="integer" activationPolicy="immediate" units="seconds" default="600" displayName="Long Running Query limit" description="The value (in seconds) to use to determine if a query is to be considered 'long running'.">
+             <c:constraint>
+          		<c:integer-constraint minimum="0" maximum="999999" />
+      		 </c:constraint>
+            </c:simple-property>
+	     </c:group>                 
+      </resource-configuration> 
+             
+           
+		<server name="Host"
+			discovery="HostDiscoveryComponent"
+			class="HostComponent"
+			description="Teiid Host"
+			createDeletePolicy="delete-only">
+
+				<resource-configuration>
+		        	<c:group name="hostinfo" displayName="Host Info">
+		        		<c:description>Host configuration information</c:description>
+		
+       						<c:simple-property name="metamatrix.installationDir" readOnly="true" required="false" displayName="Installation Directory" 
+                                  			description="The physical location of the Teiid server installation"/>
+			               <c:simple-property name="metamatrix.log.dir" readOnly="true" required="false" displayName="Log Directory" 
+			                                  description="The physical location of the Host log files"/>
+			               <c:simple-property name="metamatrix.data.dir"  readOnly="true" required="false" displayName="Data Directory" 
+			                                  description="The physical location of the internal Teiid dynamic data"/>
+			              <c:simple-property name="metamatrix.host.dir" readOnly="true" required="false" displayName="Host Directory" 
+			                                  description="The Host directory is where host specific files are located."/>
+			               <c:simple-property name="metamatrix.host.bind.address" readOnly="true" required="false" displayName="Bind Address" 
+			                                  description="The bind address determines what interfaces the host machine will be bound to."/>
+			               <c:simple-property name="metamatrix.host.physical.address" readOnly="true" required="false" displayName="Physical Address" 
+			                                  description="The physical address indicates what address a client application will use to connect."/>
+		     		</c:group>
+		      </resource-configuration> 
+
+
+		<service name="Process"
+			discovery="ProcessDiscoveryComponent"
+			class="ProcessComponent"
+			description="Teiid Process instance"
+			createDeletePolicy="both">
+			
+	        <plugin-configuration>
+		         <c:group name="event" displayName="Process Log Tracking">
+                     <c:simple-property name="enabled" type="boolean" summary="true" default="true" required="true"
+                                        description="A flag indicating whether of not this log Event source is currently
+                                                     enabled (i.e. whether the associated log file should be tailed for
+                                                     new entries)."/>
+                     <c:simple-property name="minimumSeverity" required="true" default="ERROR" 
+                                        description="The minimum severity of Events that should be collected for this
+                                                     source. The default is ERROR.">
+                         <c:property-options>
+                            <c:option name="DEBUG" value="DEBUG"/>
+                            <c:option name="INFO"  value="INFO"/>
+                            <c:option name="WARNING"  value="WARNING"/>
+                            <c:option name="ERROR" value="ERROR" default="true"/>
+                         </c:property-options>
+                     </c:simple-property>
+		         </c:group>	        
+	        </plugin-configuration>			
+	        
+				<operation name="restartProcess"
+					displayName="Re-start Process"
+					description="Start/re-start this process" />
+				<operation name="stopProcess"
+					displayName="Stop Process"
+					description="Stop this process">
+					<parameters>
+						<c:simple-property name="stopNow" type="boolean"
+							default="true"
+							description="If true, stop the process forcefully. If false, wait until any pending work is completed." />
+					</parameters>
+				</operation>
+
+
+			<metric displayName="Query High Water Mark" defaultOn="true"
+				displayType="summary" category="utilization"
+				property="highWatermark"
+				description="High water mark for queries in the Socket Worker Queue" />
+
+ 			<event name="errorLogEntry" description="an entry in a log file"/>  
+			<!-- Ted Jones - 06/19/08
+				Commenting out current threads metric until http://jira.jboss.org/jira/browse/JBEDSP-426 is resolved. -->
+			<!--     <metric displayName="Current Threads"
+				defaultOn="true"
+				displayType="summary"
+				category="utilization"
+				property="threadCount"
+				description="The number of active threads in the Socket Worker Queue"/> -->
+
+				<resource-configuration>
+		        	<c:group name="processinfo" displayName="Process Info">
+		        		<c:description>Process configuration information</c:description>
+			               <c:simple-property name="vm.enabled" type="boolean" displayName="Start Enabled Flag" 
+			                                  description="The enabled flag allows for disabling the VM from starting without have to remove it from deployment."/>
+			              <c:simple-property name="vm.socketPort" type="integer" displayName="Socket Port" 
+			                                  description="The port number for the process when socket communications are being used"/>
+		
+       						<c:simple-property name="vm.starter.cmd.java_opts"  displayName="Java Options" 
+                                  			description="These are the java options passed in before the main class"/>
+    						<c:simple-property name="vm.starter.minHeapSize"  displayName="Minimum Heap Size (MB)"  required="false"
+                                  			description="The bind address, when specified determines what address the vm will be bound to."/>
+			              	<c:simple-property name="vm.starter.maxHeapSize" type="integer" displayName="Maximum Heap Size (MB)" required="false"
+			                                  description="The maximum heap size, in megabytes, to be used for this VM.  If no value is provided for this property, the default property value from the configuration is used; if no value is specified anywhere, no maximum heap size will be set."/>
+		              	 	<c:simple-property name="vm.bind.address" type="string" displayName="VM Bind Address" required="false"
+			                                  description="The bind address, when specified determines what address the vm will be bound to."/>
+			               <c:simple-property name="vm.unicast.port" type="integer" displayName="Cluster Port for Unicast" 
+			                                  description="The port number for the process when unicast based clustering is used."/>
+			               <c:simple-property name="vm.minPort" type="integer" displayName="Min Port Number" 
+			                                  description="Min port number"/>
+	
+		     		</c:group>
+		        	<c:group name="tuning" displayName="Tuning">
+
+			               <c:simple-property name="vm.timetolive"  type="integer" displayName="Socket Worker Thread Time-To-Live (ms)" 
+			                                  description="Time-to-live (in milliseconds) for threads used to do work on client requests."/>
+			               <c:simple-property name="vm.maxThreads" type="integer" displayName="Max Threads"  required="false"
+			                                  description="Maximum socket listener threads.">
+								<c:defaultValueDescription>If nothing is specified, the default of 64 will be used.
+                        		</c:defaultValueDescription>
+							</c:simple-property>
+ 			               <c:simple-property name="vm.inputBufferSize"  type="integer" displayName="Socket Input BufferSize" 
+			                                  description="The size of socket buffer used when reading."/>
+			              <c:simple-property name="vm.forced.shutdown.time" type="integer" displayName="VM Forced Shutdown Time (secs)" 
+			                                  description="The the number of seconds the VM will wait until it will perform a force shutdown."/>
+			               <c:simple-property name="vm.outputBufferSize" type="integer" displayName="Socket Output BufferSize" 
+			                                  description="The size of the socket buffer used when writing."/>
+
+		     		</c:group>
+		      </resource-configuration> 
+
+
+			<service name="Connectors"
+				discovery="ConnectorDiscoveryComponent"
+				class="ConnectorComponent">
+
+				<resource-configuration>
+    				<c:group name="advanced" displayName="Advanced">
+
+	                  	<c:list-property name="config-property"
+	                                     displayName="Config Property"
+	                                     description="Configuration Properties"
+	                                     required="false">
+	                        <c:map-property name="property-values">
+	                            <c:simple-property name="config-property-name"
+	                                               displayName="Name"
+	                                               description="Name of the Configuration Property"
+	                                               required="true"/>
+	                            <c:simple-property name="config-property-type"
+	                                               displayName="Type"
+	                                               description="Type of the Configuration Property"
+	                                               required="true"/>
+	                            <c:simple-property name="config-property-value"
+	                                               displayName="Value"
+	                                               description="Value of the Configuration Property"
+	                                               required="true"/>
+	                        </c:map-property>
+	                    </c:list-property>
+	
+	                </c:group>
+	            </resource-configuration>
+
+				<operation name="restartConnector"
+					displayName="Re-start Connector"
+					description="Start/re-start this connector binding" />
+				<operation name="stopConnector"
+					displayName="Stop Connector"
+					description="Stop this connector binding">
+					<parameters>
+						<c:simple-property name="stopNow" type="boolean"
+							default="true"
+							description="If true, stop the connector binding forcefully. If false, wait until any pending work is completed." />
+					</parameters>
+				</operation>
+			</service>
+
+			<service name="Services"
+				discovery="ServiceDiscoveryComponent"
+				class="ServiceComponent">
+
+				<resource-configuration>
+    				<c:group name="advanced" displayName="Advanced">
+
+	                  	<c:list-property name="config-property"
+	                                     displayName="Config Property"
+	                                     description="Configuration Properties"
+	                                     required="false">
+	                        <c:map-property name="property-values">
+	                            <c:simple-property name="config-property-name"
+	                                               displayName="Name"
+	                                               description="Name of the Configuration Property"
+	                                               required="true"/>
+	                            <c:simple-property name="config-property-type"
+	                                               displayName="Type"
+	                                               description="Type of the Configuration Property"
+	                                               required="true"/>
+	                            <c:simple-property name="config-property-value"
+	                                               displayName="Value"
+	                                               description="Value of the Configuration Property"
+	                                               required="true"/>
+	                        </c:map-property>
+	                    </c:list-property>
+	
+	                </c:group>
+	            </resource-configuration>
+
+				<operation name="restart"
+					displayName="Re-start Service"
+					description="Start/re-start this service" />
+				<operation name="stop"
+					displayName="Stop Service"
+					description="Stop this service">
+					<parameters>
+						<c:simple-property name="stopNow" type="boolean"
+							default="true"
+							description="If true, stop the servie forcefully. If false, wait until any pending work is completed." />
+					</parameters>
+				</operation>
+			</service>
+
+		</service>  <!-- end of VM -->
+
+		</server>  <!-- end of Host -->
+
+	</server> <!-- end of System -->
+
+		<server name="Security"
+			discovery="NodeDiscoveryComponent"
+			description="Security"
+			class="SecurityComponent"
+			singleton="true">
+					
+				 <resource-configuration>
+			         <c:group name="configuration" displayName="Configuration">
+	                     <c:simple-property name="enabled" type="boolean" summary="true" default="false" required="true"
+	                                        description="A flag indicating whether or not security is enabled for this system."/>
+	                      <c:simple-property name="username" required="false" description="The name of the administrative principal (i.e. user) to authenticate."/>
+         				  <c:simple-property name="password" type="password" required="false"
+                            description="The credentials (i.e. password) that should be used to authenticate the administrative principal."/>
+			        </c:group>	        
+	        	</resource-configuration>		
+		</server> <!-- End of security -->	
+
+  </server> <!-- end of Platform -->
+
+
+
+<!--
+
+
+		<service name="Connector Types"
+			subCategory="Resources"
+			discovery="ResourceDiscoveryComponent"
+			class="ResourceComponent"
+			description="Connector Types"
+			createDeletePolicy="both"
+               creationDataType="content">
+
+				<operation name="getProperties"
+					displayName="View properties"
+					description="List the properties">
+					<results>
+						<c:list-property name="list">
+							<c:map-property name="map">
+								<c:simple-property name="Name" type="string"
+									description="The name of this property" />
+								<c:simple-property name="Connector Type" type="string"
+									description="The type of connector that defines this data source" />
+								<c:simple-property name="Default" type="string"
+									description="The default value when not defined by the user" />
+								<c:simple-property name="Masked" type="boolean"
+									description="Indicates if the property value requires masking after being entered.  A password would be a good example of a value needing masking." />
+								<c:simple-property name="Descritpion" type="string"
+									description="The property description" />
+							</c:map-property>
+						</c:list-property>
+					</results>
+				</operation>
+
+         <content name="file" displayName="CDK File" category="deployable" isCreationType="true">
+            <configuration>
+            </configuration>
+         </content>
+		</service>
+-->
+
+</plugin>
