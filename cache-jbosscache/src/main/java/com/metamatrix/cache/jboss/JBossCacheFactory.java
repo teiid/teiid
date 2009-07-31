@@ -111,6 +111,7 @@ public class JBossCacheFactory implements CacheFactory {
 	
 	public void destroy() {
 		jmxManager.unregisterAllMBeans();
+		this.cacheStore.stop();
 		this.cacheStore.destroy();
 		this.destroyed = true;		
 	}	

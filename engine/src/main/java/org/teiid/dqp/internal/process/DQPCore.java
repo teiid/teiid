@@ -161,6 +161,7 @@ public class DQPCore extends Application implements ClientSideDQP {
      */
 	@Override
     public void stop() throws ApplicationLifecycleException {
+		LogManager.logDetail(LogConstants.CTX_DQP, "Stopping the DQP"); //$NON-NLS-1$
     	processWorkerPool.shutdownNow();
     	try {
 			processWorkerPool.awaitTermination(10, TimeUnit.SECONDS);
