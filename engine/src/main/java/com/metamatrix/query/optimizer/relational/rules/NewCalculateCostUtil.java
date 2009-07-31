@@ -87,8 +87,8 @@ public class NewCalculateCostUtil {
     // the following variables are used to hold cost estimates (roughly in milliseconds)
     private final static float compareTime = .05f; //TODO: a better estimate would be based upon the number of conjuncts
     private final static float readTime = .001f;
-    private final static float procNewRequestTime = 100;
-    private final static float procMoreRequestTime = 15;
+    private final static float procNewRequestTime = 100; //TODO: should come from the connector
+    private final static float procMoreRequestTime = 15; //TODO: should come from the connector
     
     /**
      * Calculate cost of a node and all children, recursively from the bottom up.
@@ -100,10 +100,18 @@ public class NewCalculateCostUtil {
      */
     static float computeCostForTree(PlanNode node, QueryMetadataInterface metadata) 
         throws QueryMetadataException, MetaMatrixComponentException {
-        
-        recursiveComputeCost(node, metadata);
-        
+
         Float cost = (Float) node.getProperty(NodeConstants.Info.EST_CARDINALITY);
+
+    	// check if already computed
+        if(cost == null) {
+        	for (PlanNode child : node.getChildren()) {
+        		computeCostForTree(child, metadata);
+            }
+            computeNodeCost(node, metadata);
+            cost = (Float) node.getProperty(NodeConstants.Info.EST_CARDINALITY); 
+        }
+        
         if(cost != null) {
             return cost.floatValue();
         } 
@@ -112,33 +120,7 @@ public class NewCalculateCostUtil {
     }
    
     /**
-     * This method recursively estimates, from the bottom up, the cost of each node in
-     * the plan subtree.  If a cost can't be estimated for any node, the whole recursive
-     * operation is aborted.
-     * @param node
-     * @param metadata
-     * @throws QueryMetadataException
-     * @throws MetaMatrixComponentException
-     */
-    private static void recursiveComputeCost(PlanNode node, QueryMetadataInterface metadata) 
-        throws QueryMetadataException, MetaMatrixComponentException {
-        
-        // check if already computed
-        if(node.getProperty(NodeConstants.Info.EST_CARDINALITY) != null) {
-            return;
-        }
-        
-        Iterator children = node.getChildren().iterator();
-        while (children.hasNext()) {
-            PlanNode child = (PlanNode)children.next();
-            recursiveComputeCost(child, metadata);
-        }
-        computeNodeCost(node, metadata);
-    }
-
-    /**
-     * This method attempts to estimate a cost for each type of node
-     * that can be below an access node at this podouble in planning.
+     * This method attempts to estimate a cost for each type of node.
      * @param node
      * @param metadata
      * @throws QueryMetadataException
@@ -182,11 +164,10 @@ public class NewCalculateCostUtil {
 
             case NodeConstants.Types.PROJECT:
             {
-                PlanNode child = null;
                 Float childCost = null;
                 //Simply record the cost of the only child
                 if (node.getChildCount() != 0) {
-                    child = node.getFirstChild();
+                    PlanNode child = node.getFirstChild();
                     childCost = (Float)child.getProperty(NodeConstants.Info.EST_CARDINALITY);
                 } else {
                     childCost = new Float(1);
@@ -210,7 +191,9 @@ public class NewCalculateCostUtil {
 	                    // All rows will be projected so add both costs together.
 	                    cost += childCost1;
 	                }
-	                cost = getDistinctEstimate(node, metadata, cost);
+	                if (!node.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+	                	cost = getDistinctEstimate(node, metadata, cost);
+	                }
                 } else {
                 	float leftCost = (Float)node.getFirstChild().getProperty(NodeConstants.Info.EST_CARDINALITY);                	
                 	leftCost = getDistinctEstimate(node.getFirstChild(), metadata, leftCost);
@@ -279,11 +262,10 @@ public class NewCalculateCostUtil {
 	}
 
     private static void setCardinalityEstimate(PlanNode node, Float bestEstimate) {
-        if (bestEstimate != null){
-            node.setProperty(NodeConstants.Info.EST_CARDINALITY, bestEstimate);
-        } else {
-            node.setProperty(NodeConstants.Info.EST_CARDINALITY, new Float(UNKNOWN_VALUE));
+        if (bestEstimate == null){
+        	bestEstimate = Float.valueOf(UNKNOWN_VALUE);
         }
+        node.setProperty(NodeConstants.Info.EST_CARDINALITY, bestEstimate);
     }
 
     /**
@@ -559,8 +541,7 @@ public class NewCalculateCostUtil {
     private static float estimatePredicateCost(float childCost, PlanNode currentNode, PredicateCriteria predicateCriteria, QueryMetadataInterface metadata)
         throws QueryMetadataException, MetaMatrixComponentException {
         
-        HashSet elements = new HashSet();
-        ElementCollectorVisitor.getElements(predicateCriteria, elements);
+        Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(predicateCriteria, true);
         
         Collection groups = GroupsUsedByElementsVisitor.getGroups(predicateCriteria);
         boolean multiGroup = groups.size() > 1;
@@ -787,7 +768,7 @@ public class NewCalculateCostUtil {
         return cost;
     }
     
-    static boolean usesKey(Collection<SingleElementSymbol> allElements, QueryMetadataInterface metadata)
+    static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, MetaMatrixComponentException {
     
         if(allElements == null || allElements.size() == 0) { 
@@ -796,9 +777,7 @@ public class NewCalculateCostUtil {
      
         // Sort elements into groups
         Map groupMap = new HashMap();
-        Iterator elementIter = allElements.iterator();
-        while(elementIter.hasNext()) { 
-        	SingleElementSymbol ses = (SingleElementSymbol) elementIter.next();
+        for (SingleElementSymbol ses : allElements) {
         	if (!(ses instanceof ElementSymbol)) {
         		continue;
         	}
@@ -842,7 +821,7 @@ public class NewCalculateCostUtil {
      * @return
      * @since 4.3
      */
-    private static float getCardinality(HashSet elements, QueryMetadataInterface metadata) 
+    private static float getCardinality(Collection elements, QueryMetadataInterface metadata) 
         throws QueryMetadataException, MetaMatrixComponentException {
         
         if(elements.size() != 1) {
@@ -879,7 +858,7 @@ public class NewCalculateCostUtil {
      * @return
      * @since 4.3
      */
-    private static boolean isNullable(HashSet elements, QueryMetadataInterface metadata) 
+    private static boolean isNullable(Collection elements, QueryMetadataInterface metadata) 
         throws QueryMetadataException, MetaMatrixComponentException {
         
         if(elements.size() != 1) {
@@ -896,7 +875,7 @@ public class NewCalculateCostUtil {
      * @return
      * @since 4.3
      */
-    private static float getNNV(HashSet elements, QueryMetadataInterface metadata) 
+    private static float getNNV(Collection elements, QueryMetadataInterface metadata) 
         throws QueryMetadataException, MetaMatrixComponentException {
         
         if(elements.size() != 1) {
@@ -1019,7 +998,7 @@ public class NewCalculateCostUtil {
         
         independentNode.setProperty(NodeConstants.Info.EST_SET_SIZE, new Float(indSymbolNDV));
         
-        //for non-partitioned joins the cardinatlity of the dependentaccess should never be greater than the dependent cardinality
+        //for non-partitioned joins the cardinality of the dependentaccess should never be greater than the dependent cardinality
         //TODO: when partitioned joins are implemented, this logic will need updated
         float dependentAccessCardinality = Math.min(dependentCardinality, dependentCardinality * indSymbolNDV / depSymbolNDV);
         

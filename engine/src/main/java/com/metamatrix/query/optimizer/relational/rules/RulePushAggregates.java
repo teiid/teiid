@@ -175,15 +175,7 @@ public class RulePushAggregates implements
 		}
 		
 		//check to see if any aggregate is dependent upon cardinality
-		boolean cardinalityDependent = false;
-		for (AggregateSymbol aggregateSymbol : aggregates) {
-			if (aggregateSymbol.getAggregateFunction().equals(ReservedWords.COUNT)
-					|| aggregateSymbol.getAggregateFunction().equals(ReservedWords.AVG)
-					|| aggregateSymbol.getAggregateFunction().equals(ReservedWords.SUM)) {
-				cardinalityDependent = true;
-				break;
-			}
-		}
+		boolean cardinalityDependent = RuleRemoveOptionalJoins.areAggregatesCardinalityDependent(aggregates);
 		
 		LinkedList<PlanNode> unionChildren = new LinkedList<PlanNode>();
 		findUnionChildren(unionChildren, cardinalityDependent, setOp);

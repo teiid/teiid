@@ -29,6 +29,7 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -96,7 +97,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 	}
                     plan = removeUnnecessaryInlineView(plan, commandRoot);
                     QueryCommand queryCommand = createQuery(metadata, capFinder, accessNode, commandRoot);
-                	addSetOpDistinct(metadata, capFinder, accessNode, queryCommand);
+                	addDistinct(metadata, capFinder, accessNode, queryCommand);
                     command = queryCommand;
                     if (intoGroup != null) {
                     	Insert insertCommand = new Insert(intoGroup, ResolverUtil.resolveElementsInGroup(intoGroup, metadata), null);
@@ -112,29 +113,55 @@ public final class RuleCollapseSource implements OptimizerRule {
 		return plan;
 	}
 
-	private void addSetOpDistinct(QueryMetadataInterface metadata,
+	/**
+	 * This functions as "RulePushDistinct", however we do not bother
+	 * checking to see if a parent dup removal can actually be removed
+	 * - which can only happen if there are sources/selects/simple projects/limits/order by
+	 * between the access node and the parent dup removal.
+	 * 
+	 * @param metadata
+	 * @param capFinder
+	 * @param accessNode
+	 * @param queryCommand
+	 * @throws QueryMetadataException
+	 * @throws MetaMatrixComponentException
+	 */
+	private void addDistinct(QueryMetadataInterface metadata,
 			CapabilitiesFinder capFinder, PlanNode accessNode,
 			QueryCommand queryCommand) throws QueryMetadataException,
 			MetaMatrixComponentException {
-		if (queryCommand.getLimit() != null && queryCommand.getOrderBy() != null) {
+		if (queryCommand.getLimit() != null) {
 			return; //TODO: could create an inline view
 		}
-		PlanNode parent = accessNode.getParent();
-		boolean dupRemoval = false;
-		while (parent != null && parent.getType() == NodeConstants.Types.SET_OP) {
-			if (!parent.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
-				dupRemoval = true;
-			}
-			parent = parent.getParent();
+		if (queryCommand.getOrderBy() == null) {
+			/* 
+			 * we're assuming that a pushed order by implies that the cost of the distinct operation 
+			 * will be marginal - which is not always true.
+			 * 
+			 * TODO: we should add costing for the benefit of pushing distinct by itself
+			 * cardinality without = c
+			 * assume cost ~ c lg c for c' cardinality and a modification for associated bandwidth savings
+			 * recompute cost of processing plan with c' and see if new cost + c lg c < original cost
+			 */
+			return; 
 		}
-		if (!dupRemoval || NewCalculateCostUtil.usesKey(queryCommand.getProjectedSymbols(), metadata)) {
+		if (RuleRemoveOptionalJoins.useNonDistinctRows(accessNode.getParent())) {
 			return;
 		}
-		//TODO: we should also order the results and update the set processing logic
-		// this requires that we can guarantee null ordering
+		// ensure that all columns are comparable - they might not be if there is an intermediate project
+		for (SingleElementSymbol ses : queryCommand.getProjectedSymbols()) {
+			if (DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(ses.getType()))) {
+				return;
+			}
+		}
+		/* 
+		 * TODO: if we are under a grouping/union not-all, then we should also fully order the results 
+		 * and update the processing logic (this requires that we can guarantee null ordering) to assume sorted
+		 */
 		if (queryCommand instanceof SetQuery) {
 			((SetQuery)queryCommand).setAll(false);
-		} else if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
+		} else if (!NewCalculateCostUtil.usesKey(queryCommand.getProjectedSymbols(), metadata) && CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
+			//TODO: could check for group by and a select clause containing all group by expressions
 			((Query)queryCommand).getSelect().setDistinct(true);
 		}
 	}

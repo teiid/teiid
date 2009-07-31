@@ -73,7 +73,7 @@ public class TestUnionPlanning extends TestCase {
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT IntKey FROM BQT1.SmallA UNION SELECT IntNum FROM BQT2.SmallA UNION ALL SELECT IntNum FROM BQT1.SmallA", FakeMetadataFactory.exampleBQTCached(), null, capFinder,//$NON-NLS-1$
-            new String[] { "SELECT DISTINCT IntNum FROM BQT2.SmallA", "SELECT DISTINCT IntKey FROM BQT1.SmallA", "SELECT IntNum FROM BQT1.SmallA" }, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+            new String[] { "SELECT IntNum FROM BQT2.SmallA", "SELECT IntKey FROM BQT1.SmallA", "SELECT IntNum FROM BQT1.SmallA" }, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             3,      // Access

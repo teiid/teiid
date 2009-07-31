@@ -902,28 +902,28 @@ public class TestOptimizer extends TestCase {
     public void testPushingCriteriaThroughUnion1() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc'", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
     public void testPushingCriteriaThroughUnion2() { 
     	helpPlan("select e1 from vm1.u2 where e1='abc'", example1(), //$NON-NLS-1$
-			new String[] { "SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+			new String[] { "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
   	}
 
     public void testPushingCriteriaThroughUnion3() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc' and e2=5", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') AND (pm1.g3.e2 = 5)", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') AND (pm1.g2.e2 = 5)", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') AND (pm1.g1.e2 = 5)" } ); //$NON-NLS-1$
+							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') AND (pm1.g2.e2 = 5)", //$NON-NLS-1$
+							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') AND (pm1.g1.e2 = 5)" } ); //$NON-NLS-1$
   	}
 
     public void testPushingCriteriaThroughUnion4() { 
     	helpPlan("select e1 from vm1.u1 where e1='abc' or e2=5", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE (pm1.g3.e1 = 'abc') OR (pm1.g3.e2 = 5)", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)" } ); //$NON-NLS-1$
+							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE (pm1.g1.e1 = 'abc') OR (pm1.g1.e2 = 5)", //$NON-NLS-1$
+							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE (pm1.g2.e1 = 'abc') OR (pm1.g2.e2 = 5)" } ); //$NON-NLS-1$
   	}
 
 	// expression in a subquery of the union
@@ -992,8 +992,8 @@ public class TestOptimizer extends TestCase {
     	ProcessorPlan plan = helpPlan("select vm1.u1.e1 from vm1.u1, pm1.g1 where vm1.u1.e1='abc' and vm1.u1.e1=pm1.g1.e1", example1(), //$NON-NLS-1$
 			new String[] { "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'", //$NON-NLS-1$
                             "SELECT pm1.g3.e1, pm1.g3.e2, pm1.g3.e3, pm1.g3.e4 FROM pm1.g3 WHERE pm1.g3.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
-							"SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
+							"SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2 WHERE pm1.g2.e1 = 'abc'", //$NON-NLS-1$
+							"SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1 WHERE pm1.g1.e1 = 'abc'" } ); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
             4,      // Access
             0,      // DependentAccess
@@ -1137,8 +1137,8 @@ public class TestOptimizer extends TestCase {
     
     public void testDefect5283() {        
         helpPlan("select * from vm1.a6", example1(), //$NON-NLS-1$
-            new String[] { "SELECT DISTINCT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", //$NON-NLS-1$
-                            "SELECT DISTINCT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2" } ); //$NON-NLS-1$
+            new String[] { "SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", //$NON-NLS-1$
+                            "SELECT pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4 FROM pm1.g2" } ); //$NON-NLS-1$
     }
     
     public void testManyJoinsOverThreshold() throws Exception {

@@ -217,7 +217,7 @@ public class RuleRemoveOptionalJoins implements
         JoinType jt = (JoinType)joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         
         if (!optionalNode.hasBooleanProperty(NodeConstants.Info.IS_OPTIONAL) && 
-        		!(jt == JoinType.JOIN_LEFT_OUTER && optionalNode == joinNode.getLastChild() && isDistinct(joinNode.getParent()))) {
+        		(jt != JoinType.JOIN_LEFT_OUTER || optionalNode != joinNode.getLastChild() || useNonDistinctRows(joinNode.getParent()))) {
         	return false;
         }
     	// remove the parent node and move the sibling node upward
@@ -242,30 +242,40 @@ public class RuleRemoveOptionalJoins implements
      * Ensure that the needed elements come only from the left hand side and 
      * that cardinality won't matter
      */
-    private boolean isDistinct(PlanNode parent) {
+    static boolean useNonDistinctRows(PlanNode parent) {
 		while (parent != null) {
 			switch (parent.getType()) {
 				case NodeConstants.Types.DUP_REMOVE: {
-					return true;
+					return false;
 				}
 				case NodeConstants.Types.SET_OP: {
 					if (!parent.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
-						return true;
+						return false;
 					}
 					break;
 				}
 				case NodeConstants.Types.GROUP: {
 					Set<AggregateSymbol> aggs = RulePushAggregates.collectAggregates(parent);
-					for (AggregateSymbol aggregateSymbol : aggs) {
-						if (aggregateSymbol.getAggregateFunction().equalsIgnoreCase(ReservedWords.COUNT) || 
-								aggregateSymbol.getAggregateFunction().equalsIgnoreCase(ReservedWords.AVG)) {
-							return false;
-						}
-					}
-					return true;
+					return areAggregatesCardinalityDependent(aggs);
 				}
+				case NodeConstants.Types.TUPLE_LIMIT: {
+					if (parent.getFirstChild().getType() == NodeConstants.Types.SORT) {
+						return true;
+					}
+				}
+				//we assmue that projects of non-deterministic expressions do not matter
 			}
 			parent = parent.getParent();
+		}
+		return true;
+	}
+
+	static boolean areAggregatesCardinalityDependent(Set<AggregateSymbol> aggs) {
+		for (AggregateSymbol aggregateSymbol : aggs) {
+			if (aggregateSymbol.getAggregateFunction().equalsIgnoreCase(ReservedWords.COUNT) || 
+					aggregateSymbol.getAggregateFunction().equalsIgnoreCase(ReservedWords.AVG)) {
+				return true;
+			}
 		}
 		return false;
 	}

@@ -129,8 +129,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         PlanNode sortNode = createSortNode(orderSymbols, outputSymbols, directions);
         
         if (sourceNode.getType() == NodeConstants.Types.ACCESS) {
-        	if (NodeEditor.findAllNodes(sourceNode, NodeConstants.Types.SOURCE).size() == 1 
-        			&& NewCalculateCostUtil.usesKey(expressions, metadata)) {
+        	if (NewCalculateCostUtil.usesKey(expressions, metadata)) {
                 joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
         	}
 	        if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode)) {

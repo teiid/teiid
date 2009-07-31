@@ -214,7 +214,7 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
     <sect2>
       <title>Partial Aggregate Pushdown</title>
       <para> Partial aggregate pushdown allows for grouping operations
-        above multi-source joins to be decomposed so that some of the
+        above multi-source joins and unions to be decomposed so that some of the
         grouping and aggregate functions may be pushed down to the
         sources.</para>
     </sect2>
@@ -239,10 +239,13 @@ Departments AS d ON e.dept_id = d.dept_id WHERE year(e.birthday) &gt;= 1970 AND 
       </para>
       <programlisting>select a.column1 from a</programlisting>
       <tip>
-        <para> When a join clause is omitted, the relevant join criteria
+        <para>When a join clause is omitted via the optional join hint, the relevant join criteria
           is not applied. Thus it is possible that the query results may
           not have the same cardinality or even the same row values as
           when the join is fully applied.</para>
+	    <para>Left/right outer joins where the inner side values are not used
+		  and whose rows under go a distinct operation will automatically be
+		  treated as an optional join and does not require a hint.</para>
       </tip>
     </sect2>
     <sect2 id="standard_relational_techniques">
