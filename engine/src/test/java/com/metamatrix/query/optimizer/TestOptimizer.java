@@ -53,7 +53,7 @@ import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.relational.AliasGenerator;
 import com.metamatrix.query.optimizer.relational.rules.CapabilitiesUtil;
-import com.metamatrix.query.optimizer.relational.rules.NewCalculateCostUtil;
+import com.metamatrix.query.optimizer.relational.rules.RuleChooseDependent;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.AccessNode;
@@ -3085,7 +3085,7 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3122,9 +3122,9 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3197,9 +3197,9 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm2.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3238,9 +3238,9 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm2.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3282,9 +3282,9 @@ public class TestOptimizer extends TestCase {
         FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         FakeMetadataObject model2 = metadata.getStore().findObject("pm2", FakeMetadataObject.MODEL); //$NON-NLS-1$
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm2.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3324,9 +3324,9 @@ public class TestOptimizer extends TestCase {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject model = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3364,11 +3364,11 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 500));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
         FakeMetadataObject g3 = metadata.getStore().findObject("pm1.g3", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g3.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g3.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3501,9 +3501,9 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         FakeMetadataObject g1 = metadata.getStore().findObject("pm1.g1", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST - 1));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
         FakeMetadataObject g2 = metadata.getStore().findObject("pm1.g2", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -4440,9 +4440,9 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
         FakeMetadataObject g1 = metadata.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST - 1));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
         FakeMetadataObject g2 = metadata.getStore().findObject("BQT1.SmallB", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
          
         ProcessorPlan plan = helpPlan(
             "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA, BQT1.SmallB WHERE (BQT1.SmallA.IntKey = lookup('BQT1.SmallB', 'IntKey', 'StringKey', BQT1.SmallB.StringKey)) AND (BQT1.SmallA.IntKey = 1)",  //$NON-NLS-1$
@@ -4484,9 +4484,9 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
         FakeMetadataObject g1 = metadata.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST - 1));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
         FakeMetadataObject g2 = metadata.getStore().findObject("BQT1.MediumB", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
          
         ProcessorPlan plan = helpPlan(
             "SELECT BQT1.SmallA.IntKey, BQT1.MediumB.IntKey FROM BQT1.SmallA LEFT OUTER JOIN BQT1.MediumB ON BQT1.SmallA.IntKey = lookup('BQT1.MediumB', 'IntKey', 'StringKey', BQT1.MediumB.StringKey)",  //$NON-NLS-1$
@@ -4528,9 +4528,9 @@ public class TestOptimizer extends TestCase {
 
         FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQT();
         FakeMetadataObject g1 = metadata.getStore().findObject("BQT1.SmallA", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST - 1));
+        g1.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY - 1));
         FakeMetadataObject g2 = metadata.getStore().findObject("BQT1.MediumB", FakeMetadataObject.GROUP); //$NON-NLS-1$
-        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(NewCalculateCostUtil.DEFAULT_STRONG_COST + 1000));
+        g2.putProperty(FakeMetadataObject.Props.CARDINALITY, new Integer(RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000));
          
         ProcessorPlan plan = helpPlan(
             "SELECT BQT1.SmallA.IntKey, BQT1.MediumB.IntKey FROM BQT1.MediumB RIGHT OUTER JOIN BQT1.SmallA ON BQT1.SmallA.IntKey = lookup('BQT1.MediumB', 'IntKey', 'StringKey',BQT1.MediumB.StringKey)",  //$NON-NLS-1$          

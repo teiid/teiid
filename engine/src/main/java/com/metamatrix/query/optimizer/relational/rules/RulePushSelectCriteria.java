@@ -235,6 +235,8 @@ public final class RulePushSelectCriteria implements OptimizerRule {
     void pushTowardOriginatingNode(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
 		throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
+    	boolean groupSelects = sourceNode.getParent().getType() == NodeConstants.Types.SELECT && sourceNode.getChildCount() == 0;
+        
         //to keep a stable criteria ordering, move the sourceNode to the top of the criteria chain
         while (sourceNode.getParent().getType() == NodeConstants.Types.SELECT) {
             sourceNode = sourceNode.getParent();
@@ -247,6 +249,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		PlanNode destination = examinePath(critNode, sourceNode, metadata, capFinder);
         NodeEditor.removeChildNode(critNode.getParent(), critNode);
         destination.addAsParent(critNode);
+        if (groupSelects && destination == sourceNode) {
+        	RuleMergeCriteria.mergeChain(critNode);
+        }
 	}
 
     /**

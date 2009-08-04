@@ -339,13 +339,13 @@ public final class RuleCopyCriteria implements OptimizerRule {
                                  Set allCriteria) {
         //First examine criteria in critNode for suitability
         Criteria crit = (Criteria) node.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-        if(node.getGroups().size() == 1 && crit != null) {
-            
+        if(node.getGroups().size() == 1) {
+            List<Criteria> crits = Criteria.separateCriteriaByAnd(crit);
             if(!node.hasBooleanProperty(NodeConstants.Info.IS_HAVING) && node.getSubqueryContainers().isEmpty()) {
                 if (!node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)) {
-                    toCopy.add(crit);
+                    toCopy.addAll(crits);
                 }
-                allCriteria.add(crit);
+                allCriteria.addAll(crits);
             }
         }
     }

@@ -160,7 +160,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 		 */
 		if (queryCommand instanceof SetQuery) {
 			((SetQuery)queryCommand).setAll(false);
-		} else if (!NewCalculateCostUtil.usesKey(queryCommand.getProjectedSymbols(), metadata) && CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
+		} else if (!NewCalculateCostUtil.usesKey(accessNode, queryCommand.getProjectedSymbols(), metadata) && CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
 			//TODO: could check for group by and a select clause containing all group by expressions
 			((Query)queryCommand).getSelect().setDistinct(true);
 		}

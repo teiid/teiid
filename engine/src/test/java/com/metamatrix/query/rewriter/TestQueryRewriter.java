@@ -2216,4 +2216,11 @@ public class TestQueryRewriter {
     	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
     }
     
+    @Test public void testRewriteLike() {
+    	String original = "pm1.g1.e1 like '%'"; //$NON-NLS-1$
+    	String expected = "1 = 1"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
 }

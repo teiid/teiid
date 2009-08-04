@@ -10000,7 +10000,7 @@ public class TestXMLProcessor extends TestCase {
 
      
     /**
-     * Test for Merrill - if no data is contained in the soap elements
+     * if no data is contained in the soap elements
      * (e.g. ORG:ArrayOfTaxID) and the schema allows it, eliminate the 
      * whole fragment
      */        

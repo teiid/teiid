@@ -315,8 +315,7 @@ class JoinRegion {
     public void initializeCostingInformation(QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
         for (Iterator i = joinSourceNodes.values().iterator(); i.hasNext();) {
             PlanNode node = (PlanNode)i.next();
-            float value = NewCalculateCostUtil.computeCostForTree(node, metadata);
-            node.setProperty(NodeConstants.Info.EST_CARDINALITY, new Float(value));
+            NewCalculateCostUtil.computeCostForTree(node, metadata);
         }
         
         estimateCriteriaSelectivity(metadata);        

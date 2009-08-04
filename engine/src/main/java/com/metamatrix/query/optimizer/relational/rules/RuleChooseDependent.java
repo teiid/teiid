@@ -61,6 +61,8 @@ public final class RuleChooseDependent implements OptimizerRule {
         boolean leftCandidate;
         boolean rightCandidate;
     }
+
+	public static final int DEFAULT_INDEPENDENT_CARDINALITY = 10;
     
     public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
@@ -104,25 +106,14 @@ public final class RuleChooseDependent implements OptimizerRule {
             if (depJoinCost != NewCalculateCostUtil.UNKNOWN_VALUE) {
                 pushCriteria |= decideForAgainstDependentJoin(depJoinCost, independentNode, dependentNode, joinNode, metadata, context);
             } else {
-                boolean siblingStrong = NewCalculateCostUtil.isNodeStrong(siblingNode, metadata, context);
-                boolean sourceStrong = NewCalculateCostUtil.isNodeStrong(sourceNode, metadata, context);
-                
-                if (!bothCandidates) {
-                    if (siblingStrong) {
-                        pushCriteria |= markDependent(sourceNode, joinNode);
-                    } 
-                } else {
-                    if (siblingStrong && !sourceStrong) {
-                        pushCriteria |= markDependent(sourceNode, joinNode);
-                    } else if (!siblingStrong && sourceStrong) {
-                        pushCriteria |= markDependent(siblingNode, joinNode);
-                    } else if (siblingStrong && sourceStrong) {
-                        if (NewCalculateCostUtil.computeCostForTree(sourceNode, metadata) <= NewCalculateCostUtil.computeCostForTree(siblingNode, metadata)) {
-                            pushCriteria |= markDependent(siblingNode, joinNode);
-                        } else {
-                            pushCriteria |= markDependent(sourceNode, joinNode);
-                        }
-                    }
+            	float sourceCost = NewCalculateCostUtil.computeCostForTree(sourceNode, metadata);
+            	float siblingCost = NewCalculateCostUtil.computeCostForTree(siblingNode, metadata);
+            	
+                if (bothCandidates && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
+                		&& (sourceCost < siblingCost || siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE)) {
+                    pushCriteria |= markDependent(siblingNode, joinNode);
+                } else if (siblingCost != NewCalculateCostUtil.UNKNOWN_VALUE && siblingCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY) {
+                    pushCriteria |= markDependent(sourceNode, joinNode);
                 }
             }
         }

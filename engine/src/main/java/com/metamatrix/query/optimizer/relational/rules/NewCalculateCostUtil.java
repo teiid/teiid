@@ -26,6 +26,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,8 +78,6 @@ public class NewCalculateCostUtil {
 
     public static final float UNKNOWN_VALUE = -1;
     
-    public static final int DEFAULT_STRONG_COST = 10;
-    
     // These batch size should generally not be used as they should be retrieved from the 
     // command context, however they might be used in test scenarios where that is undefined
     static final int DEFAULT_PROCESSOR_BATCH_SIZE = 2000;
@@ -86,7 +85,7 @@ public class NewCalculateCostUtil {
     
     // the following variables are used to hold cost estimates (roughly in milliseconds)
     private final static float compareTime = .05f; //TODO: a better estimate would be based upon the number of conjuncts
-    private final static float readTime = .001f;
+    private final static float readTime = .001f; //TODO: should come from the connector
     private final static float procNewRequestTime = 100; //TODO: should come from the connector
     private final static float procMoreRequestTime = 15; //TODO: should come from the connector
     
@@ -177,48 +176,7 @@ public class NewCalculateCostUtil {
             }
             case NodeConstants.Types.SET_OP: 
             {
-                float cost = 0;
-                
-                SetQuery.Operation op = (SetQuery.Operation)node.getProperty(NodeConstants.Info.SET_OPERATION);
-
-                if (op == SetQuery.Operation.UNION) {
-	                for (PlanNode childNode : node.getChildren()) {
-	                    float childCost1 = (Float)childNode.getProperty(NodeConstants.Info.EST_CARDINALITY);
-	                    if (childCost1 == UNKNOWN_VALUE) {
-	                        cost = UNKNOWN_VALUE;
-	                        break;
-	                    } 
-	                    // All rows will be projected so add both costs together.
-	                    cost += childCost1;
-	                }
-	                if (!node.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
-	                	cost = getDistinctEstimate(node, metadata, cost);
-	                }
-                } else {
-                	float leftCost = (Float)node.getFirstChild().getProperty(NodeConstants.Info.EST_CARDINALITY);                	
-                	leftCost = getDistinctEstimate(node.getFirstChild(), metadata, leftCost);
-                    
-                    float rightCost = (Float)node.getLastChild().getProperty(NodeConstants.Info.EST_CARDINALITY);
-                    rightCost = getDistinctEstimate(node.getLastChild(), metadata, rightCost);
-                    
-                    cost = leftCost;
-                    
-                	if (op == SetQuery.Operation.EXCEPT) {
-                        if (leftCost != UNKNOWN_VALUE && rightCost != UNKNOWN_VALUE) {
-                        	cost = Math.max(1, leftCost - rightCost);
-                        }                    		
-                	} else {
-                		if (rightCost != UNKNOWN_VALUE) {
-                			if (leftCost != UNKNOWN_VALUE) {
-                        		cost = Math.min(leftCost, rightCost);
-                			} else {
-                				cost = rightCost;
-                			}
-                		}
-                	}
-                }                
-                
-                setCardinalityEstimate(node, new Float(cost));
+                estimateSetOpCost(node, metadata);
                 break;
             }
             case NodeConstants.Types.TUPLE_LIMIT: 
@@ -249,14 +207,58 @@ public class NewCalculateCostUtil {
         }
     }
 
+	private static void estimateSetOpCost(PlanNode node,
+			QueryMetadataInterface metadata) throws QueryMetadataException,
+			MetaMatrixComponentException {
+		float cost = 0;
+		
+		SetQuery.Operation op = (SetQuery.Operation)node.getProperty(NodeConstants.Info.SET_OPERATION);
+
+		float leftCost = (Float)node.getFirstChild().getProperty(NodeConstants.Info.EST_CARDINALITY);
+		float rightCost = (Float)node.getLastChild().getProperty(NodeConstants.Info.EST_CARDINALITY);
+		
+		if (!node.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+			leftCost = getDistinctEstimate(node.getFirstChild(), metadata, leftCost);
+			rightCost = getDistinctEstimate(node.getLastChild(), metadata, rightCost);
+		}
+		
+		cost = leftCost;
+		
+		switch (op) {
+		case EXCEPT:
+			if (leftCost != UNKNOWN_VALUE && rightCost != UNKNOWN_VALUE) {
+		    	cost = Math.max(1, leftCost - .5f * rightCost);
+		    }
+			break;
+		case INTERSECT:
+			if (rightCost != UNKNOWN_VALUE) {
+				if (leftCost != UNKNOWN_VALUE) {
+		    		cost = .5f * Math.min(leftCost, rightCost);
+				} else {
+					cost = rightCost;
+				}
+			}
+			break;
+		default: //union
+			if (leftCost != UNKNOWN_VALUE && rightCost != UNKNOWN_VALUE) {
+		        if (!node.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
+		        	cost = Math.max(leftCost, rightCost) + .5f * Math.min(leftCost, rightCost);
+		        } else {
+		            cost = rightCost + leftCost;
+		        }
+			}
+			break;
+		}
+		
+		setCardinalityEstimate(node, new Float(cost));
+	}
+
 	private static float getDistinctEstimate(PlanNode node,
 			QueryMetadataInterface metadata, float cost)
 			throws QueryMetadataException, MetaMatrixComponentException {
-		if (!node.hasBooleanProperty(NodeConstants.Info.USE_ALL)) {
-			PlanNode projectNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.PROJECT);
-			if (projectNode != null) {
-				cost = getDistinctEstimate(projectNode, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), metadata, cost);
-			}
+		PlanNode projectNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.PROJECT);
+		if (projectNode != null) {
+			cost = getDistinctEstimate(projectNode, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), metadata, cost);
 		}
 		return cost;
 	}
@@ -393,14 +395,12 @@ public class NewCalculateCostUtil {
         if(elements == null) {
             return new Float(childCost);
         }
-        HashSet elems = new HashSet();
-        for(Iterator iter = elements.iterator(); iter.hasNext();) {
-            Expression expression = (Expression)iter.next();
-            ElementCollectorVisitor.getElements(expression, elems);
+        HashSet<ElementSymbol> elems = new HashSet<ElementSymbol>();
+        ElementCollectorVisitor.getElements(elements, elems);
+        if (usesKey(elements, metadata)) {
+        	return new Float(childCost);
         }
-        elements = new ArrayList(elems);
-        
-        float ndvCost = getMaxNDV(elements, node, childCost, metadata);
+        float ndvCost = getNDV(elems, node, childCost, metadata);
         if(ndvCost == UNKNOWN_VALUE) {
             ndvCost = childCost;
         }
@@ -417,21 +417,15 @@ public class NewCalculateCostUtil {
             CompoundCriteria compCrit = (CompoundCriteria) crit;
             if (compCrit.getOperator() == CompoundCriteria.OR) {
                 cost = 0;
-            } else { //check for composite key
-                HashSet elements = new HashSet();
-                Iterator crits = compCrit.getCriteria().iterator();
-                while(crits.hasNext()) { 
-                    Criteria aCrit =  (Criteria) crits.next();
-                    collectElementsOfValidCriteria(aCrit, elements);
-                }
-                if (usesKey(elements, metadata)) {
-                    return 1;
-                }
+            } 
+            HashSet<ElementSymbol> elements = new HashSet<ElementSymbol>();
+            collectElementsOfValidCriteria(compCrit, elements);
+            if (usesKey(elements, metadata)) {
+                return 1;
             }
 
-            Iterator iter = compCrit.getCriteria().iterator();
-            while(iter.hasNext()) { 
-                float nextCost = recursiveEstimateCostOfCriteria(childCost, currentNode, (Criteria) iter.next(), metadata);
+            for (Criteria critPart : compCrit.getCriteria()) {
+                float nextCost = recursiveEstimateCostOfCriteria(childCost, currentNode, critPart, metadata);
                 
                 if(compCrit.getOperator() == CompoundCriteria.AND) {
                     if (nextCost == UNKNOWN_VALUE) {
@@ -496,15 +490,28 @@ public class NewCalculateCostUtil {
      * @param elements Collection to collect ElementSymbols in
      * @since 4.2
      */
-    private static void collectElementsOfValidCriteria(Criteria criteria, Collection elements) {
+    private static void collectElementsOfValidCriteria(Criteria criteria, Collection<ElementSymbol> elements) {
        
         if(criteria instanceof CompoundCriteria) {
             CompoundCriteria compCrit = (CompoundCriteria) criteria;
-            if(compCrit.getOperator() == CompoundCriteria.AND) {
-                Iterator iter = compCrit.getCriteria().iterator();
-                while(iter.hasNext()) { 
-                    collectElementsOfValidCriteria((Criteria) iter.next(), elements);
-                }
+            Iterator iter = compCrit.getCriteria().iterator();
+            boolean first = true;
+            Collection<ElementSymbol> savedElements = elements;
+            if(compCrit.getOperator() == CompoundCriteria.OR) {
+            	elements = new HashSet<ElementSymbol>();
+            }
+            while(iter.hasNext()) { 
+            	if(compCrit.getOperator() == CompoundCriteria.AND || first) {
+            		collectElementsOfValidCriteria((Criteria) iter.next(), elements);
+            		first = false;
+            	} else {
+            		HashSet<ElementSymbol> other = new HashSet<ElementSymbol>();
+            		collectElementsOfValidCriteria((Criteria) iter.next(), other);
+            		elements.retainAll(other);
+            	}
+            }
+            if (compCrit.getOperator() == CompoundCriteria.OR) {
+            	savedElements.addAll(elements);
             }
         } else if(criteria instanceof CompareCriteria) {
             CompareCriteria compCrit = (CompareCriteria)criteria;
@@ -543,15 +550,15 @@ public class NewCalculateCostUtil {
         
         Collection<ElementSymbol> elements = ElementCollectorVisitor.getElements(predicateCriteria, true);
         
-        Collection groups = GroupsUsedByElementsVisitor.getGroups(predicateCriteria);
+        Collection<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(elements);
         boolean multiGroup = groups.size() > 1;
         
         float cost = childCost;
-        float ndv = getMaxNDV(elements, currentNode, childCost, metadata);
+        float ndv = getNDV(elements, currentNode, childCost, metadata);
         
         boolean unknownChildCost = childCost == UNKNOWN_VALUE;
         boolean usesKey = usesKey(elements, metadata);
-
+        
         if (childCost == UNKNOWN_VALUE) {
             childCost = 1;
         }
@@ -599,7 +606,7 @@ public class NewCalculateCostUtil {
             if (unknownChildCost) {
                 return UNKNOWN_VALUE;
             }
-            cost = Math.min(childCost, childCost * setCriteria.getNumberOfValues() / ndv);
+            cost = childCost * setCriteria.getNumberOfValues() / ndv;
             
             isNegatedPredicateCriteria = setCriteria.isNegated();
             
@@ -618,19 +625,14 @@ public class NewCalculateCostUtil {
         } else if(predicateCriteria instanceof IsNullCriteria) {
             IsNullCriteria isNullCriteria = (IsNullCriteria)predicateCriteria;
 
-            if(isNullable(elements, metadata)) {
-                 
-                float nnv = getNNV(elements, metadata);
-                if (unknownChildCost) {
-                    return nnv;
-                } else if (nnv == UNKNOWN_VALUE) {
-                    cost = childCost / ndv;
-                } else {
-                    cost = childCost * (nnv / Math.max(1, getCardinality(elements, metadata)));
-                }
+            float nnv = getNNV(elements, currentNode, childCost, metadata);
+            if (nnv == UNKNOWN_VALUE) {
+            	if (unknownChildCost) {
+            		return UNKNOWN_VALUE;
+            	}
+                cost = childCost / ndv;
             } else {
-                // No nulls allowed
-                cost = 0;
+                cost = nnv;
             }
             
             isNegatedPredicateCriteria = isNullCriteria.isNegated();
@@ -655,11 +657,8 @@ public class NewCalculateCostUtil {
     }
 
     /** 
-     * @param childCost
-     * @param cost
-     * @param ndv
-     * @param matchExpression
-     * @return
+     * TODO: does not check for escape char
+     * or if it will contain single match chars
      */
     private static float estimateMatchCost(float childCost,
                                            float ndv,
@@ -667,14 +666,8 @@ public class NewCalculateCostUtil {
         Expression matchExpression = criteria.getRightExpression();
         if(matchExpression instanceof Constant && ((Constant)matchExpression).getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
             String compareValue = (String) ((Constant)matchExpression).getValue();
-            if(compareValue != null) {
-                if(compareValue.indexOf('%') >= 0) {
-                    if(compareValue.length() == 1) {
-                        return childCost;
-                    }
-                } else {
-                    return childCost / ndv;
-                }
+            if(compareValue != null && compareValue.indexOf('%') < 0) {
+            	return (childCost / 2) * (1 / 3f  + 1 / ndv); //without knowing length constraints we'll make an average guess
             }
         } else if (EvaluateExpressionVisitor.willBecomeConstant(criteria.getLeftExpression())) {
             return childCost / ndv;
@@ -768,7 +761,17 @@ public class NewCalculateCostUtil {
         return cost;
     }
     
-    static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata)
+    static boolean usesKey(PlanNode planNode, Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata) throws QueryMetadataException, MetaMatrixComponentException {
+    	return NodeEditor.findAllNodes(planNode, NodeConstants.Types.SOURCE, NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP).size() == 1
+    	&& usesKey(allElements, metadata);
+    }
+    
+    /**
+     * TODO: this uses key check is not really accurate, it doesn't take into consideration where 
+     * we are in the plan.
+     * if a key column is used after a non 1-1 join or a union all, then it may be non-unique.
+     */
+    private static boolean usesKey(Collection<? extends SingleElementSymbol> allElements, QueryMetadataInterface metadata)
         throws QueryMetadataException, MetaMatrixComponentException {
     
         if(allElements == null || allElements.size() == 0) { 
@@ -814,76 +817,77 @@ public class NewCalculateCostUtil {
         
         return false;    
     }
-
-    /** 
-     * @param elements
-     * @param metadata
-     * @return
-     * @since 4.3
+    
+    /**
+     * Get the scaled max ndv for a set of elements.
+     * 
+     * NOTE: this is not a good approximation over unions, joins, grouping, etc.
      */
-    private static float getCardinality(Collection elements, QueryMetadataInterface metadata) 
+    private static float getNDV(Collection<ElementSymbol> elements, PlanNode current, float cardinality, QueryMetadataInterface metadata) 
         throws QueryMetadataException, MetaMatrixComponentException {
+        float result = 1;
         
-        if(elements.size() != 1) {
-            return UNKNOWN_VALUE;
-        }
-        ElementSymbol elem = (ElementSymbol) elements.iterator().next();
-        Object groupID = elem.getGroupSymbol().getMetadataID();
-        return metadata.getCardinality(groupID);
-    }
-
-    private static float getMaxNDV(Collection elements, PlanNode currentNode, float estNodeCardinality, QueryMetadataInterface metadata) 
-        throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if(elements.isEmpty()) {
-            return UNKNOWN_VALUE;
-        }
-
-        float ndv = UNKNOWN_VALUE;
-        
-        Iterator elementIterator = elements.iterator();
-        while(elementIterator.hasNext()) {
-            ElementSymbol elem = (ElementSymbol) elementIterator.next();
-            ndv = Math.max(ndv, estimateNDVForSymbol(elem, currentNode, estNodeCardinality, metadata));
-            if(ndv == UNKNOWN_VALUE) {
-                return UNKNOWN_VALUE;
+    	for (ElementSymbol elementSymbol : elements) {
+            Object elemID = elementSymbol.getMetadataID();
+            float ndv = metadata.getDistinctValues(elemID);
+            if (ndv == UNKNOWN_VALUE) {
+                if (metadata.isVirtualGroup(elementSymbol.getGroupSymbol().getMetadataID()) && !metadata.isProcedure(elementSymbol.getGroupSymbol().getMetadataID())) {
+            		PlanNode sourceNode = FrameUtil.findOriginatingNode(current, new HashSet<GroupSymbol>(Arrays.asList(elementSymbol.getGroupSymbol())));
+            		if (sourceNode != null) {
+	        			SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+	        			Expression expr = symbolMap.getMappedExpression(elementSymbol);
+	        			ndv = getNDV(ElementCollectorVisitor.getElements(expr, true), sourceNode.getFirstChild(), cardinality, metadata);
+            		}
+            	}
+            	if (ndv == UNKNOWN_VALUE) {
+            		return UNKNOWN_VALUE;
+            	}
+            } else if (cardinality != UNKNOWN_VALUE) {
+            	int groupCardinality = metadata.getCardinality(elementSymbol.getGroupSymbol().getMetadataID());
+            	if (groupCardinality != UNKNOWN_VALUE) {
+            		ndv *= cardinality / Math.max(1, groupCardinality);
+            	}
             }
-        }
-                
-        return ndv;
+            result = Math.max(result, ndv);
+		}
+        return result;
     }
     
-    /** 
-     * @param elements
-     * @return
-     * @since 4.3
+    /**
+     * Get the scaled max nnv for a set of elements.
+     * 
+     * NOTE: assumes that the expression does not allow nulls
      */
-    private static boolean isNullable(Collection elements, QueryMetadataInterface metadata) 
+    private static float getNNV(Collection<ElementSymbol> elements, PlanNode current, float cardinality, QueryMetadataInterface metadata) 
         throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if(elements.size() != 1) {
-            return true;
-        }
-        ElementSymbol elem = (ElementSymbol) elements.iterator().next();
-        Object elemID = elem.getMetadataID();
-        return metadata.elementSupports(elemID, SupportConstants.Element.NULL) || 
-            metadata.elementSupports(elemID, SupportConstants.Element.NULL_UNKNOWN);  
-    }
-
-    /** 
-     * @param elements
-     * @return
-     * @since 4.3
-     */
-    private static float getNNV(Collection elements, QueryMetadataInterface metadata) 
-        throws QueryMetadataException, MetaMatrixComponentException {
-        
-        if(elements.size() != 1) {
-            return UNKNOWN_VALUE;
-        }
-        ElementSymbol elem = (ElementSymbol) elements.iterator().next();
-        Object elemID = elem.getMetadataID();
-        return metadata.getNullValues(elemID);
+        float result = 0;
+    	for (ElementSymbol elementSymbol : elements) {
+            Object elemID = elementSymbol.getMetadataID();
+            float nnv = metadata.getNullValues(elemID);
+            if (nnv == UNKNOWN_VALUE) {
+            	if (!metadata.elementSupports(elemID, SupportConstants.Element.NULL) 
+            			&& !metadata.elementSupports(elemID, SupportConstants.Element.NULL_UNKNOWN)) {
+            		nnv = 0;
+            	} else if (metadata.isVirtualGroup(elementSymbol.getGroupSymbol().getMetadataID()) && !metadata.isProcedure(elementSymbol.getGroupSymbol().getMetadataID())) {
+            		PlanNode sourceNode = FrameUtil.findOriginatingNode(current, new HashSet<GroupSymbol>(Arrays.asList(elementSymbol.getGroupSymbol())));
+            		if (sourceNode != null) {
+	        			SymbolMap symbolMap = (SymbolMap)sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+	        			Expression expr = symbolMap.getMappedExpression(elementSymbol);
+	        			nnv = getNNV(ElementCollectorVisitor.getElements(expr, true), sourceNode.getFirstChild(), cardinality, metadata);
+            		}
+            	}
+            	if (nnv == UNKNOWN_VALUE) {
+            		return UNKNOWN_VALUE;
+            	}
+            } else if (cardinality != UNKNOWN_VALUE) {
+            	int groupCardinality = metadata.getCardinality(elementSymbol.getGroupSymbol().getMetadataID());
+            	if (groupCardinality != UNKNOWN_VALUE) {
+            		nnv *= cardinality / Math.max(1, groupCardinality);
+            	}
+            }
+            result = Math.max(result, nnv);
+		}
+        return result;
     }
     
     /**
@@ -1066,9 +1070,9 @@ public class NewCalculateCostUtil {
         float result = UNKNOWN_VALUE;
         for(Iterator iter = expressions.iterator(); iter.hasNext();) {
             Expression expr = (Expression)iter.next();
-            Collection symbols = ElementCollectorVisitor.getElements(expr, true);
+            Collection<ElementSymbol> symbols = ElementCollectorVisitor.getElements(expr, true);
             
-            float currentSymbolNDV = getMaxNDV(symbols, node, nodeCardinality, metadata);                
+            float currentSymbolNDV = getNDV(symbols, node, nodeCardinality, metadata);                
             
             if(currentSymbolNDV == UNKNOWN_VALUE) { 
                 if (usesKey(symbols, metadata)) {
@@ -1086,131 +1090,6 @@ public class NewCalculateCostUtil {
             }
         }
         return Math.max(1, Math.min(nodeCardinality, result));
-    }
-    
-    /** 
-     * For virtual symbol, find a mapped physical symbol and look up it's NDV
-     *  
-     * @param currentDepSymbol The current virtual dependent symbol
-     * @param dependentNode The dependent node starting point
-     * @param metadata Metadata API
-     * @return NDV for currentDepSymbol
-     * @since 5.0.1
-     */
-    private static float getMappedPhysicalNDV(ElementSymbol currentDepSymbol,
-                                            PlanNode dependentNode,
-                                            QueryMetadataInterface metadata) throws MetaMatrixComponentException {
-        
-        PlanNode currentNode = dependentNode;
-        
-        while(true) {
-            // Walk down to a source node
-            PlanNode sourceNode = FrameUtil.findOriginatingNode(currentNode, dependentNode.getGroups());
-            if(sourceNode == null) {
-                break;
-            }
-            
-            if (sourceNode.getType() == NodeConstants.Types.SOURCE) {
-                SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-                
-                if (symbolMap == null) {
-                    return UNKNOWN_VALUE;
-                }
-                
-                Expression currentExpr = symbolMap.getMappedExpression(currentDepSymbol);
-                
-                if (currentExpr == null) {
-                    return UNKNOWN_VALUE;
-                }
-                
-                if(! (currentExpr instanceof ElementSymbol)) {
-                    // Not a 1-to-1 mapping - check for single contained element to use instead.  This
-                    // is a bit of a hack as it will work just fine in some cases (like convert(elem, Double))
-                    // and will suck badly in others that change the size of the value domain.  If there is 
-                    // more than 1 element, we'll just give up for now - probably some heuristic we can use later.
-                    Collection elements = ElementCollectorVisitor.getElements(currentExpr, false, false);
-                    switch(elements.size()) {
-                        case 0:
-                        {
-                            // Must be a constant, so use NDV=1
-                            return 1;
-                        }
-                        case 1: 
-                        {
-                            // Just switch to using the current expression
-                            currentDepSymbol = (ElementSymbol) elements.iterator().next();
-                            break;
-                        }
-                        default:
-                        {
-                            // More than 1 element in lower expression - give up!
-                            return UNKNOWN_VALUE;
-                        }
-    
-                    }
-                }
-            }
-            
-            // Check for physical element and if so, break out of the loop
-            try {
-                if(! metadata.isVirtualGroup(currentDepSymbol.getGroupSymbol().getMetadataID())) {
-                    return metadata.getDistinctValues(currentDepSymbol.getMetadataID());
-                } 
-                currentNode = currentNode.getFirstChild();
-            } catch(QueryMetadataException e) {
-                throw new MetaMatrixComponentException(e, e.getMessage());
-            }
-        }
-        return UNKNOWN_VALUE;
-    }
-
-    /**
-     * This method will return an estimate NDV of a symbol based on the cost of the input node and the ratio of
-     * the input symbol's NDV value to the input symbol's Group's cardinality.
-     */
-    private static float estimateNDVForSymbol(ElementSymbol symbol, PlanNode currentNode, float estNodeCardinality, QueryMetadataInterface metadata) 
-        throws MetaMatrixComponentException, QueryMetadataException {
-        
-        if(symbol == null) {
-            return UNKNOWN_VALUE;
-        }
-        
-        float ndv = 0;
-        float tableCardinality = 0;
-        Object elemID = symbol.getMetadataID();
-        Object groupID = symbol.getGroupSymbol().getMetadataID();
-        
-        if (metadata.isVirtualGroup(groupID)) {
-            return getMappedPhysicalNDV(symbol, currentNode, metadata);
-        }
-        
-        if(elemID != null && groupID != null) {
-            ndv = metadata.getDistinctValues(elemID);
-            tableCardinality = metadata.getCardinality(groupID);
-        }
-        // if ndv is <= 0 the value is considered unknown and we return UNKNOWN_VALUE
-        if(ndv <= 0) {
-            return UNKNOWN_VALUE;
-        }
-        float estNDV = estNodeCardinality * ndv / tableCardinality;
-        if(estNDV < ndv) {
-            return Math.max(1, estNDV);
-        }
-        return Math.max(1, ndv);
-    }
-    
-    static boolean isNodeStrong(PlanNode accessNode, QueryMetadataInterface metadata, CommandContext context) 
-        throws QueryMetadataException, MetaMatrixComponentException {
-    
-        float result = computeCostForTree(accessNode, metadata);
-        
-        float strong_cost = DEFAULT_STRONG_COST;
-        
-        if(context != null) {
-            strong_cost = Math.min(strong_cost, context.getProcessorBatchSize()); 
-        }
-        
-        return result != UNKNOWN_VALUE && result <= strong_cost;
     }
     
 }

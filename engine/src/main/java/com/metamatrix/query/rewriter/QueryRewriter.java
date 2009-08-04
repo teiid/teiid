@@ -27,8 +27,6 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1877,7 +1875,10 @@ public class QueryRewriter {
                 // if both left and right expressions are strings, and the LIKE match characters ('*', '_') are not present 
                 //  in the right expression, rewrite the criteria as EQUALs rather than LIKE
                 if(DataTypeManager.DefaultDataClasses.STRING.equals(criteria.getLeftExpression().getType()) && value.indexOf(escape) < 0 && value.indexOf(MatchCriteria.MATCH_CHAR) < 0 && value.indexOf(MatchCriteria.WILDCARD_CHAR) < 0) {
-                    return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()), procCommand, context, metadata);
+                    if (value.equals(MatchCriteria.WILDCARD_CHAR)) {
+                    	return TRUE_CRITERIA;
+                    }
+                	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()), procCommand, context, metadata);
                 }
             }
         }

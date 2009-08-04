@@ -493,9 +493,9 @@ public class ResolverUtil {
      * The resolved elements may not contain non-selectable columns depending on the metadata first used for resolving.
      * 
      */
-    public static List resolveElementsInGroup(GroupSymbol group, QueryMetadataInterface metadata)
+    public static List<ElementSymbol> resolveElementsInGroup(GroupSymbol group, QueryMetadataInterface metadata)
     throws QueryMetadataException, MetaMatrixComponentException {
-        return new ArrayList(getGroupInfo(group, metadata).getSymbolList());
+        return new ArrayList<ElementSymbol>(getGroupInfo(group, metadata).getSymbolList());
     }
     
 	static GroupInfo getGroupInfo(GroupSymbol group,

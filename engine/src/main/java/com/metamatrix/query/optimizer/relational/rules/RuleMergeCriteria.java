@@ -42,6 +42,7 @@ import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 /**
+ * TODO: this rule should attempt to intelligently order the criteria
  */
 public final class RuleMergeCriteria implements OptimizerRule {
 
@@ -92,14 +93,14 @@ public final class RuleMergeCriteria implements OptimizerRule {
         }
     }
 
-    void mergeChain(PlanNode chainRoot) {
+    static void mergeChain(PlanNode chainRoot) {
 
         // Remove all of chain except root, collect crit from each
         CompoundCriteria critParts = new CompoundCriteria();
         PlanNode current = chainRoot;
         boolean isDependentSet = false;
         while(current.getType() == NodeConstants.Types.SELECT) {
-            critParts.addCriteria((Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA)); 
+            critParts.getCriteria().add(0, (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA)); 
             
             isDependentSet |= current.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET);
             

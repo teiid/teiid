@@ -22,9 +22,6 @@
 
 package com.metamatrix.query.optimizer.relational.rules;
 
-import java.util.Iterator;
-import java.util.List;
-
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
@@ -53,14 +50,9 @@ public final class RuleCleanCriteria implements OptimizerRule {
     public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, MetaMatrixComponentException {
 
-        List criteria = NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT);
-        
-        Iterator critIter = criteria.iterator();
-        
         boolean pushRaiseNull = false;
         
-        while (critIter.hasNext()) {
-            PlanNode critNode = (PlanNode)critIter.next();
+        for (PlanNode critNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SELECT)) {
             
             if (critNode.hasBooleanProperty(NodeConstants.Info.IS_PHANTOM)) {
                 NodeEditor.removeChildNode(critNode.getParent(), critNode);

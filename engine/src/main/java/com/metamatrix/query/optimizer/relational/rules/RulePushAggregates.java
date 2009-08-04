@@ -409,10 +409,7 @@ public class RulePushAggregates implements
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
             
             //if the grouping expressions are unique then there's no point in staging the aggregate
-            //TODO: the uses key check is not really accurate, it doesn't take into consideration where 
-            //we are in the plan.
-            //if a key column is used after a non 1-1 join or a union all, then it may be non-unique.
-            if (NewCalculateCostUtil.usesKey(stagedGroupingSymbols, metadata)) {
+            if (NewCalculateCostUtil.usesKey(planNode, stagedGroupingSymbols, metadata)) {
             	continue;
             }
 
