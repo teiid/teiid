@@ -80,11 +80,10 @@ public class SSLConfiguration {
     boolean client_encryption_enabled = false;
     
     public void init(Properties props) {
-        ssl_enabled = PropertiesUtils.getBooleanProperty(props, SSL_ENABLED, false); 
+        ssl_enabled = PropertiesUtils.getBooleanProperty(props, SSL_ENABLED, false);
+        client_encryption_enabled = PropertiesUtils.getBooleanProperty(props, CLIENT_ENCRYPTION_ENABLED, true);
         
         if (ssl_enabled) {
-	        client_encryption_enabled = PropertiesUtils.getBooleanProperty(props, CLIENT_ENCRYPTION_ENABLED, true);
-	        
 	        keyStoreFileName = props.getProperty(KEYSTORE_FILENAME);
 	        try {
 	            keyStorePassword = CryptoUtil.stringDecrypt(props.getProperty(KEYSTORE_PASSWORD, "")); //$NON-NLS-1$
@@ -142,11 +141,11 @@ public class SSLConfiguration {
     }
 
     public boolean isServerSSLEnabled() {
-        return ssl_enabled && CryptoUtil.isEncryptionEnabled();
+        return this.ssl_enabled;
     }
     
     public boolean isClientEncryptionEnabled() {
-        return CryptoUtil.isEncryptionEnabled() && client_encryption_enabled;
+        return this.client_encryption_enabled;
     }
     
 }
