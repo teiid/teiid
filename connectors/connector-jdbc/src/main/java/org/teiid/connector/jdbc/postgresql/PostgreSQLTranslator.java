@@ -53,6 +53,8 @@ import org.teiid.connector.visitor.util.SQLReservedWords;
  * @since 4.3
  */
 public class PostgreSQLTranslator extends Translator {
+	
+	private String version = PostgreSQLCapabilities.EIGHT_0;
 
     public void initialize(ConnectorEnvironment env) throws ConnectorException {
         //TODO: all of the functions (except for convert) can be handled through just the escape syntax
@@ -155,6 +157,16 @@ public class PostgreSQLTranslator extends Translator {
     	
     	command.acceptVisitor(visitor);
     	return command;
+    }
+    
+    @Override
+    public NullOrder getDefaultNullOrder() {
+    	return NullOrder.HIGH;
+    }
+    
+    @Override
+    public boolean supportsExplicitNullOrdering() {
+    	return version.compareTo(PostgreSQLCapabilities.EIGHT_4) >= 0;
     }
     
     @Override

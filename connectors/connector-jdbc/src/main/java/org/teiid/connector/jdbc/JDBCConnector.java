@@ -122,9 +122,11 @@ public class JDBCConnector extends BasicConnector implements XAConnector, Metada
         } catch (MetaMatrixCoreException e) {
             throw new ConnectorException(e);
         }
+        PropertiesUtils.setBeanProperties(sqlTranslator, environment.getProperties(), null);
         sqlTranslator.initialize(environment);
         
         capabilities = sqlTranslator.getConnectorCapabilities();
+        PropertiesUtils.setBeanProperties(capabilities, environment.getProperties(), null);
         
         createDataSources(dataSourceClassName, connectionProps);
         

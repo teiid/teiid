@@ -89,10 +89,10 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
         boolean succeeded = false;
 
         boolean commitType = getAutoCommit(null);
-        ICommand[] commands = (ICommand[])batchedCommand.getUpdateCommands().toArray(new ICommand[batchedCommand.getUpdateCommands().size()]);
+        ICommand[] commands = batchedCommand.getUpdateCommands().toArray(new ICommand[batchedCommand.getUpdateCommands().size()]);
         int[] results = new int[commands.length];
 
-        TranslatedCommand command = null;
+        TranslatedCommand tCommand = null;
         
         try {
             // temporarily turn the auto commit off, and set it back to what it was
@@ -106,18 +106,18 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
             TranslatedCommand previousCommand = null;
             
             for (int i = 0; i < commands.length; i++) {
-                command = translateCommand(commands[i]);
-                if (command.isPrepared()) {
+            	tCommand = translateCommand(commands[i]);
+                if (tCommand.isPrepared()) {
                     PreparedStatement pstmt = null;
-                    if (previousCommand != null && previousCommand.isPrepared() && previousCommand.getSql().equals(command.getSql())) {
+                    if (previousCommand != null && previousCommand.isPrepared() && previousCommand.getSql().equals(tCommand.getSql())) {
                         pstmt = (PreparedStatement)statement;
                     } else {
                         if (!executedCmds.isEmpty()) {
                             executeBatch(i, results, executedCmds);
                         }
-                        pstmt = getPreparedStatement(command.getSql());
+                        pstmt = getPreparedStatement(tCommand.getSql());
                     }
-                    bindPreparedStatementValues(pstmt, command, 1);
+                    bindPreparedStatementValues(pstmt, tCommand, 1);
                     pstmt.addBatch();
                 } else {
                     if (previousCommand != null && previousCommand.isPrepared()) {
@@ -127,17 +127,17 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                     if (statement == null) {
                         getStatement();
                     }
-                    statement.addBatch(command.getSql());
+                    statement.addBatch(tCommand.getSql());
                 }
-                executedCmds.add(command);
-                previousCommand = command;
+                executedCmds.add(tCommand);
+                previousCommand = tCommand;
             }
             if (!executedCmds.isEmpty()) {
                 executeBatch(commands.length, results, executedCmds);
             }
             succeeded = true;
         } catch (SQLException e) {
-        	throw new JDBCExecutionException(e, command);
+        	throw new JDBCExecutionException(e, tCommand);
         } finally {
             if (commitType) {
                 restoreAutoCommit(!succeeded, null);
@@ -182,7 +182,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
                 for (int i = 0; i< translatedComm.getPreparedValues().size(); i++) {
                     ILiteral paramValue = (ILiteral)translatedComm.getPreparedValues().get(i);
                     if (paramValue.isMultiValued()) {
-                    	rowCount = ((List<?>)paramValue).size();
+                    	rowCount = ((List<?>)paramValue.getValue()).size();
                     	break;
                     }
                 }
@@ -220,11 +220,14 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
      * @return
      * @throws ConnectorException
      */
-    private boolean getAutoCommit(TranslatedCommand command) throws ConnectorException {
+    private boolean getAutoCommit(TranslatedCommand tCommand) throws ConnectorException {
+    	if (this.context.isTransactional()) {
+    		return false;
+    	}
         try {
             return connection.getAutoCommit();
         } catch (SQLException err) {
-        	throw new JDBCExecutionException(err, command);
+        	throw new JDBCExecutionException(err, tCommand);
         }
     }
 
@@ -236,18 +239,18 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements
      * @throws ConnectorException
      */
     private void restoreAutoCommit(boolean exceptionOccurred,
-                                   TranslatedCommand command) throws ConnectorException {
+                                   TranslatedCommand tCommand) throws ConnectorException {
         try {
             if (exceptionOccurred) {
                 connection.rollback();
             }
         } catch (SQLException err) {
-        	throw new JDBCExecutionException(err, command);
+        	throw new JDBCExecutionException(err, tCommand);
         } finally {
         	try {
         		connection.setAutoCommit(true);
         	} catch (SQLException err) {
-            	throw new JDBCExecutionException(err, command);
+            	throw new JDBCExecutionException(err, tCommand);
             }
         }
     }

@@ -31,14 +31,14 @@ public class TestDerbyCapabilities {
 	@Test public void testLimitSupport() {
 		DerbyCapabilities derbyCapabilities = new DerbyCapabilities();
 		assertFalse(derbyCapabilities.supportsRowLimit());
-		derbyCapabilities.setVersion(DerbyCapabilities.TEN_5);
+		derbyCapabilities.setDatabaseVersion(DerbyCapabilities.TEN_5);
 		assertTrue(derbyCapabilities.supportsRowLimit());
 	}
 	
 	@Test public void testFunctionSupport() {
 		DerbyCapabilities derbyCapabilities = new DerbyCapabilities();
 		assertEquals(27, derbyCapabilities.getSupportedFunctions().size());
-		derbyCapabilities.setVersion(DerbyCapabilities.TEN_4);
+		derbyCapabilities.setDatabaseVersion(DerbyCapabilities.TEN_4);
 		assertEquals(43, derbyCapabilities.getSupportedFunctions().size());
 	}
 

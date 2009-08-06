@@ -176,5 +176,8 @@ public class DB2SQLTranslator extends Translator {
 		return expr;
 	}
 
-	
+	@Override
+	public NullOrder getDefaultNullOrder() {
+		return NullOrder.HIGH;
+	}
 }

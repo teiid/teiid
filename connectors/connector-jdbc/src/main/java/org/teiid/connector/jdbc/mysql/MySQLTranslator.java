@@ -64,7 +64,7 @@ public class MySQLTranslator extends Translator {
 
 	@Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "TIMESTAMP('" + formatDateValue(timestampValue) + "')";  //$NON-NLS-1$//$NON-NLS-2$
+        return "{ts '" + formatDateValue(timestampValue) + "'}";  //$NON-NLS-1$//$NON-NLS-2$
     }
 	
 	@Override
@@ -74,7 +74,7 @@ public class MySQLTranslator extends Translator {
 	
 	@Override
 	public int getTimestampNanoPrecision() {
-		return 6;
+		return 0;
 	}
 	
 	@Override

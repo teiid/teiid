@@ -323,6 +323,11 @@ public class OracleSQLTranslator extends Translator {
     }
     
     @Override
+    public NullOrder getDefaultNullOrder() {
+    	return NullOrder.HIGH;
+    }
+    
+    @Override
     public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
     	return OracleCapabilities.class;
     }

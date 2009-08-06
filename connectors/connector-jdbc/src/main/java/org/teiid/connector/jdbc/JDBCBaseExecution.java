@@ -97,7 +97,7 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
      * Return true if this is a batched update
      */
     protected void bindPreparedStatementValues(PreparedStatement stmt, TranslatedCommand tc, int rowCount) throws SQLException {
-        List params = tc.getPreparedValues();
+        List<?> params = tc.getPreparedValues();
 
         for (int row = 0; row < rowCount; row++) {
 	        for (int i = 0; i< params.size(); i++) {
@@ -106,12 +106,12 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
 	            if (paramValue.isMultiValued()) {
 	            	value = ((List<?>)value).get(row);
 	            }
-	            Class paramType = paramValue.getType();
+	            Class<?> paramType = paramValue.getType();
 	            sqlTranslator.bindValue(stmt, value, paramType, i+1);
-	            if (rowCount > 1) {
-	            	stmt.addBatch();
-	            }
-	        }          
+	        }
+	        if (rowCount > 1) {
+            	stmt.addBatch();
+            }
         }
     }
 

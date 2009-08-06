@@ -37,8 +37,8 @@ import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
  */
 public class DerbySQLTranslator extends DB2SQLTranslator {
 	
-	public static final String DATABASE_VERSION = "DatabaseVersion"; //$NON-NLS-1$
-
+	private String version = DerbyCapabilities.TEN_1;
+	
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
 		super.initialize(env);
@@ -68,13 +68,12 @@ public class DerbySQLTranslator extends DB2SQLTranslator {
     }
     
     @Override
-    public ConnectorCapabilities getConnectorCapabilities()
-    		throws ConnectorException {
-    	ConnectorCapabilities capabilities = super.getConnectorCapabilities();
-    	if (capabilities instanceof DerbyCapabilities) {
-    		((DerbyCapabilities)capabilities).setVersion(getEnvironment().getProperties().getProperty(DATABASE_VERSION, DerbyCapabilities.TEN_1));
-    	}
-    	return capabilities;
+    public boolean supportsExplicitNullOrdering() {
+    	return version.compareTo(DerbyCapabilities.TEN_4) >= 0;
+    }
+    
+    public void setDatabaseVersion(String version) {
+    	this.version = version;
     }
 
 }

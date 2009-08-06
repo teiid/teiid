@@ -135,7 +135,7 @@ public class DerbyCapabilities extends JDBCCapabilities {
         return supportedFunctions;
     }
     
-    public void setVersion(String version) {
+    public void setDatabaseVersion(String version) {
 		this.version = version;
 	}
 

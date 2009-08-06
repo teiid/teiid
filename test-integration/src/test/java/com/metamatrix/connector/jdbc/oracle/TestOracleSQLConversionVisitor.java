@@ -301,7 +301,7 @@ public class TestOracleSQLConversionVisitor {
         helpTestVisitor(getTestVDB(),
                         "select part_id id FROM parts UNION ALL select part_name FROM parts UNION ALL select part_id FROM parts ORDER BY id", //$NON-NLS-1$
                         null,
-                        "(SELECT g_2.PART_ID AS c_0 FROM PARTS g_2 UNION ALL SELECT g_1.PART_NAME AS c_0 FROM PARTS g_1) UNION ALL SELECT g_0.PART_ID AS c_0 FROM PARTS g_0 ORDER BY c_0", //$NON-NLS-1$
+                        "(SELECT g_2.PART_ID AS c_0 FROM PARTS g_2 UNION ALL SELECT g_1.PART_NAME AS c_0 FROM PARTS g_1) UNION ALL SELECT g_0.PART_ID AS c_0 FROM PARTS g_0 ORDER BY c_0 NULLS FIRST", //$NON-NLS-1$
                         true); 
     }
     
@@ -309,7 +309,7 @@ public class TestOracleSQLConversionVisitor {
         helpTestVisitor(getTestVDB(),
                         "select part_id FROM parts UNION ALL select part_name FROM parts ORDER BY part_id", //$NON-NLS-1$
                         null,
-                        "SELECT g_1.PART_ID AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_NAME AS c_0 FROM PARTS g_0 ORDER BY c_0", //$NON-NLS-1$
+                        "SELECT g_1.PART_ID AS c_0 FROM PARTS g_1 UNION ALL SELECT g_0.PART_NAME AS c_0 FROM PARTS g_0 ORDER BY c_0 NULLS FIRST", //$NON-NLS-1$
                         true); 
     }
 
@@ -317,7 +317,7 @@ public class TestOracleSQLConversionVisitor {
         helpTestVisitor(getTestVDB(),
                         "select part_id as p FROM parts UNION ALL select part_name FROM parts ORDER BY p", //$NON-NLS-1$
                         null,
-                        "SELECT PARTS.PART_ID AS p FROM PARTS UNION ALL SELECT PARTS.PART_NAME FROM PARTS ORDER BY p"); //$NON-NLS-1$
+                        "SELECT PARTS.PART_ID AS p FROM PARTS UNION ALL SELECT PARTS.PART_NAME FROM PARTS ORDER BY p NULLS FIRST"); //$NON-NLS-1$
     }
 
     @Test public void testUpdateWithFunction() throws Exception {
@@ -458,7 +458,7 @@ public class TestOracleSQLConversionVisitor {
             
     @Test public void testLimitWithNestedInlineView() throws Exception {
         String input = "select max(intkey), stringkey from (select intkey, stringkey from bqt1.smalla order by intkey limit 100) x group by stringkey"; //$NON-NLS-1$
-        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY intkey) WHERE ROWNUM <= 100) x GROUP BY x.stringkey"; //$NON-NLS-1$
+        String output = "SELECT MAX(x.intkey), x.stringkey FROM (SELECT * FROM (SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY intkey NULLS FIRST) WHERE ROWNUM <= 100) x GROUP BY x.stringkey"; //$NON-NLS-1$
                
         helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
                 input, 
@@ -500,7 +500,7 @@ public class TestOracleSQLConversionVisitor {
     
     @Test public void testRowLimitWithUnionOrderBy() throws Exception {
         String input = "(select intkey from bqt1.smalla limit 50, 100) union select intnum from bqt1.smalla order by intkey"; //$NON-NLS-1$
-        String output = "SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50 UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0"; //$NON-NLS-1$
+        String output = "SELECT c_0 FROM (SELECT VIEW_FOR_LIMIT.*, ROWNUM ROWNUM_ FROM (SELECT g_1.IntKey AS c_0 FROM SmallA g_1) VIEW_FOR_LIMIT WHERE ROWNUM <= 150) WHERE ROWNUM_ > 50 UNION SELECT g_0.IntNum AS c_0 FROM SmallA g_0 ORDER BY c_0 NULLS FIRST"; //$NON-NLS-1$
                
         CommandBuilder commandBuilder = new CommandBuilder(FakeMetadataFactory.exampleBQTCached());
         ICommand obj = commandBuilder.getCommand(input, true, true);

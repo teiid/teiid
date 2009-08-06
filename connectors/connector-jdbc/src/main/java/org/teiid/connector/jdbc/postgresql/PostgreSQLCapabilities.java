@@ -34,7 +34,14 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
  */
 public class PostgreSQLCapabilities extends JDBCCapabilities {
     
+	public static final String EIGHT_0 = "8.0"; //$NON-NLS-1$
+	public static final String EIGHT_1 = "8.1"; //$NON-NLS-1$
+	public static final String EIGHT_2 = "8.2"; //$NON-NLS-1$
+	public static final String EIGHT_3 = "8.3"; //$NON-NLS-1$
+	public static final String EIGHT_4 = "8.4"; //$NON-NLS-1$
     
+	private String version = EIGHT_0;
+	
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
@@ -118,8 +125,10 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
 //        supportedFunctions.add("PARSETIMESTAMP"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
-//        supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
-//        supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
+        if (this.version.compareTo(EIGHT_2) >= 0) {
+        	supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
+        	supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
+        }
         supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
         
@@ -268,5 +277,9 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
     @Override
     public boolean supportsIntersect() {
         return true;
+    }
+    
+    public void setDatabaseVersion(String version) {
+    	this.version = version;
     }
 }

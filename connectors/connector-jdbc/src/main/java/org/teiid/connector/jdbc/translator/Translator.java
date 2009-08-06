@@ -56,6 +56,7 @@ import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.ISetQuery;
 import org.teiid.connector.language.IParameter.Direction;
+import org.teiid.connector.visitor.util.SQLReservedWords;
 
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ReflectionHelper;
@@ -65,7 +66,14 @@ import com.metamatrix.core.util.ReflectionHelper;
  * Specific databases should override as necessary.
  */
 public class Translator {
-
+	
+	public enum NullOrder {
+		HIGH,
+		LOW,
+		FIRST,
+		LAST
+	}
+	
 	// Because the retrieveValue() method will be hit for every value of 
     // every JDBC result set returned, we do lots of weird special stuff here 
     // to improve the performance (most importantly to remove big if/else checks
@@ -296,6 +304,8 @@ public class Translator {
         	if (getTimestampNanoPrecision() > 0) {
 	        	int mask = 10^(9-getTimestampNanoPrecision());
 	        	newTs.setNanos(ts.getNanos()/mask*mask);
+        	} else {
+        		newTs.setNanos(0);
         	}
         	dateObject = newTs;
         }
@@ -783,5 +793,17 @@ public class Translator {
      */
     public boolean useParensForJoins() {
     	return false;
+    }
+    
+    /**
+     * get the default null ordering
+     * @return
+     */
+    public NullOrder getDefaultNullOrder() {
+    	return NullOrder.LOW;
+    }
+    
+    public boolean supportsExplicitNullOrdering() {
+    	return true;
     }
 }

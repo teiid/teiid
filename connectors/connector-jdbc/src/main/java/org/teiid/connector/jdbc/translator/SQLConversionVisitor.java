@@ -37,11 +37,13 @@ import java.util.Set;
 
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.jdbc.translator.Translator.NullOrder;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.language.ILimit;
 import org.teiid.connector.language.ILiteral;
+import org.teiid.connector.language.IOrderByItem;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.language.IParameter.Direction;
@@ -117,6 +119,22 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 		    } else {
 		        buffer.append(part);
 		    }
+		}
+	}
+	
+	@Override
+	public void visit(IOrderByItem obj) {
+		super.visit(obj);
+		if (!this.translator.supportsExplicitNullOrdering()) {
+			return;
+		}
+		NullOrder nullOrder = this.translator.getDefaultNullOrder();
+		if (obj.getDirection() == IOrderByItem.ASC) {
+			if (nullOrder != NullOrder.LOW && nullOrder != NullOrder.FIRST) {
+				buffer.append(" NULLS FIRST"); //$NON-NLS-1$
+			}
+		} else if (nullOrder != NullOrder.HIGH && nullOrder != NullOrder.LAST) {
+			buffer.append(" NULLS LAST"); //$NON-NLS-1$
 		}
 	}
 

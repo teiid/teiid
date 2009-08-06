@@ -193,4 +193,13 @@ public class TestMySQLTranslator {
             input, 
             output, TRANSLATOR);        
     }
+    
+    @Test public void testTimestampLiteral() throws Exception {
+        String input = "select smalla.intkey from bqt1.smalla where smalla.timestampvalue = '2009-08-06 12:23:34.999'"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.TimestampValue = {ts '2009-08-06 12:23:34.0'}"; //$NON-NLS-1$
+          
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+            input, 
+            output, TRANSLATOR);        
+    }
 }

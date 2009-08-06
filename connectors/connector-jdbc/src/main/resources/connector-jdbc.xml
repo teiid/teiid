@@ -86,6 +86,7 @@
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="org.postgresql.Driver" IsRequired="true"   />        
             <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:postgresql://&lt;host&gt;:5432/&lt;databaseName&gt;" IsRequired="true" PropertyType="String"    IsMasked="false"   />
             <PropertyDefinition Name="ExtensionTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.postgresql.PostgreSQLTranslator"  PropertyType="String"   IsExpert="true"  IsMasked="false"   />
+            <PropertyDefinition Name="DatabaseVersion" DisplayName="Database Version" ShortDescription="PostgreSQL Version i.e. 8.3" DefaultValue="8.0" PropertyType="String" />
         </ComponentType>
         <ComponentType Name="PostgreSQL XA JDBC Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="org.postgresql.xa.PGXADataSource" IsRequired="true"   />        
@@ -94,6 +95,7 @@
             <PropertyDefinition Name="DatabaseName" DisplayName="Database Name" ShortDescription="" IsRequired="true" PropertyType="String"    IsMasked="false"   />
 			<PropertyDefinition Name="ExtensionTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.postgresql.PostgreSQLTranslator"  PropertyType="String"   IsExpert="true"  IsMasked="false"   />            
             <PropertyDefinition Name="IsXA" DisplayName="Is XA" ShortDescription="Is XA" DefaultValue="true" IsRequired="true" PropertyType="Boolean"   />
+            <PropertyDefinition Name="DatabaseVersion" DisplayName="Database Version" ShortDescription="PostgreSQL Version i.e. 8.3" DefaultValue="8.0" PropertyType="String" />
         </ComponentType>
         <ComponentType Name="Apache Derby Embedded Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="org.apache.derby.jdbc.EmbeddedDriver" IsRequired="true"   />        
