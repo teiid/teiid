@@ -161,9 +161,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
             		}
         			NodeEditor.removeChildNode(parentNode, node);
             	}
-                rootNode = performRaise(rootNode, accessNode, parentNode);
-            	
-            	return rootNode;            	
+            	accessNode.getGroups().clear();
+                return performRaise(rootNode, accessNode, parentNode);
             case NodeConstants.Types.SELECT:            
             {
                 if (!parentNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET) && canRaiseOverSelect(accessNode, metadata, capFinder, parentNode)) {
