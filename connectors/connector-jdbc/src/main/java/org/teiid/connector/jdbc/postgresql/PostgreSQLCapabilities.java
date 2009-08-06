@@ -89,8 +89,7 @@ public class PostgreSQLCapabilities extends JDBCCapabilities {
         supportedFunctions.add("LCASE"); //$NON-NLS-1$
         supportedFunctions.add("LEFT"); //$NON-NLS-1$
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
-        // Doesn't support both forms exposed by MM
-//        supportedFunctions.add("LOCATE"); //$NON-NLS-1$
+        supportedFunctions.add("LOCATE"); //$NON-NLS-1$
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
         supportedFunctions.add("LPAD"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$

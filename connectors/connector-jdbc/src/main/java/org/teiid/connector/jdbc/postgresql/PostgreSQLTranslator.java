@@ -93,7 +93,9 @@ public class PostgreSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
         
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new PostgreSQLConvertModifier(getLanguageFactory()));        
+        registerFunctionModifier(SourceSystemFunctions.CONVERT, new PostgreSQLConvertModifier(getLanguageFactory())); 
+        
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
     }    
     
     @Override
