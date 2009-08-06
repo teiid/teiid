@@ -84,7 +84,6 @@ import com.metamatrix.platform.vm.controller.SocketListenerStats;
  * already alive.
  */
 public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
-    private volatile boolean shutdownInProgress = false;
     private DQPCore dqp;
     private long starttime = -1L;
     private Thread shutdownThread;
@@ -315,45 +314,34 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     		Runtime.getRuntime().removeShutdownHook(this.shutdownThread);
     	}
     	
-        // Make sure shutdown is not already in progress; as call to shutdown will close
-        // connections; and after the last connection closes, the listener also calls shutdown
-        // for normal route.
-        if (!this.shutdownInProgress) {
-
-            // this will by pass, and only let shutdown called once.
-            this.shutdownInProgress = true;
-            
-        	try {
-				this.dqp.stop();
-			} catch (ApplicationLifecycleException e) {
-				LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
-			}
-            
-            // remove any artifacts which are not cleaned-up
-            if (this.workspaceDirectory != null) {
-                File file = new File(this.workspaceDirectory);
-                if (file.exists()) {
-                    delete(file);
-                }
+    	try {
+			this.dqp.stop();
+		} catch (ApplicationLifecycleException e) {
+			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+		}
+        
+        // remove any artifacts which are not cleaned-up
+        if (this.workspaceDirectory != null) {
+            File file = new File(this.workspaceDirectory);
+            if (file.exists()) {
+                delete(file);
             }
-            
-            this.dqp = null;
-            
-            // shutdown the socket transport.
-            if (this.socketTransport != null) {
-            	this.socketTransport.stop();
-            	this.socketTransport = null;
-            }
-            
-            // shutdown the cache.
-            ResourceFinder.getCacheFactory().destroy();
-            
-            this.shutdownInProgress = false;
-            
-            this.init = false;
-            
-            this.restart = restart;
-        }    	
+        }
+        
+        this.dqp = null;
+        
+        // shutdown the socket transport.
+        if (this.socketTransport != null) {
+        	this.socketTransport.stop();
+        	this.socketTransport = null;
+        }
+        
+        // shutdown the cache.
+        ResourceFinder.getCacheFactory().destroy();
+        
+        this.init = false;
+        
+		this.restart = restart;
     }
 
     private Admin getAdminAPI() {
