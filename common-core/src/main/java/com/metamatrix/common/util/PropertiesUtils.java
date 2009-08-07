@@ -997,15 +997,11 @@ public final class PropertiesUtils {
 
 	private static Properties lowerCaseAllPropNames(final Properties connectionProps) {
 	    final Properties lcProps = new Properties();
-	    final Iterator itr = connectionProps.keySet().iterator();
-	    while ( itr.hasNext() ) {
-	        final String name = (String) itr.next();
-	        Object propValue = connectionProps.get(name);
-	        if (propValue instanceof String) {
-	            // we're only interested in prop values of type String
-	            // here since we'll be looking for params to reflected methods
-	            lcProps.setProperty(name.toLowerCase(), (String)propValue);
-	        } // if
+	    final Enumeration<?> itr = connectionProps.propertyNames();
+	    while ( itr.hasMoreElements() ) {
+	        final String name = (String) itr.nextElement();
+	        String propValue = connectionProps.getProperty(name);
+            lcProps.setProperty(name.toLowerCase(), propValue);
 	    }
 	    return lcProps;
 	}
