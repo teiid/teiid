@@ -35,6 +35,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
+import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.Evaluator;
@@ -58,6 +59,7 @@ import com.metamatrix.query.sql.lang.GroupBy;
 import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.Into;
 import com.metamatrix.query.sql.lang.IsNullCriteria;
+import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.NotCriteria;
 import com.metamatrix.query.sql.lang.Option;
@@ -90,6 +92,7 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -104,7 +107,24 @@ import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class ValidationVisitor extends AbstractValidationVisitor {
 
-    // State during validation
+    private final class PositiveIntegerConstraint implements
+			Reference.Constraint {
+    	
+    	private String msgKey;
+    	
+    	public PositiveIntegerConstraint(String msgKey) {
+    		this.msgKey = msgKey;
+		}
+    	
+		@Override
+		public void validate(Object value) throws QueryValidatorException {
+			if (((Integer)value).intValue() < 0) {
+				throw new QueryValidatorException(QueryPlugin.Util.getString(msgKey)); //$NON-NLS-1$
+			}
+		}
+	}
+
+	// State during validation
     private boolean isXML = false;	// only used for Query commands
     
     // update procedure being validated
@@ -1033,6 +1053,78 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if (isNonComparable(obj.getLeftExpression())) {
     		handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0027, obj),obj);    		
     	}
+    	
+        // Validate use of 'rowlimit' and 'rowlimitexception' pseudo-functions - they cannot be nested within another
+        // function, and their operands must be a nonnegative integers
+
+        // Collect all occurrances of rowlimit function
+        List rowLimitFunctions = new ArrayList();
+        FunctionCollectorVisitor visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMIT);
+        PreOrderNavigator.doVisit(obj, visitor);   
+        visitor = new FunctionCollectorVisitor(rowLimitFunctions, FunctionLibrary.ROWLIMITEXCEPTION);
+        PreOrderNavigator.doVisit(obj, visitor);            
+        final int functionCount = rowLimitFunctions.size();
+        if (functionCount > 0) {
+            Function function = null;
+            Expression expr = null;
+            if (obj.getLeftExpression() instanceof Function) {
+                Function leftExpr = (Function)obj.getLeftExpression();
+                if (leftExpr.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
+                    leftExpr.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
+                    function = leftExpr;
+                    expr = obj.getRightExpression();
+                }
+            } 
+            if (function == null && obj.getRightExpression() instanceof Function) {
+                Function rightExpr = (Function)obj.getRightExpression();
+                if (rightExpr.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
+                    rightExpr.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
+                    function = rightExpr;
+                    expr = obj.getLeftExpression();
+                }
+            }
+            if (function == null) {
+                // must be nested, which is invalid
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.0"), obj); //$NON-NLS-1$
+            } else {
+                if (expr instanceof Constant) {
+                    Constant constant = (Constant)expr;
+                    if (constant.getValue() instanceof Integer) {
+                        Integer integer = (Integer)constant.getValue();
+                        if (integer.intValue() < 0) {
+                            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.1"), obj); //$NON-NLS-1$
+                        }
+                    } else {
+                        handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.1"), obj); //$NON-NLS-1$
+                    }
+                } else if (expr instanceof Reference) {
+                	((Reference)expr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.1")); //$NON-NLS-1$
+                } else {
+                    handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.1"), obj); //$NON-NLS-1$
+                }
+            }                 
+        }
+    }
+    
+    public void visit(Limit obj) {
+        Expression offsetExpr = obj.getOffset();
+        if (offsetExpr instanceof Constant) {
+            Integer offset = (Integer)((Constant)offsetExpr).getValue();
+            if (offset.intValue() < 0) {
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badoffset2"), obj); //$NON-NLS-1$
+            }
+        } else if (offsetExpr instanceof Reference) {
+        	((Reference)offsetExpr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.badoffset2")); //$NON-NLS-1$
+        }
+        Expression limitExpr = obj.getRowLimit();
+        if (limitExpr instanceof Constant) {
+            Integer limit = (Integer)((Constant)limitExpr).getValue();
+            if (limit.intValue() < 0) {
+                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badlimit2"), obj); //$NON-NLS-1$
+            }
+        } else if (limitExpr instanceof Reference) {
+        	((Reference)limitExpr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.badlimit2")); //$NON-NLS-1$
+        }
     }
         
 }

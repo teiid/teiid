@@ -354,12 +354,9 @@ public class TestValidator extends TestCase {
         try {
             ValidatorReport report = Validator.validate(command, metadata);
             
-            ValidatorReport report3 = Validator.validate(command, metadata, new ValueValidationVisitor(), true);
-
             // Get invalid objects from report
             Collection actualObjs = new ArrayList();
             report.collectInvalidObjects(actualObjs);
-            report3.collectInvalidObjects(actualObjs);
 
             // Compare expected and actual objects
             Set expectedStrings = new HashSet(Arrays.asList(expectedStringArray));
@@ -371,7 +368,7 @@ public class TestValidator extends TestCase {
             }
 
             if(expectedStrings.size() == 0 && actualStrings.size() > 0) {
-                fail("Expected no failures but got some: " + report.getFailureMessage() + ", "  + report3.getFailureMessage()); //$NON-NLS-1$ //$NON-NLS-2$ 
+                fail("Expected no failures but got some: " + report.getFailureMessage()); //$NON-NLS-1$ 
             } else if(actualStrings.size() == 0 && expectedStrings.size() > 0) {
                 fail("Expected some failures but got none for sql = " + command); //$NON-NLS-1$
             } else {

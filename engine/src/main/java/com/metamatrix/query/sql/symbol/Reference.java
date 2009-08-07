@@ -22,6 +22,7 @@
 
 package com.metamatrix.query.sql.symbol;
 
+import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.LanguageVisitor;
@@ -34,13 +35,19 @@ import com.metamatrix.query.sql.visitor.SQLStringVisitor;
  */
 public class Reference implements Expression, ContextReference {
 
+	public interface Constraint {
+		public void validate(Object value) throws QueryValidatorException;
+	}
+	
     private boolean positional;
 
     private int refIndex;
     private Class<?> type;
     
     private ElementSymbol expression;
-
+    
+    private Constraint constraint;
+    
     /**
      * Constructor for a positional Reference.
      */
@@ -48,6 +55,14 @@ public class Reference implements Expression, ContextReference {
         this.refIndex = refIndex;
         this.positional = true;
     }
+    
+    public Constraint getConstraint() {
+		return constraint;
+	}
+    
+    public void setConstraint(Constraint constraint) {
+		this.constraint = constraint;
+	}
     
     /**
      * Constructor for an element Reference.
@@ -64,6 +79,7 @@ public class Reference implements Expression, ContextReference {
     	if (ref.expression != null) {
     		this.expression = (ElementSymbol)ref.expression.clone();
     	}
+    	this.constraint = ref.constraint;
     }
 
     public boolean isResolved() {

@@ -105,7 +105,6 @@ import com.metamatrix.query.validator.ValidationVisitor;
 import com.metamatrix.query.validator.Validator;
 import com.metamatrix.query.validator.ValidatorFailure;
 import com.metamatrix.query.validator.ValidatorReport;
-import com.metamatrix.query.validator.ValueValidationVisitor;
 
 /**
  * Server side representation of the RequestMessage.  Knows how to process itself.
@@ -326,13 +325,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         }
     }
     
-    protected void validateQueryValues(Command command) 
-        throws QueryValidatorException, MetaMatrixComponentException {
-
-        AbstractValidationVisitor visitor = new ValueValidationVisitor();
-        validateWithVisitor(visitor, metadata, command, false);
-    }
-
     private Command parseCommand() throws QueryParserException {
         String[] commands = requestMsg.getCommands();
         ParseInfo parseInfo = createParseInfo(this.requestMsg);
@@ -470,8 +462,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         createCommandContext();
         
         validateQuery(command, true);
-        
-        validateQueryValues(command);
         
         command = QueryRewriter.rewrite(command, null, metadata, context);
         
@@ -614,8 +604,6 @@ public class Request implements QueryProcessor.ProcessorFactory {
         referenceCheck(references);
         
         validateQuery(newCommand, isRootXQuery);
-        
-        validateQueryValues(newCommand);
         
         if (isRootXQuery) {
         	validateEntitlement(newCommand);

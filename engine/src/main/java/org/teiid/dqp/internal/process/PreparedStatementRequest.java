@@ -123,12 +123,6 @@ public class PreparedStatementRequest extends Request {
 		}
 	}
     
-    @Override
-    protected void validateQueryValues(Command command)
-    		throws QueryValidatorException, MetaMatrixComponentException {
-    	//do nothing initially - check after parameter values have been set
-    }
-    
     /** 
      * @throws MetaMatrixComponentException 
      * @throws QueryValidatorException 
@@ -174,7 +168,7 @@ public class PreparedStatementRequest extends Request {
 	        List<Reference> params = prepPlan.getReferences();
 	        List<?> values = requestMsg.getParameterValues();
 	
-			resolveAndValidateParameters(this.userCommand, params, values);
+	    	PreparedStatementRequest.resolveParameterValues(params, values, this.context);
         }
         return prepPlan.getRewritenCommand();
     }
@@ -213,7 +207,7 @@ public class PreparedStatementRequest extends Request {
 		List<VariableContext> contexts = new LinkedList<VariableContext>();
 		List<List<Object>> multiValues = new ArrayList<List<Object>>(this.prepPlan.getReferences().size());
 		for (List<?> values : paramValues) {
-			resolveAndValidateParameters(this.userCommand, this.prepPlan.getReferences(), values);
+	    	PreparedStatementRequest.resolveParameterValues(this.prepPlan.getReferences(), values, this.context);
 			contexts.add(this.context.getVariableContext());
 			if(supportPreparedBatchUpdate){
 				if (multiValues.isEmpty()) {
@@ -259,22 +253,14 @@ public class PreparedStatementRequest extends Request {
 		this.processPlan = planner.optimize(ctn, idGenerator, metadata, capabilitiesFinder, analysisRecord, context);
 	}
 
-	private void resolveAndValidateParameters(Command command, List<Reference> params,
-			List<?> values) throws QueryResolverException,
-			MetaMatrixComponentException, QueryValidatorException {
-		// validate parameters values - right number and right type
-    	PreparedStatementRequest.resolveParameterValues(params, values, this.context);
-        // call back to Request.validateQueryValues to ensure that bound references are valid
-        super.validateQueryValues(command);
-	}
-
 	/** 
 	 * @param params
 	 * @param values
 	 * @throws QueryResolverException
+	 * @throws QueryValidatorException 
 	 */
 	public static void resolveParameterValues(List<Reference> params,
-	                                    List values, CommandContext context) throws QueryResolverException, MetaMatrixComponentException {
+	                                    List values, CommandContext context) throws QueryResolverException, MetaMatrixComponentException, QueryValidatorException {
 		VariableContext result = new VariableContext();
 	    //the size of the values must be the same as that of the parameters
 	    if (params.size() != values.size()) {
@@ -303,6 +289,9 @@ public class PreparedStatementRequest extends Request {
 				}
 	        }
 	        	        
+        	if (param.getConstraint() != null) {
+        		param.getConstraint().validate(value);
+        	}
 	        //bind variable
 	        result.setGlobalValue(param.getContextSymbol(), value);
 	    }

@@ -391,5 +391,13 @@ public class TestPreparedStatement {
         TestProcessor.sampleData2b(dataManager);
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
     }
+    
+    @Test(expected=QueryValidatorException.class) public void testLimitValidation() throws Exception {
+        String preparedSql = "select pm1.g1.e1 from pm1.g1 limit ?"; //$NON-NLS-1$
+        
+		List values = Arrays.asList(-1);
+        FakeDataManager dataManager = new FakeDataManager();
+		helpTestProcessing(preparedSql, values, null, dataManager, FakeMetadataFactory.example1Cached(), false, false);
+    }
 
 }
