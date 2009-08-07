@@ -1001,7 +1001,9 @@ public final class PropertiesUtils {
 	    while ( itr.hasMoreElements() ) {
 	        final String name = (String) itr.nextElement();
 	        String propValue = connectionProps.getProperty(name);
-            lcProps.setProperty(name.toLowerCase(), propValue);
+	        if (propValue != null) {
+	        	lcProps.setProperty(name.toLowerCase(), propValue);
+	        } 
 	    }
 	    return lcProps;
 	}

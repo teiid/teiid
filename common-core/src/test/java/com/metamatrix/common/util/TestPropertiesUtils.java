@@ -723,6 +723,7 @@ public class TestPropertiesUtils extends TestCase {
     	p.setProperty("prop3", "3"); //$NON-NLS-1$ //$NON-NLS-2$
     	
     	p = new Properties(p);
+    	p.put("object", new Object()); //$NON-NLS-1$
     	
     	PropertiesUtils.setBeanProperties(bean, p, null);
     	
