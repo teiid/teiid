@@ -948,16 +948,17 @@ public class BufferManagerImpl implements BufferManager {
 
                         // First update the reference tuple source.
                         if (!lob.getReferenceStreamId().equals(parentId.getStringID())) {
+                        	TupleGroupInfo groupInfo = getGroupInfo(parentId.getStringID());
                             TupleSourceID id = new TupleSourceID(lob.getReferenceStreamId());
                             TupleSourceInfo lobInfo = getTupleSourceInfo(id, false);
-                            lobInfo.setGroupInfo(getGroupInfo(parentId.getStringID()));
+                            reassignGroup(groupInfo, lobInfo);
                             
                             // if the lob moving parent has a assosiated persistent
                             // tuple source, then move that one to same parent too.
                             if (lob.getPersistenceStreamId() != null) {
                                 id = new TupleSourceID(lob.getPersistenceStreamId());
                                 lobInfo = getTupleSourceInfo(id, false);
-                                lobInfo.setGroupInfo(getGroupInfo(parentId.getStringID()));                                
+                                reassignGroup(groupInfo, lobInfo);                                
                             }                            
                         }
                     }
@@ -966,6 +967,17 @@ public class BufferManagerImpl implements BufferManager {
             }
         }
     }
+
+	private void reassignGroup(TupleGroupInfo groupInfo, TupleSourceInfo lobInfo) {
+		TupleGroupInfo tupleGroupInfo = lobInfo.getGroupInfo();
+		synchronized (tupleGroupInfo) {
+			tupleGroupInfo.getTupleSourceIDs().remove(lobInfo.getTupleSourceID());
+		}
+		lobInfo.setGroupInfo(groupInfo);
+		synchronized (groupInfo) {
+			groupInfo.getTupleSourceIDs().add(lobInfo.getTupleSourceID());
+		}
+	}
     
     private boolean lobIsNotKnownInTupleSourceMap( Streamable lob, TupleSourceID parentId) throws TupleSourceNotFoundException {
         /*
