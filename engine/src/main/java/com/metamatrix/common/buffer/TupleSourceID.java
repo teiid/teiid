@@ -114,7 +114,7 @@ public class TupleSourceID implements Serializable {
             return true;
         }
 
-        if(obj == null || ! (obj instanceof TupleSourceID)) {
+        if(! (obj instanceof TupleSourceID)) {
             return false;
         }
 

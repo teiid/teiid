@@ -74,7 +74,7 @@ public class BufferManagerImpl implements BufferManager {
     // Cache tuple source info in memory 
     private Map<TupleSourceID, TupleSourceInfo> tupleSourceMap = new ConcurrentHashMap<TupleSourceID, TupleSourceInfo>();
     // groupName (String) -> TupleGroupInfo map
-    private Map groupInfos = new HashMap();
+    private Map<String, TupleGroupInfo> groupInfos = new HashMap<String, TupleGroupInfo>();
 
     // Storage managers
     private StorageManager memoryMgr;
@@ -160,14 +160,14 @@ public class BufferManagerImpl implements BufferManager {
         this.memoryState.fillStats(stats);
         
         // Get picture of what's happening
-        Set copyKeys = tupleSourceMap.keySet();
-        Iterator infoIter = copyKeys.iterator();
+        Set<TupleSourceID> copyKeys = tupleSourceMap.keySet();
+        Iterator<TupleSourceID> infoIter = copyKeys.iterator();
         stats.numTupleSources = copyKeys.size();
 
         // Walk through each info and count where all the batches are -
         // lock only a single info at a time to minimize locking
         while(infoIter.hasNext()) {
-            Object key = infoIter.next();
+            TupleSourceID key = infoIter.next();
             TupleSourceInfo info = tupleSourceMap.get(key);
             if(info == null) {
                 continue;
@@ -248,7 +248,11 @@ public class BufferManagerImpl implements BufferManager {
     throws MetaMatrixComponentException {
 
         TupleSourceID newID = new TupleSourceID(String.valueOf(this.currentTuple.getAndIncrement()), this.lookup);
-		TupleSourceInfo info = new TupleSourceInfo(newID, schema, types, getGroupInfo(groupName), tupleSourceType);
+        TupleGroupInfo tupleGroupInfo = getGroupInfo(groupName);
+		TupleSourceInfo info = new TupleSourceInfo(newID, schema, types, tupleGroupInfo, tupleSourceType);
+		synchronized (tupleGroupInfo) {
+            tupleGroupInfo.getTupleSourceIDs().add(newID);
+		}
 		tupleSourceMap.put(newID, info);
 
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
@@ -301,7 +305,10 @@ public class BufferManagerImpl implements BufferManager {
                 }
             }
         }
-
+        TupleGroupInfo tupleGroupInfo = info.getGroupInfo();
+        synchronized (tupleGroupInfo) {
+			tupleGroupInfo.getTupleSourceIDs().remove(tupleSourceID);
+		}
         // Remove memory storage
         this.memoryMgr.removeBatches(tupleSourceID);
 
@@ -330,37 +337,22 @@ public class BufferManagerImpl implements BufferManager {
             LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, new Object[]{"Removing TupleSources for group", groupName}); //$NON-NLS-1$
         }
 
-        // Get tuple sources to remove
-        List removeList = new ArrayList();
-    	Iterator iter = this.tupleSourceMap.keySet().iterator();
-    	while(iter.hasNext()) {
-    		TupleSourceID tsID = (TupleSourceID) iter.next();
-    		TupleSourceInfo info = this.tupleSourceMap.get(tsID);
-            if(info != null && ! info.isRemoved()) {
-                // group names can be null - have to do a comparison with nulls here
-                String infoGroup = info.getGroupInfo().getGroupName();
-                if(infoGroup == null) {
-                    if(groupName == null) {
-                        removeList.add(tsID);
-                    }
-                } else if(infoGroup.equals(groupName)) {
-                    removeList.add(tsID);
-                }
-    		}
-    	}
-        
+        TupleGroupInfo tupleGroupInfo = null;
         synchronized(groupInfos) {
-            groupInfos.remove(groupName);
+        	tupleGroupInfo = groupInfos.remove(groupName);
         }
-
+        if (tupleGroupInfo == null) {
+        	return;
+        }
+        List<TupleSourceID> tupleSourceIDs = null;
+        synchronized (tupleGroupInfo) {
+			tupleSourceIDs = new ArrayList<TupleSourceID>(tupleGroupInfo.getTupleSourceIDs());
+		}
         // Remove them
-        if(removeList.size() > 0) {
+        if(tupleSourceIDs.size() > 0) {
 	        MetaMatrixComponentException ex = null;
 
-	        Iterator removeIter = removeList.iterator();
-	        while(removeIter.hasNext()) {
-	     		TupleSourceID tsID = (TupleSourceID) removeIter.next();
-
+	        for (TupleSourceID tsID : tupleSourceIDs) {
 	     		try {
 	     			this.removeTupleSource(tsID);
 	     		} catch(TupleSourceNotFoundException e) {
@@ -883,7 +875,7 @@ public class BufferManagerImpl implements BufferManager {
     private TupleGroupInfo getGroupInfo(String groupName) {
         TupleGroupInfo info = null;
         synchronized(groupInfos) {
-            info = (TupleGroupInfo)groupInfos.get(groupName);
+            info = groupInfos.get(groupName);
             if (info == null) {
                 // If it doesn't exist, create a new one
                 info = new TupleGroupInfo(groupName);

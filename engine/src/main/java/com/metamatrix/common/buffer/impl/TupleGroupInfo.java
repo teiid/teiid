@@ -22,6 +22,11 @@
 
 package com.metamatrix.common.buffer.impl;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import com.metamatrix.common.buffer.TupleSourceID;
+
 
 
 /** 
@@ -34,10 +39,15 @@ class TupleGroupInfo {
     private String groupName;
     /** The bytes of memory used by this tuple group*/
     private long memoryUsed;
+    private Set<TupleSourceID> tupleSourceIDs = new HashSet<TupleSourceID>();
     
     TupleGroupInfo(String groupName) {
         this.groupName = groupName;
     }
+    
+    public Set<TupleSourceID> getTupleSourceIDs() {
+		return tupleSourceIDs;
+	}
     
     String getGroupName() {
         return groupName;

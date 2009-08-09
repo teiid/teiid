@@ -53,9 +53,9 @@ class ManagedBatch {
     private int beginRow;
     private int endRow;
     private long size;    
-    private long lastAccessed; 
     private int location;  
     private int pinnedCount;
+    private int hashCode;
     
     // logging
     private static int STACK_LEVELS_TO_OMIT = 2;
@@ -72,7 +72,7 @@ class ManagedBatch {
         this.beginRow = begin;
         this.endRow = end;
         this.size = size;
-        updateLastAccessed();       
+        this.hashCode = HashCodeUtil.hashCode(tupleSourceID.hashCode(), beginRow);
     }
     
     /**
@@ -106,21 +106,6 @@ class ManagedBatch {
     public long getSize() {
         return this.size;
     }
-    
-    /**
-     * Get the last accessed timestamp.
-     * @return Last accessed timestamp
-     */    
-    public long getLastAccessed() {
-        return this.lastAccessed;
-    }
-    
-    /**
-     * Update the last accessed timestamp from system clock
-     */
-    public void updateLastAccessed() {
-        lastAccessed = System.currentTimeMillis();    
-    }    
     
     /**
      * Get the location of the batch, as defined in constants
@@ -212,10 +197,11 @@ class ManagedBatch {
      * @return Hash code
      */
     public int hashCode() {
-        return HashCodeUtil.hashCode(beginRow, tupleSourceID);
+        return hashCode;
     }
     
     public String toString() {
         return "ManagedBatch[" + tupleSourceID + ", " + beginRow + ", " + endRow + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
+
 }

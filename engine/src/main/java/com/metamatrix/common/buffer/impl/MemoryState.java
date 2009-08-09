@@ -23,11 +23,13 @@
 package com.metamatrix.common.buffer.impl;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.log.LogManager;
@@ -54,7 +56,7 @@ import com.metamatrix.dqp.util.LogConstants;
  */
 class MemoryState {
     
-    private static ThreadLocal PINNED_BY_THREAD = new ThreadLocal();
+    private static ThreadLocal<Map<TupleSourceID, Map<Integer, ManagedBatch>>> PINNED_BY_THREAD = new ThreadLocal<Map<TupleSourceID, Map<Integer, ManagedBatch>>>();
     
     //memory availability when reserveMemory() is called
     static final int MEMORY_AVAILABLE = 1;
@@ -68,11 +70,10 @@ class MemoryState {
     private volatile long memoryUsed = 0;
 
     // Track the currently pinned stuff by TupleSourceID for easy lookup
-    private Map pinned = new HashMap();     
+    private Map<TupleSourceID, Map<Integer, ManagedBatch>> pinned = new HashMap<TupleSourceID, Map<Integer, ManagedBatch>>();     
     
     // Track the currently unpinned stuff in a sorted list, sorted by access time
-    private static final Comparator BATCH_COMPARATOR = new BatchComparator();
-    private List unpinned = new ArrayList();
+    private Set<ManagedBatch> unpinned = Collections.synchronizedSet(new LinkedHashSet<ManagedBatch>());
     
     /**
      * Constructor for MemoryState, based on config.
@@ -158,9 +159,9 @@ class MemoryState {
         synchronized (this) {
             addPinnedInternal(pinned, batch);
         }
-        Map theadPinned = (Map)PINNED_BY_THREAD.get();
+        Map<TupleSourceID, Map<Integer, ManagedBatch>> theadPinned = PINNED_BY_THREAD.get();
         if (theadPinned == null) {
-            theadPinned = new HashMap();
+            theadPinned = new HashMap<TupleSourceID, Map<Integer, ManagedBatch>>();
             PINNED_BY_THREAD.set(theadPinned);
         }
         addPinnedInternal(theadPinned, batch);
@@ -169,11 +170,11 @@ class MemoryState {
         }
     }
 
-    private void addPinnedInternal(Map pinnedMap, ManagedBatch batch) {
+    private void addPinnedInternal(Map<TupleSourceID, Map<Integer, ManagedBatch>> pinnedMap, ManagedBatch batch) {
         TupleSourceID tsID = batch.getTupleSourceID();
-        Map tsPinned = (Map) pinnedMap.get(tsID);
+        Map<Integer, ManagedBatch> tsPinned = pinnedMap.get(tsID);
         if(tsPinned == null) {
-            tsPinned = new HashMap();
+            tsPinned = new HashMap<Integer, ManagedBatch>();
             pinnedMap.put(tsID, tsPinned);
         } 
         
@@ -193,7 +194,7 @@ class MemoryState {
             result = removePinnedInternal(pinned, tsID, beginRow);
         }
         if (result != null) {
-            Map theadPinned = (Map)PINNED_BY_THREAD.get();
+        	Map<TupleSourceID, Map<Integer, ManagedBatch>> theadPinned = PINNED_BY_THREAD.get();
             if (theadPinned != null) {
                 removePinnedInternal(theadPinned, tsID, beginRow);
             }
@@ -201,11 +202,11 @@ class MemoryState {
         return result;
     }
 
-    private ManagedBatch removePinnedInternal(Map pinnedMap, TupleSourceID tsID,
+    private ManagedBatch removePinnedInternal(Map<TupleSourceID, Map<Integer, ManagedBatch>> pinnedMap, TupleSourceID tsID,
                                               int beginRow) {
-        Map tsPinned = (Map) pinnedMap.get(tsID);
+        Map<Integer, ManagedBatch> tsPinned = pinnedMap.get(tsID);
         if(tsPinned != null) { 
-            ManagedBatch mbatch = (ManagedBatch) tsPinned.remove(new Integer(beginRow));
+            ManagedBatch mbatch = tsPinned.remove(new Integer(beginRow));
             
             if(tsPinned.size() == 0) { 
                 pinnedMap.remove(tsID);
@@ -220,28 +221,15 @@ class MemoryState {
      * Add an unpinned batch
      * @param batch Unpinned batch to add
      */        
-    public synchronized void addUnpinned(ManagedBatch batch) {
-        batch.updateLastAccessed();
-  
-        if(unpinned.isEmpty()) {
-            unpinned.add(batch);
-            return;
-        }
-        int size = unpinned.size() - 1;
-        for(int i=size; i>=0; i--) {
-            ManagedBatch listBatch = (ManagedBatch)unpinned.get(i); 
-            if(BATCH_COMPARATOR.compare(batch, listBatch) >= 0) {
-                unpinned.add(i + 1, batch);
-                break;
-            } 
-        }
+    public void addUnpinned(ManagedBatch batch) {
+        unpinned.add(batch);
     }
     
     /**
      * Remove an unpinned batch
      * @param batch Batch to remove
      */
-    public synchronized void removeUnpinned(ManagedBatch batch) {
+    public void removeUnpinned(ManagedBatch batch) {
         unpinned.remove(batch);
     }
 
@@ -254,17 +242,19 @@ class MemoryState {
      * should check that each batch is still unpinned.
      * @return Safe (but possibly out of date) iterator on unpinned batches
      */
-    public synchronized Iterator getAllUnpinned() {
-        List copy = new ArrayList(unpinned);
-        return copy.iterator();    
+    public Iterator<ManagedBatch> getAllUnpinned() {
+    	synchronized (unpinned) {
+            List<ManagedBatch> copy = new ArrayList<ManagedBatch>(unpinned);
+            return copy.iterator();    
+		}
     }
     
-    public synchronized Map getAllPinned() {
-        return new HashMap(pinned);    
+    public synchronized Map<TupleSourceID, Map<Integer, ManagedBatch>> getAllPinned() {
+        return new HashMap<TupleSourceID, Map<Integer, ManagedBatch>>(pinned);    
     }
         
-    public Map getPinnedByCurrentThread() {
-        return (Map)PINNED_BY_THREAD.get();
+    public Map<TupleSourceID, Map<Integer, ManagedBatch>> getPinnedByCurrentThread() {
+        return PINNED_BY_THREAD.get();
     }
 
 }
