@@ -66,8 +66,7 @@ public class SaxonXQueryExpression implements XQueryExpression {
     private net.sf.saxon.query.XQueryExpression xQuery;    
     private Map virtualDocuments;
     private String xmlFormat;
-    private Map params; // map of param name to value
-    private Map paramDeclarations;
+    private Map<String, String> paramDeclarations;
 
     // Create a default error listener to use when compiling - this prevents 
     // errors from being printed to System.err.
@@ -108,7 +107,7 @@ public class SaxonXQueryExpression implements XQueryExpression {
      * 
      */
     private void parseParameters() {
-        this.paramDeclarations = new HashMap();
+        this.paramDeclarations = new HashMap<String, String>();
         
         Matcher matcher = EXTERNAL_VARIABLE_PATTERN.matcher(xQueryString);
         while(matcher.find()) {
@@ -131,41 +130,19 @@ public class SaxonXQueryExpression implements XQueryExpression {
         dynamicContext.setURIResolver(new DocFunctionURIResolver(this.virtualDocuments, sqlEval));
         
         // Set external parameter values (if used in a view with params)
-        if(this.params != null && this.params.size() > 0) {
-            Iterator paramIter = params.entrySet().iterator();
-            while(paramIter.hasNext()) {
-                Map.Entry entry = (Map.Entry) paramIter.next();
-                String paramName = (String)entry.getKey();
-                paramName = StringUtil.getLastToken(paramName, "."); //$NON-NLS-1$
-                
-                Expression expr = (Expression)entry.getValue();
-                Object value = Evaluator.evaluate(expr);
-                
-                if(! paramDeclarations.containsKey(paramName)) {
-                    // Look for a different case match
-                    Iterator declIter = this.paramDeclarations.keySet().iterator();
-                    while(declIter.hasNext()) {
-                        String paramDecl = (String) declIter.next();
-                        if(paramName.equalsIgnoreCase(paramDecl)) {
-                            paramName = paramDecl;
-                            break;
-                        }
-                    }
+        for (Map.Entry<String, String> entry : this.paramDeclarations.entrySet()) {
+        	Object value = sqlEval.getParameterValue(entry.getKey());
+            // Check for xml and serialize
+            String type = entry.getValue();
+            if(type != null && type.equals("node()") && value != null) { //$NON-NLS-1$                    
+                try {
+                    value = ((SQLXML)value).getSource(null);
+                } catch (SQLException e) {
+                    throw new MetaMatrixProcessingException(e);
                 }
-                
-                // Check for xml and serialize
-                String type = (String) paramDeclarations.get(paramName);
-                if(type != null && type.equals("node()") && value != null) { //$NON-NLS-1$                    
-                    try {
-                        value = ((SQLXML)value).getSource(null);
-                    } catch (SQLException e) {
-                        throw new MetaMatrixProcessingException(e);
-                    }
-                }
-                
-                dynamicContext.setParameter(paramName, value);                
             }
-        }
+            dynamicContext.setParameter(entry.getKey(), value);                
+		}
         
         // Evaluate
         List rawResults = null;
@@ -218,11 +195,4 @@ public class SaxonXQueryExpression implements XQueryExpression {
         this.xmlFormat = xmlFormat;
     }
     
-    /** 
-     * @see com.metamatrix.query.xquery.XQueryExpression#setParameters(java.util.Map)
-     * @since 4.3
-     */
-    public void setParameters(Map params) {
-        this.params = params;
-    }        
 }

@@ -140,22 +140,18 @@ public class MetadataResultsPostProcessor {
      * @since 4.3
      */
     public ModelRecordImpl getModelRecordWithUpdatedVisibility(final ModelRecordImpl record) {
-        if(record instanceof ModelRecordImpl){
-            //set visibility
-            ModelRecordImpl mRecord = (ModelRecordImpl)record;
-            String modelName = mRecord.getName();   
-            if(!SystemVdbUtility.isSystemModelWithSystemTableType(modelName)){
-                int visibility = ModelInfo.PUBLIC;
-                if(this.vdbService != null) {
-                    try {
-                        visibility = vdbService.getModelVisibility(vdbName, vdbVersion, modelName);
-                    } catch (MetaMatrixComponentException e) {
-                        throw new MetaMatrixRuntimeException(e);
-                    }
+        String modelName = record.getName();   
+        if(!SystemVdbUtility.isSystemModelWithSystemTableType(modelName)){
+            int visibility = ModelInfo.PUBLIC;
+            if(this.vdbService != null) {
+                try {
+                    visibility = vdbService.getModelVisibility(vdbName, vdbVersion, modelName);
+                } catch (MetaMatrixComponentException e) {
+                    throw new MetaMatrixRuntimeException(e);
                 }
-                mRecord.setVisible(visibility == ModelInfo.PUBLIC);
-                return mRecord;
             }
+            record.setVisible(visibility == ModelInfo.PUBLIC);
+            return record;
         }
         return null;
     }

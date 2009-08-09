@@ -155,7 +155,22 @@ public class EvaluatableVisitor extends LanguageVisitor {
     	return levels.last().compareTo(targetLevel) <= 0;
     }
     
-    public static final boolean isEvaluatable(LanguageObject obj, EvaluationLevel target) {
+    /**
+	 *  Will return true if the expression can be deterministically evaluated at runtime, but it may not be
+	 *  evaluatable during planning
+	 */
+	public static final boolean willBecomeConstant(LanguageObject obj) {
+	    return willBecomeConstant(obj, false);
+	}
+
+	/**
+	 *  Should be called to check if the object can fully evaluated
+	 */
+	public static final boolean isFullyEvaluatable(LanguageObject obj, boolean duringPlanning) {
+	    return isEvaluatable(obj, duringPlanning?EvaluationLevel.PLANNING:EvaluationLevel.PROCESSING);
+	}
+
+	public static final boolean isEvaluatable(LanguageObject obj, EvaluationLevel target) {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         visitor.targetLevel = target;
         PreOrderNavigator.doVisit(obj, visitor);

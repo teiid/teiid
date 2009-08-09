@@ -41,6 +41,7 @@ public class XQuery extends Command {
     
     private String xQuery;
     private XQueryExpression compiledXQuery;
+    private Map variables;
     
     public XQuery(){
     }
@@ -49,6 +50,14 @@ public class XQuery extends Command {
         this.xQuery = xQuery;
         this.compiledXQuery = compiledXQuery;
     }
+    
+    public void setVariables(Map variables) {
+		this.variables = variables;
+	}
+    
+    public Map getVariables() {
+		return variables;
+	}
     
     public String getXQuery(){
         return xQuery;
@@ -110,6 +119,7 @@ public class XQuery extends Command {
      */
     public Object clone() {
         XQuery copy = new XQuery(getXQuery(), this.compiledXQuery);
+        copy.variables = variables;
         copyMetadataState(copy);
         return copy;
     }

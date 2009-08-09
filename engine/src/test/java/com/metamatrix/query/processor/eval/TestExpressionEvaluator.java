@@ -42,14 +42,11 @@ import com.metamatrix.query.function.FunctionDescriptor;
 import com.metamatrix.query.function.FunctionLibraryManager;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
-import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.CollectionValueIterator;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SubqueryContainer;
-import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.CaseExpression;
 import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ContextReference;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
@@ -59,7 +56,6 @@ import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.symbol.TestCaseExpression;
 import com.metamatrix.query.sql.symbol.TestSearchedCaseExpression;
 import com.metamatrix.query.sql.util.ValueIterator;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -415,18 +411,4 @@ public class TestExpressionEvaluator extends TestCase {
         }
     }    
     
-    //tests that the visitor is safe to use against a null expression in the aggregate symbol
-    public void testCountStar() throws Exception {
-    	ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
-        ElementSymbol y = new ElementSymbol("y"); //$NON-NLS-1$
-        
-        HashMap map = new HashMap();
-        map.put(x, y);
-        
-    	AggregateSymbol countStar = new AggregateSymbol("agg1", ReservedWords.COUNT, false, null); //$NON-NLS-1$ //$NON-NLS-2$
-    	AggregateSymbol countStar1 = new AggregateSymbol("agg1", ReservedWords.COUNT, false, null); //$NON-NLS-1$ //$NON-NLS-2$
-    	EvaluateExpressionVisitor.replaceExpressions(countStar, true, null, null);
-    	
-    	assertEquals(countStar1, countStar);
-    }
 }

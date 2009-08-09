@@ -37,20 +37,12 @@ import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.xquery.saxon.SaxonXQueryExpression;
 
 /**
  * Test XQueryEngine and XQueryExpression implementations
  */
 public class TestXQueryEngine extends TestCase {
-
-    /**
-     * constructor
-     */
-    public TestXQueryEngine() {
-        super();
-    }
 
     /**
      * @param name
@@ -73,7 +65,7 @@ public class TestXQueryEngine extends TestCase {
         assertEquals(expected.getString(), actualResults.getString());        
     }
 
-    private void helpTestEngineFails(String xQuery, Class expectedFailure, XQuerySQLEvaluator sqlEval) throws Exception{
+    private void helpTestEngineFails(String xQuery, Class<?> expectedFailure, XQuerySQLEvaluator sqlEval) throws Exception{
         XQueryExpression expr = new SaxonXQueryExpression();
         expr.compileXQuery(xQuery);
         
@@ -203,10 +195,10 @@ public class TestXQueryEngine extends TestCase {
                         "<Name>Lamp</Name>" +   //$NON-NLS-1$
                         "</set>"; //$NON-NLS-1$                        
         XQueryExpression expr = new SaxonXQueryExpression();
-        HashMap params= new HashMap();
-        params.put("ItemID", new Constant("001")); //$NON-NLS-1$ //$NON-NLS-2$
-        expr.setParameters(params);
-        helpTestEngine(expr, xquery, new SQLXMLImpl(expected), new HardcodedSqlEval(inputdoc));        
+        HardcodedSqlEval eval = new HardcodedSqlEval(inputdoc);
+        eval.params = new HashMap<String, Object>();
+        eval.params.put("itemid", "001"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestEngine(expr, xquery, new SQLXMLImpl(expected), eval);        
     }     
 
 }

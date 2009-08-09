@@ -23,7 +23,6 @@
 package com.metamatrix.query.xquery;
 
 import java.sql.SQLXML;
-import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -70,13 +69,4 @@ public interface XQueryExpression {
      */
     public void setXMLFormat(String xmlFormat);  
     
-    /**
-     * Set external parameter values.  These much match up to declared external variables
-     * in the xquery expression itself.  For example, xml literal inputs need to be declared
-     * like this in the prolog:
-     *    declare variable $input as node() external;
-     * @param params Map of parameter name -> value
-     */
-    public void setParameters(Map params);
-        
 }

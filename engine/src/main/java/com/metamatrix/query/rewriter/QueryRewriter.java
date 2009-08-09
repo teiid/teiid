@@ -43,6 +43,8 @@ import java.util.StringTokenizer;
 import org.teiid.connector.api.SourceSystemFunctions;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.CriteriaEvaluationException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.FunctionExecutionException;
@@ -66,10 +68,12 @@ import com.metamatrix.query.metadata.SupportConstants;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
 import com.metamatrix.query.sql.LanguageObject;
+import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
 import com.metamatrix.query.sql.lang.BetweenCriteria;
@@ -100,6 +104,7 @@ import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.Select;
 import com.metamatrix.query.sql.lang.SetClause;
+import com.metamatrix.query.sql.lang.SetClauseList;
 import com.metamatrix.query.sql.lang.SetCriteria;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.StoredProcedure;
@@ -110,6 +115,7 @@ import com.metamatrix.query.sql.lang.SubquerySetCriteria;
 import com.metamatrix.query.sql.lang.TranslatableProcedureContainer;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.lang.Update;
+import com.metamatrix.query.sql.lang.XQuery;
 import com.metamatrix.query.sql.navigator.PostOrderNavigator;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
@@ -132,17 +138,18 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
-import com.metamatrix.query.sql.visitor.CorrelatedVariableSubstitutionVisitor;
 import com.metamatrix.query.sql.visitor.CriteriaTranslatorVisitor;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.sql.visitor.ExpressionMappingVisitor;
 import com.metamatrix.query.sql.visitor.PredicateCollectorVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
@@ -170,41 +177,81 @@ public class QueryRewriter {
     	ALIASED_FUNCTIONS.put("||", SourceSystemFunctions.CONCAT); //$NON-NLS-1$
     	ALIASED_FUNCTIONS.put("chr", SourceSystemFunctions.CHAR); //$NON-NLS-1$
     }
+    
+    private QueryMetadataInterface metadata;
+    private CommandContext context;
+    private CreateUpdateProcedureCommand procCommand;
+    
+    private boolean rewriteSubcommands;
+    private ProcessorDataManager dataMgr;
+    private Map variables; //constant propagation
+    private int commandType;
+   
+    private QueryRewriter(QueryMetadataInterface metadata,
+			CommandContext context, CreateUpdateProcedureCommand procCommand) {
+		this.metadata = metadata;
+		this.context = context;
+		this.procCommand = procCommand;
+	}
+    
+    public static Command evaluateAndRewrite(Command command, ProcessorDataManager dataMgr, CommandContext context) throws MetaMatrixProcessingException, MetaMatrixComponentException {
+    	QueryRewriter queryRewriter = new QueryRewriter(null, context, null);
+    	queryRewriter.dataMgr = dataMgr;
+    	queryRewriter.rewriteSubcommands = true;
+    	try {
+    		return queryRewriter.rewriteCommand(command, false);
+    	} catch (MetaMatrixRuntimeException err) {
+    		Throwable e = err.getChild();
+            
+            if (e == null) {
+                throw err;
+            }
+            
+            if(e instanceof ExpressionEvaluationException) {
+                throw (ExpressionEvaluationException) e;
+            } else if(e instanceof MetaMatrixComponentException) {
+                throw (MetaMatrixComponentException) e;                    
+            } else {
+                throw new MetaMatrixComponentException(e, e.getMessage());    
+            }
+    	}
+    }
 
-	private QueryRewriter() { }
-
-    public static Command rewrite(Command command, Command procCommand, QueryMetadataInterface metadata, CommandContext context) throws QueryValidatorException {
-        return rewriteCommand(command, procCommand, metadata, context, false);
+	public static Command rewrite(Command command, CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata, CommandContext context, Map variableValues, int commandType) throws QueryValidatorException {
+		QueryRewriter rewriter = new QueryRewriter(metadata, context, procCommand);
+		rewriter.rewriteSubcommands = true;
+		rewriter.variables = variableValues;
+		rewriter.commandType = commandType;
+		return rewriter.rewriteCommand(command, false);
+	}
+    
+	public static Command rewrite(Command command, CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata, CommandContext context) throws QueryValidatorException {
+		return rewrite(command, procCommand, metadata, context, null, Command.TYPE_UNKNOWN);
     }
 
     /**
      * Rewrites the command and all of its subcommands (both embedded and non-embedded)
      *  
      * @param command
-     * @param procCommand
-     * @param metadata
-     * @param context
      * @param removeOrderBy
      * @return
      * @throws QueryValidatorException
      */
-	private static Command rewriteCommand(Command command, Command procCommand, final QueryMetadataInterface metadata, final CommandContext context, boolean removeOrderBy) throws QueryValidatorException {
-
-        //TODO: this should be merged with the normal functioning of the rewriter
-        CorrelatedVariableSubstitutionVisitor.substituteVariables(command);
+	private Command rewriteCommand(Command command, boolean removeOrderBy) throws QueryValidatorException {
+		QueryMetadataInterface oldMetadata = metadata;
+		CreateUpdateProcedureCommand oldProcCommand = procCommand;
         
-        Map tempMetadata = command.getTemporaryMetadata();
-        QueryMetadataInterface rewriteMetadata = metadata;
+		Map tempMetadata = command.getTemporaryMetadata();
         if(tempMetadata != null) {
-        	rewriteMetadata = new TempMetadataAdapter(metadata, new TempMetadataStore(tempMetadata));
+        	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore(tempMetadata));
         }
         
         switch(command.getType()) {
 			case Command.TYPE_QUERY:
                 if(command instanceof Query) {
-                    command = rewriteQuery((Query) command, procCommand, rewriteMetadata, context);
+                    command = rewriteQuery((Query) command);
                 }else {
-                    command = rewriteSetQuery((SetQuery) command, procCommand, rewriteMetadata, context);
+                    command = rewriteSetQuery((SetQuery) command);
                 }
             	if (removeOrderBy) {
                 	QueryCommand queryCommand = (QueryCommand)command;
@@ -214,35 +261,38 @@ public class QueryRewriter {
                 }
                 break;
             case Command.TYPE_STORED_PROCEDURE:
-                command = rewriteExec((StoredProcedure) command, procCommand, rewriteMetadata, context);
+                command = rewriteExec((StoredProcedure) command);
                 break;
     		case Command.TYPE_INSERT:
-                command = rewriteInsert((Insert) command, procCommand, context, rewriteMetadata);
+                command = rewriteInsert((Insert) command);
                 break;
 			case Command.TYPE_UPDATE:
-                command = rewriteUpdate((Update) command, procCommand, context, rewriteMetadata);
+                command = rewriteUpdate((Update) command);
                 break;
 			case Command.TYPE_DELETE:
-                command = rewriteDelete((Delete) command, procCommand, context, rewriteMetadata);
+                command = rewriteDelete((Delete) command);
                 break;
             case Command.TYPE_UPDATE_PROCEDURE:
-                procCommand = command;
-                command = rewriteUpdateProcedure((CreateUpdateProcedureCommand) command, rewriteMetadata, context);
+                procCommand = (CreateUpdateProcedureCommand) command;
+                command = rewriteUpdateProcedure((CreateUpdateProcedureCommand) command);
                 break;
+            case Command.TYPE_XQUERY:
+            	((XQuery)command).setVariables(this.variables);
+            	break;
 		}
         
         //recursively rewrite simple containers - after the container itself was rewritten
         if (command instanceof CommandContainer) {
-            List subCommands = ((CommandContainer)command).getContainedCommands();
+            Map oldVariables = variables;
+        	List subCommands = ((CommandContainer)command).getContainedCommands();
             for (int i = 0; i < subCommands.size(); i++) {
                 Command subCommand = (Command)subCommands.get(i);
                 
                 if (command instanceof ProcedureContainer) {
                        
                     try {
-    	                Map variables = QueryResolver.getVariableValues(command, metadata);                        
-                        VariableSubstitutionVisitor.substituteVariables(subCommand, variables, command.getType());
-
+    	                variables = QueryResolver.getVariableValues(command, metadata);                        
+    	                commandType = command.getType();
                     } catch (QueryMetadataException err) {
                         throw new QueryValidatorException(err, err.getMessage());
                     } catch (QueryResolverException err) {
@@ -252,15 +302,19 @@ public class QueryRewriter {
                     }
                 }
                 
-                subCommand = rewriteCommand(subCommand, procCommand, metadata, context, false);
+                subCommand = rewriteCommand(subCommand, false);
                 subCommands.set(i, subCommand);
             }
+            variables = oldVariables;
         }
 
-        return removeProceduralWrapper(command, metadata);
+        Command result = removeProceduralWrapper(command);
+        this.metadata = oldMetadata;
+        this.procCommand = oldProcCommand;
+        return result;
 	}
     
-    private static Option mergeOptions( Option sourceOption, Option targetOption ) {
+    private Option mergeOptions( Option sourceOption, Option targetOption ) {
         if ( sourceOption == null ) {
             return targetOption;
         }
@@ -278,7 +332,7 @@ public class QueryRewriter {
     }
     
 	
-    private static Command removeProceduralWrapper(Command command, QueryMetadataInterface metadata) throws QueryValidatorException {
+    private Command removeProceduralWrapper(Command command) throws QueryValidatorException {
         
         if (!(command instanceof StoredProcedure)) {
             return command;
@@ -303,7 +357,7 @@ public class QueryRewriter {
         for (Iterator iter = container.getInputParameters().iterator(); iter.hasNext();) {
             SPParameter param = (SPParameter)iter.next();
             Expression expr = param.getExpression();
-            if (!EvaluateExpressionVisitor.isFullyEvaluatable(expr, true)) {
+            if (!EvaluatableVisitor.isFullyEvaluatable(expr, true)) {
                 return command;
             }
             try {
@@ -344,16 +398,16 @@ public class QueryRewriter {
         return command;
     }
 
-	private static Command rewriteUpdateProcedure(CreateUpdateProcedureCommand procCommand, QueryMetadataInterface metadata, CommandContext context)
+	private Command rewriteUpdateProcedure(CreateUpdateProcedureCommand command)
 								 throws QueryValidatorException {
 		
-		Block block = rewriteBlock(procCommand.getBlock(), procCommand, context, metadata);
-        procCommand.setBlock(block);
+		Block block = rewriteBlock(command.getBlock());
+        command.setBlock(block);
         
-        return procCommand;
+        return command;
 	}
 
-	private static Block rewriteBlock(Block block, Command procCommand, CommandContext context, QueryMetadataInterface metadata)
+	private Block rewriteBlock(Block block)
 								 throws QueryValidatorException {
 		List statements = block.getStatements();
         Iterator stmtIter = statements.iterator();
@@ -362,7 +416,7 @@ public class QueryRewriter {
 		// plan each statement in the block
         while(stmtIter.hasNext()) {
 			Statement stmnt = (Statement) stmtIter.next();
-			Object newStmt = rewriteStatement(stmnt, procCommand, context, metadata);
+			Object newStmt = rewriteStatement(stmnt);
 			if(newStmt instanceof Statement) {
 				newStmts.add(newStmt);
 			} else if (newStmt instanceof List) {
@@ -375,7 +429,7 @@ public class QueryRewriter {
         return block;
 	 }
 
-	private static Object rewriteStatement(Statement statement, Command procCommand, CommandContext context, QueryMetadataInterface metadata)
+	private Object rewriteStatement(Statement statement)
 								 throws QueryValidatorException {
 
         // evaluate the HAS Criteria on the procedure and rewrite
@@ -384,24 +438,24 @@ public class QueryRewriter {
 			case Statement.TYPE_IF:
 				IfStatement ifStmt = (IfStatement) statement;
 				Criteria ifCrit = ifStmt.getCondition();
-				Criteria evalCrit = rewriteCriteria(ifCrit, procCommand, context, metadata);
+				Criteria evalCrit = rewriteCriteria(ifCrit, false);
                 evalCrit = evaluateCriteria(evalCrit);
                 
 				ifStmt.setCondition(evalCrit);
 				if(evalCrit.equals(TRUE_CRITERIA)) {
-					Block ifblock = rewriteBlock(ifStmt.getIfBlock(), procCommand, context, metadata);
+					Block ifblock = rewriteBlock(ifStmt.getIfBlock());
 					return ifblock.getStatements();
 				} else if(evalCrit.equals(FALSE_CRITERIA) || evalCrit.equals(UNKNOWN_CRITERIA)) {
 					if(ifStmt.hasElseBlock()) {
-						Block elseBlock = rewriteBlock(ifStmt.getElseBlock(), procCommand, context, metadata);
+						Block elseBlock = rewriteBlock(ifStmt.getElseBlock());
 						return elseBlock.getStatements();
 					} 
                     return null;
 				} else {
-					Block ifblock = rewriteBlock(ifStmt.getIfBlock(), procCommand, context, metadata);
+					Block ifblock = rewriteBlock(ifStmt.getIfBlock());
 					ifStmt.setIfBlock(ifblock);
 					if(ifStmt.hasElseBlock()) {
-						Block elseBlock = rewriteBlock(ifStmt.getElseBlock(), procCommand, context, metadata);
+						Block elseBlock = rewriteBlock(ifStmt.getElseBlock());
 						ifStmt.setElseBlock(elseBlock);
 					}
 				}
@@ -414,10 +468,10 @@ public class QueryRewriter {
 				// replaced in the processor with variable values
                 if (assStmt.hasExpression()) {
     				Expression expr = assStmt.getExpression();
-    				expr = rewriteExpression(expr, procCommand, context, metadata);
+    				expr = rewriteExpressionDirect(expr);
                     assStmt.setExpression(expr);
                 } else if (assStmt.hasCommand()) {
-                    rewriteSubqueryContainer(assStmt, procCommand, context, metadata, false);
+                    rewriteSubqueryContainer(assStmt, false);
                     
                     if(assStmt.getCommand().getType() == Command.TYPE_UPDATE) {
                         Update update = (Update)assStmt.getCommand();
@@ -429,7 +483,7 @@ public class QueryRewriter {
 				return assStmt;
 			case Statement.TYPE_COMMAND:
 				CommandStatement cmdStmt = (CommandStatement) statement;
-                rewriteSubqueryContainer(cmdStmt, procCommand, context, metadata, false);
+                rewriteSubqueryContainer(cmdStmt, false);
                 
 				if(cmdStmt.getCommand().getType() == Command.TYPE_UPDATE) {
                     Update update = (Update)cmdStmt.getCommand();
@@ -441,9 +495,9 @@ public class QueryRewriter {
             case Statement.TYPE_LOOP: 
                 LoopStatement loop = (LoopStatement)statement; 
                 
-                rewriteSubqueryContainer(loop, procCommand, context, metadata, false);
+                rewriteSubqueryContainer(loop, false);
                 
-                rewriteBlock(loop.getBlock(), procCommand, context, metadata);
+                rewriteBlock(loop.getBlock());
                 
                 if (loop.getBlock().getStatements().isEmpty()) {
                     return null;
@@ -453,6 +507,7 @@ public class QueryRewriter {
             case Statement.TYPE_WHILE:
                 WhileStatement whileStatement = (WhileStatement) statement;
                 Criteria crit = whileStatement.getCondition();
+                crit = rewriteCriteria(crit, false);
                 evalCrit = evaluateCriteria(crit);
                 
                 whileStatement.setCondition(evalCrit);
@@ -461,7 +516,7 @@ public class QueryRewriter {
                 } else if(evalCrit.equals(FALSE_CRITERIA) || evalCrit.equals(UNKNOWN_CRITERIA)) {
                     return null;
                 } 
-                whileStatement.setBlock(rewriteBlock(whileStatement.getBlock(), procCommand, context, metadata));
+                whileStatement.setBlock(rewriteBlock(whileStatement.getBlock()));
                 
                 if (whileStatement.getBlock().getStatements().isEmpty()) {
                     return null;
@@ -474,17 +529,13 @@ public class QueryRewriter {
 	}
     
     /** 
-     * @param procCommand
-     * @param context
-     * @param metadata
      * @param removeOrderBy
      * @param assStmt
      * @throws QueryValidatorException
      */
-    private static void rewriteSubqueryContainer(SubqueryContainer container, Command procCommand,
-                                                 CommandContext context, QueryMetadataInterface metadata, boolean removeOrderBy) throws QueryValidatorException {
-        if (container.getCommand() != null && container.getCommand().getProcessorPlan() == null && metadata != null) {
-        	container.setCommand(rewriteCommand(container.getCommand(), procCommand, metadata, context, removeOrderBy));
+    private void rewriteSubqueryContainer(SubqueryContainer container, boolean removeOrderBy) throws QueryValidatorException {
+        if (rewriteSubcommands && container.getCommand() != null && container.getCommand().getProcessorPlan() == null) {
+        	container.setCommand(rewriteCommand(container.getCommand(), removeOrderBy));
         }
     }
     
@@ -493,9 +544,9 @@ public class QueryRewriter {
 	 * if type of criteria on the elements specified by the CriteriaSelector is specified on
 	 * the user's command.</p>
 	 */
-	private static Criteria rewriteCriteria(HasCriteria hasCrit, Command procCommand, CommandContext context, QueryMetadataInterface metadata) {
+	private Criteria rewriteCriteria(HasCriteria hasCrit) {
 		Criteria userCrit = null;
-		Command userCommand = ((CreateUpdateProcedureCommand)procCommand).getUserCommand();
+		Command userCommand = procCommand.getUserCommand();
 		int cmdType = userCommand.getType();
 		switch(cmdType) {
 			case Command.TYPE_DELETE:
@@ -599,14 +650,12 @@ public class QueryRewriter {
 	 * virtual group elements and the expressions on the query transformation defining the
 	 * virtual group.</p>
 	 */
-	private static Criteria rewriteCriteria(TranslateCriteria transCrit, Command command, CommandContext context, QueryMetadataInterface metadata)
+	private Criteria rewriteCriteria(TranslateCriteria transCrit)
 			 throws QueryValidatorException {
 
 		// criteria translated
 		Criteria translatedCriteria = null;
 
-		// command received is the procedure
-		CreateUpdateProcedureCommand procCommand = (CreateUpdateProcedureCommand) command;
 		// get the user's command from the procedure
 		Command userCmd = procCommand.getUserCommand();
 
@@ -632,7 +681,7 @@ public class QueryRewriter {
 
 		// base on the selector evaluate Has criteria, if false
 		// return a false criteria
-		Criteria result = rewriteCriteria(hasCrit, procCommand, context, metadata);
+		Criteria result = rewriteCriteria(hasCrit);
 
 		if(result.equals(FALSE_CRITERIA)) {
 			return FALSE_CRITERIA;
@@ -652,7 +701,7 @@ public class QueryRewriter {
 		translatedCriteria = translateVisitor.getTranslatedCriteria();
 		((TranslatableProcedureContainer)userCmd).addImplicitParameters(translateVisitor.getImplicitParams());
 		
-		translatedCriteria = rewriteCriteria(translatedCriteria, null, context, metadata);
+		translatedCriteria = rewriteCriteria(translatedCriteria, false);
 
 		// apply any implicit conversions
 		try {
@@ -664,7 +713,7 @@ public class QueryRewriter {
 		return translatedCriteria;
 	}
 
-	private static Query rewriteQuery(Query query, final Command procCommand, final QueryMetadataInterface metadata, final CommandContext context)
+	private Query rewriteQuery(Query query)
              throws QueryValidatorException {
         
         // Rewrite from clause
@@ -673,7 +722,7 @@ public class QueryRewriter {
             List clauses = new ArrayList(from.getClauses().size());
             Iterator clauseIter = from.getClauses().iterator();
             while(clauseIter.hasNext()) {
-                clauses.add( rewriteFromClause(query, (FromClause) clauseIter.next(), procCommand, metadata, context) );
+                clauses.add( rewriteFromClause(query, (FromClause) clauseIter.next()) );
             }
             from.setClauses(clauses);
         } else {
@@ -682,8 +731,8 @@ public class QueryRewriter {
 
         // Rewrite criteria
         Criteria crit = query.getCriteria();
-        if(crit != null && !query.getIsXML()) {
-            crit = rewriteCriteria(crit, procCommand, context, metadata);
+        if(crit != null) {
+            crit = rewriteCriteria(crit, false);
             if(crit == TRUE_CRITERIA) {
                 query.setCriteria(null);
             } else {
@@ -761,21 +810,20 @@ public class QueryRewriter {
                 outerQuery.setInto(into);
                 outerQuery.setOption(query.getOption());
                 query = outerQuery;
-                rewriteExpressions(innerSelect, procCommand, metadata, context);
+                rewriteExpressions(innerSelect);
             }
         }
 
         // Rewrite having
         Criteria having = query.getHaving();
         if(having != null) {
-            query.setHaving(rewriteCriteria(having, procCommand, context, metadata));
+            query.setHaving(rewriteCriteria(having, false));
         }
                 
-        rewriteExpressions(query.getSelect(), procCommand, metadata, context);
+        rewriteExpressions(query.getSelect());
 
-        if (query.getOrderBy() != null && !query.getIsXML()) {
-            makeSelectUnique(query.getSelect(), true);
-            rewriteOrderBy(query, procCommand, metadata, context);
+        if (!query.getIsXML()) {
+            rewriteOrderBy(query);
         }
         
         if (query.getLimit() != null) {
@@ -783,16 +831,13 @@ public class QueryRewriter {
         }
         
         if (query.getInto() != null) {
-            query = rewriteSelectInto(query, metadata, procCommand, context);
+            query = rewriteSelectInto(query);
         }
         
         return query;
     }
     
-    private static void rewriteExpressions(LanguageObject obj,
-                                           final Command procCommand,
-                                           final QueryMetadataInterface metadata,
-                                           final CommandContext context) throws QueryValidatorException {
+    private void rewriteExpressions(LanguageObject obj) throws QueryValidatorException {
         if (obj == null) {
             return;
         }
@@ -803,7 +848,7 @@ public class QueryRewriter {
             @Override
             public Expression replaceExpression(Expression element) {
                 try {
-                    return rewriteExpression(element, procCommand, context, metadata);
+                    return rewriteExpressionDirect(element);
                 } catch (QueryValidatorException err) {
                     throw new MetaMatrixRuntimeException(err);
                 }
@@ -825,22 +870,15 @@ public class QueryRewriter {
      * @param query
      * @throws QueryValidatorException 
      */
-    public static void rewriteOrderBy(QueryCommand query, Command procCommand, QueryMetadataInterface metadata, CommandContext context) throws QueryValidatorException {
+    private void rewriteOrderBy(QueryCommand query) throws QueryValidatorException {
         OrderBy orderBy = query.getOrderBy();
         if (orderBy == null) {
             return;
         }
-        List projectedSymbols = null;
-        if (query instanceof Query) {
-            if (((Query)query).getIsXML()) {
-                return;
-            }
-            projectedSymbols = ((Query)query).getSelect().getProjectedSymbols();
-        } else {
-            projectedSymbols = query.getProjectedSymbols();
-        }
+        makeSelectUnique(query.getProjectedQuery().getSelect(), true);
+        List projectedSymbols = query.getProjectedQuery().getSelect().getProjectedSymbols();
         if (orderBy.isInPlanForm()) {
-            rewriteExpressions(orderBy, procCommand, metadata, context);
+            rewriteExpressions(orderBy);
         }
 
         OrderBy newOrderBy = new OrderBy();
@@ -865,7 +903,7 @@ public class QueryRewriter {
                 continue;
             }
             
-            if (query instanceof Query && EvaluateExpressionVisitor.isFullyEvaluatable(expr, true)) {
+            if (query instanceof Query && EvaluatableVisitor.isFullyEvaluatable(expr, true)) {
                 continue;
             }
             newOrderBy.addVariable((SingleElementSymbol)querySymbol.clone(), orderBy.getOrderType(i).booleanValue());
@@ -884,11 +922,9 @@ public class QueryRewriter {
      * target table.  This ensures that they will all be uniquely named.
      *  
      * @param query
-     * @param metadata
      * @throws QueryValidatorException
      */
-    private static Query rewriteSelectInto(Query query,
-                                          QueryMetadataInterface metadata, Command procCommand, CommandContext context) throws QueryValidatorException {
+    private Query rewriteSelectInto(Query query) throws QueryValidatorException {
         Into into = query.getInto();
         
         try {
@@ -904,7 +940,7 @@ public class QueryRewriter {
             
             if (needsView) {
                 query.setInto(null);
-                query = createInlineViewQuery(into.getGroup(), query, metadata);
+                query = createInlineViewQuery(into.getGroup(), query);
                 query.setInto(into);
                 return query;
             }
@@ -919,8 +955,7 @@ public class QueryRewriter {
         
     }
 
-    private static void correctProjectedTypes(List actualSymbolTypes,
-                                              Query query) throws QueryValidatorException {
+    private void correctProjectedTypes(List actualSymbolTypes, Query query) {
         
         List symbols = query.getSelect().getProjectedSymbols();
         
@@ -929,7 +964,7 @@ public class QueryRewriter {
         query.getSelect().setSymbols(newSymbols);
     } 
     
-	private static SetQuery rewriteSetQuery(SetQuery setQuery, Command procCommand, QueryMetadataInterface metadata, CommandContext context)
+	private SetQuery rewriteSetQuery(SetQuery setQuery)
 				 throws QueryValidatorException {
         
         if (setQuery.getProjectedTypes() != null) {
@@ -942,13 +977,10 @@ public class QueryRewriter {
             setQuery.setProjectedTypes(null);
         }
         
-        setQuery.setLeftQuery((QueryCommand)rewriteCommand(setQuery.getLeftQuery(), procCommand, metadata, context, true));
-        setQuery.setRightQuery((QueryCommand)rewriteCommand(setQuery.getRightQuery(), procCommand, metadata, context, true));
+        setQuery.setLeftQuery((QueryCommand)rewriteCommand(setQuery.getLeftQuery(), true));
+        setQuery.setRightQuery((QueryCommand)rewriteCommand(setQuery.getRightQuery(), true));
 
-        if (setQuery.getOrderBy() != null) {
-            makeSelectUnique(setQuery.getProjectedQuery().getSelect(), true);
-            rewriteOrderBy(setQuery, procCommand, metadata, context);
-        }
+        rewriteOrderBy(setQuery);
         
         if (setQuery.getLimit() != null) {
             setQuery.setLimit(rewriteLimitClause(setQuery.getLimit()));
@@ -957,38 +989,36 @@ public class QueryRewriter {
         return setQuery;
     }
 
-	private static FromClause rewriteFromClause(Query parent, FromClause clause, Command procCommand, QueryMetadataInterface metadata, CommandContext context)
+	private FromClause rewriteFromClause(Query parent, FromClause clause)
 			 throws QueryValidatorException {
 		if(clause instanceof JoinPredicate) {
-			return rewriteJoinPredicate(parent, (JoinPredicate) clause, procCommand, metadata, context);
+			return rewriteJoinPredicate(parent, (JoinPredicate) clause);
         } else if (clause instanceof UnaryFromClause) {
-            rewriteUnaryFromClause(parent, (UnaryFromClause)clause, metadata, context);
+            rewriteUnaryFromClause((UnaryFromClause)clause);
         } else if (clause instanceof SubqueryFromClause) {
-            rewriteSubqueryContainer((SubqueryFromClause)clause, procCommand, context, metadata, true);
+            rewriteSubqueryContainer((SubqueryFromClause)clause, true);
         }
         return clause;
 	}
 
-    private static void rewriteUnaryFromClause(Query parent, UnaryFromClause ufc, QueryMetadataInterface metadata,
-                                               CommandContext context) throws QueryValidatorException {
+    private void rewriteUnaryFromClause(UnaryFromClause ufc) throws QueryValidatorException {
         Command nestedCommand = ufc.getExpandedCommand();
         
         if (nestedCommand == null) {
             return;
         }
             
-        ufc.setExpandedCommand(rewriteCommand(nestedCommand, null, metadata, context, true));
+        ufc.setExpandedCommand(rewriteCommand(nestedCommand, true));
     }
 
-	private static JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate, Command procCommand,
-        QueryMetadataInterface metadata, CommandContext context)
+	private JoinPredicate rewriteJoinPredicate(Query parent, JoinPredicate predicate)
 			 throws QueryValidatorException {
 		List joinCrits = predicate.getJoinCriteria();
 		if(joinCrits != null && joinCrits.size() > 0) {
 			//rewrite join crits by rewriting a compound criteria
 			Criteria criteria = new CompoundCriteria(new ArrayList(joinCrits));
             joinCrits.clear();
-            criteria = rewriteCriteria(criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria(criteria, false);
             if (criteria instanceof CompoundCriteria && ((CompoundCriteria)criteria).getOperator() == CompoundCriteria.AND) {
                 joinCrits.addAll(((CompoundCriteria)criteria).getCriteria());
             } else {
@@ -1007,8 +1037,8 @@ public class QueryRewriter {
             predicate.setRightClause(leftClause);
         }
 
-        predicate.setLeftClause( rewriteFromClause(parent, predicate.getLeftClause(), procCommand, metadata, context ));
-        predicate.setRightClause( rewriteFromClause(parent, predicate.getRightClause(), procCommand, metadata, context ));
+        predicate.setLeftClause( rewriteFromClause(parent, predicate.getLeftClause() ));
+        predicate.setRightClause( rewriteFromClause(parent, predicate.getRightClause() ));
     
 		return predicate;
 	}
@@ -1021,49 +1051,48 @@ public class QueryRewriter {
      * in the procedural language.
      * @return The re-written criteria
      */
-    public static Criteria rewriteCriteria(Criteria criteria, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-       return rewriteCriteria(criteria, procCommand, context, false, metadata);
+    public static Criteria rewriteCriteria(Criteria criteria, CreateUpdateProcedureCommand procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+    	return new QueryRewriter(metadata, context, procCommand).rewriteCriteria(criteria, false);
     }
 
 	/**
 	 * Rewrite the criteria by evaluating some trivial cases.
 	 * @param criteria The criteria to rewrite
-	 * @param metadata
 	 * @param userCriteria The criteria on user's command, used in rewriting HasCriteria
 	 * in the procedural language.
 	 * @return The re-written criteria
 	 */
-    private static Criteria rewriteCriteria(Criteria criteria, Command procCommand, CommandContext context, boolean preserveUnknown, QueryMetadataInterface metadata) throws QueryValidatorException {
+    private Criteria rewriteCriteria(Criteria criteria, boolean preserveUnknown) throws QueryValidatorException {
 		if(criteria instanceof CompoundCriteria) {
-            return rewriteCriteria((CompoundCriteria)criteria, procCommand, context, true, preserveUnknown, metadata);
+            return rewriteCriteria((CompoundCriteria)criteria, true, preserveUnknown);
 		} else if(criteria instanceof NotCriteria) {
-			criteria = rewriteCriteria((NotCriteria)criteria, procCommand, context, metadata);
+			criteria = rewriteCriteria((NotCriteria)criteria);
 		} else if(criteria instanceof CompareCriteria) {
-            criteria = rewriteCriteria((CompareCriteria)criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria((CompareCriteria)criteria);
         } else if(criteria instanceof SubqueryCompareCriteria) {
-            criteria = rewriteCriteria((SubqueryCompareCriteria)criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria((SubqueryCompareCriteria)criteria);
 		} else if(criteria instanceof MatchCriteria) {
-            criteria = rewriteCriteria((MatchCriteria)criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria((MatchCriteria)criteria);
 		} else if(criteria instanceof SetCriteria) {
-            criteria = rewriteCriteria((SetCriteria)criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria((SetCriteria)criteria);
         } else if(criteria instanceof IsNullCriteria) {
-            criteria = rewriteCriteria((IsNullCriteria)criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria((IsNullCriteria)criteria);
         } else if(criteria instanceof BetweenCriteria) {
-            criteria = rewriteCriteria((BetweenCriteria)criteria, procCommand, context, preserveUnknown, metadata);
+            criteria = rewriteCriteria((BetweenCriteria)criteria, preserveUnknown);
 		} else if(criteria instanceof HasCriteria) {
-            criteria = rewriteCriteria((HasCriteria)criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria((HasCriteria)criteria);
 		} else if(criteria instanceof TranslateCriteria) {
-            criteria = rewriteCriteria((TranslateCriteria)criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria((TranslateCriteria)criteria);
 		} else if (criteria instanceof ExistsCriteria) {
-		    rewriteSubqueryContainer((SubqueryContainer)criteria, procCommand, context, metadata, true);
+		    rewriteSubqueryContainer((SubqueryContainer)criteria, true);
 		} else if (criteria instanceof SubquerySetCriteria) {
 		    SubquerySetCriteria sub = (SubquerySetCriteria)criteria;
 		    if (isNull(sub.getExpression())) {
 		        return UNKNOWN_CRITERIA;
 		    }
-		    rewriteSubqueryContainer((SubqueryContainer)criteria, procCommand, context, metadata, true);
+		    rewriteSubqueryContainer((SubqueryContainer)criteria, true);
         } else if (criteria instanceof DependentSetCriteria) {
-            criteria = rewriteCriteria((AbstractSetCriteria)criteria, procCommand, context, metadata);
+            criteria = rewriteCriteria((AbstractSetCriteria)criteria);
         }
 
         return evaluateCriteria(criteria);
@@ -1077,7 +1106,7 @@ public class QueryRewriter {
      */
     public static Criteria optimizeCriteria(CompoundCriteria criteria) {
         try {
-            return rewriteCriteria(criteria, null, null, false, false, null);
+            return new QueryRewriter(null, null, null).rewriteCriteria(criteria, false, false);
         } catch (QueryValidatorException err) {
             //shouldn't happen
             return criteria;
@@ -1087,7 +1116,7 @@ public class QueryRewriter {
     /** May be simplified if this is an AND and a sub criteria is always
      * false or if this is an OR and a sub criteria is always true
      */
-    private static Criteria rewriteCriteria(CompoundCriteria criteria, Command procCommand, CommandContext context, boolean rewrite, boolean preserveUnknown, QueryMetadataInterface metadata) throws QueryValidatorException {
+    private Criteria rewriteCriteria(CompoundCriteria criteria, boolean rewrite, boolean preserveUnknown) throws QueryValidatorException {
         List crits = criteria.getCriteria();
         int operator = criteria.getOperator();
 
@@ -1097,10 +1126,10 @@ public class QueryRewriter {
         while(critIter.hasNext()) {
             Criteria converted = (Criteria) critIter.next();
             if (rewrite) {
-                converted = rewriteCriteria(converted, procCommand, context, preserveUnknown, metadata);
+                converted = rewriteCriteria(converted, preserveUnknown);
                 converted = evaluateCriteria(converted);
             } else if (converted instanceof CompoundCriteria) {
-                converted = rewriteCriteria((CompoundCriteria)converted, null, null, false, preserveUnknown, metadata);
+                converted = rewriteCriteria((CompoundCriteria)converted, false, preserveUnknown);
             }
 
             //begin boolean optimizations
@@ -1151,8 +1180,8 @@ public class QueryRewriter {
         }
 	}
     
-    private static Criteria evaluateCriteria(Criteria crit) throws QueryValidatorException {
-        if(EvaluateExpressionVisitor.isFullyEvaluatable(crit, true)) {
+    private Criteria evaluateCriteria(Criteria crit) throws QueryValidatorException {
+        if(EvaluatableVisitor.isFullyEvaluatable(crit, true)) {
             try {
             	Boolean eval = new Evaluator(Collections.emptyMap(), null, null).evaluateTVL(crit, Collections.emptyList());
                 
@@ -1177,8 +1206,8 @@ public class QueryRewriter {
     }
     
 
-	private static Criteria rewriteCriteria(NotCriteria criteria, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-        Criteria innerCrit = rewriteCriteria(criteria.getCriteria(), procCommand, context, true, metadata);
+	private Criteria rewriteCriteria(NotCriteria criteria) throws QueryValidatorException {
+        Criteria innerCrit = rewriteCriteria(criteria.getCriteria(), true);
         
         innerCrit = evaluateCriteria(innerCrit);
         if(innerCrit == TRUE_CRITERIA) {
@@ -1200,11 +1229,10 @@ public class QueryRewriter {
     /**
      * Rewrites "a [NOT] BETWEEN b AND c" as "a &gt;= b AND a &lt;= c", or as "a &lt;= b OR a&gt;= c"
      * @param criteria
-     * @param procCommand
      * @return
      * @throws QueryValidatorException
      */
-    private static Criteria rewriteCriteria(BetweenCriteria criteria, Command procCommand, CommandContext context, boolean preserveUnknown, QueryMetadataInterface metadata) throws QueryValidatorException {
+    private Criteria rewriteCriteria(BetweenCriteria criteria, boolean preserveUnknown) throws QueryValidatorException {
         CompareCriteria lowerCriteria = new CompareCriteria(criteria.getExpression(),
                                                             criteria.isNegated() ? CompareCriteria.LT: CompareCriteria.GE,
                                                             criteria.getLowerExpression());
@@ -1215,14 +1243,14 @@ public class QueryRewriter {
                                                             lowerCriteria,
                                                             upperCriteria);
 
-        return rewriteCriteria(newCriteria, procCommand, context, preserveUnknown, metadata);
+        return rewriteCriteria(newCriteria, preserveUnknown);
     }
 
-	private static Criteria rewriteCriteria(CompareCriteria criteria, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-		Expression leftExpr = rewriteExpression(criteria.getLeftExpression(), procCommand, context, metadata);
-		Expression rightExpr = rewriteExpression(criteria.getRightExpression(), procCommand, context, metadata);
+	private Criteria rewriteCriteria(CompareCriteria criteria) throws QueryValidatorException {
+		Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
+		Expression rightExpr = rewriteExpressionDirect(criteria.getRightExpression());
 
-        if(!EvaluateExpressionVisitor.willBecomeConstant(rightExpr) && EvaluateExpressionVisitor.willBecomeConstant(leftExpr)) {
+        if(!EvaluatableVisitor.willBecomeConstant(rightExpr) && EvaluatableVisitor.willBecomeConstant(leftExpr)) {
             // Swap in this particular case for connectors
             criteria.setLeftExpression(rightExpr);
             criteria.setRightExpression(leftExpr);
@@ -1240,7 +1268,7 @@ public class QueryRewriter {
 			criteria.setRightExpression(rightExpr);
 		}
 
-        if(criteria.getLeftExpression() instanceof Function && EvaluateExpressionVisitor.willBecomeConstant(criteria.getRightExpression())) {
+        if(criteria.getLeftExpression() instanceof Function && EvaluatableVisitor.willBecomeConstant(criteria.getRightExpression())) {
             criteria = simplifyWithInverse(criteria);
         }
         
@@ -1263,9 +1291,9 @@ public class QueryRewriter {
      * The thing of primary importance here is that the use of the 'ANY' predicate
      * quantifier is replaced with the canonical and equivalent 'SOME'
      */
-    private static Criteria rewriteCriteria(SubqueryCompareCriteria criteria, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+    private Criteria rewriteCriteria(SubqueryCompareCriteria criteria) throws QueryValidatorException {
 
-        Expression leftExpr = rewriteExpression(criteria.getLeftExpression(), procCommand, context, metadata);
+        Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
         
         if (isNull(leftExpr)) {
             return UNKNOWN_CRITERIA;
@@ -1277,12 +1305,12 @@ public class QueryRewriter {
             criteria.setPredicateQuantifier(SubqueryCompareCriteria.SOME);
         }
         
-        rewriteSubqueryContainer(criteria, procCommand, context, metadata, true);
+        rewriteSubqueryContainer(criteria, true);
 
         return criteria;
     }
     
-    private static CompareCriteria simplifyWithInverse(CompareCriteria criteria) throws QueryValidatorException {
+    private CompareCriteria simplifyWithInverse(CompareCriteria criteria) throws QueryValidatorException {
         Expression leftExpr = criteria.getLeftExpression();
         
         Function leftFunction = (Function) leftExpr;
@@ -1300,7 +1328,7 @@ public class QueryRewriter {
         return criteria;
     }
     
-    private static boolean isSimpleMathematicalFunction(Function function) {
+    private boolean isSimpleMathematicalFunction(Function function) {
         String funcName = function.getName();
         if(funcName.equals("+") || funcName.equals("-") || funcName.equals("*") || funcName.equals("/")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             Expression[] args = function.getArgs();
@@ -1314,20 +1342,20 @@ public class QueryRewriter {
     }
 
     // Constants used in simplifying mathematical criteria
-    private static Integer INTEGER_ZERO = new Integer(0);
-    private static Double DOUBLE_ZERO = new Double(0);
-    private static Float FLOAT_ZERO = new Float(0);
-    private static Long LONG_ZERO = new Long(0);
-    private static BigInteger BIG_INTEGER_ZERO = new BigInteger("0"); //$NON-NLS-1$
-    private static BigDecimal BIG_DECIMAL_ZERO = new BigDecimal("0"); //$NON-NLS-1$
-    private static Short SHORT_ZERO = new Short((short)0);
-    private static Byte BYTE_ZERO = new Byte((byte)0);
+    private Integer INTEGER_ZERO = new Integer(0);
+    private Double DOUBLE_ZERO = new Double(0);
+    private Float FLOAT_ZERO = new Float(0);
+    private Long LONG_ZERO = new Long(0);
+    private BigInteger BIG_INTEGER_ZERO = new BigInteger("0"); //$NON-NLS-1$
+    private BigDecimal BIG_DECIMAL_ZERO = new BigDecimal("0"); //$NON-NLS-1$
+    private Short SHORT_ZERO = new Short((short)0);
+    private Byte BYTE_ZERO = new Byte((byte)0);
 
     /**
      * @param criteria
      * @return CompareCriteria
      */
-    private static CompareCriteria simplifyMathematicalCriteria(CompareCriteria criteria)
+    private CompareCriteria simplifyMathematicalCriteria(CompareCriteria criteria)
     throws QueryValidatorException {
 
         Expression leftExpr = criteria.getLeftExpression();
@@ -1468,7 +1496,7 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      * @since 4.2
      */
-    private static CompareCriteria simplifyConvertFunction(CompareCriteria crit) throws QueryValidatorException {
+    private CompareCriteria simplifyConvertFunction(CompareCriteria crit) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getLeftExpression();
         Constant rightConstant = (Constant) crit.getRightExpression();
         Expression leftExpr = leftFunction.getArgs()[0];
@@ -1529,7 +1557,7 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      * @since 4.2
      */
-    private static Criteria simplifyConvertFunction(SetCriteria crit, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+    private Criteria simplifyConvertFunction(SetCriteria crit) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getExpression();
         Expression leftExpr = leftFunction.getArgs()[0];
         String leftExprTypeName = DataTypeManager.getDataTypeName(leftExpr.getType());
@@ -1567,14 +1595,14 @@ public class QueryRewriter {
         	if (!removedSome) {
         		return crit; //just return as is
         	}
-        	return rewriteCriteria(crit, procCommand, context, metadata);
+        	return rewriteCriteria(crit);
         }
         crit.setExpression(leftExpr);
         crit.setValues(newValues);
-        return rewriteCriteria(crit, procCommand, context, metadata);
+        return rewriteCriteria(crit);
     }
         
-    private static CompareCriteria simplifyParseFormatFunction(CompareCriteria crit) throws QueryValidatorException {
+    private CompareCriteria simplifyParseFormatFunction(CompareCriteria crit) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getLeftExpression();
         String funcName = leftFunction.getName().toLowerCase();
         String inverseFunction = null;
@@ -1701,7 +1729,7 @@ public class QueryRewriter {
      * @param criteria Compare criteria
      * @return Simplified criteria, if possible
      */
-    private static Criteria simplifyTimestampMerge2(CompareCriteria criteria) {
+    private Criteria simplifyTimestampMerge2(CompareCriteria criteria) {
         if(criteria.getOperator() != CompareCriteria.EQ) {
             return criteria;
         }
@@ -1767,7 +1795,7 @@ public class QueryRewriter {
     * @return Simplified criteria, if possible
     */
 
-   private static Criteria simplifyTimestampMerge(CompareCriteria criteria) {
+   private Criteria simplifyTimestampMerge(CompareCriteria criteria) {
        if(criteria.getOperator() != CompareCriteria.EQ) {
            return criteria;
        }
@@ -1843,9 +1871,9 @@ public class QueryRewriter {
        }
     }
     
-    private static Criteria rewriteCriteria(MatchCriteria criteria, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-		criteria.setLeftExpression( rewriteExpression(criteria.getLeftExpression(), procCommand, context, metadata));
-		criteria.setRightExpression( rewriteExpression(criteria.getRightExpression(), procCommand, context, metadata));
+    private Criteria rewriteCriteria(MatchCriteria criteria) throws QueryValidatorException {
+		criteria.setLeftExpression( rewriteExpressionDirect(criteria.getLeftExpression()));
+		criteria.setRightExpression( rewriteExpressionDirect(criteria.getRightExpression()));
         
         if (isNull(criteria.getLeftExpression()) || isNull(criteria.getRightExpression())) {
             return UNKNOWN_CRITERIA;
@@ -1878,7 +1906,7 @@ public class QueryRewriter {
                     if (value.equals(MatchCriteria.WILDCARD_CHAR)) {
                     	return TRUE_CRITERIA;
                     }
-                	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()), procCommand, context, metadata);
+                	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()));
                 }
             }
         }
@@ -1886,8 +1914,8 @@ public class QueryRewriter {
 		return criteria;
 	}
     
-    private static Criteria rewriteCriteria(AbstractSetCriteria criteria, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-        criteria.setExpression(rewriteExpression(criteria.getExpression(), procCommand, context, metadata));
+    private Criteria rewriteCriteria(AbstractSetCriteria criteria) throws QueryValidatorException {
+        criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
         
         if (isNull(criteria.getExpression())) {
             return UNKNOWN_CRITERIA;
@@ -1897,8 +1925,8 @@ public class QueryRewriter {
     }
 
 
-	private static Criteria rewriteCriteria(SetCriteria criteria, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-		criteria.setExpression(rewriteExpression(criteria.getExpression(), procCommand, context, metadata));
+	private Criteria rewriteCriteria(SetCriteria criteria) throws QueryValidatorException {
+		criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
         
         if (isNull(criteria.getExpression())) {
             return UNKNOWN_CRITERIA;
@@ -1909,7 +1937,7 @@ public class QueryRewriter {
         LinkedHashSet newVals = new LinkedHashSet(vals.size());
         Iterator valIter = vals.iterator();
         while(valIter.hasNext()) {
-            Expression value = rewriteExpression( (Expression) valIter.next(), procCommand, context, metadata);
+            Expression value = rewriteExpressionDirect( (Expression) valIter.next());
             if (isNull(value)) {
                 continue;
             }
@@ -1920,7 +1948,7 @@ public class QueryRewriter {
         
         if (newVals.size() == 1) {
             Expression value = (Expression)newVals.iterator().next();
-            return rewriteCriteria(new CompareCriteria(criteria.getExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, value), procCommand, context, metadata);
+            return rewriteCriteria(new CompareCriteria(criteria.getExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, value));
         } else if (newVals.size() == 0) {
             return FALSE_CRITERIA;
         }
@@ -1929,40 +1957,94 @@ public class QueryRewriter {
             
             Function leftFunction = (Function)criteria.getExpression();
             if(FunctionLibrary.isConvert(leftFunction)) {
-                return simplifyConvertFunction(criteria, procCommand, context, metadata);        
+                return simplifyConvertFunction(criteria);        
             }
         }
 
 		return criteria;
 	}
 
-	private static Criteria rewriteCriteria(IsNullCriteria criteria, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-		criteria.setExpression(rewriteExpression(criteria.getExpression(), procCommand, context, metadata));
+	private Criteria rewriteCriteria(IsNullCriteria criteria) throws QueryValidatorException {
+		criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
 		return criteria;
 	}
-
-    public static Expression rewriteExpression(Expression expression, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-		if(expression instanceof Function) {
-			return rewriteFunction((Function) expression, procCommand, context, metadata);
-		} else if (expression instanceof CaseExpression) {
-            return rewriteCaseExpression((CaseExpression)expression, procCommand, context, metadata);
-        } else if (expression instanceof SearchedCaseExpression) {
-            return rewriteCaseExpression((SearchedCaseExpression)expression, procCommand, context, metadata);
-        } else if (expression instanceof ScalarSubquery) {
-            rewriteSubqueryContainer((ScalarSubquery)expression, procCommand, context, metadata, true);
-            return expression;
-        } else if (expression instanceof ExpressionSymbol && !(expression instanceof AggregateSymbol)) {
-            return rewriteExpression(((ExpressionSymbol)expression).getExpression(), procCommand, context, metadata);
-        } else if(expression instanceof AggregateSymbol){
-        	return rewriteExpression((AggregateSymbol)expression);
-        }
-        return expression;
+	
+	public static Expression rewriteExpression(Expression expression, CreateUpdateProcedureCommand procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+		return new QueryRewriter(metadata, context, procCommand).rewriteExpressionDirect(expression);
 	}
 
-    private static Expression rewriteExpression(AggregateSymbol expression) {
+    private Expression rewriteExpressionDirect(Expression expression) throws QueryValidatorException {
+    	if (expression instanceof Constant) {
+    		return expression;
+    	}
+    	if (expression instanceof ElementSymbol) {
+    		ElementSymbol es = (ElementSymbol)expression;
+    		Class<?> type  = es.getType();
+            if (dataMgr == null && es.isExternalReference()) {
+                String grpName = es.getGroupSymbol().getCanonicalName();
+                
+                if (variables == null) {
+                	return new Reference(es);
+                }
+                
+                Expression value = (Expression)variables.get(es.getCanonicalName());
+
+                if (value == null) {
+	                if (grpName.equals(ProcedureReservedWords.INPUT)) {
+	                	return new Constant(null, es.getType());
+	                } 
+	                if (grpName.equals(ProcedureReservedWords.CHANGING)) {
+	                    Assertion.failed("Changing value should not be null"); //$NON-NLS-1$
+	                } 
+                } else if (value instanceof Constant) {
+                	if (value.getType() == type) {
+                		return value;
+                	}
+                	try {
+						return new Constant(FunctionMethods.convert(((Constant)value).getValue(), DataTypeManager.getDataTypeName(type)), es.getType());
+					} catch (FunctionExecutionException e) {
+						throw new QueryValidatorException(e, e.getMessage());
+					}
+                }
+                return new Reference(es);
+            }
+            return expression;
+    	}
+    	if(expression instanceof Function) {
+    		expression = rewriteFunction((Function) expression);
+		} else if (expression instanceof CaseExpression) {
+			expression = rewriteCaseExpression((CaseExpression)expression);
+        } else if (expression instanceof SearchedCaseExpression) {
+        	expression = rewriteCaseExpression((SearchedCaseExpression)expression);
+        } else if (expression instanceof ScalarSubquery) {
+            rewriteSubqueryContainer((ScalarSubquery)expression, true);
+            return expression;
+        } else if (expression instanceof ExpressionSymbol) {
+        	if (expression instanceof AggregateSymbol) {
+        		expression = rewriteExpression((AggregateSymbol)expression);	
+        	} else {
+            	expression = rewriteExpressionDirect(((ExpressionSymbol)expression).getExpression());
+        	}
+        } 
+    	if (dataMgr == null || (!(expression instanceof Reference) && !EvaluatableVisitor.isEvaluatable(expression, EvaluationLevel.PROCESSING))) {
+    		return expression;
+    	}
+		Object value;
+        try {
+            value = new Evaluator(Collections.emptyMap(), dataMgr, context).evaluate(expression, Collections.emptyList());
+        } catch (MetaMatrixException err) {
+            throw new MetaMatrixRuntimeException(err);
+        }
+        if (value instanceof Constant) {
+        	return (Constant)value; //multi valued substitution
+        }
+		return new Constant(value, expression.getType());
+	}
+    
+    private Expression rewriteExpression(AggregateSymbol expression) {
     	if (!expression.getAggregateFunction().equals(ReservedWords.COUNT)
 				&& !expression.getAggregateFunction().equals(ReservedWords.SUM)
-				&& EvaluateExpressionVisitor.willBecomeConstant(expression.getExpression())) {
+				&& EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
 			try {
 				return new ExpressionSymbol(expression.getName(), ResolverUtil
 						.convertExpression(expression.getExpression(),DataTypeManager.getDataTypeName(expression.getType())));
@@ -1974,7 +2056,7 @@ public class QueryRewriter {
 		return expression;
 	}
 
-	private static Expression rewriteFunction(Function function, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+	private Expression rewriteFunction(Function function) throws QueryValidatorException {
 		//rewrite alias functions
 		String actualName =ALIASED_FUNCTIONS.get(function.getName().toLowerCase());
 		if (actualName != null) {
@@ -1990,7 +2072,7 @@ public class QueryRewriter {
 	        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.REPEAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER});
 			result.setFunctionDescriptor(descriptor);
 			result.setType(DataTypeManager.DefaultDataClasses.STRING);
-			return rewriteFunction(result, procCommand, context, metadata);
+			return rewriteFunction(result);
 		}
 		
 		//from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0)) 
@@ -2002,7 +2084,7 @@ public class QueryRewriter {
 	        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
 			result.setFunctionDescriptor(descriptor);
 			result.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
-			return rewriteFunction(result, procCommand, context, metadata);
+			return rewriteFunction(result);
 		}
 		
 		//rewrite nullif(a, b) => case when (a = b) then null else a
@@ -2013,7 +2095,7 @@ public class QueryRewriter {
 			SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
 			caseExpr.setElseExpression(function.getArg(0));
 			caseExpr.setType(function.getType());
-			return rewriteExpression(caseExpr, procCommand, context, metadata);
+			return rewriteExpressionDirect(caseExpr);
 		}
 		
 		if (function.getName().equalsIgnoreCase(FunctionLibrary.COALESCE)) {
@@ -2026,7 +2108,7 @@ public class QueryRewriter {
 		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { function.getType(), function.getType()  });
 				result.setFunctionDescriptor(descriptor);
 				result.setType(function.getType());
-				return rewriteFunction(result, procCommand, context, metadata);
+				return rewriteFunction(result);
 			}
 		}
 		
@@ -2056,7 +2138,7 @@ public class QueryRewriter {
 			SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
 			caseExpr.setElseExpression(concat);
 			caseExpr.setType(DataTypeManager.DefaultDataClasses.STRING);
-			return rewriteExpression(caseExpr, procCommand, context, metadata);
+			return rewriteExpressionDirect(caseExpr);
 		}
 		
 		Expression[] args = function.getArgs();
@@ -2064,7 +2146,7 @@ public class QueryRewriter {
 		        
         // Rewrite args
 		for(int i=0; i<args.length; i++) {
-			newArgs[i] = rewriteExpression(args[i], procCommand, context, metadata);
+			newArgs[i] = rewriteExpressionDirect(args[i]);
             if (isNull(newArgs[i]) && !function.getFunctionDescriptor().isNullDependent()) {
                 return new Constant(null, function.getType());
             }
@@ -2090,7 +2172,7 @@ public class QueryRewriter {
             return convertDecodeFunction(function);
         }
         
-        if(EvaluateExpressionVisitor.isFullyEvaluatable(function, true)) {
+        if(EvaluatableVisitor.isFullyEvaluatable(function, true)) {
             try {
                 Object result = new Evaluator(Collections.emptyMap(), null, context).evaluate(function, Collections.emptyList());
 				Constant constant = new Constant(result, function.getType());
@@ -2113,7 +2195,7 @@ public class QueryRewriter {
         return function;
 	}
 
-	private static Expression convertDecodeFunction(Function function){
+	private Expression convertDecodeFunction(Function function){
     	Expression exprs[] = function.getArgs();
     	String decodeString = (String)((Constant)exprs[1]).getValue();
     	String decodeDelimiter = ","; //$NON-NLS-1$
@@ -2153,7 +2235,7 @@ public class QueryRewriter {
         return newCaseExpr;
 	}
 	
-    public static String convertString(String string) {
+    private static String convertString(String string) {
         /*
          * if there are no characters in the compare string we designate that as
          * an indication of null.  ie if the decode string looks like this:
@@ -2198,7 +2280,7 @@ public class QueryRewriter {
         return string;
     }
 	
-    private static Expression rewriteCaseExpression(CaseExpression expr, Command procCommand, CommandContext context, QueryMetadataInterface metadata)
+    private Expression rewriteCaseExpression(CaseExpression expr)
         throws QueryValidatorException {
     	List<CompareCriteria> whens = new ArrayList<CompareCriteria>(expr.getWhenCount());
     	for (Expression expression: (List<Expression>)expr.getWhen()) {
@@ -2207,10 +2289,10 @@ public class QueryRewriter {
     	SearchedCaseExpression sce = new SearchedCaseExpression(whens, expr.getThen());
     	sce.setElseExpression(expr.getElseExpression());
     	sce.setType(expr.getType());
-    	return rewriteCaseExpression(sce, procCommand, context, metadata);
+    	return rewriteCaseExpression(sce);
     }
 
-    private static Expression rewriteCaseExpression(SearchedCaseExpression expr, Command procCommand, CommandContext context, QueryMetadataInterface metadata)
+    private Expression rewriteCaseExpression(SearchedCaseExpression expr)
         throws QueryValidatorException {
         int whenCount = expr.getWhenCount();
         ArrayList whens = new ArrayList(whenCount);
@@ -2219,27 +2301,20 @@ public class QueryRewriter {
         for (int i = 0; i < whenCount; i++) {
             
             // Check the when to see if this CASE can be rewritten due to an always true/false when
-            Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i), procCommand, context, metadata);
-            if(EvaluateExpressionVisitor.isFullyEvaluatable(rewrittenWhen, true)) {
-                try {
-                	boolean eval = Evaluator.evaluate(rewrittenWhen);
-                    if(eval) {
-                        // WHEN is always true, so just return the THEN
-                        return rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata);
-                    } 
-
-                    // WHEN is never true, so just skip this WHEN/THEN pair in the lists
-                    continue;
-                } catch(Exception e) {
-                    // ignore and don't simplify - shouldn't happen
-                }
-            } 
+            Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i), false);
+            if(rewrittenWhen == TRUE_CRITERIA) {
+                // WHEN is always true, so just return the THEN
+                return rewriteExpressionDirect(expr.getThenExpression(i));
+            }
+            if (rewrittenWhen == FALSE_CRITERIA || rewrittenWhen == UNKNOWN_CRITERIA) {
+            	continue;
+            }
             
             whens.add(rewrittenWhen);
-            thens.add(rewriteExpression(expr.getThenExpression(i), procCommand, context, metadata));
+            thens.add(rewriteExpressionDirect(expr.getThenExpression(i)));
         }
 
-        expr.setElseExpression(rewriteExpression(expr.getElseExpression(), procCommand, context, metadata));
+        expr.setElseExpression(rewriteExpressionDirect(expr.getElseExpression()));
         
         Expression elseExpr = expr.getElseExpression();
         if(whens.size() == 0) {
@@ -2278,27 +2353,26 @@ public class QueryRewriter {
         return expr;
     }
         
-    private static Command rewriteExec(StoredProcedure storedProcedure, Command procCommand, QueryMetadataInterface metadata, CommandContext context) throws QueryValidatorException {
+    private Command rewriteExec(StoredProcedure storedProcedure) throws QueryValidatorException {
         //After this method, no longer need to display named parameters
         storedProcedure.setDisplayNamedParameters(false);
         
         for (Iterator i = storedProcedure.getInputParameters().iterator(); i.hasNext();) {
             SPParameter param = (SPParameter)i.next();
-            param.setExpression(rewriteExpression(param.getExpression(), procCommand, context, metadata));
+            param.setExpression(rewriteExpressionDirect(param.getExpression()));
         }
-        
         return storedProcedure;
     }
 
-	private static Command rewriteInsert(Insert insert, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+	private Command rewriteInsert(Insert insert) throws QueryValidatorException {
         
         if ( insert.getQueryExpression() != null ) {
             Query query = null;
             QueryCommand nested = insert.getQueryExpression();
-            QueryRewriter.rewrite(nested, procCommand, metadata, context);
+            rewriteCommand(nested, true);
             if(nested instanceof SetQuery) {
                 try {
-                    query = createInlineViewQuery(insert.getGroup(), nested, metadata);
+                    query = createInlineViewQuery(insert.getGroup(), nested);
                 } catch (QueryMetadataException err) {
                     throw new QueryValidatorException(err, err.getMessage());
                 } catch (QueryResolverException err) {
@@ -2320,7 +2394,7 @@ public class QueryRewriter {
         Iterator expIter = expressions.iterator();
         while(expIter.hasNext()) {
             Expression exp = (Expression) expIter.next();
-            evalExpressions.add( rewriteExpression( exp, procCommand, context, metadata ));
+            evalExpressions.add( rewriteExpressionDirect( exp ));
         }
 
         insert.setValues(evalExpressions);        
@@ -2331,14 +2405,13 @@ public class QueryRewriter {
 	/**
 	 * Creates an inline view around the target query.
 	 */
-    private static Query createInlineViewQuery(GroupSymbol group,
-                                          QueryCommand nested,
-                                          QueryMetadataInterface metadata) throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
+    private Query createInlineViewQuery(GroupSymbol group,
+                                          QueryCommand nested) throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
         List actualSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
         return createInlineViewQuery(group, nested, metadata, actualSymbols);
     }
 
-    public static Query createInlineViewQuery(GroupSymbol group,
+    private static Query createInlineViewQuery(GroupSymbol group,
                                                QueryCommand nested,
                                                QueryMetadataInterface metadata,
                                                List actualSymbols) throws QueryMetadataException,
@@ -2427,43 +2500,81 @@ public class QueryRewriter {
         }
     }
 
-	private static Update rewriteUpdate(Update update, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-        // Evaluate any function on the right side of set clauses
+	private Update rewriteUpdate(Update update) throws QueryValidatorException {
+		if (commandType == Command.TYPE_UPDATE && variables != null) {
+	        SetClauseList newChangeList = new SetClauseList();
+	        for (SetClause entry : update.getChangeList().getClauses()) {
+	            Expression rightExpr = entry.getValue();
+	            boolean retainChange = checkInputVariables(rightExpr);
+	            if (retainChange) {
+	                newChangeList.addClause(entry.getSymbol(), entry.getValue());
+	            }
+	        }
+	        update.setChangeList(newChangeList);
+        }
+
+		// Evaluate any function on the right side of set clauses
         for (SetClause entry : update.getChangeList().getClauses()) {
-        	entry.setValue(rewriteExpression(entry.getValue(), procCommand, context, metadata));
+        	entry.setValue(rewriteExpressionDirect(entry.getValue()));
         }
 
 		// Rewrite criteria
 		Criteria crit = update.getCriteria();
 		if(crit != null) {
-			update.setCriteria(rewriteCriteria(crit, procCommand, context, metadata));
+			update.setCriteria(rewriteCriteria(crit, false));
 		}
 
 		return update;
 	}
+	
+    /**
+     * Checks variables in an expression, if the variables are INPUT variables and if
+     * none of them are changing, then this method returns a false, if all of them
+     * are changing this returns a true, if some are changing and some are not, then
+     * that is an invalid case and the method adds to the list of invalid variables.
+     * @throws QueryValidatorException 
+     */
+    private boolean checkInputVariables(Expression expr) throws QueryValidatorException {
+        Boolean result = null;
+        for (ElementSymbol var : ElementCollectorVisitor.getElements(expr, false)) {
+            String grpName = var.getGroupSymbol().getName();
+            if (var.isExternalReference() && grpName.equals(ProcedureReservedWords.INPUT)) {
+                
+                String changingKey = ProcedureReservedWords.CHANGING + ElementSymbol.SEPARATOR + var.getShortCanonicalName();
+                
+                Boolean changingValue = (Boolean)((Constant)variables.get(changingKey)).getValue();
+                
+                if (result == null) {
+                    result = changingValue;
+                } else if (!result.equals(changingValue)) {
+                	throw new QueryValidatorException(QueryExecPlugin.Util.getString("VariableSubstitutionVisitor.Input_vars_should_have_same_changing_state", expr)); //$NON-NLS-1$
+                }
+            }
+        }
+        
+        if (result != null) {
+            return result.booleanValue();
+        }
+        
+        return true;
+    }
 
-	private static Delete rewriteDelete(Delete delete, Command procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
+	private Delete rewriteDelete(Delete delete) throws QueryValidatorException {
 		// Rewrite criteria
 		Criteria crit = delete.getCriteria();
 		if(crit != null) {
-			delete.setCriteria(rewriteCriteria(crit, procCommand, context, metadata));
+			delete.setCriteria(rewriteCriteria(crit, false));
 		}
 
 		return delete;
 	}
     
-    private static Limit rewriteLimitClause(Limit limit) {
-        try {
-            if (limit.getOffset() != null && EvaluateExpressionVisitor.isFullyEvaluatable(limit.getOffset(), true)) {
-                limit.setOffset(new Constant(Evaluator.evaluate(limit.getOffset())));
-            }
-            if (limit.getRowLimit() != null && EvaluateExpressionVisitor.isFullyEvaluatable(limit.getRowLimit(), true)) {
-                limit.setRowLimit(new Constant(Evaluator.evaluate(limit.getRowLimit())));
-            }
-        } catch (ExpressionEvaluationException e) {
-            throw new MetaMatrixRuntimeException(e);
-        } catch (MetaMatrixComponentException e) {
-            throw new MetaMatrixRuntimeException(e);
+    private Limit rewriteLimitClause(Limit limit) throws QueryValidatorException {
+        if (limit.getOffset() != null) {
+            limit.setOffset(rewriteExpressionDirect(limit.getOffset()));
+        }
+        if (limit.getRowLimit() != null) {
+            limit.setRowLimit(rewriteExpressionDirect(limit.getRowLimit()));
         }
         return limit;
     }

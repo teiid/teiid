@@ -55,7 +55,7 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 public final class RuleRaiseAccess implements OptimizerRule {
@@ -370,7 +370,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         
         if(inSelectClause && !(expr instanceof ElementSymbol)) {
 			if (!CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, capFinder) 
-        		&& (expr instanceof Constant || EvaluateExpressionVisitor.willBecomeConstant(expr))) {
+        		&& (expr instanceof Constant || EvaluatableVisitor.willBecomeConstant(expr))) {
         		return false;
         	}
         }                

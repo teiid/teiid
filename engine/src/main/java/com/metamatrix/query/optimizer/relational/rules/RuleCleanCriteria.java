@@ -36,7 +36,7 @@ import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.NodeEditor;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
 import com.metamatrix.query.sql.lang.Criteria;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 /**
@@ -67,7 +67,7 @@ public final class RuleCleanCriteria implements OptimizerRule {
             
             Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
             //if not evaluatable, just move on to the next criteria
-            if (!EvaluateExpressionVisitor.isFullyEvaluatable(crit, true)) {
+            if (!EvaluatableVisitor.isFullyEvaluatable(crit, true)) {
                 continue;
             }
             //if evaluatable

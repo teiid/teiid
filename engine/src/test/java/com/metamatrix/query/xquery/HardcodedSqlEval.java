@@ -23,13 +23,16 @@
 package com.metamatrix.query.xquery;
 
 import java.io.StringReader;
+import java.util.Map;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryParserException;
+import com.metamatrix.common.buffer.BlockedException;
 
 
 /** 
@@ -37,6 +40,7 @@ import com.metamatrix.api.exception.query.QueryParserException;
 public class HardcodedSqlEval implements XQuerySQLEvaluator {
 
     String result;
+    Map<String, Object> params;
     public HardcodedSqlEval(String result) {
         this.result = result;
     }
@@ -54,5 +58,12 @@ public class HardcodedSqlEval implements XQuerySQLEvaluator {
      */
     public void close() throws MetaMatrixComponentException {
     }
+
+	@Override
+	public Object getParameterValue(String key)
+			throws ExpressionEvaluationException, BlockedException,
+			MetaMatrixComponentException {
+		return params.get(key);
+	}
 
 }

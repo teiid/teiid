@@ -26,7 +26,9 @@ import javax.xml.transform.Source;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryParserException;
+import com.metamatrix.common.buffer.BlockedException;
 
 
 /** 
@@ -47,4 +49,6 @@ public interface XQuerySQLEvaluator {
      * Closes any resources opened during the evaluation 
      */
     void close() throws MetaMatrixComponentException ;
+
+	Object getParameterValue(String key) throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException;
 }

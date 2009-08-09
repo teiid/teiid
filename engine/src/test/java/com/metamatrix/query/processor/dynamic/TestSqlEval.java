@@ -23,6 +23,7 @@
 package com.metamatrix.query.processor.dynamic;
 
 import java.io.BufferedReader;
+import java.util.Collections;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
@@ -68,7 +69,7 @@ public class TestSqlEval extends TestCase {
         CommandContext cc = TestProcessor.createCommandContext();
         cc.setQueryProcessorFactory(factory);
         
-        SqlEval sqlEval = new SqlEval(bufferMgr, cc, null);
+        SqlEval sqlEval = new SqlEval(bufferMgr, null, cc, null, Collections.EMPTY_MAP);
         Source results =  sqlEval.executeSQL(sql);        
         String result = toXMLString(results);
         sqlEval.close();

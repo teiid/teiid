@@ -61,6 +61,7 @@ public class XQueryPlan extends BaseProcessorPlan {
     private BufferManager bufferMgr;
     private String xmlFormat;
     private String parentGroup;
+    private ProcessorDataManager dataManager;
 
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
     private TupleSourceID resultsTupleSourceId;
@@ -90,7 +91,8 @@ public class XQueryPlan extends BaseProcessorPlan {
      */
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         setContext(context);
-        this.bufferMgr = bufferMgr;        
+        this.bufferMgr = bufferMgr;
+        this.dataManager = dataMgr;
         if(context.getStreamingBatchSize() != 0){
             this.chunkSize = context.getStreamingBatchSize();
         }        
@@ -126,7 +128,7 @@ public class XQueryPlan extends BaseProcessorPlan {
     	XQueryExpression expr = this.xQuery.getCompiledXQuery();    
         expr.setXMLFormat(xmlFormat);
         
-        SqlEval sqlEval = new SqlEval(bufferMgr, getContext(), this.parentGroup);
+        SqlEval sqlEval = new SqlEval(bufferMgr, this.dataManager, getContext(), this.parentGroup, this.xQuery.getVariables());
         try {
         	SQLXML xml = expr.evaluateXQuery(sqlEval);
             TupleBatch batch = packResultsIntoBatch(xml);        

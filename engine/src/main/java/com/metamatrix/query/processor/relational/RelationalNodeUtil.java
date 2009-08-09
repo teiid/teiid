@@ -35,7 +35,7 @@ import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 
 
 /** 
@@ -109,7 +109,7 @@ public class RelationalNodeUtil {
 
                 if(criteria == null) {
                     return true;
-                } else if(!EvaluateExpressionVisitor.isFullyEvaluatable(criteria, false)) {
+                } else if(!EvaluatableVisitor.isFullyEvaluatable(criteria, false)) {
                     // If there are elements present in the criteria,
                     // then we don't know the result, so assume we need to execute
                     return true;
@@ -133,7 +133,7 @@ public class RelationalNodeUtil {
                 if (criteria == null) {
                 	return true;
                 }
-                if(!EvaluateExpressionVisitor.isFullyEvaluatable(criteria, false)) {
+                if(!EvaluatableVisitor.isFullyEvaluatable(criteria, false)) {
                     return true;
                 } else if(evaluateCriteria(criteria)) {
                     if (simplifyCriteria) {
@@ -150,7 +150,7 @@ public class RelationalNodeUtil {
                 if (criteria == null) {
                 	return true;
                 }
-                if(!EvaluateExpressionVisitor.isFullyEvaluatable(criteria, false)) {
+                if(!EvaluatableVisitor.isFullyEvaluatable(criteria, false)) {
                     return true;
                 } else if(evaluateCriteria(criteria)) {
                     if (simplifyCriteria) {

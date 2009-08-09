@@ -54,7 +54,6 @@ import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolveVirtualGroupCriteriaVisitor;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.rewriter.VariableSubstitutionVisitor;
 import com.metamatrix.query.sql.ProcedureReservedWords;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.DynamicCommand;
@@ -190,10 +189,8 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
             nameValueMap.putAll(QueryResolver.getVariableValues(parentProcCommand.getUserCommand(), metadata));
             // validation visitor?
 
-            VariableSubstitutionVisitor.substituteVariables(command, nameValueMap, command.getType());
-            
 			QueryRewriter.rewrite(command, parentProcCommand, metadata,
-					procEnv.getContext());
+					procEnv.getContext(), nameValueMap, parentProcCommand.getUserCommand().getType());
 
 			if (dynamicCommand.getAsColumns() != null
 					&& !dynamicCommand.getAsColumns().isEmpty()) {

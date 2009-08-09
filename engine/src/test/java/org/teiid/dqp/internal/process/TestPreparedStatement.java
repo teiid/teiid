@@ -386,7 +386,7 @@ public class TestPreparedStatement {
             Arrays.asList(1),
         };    
     
-		List values = Arrays.asList("aa "); //$NON-NLS-1$
+		List<String> values = Arrays.asList("aa "); //$NON-NLS-1$
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData2b(dataManager);
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
@@ -398,6 +398,32 @@ public class TestPreparedStatement {
 		List values = Arrays.asList(-1);
         FakeDataManager dataManager = new FakeDataManager();
 		helpTestProcessing(preparedSql, values, null, dataManager, FakeMetadataFactory.example1Cached(), false, false);
+    }
+    
+    @Test public void testExecParam() throws Exception {
+        String preparedSql = "exec pm1.sq2(?)"; //$NON-NLS-1$
+        
+		List<String> values = Arrays.asList("c"); //$NON-NLS-1$
+        List[] expected = new List[] { 
+                Arrays.asList("c", 1),
+            };    
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
+    }
+    
+    @Test public void testXQueryParam() throws Exception {
+        String preparedSql = "exec m.xproc3(?)"; //$NON-NLS-1$
+        
+		List<String> values = Arrays.asList("<test1/>"); //$NON-NLS-1$
+        List[] expected = new List[] { 
+                Arrays.asList("<?xml version=\"1.0\" encoding=\"UTF-8\"?><wrap><test1/></wrap>"), //$NON-NLS-1$
+            };    
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.exampleXQueryTransformations(), false, false);
     }
 
 }

@@ -44,7 +44,6 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -323,20 +322,10 @@ public class ProcedurePlan extends BaseProcessorPlan {
     private TupleSource getResults()
         throws MetaMatrixComponentException, BlockedException, MetaMatrixProcessingException {
 
-		TupleSource results;
+        this.internalProcessor.process(Integer.MAX_VALUE); //TODO: put a better value here
 
-        try {
-            this.internalProcessor.process(Integer.MAX_VALUE); //TODO: put a better value here
-
-            // didn't throw processor blocked, so must be done
-            results = this.bufferMgr.getTupleSource(this.internalResultID);
-        } catch(MetaMatrixComponentException e) {
-            throw e;
-        } catch (MetaMatrixProcessingException e) {
-        	throw e;
-        } catch(MetaMatrixCoreException e) {
-            throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0023, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0023, e.getMessage()));
-        }
+        // didn't throw processor blocked, so must be done
+        TupleSource results = this.bufferMgr.getTupleSource(this.internalResultID);
 
         // clean up internal stuff
         this.internalProcessor = null;

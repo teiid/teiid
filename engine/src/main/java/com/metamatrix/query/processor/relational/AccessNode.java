@@ -37,7 +37,6 @@ import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 public class AccessNode extends RelationalNode {
@@ -114,12 +113,9 @@ public class AccessNode extends RelationalNode {
 	static boolean prepareCommand(Command atomicCommand, RelationalNode node, CommandContext context)
 			throws ExpressionEvaluationException, MetaMatrixComponentException,
 			MetaMatrixProcessingException, CriteriaEvaluationException {
-		// evaluate all references and any functions on constant values
-        EvaluateExpressionVisitor.replaceExpressions(atomicCommand, true, node.getDataManager(), context);                            
-        
         try {
             // Defect 16059 - Rewrite the command once the references have been replaced with values.
-            QueryRewriter.rewrite(atomicCommand, null, null, context);
+            QueryRewriter.evaluateAndRewrite(atomicCommand, node.getDataManager(), context);
         } catch (QueryValidatorException e) {
             throw new MetaMatrixProcessingException(e, QueryExecPlugin.Util.getString("AccessNode.rewrite_failed", atomicCommand)); //$NON-NLS-1$
         }

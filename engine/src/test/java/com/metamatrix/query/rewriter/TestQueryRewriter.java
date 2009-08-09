@@ -1740,21 +1740,6 @@ public class TestQueryRewriter {
         assertEquals("SELECT e1, e2 FROM pm1.g1 WHERE e1 = '1'", rewriteCommand.toString()); //$NON-NLS-1$
     }
 
-    @Test public void testRewriteExecCase6455() throws Exception {
-        Command command = QueryParser.getQueryParser().parseCommand("exec pm1.sq2(env('sessionid')) OPTION PLANONLY DEBUG");             //$NON-NLS-1$
-        
-        QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
-        
-        CommandContext context = new CommandContext();
-        Properties props = new Properties();
-        props.setProperty(ContextProperties.SESSION_ID, "1"); //$NON-NLS-1$
-        context.setEnvironmentProperties(props);
-        Command rewriteCommand = QueryRewriter.rewrite(command, null, null, context);
-        
-        assertEquals("SELECT e1, e2 FROM pm1.g1 WHERE e1 = '1' OPTION PLANONLY DEBUG", rewriteCommand.toString()); //$NON-NLS-1$
-    }
-
-
     @Test public void testRewriteNestedFunctions() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 where convert(parsedate(e1, 'yyyy-MM-dd'), string) = '2006-07-01'", "SELECT e1 FROM pm1.g1 WHERE e1 = '2006-07-01'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -1914,7 +1899,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteXMLCriteriaCases5630And5640() {
-        helpTestRewriteCommand("select * from xmltest.doc1 where node1 = null", "SELECT * FROM xmltest.doc1 WHERE node1 = null"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCommand("select * from xmltest.doc1 where node1 = null", "SELECT * FROM xmltest.doc1 WHERE null <> null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCorrelatedSubqueryInHaving() {

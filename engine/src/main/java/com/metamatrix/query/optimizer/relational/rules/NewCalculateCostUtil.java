@@ -65,7 +65,7 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.LogConstants;
@@ -669,7 +669,7 @@ public class NewCalculateCostUtil {
             if(compareValue != null && compareValue.indexOf('%') < 0) {
             	return (childCost / 2) * (1 / 3f  + 1 / ndv); //without knowing length constraints we'll make an average guess
             }
-        } else if (EvaluateExpressionVisitor.willBecomeConstant(criteria.getLeftExpression())) {
+        } else if (EvaluatableVisitor.willBecomeConstant(criteria.getLeftExpression())) {
             return childCost / ndv;
         }
         return childCost / 3;

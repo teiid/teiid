@@ -98,7 +98,7 @@ import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.EvaluateExpressionVisitor;
+import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.PredicateCollectorVisitor;
@@ -775,7 +775,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 Expression nextValue = (Expression) valIter.next();
                 ElementSymbol nextVar = (ElementSymbol) varIter.next();
 
-                if (EvaluateExpressionVisitor.isFullyEvaluatable(nextValue, true)) {
+                if (EvaluatableVisitor.isFullyEvaluatable(nextValue, true)) {
                     try {
                         // If nextValue is an expression, evaluate it before checking for null
                         Object evaluatedValue = Evaluator.evaluate(nextValue);
@@ -823,7 +823,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			    // Check that right expression is a constant and is non-null
                 Expression value = entry.getValue();
                 
-                if (EvaluateExpressionVisitor.isFullyEvaluatable(value, true)) {
+                if (EvaluatableVisitor.isFullyEvaluatable(value, true)) {
                     try {
                         value = new Constant(Evaluator.evaluate(value));
                     } catch (ExpressionEvaluationException err) {
@@ -835,7 +835,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                     if(((Constant)value).isNull() && ! getMetadata().elementSupports(elementID.getMetadataID(), SupportConstants.Element.NULL)) {
                         handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0060, SQLStringVisitor.getSQLString(elementID)), elementID);
                     }// end of if
-                } else if (!EvaluateExpressionVisitor.willBecomeConstant(value)) {
+                } else if (!EvaluatableVisitor.willBecomeConstant(value)) {
                     // If this is an update on a virtual group, verify that no elements are in the right side
                     GroupSymbol group = update.getGroup();
                     if(getMetadata().isVirtualGroup(group.getMetadataID())) {

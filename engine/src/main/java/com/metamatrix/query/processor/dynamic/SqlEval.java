@@ -23,21 +23,28 @@
 package com.metamatrix.query.processor.dynamic;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.transform.Source;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
+import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryParserException;
+import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.query.eval.Evaluator;
+import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
+import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.symbol.Symbol;
 import com.metamatrix.query.util.CommandContext;
@@ -54,11 +61,15 @@ public class SqlEval implements XQuerySQLEvaluator {
     private CommandContext context;
     private ArrayList<TupleSourceID> openTupleList;
     private String parentGroup;
+    private Map<String, Expression> params;
+    private ProcessorDataManager dataManager;
     
-    public SqlEval(BufferManager bufferMgr, CommandContext context, String parentGroup) {
+    public SqlEval(BufferManager bufferMgr, ProcessorDataManager dataManager, CommandContext context, String parentGroup, Map<String, Expression> params) {
         this.bufferMgr = bufferMgr;
+        this.dataManager = dataManager;
         this.context = context;
         this.parentGroup = parentGroup;
+        this.params = params;
     }
 
     /** 
@@ -93,6 +104,14 @@ public class SqlEval implements XQuerySQLEvaluator {
             return XMLSource.createSource(columns, types, src, this.bufferMgr);
         }
         return SQLSource.createSource(columns, types, src);
+    }
+    
+    @Override
+    public Object getParameterValue(String key) throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+    	String paramName = this.parentGroup + ElementSymbol.SEPARATOR + key;
+    	paramName = paramName.toUpperCase();
+    	Expression expr = this.params.get(paramName);
+    	return new Evaluator(Collections.emptyMap(), this.dataManager, context).evaluate(expr, Collections.emptyList());
     }
 
     /**

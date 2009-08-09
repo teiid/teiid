@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.parser.ParseInfo;
@@ -41,10 +43,7 @@ import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.Function;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.util.ElementSymbolOptimizer;
-import com.metamatrix.query.sql.visitor.VariableCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
-
-import junit.framework.TestCase;
 
 public class TestXMLResolver extends TestCase {
     
@@ -403,7 +402,7 @@ public class TestXMLResolver extends TestCase {
         QueryResolver.resolveCommand(command, externalMetadata, false, FakeMetadataFactory.example1Cached(), AnalysisRecord.createNonRecordingRecord());
     
         // Verify results        
-        Collection vars = VariableCollectorVisitor.getVariables(command, false);
+        Collection vars = TestResolver.getVariables(command);
         assertEquals("Did not find variable in resolved query", 1, vars.size()); //$NON-NLS-1$
     }
       

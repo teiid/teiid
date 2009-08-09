@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.processor.proc;
 
+import static org.junit.Assert.*;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
@@ -54,11 +56,8 @@ import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.TestOptimizer;
-import com.metamatrix.query.optimizer.capabilities.AllCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.FakeDataManager;
 import com.metamatrix.query.processor.ProcessorDataManager;
@@ -81,11 +80,7 @@ import com.metamatrix.query.validator.Validator;
 import com.metamatrix.query.validator.ValidatorFailure;
 import com.metamatrix.query.validator.ValidatorReport;
 
-public class TestProcedureProcessor extends TestCase {
-
-    public TestProcedureProcessor(String name) {
-        super(name);
-    }
+public class TestProcedureProcessor {
 	
     public static ProcessorPlan getProcedurePlan(String userQuery, FakeMetadataFacade metadata) throws Exception {
     	return getProcedurePlan(userQuery, metadata, /*capabilitiesFinder*/null);
@@ -342,7 +337,7 @@ public class TestProcedureProcessor extends TestCase {
     }    
     
 	// procedure does nothing returns zero update count	
-    public void testProcedureProcessor1() throws Exception {
+    @Test public void testProcedureProcessor1() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1 = 0;\n"; //$NON-NLS-1$
@@ -361,7 +356,7 @@ public class TestProcedureProcessor extends TestCase {
     }
 
 	// testing if statement    
-    public void testProcedureProcessor2() throws Exception {
+    @Test public void testProcedureProcessor2() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -384,7 +379,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
     // testing if statement    
-    public void testProcedureProcessor2WithBlockedException() throws Exception  {
+    @Test public void testProcedureProcessor2WithBlockedException() throws Exception  {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -408,7 +403,7 @@ public class TestProcedureProcessor extends TestCase {
     }
 
 	// testing rows updated incremented, Input and assignment statements
-    public void testProcedureProcessor3() throws Exception {
+    @Test public void testProcedureProcessor3() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -429,7 +424,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
     // if/else test
-    public void testProcedureProcessor4() throws Exception {
+    @Test public void testProcedureProcessor4() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -458,7 +453,7 @@ public class TestProcedureProcessor extends TestCase {
 		helpTestProcess(plan, 5, dataMgr);									 
     }
     
-    public void testProcedureProcessor4WithBlockedException() throws Exception {
+    @Test public void testProcedureProcessor4WithBlockedException() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -489,7 +484,7 @@ public class TestProcedureProcessor extends TestCase {
     }
 
     // if/else test    
-    public void testProcedureProcessor5() throws Exception {
+    @Test public void testProcedureProcessor5() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -516,7 +511,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
     // more rows than expected
-    public void testProcedureProcessor6() throws Exception {
+    @Test public void testProcedureProcessor6() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "ROWS_UPDATED = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
@@ -534,22 +529,22 @@ public class TestProcedureProcessor extends TestCase {
     }
 
     // error statement
-    public void testProcedureProcessor7() throws Exception {
+    @Test public void testProcedureProcessor7() throws Exception {
         String errorValue = "\"MY ERROR\""; //$NON-NLS-1$
         helpTestErrorStatment(errorValue, "MY ERROR"); //$NON-NLS-1$
     }
     
-    public void testProcedureProcessor8() throws Exception {
+    @Test public void testProcedureProcessor8() throws Exception {
         String errorValue = "var1"; //$NON-NLS-1$
         helpTestErrorStatment(errorValue, "5"); //$NON-NLS-1$
     }
     
-    public void testProcedureProcessor9() throws Exception {
+    @Test public void testProcedureProcessor9() throws Exception {
         String errorValue = "var1||\"MY ERROR\""; //$NON-NLS-1$
         helpTestErrorStatment(errorValue, "5MY ERROR"); //$NON-NLS-1$
     }
         
-    public void testProcedureProcessor10() throws Exception {
+    @Test public void testProcedureProcessor10() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "loop on (Select pm1.g1.e2 from pm1.g1 where e2 = 5) as mycursor\n"; //$NON-NLS-1$
@@ -591,7 +586,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
 	/** test if statement's if block with lookup in if condition */
-	public void testLookupFunction1() throws Exception {     
+	@Test public void testLookupFunction1() throws Exception {     
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var2;\n"; //$NON-NLS-1$
@@ -622,7 +617,7 @@ public class TestProcedureProcessor extends TestCase {
 	}
 	
 	/** test if statement's else block with lookup in if condition */
-	public void testLookupFunction2() throws Exception {     
+	@Test public void testLookupFunction2() throws Exception {     
 		String procedure = "CREATE PROCEDURE "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var2;\n"; //$NON-NLS-1$
@@ -651,7 +646,7 @@ public class TestProcedureProcessor extends TestCase {
 		helpTestProcess(plan, 12, dataMgr);        
 	}
 
-    public void testVirtualProcedure() throws Exception {
+    @Test public void testVirtualProcedure() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp2()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -668,7 +663,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedureWithBlockedException() throws Exception {
+    @Test public void testVirtualProcedureWithBlockedException() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp2()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -686,7 +681,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure2() throws Exception {
+    @Test public void testVirtualProcedure2() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp3()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -701,7 +696,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure3() throws Exception {
+    @Test public void testVirtualProcedure3() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp4()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -716,7 +711,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
         
-    public void testVirtualProcedure4() throws Exception {
+    @Test public void testVirtualProcedure4() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp5()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -731,7 +726,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure5() throws Exception {
+    @Test public void testVirtualProcedure5() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp6()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -746,7 +741,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
        
-    public void testVirtualProcedure6() throws Exception {
+    @Test public void testVirtualProcedure6() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp7(5)"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -761,7 +756,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
           
-    public void testVirtualProcedure7() throws Exception {
+    @Test public void testVirtualProcedure7() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp8(51)"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -776,7 +771,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
               
-    public void testVirtualProcedure8() throws Exception {
+    @Test public void testVirtualProcedure8() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp9(51)"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -791,7 +786,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
              
-    public void testVirtualProcedure9() throws Exception {
+    @Test public void testVirtualProcedure9() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp10(51)"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -806,7 +801,7 @@ public class TestProcedureProcessor extends TestCase {
     }
 
               
-    public void testVirtualProcedure10() throws Exception {
+    @Test public void testVirtualProcedure10() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp13()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -821,7 +816,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure11() throws Exception {
+    @Test public void testVirtualProcedure11() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp14()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         // Set up data
@@ -839,7 +834,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure12() throws Exception {
+    @Test public void testVirtualProcedure12() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp15()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         // Set up data
@@ -870,7 +865,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
     //Defect17447_testVirtualProcedure13
-    public void testVirtualProcedure13() throws Exception {
+    @Test public void testVirtualProcedure13() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp16()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
 
@@ -901,7 +896,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     		
-    public void testVirtualProcedure14() throws Exception {
+    @Test public void testVirtualProcedure14() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp17()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         // Set up data
@@ -958,7 +953,7 @@ public class TestProcedureProcessor extends TestCase {
         return plan;
     }
     
-    public void testVirtualProcedure15() throws Exception {
+    @Test public void testVirtualProcedure15() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp19()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
 
@@ -980,7 +975,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure16() throws Exception {
+    @Test public void testVirtualProcedure16() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp20()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         // Set up data
@@ -998,7 +993,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure17() throws Exception {
+    @Test public void testVirtualProcedure17() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp21(7)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         //Set up data
@@ -1017,7 +1012,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure18() throws Exception {
+    @Test public void testVirtualProcedure18() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp22(7)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         //Set up data
@@ -1034,7 +1029,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure19() throws Exception {
+    @Test public void testVirtualProcedure19() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp23(7)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         //Set up data
@@ -1050,7 +1045,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure19WithBlockedException() throws Exception {
+    @Test public void testVirtualProcedure19WithBlockedException() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp23(7)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         //Set up data
@@ -1065,7 +1060,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
 
-    public void testVirtualProcedureNoDataInTempTable() throws Exception {
+    @Test public void testVirtualProcedureNoDataInTempTable() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp25()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
 
@@ -1082,7 +1077,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
     //procedure with Has Criteria and Translate Criteria 
-    public void testDefect13625() throws Exception {
+    @Test public void testDefect13625() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1107,7 +1102,7 @@ public class TestProcedureProcessor extends TestCase {
 		helpTestProcess(plan, 5, dataMgr);
     }
     
-    public void testVirtualProcedure30() throws Exception {
+    @Test public void testVirtualProcedure30() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp30()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
     
@@ -1124,7 +1119,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
 
-    public void testVirtualProcedure31() throws Exception {
+    @Test public void testVirtualProcedure31() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp31(51)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         
@@ -1138,7 +1133,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
 
-    public void testVirtualProcedureDefect14282() throws Exception {
+    @Test public void testVirtualProcedureDefect14282() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp24()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -1153,7 +1148,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }    
     
-    public void testDefect16193() throws Exception {
+    @Test public void testDefect16193() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp35(51)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -1167,7 +1162,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedure16602() throws Exception {
+    @Test public void testVirtualProcedure16602() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp37()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -1193,7 +1188,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDefect16649_1() throws Exception {
+    @Test public void testDefect16649_1() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp38()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -1207,7 +1202,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDefect16649_2() throws Exception {
+    @Test public void testDefect16649_2() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp39()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -1221,7 +1216,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDefect16694() throws Exception {
+    @Test public void testDefect16694() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp40()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -1235,7 +1230,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDefect16707() throws Exception {
+    @Test public void testDefect16707() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp44(2)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -1251,7 +1246,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDefect16707_1() throws Exception {
+    @Test public void testDefect16707_1() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp43(2)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -1267,7 +1262,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDefect17451() throws Exception {
+    @Test public void testDefect17451() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp45()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
 
@@ -1299,7 +1294,7 @@ public class TestProcedureProcessor extends TestCase {
     }
     
     //Defect 17447
-    public void testVirtualProcedure46() throws Exception {
+    @Test public void testVirtualProcedure46() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp46()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
 
@@ -1330,7 +1325,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDefect17650() throws Exception {
+    @Test public void testDefect17650() throws Exception {
         String procedure1 = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure1 = procedure1 + "BEGIN\n"; //$NON-NLS-1$
         procedure1 = procedure1 + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1358,7 +1353,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, 5, dataMgr);
     }
     
-    public void testDefect19982() throws Exception {
+    @Test public void testDefect19982() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp55(5)";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
@@ -1374,7 +1369,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     } 
     
-    public void testCase3521() throws Exception {
+    @Test public void testCase3521() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp1()"; //$NON-NLS-1$
     
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -1393,7 +1388,7 @@ public class TestProcedureProcessor extends TestCase {
     }
 
     //procedure with Has Criteria and Translate Criteria and changing
-    public void testDynamicCommandWithTranslate() throws Exception {
+    @Test public void testDynamicCommandWithTranslate() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -1419,7 +1414,7 @@ public class TestProcedureProcessor extends TestCase {
 		helpTestProcess(plan, 5, dataMgr);
     }
     
-    public void testDynamicCommandWithIntoExpression() throws Exception {
+    @Test public void testDynamicCommandWithIntoExpression() throws Exception {
     	
     	//Test INTO clause with expression
     	FakeMetadataFacade metadata = FakeMetadataFactory.example1();
@@ -1448,7 +1443,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
       }
     
-    public void testDynamicCommandWithIntoAndLoop() throws Exception {
+    @Test public void testDynamicCommandWithIntoAndLoop() throws Exception {
     	
     	//Test INTO clause with loop
     	FakeMetadataFacade metadata = FakeMetadataFactory.example1();
@@ -1490,7 +1485,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
       }
     
-    public void testDynamicCommandWithParameter() throws Exception {
+    @Test public void testDynamicCommandWithParameter() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
         FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -1518,7 +1513,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDynamicCommandWithUsing() throws Exception {
+    @Test public void testDynamicCommandWithUsing() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
         FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -1546,7 +1541,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDynamicCommandWithVariable() throws Exception {
+    @Test public void testDynamicCommandWithVariable() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
         FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -1574,7 +1569,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
 
-    public void testDynamicCommandWithSingleSelect() throws Exception {
+    @Test public void testDynamicCommandWithSingleSelect() throws Exception {
     	//Test select of a single value in a DynamicCommand
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -1603,7 +1598,7 @@ public class TestProcedureProcessor extends TestCase {
 
     
     //converts e1 from integer to string, with a different name
-    public void testDynamicCommandTypeConversion() throws Exception {
+    @Test public void testDynamicCommandTypeConversion() throws Exception {
     	 FakeMetadataFacade metadata = FakeMetadataFactory.example1();
          
          FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -1631,7 +1626,7 @@ public class TestProcedureProcessor extends TestCase {
          helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDynamicCommandRecursion() throws Exception {
+    @Test public void testDynamicCommandRecursion() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
 
         FakeMetadataObject pm1 = metadata.getStore().findObject("pm1", FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -1662,7 +1657,7 @@ public class TestProcedureProcessor extends TestCase {
                                "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: There is a recursive invocation of group 'PM1.SQ2'. Please correct the SQL."); //$NON-NLS-1$
     }
     
-    public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
+    @Test public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
     	//Tests dynamic query with incorrect number of elements   
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -1692,7 +1687,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcessFailure(false, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements."); //$NON-NLS-1$
      }
     
-    public void testDynamicCommandIncorrectProjectSymbolNames() throws Exception {
+    @Test public void testDynamicCommandIncorrectProjectSymbolNames() throws Exception {
     	//Tests dynamic query with incorrect number of elements   
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -1717,7 +1712,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcessFailure(false, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 as x, e2 from pm1.g1'\" with the SQL statement \"'select e1 as x, e2 from pm1.g1'\" due to: No match found for expected symbol 'E1' in the dynamic SQL."); //$NON-NLS-1$
      }
     
-    public void testDynamicCommandIncorrectProjectSymbolDatatypes() throws Exception {
+    @Test public void testDynamicCommandIncorrectProjectSymbolDatatypes() throws Exception {
     	//Tests dynamic query with a different datatype definition for an element in the AS clause that
     	//has no implicit conversion. 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
@@ -1742,7 +1737,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcessFailure(false, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 from pm1.g1'\" with the SQL statement \"'select e1 from pm1.g1'\" due to: The datatype 'string' for element 'E1' in the dynamic SQL cannot be implicitly converted to 'integer'."); //$NON-NLS-1$
      }
  
-    public void testDynamicCommandInvalidModelUpdateCountEqualOne() throws Exception {
+    @Test public void testDynamicCommandInvalidModelUpdateCountEqualOne() throws Exception {
     	//Test invalid update model count
     	//Set update model count to 1 while actual is 2   
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
@@ -1773,7 +1768,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcessFailure(true, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string UPDATE 1\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The actual model update count '2' is greater than the expected value of '1'.  This is potentially unsafe in OPTIMISTIC transaction mode.  Please adjust the UPDATE clause of the dynamic SQL statement."); //$NON-NLS-1$ 
       }
     
-    public void testDynamicCommandWithTwoDynamicStatements() throws Exception {
+    @Test public void testDynamicCommandWithTwoDynamicStatements() throws Exception {
     	//Tests dynamic query with two consecutive DynamicCommands. The first without an AS clause and returning different results. 
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -1803,7 +1798,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
      }
     
-    public void testAssignmentWithCase() throws Exception {
+    @Test public void testAssignmentWithCase() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
         String sql = new StringBuffer("declare integer caseValue = ") //$NON-NLS-1$
@@ -1840,7 +1835,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDynamicCommandInsertIntoTempTableWithDifferentDatatypeFromSource() throws Exception {
+    @Test public void testDynamicCommandInsertIntoTempTableWithDifferentDatatypeFromSource() throws Exception {
     	//Tests dynamic query with insert into a temp table using data returned from a physical table.
     	//See defect 23394  
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
@@ -1870,7 +1865,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
      }
     
-    public void testDynamicCommandWithVariableOnly() throws Exception {
+    @Test public void testDynamicCommandWithVariableOnly() throws Exception {
     	//Tests dynamic query with only a variable that represents thte entire dynamic query.
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -1897,7 +1892,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
      }
     
-    public void testVirtualProcedureWithCreate() throws Exception{
+    @Test public void testVirtualProcedureWithCreate() throws Exception{
         String userUpdateStr = "EXEC pm1.vsp60()"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -1914,7 +1909,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedureWithCreateAndDrop() throws Exception{
+    @Test public void testVirtualProcedureWithCreateAndDrop() throws Exception{
         String userUpdateStr = "EXEC pm1.vsp61()"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -1931,7 +1926,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testVirtualProcedureWithCreateAndSelectInto() throws Exception{
+    @Test public void testVirtualProcedureWithCreateAndSelectInto() throws Exception{
         String userUpdateStr = "EXEC pm1.vsp62()"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -1948,7 +1943,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDifferentlyScopedTempTables() throws Exception {
+    @Test public void testDifferentlyScopedTempTables() throws Exception {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -1991,7 +1986,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testLoopsWithBreak() throws Exception {
+    @Test public void testLoopsWithBreak() throws Exception {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -2033,7 +2028,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testCreateWithoutDrop() throws Exception {
+    @Test public void testCreateWithoutDrop() throws Exception {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -2066,7 +2061,7 @@ public class TestProcedureProcessor extends TestCase {
     /**
      *  We allow drops to silently fail
      */
-    public void testDoubleDrop() throws Exception {
+    @Test public void testDoubleDrop() throws Exception {
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -2101,7 +2096,7 @@ public class TestProcedureProcessor extends TestCase {
     /**
      * defect 23975 
      */
-    public void testFunctionInput() throws Exception {
+    @Test public void testFunctionInput() throws Exception {
         FakeMetadataObject v1 = FakeMetadataFactory.createVirtualModel("v1"); //$NON-NLS-1$
 
         FakeMetadataObject p1 = FakeMetadataFactory.createParameter("v1.vp1.in", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING, null);  //$NON-NLS-1$
@@ -2142,7 +2137,7 @@ public class TestProcedureProcessor extends TestCase {
      * Also, even after the bug for passing procedure inputs to non-execs was fixed, the special case of
      * if (below) and while statements popped up.  
      */
-    public void testIfEvaluation() throws Exception {
+    @Test public void testIfEvaluation() throws Exception {
         String procedure1 = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure1 += "BEGIN\n"; //$NON-NLS-1$
         procedure1 += "DECLARE string var1 = INPUT.e1;\n"; //$NON-NLS-1$
@@ -2171,7 +2166,7 @@ public class TestProcedureProcessor extends TestCase {
      *  This is a slight variation of TestProcessor.testVariableInExecParam, where the proc wrapper can be 
      *  removed after rewrite
      */
-    public void testReferenceForwarding() throws Exception { 
+    @Test public void testReferenceForwarding() throws Exception { 
         // Create query 
         String sql = "EXEC pm1.vsp49()"; //$NON-NLS-1$
         
@@ -2205,7 +2200,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataManager);
     }
     
-    public void testInsertAfterCreate() throws Exception {
+    @Test public void testInsertAfterCreate() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
         FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -2241,7 +2236,7 @@ public class TestProcedureProcessor extends TestCase {
     /**
      * the update will not be executed, but the assignment value should still be 0
      */
-    public void testUpdateAssignmentNotExecuted() throws Exception {
+    @Test public void testUpdateAssignmentNotExecuted() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1 = UPDATE pm1.g1 SET pm1.g1.e1 = INPUT.e2;"; //$NON-NLS-1$
@@ -2259,7 +2254,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, 1, dataMgr);
     }
     
-    public void testUpdateAssignmentNotExecutedVirtual() throws Exception {
+    @Test public void testUpdateAssignmentNotExecutedVirtual() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1 = UPDATE vm1.g2 SET e1 = INPUT.e2;"; //$NON-NLS-1$
@@ -2286,7 +2281,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, 1, dataMgr);
     }
     
-    public void testEvaluatableSelectWithOrderBy() throws Exception {
+    @Test public void testEvaluatableSelectWithOrderBy() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
         FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -2316,7 +2311,7 @@ public class TestProcedureProcessor extends TestCase {
         
     }
     
-    public void testEvaluatableSelectWithOrderBy1() throws Exception {
+    @Test public void testEvaluatableSelectWithOrderBy1() throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
         FakeMetadataObject pm1 = metadata.getStore().findObject("pm1",FakeMetadataObject.MODEL); //$NON-NLS-1$
@@ -2356,7 +2351,7 @@ public class TestProcedureProcessor extends TestCase {
      * 
      * If this function were deterministic, it would be evaluated during rewrite to a single value.
      */
-    public void testNonDeterministicEvaluation() throws Exception {
+    @Test public void testNonDeterministicEvaluation() throws Exception {
         StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n") //$NON-NLS-1$
         .append("BEGIN\n") //$NON-NLS-1$
         .append("DECLARE integer x = 0;\n") //$NON-NLS-1$
@@ -2399,7 +2394,7 @@ public class TestProcedureProcessor extends TestCase {
         return metadata;
     }
     
-    public void testTempTableTypeConversion() throws Exception {
+    @Test public void testTempTableTypeConversion() throws Exception {
         
         String procedure = "CREATE VIRTUAL PROCEDURE\n"; //$NON-NLS-1$
         procedure += "BEGIN\n";       //$NON-NLS-1$
@@ -2426,7 +2421,7 @@ public class TestProcedureProcessor extends TestCase {
      * 
      * Now it will not and the rewriter should remove empty loops, where this was happening
      */
-    public void testGetChildPlans() {
+    @Test public void testGetChildPlans() {
         Program program = new Program();
         assertEquals(Collections.EMPTY_LIST, program.getChildPlans());
     }
@@ -2434,7 +2429,7 @@ public class TestProcedureProcessor extends TestCase {
     /**
      * wraps {@link TestXMLPlanningEnhancements.testNested2WithContextCriteria5d1} in a procedure
      */
-    public void testXMLWithExternalCriteria() throws Exception {
+    @Test public void testXMLWithExternalCriteria() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
@@ -2463,7 +2458,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testXMLWithExternalCriteria_InXMLVar() throws Exception {
+    @Test public void testXMLWithExternalCriteria_InXMLVar() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String resultFile = "TestXMLProcessor-testNested2WithContextCriteria5d.xml"; //$NON-NLS-1$
@@ -2497,7 +2492,7 @@ public class TestProcedureProcessor extends TestCase {
      * 
      * This one will successfully auto-stage
      */
-    public void testXMLWithExternalCriteria1() throws Exception {
+    @Test public void testXMLWithExternalCriteria1() throws Exception {
         FakeMetadataFacade metadata = TestXMLProcessor.exampleMetadataCached();
         FakeDataManager dataMgr = TestXMLProcessor.exampleDataManagerNested(metadata);
         String expectedDoc = 
@@ -2559,7 +2554,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testCase174806() throws Exception{
+    @Test public void testCase174806() throws Exception{
         String userUpdateStr = "EXEC pm1.vsp63()"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -2574,7 +2569,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testJoinProcAndPhysicalModel() throws Exception {
+    @Test public void testJoinProcAndPhysicalModel() throws Exception {
         String userUpdateStr = "select a.e1 from (EXEC pm1.vsp46()) as a, pm1.g1 where a.e1=pm1.g1.e1";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
 
@@ -2617,7 +2612,7 @@ public class TestProcedureProcessor extends TestCase {
      * assigned value in the <code>DECLARE</code> statement.</p> 
      * @throws Exception
      */
-    public void testDeclareWithQueryAssignment() throws Exception {
+    @Test public void testDeclareWithQueryAssignment() throws Exception {
     	// procedure comes from test case IT236455 / JBEDSP-818
         String procedure = "CREATE VIRTUAL PROCEDURE \n"; //$NON-NLS-1$
         procedure += "BEGIN\n"; //$NON-NLS-1$
@@ -2652,7 +2647,7 @@ public class TestProcedureProcessor extends TestCase {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    public void testDefect8693() throws Exception {
+    @Test public void testDefect8693() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
@@ -2671,7 +2666,7 @@ public class TestProcedureProcessor extends TestCase {
 		helpTestProcess(plan, 5, dataMgr);									 
     }
     
-    public void testWhileWithSubquery() throws Exception {
+    @Test public void testWhileWithSubquery() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1 = 2;\n"; //$NON-NLS-1$
@@ -2689,7 +2684,7 @@ public class TestProcedureProcessor extends TestCase {
 		helpTestProcess(plan, 0, dataMgr);									 
     }
     
-    public void testDefect18404() throws Exception {
+    @Test public void testDefect18404() throws Exception {
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1 = 5 + (select count(e2) from pm1.g1);\n"; //$NON-NLS-1$
@@ -2713,7 +2708,7 @@ public class TestProcedureProcessor extends TestCase {
      *  
      * @throws Exception
      */
-    public void testRemovalOfNonJoinCritWithReference() throws Exception {
+    @Test public void testRemovalOfNonJoinCritWithReference() throws Exception {
     	String proc = ""; //$NON-NLS-1$
     	
         String sql = ""; //$NON-NLS-1$
@@ -2757,7 +2752,7 @@ public class TestProcedureProcessor extends TestCase {
      *  
      * @throws Exception
      */
-    public void testRemovalOfNonJoinCritWithReference2() throws Exception {
+    @Test public void testRemovalOfNonJoinCritWithReference2() throws Exception {
     	String proc = ""; //$NON-NLS-1$
     	
         String sql = ""; //$NON-NLS-1$

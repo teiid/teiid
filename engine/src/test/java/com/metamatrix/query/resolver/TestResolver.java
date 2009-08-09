@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +95,6 @@ import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
 import com.metamatrix.query.sql.visitor.FunctionCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.ReferenceCollectorVisitor;
-import com.metamatrix.query.sql.visitor.VariableCollectorVisitor;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
@@ -176,9 +174,7 @@ public class TestResolver extends TestCase {
      */
     private Command helpResolveSubquery(String sql, String[] variableNames){
         Query query = (Query)helpResolve(sql);
-        Collection variables = new HashSet();
-        VariableCollectorVisitor visitor = new VariableCollectorVisitor(variables);
-        DeepPreOrderNavigator.doVisit(query, visitor);
+        Collection<ElementSymbol> variables = getVariables(query);
 
         assertTrue("Expected variables size " + variableNames.length + " but was " + variables.size(),  //$NON-NLS-1$ //$NON-NLS-2$
                    variables.size() == variableNames.length);
@@ -197,6 +193,17 @@ public class TestResolver extends TestCase {
         
         return query;         
     }
+
+	public static Collection<ElementSymbol> getVariables(LanguageObject languageObject) {
+		Collection<ElementSymbol> variables = ElementCollectorVisitor.getElements(languageObject, false, true);
+    	for (Iterator<ElementSymbol> iterator = variables.iterator(); iterator.hasNext();) {
+			ElementSymbol elementSymbol = iterator.next();
+			if (!elementSymbol.isExternalReference()) {
+				iterator.remove();
+			}
+		}
+		return variables;
+	}
     
     public static Command helpResolve(String sql, QueryMetadataInterface queryMetadata, AnalysisRecord analysis){
         return helpResolve(helpParse(sql), queryMetadata, analysis);
@@ -1053,7 +1060,7 @@ public class TestResolver extends TestCase {
 
         // Verify results        
         helpCheckFrom((Query)command, new String[] { "pm1.g1" });         //$NON-NLS-1$
-        Collection vars = VariableCollectorVisitor.getVariables(command, false);
+        Collection vars = getVariables(command);
         assertEquals("Did not find variable in resolved query", 1, vars.size()); //$NON-NLS-1$
     }
 
@@ -1073,7 +1080,7 @@ public class TestResolver extends TestCase {
 
         // Verify results        
         helpCheckFrom((Query)command, new String[] { "pm1.g1" });         //$NON-NLS-1$
-        Collection vars = VariableCollectorVisitor.getVariables(command, false);
+        Collection vars = getVariables(command);
         assertEquals("Did not find variable in resolved query", 1, vars.size()); //$NON-NLS-1$
     }
 
@@ -1092,7 +1099,7 @@ public class TestResolver extends TestCase {
         QueryResolver.resolveCommand(command, externalMetadata, false, metadata, AnalysisRecord.createNonRecordingRecord());
 
         // Verify results
-        Collection vars = VariableCollectorVisitor.getVariables(command, false);
+        Collection vars = getVariables(command);
         assertEquals("Did not find variable in resolved query", 1, vars.size()); //$NON-NLS-1$
     }
     
