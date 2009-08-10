@@ -31,11 +31,14 @@ import org.teiid.connector.language.ILiteral;
 
 public class OracleSpatialFunctionModifier extends BasicFunctionModifier {
 
-    protected void addParamWithConversion(List objs,
+    protected void addParamWithConversion(List<Object> objs,
                                           IExpression expression) {
-        if ((expression instanceof ILiteral) && (((ILiteral)expression).getType() == String.class))
-            objs.add(((String)((ILiteral)expression).getValue()));
-        else
-            objs.add(expression);
+		if ((expression instanceof ILiteral)
+				&& (((ILiteral) expression).getValue() != null)
+				&& (((ILiteral) expression).getValue() instanceof String))
+			objs.add(((String) ((ILiteral) expression).getValue()));
+		else
+			objs.add(expression);
     }
+    
 }
