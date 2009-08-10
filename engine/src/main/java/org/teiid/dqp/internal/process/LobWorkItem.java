@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.MemoryNotAvailableException;
 import com.metamatrix.common.buffer.TupleBatch;
@@ -104,7 +105,9 @@ public class LobWorkItem implements Runnable {
         
         if (shouldClose) {
         	try {
-				stream.close();
+        		if (stream != null) {
+        			stream.close();
+        		}
 			} catch (IOException e) {
 				LogManager.logWarning(LogConstants.CTX_DQP, e, DQPPlugin.Util.getString("ProcessWorker.LobError")); //$NON-NLS-1$
 			}

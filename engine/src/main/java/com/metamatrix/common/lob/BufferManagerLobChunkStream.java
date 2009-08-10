@@ -31,6 +31,7 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.util.LogConstants;
 
 public class BufferManagerLobChunkStream  implements LobChunkProducer {
@@ -48,11 +49,11 @@ public class BufferManagerLobChunkStream  implements LobChunkProducer {
             this.position++;
             return bufferMgr.getStreamablePart(sourceId, position);
         } catch (TupleSourceNotFoundException e) {
-            String msg = CommonPlugin.Util.getString("BufferManagerLobChunkStream.no_tuple_source", new Object[] {sourceId}); //$NON-NLS-1$
+            String msg = DQPPlugin.Util.getString("BufferManagerLobChunkStream.no_tuple_source", new Object[] {sourceId}); //$NON-NLS-1$
             LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, msg); 
             throw new IOException(msg);
         } catch (MetaMatrixComponentException e) {
-            String msg = CommonPlugin.Util.getString("BufferManagerLobChunkStream.error_processing", new Object[] {sourceId}); //$NON-NLS-1$
+            String msg = DQPPlugin.Util.getString("BufferManagerLobChunkStream.error_processing", new Object[] {sourceId}); //$NON-NLS-1$
             LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, msg); 
             throw new IOException(msg);
         }                
