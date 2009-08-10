@@ -110,7 +110,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         	int paramIndex = 1;
         	for (IParameter parameter : proc.getParameters()) {
         		if (parameter.getDirection() == Direction.RETURN) {
-                	addParameterValue(result, paramIndex, parameter);
+                	addParameterValue(result, paramIndex++, parameter);
                 	break;
         		}
 			}
@@ -118,9 +118,8 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         		if (parameter.getDirection() == Direction.RETURN || parameter.getDirection() == Direction.RESULT_SET) {
         			continue;
         		}
-        		paramIndex++;
         		if (parameter.getDirection() == Direction.INOUT || parameter.getDirection() == Direction.OUT) {
-        			addParameterValue(result, paramIndex, parameter);
+        			addParameterValue(result, paramIndex++, parameter);
         		}
 			}
         	return result;

@@ -2178,6 +2178,8 @@ public class FakeMetadataFactory {
         FakeMetadataObject rs2p3 = createParameter("ret", 1, ParameterInfo.RESULT_SET, DataTypeManager.DefaultDataTypes.OBJECT, rs2);  //$NON-NLS-1$
         FakeMetadataObject spTest8 = createStoredProcedure("pm2.spTest8", pm2, Arrays.asList(new FakeMetadataObject[] { rs2p1, rs2p2, rs2p3}), "spTest8"); //$NON-NLS-1$ //$NON-NLS-2$
 
+        FakeMetadataObject spTest8a = createStoredProcedure("pm2.spTest8a", pm2, Arrays.asList(new FakeMetadataObject[] { rs2p2, rs2p3}), "spTest8a"); //$NON-NLS-1$ //$NON-NLS-2$
+        
         FakeMetadataObject pm4 = createPhysicalModel("pm4"); //$NON-NLS-1$
         FakeMetadataObject rs4p1 = createParameter("inkey", 2, ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER, null); //$NON-NLS-1$
         FakeMetadataObject rs4p2 = createParameter("ret", 1, ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER, null);  //$NON-NLS-1$
@@ -2291,6 +2293,7 @@ public class FakeMetadataFactory {
         
         store.addObject(pm2);
         store.addObject(spTest8);
+        store.addObject(spTest8a);
         store.addObject(rs2);
         
         store.addObject(pm4);
