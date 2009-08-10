@@ -45,6 +45,7 @@ public class OracleSpatialSQLTranslator extends OracleSQLTranslator {
 
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
+        super.initialize(env);
         Iterator<String> iter = OracleSpatialFunctions.relateFunctions.iterator();
         while (iter.hasNext()) {
             registerFunctionModifier(iter.next(), new RelateFunctionModifier());
@@ -102,7 +103,7 @@ public class OracleSpatialSQLTranslator extends OracleSQLTranslator {
             }
         }
 
-        return command;
+        return super.modifyCommand(command, context);
     }
 
     /**
