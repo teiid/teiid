@@ -42,7 +42,7 @@ public class WithinDistanceFunctionModifier extends OracleSpatialFunctionModifie
      * marks
      */
     public List translate(IFunction function) {
-        List objs = new ArrayList();
+        List<Object> objs = new ArrayList<Object>();
         objs.add("SDO_WITHIN_DISTANCE"); // recast name from sdoNN to SDO_NN //$NON-NLS-1$
         objs.add("("); //$NON-NLS-1$
         List<IExpression> params = function.getParameters();

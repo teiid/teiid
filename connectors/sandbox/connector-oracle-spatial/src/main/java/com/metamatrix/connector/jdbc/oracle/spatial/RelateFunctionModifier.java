@@ -44,7 +44,7 @@ public class RelateFunctionModifier extends OracleSpatialFunctionModifier {
      * marks
      */
     public List translate( IFunction function ) {
-        List objs = new ArrayList();
+        List<Object> objs = new ArrayList<Object>();
         objs.add("SDO_RELATE"); // recast name from sdoRelate to SDO_RELATE //$NON-NLS-1$
         objs.add("("); //$NON-NLS-1$
         List<IExpression> params = function.getParameters();

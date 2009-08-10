@@ -42,7 +42,7 @@ public class FilterFunctionModifier extends OracleSpatialFunctionModifier {
      * marks
      */
     public List translate(IFunction function) {
-        List objs = new ArrayList();
+        List<Object> objs = new ArrayList<Object>();
         objs.add("SDO_FILTER"); //$NON-NLS-1$
         objs.add("("); //$NON-NLS-1$
         List<IExpression> params = function.getParameters();
