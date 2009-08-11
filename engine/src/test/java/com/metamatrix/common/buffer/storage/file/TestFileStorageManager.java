@@ -322,7 +322,7 @@ public class TestFileStorageManager extends TestCase {
         }
     }
     
-    public void testAddTwice() {
+    public void testAddTwice() throws Exception {
         StorageManager sm = getStorageManager(null);
         TupleSourceID tsID = new TupleSourceID("local,1:0");     //$NON-NLS-1$
         TupleBatch batch = exampleBatch(1, 20);
@@ -331,14 +331,9 @@ public class TestFileStorageManager extends TestCase {
             // Add batch
             sm.addBatch(tsID, batch, null);
             
-            // Remove batch (does nothing)
-            sm.removeBatch(tsID, batch.getBeginRow());
-            
             // Add batch again
             sm.addBatch(tsID, batch, null);
            
-        } catch(MetaMatrixException e) {
-            fail("Unexpected exception of type " + e.getClass().getName() + ": " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
         } finally { 
             try {
                 sm.removeBatches(tsID);    
@@ -527,7 +522,6 @@ public class TestFileStorageManager extends TestCase {
                         // Remove
                         if(added[batch]) {
                             //System.out.println(tsID.toString() + ": removing batch " + batch);
-                            sm.removeBatch(tsID, batches[batch].getBeginRow());
                             added[batch] = false;
                         }                        
                     }                                        

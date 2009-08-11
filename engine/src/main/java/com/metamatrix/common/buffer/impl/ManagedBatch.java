@@ -26,6 +26,7 @@ import java.sql.Timestamp;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.core.util.HashCodeUtil;
 
@@ -56,12 +57,13 @@ class ManagedBatch {
     private int location;  
     private int pinnedCount;
     private int hashCode;
+    private TupleBatch batch;
     
     // logging
     private static int STACK_LEVELS_TO_OMIT = 2;
     private static int STACK_LEVELS_TO_CAPTURE = 5;
 
-    private List whoCalledUs;
+    private List<String> whoCalledUs;
     private String sCallStackTimeStamp;
     
     /**
@@ -74,6 +76,14 @@ class ManagedBatch {
         this.size = size;
         this.hashCode = HashCodeUtil.hashCode(tupleSourceID.hashCode(), beginRow);
     }
+    
+    public TupleBatch getBatch() {
+		return batch;
+	}
+    
+    public void setBatch(TupleBatch batch) {
+		this.batch = batch;
+	}
     
     /**
      * Get the tuple source ID 
@@ -147,7 +157,7 @@ class ManagedBatch {
          */
         StackTraceElement[] elements =  new Exception().getStackTrace();
         
-        whoCalledUs = new LinkedList();
+        whoCalledUs = new LinkedList<String>();
         
         for ( int i = STACK_LEVELS_TO_OMIT; i < elements.length && i < STACK_LEVELS_TO_OMIT + STACK_LEVELS_TO_CAPTURE; i++ ) {
             whoCalledUs.add(elements[ i ].toString());
@@ -158,7 +168,7 @@ class ManagedBatch {
     /**
      * Returns call stack 
      */
-    public List getCallStack() {
+    public List<String> getCallStack() {
         
         return whoCalledUs;
     }    

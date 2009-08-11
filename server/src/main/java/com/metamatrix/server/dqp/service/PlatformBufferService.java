@@ -33,8 +33,10 @@ import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.BufferManagerPropertyNames;
+import com.metamatrix.common.buffer.StorageManager;
+import com.metamatrix.common.buffer.impl.BufferManagerImpl;
+import com.metamatrix.common.buffer.storage.file.FileStorageManager;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.FileUtils;
@@ -87,10 +89,31 @@ public class PlatformBufferService implements BufferService {
 		props.setProperty(BufferManagerPropertyNames.BUFFER_STORAGE_DIRECTORY, dir);
 
 		try {
-			bufferMgr = BufferManagerFactory.getServerBufferManager(host.getFullName()+"-"+processName, props); //$NON-NLS-1$
+			bufferMgr = getServerBufferManager(host.getFullName()+"-"+processName, props); //$NON-NLS-1$
 		} catch (MetaMatrixComponentException e) {
 			throw new ApplicationLifecycleException(e);
 		} 
+    }
+    
+    /**
+     * Helper to get a buffer manager all set up for unmanaged standalone use.  This is
+     * typically used for testing or when memory is not an issue.
+     * @param lookup Lookup implementation to use
+     * @param props Configuration properties
+     * @return BufferManager ready for use
+     */
+    public static BufferManager getServerBufferManager(String lookup, Properties props) throws MetaMatrixComponentException {
+        Properties bmProps = PropertiesUtils.clone(props, false);
+        // Construct buffer manager
+        BufferManager bufferManager = new BufferManagerImpl();
+        bufferManager.initialize(lookup, bmProps);
+
+        // Get the properties for FileStorageManager and create.
+        StorageManager fsm = new FileStorageManager();
+        fsm.initialize(bmProps);
+        bufferManager.setStorageManager(fsm);
+
+        return bufferManager;
     }
 
     /* 

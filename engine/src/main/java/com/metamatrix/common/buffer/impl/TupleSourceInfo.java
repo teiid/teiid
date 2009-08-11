@@ -34,15 +34,6 @@ import com.metamatrix.common.types.DataTypeManager;
  */
 public class TupleSourceInfo {
     
-    private static final BatchMapValueTranslator TRANSLATOR = new BatchMapValueTranslator() {
-        public int getBeginRow(Object batchMapValue) {
-            return ((ManagedBatch)batchMapValue).getBeginRow();
-        }
-        public int getEndRow(Object batchMapValue) {
-            return ((ManagedBatch)batchMapValue).getEndRow();
-        }
-    };
-
     private TupleSourceType type;       // Type of TupleSource, as defined in BufferManager constants
     private TupleSourceID tsID;
     private List schema;
@@ -51,8 +42,8 @@ public class TupleSourceInfo {
     private TupleSourceStatus status;
     private TupleGroupInfo groupInfo;  
     private boolean removed = false;
+    private TreeMap<Integer, ManagedBatch> batches = new TreeMap<Integer, ManagedBatch>();
 
-    private BatchMap batches;
     private boolean lobs;
     
     /**
@@ -63,7 +54,6 @@ public class TupleSourceInfo {
      * @param type Type of tuple source, as defined in BufferManager constants
      */
     public TupleSourceInfo(TupleSourceID tsID, List schema, String[] types, TupleGroupInfo groupInfo, TupleSourceType type) {
-    
         this.tsID = tsID;
         this.schema = schema;
         this.types = types;
@@ -71,8 +61,27 @@ public class TupleSourceInfo {
         this.status = TupleSourceStatus.ACTIVE;
         this.rowCount = 0;   
         this.type = type;
-        this.batches = new BatchMap(TRANSLATOR);
         this.lobs = checkForLobs();
+    }
+    
+    public void addBatch(ManagedBatch batch) {
+        batches.put(batch.getBeginRow(), batch);
+    }
+    
+    public ManagedBatch getBatch(int beginRow) {
+        Map.Entry<Integer, ManagedBatch> entry = batches.floorEntry(beginRow);
+        if (entry != null && entry.getValue().getEndRow() >= beginRow) {
+        	return entry.getValue();
+        }
+        return null;
+    }
+    
+    public void removeBatch(int beginRow) {
+        batches.remove(new Integer(beginRow));
+    }
+    
+    public Iterator<ManagedBatch> getBatchIterator() {
+        return batches.values().iterator();
     }
     
     /**
@@ -159,45 +168,8 @@ public class TupleSourceInfo {
         this.removed = true;
     }
 
-    /**
-     * Add a managed batch to this tuple source
-     * @param batch Managed batch for this tuple source
-     */            
-    public void addBatch(ManagedBatch batch) {
-        batches.addBatch(batch.getBeginRow(), batch);
-    }
-
-    /**
-     * Remove a managed batch for this tuple source, 
-     * indexed by beginRow
-     * @param beginRow First row of batch to remove
-     */
-    public void removeBatch(int beginRow) {
-        batches.removeBatch(beginRow);
-    }
-    
-    /**
-     * Get a batch, specified by beginRow
-     * @param beginRow First row of batch to retrieve
-     * @return Managed batch or null if not found
-     */
-    public ManagedBatch getBatch(int beginRow) {
-        return (ManagedBatch)batches.getBatch(beginRow);            
-    }
-
     public boolean lobsInSource() {
         return this.lobs;
-    }
-    
-    /**
-     * Get iterator directly on the batches contained by this 
-     * tuple source.  To use this safely, the user should ensure
-     * through locking that no other thread are modifying this 
-     * TupleSourceInfo while the iterator is being used.
-     * @return Unsafe iterator
-     */
-    public Iterator getBatchIterator() {
-        return this.batches.getBatchIterator();
     }
     
     public String[] getTypes() {

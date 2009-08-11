@@ -33,8 +33,8 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -72,7 +72,7 @@ public class FileStorageManager implements StorageManager {
     private File dirFile;
 
     // State
-    private Map tupleSourceMap = new HashMap();          // TupleSourceID -> TupleSourceInfo
+    private Map<TupleSourceID, TupleSourceInfo> tupleSourceMap = new HashMap<TupleSourceID, TupleSourceInfo>();          
     private Map<File, RandomAccessFile> fileCache = Collections.synchronizedMap(new LinkedHashMap<File, RandomAccessFile>() {
     	@Override
     	protected boolean removeEldestEntry(
@@ -119,14 +119,6 @@ public class FileStorageManager implements StorageManager {
     }
 
     /**
-     * Return file type: {@link com.metamatrix.common.buffer.StorageManager.TYPE_FILE}
-     * @return File type constant
-     */
-    public int getStorageType() {
-        return StorageManager.TYPE_FILE;
-    }
-
-    /**
      * Look up tuple source info and possibly create.  First the file map is used to find an
      * existing file info.  If the info is found it is returned.  If not, then
      * a TupleSourceInfo is created according to shouldCreate flag
@@ -138,7 +130,7 @@ public class FileStorageManager implements StorageManager {
 
         // Try to find in cache
         synchronized(tupleSourceMap) {
-            TupleSourceInfo info = (TupleSourceInfo) tupleSourceMap.get(sourceID);
+            TupleSourceInfo info = tupleSourceMap.get(sourceID);
             if(info == null && shouldCreate) {
                 info = new TupleSourceInfo();
                 tupleSourceMap.put(sourceID, info);
@@ -285,7 +277,7 @@ public class FileStorageManager implements StorageManager {
             	throw new TupleSourceNotFoundException(QueryExecPlugin.Util.getString("BufferManagerImpl.tuple_source_not_found", sourceID)); //$NON-NLS-1$
             }
             // Find pointer
-            PointerInfo pointerInfo = (PointerInfo) info.tupleBatchPointers.get(new Integer(beginRow));
+            PointerInfo pointerInfo = info.tupleBatchPointers.get(new Integer(beginRow));
             Assertion.isNotNull(pointerInfo);
 
             FileInfo fileInfo = pointerInfo.fileInfo;
@@ -305,26 +297,13 @@ public class FileStorageManager implements StorageManager {
                 batch.readExternal(ois);
                 return batch;
             } catch(IOException e) {
-            	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile()));
+            	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
             } catch (ClassNotFoundException e) {
-            	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile()));
+            	throw new MetaMatrixComponentException(e, QueryExecPlugin.Util.getString("FileStoreageManager.error_reading", fileInfo.file.getAbsoluteFile())); //$NON-NLS-1$
 			} finally {
                 fileInfo.close();
             }
         }
-    }
-
-    /**
-     * This method does nothing - rather than deleting batches from the middle of a RandomAccessFile,
-     * which would be very expensive, we just handle the possibility that a batch already exists
-     * in the addBatch method.
-     * @param sourceID Source identifier
-     * @param beginRow Beginning batch row to remove
-     */
-    public void removeBatch(TupleSourceID sourceID, int beginRow)
-        throws TupleSourceNotFoundException, MetaMatrixComponentException {
-
-        // nothing - don't remove batches as it is too expensive
     }
 
     /**
@@ -335,7 +314,7 @@ public class FileStorageManager implements StorageManager {
         TupleSourceInfo info = null;
         // Remove info from the file map
         synchronized(tupleSourceMap) {
-            info = (TupleSourceInfo)tupleSourceMap.remove(sourceID);
+            info = tupleSourceMap.remove(sourceID);
         }
 
         // Didn't find a file
@@ -355,7 +334,7 @@ public class FileStorageManager implements StorageManager {
 
             // If open, close the file and decrement the open file counter
             for (int i = 0; i < info.storageFiles.size(); i++) {
-                FileInfo fileInfo = (FileInfo)info.storageFiles.get(i);
+                FileInfo fileInfo = info.storageFiles.get(i);
                 fileInfo.delete();
             }
             // Delete the file and mark info as being removed
@@ -371,10 +350,12 @@ public class FileStorageManager implements StorageManager {
 
 	    LogManager.logDetail(LogConstants.CTX_STORAGE_MGR, "Removing all storage area files "); //$NON-NLS-1$
 
-		Iterator tsIter = tupleSourceMap.keySet().iterator();
-
-		while(tsIter.hasNext()) {
-			TupleSourceID key = (TupleSourceID)tsIter.next();
+	    List<TupleSourceID> ids = null;
+	    synchronized (tupleSourceMap) {
+			ids = new LinkedList<TupleSourceID>(tupleSourceMap.keySet());
+		}
+	    
+	    for (TupleSourceID key : ids) {
             try {
                 removeBatches(key);
             } catch (MetaMatrixComponentException e) {
@@ -396,10 +377,6 @@ public class FileStorageManager implements StorageManager {
 
         public FileInfo(File file) {
             this.file = file;
-        }
-
-        public boolean isOpen() {
-            return fileData != null;
         }
 
         public void open() throws FileNotFoundException {
@@ -454,15 +431,15 @@ public class FileStorageManager implements StorageManager {
     }
     
     private static class TupleSourceInfo {
-        Map tupleBatchPointers = new HashMap(); // beginRow -> PointerInfo
-        List storageFiles = new ArrayList(2); // Stores all the FileInfos for this tupleSource
+        Map<Integer, PointerInfo> tupleBatchPointers = new HashMap<Integer, PointerInfo>();
+        List<FileInfo> storageFiles = new ArrayList<FileInfo>(2); // Stores all the FileInfos for this tupleSource
         private boolean isRemoved = false;
         
         FileInfo getMostRecentlyCreatedFile() {
             if (storageFiles.isEmpty()) {
                 return null;
             }
-            return (FileInfo)storageFiles.get(storageFiles.size() - 1);
+            return storageFiles.get(storageFiles.size() - 1);
         }
     }
 

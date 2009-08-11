@@ -28,12 +28,6 @@ package com.metamatrix.common.buffer;
 public final class BufferManagerPropertyNames {
 
     /**
-     * Optional property - the class name of the memory manager to use (must be an implementation
-     * of {@link com.metamatrix.buffer.impl.BufferIDCreator}.
-     */
-    public static final String ID_CREATOR = "metamatrix.buffer.idCreator"; //$NON-NLS-1$
-
-    /**
      * Optional property - the amount of memory (in megabytes) that buffer management should use.  
      * This value should be a positive integer (less than the the max heap size) and defaults to 
      * 128.

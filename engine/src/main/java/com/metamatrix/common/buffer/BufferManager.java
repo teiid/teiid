@@ -90,12 +90,10 @@ public interface BufferManager {
     int getConnectorBatchSize();
     
 	/**
-	 * Adds a {@link StorageManager} to this BufferManager instance.  This 
-	 * method may be called multiple times; it will be first called after the
-	 * call to {@link #initialize}.
+	 * Adds a {@link StorageManager} to this BufferManager instance.
      * @param storageManager Storage manager to add
 	 */
-	void addStorageManager(StorageManager storageManager);
+	void setStorageManager(StorageManager storageManager);
 
 	/**
 	 * Creates a tuple source based on a schema and properties describing

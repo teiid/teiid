@@ -47,7 +47,7 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.common.buffer.storage.memory.MemoryStorageManager;
+import com.metamatrix.common.buffer.BufferManagerFactory.MemoryStorageManager;
 import com.metamatrix.common.lob.ByteLobChunkStream;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.lob.LobChunkInputStream;
@@ -69,7 +69,7 @@ public class TestBufferManagerImpl extends TestCase {
         super(arg0);
     }
 
-    public static BufferManager getTestBufferManager(long bytesAvailable, StorageManager sm1, StorageManager sm2) throws MetaMatrixComponentException {
+    public static BufferManager getTestBufferManager(long bytesAvailable, StorageManager sm2) throws MetaMatrixComponentException {
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
         bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + bytesAvailable); //$NON-NLS-1$
@@ -77,30 +77,19 @@ public class TestBufferManagerImpl extends TestCase {
         BufferManager bufferManager = new BufferManagerImpl();
         bufferManager.initialize("local", bmProps); //$NON-NLS-1$
 
-        // Add storage managers
-        bufferManager.addStorageManager(sm1);
-        
         if(sm2 != null) { 
-            bufferManager.addStorageManager(sm2);
+            bufferManager.setStorageManager(sm2);
         }
 
         return bufferManager;
     }
     
-    private StorageManager createMemoryStorageManager() {
-        return new MemoryStorageManager();
-    }
-    
     private StorageManager createFakeDatabaseStorageManager() {
-        return new MemoryStorageManager() {
-            public int getStorageType() { 
-                return StorageManager.TYPE_DATABASE;    
-            }  
-        };        
+        return new MemoryStorageManager();        
     }
     
-    public void helpTestAddBatches(StorageManager sm1, StorageManager sm2, int memorySize, int numBatches, int rowsPerBatch) throws MetaMatrixComponentException, MetaMatrixProcessingException {
-        BufferManager mgr = getTestBufferManager(memorySize, sm1, sm2);
+    public void helpTestAddBatches(StorageManager sm2, int memorySize, int numBatches, int rowsPerBatch) throws MetaMatrixComponentException, MetaMatrixProcessingException {
+        BufferManager mgr = getTestBufferManager(memorySize, sm2);
 
         List expectedRows = new ArrayList();
 
@@ -136,20 +125,28 @@ public class TestBufferManagerImpl extends TestCase {
         
         // Check batches in sm1 - 3 should fit in 1000 bytes of memory
         int batchesInMemory = (int) (memorySize * 1000000 / batchSize);
-        for(int b=0; b<batchesInMemory; b++) {
-            int begin = (b*rowsPerBatch) + 1;
-            
-            TupleBatch batch = sm1.getBatch(tsID, begin, null);
-            assertNotNull("batch " + (b+1) + " is null ", batch); //$NON-NLS-1$ //$NON-NLS-2$
-        }
+        if (sm2 != null) {
+	        for(int b=0; b<batchesInMemory; b++) {
+	            int begin = (b*rowsPerBatch) + 1;
+	            try {
+	            	sm2.getBatch(tsID, begin, null);
+            		fail("Expected exception"); //$NON-NLS-1$
+	            } catch (TupleSourceNotFoundException e) {
+	            	
+	            } catch (MetaMatrixComponentException e) {
+	            	
+	            }
+	        }
+	        
+	        // Check batches in sm2
+	        for(int b=batchesInMemory+1; b<numBatches; b++) {
+	            int begin = (b*rowsPerBatch) + 1;
+	            
+	            TupleBatch batch = sm2.getBatch(tsID, begin, null);
+	            assertNotNull("batch " + (b+1) + " is null ", batch); //$NON-NLS-1$ //$NON-NLS-2$
+	        }
+    	}
         
-        // Check batches in sm2
-        for(int b=batchesInMemory+1; b<numBatches; b++) {
-            int begin = (b*rowsPerBatch) + 1;
-            
-            TupleBatch batch = sm2.getBatch(tsID, begin, null);
-            assertNotNull("batch " + (b+1) + " is null ", batch); //$NON-NLS-1$ //$NON-NLS-2$
-        }
         
         // Check row count
         int rowCount = mgr.getRowCount(tsID);
@@ -168,16 +165,14 @@ public class TestBufferManagerImpl extends TestCase {
     }    
 
     public void testSpanStorage() throws Exception {
-        helpTestAddBatches(createMemoryStorageManager(), 
-                           createFakeDatabaseStorageManager(), 
+        helpTestAddBatches(createFakeDatabaseStorageManager(), 
                            1, 
                            50, 
                            100);    
     }
  
     public void testStandalone() throws Exception {
-        helpTestAddBatches(createMemoryStorageManager(), 
-                           null, 
+        helpTestAddBatches(null, 
                            10, 
                            5, 
                            10);    
@@ -218,7 +213,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
     
     public void testCreateLobReference() throws Exception {
-        final BufferManagerImpl mgr = (BufferManagerImpl)getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        final BufferManagerImpl mgr = (BufferManagerImpl)getTestBufferManager(1, createFakeDatabaseStorageManager());
 
         XMLType xml1 = new XMLType(new SQLXMLImpl("<foo/>")); //$NON-NLS-1$
         XMLType xml2 = new XMLType(new SQLXMLImpl("<bar/>")); //$NON-NLS-1$
@@ -257,7 +252,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
     
     public void testAddStreamablePart() throws Exception {
-         final BufferManager mgr = getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+         final BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         // save the lob
         List schema = new ArrayList();
@@ -318,7 +313,7 @@ public class TestBufferManagerImpl extends TestCase {
     
     
     public void testPinning1() throws Exception {
-        BufferManager mgr = getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         List schema = new ArrayList();
         schema.add("val"); //$NON-NLS-1$
@@ -349,7 +344,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
 
     public void testUnpinOfUnpinnedBatch() throws Exception {
-        BufferManager mgr = getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         List schema = new ArrayList();
         schema.add("val"); //$NON-NLS-1$
@@ -403,7 +398,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
 
     public void testDeadlockOnMultiThreadClean() throws Exception {
-        BufferManager mgr = getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
 
         List schema = new ArrayList();
         schema.add("val"); //$NON-NLS-1$
@@ -440,7 +435,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
     
     public void testSessionMax_Fail() throws Exception {
-        BufferManager mgr = getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
             List schema = new ArrayList();
@@ -481,7 +476,7 @@ public class TestBufferManagerImpl extends TestCase {
      * @since 4.3
      */
     public void testDefect_18499() throws Exception {
-        BufferManager mgr = getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         List schema = new ArrayList();
         schema.add("col"); //$NON-NLS-1$
         String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.STRING};
@@ -502,7 +497,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
     
     public void testDefect18497() throws Exception {
-        BufferManager mgr = getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
             List schema = new ArrayList();
@@ -536,7 +531,7 @@ public class TestBufferManagerImpl extends TestCase {
     
     //two threads do the cleaning at the same time
     public void testDefect19325() throws Exception{
-        BufferManagerImpl mgr = (BufferManagerImpl)getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManagerImpl mgr = (BufferManagerImpl)getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         List schema = new ArrayList();
         schema.add("val"); //$NON-NLS-1$
@@ -572,7 +567,7 @@ public class TestBufferManagerImpl extends TestCase {
     
     //test many small batches
     public void testSmallBatches() throws Exception{
-        BufferManager mgr = getTestBufferManager(50, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManager mgr = getTestBufferManager(50, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
             List schema = new ArrayList();
@@ -606,7 +601,7 @@ public class TestBufferManagerImpl extends TestCase {
     
     //going backward
     public void testPinning2() throws Exception {
-        BufferManager mgr = getTestBufferManager(1, createMemoryStorageManager(), createFakeDatabaseStorageManager());
+        BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         List schema = new ArrayList();
         schema.add("val"); //$NON-NLS-1$

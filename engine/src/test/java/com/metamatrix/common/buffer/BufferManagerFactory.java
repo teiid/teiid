@@ -22,13 +22,14 @@
 
 package com.metamatrix.common.buffer;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
-import com.metamatrix.common.buffer.storage.file.FileStorageManager;
-import com.metamatrix.common.buffer.storage.memory.MemoryStorageManager;
-import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.query.execution.QueryExecPlugin;
 
 /**
  * <p>Factory for BufferManager instances.  One method will get
@@ -42,6 +43,75 @@ import com.metamatrix.common.util.PropertiesUtils;
  * within the modeler.</p>
  */
 public class BufferManagerFactory {
+	
+	public static class MemoryStorageManager implements StorageManager {
+	    
+	    // TupleSourceID -> List<TupleBatch> (ordered by startRow)
+	    private Map<TupleSourceID, Map<Integer, TupleBatch>> storage = Collections.synchronizedMap(new HashMap<TupleSourceID, Map<Integer, TupleBatch>>());
+
+	    /**
+	     * @see StorageManager#initialize(Properties)
+	     */
+	    public void initialize(Properties props) throws MetaMatrixComponentException {
+	    }
+
+	    /**
+	     * @see StorageManager#addBatch(TupleSourceID, TupleBatch)
+	     */
+	    public void addBatch(TupleSourceID storageID, TupleBatch batch, String[] types)
+	        throws MetaMatrixComponentException {
+
+	    	Map<Integer, TupleBatch> batches = null;
+	        synchronized(this.storage) {
+	            batches = storage.get(storageID);
+	            if(batches == null) {
+	                batches = new HashMap<Integer, TupleBatch>();
+	                this.storage.put(storageID, batches);
+	            }
+	        }
+
+	        synchronized(batches) {
+	            batches.put(batch.getBeginRow(), batch);
+	        }
+	    }
+
+	    /**
+	     * @see StorageManager#getBatch(TupleSourceID, int, int)
+	     */
+	    public TupleBatch getBatch(TupleSourceID storageID, int beginRow, String[] types)
+	        throws TupleSourceNotFoundException, MetaMatrixComponentException {
+
+	    	Map<Integer, TupleBatch> batches = storage.get(storageID);
+
+	        if(batches == null) {
+	           	throw new TupleSourceNotFoundException(QueryExecPlugin.Util.getString("BufferManagerImpl.tuple_source_not_found", storageID)); //$NON-NLS-1$
+	        }
+
+	        synchronized(batches) {
+	            TupleBatch batch = batches.get(beginRow);
+	            if(batch == null) {
+	            	throw new MetaMatrixComponentException("unknown batch"); //$NON-NLS-1$
+	            }
+                return batch;
+	        }
+	    }
+
+	    /**
+	     * @see StorageManager#removeStorageArea(TupleSourceID)
+	     */
+	    public void removeBatches(TupleSourceID storageID) throws MetaMatrixComponentException {
+	        storage.remove(storageID);
+	    }
+
+	    /**
+	     * @see StorageManager#shutdown()
+	     */
+	    public void shutdown() {
+	        this.storage.clear();
+	        this.storage = null;
+	    }
+
+	}
 
 	private static BufferManager INSTANCE;
 	
@@ -61,43 +131,11 @@ public class BufferManagerFactory {
 	        bufferMgr.initialize("local", props); //$NON-NLS-1$
 	
 	        // Add unmanaged memory storage manager
-	        bufferMgr.addStorageManager(new MemoryStorageManager());
-	        bufferMgr.addStorageManager(new MemoryStorageManager() {
-	        	@Override
-	        	public int getStorageType() {
-	        		return StorageManager.TYPE_FILE;
-	        	}
-	        });
+	        bufferMgr.setStorageManager(new MemoryStorageManager());
 	        INSTANCE = bufferMgr;
     	}
 
         return INSTANCE;
-    }
-
-    /**
-     * Helper to get a buffer manager all set up for unmanaged standalone use.  This is
-     * typically used for testing or when memory is not an issue.
-     * @param lookup Lookup implementation to use
-     * @param props Configuration properties
-     * @return BufferManager ready for use
-     */
-    public static BufferManager getServerBufferManager(String lookup, Properties props) throws MetaMatrixComponentException {
-        Properties bmProps = PropertiesUtils.clone(props, false);
-        // Construct buffer manager
-        BufferManager bufferManager = new BufferManagerImpl();
-        bufferManager.initialize(lookup, bmProps);
-
-        // Get the properties for FileStorageManager and create.
-        StorageManager fsm = new FileStorageManager();
-        fsm.initialize(bmProps);
-        bufferManager.addStorageManager(fsm);
-
-        // Create MemoryStorageManager
-        StorageManager msm = new MemoryStorageManager();
-        msm.initialize(bmProps);
-        bufferManager.addStorageManager(msm);
-
-        return bufferManager;
     }
 
 }

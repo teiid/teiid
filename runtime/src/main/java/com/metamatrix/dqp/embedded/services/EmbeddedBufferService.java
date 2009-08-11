@@ -38,7 +38,6 @@ import com.metamatrix.common.buffer.BufferManagerPropertyNames;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.buffer.storage.file.FileStorageManager;
-import com.metamatrix.common.buffer.storage.memory.MemoryStorageManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.ConfigurationService;
@@ -102,7 +101,6 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
                 
             // Set up buffer configuration properties
             Properties bufferProps = new Properties();                                  
-            bufferProps.setProperty(BufferManagerPropertyNames.ID_CREATOR, DEFAULT_ID_CREATOR); 
             bufferProps.setProperty(BufferManagerPropertyNames.SESSION_USE_PERCENTAGE, DEFAULT_SESSION_USE_PERCENTAGE); 
             bufferProps.setProperty(BufferManagerPropertyNames.LOG_STATS_INTERVAL, DEFAULT_LOG_STATS_INTERVAL); 
             bufferProps.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, DEFAULT_MANAGEMENT_INTERVAL); 
@@ -126,16 +124,13 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
                 fsmProps.setProperty(BufferManagerPropertyNames.MAX_OPEN_FILES, DEFAULT_MAX_OPEN_FILES);
                 StorageManager fsm = new FileStorageManager();
                 fsm.initialize(fsmProps);        
-                this.bufferMgr.addStorageManager(fsm);
+                this.bufferMgr.setStorageManager(fsm);
                 
                 // start the file storrage manager in clean state
                 // wise FileStorageManager is smart enough to clen up after itself
                 cleanDirectory(bufferDir);
             }
             
-            // Add unmanaged memory storage manager
-            this.bufferMgr.addStorageManager(new MemoryStorageManager());
-                     
         } catch(MetaMatrixComponentException e) { 
             throw new ApplicationLifecycleException(e, DQPEmbeddedPlugin.Util.getString("LocalBufferService.Failed_initializing_buffer_manager._8")); //$NON-NLS-1$
         } catch(IOException e) {

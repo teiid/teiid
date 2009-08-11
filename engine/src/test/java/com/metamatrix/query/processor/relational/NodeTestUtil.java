@@ -33,8 +33,8 @@ import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.BufferManagerFactory.MemoryStorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
-import com.metamatrix.common.buffer.storage.memory.MemoryStorageManager;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 
@@ -45,7 +45,6 @@ public class NodeTestUtil {
     static BufferManager getTestBufferManager(long bytesAvailable) {
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManagerPropertyNames.ID_CREATOR, "com.metamatrix.common.buffer.impl.LongIDCreator"); //$NON-NLS-1$
         bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + bytesAvailable); //$NON-NLS-1$
         return createBufferManager(bmProps);
     }
@@ -54,7 +53,6 @@ public class NodeTestUtil {
 
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManagerPropertyNames.ID_CREATOR, "com.metamatrix.common.buffer.impl.LongIDCreator"); //$NON-NLS-1$
         bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + bytesAvailable); //$NON-NLS-1$
         bmProps.setProperty(BufferManagerPropertyNames.PROCESSOR_BATCH_SIZE, "" + procBatchSize); //$NON-NLS-1$
         bmProps.setProperty(BufferManagerPropertyNames.CONNECTOR_BATCH_SIZE, "" + connectorBatchSize); //$NON-NLS-1$
@@ -65,7 +63,6 @@ public class NodeTestUtil {
 
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManagerPropertyNames.ID_CREATOR, "com.metamatrix.common.buffer.impl.LongIDCreator"); //$NON-NLS-1$
         bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + bytesAvailable); //$NON-NLS-1$
         bmProps.setProperty(BufferManagerPropertyNames.PROCESSOR_BATCH_SIZE, "" + procBatchSize); //$NON-NLS-1$
         return createBufferManager(bmProps);
@@ -81,22 +78,14 @@ public class NodeTestUtil {
         }
 
         // Add storage managers
-        bufferManager.addStorageManager(createMemoryStorageManager());
         
-        bufferManager.addStorageManager(createFakeDatabaseStorageManager());
+        bufferManager.setStorageManager(createFakeDatabaseStorageManager());
         return bufferManager;
     }
     
-    private static StorageManager createMemoryStorageManager() {
-        return new MemoryStorageManager();
-    }
     
     private static StorageManager createFakeDatabaseStorageManager() {
-        return new MemoryStorageManager() {
-            public int getStorageType() { 
-                return StorageManager.TYPE_DATABASE;    
-            }  
-        };        
+        return new MemoryStorageManager();        
     } 
     
     public static class TestableBufferManagerImpl extends BufferManagerImpl {

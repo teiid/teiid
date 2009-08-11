@@ -77,7 +77,6 @@ public class BufferManagerImpl implements BufferManager {
     private Map<String, TupleGroupInfo> groupInfos = new HashMap<String, TupleGroupInfo>();
 
     // Storage managers
-    private StorageManager memoryMgr;
     private StorageManager diskMgr;
 
     // ID creator
@@ -174,9 +173,9 @@ public class BufferManagerImpl implements BufferManager {
             }
 
             synchronized(info) {
-                Iterator batchIter = info.getBatchIterator();
+                Iterator<ManagedBatch> batchIter = info.getBatchIterator();
                 while(batchIter.hasNext()) {
-                    ManagedBatch batch = (ManagedBatch) batchIter.next();
+                    ManagedBatch batch = batchIter.next();
                     switch(batch.getLocation()) {
                         case ManagedBatch.PERSISTENT:
                             stats.numPersistentBatches++;
@@ -226,14 +225,10 @@ public class BufferManagerImpl implements BufferManager {
      * Add a storage manager to this buffer manager, order is unimportant
      * @param storageManager Storage manager to add
      */
-    public void addStorageManager(StorageManager storageManager) {
+    public void setStorageManager(StorageManager storageManager) {
     	Assertion.isNotNull(storageManager);
-        if(storageManager.getStorageType() == StorageManager.TYPE_MEMORY) {
-            this.memoryMgr = storageManager;
-        } else {
-        	Assertion.isNull(diskMgr);
-            this.diskMgr = storageManager;
-        }
+    	Assertion.isNull(diskMgr);
+        this.diskMgr = storageManager;
     }
 
     /**
@@ -289,9 +284,9 @@ public class BufferManagerImpl implements BufferManager {
             if(! info.isRemoved()) {
                 info.setRemoved();
 
-                Iterator iter = info.getBatchIterator();
+                Iterator<ManagedBatch> iter = info.getBatchIterator();
                 while(iter.hasNext()) {
-                    ManagedBatch batch = (ManagedBatch) iter.next();
+                    ManagedBatch batch = iter.next();
                     switch(batch.getLocation()) {
                         case ManagedBatch.UNPINNED:
                             memoryState.removeUnpinned(batch);
@@ -309,9 +304,7 @@ public class BufferManagerImpl implements BufferManager {
         synchronized (tupleGroupInfo) {
 			tupleGroupInfo.getTupleSourceIDs().remove(tupleSourceID);
 		}
-        // Remove memory storage
-        this.memoryMgr.removeBatches(tupleSourceID);
-
+        
         // Remove disk storage
         if (this.diskMgr != null){
             this.diskMgr.removeBatches(tupleSourceID);
@@ -491,12 +484,16 @@ public class BufferManagerImpl implements BufferManager {
                 throw new TupleSourceNotFoundException(QueryExecPlugin.Util.getString("BufferManagerImpl.tuple_source_not_found", tupleSourceID)); //$NON-NLS-1$
             }
 
+            // Update tuple source state
+            ManagedBatch managedBatch = new ManagedBatch(tupleSourceID, tupleBatch.getBeginRow(), tupleBatch.getEndRow(), bytes);
+            managedBatch.setLocation(location);
+
             // Store into storage manager
             try {
                 if(location == ManagedBatch.PERSISTENT) {
                     this.diskMgr.addBatch(tupleSourceID, tupleBatch, info.getTypes());
                 } else {
-                    this.memoryMgr.addBatch(tupleSourceID, tupleBatch, info.getTypes());
+                    managedBatch.setBatch(tupleBatch);
                 }
             } catch(MetaMatrixComponentException e) {
                 // If we were storing to memory, clean up memory we reserved
@@ -505,11 +502,7 @@ public class BufferManagerImpl implements BufferManager {
                 }
                 throw e;
             }
-
-            // Update tuple source state
-            ManagedBatch managedBatch = new ManagedBatch(tupleSourceID, tupleBatch.getBeginRow(), tupleBatch.getEndRow(), bytes);
-            managedBatch.setLocation(location);
-
+            
             // Add to memory state if in memory
             if(location == ManagedBatch.UNPINNED) {
                 this.memoryState.addUnpinned(managedBatch);
@@ -565,7 +558,7 @@ public class BufferManagerImpl implements BufferManager {
     
                 } else if(mbatch.getLocation() == ManagedBatch.PINNED) {
                     // Load batch from memory - already pinned
-                    memoryBatch = this.memoryMgr.getBatch(tupleSourceID, beginRow, info.getTypes());
+                    memoryBatch = mbatch.getBatch();
     
                 } else if(mbatch.getLocation() == ManagedBatch.UNPINNED) {
                     // Already in memory - just move from unpinned to pinned
@@ -574,7 +567,7 @@ public class BufferManagerImpl implements BufferManager {
                     this.memoryState.addPinned(mbatch);
     
                     // Load batch from memory
-                    memoryBatch = this.memoryMgr.getBatch(tupleSourceID, beginRow, info.getTypes());
+                    memoryBatch = mbatch.getBatch();
                                                 
                 } else if(mbatch.getLocation() == ManagedBatch.PERSISTENT) {
                     memoryRequiredByBatch = mbatch.getSize();
@@ -601,26 +594,7 @@ public class BufferManagerImpl implements BufferManager {
                     int internalBeginRow = mbatch.getBeginRow();
                     memoryBatch = diskMgr.getBatch(tupleSourceID, internalBeginRow, info.getTypes());
     
-                    try {
-                        memoryMgr.addBatch(tupleSourceID, memoryBatch, info.getTypes());
-                    } catch(MetaMatrixComponentException e) {
-                        memoryState.releaseMemory(mbatch.getSize(), info.getGroupInfo());
-                        throw e;
-                    }
-    
-                    try {
-                        diskMgr.removeBatch(tupleSourceID, internalBeginRow);
-                    } catch(TupleSourceNotFoundException e) {
-                    } catch(MetaMatrixComponentException e) {
-                        memoryState.releaseMemory(memoryRequiredByBatch, info.getGroupInfo());
-                        try {
-                            memoryMgr.removeBatch(tupleSourceID, internalBeginRow);
-                        } catch(Exception e2) {
-                            // ignore
-                        }
-                        throw e;
-                    }
-    
+                    mbatch.setBatch(memoryBatch);
                     mbatch.setLocation(ManagedBatch.PINNED);
                     this.memoryState.addPinned(mbatch);
                 }
@@ -736,13 +710,13 @@ public class BufferManagerImpl implements BufferManager {
         long totalMemory = config.getTotalAvailableMemory();
         long released = 0;
 
-        Iterator unpinnedIter = this.memoryState.getAllUnpinned();
+        Iterator<ManagedBatch> unpinnedIter = this.memoryState.getAllUnpinned();
         while(unpinnedIter.hasNext() && // If there are unpinned batches in memory, AND
               // Defect 14573 - if we require more than what's available, then cleanup regardless of the threshold
               (memoryRequired > totalMemory - memoryState.getMemoryUsed() || // if the memory needed is more than what's available, or
                memoryState.getMemoryUsed() > targetLevel)){ // if we've crossed the active memory threshold, then cleanup
             
-            ManagedBatch batch = (ManagedBatch) unpinnedIter.next();
+            ManagedBatch batch = unpinnedIter.next();
             TupleSourceID tsID = batch.getTupleSourceID();
 
             released += releaseMemory(batch, tsID);
@@ -763,9 +737,9 @@ public class BufferManagerImpl implements BufferManager {
         boolean cleanForSessionSucceeded = false;
         long released = 0;
 
-        Iterator unpinnedIter = this.memoryState.getAllUnpinned();
+        Iterator<ManagedBatch> unpinnedIter = this.memoryState.getAllUnpinned();
         while(unpinnedIter.hasNext()) {
-            ManagedBatch batch = (ManagedBatch) unpinnedIter.next();
+            ManagedBatch batch = unpinnedIter.next();
             TupleSourceID tsID = batch.getTupleSourceID();
             TupleSourceInfo tsInfo = getTupleSourceInfo(tsID, false);
             if(tsInfo == null) {
@@ -828,15 +802,7 @@ public class BufferManagerImpl implements BufferManager {
                 }
 
                 // This batch is still unpinned - move to persistent storage
-                int beginRow = batch.getBeginRow();
-                TupleBatch dataBatch = null;
-                try {
-                    dataBatch = memoryMgr.getBatch(tsID, beginRow, info.getTypes());
-                } catch(TupleSourceNotFoundException e) {
-                    return 0;
-                } catch(MetaMatrixComponentException e) {
-                    return 0;
-                }
+                TupleBatch dataBatch = batch.getBatch();
 
                 try {
                     diskMgr.addBatch(tsID, dataBatch, info.getTypes());
@@ -845,13 +811,7 @@ public class BufferManagerImpl implements BufferManager {
                     return 0;
                 }
 
-                try {
-                    memoryMgr.removeBatch(tsID, beginRow);
-                } catch(TupleSourceNotFoundException e) {
-                    // ignore
-                } catch(MetaMatrixComponentException e) {
-                    // ignore
-                }
+                batch.setBatch(null);
 
                 // Update memory
                 batch.setLocation(ManagedBatch.PERSISTENT);
@@ -1048,18 +1008,18 @@ public class BufferManagerImpl implements BufferManager {
      * @see com.metamatrix.common.buffer.BufferManager#releasePinnedBatches()
      */
     public void releasePinnedBatches() throws MetaMatrixComponentException {
-        Map threadPinned = memoryState.getPinnedByCurrentThread();
+        Map<TupleSourceID, Map<Integer, ManagedBatch>> threadPinned = memoryState.getPinnedByCurrentThread();
         if (threadPinned == null) {
             return;
         }
-        for (Iterator i = threadPinned.entrySet().iterator(); i.hasNext();) {
-            Map.Entry entry = (Map.Entry)i.next();
+        for (Iterator<Map.Entry<TupleSourceID, Map<Integer, ManagedBatch>>> i = threadPinned.entrySet().iterator(); i.hasNext();) {
+            Map.Entry<TupleSourceID, Map<Integer, ManagedBatch>> entry = i.next();
             i.remove();
-            TupleSourceID tsid = (TupleSourceID)entry.getKey();
-            Map pinnedBatches = (Map)entry.getValue();
+            TupleSourceID tsid = entry.getKey();
+            Map<Integer, ManagedBatch> pinnedBatches = entry.getValue();
             try {
-                for (Iterator j = pinnedBatches.values().iterator(); j.hasNext();) {
-                    ManagedBatch batch = (ManagedBatch)j.next();
+                for (Iterator<ManagedBatch> j = pinnedBatches.values().iterator(); j.hasNext();) {
+                    ManagedBatch batch = j.next();
                     
                     //TODO: add trace logging about the batch that is being unpinned
                     unpinTupleBatch(tsid, batch.getBeginRow(), batch.getEndRow());
@@ -1074,7 +1034,7 @@ public class BufferManagerImpl implements BufferManager {
      * for testing purposes 
      */
     public int getPinnedCount() {
-        Map pinned = memoryState.getAllPinned();
+        Map<TupleSourceID, Map<Integer, ManagedBatch>> pinned = memoryState.getAllPinned();
         
         int count = 0;
         
@@ -1082,8 +1042,8 @@ public class BufferManagerImpl implements BufferManager {
             return count;
         }
         
-        for (Iterator i = pinned.values().iterator(); i.hasNext();) {
-            count += ((Map)i.next()).size();
+        for (Iterator<Map<Integer, ManagedBatch>> i = pinned.values().iterator(); i.hasNext();) {
+            count += i.next().size();
         }
         
         return count;

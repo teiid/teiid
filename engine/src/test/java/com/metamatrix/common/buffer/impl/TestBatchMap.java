@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.metamatrix.common.buffer.TupleSourceID;
+
 import junit.framework.TestCase;
 
 
@@ -35,14 +37,6 @@ import junit.framework.TestCase;
  * @since 4.3
  */
 public class TestBatchMap extends TestCase{
-    private BatchMapValueTranslator batchMapValueTranslator = new BatchMapValueTranslator() {
-        public int getBeginRow(Object batchMapValue) {
-            return ((Batch)batchMapValue).getBeginRow();
-        }
-        public int getEndRow(Object batchMapValue) {
-            return ((Batch)batchMapValue).getEndRow();
-        }           
-    };
     
     public TestBatchMap(String arg0) {
         super(arg0);
@@ -50,17 +44,16 @@ public class TestBatchMap extends TestCase{
     
     //no batch
     public void testAddAndGetBatch1() {
-        BatchMap batches = new BatchMap(batchMapValueTranslator);
-        assertTrue(batches.isEmpty());
+        TupleSourceInfo batches = new TupleSourceInfo(null, null, null, null, null);
         assertNull(batches.getBatch(1));
         assertNull(batches.getBatch(2));
     }
     
     //one batch
     public void testAddAndGetBatch2() {
-        BatchMap batches = new BatchMap(batchMapValueTranslator);  
-        Batch batch1 = new Batch(1,5);
-        batches.addBatch(1, batch1);
+    	TupleSourceInfo batches = new TupleSourceInfo(null, null, null, null, null);  
+        ManagedBatch batch1 = createManagedBatch(1, 5);
+        batches.addBatch(batch1);
         assertEquals(batch1, batches.getBatch(1));
         assertEquals(batch1, batches.getBatch(2));
         assertEquals(batch1, batches.getBatch(5));
@@ -70,11 +63,11 @@ public class TestBatchMap extends TestCase{
     
     //two batches
     public void testAddAndGetBatch3() {
-        BatchMap batches = new BatchMap(batchMapValueTranslator);
-        Batch batch1 = new Batch(1,5);
-        Batch batch2 = new Batch(6,10);   
-        batches.addBatch(1, batch1);
-        batches.addBatch(6, batch2);
+    	TupleSourceInfo batches = new TupleSourceInfo(null, null, null, null, null);
+    	ManagedBatch batch1 = createManagedBatch(1, 5);
+    	ManagedBatch batch2 = createManagedBatch(6, 10);
+        batches.addBatch(batch1);
+        batches.addBatch(batch2);
         assertEquals(batch1, batches.getBatch(1));
         assertEquals(batch1, batches.getBatch(2));
         assertEquals(batch1, batches.getBatch(5));
@@ -83,22 +76,26 @@ public class TestBatchMap extends TestCase{
         assertEquals(batch2, batches.getBatch(10));
         assertNull(batches.getBatch(11));
     }
+
+	private ManagedBatch createManagedBatch(int begin, int end) {
+		return new ManagedBatch(new TupleSourceID("x"), begin, end, 0); //$NON-NLS-1$
+	}
     
     //more batches, no adding order
     public void testAddAndGetBatch4() {
-        BatchMap batches = new BatchMap(batchMapValueTranslator);
+    	TupleSourceInfo batches = new TupleSourceInfo(null, null, null, null, null);
         Set batchSet = new HashSet();
         List batchList = new ArrayList();
         for(int i=1; i<10000;) {
-            Batch batch = new Batch(i,i+4);
+            ManagedBatch batch = createManagedBatch(i, i + 4);
             batchSet.add(batch);
             batchList.add(batch);
             i += 5;
         }
         Iterator iter = batchSet.iterator();
         while(iter.hasNext()) {
-            Batch next = (Batch)iter.next();
-            batches.addBatch(next.getBeginRow(), next);
+            ManagedBatch next = (ManagedBatch)iter.next();
+            batches.addBatch(next);
         }
         for(int i=1; i<10000;) {
             assertEquals(batchList.get(i/5), batches.getBatch(i));
@@ -112,39 +109,23 @@ public class TestBatchMap extends TestCase{
     }
     
     public void testAddAndRemoveBatch() {
-        BatchMap batches = new BatchMap(batchMapValueTranslator);
-        assertTrue(batches.isEmpty());
-        Batch batch1 = new Batch(1,5);
-        Batch batch2 = new Batch(6,10);   
-        batches.addBatch(1, batch1);
-        batches.addBatch(2, batch2);
+    	TupleSourceInfo batches = new TupleSourceInfo(null, null, null, null, null);
+    	ManagedBatch batch1 = createManagedBatch(1, 5);
+    	ManagedBatch batch2 = createManagedBatch(6, 10);   
+        batches.addBatch(batch1);
+        batches.addBatch(batch2);
         assertEquals(batch1, batches.getBatch(1));
         batches.removeBatch(1);
         assertNull(batches.getBatch(1));
         assertNull(batches.getBatch(2));
         assertNull(batches.getBatch(5));
-        batches.removeBatch(2);
+        batches.removeBatch(6);
         assertNull(batches.getBatch(1));
         assertNull(batches.getBatch(2));
         assertNull(batches.getBatch(5));
         assertNull(batches.getBatch(6));
         assertNull(batches.getBatch(8));
         assertNull(batches.getBatch(10));
-        assertTrue(batches.isEmpty());
     }
     
-    class Batch{
-        private int beginRow;
-        private int endRow;
-        Batch(int beginRow, int endRow){
-            Batch.this.beginRow = beginRow;
-            Batch.this.endRow = endRow;
-        }
-        int getBeginRow() {
-            return Batch.this.beginRow;
-        }
-        int getEndRow() {
-            return Batch.this.endRow;
-        }
-    }
 }

@@ -39,11 +39,6 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
 public interface StorageManager {
 
     /**
-     * Constant for a StorageManager for in-memory storage
-     */
-    public static final int TYPE_MEMORY = 0;
-
-    /**
      * Constant for a StorageManager for database storage
      */
     public static final int TYPE_DATABASE = 1;
@@ -68,16 +63,6 @@ public interface StorageManager {
     throws MetaMatrixComponentException;
 
     /**
-     * Get the type of storage as defined by constants.
-     * @return Storage type
-     * @see StorageManager#TYPE_MEMORY
-     * @see StorageManager#TYPE_DATABASE
-     * @see StorageManager#TYPE_FILE
-     * @see StorageManager#TYPE_REMOTE
-     */
-    int getStorageType();
-
-    /**
      * Add a batch to the storage manager.  
      * @param types a hint to the StorageManager about the types of data in the batch
      * @throws MetaMatrixComponentException indicating a non-business-related
@@ -96,17 +81,6 @@ public interface StorageManager {
      * exception (such as a communication exception)
      */
 	TupleBatch getBatch(TupleSourceID sourceID, int beginRow, String[] types) 
-    throws TupleSourceNotFoundException, MetaMatrixComponentException;
-
-    /**
-     * Remove a batch from this storage as specified.  If the tuple source
-     * is unknown or the batch is unknown, a TupleSourceNotFoundException is 
-     * thrown.
-     * @throws TupleSourceNotFoundException indicating the sourceID is unknown
-     * @throws MetaMatrixComponentException indicating a non-business-related
-     * exception (such as a communication exception)
-     */
-    void removeBatch(TupleSourceID sourceID, int beginRow) 
     throws TupleSourceNotFoundException, MetaMatrixComponentException;
 
     /**

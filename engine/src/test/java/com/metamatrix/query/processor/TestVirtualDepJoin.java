@@ -38,8 +38,8 @@ import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerPropertyNames;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.buffer.BufferManagerFactory.MemoryStorageManager;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
-import com.metamatrix.common.buffer.storage.memory.MemoryStorageManager;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.query.mapping.relational.QueryNode;
 import com.metamatrix.query.optimizer.TestOptimizer;
@@ -491,17 +491,16 @@ public class TestVirtualDepJoin extends TestCase {
     private BufferManager createCustomBufferMgr(int batchSize) throws MetaMatrixComponentException {
         BufferManager bufferMgr = new BufferManagerImpl();
         Properties props = new Properties();
-        props.setProperty(BufferManagerPropertyNames.ID_CREATOR, "com.metamatrix.common.buffer.impl.LongIDCreator"); //$NON-NLS-1$
-        props.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + Long.MAX_VALUE); //$NON-NLS-1$
+        props.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, String.valueOf(Long.MAX_VALUE)); 
         props.setProperty(BufferManagerPropertyNames.SESSION_USE_PERCENTAGE, "100"); //$NON-NLS-1$
         props.setProperty(BufferManagerPropertyNames.LOG_STATS_INTERVAL, "0"); //$NON-NLS-1$
         props.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
-        props.setProperty(BufferManagerPropertyNames.PROCESSOR_BATCH_SIZE, "" + batchSize); //$NON-NLS-1$
-        props.setProperty(BufferManagerPropertyNames.CONNECTOR_BATCH_SIZE, "" + batchSize);//$NON-NLS-1$
+        props.setProperty(BufferManagerPropertyNames.PROCESSOR_BATCH_SIZE, String.valueOf(batchSize));
+        props.setProperty(BufferManagerPropertyNames.CONNECTOR_BATCH_SIZE, String.valueOf(batchSize));
         bufferMgr.initialize("local", props); //$NON-NLS-1$
 
         // Add unmanaged memory storage manager
-        bufferMgr.addStorageManager(new MemoryStorageManager());
+        bufferMgr.setStorageManager(new MemoryStorageManager());
 
         return bufferMgr;
     }
