@@ -199,13 +199,14 @@ public class TestEmbeddedVDBService extends TestCase{
         configService.addVDB(vdb, true);
         
         assertEquals(3, vdbService.getAvailableVDBs().size()); 
-        vdb = vdbService.getVDB("Empty", "1"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("Empty", vdb.getName()); //$NON-NLS-1$
+        
+        vdb = vdbService.getVDB("TestEmpty", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        assertEquals("TestEmpty", vdb.getName()); //$NON-NLS-1$
         assertEquals("1", vdb.getVersion()); //$NON-NLS-1$
         
         // no bindings should be added because this function only worries 
         // about the vdb not bindings. Adding is for the Data service and the admin API
-        assertEquals(3, configService.getConnectorBindings().size());
+        assertEquals(4, configService.getConnectorBindings().size());
     }
    
     // when we deploy the already deployed VDB it should take on the next version
