@@ -98,7 +98,48 @@ public class TestLogManager extends TestCase {
         }
         
         List recevedMsgList = listener.getLoggedMessages();
+        assertEquals(sentMsgList.size(), recevedMsgList.size());
         assertEquals(sentMsgList, recevedMsgList);
+    }
+    
+    public void testFilterMessage() {
+        final LogConfiguration cfg = LogManager.getLogConfigurationCopy();
+        cfg.setLogLevel(context, MessageLevel.INFO );
+        LogManager.setLogConfiguration(cfg);
+         
+        LogListener listener = new LogListener() {
+			@Override
+			public void log(int level, String context, Object msg) {
+				int setLevel = cfg.getLogLevel(context);
+				assertTrue(level <= setLevel);
+			}
+
+			@Override
+			public void log(int level, String context, Throwable t, Object msg) {
+				int setLevel = cfg.getLogLevel(context);
+				assertTrue(level <= setLevel);			
+			}
+
+			@Override
+			public void shutdown() {
+			}
+        };
+        LogManager.logListener = listener;
+        
+        LogManager.logCritical(context, "message"); //$NON-NLS-1$
+        LogManager.logDetail(context, "msgParts");//$NON-NLS-1$
+        LogManager.logError(context, "message");//$NON-NLS-1$
+        LogManager.logInfo(context, "message");//$NON-NLS-1$
+        LogManager.logTrace(context, "msgParts");//$NON-NLS-1$
+        LogManager.logWarning(context, "message");//$NON-NLS-1$
+        
+        Exception e = new Exception("test"); //$NON-NLS-1$
+        LogManager.logCritical(context, e, "message"); //$NON-NLS-1$
+        LogManager.logDetail(context, e, "msgParts");//$NON-NLS-1$
+        LogManager.logError(context, e, "message");//$NON-NLS-1$
+        LogManager.log(MessageLevel.INFO, context, e, "message");//$NON-NLS-1$
+        LogManager.logTrace(context,e,  "msgParts");//$NON-NLS-1$
+        LogManager.logWarning(context, e, "message");//$NON-NLS-1$
     }
 
     /**
@@ -107,7 +148,7 @@ public class TestLogManager extends TestCase {
      * List for later comparison.
      */
     class ListLogger implements LogListener {
-        private List messages = new ArrayList();
+        private List<String> messages = new ArrayList<String>();
         private int expectedMessages;
 
         public ListLogger(int expectedMessages) {
@@ -118,14 +159,14 @@ public class TestLogManager extends TestCase {
          * @see com.metamatrix.core.log.LogListener#logMessage(org.eclipse.core.runtime.IStatus, long, java.lang.String, java.lang.String)
          */
         public synchronized void log(int level, String context, Object msg){
-            this.messages.add(msg);
+            this.messages.add(msg.toString());
             if (this.messages.size() == expectedMessages) {
             	this.notifyAll();
             }
         }
         
 		public void log(int level, String context, Throwable t, Object msg) {
-            this.messages.add(msg);
+            this.messages.add(msg.toString());
             if (this.messages.size() == expectedMessages) {
             	this.notifyAll();
             }			
@@ -152,7 +193,5 @@ public class TestLogManager extends TestCase {
         }
 
     }
-
-
 
 }
