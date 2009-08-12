@@ -23,6 +23,9 @@
 package com.metamatrix.common.types;
 
 import java.io.Serializable;
+import java.lang.ref.PhantomReference;
+
+import com.metamatrix.core.CorePlugin;
 
 
 /**
@@ -38,31 +41,71 @@ import java.io.Serializable;
  * the process worker to in case the reference object has lost its state and we 
  * need to reinsate the object from the disk.
  */
-public interface Streamable extends Serializable {
-    static final String FORCE_STREAMING = "FORCE_STREAMING"; //$NON-NLS-1$
+public abstract class Streamable<T> implements Serializable {
+    public static final String FORCE_STREAMING = "FORCE_STREAMING"; //$NON-NLS-1$
     public static final int STREAMING_BATCH_SIZE_IN_BYTES = 102400; // 100K
+
+    private String referenceStreamId;
+    private String persistenceStreamId;
+    protected transient T reference;
     
-    /**
-     * Reference Stream ID in the server 
-     * @return string - this is buffer managers tuple source id.
-     */
-    String getReferenceStreamId();
+    public Streamable() {
+    	
+	}
     
-    /**
-     * Reference Stream ID in the server
-     * @param id this is buffer managers tuple source id.
-     */
-    void setReferenceStreamId(String id);    
+    public Streamable(T reference) {
+        if (reference == null) {
+            throw new IllegalArgumentException(CorePlugin.Util.getString("Streamable.isNUll")); //$NON-NLS-1$
+        }
+
+    	this.reference = reference;
+    }
     
-    /**
-     * Persitence Stream ID in the server 
-     * @return string - this is buffer managers tuple source id.
-     */
-    String getPersistenceStreamId();
+    public T getReference() {
+		return reference;
+	}
     
-    /**
-     * Persitence Stream ID in the server
-     * @param id this is buffer managers tuple source id.
-     */
-    void setPersistenceStreamId(String id);       
+    public void setReference(T reference) {
+		this.reference = reference;
+	}
+    
+    public String getReferenceStreamId() {
+        return this.referenceStreamId;
+    }
+    
+    public void setReferenceStreamId(String id) {
+        this.referenceStreamId = id;
+    }
+    
+    public String getPersistenceStreamId() {
+        return persistenceStreamId;
+    }
+
+    public void setPersistenceStreamId(String id) {
+        this.persistenceStreamId = id;
+    } 
+    
+    @Override
+    public String toString() {
+        return reference.toString();
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+    	if (this == obj) {
+    		return true;
+    	}
+    	if (!(obj instanceof Streamable<?>)) {
+    		return false;
+    	}
+    	Streamable<?> other = (Streamable<?>)obj;
+    	
+    	if (this.reference != null) {
+    		return this.reference.equals(other.reference);
+    	}
+    	
+    	return this.persistenceStreamId == other.persistenceStreamId
+		&& this.referenceStreamId == other.referenceStreamId;
+    }
+
 }

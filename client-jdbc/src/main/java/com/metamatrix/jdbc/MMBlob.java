@@ -55,7 +55,7 @@ public class MMBlob implements Blob, StreamProvider {
      */
     public static Blob newInstance(StreamingLobChunckProducer.Factory lobChunckFactory, BlobType blob) {
     	if (!Boolean.getBoolean(Streamable.FORCE_STREAMING)) {
-        	Blob sourceBlob = blob.getSourceBlob();
+        	Blob sourceBlob = blob.getReference();
         	if (sourceBlob != null) {
         		return sourceBlob;
         	}

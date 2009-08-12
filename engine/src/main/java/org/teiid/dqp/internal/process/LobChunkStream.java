@@ -27,17 +27,14 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 
 import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.lob.BufferManagerLobChunkStream;
 import com.metamatrix.common.lob.ByteLobChunkStream;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.lob.LobChunkProducer;
 import com.metamatrix.common.lob.ReaderInputStream;
 import com.metamatrix.common.types.BlobType;
 import com.metamatrix.common.types.ClobType;
-import com.metamatrix.common.types.InvalidReferenceException;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
-import com.metamatrix.dqp.DQPPlugin;
 
 /** 
  * A Lob Stream builder class. Given the Lob object this object can build 
@@ -48,7 +45,7 @@ class LobChunkStream implements LobChunkProducer {
 
     LobChunkProducer internalStream = null;
     
-    public LobChunkStream(Streamable streamable, int chunkSize, BufferManager bufferMgr) 
+    public LobChunkStream(Streamable<?> streamable, int chunkSize, BufferManager bufferMgr) 
         throws IOException {
         
         try {
@@ -64,14 +61,6 @@ class LobChunkStream implements LobChunkProducer {
                 BlobType blob = (BlobType)streamable;
                 this.internalStream = new ByteLobChunkStream(blob.getBinaryStream(), chunkSize);                        
             }
-        } catch (InvalidReferenceException e) {
-            // if the lob did not have a persistent id, there is no way for us to re-create the
-            // object. so throw an error.
-            if (streamable.getPersistenceStreamId() == null) {
-                throw new IOException(DQPPlugin.Util.getString("LobStream.noreference")); //$NON-NLS-1$
-            }            
-            // otherwise read directly from the buffer manager. 
-            this.internalStream = new BufferManagerLobChunkStream(streamable.getPersistenceStreamId(), bufferMgr);            
         } catch(SQLException e) {
             IOException ex = new IOException();
             ex.initCause(e);

@@ -30,18 +30,14 @@ import java.util.TimeZone;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryProcessingException;
-import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.eval.SecurityFunctionEvaluator;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.optimizer.relational.PlanToProcessConverter;
 import com.metamatrix.query.processor.QueryProcessor;
-import com.metamatrix.query.sql.symbol.ContextReference;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.util.ValueIterator;
-import com.metamatrix.query.sql.util.ValueIteratorSource;
 import com.metamatrix.query.sql.util.VariableContext;
 
 /** 
@@ -158,6 +154,10 @@ public class CommandContext implements Cloneable {
         
     public CommandContext() {        
     }
+    
+    public CommandContext getParent() {
+		return parent;
+	}
     
     public boolean isSessionFunctionEvaluated() {
     	if (parent != null) {

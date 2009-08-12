@@ -141,7 +141,7 @@ public class RequestWorkItem extends AbstractWorkItem {
     protected Command originalCommand;
     private AnalysisRecord analysisRecord;
     private TransactionContext transactionContext;
-    private TupleSourceID resultsID;
+    protected TupleSourceID resultsID;
     private Collection schemas;     // These are schemas associated with XML results
     private boolean returnsUpdateCount;
     

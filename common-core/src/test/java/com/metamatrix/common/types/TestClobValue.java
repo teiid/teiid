@@ -68,12 +68,7 @@ public class TestClobValue extends TestCase {
         assertEquals(key, read.getReferenceStreamId());
         
         // and lost the original object
-        try {
-            read.getCharacterStream();
-            fail("this must thrown a reference stream exception"); //$NON-NLS-1$
-        } catch (InvalidReferenceException e) {
-            // pass
-        }
+        assertNull(read.getReference());
         
         saved.delete();
     }

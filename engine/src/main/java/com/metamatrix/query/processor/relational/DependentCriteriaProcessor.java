@@ -36,7 +36,6 @@ import java.util.Map;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
-import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.AbstractSetCriteria;
@@ -88,12 +87,6 @@ public class DependentCriteriaProcessor {
 	                    sortSymbols.add(dependentSetStates.get(i).valueExpression);
 	                }
 	                DependentValueSource originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
-	                TupleSource ts;
-					try {
-						ts = dependentNode.getBufferManager().getTupleSource(originalVs.getTupleSourceID());
-					} catch (TupleSourceNotFoundException e) {
-						throw new MetaMatrixComponentException(e);
-					}
 	                this.sortUtility = new SortUtility(originalVs.getTupleSourceID(), sortSymbols, sortDirection, true, dependentNode.getBufferManager(), dependentNode.getConnectionID());
             	}
             	dvs = new DependentValueSource(sortUtility.sort(), dependentNode.getBufferManager());

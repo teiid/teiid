@@ -54,7 +54,7 @@ public class BufferStats {
     public long totalCleaned;
 
     // Pinned batch details
-    public List pinnedManagedBatches = new LinkedList();
+    public List<ManagedBatch> pinnedManagedBatches = new LinkedList<ManagedBatch>();
     
     /**
      * Constructor for BufferStats.
@@ -90,7 +90,7 @@ public class BufferStats {
         LogManager.logInfo(LogConstants.CTX_BUFFER_MGR, "    avgCleaned = " + avgCleaned);         //$NON-NLS-1$
 
         if ( LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE) ) {
-            HashMap stackTraces = new HashMap();
+            HashMap<List<String>, Integer> stackTraces = new HashMap<List<String>, Integer>();
             
             if ( pinnedManagedBatches.isEmpty() ) {
                 return;
@@ -102,12 +102,10 @@ public class BufferStats {
             int stackNumber = 1;
     
             // pinned batch details
-            Iterator it = pinnedManagedBatches.iterator();
-            while ( it.hasNext() ) {
-                ManagedBatch batch = (ManagedBatch)it.next();
+            for (ManagedBatch batch : pinnedManagedBatches) {
                 LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "    TupleSourceID: " + batch.getTupleSourceID() + " Begin: " + batch.getBeginRow() + " End: " + batch.getEndRow()); //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$
                 
-                Integer stackKey = (Integer)stackTraces.get(batch.getCallStack());
+                Integer stackKey = stackTraces.get(batch.getCallStack());
                 
                 boolean isFirst = false;
                 
@@ -119,7 +117,7 @@ public class BufferStats {
                 
                 LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "        Pinned at: " + batch.getCallStackTimeStamp() + " by call# " + stackKey); //$NON-NLS-1$ //$NON-NLS-2$ 
                 if (isFirst) {
-                    for (Iterator j = batch.getCallStack().iterator(); j.hasNext();) {
+                    for (Iterator<String> j = batch.getCallStack().iterator(); j.hasNext();) {
                         LogManager.logTrace( LogConstants.CTX_BUFFER_MGR, "        " + j.next() );         //$NON-NLS-1$                
                     }
                 }

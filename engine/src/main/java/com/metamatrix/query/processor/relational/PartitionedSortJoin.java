@@ -299,6 +299,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     			matchEnd = -1;
         		partitionedTuple = null;
     		}
+    		currentSource.closeSource();
     		currentSource = null;
     		currentPartition++;
     	}

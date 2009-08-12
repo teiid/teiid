@@ -27,6 +27,7 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.lob.LobChunk;
+import com.metamatrix.common.types.Streamable;
 
 /**
  * The buffer manager controls how memory is used and how data flows through 
@@ -268,4 +269,23 @@ public interface BufferManager {
      * to ensure that the memory can be freed. 
      */
     void releasePinnedBatches() throws MetaMatrixComponentException;
+    
+    /**
+     * Return the LOB associated with the referenceId
+     * @param id
+     * @param referenceId
+     * @return
+     * @throws TupleSourceNotFoundException
+     * @throws MetaMatrixComponentException
+     */
+    public Streamable<?> getStreamable(TupleSourceID id, String referenceId) 
+    throws TupleSourceNotFoundException, MetaMatrixComponentException;
+    
+    /**
+     * Assign the tuplesource as the persistent stream for the streamable
+     * @param id
+     * @param s
+     * @throws TupleSourceNotFoundException 
+     */
+    public void setPersistentTupleSource(TupleSourceID id, Streamable<? extends Object> s) throws TupleSourceNotFoundException;
 }

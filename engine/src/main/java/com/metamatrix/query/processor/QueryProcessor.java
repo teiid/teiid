@@ -181,7 +181,10 @@ public class QueryProcessor {
         	}
         	throw new MetaMatrixComponentException(e);
         } finally {
-            bufferMgr.releasePinnedBatches();
+        	//iff this is the root command context release any pinned (Unclosed tuplesources)
+        	if (this.context.getParent() == null) {
+        		bufferMgr.releasePinnedBatches(); 
+        	}
         }
 
 		if(done || requestClosed) {

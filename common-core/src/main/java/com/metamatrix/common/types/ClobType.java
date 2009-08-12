@@ -31,41 +31,27 @@ import java.io.Writer;
 import java.sql.Clob;
 import java.sql.SQLException;
 
-import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
-import javax.sql.rowset.serial.SerialException;
 
-import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 
 /**
  * This is wrapper on top of a "clob" object, which implements the "java.sql.Clob"
  * interface. This class also implements the Streamable interface
  */
-public final class ClobType implements Streamable, Clob, Sequencable {
+public final class ClobType extends Streamable<Clob> implements Clob, Sequencable {
 
-	private transient Clob srcClob;    
-	private String streamId;
-	private String persistentId;
+	private static final long serialVersionUID = 2753412502127824104L;
 	private long length = -1;
     
     /**
      * Can't construct
      */
     ClobType() {
-        super();
-    }
-    
-    public Clob getSourceClob() {
-    	return this.srcClob;
     }
     
     public ClobType(Clob clob) {
-        if (clob == null) {
-            throw new IllegalArgumentException(CorePlugin.Util.getString("ClobValue.isNUll")); //$NON-NLS-1$
-        }
-        // this will serve as the in VM reference
-        this.srcClob = clob;
+    	super(clob);
         
         try {
             this.length = clob.length();
@@ -73,57 +59,26 @@ public final class ClobType implements Streamable, Clob, Sequencable {
             // ignore.
         }
     }
-        
-    /** 
-     * @see com.metamatrix.common.types.Streamable#getReferenceStreamId()
-     */
-    public String getReferenceStreamId() {
-        return this.streamId;
-    }
-    
-    /** 
-     * @see com.metamatrix.common.types.Streamable#setReferenceStreamId(java.lang.String)
-     */
-    public void setReferenceStreamId(String id) {
-        this.streamId = id;
-    }
-    
-    /** 
-     * @see com.metamatrix.common.types.Streamable#getPersistenceStreamId()
-     */
-    public String getPersistenceStreamId() {
-        return persistentId;
-    }
-
-    /** 
-     * @see com.metamatrix.common.types.Streamable#setPersistenceStreamId(java.lang.String)
-     */
-    public void setPersistenceStreamId(String id) {
-        this.persistentId = id;
-    }     
-    
+            
     /** 
      * @see java.sql.Clob#getAsciiStream()
      */
     public InputStream getAsciiStream() throws SQLException {
-        checkReference();
-        return this.srcClob.getAsciiStream();
+        return this.reference.getAsciiStream();
     }
 
     /** 
      * @see java.sql.Clob#getCharacterStream()
      */
     public Reader getCharacterStream() throws SQLException {
-        checkReference();
-        return this.srcClob.getCharacterStream();
+        return this.reference.getCharacterStream();
     }
 
     /** 
      * @see java.sql.Clob#getSubString(long, int)
      */
     public String getSubString(long pos, int length) throws SQLException {
-        checkReference();
-        return this.srcClob.getSubString(pos, length);
+        return this.reference.getSubString(pos, length);
     }
 
     /** 
@@ -134,40 +89,35 @@ public final class ClobType implements Streamable, Clob, Sequencable {
             return this.length;
         }
         
-        checkReference();
-        return this.srcClob.length();
+        return this.reference.length();
     }
 
     /** 
      * @see java.sql.Clob#position(java.sql.Clob, long)
      */
     public long position(Clob searchstr, long start) throws SQLException {
-        checkReference();
-        return this.srcClob.position(searchstr, start);
+        return this.reference.position(searchstr, start);
     }
 
     /** 
      * @see java.sql.Clob#position(java.lang.String, long)
      */
     public long position(String searchstr, long start) throws SQLException {
-        checkReference();
-        return this.srcClob.position(searchstr, start);
+        return this.reference.position(searchstr, start);
     }
 
     /** 
      * @see java.sql.Clob#setAsciiStream(long)
      */
     public OutputStream setAsciiStream(long pos) throws SQLException {
-        checkReference();
-        return this.srcClob.setAsciiStream(pos);
+        return this.reference.setAsciiStream(pos);
     }
 
     /** 
      * @see java.sql.Clob#setCharacterStream(long)
      */
     public Writer setCharacterStream(long pos) throws SQLException {
-        checkReference();
-        return this.srcClob.setCharacterStream(pos);
+        return this.reference.setCharacterStream(pos);
     }
 
     /** 
@@ -177,62 +127,23 @@ public final class ClobType implements Streamable, Clob, Sequencable {
                          String str,
                          int offset,
                          int len) throws SQLException {
-        checkReference();
-        return this.srcClob.setString(pos, str, offset, len);
+        return this.reference.setString(pos, str, offset, len);
     }
 
     /** 
      * @see java.sql.Clob#setString(long, java.lang.String)
      */
     public int setString(long pos, String str) throws SQLException {
-        checkReference();
-        return this.srcClob.setString(pos, str);
+        return this.reference.setString(pos, str);
     }
 
     /** 
      * @see java.sql.Clob#truncate(long)
      */
     public void truncate(long len) throws SQLException {
-        checkReference();
-        this.srcClob.truncate(len);
+        this.reference.truncate(len);
     }    
 
-    /** 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    public boolean equals(Object o) {
-    	if (this == o) {
-    		return true;
-    	}
-    	
-    	if (!(o instanceof ClobType)) {
-    		return false;
-    	}
-    	
-    	ClobType other = (ClobType)o;
-    	
-    	if (this.srcClob != null) {
-    		return this.srcClob.equals(other.srcClob);
-    	}
-    	
-    	return this.persistentId == other.persistentId
-				&& this.streamId == other.streamId;
-    }
-
-    /** 
-     * @see java.lang.Object#toString()
-     */
-    public String toString() {
-        checkReference();
-        return srcClob.toString();
-    }
-            
-    private void checkReference() {
-        if (this.srcClob == null) {
-            throw new InvalidReferenceException(CorePlugin.Util.getString("ClobValue.InvalidReference")); //$NON-NLS-1$
-        }
-    }     
-    
     /**
      * Utility method to convert to String  
      * @param clob
@@ -255,7 +166,6 @@ public final class ClobType implements Streamable, Clob, Sequencable {
     private final static int CHAR_SEQUENCE_BUFFER_SIZE = 2 << 12;
     
     public CharSequence getCharSequence() {
-        checkReference();
         return new CharSequence() {
 
         	private String buffer;
@@ -299,13 +209,11 @@ public final class ClobType implements Streamable, Clob, Sequencable {
     }
     //## JDBC4.0-begin ##
 	public void free() throws SQLException {
-		checkReference();
-		this.srcClob.free();
+		this.reference.free();
 	}
 
 	public Reader getCharacterStream(long pos, long length) throws SQLException {
-		checkReference();
-		return this.srcClob.getCharacterStream(pos, length);
+		return this.reference.getCharacterStream(pos, length);
 	}
 	//## JDBC4.0-end ##
 	

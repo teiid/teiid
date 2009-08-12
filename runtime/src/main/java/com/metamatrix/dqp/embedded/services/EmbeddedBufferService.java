@@ -54,7 +54,6 @@ public class EmbeddedBufferService extends EmbeddedBaseDQPService implements Buf
     private static final String DEFAULT_MANAGEMENT_INTERVAL = "0"; //$NON-NLS-1$
     private static final String DEFAULT_LOG_STATS_INTERVAL = DEFAULT_MANAGEMENT_INTERVAL;
     private static final String DEFAULT_SESSION_USE_PERCENTAGE = "100"; //$NON-NLS-1$
-    private static final String DEFAULT_ID_CREATOR = "com.metamatrix.common.buffer.impl.LongIDCreator"; //$NON-NLS-1$
     private static final String DEFAULT_MAX_OPEN_FILES = "10"; //$NON-NLS-1$
     
     // Instance

@@ -22,29 +22,54 @@
 
 package com.metamatrix.common.buffer.impl;
 
-import java.util.*;
+import java.lang.ref.PhantomReference;
+import java.lang.ref.ReferenceQueue;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Streamable;
 
 /**
  * Describe a TupleSource and all important information about it.
  */
 public class TupleSourceInfo {
     
+	private static final AtomicLong LOB_ID = new AtomicLong();
+	private static final ReferenceQueue<Streamable<?>> LOB_QUEUE = new ReferenceQueue<Streamable<?>>();
+	
+	private static class LobReference extends PhantomReference<Streamable<?>> {
+		
+		String persistentStreamId;
+		
+		public LobReference(Streamable<?> lob) {
+			super(lob, LOB_QUEUE);
+			this.persistentStreamId = lob.getPersistenceStreamId();
+		}		
+	}
+	
     private TupleSourceType type;       // Type of TupleSource, as defined in BufferManager constants
     private TupleSourceID tsID;
     private List schema;
     private String[] types;
     private int rowCount;
-    private TupleSourceStatus status;
+    private TupleSourceStatus status = TupleSourceStatus.ACTIVE;
     private TupleGroupInfo groupInfo;  
     private boolean removed = false;
     private TreeMap<Integer, ManagedBatch> batches = new TreeMap<Integer, ManagedBatch>();
-
+    private Map<String, Streamable<?>> lobReferences; //references to contained lobs
     private boolean lobs;
+    
+    @SuppressWarnings("unused")
+	private LobReference containingLobReference; //reference to containing lob
     
     /**
      * Construct a TupleSourceInfo given information about it.
@@ -58,16 +83,51 @@ public class TupleSourceInfo {
         this.schema = schema;
         this.types = types;
         this.groupInfo = groupInfo;
-        this.status = TupleSourceStatus.ACTIVE;
-        this.rowCount = 0;   
         this.type = type;
         this.lobs = checkForLobs();
+    }
+    
+    public void setContainingLobReference(Streamable<?> s) {
+		this.containingLobReference = new LobReference(s);
+	}
+    
+    public void addLobReference(Streamable<Object> lob) {
+    	String id = lob.getReferenceStreamId();
+    	if (id == null) {
+    		id = String.valueOf(LOB_ID.getAndIncrement());
+    		lob.setReferenceStreamId(id);
+    	}
+    	if (this.lobReferences == null) {
+    		this.lobReferences = Collections.synchronizedMap(new HashMap<String, Streamable<?>>());
+    	}
+    	this.lobReferences.put(id, lob);
+    }
+    
+    public static String getStaleLobTupleSource() {
+    	LobReference ref = (LobReference)LOB_QUEUE.poll();
+    	if (ref == null) {
+    		return null;
+    	}
+    	return ref.persistentStreamId;
+    }
+    
+    public Streamable<?> getLobReference(String id) {
+    	if (this.lobReferences == null) {
+    		return null;
+    	}
+    	return this.lobReferences.get(id);
     }
     
     public void addBatch(ManagedBatch batch) {
         batches.put(batch.getBeginRow(), batch);
     }
     
+    /**
+     * Returns the batch containing the begin row or null
+     * if it doesn't exist
+     * @param beginRow
+     * @return
+     */
     public ManagedBatch getBatch(int beginRow) {
         Map.Entry<Integer, ManagedBatch> entry = batches.floorEntry(beginRow);
         if (entry != null && entry.getValue().getEndRow() >= beginRow) {
@@ -184,19 +244,16 @@ public class TupleSourceInfo {
         return "TupleSourceInfo[" + this.tsID + "]";     //$NON-NLS-1$ //$NON-NLS-2$
     }            
     
-    
     private boolean checkForLobs() {
-        boolean lob = false;
-        if (types != null) {
-            for (int i = 0; i < types.length; i++) {
-                lob |= DataTypeManager.isLOB(types[i]);
+        if (types == null) {
+            // assume the worst
+        	return true;
+        }
+        for (int i = 0; i < types.length; i++) {
+            if (DataTypeManager.isLOB(types[i]) || types[i] == DataTypeManager.DefaultDataTypes.OBJECT) {
+            	return true;
             }
         }
-        else {
-            // if incase the user did not specify the types, then make
-            // them walk the batch; pay the penalty of performence
-            return true;
-        }
-        return lob;
+        return false;
     }
 }

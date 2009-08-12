@@ -363,6 +363,7 @@ public class SortUtility {
 			} finally {
 				tc.saveBatch();
 			}
+			outTs.closeSource();
         	outTs = null;
         }
 	}

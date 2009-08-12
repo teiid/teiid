@@ -368,7 +368,7 @@ public class GroupingNode extends RelationalNode {
             currentGroupTuple = null;
             groupBegin++;
         }
-        
+        this.groupTupleSource.closeSource();
         if(rowCount != 0 || sortElements == null) {
             // Close last group
             List row = new ArrayList(functions.length);

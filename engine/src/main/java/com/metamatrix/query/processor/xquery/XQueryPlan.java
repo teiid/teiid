@@ -160,21 +160,15 @@ public class XQueryPlan extends BaseProcessorPlan {
             List rows = new ArrayList(1);
             List row = new ArrayList(1);
 
-            // this may be little confusing, but the top layer is not immediately going
-            // to disk for saving; when it does it only saves the streaming id, not the
-            // contents. The below one saves immediately to disk, and when client refers to top
-            // id, processor know about the *saved* and gets the contents from it.
+            TupleSourceID savedId = XMLUtil.saveToBufferManager(this.bufferMgr, this.getContext().getConnectionID(), srcXML, this.chunkSize);
+
+            //for large documents use the buffermanager version instead
+            if (this.bufferMgr.getFinalRowCount(savedId) > 1) {
+            	srcXML = XMLUtil.getFromBufferManager(this.bufferMgr, savedId, getFormatProperties());
+            }
             
-            // the one which saves to disk
-            TupleSourceID savedId = XMLUtil.saveToBufferManager(this.bufferMgr, this.resultsTupleSourceId.getStringID(), srcXML, this.chunkSize);
-            
-            // here we have 2 options; create xml from original source or from buffer
-            // manager. since buffer manager is slow we will choose the first option.
-            // incase this xml used in processor it will be faster; if it used in the
-            // client using steaming will be slow.
             XMLType xml = new XMLType(srcXML);
-            xml.setPersistenceStreamId(savedId.getStringID());
-            //XMLValue xml = XMLUtil.getFromBufferManager(this.bufferMgr, savedId, this.chunkSize, getFormatProperties());
+            this.bufferMgr.setPersistentTupleSource(savedId, xml);
             
             // now build the top batch with information from the saved one.
             row.add(xml);

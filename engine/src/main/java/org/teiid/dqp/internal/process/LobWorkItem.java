@@ -23,14 +23,9 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.IOException;
-import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.CommonPlugin;
 import com.metamatrix.common.buffer.BlockedOnMemoryException;
-import com.metamatrix.common.buffer.MemoryNotAvailableException;
-import com.metamatrix.common.buffer.TupleBatch;
-import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.lob.LobChunk;
@@ -73,7 +68,7 @@ public class LobWorkItem implements Runnable {
         	// If no previous stream is not found for this request create one and 
             // save for future 
             if (stream == null) {
-                stream = createLobStream(new TupleSourceID(streamId));
+                stream = createLobStream(streamId);
             }
             
             // now get the chunk from stream
@@ -119,35 +114,13 @@ public class LobWorkItem implements Runnable {
      * Create a object which can create a sequence of LobChunk objects on a given
      * LOB object 
      */
-    private LobChunkStream createLobStream(TupleSourceID referenceStreamId) 
+    private LobChunkStream createLobStream(String referenceStreamId) 
         throws BlockedOnMemoryException, MetaMatrixComponentException, IOException, TupleSourceNotFoundException {
         
         // get the reference object in the buffer manager, and try to stream off
         // the original sources.
-        TupleBatch batch = null;
-        try {
-            batch = dqpCore.getBufferManager().pinTupleBatch(referenceStreamId, 1, 1);
-            List[] tuples = batch.getAllTuples();
-
-            if (tuples != null && tuples.length > 0) {
-                Object anObj = tuples[0].get(0);
-                if (anObj instanceof Streamable) {
-                    Streamable streamable = (Streamable)anObj;
-                    return new LobChunkStream(streamable, chunkSize, dqpCore.getBufferManager());                        
-                }                                    
-            } 
-            throw new MetaMatrixComponentException(DQPPlugin.Util.getString("ProcessWorker.wrongdata")); //$NON-NLS-1$
-        } catch (MemoryNotAvailableException e) {
-            throw BlockedOnMemoryException.INSTANCE;
-        } finally {
-            try {
-                if (batch != null) {
-                	dqpCore.getBufferManager().unpinTupleBatch(referenceStreamId, batch.getBeginRow(), batch.getEndRow());
-                }
-            } catch (MetaMatrixComponentException e) {
-            	LogManager.logDetail(LogConstants.CTX_DQP, e, "Call to unpin failed during lob stream creation"); //$NON-NLS-1$
-            } 
-        }        
+        Streamable<?> streamable = dqpCore.getBufferManager().getStreamable(parent.resultsID, referenceStreamId);
+        return new LobChunkStream(streamable, chunkSize, dqpCore.getBufferManager());                        
     }
     
     synchronized void setResultsReceiver(ResultsReceiver<LobChunk> resultsReceiver) {

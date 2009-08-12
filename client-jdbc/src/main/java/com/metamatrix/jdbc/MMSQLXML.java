@@ -59,7 +59,7 @@ public class MMSQLXML implements SQLXML {
     
     public static SQLXML newInstance(StreamingLobChunckProducer.Factory lobChunckFactory, XMLType srcXML) throws SQLException {
     	if (Boolean.getBoolean(Streamable.FORCE_STREAMING)) {
-    		SQLXML sourceSQLXML = srcXML.getSourceSQLXML();
+    		SQLXML sourceSQLXML = srcXML.getReference();
         	if (sourceSQLXML != null) {
         		return sourceSQLXML;
         	}

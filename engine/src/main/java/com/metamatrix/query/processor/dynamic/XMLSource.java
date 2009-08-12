@@ -24,7 +24,6 @@ package com.metamatrix.query.processor.dynamic;
 
 import java.io.StringReader;
 import java.util.List;
-import java.util.Properties;
 
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -32,10 +31,7 @@ import javax.xml.transform.stream.StreamSource;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleSource;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.types.InvalidReferenceException;
 import com.metamatrix.common.types.XMLType;
-import com.metamatrix.query.processor.xml.XMLUtil;
 
 
 /** 
@@ -59,12 +55,7 @@ public class XMLSource {
                     // as processing excceptions.
                     if (value instanceof XMLType) {
                         XMLType xml = (XMLType)value;
-                        try {
-                            return xml.getSource(null);
-                        } catch (InvalidReferenceException e) {
-                            xml = XMLUtil.getFromBufferManager(bufferMgr, new TupleSourceID(xml.getPersistenceStreamId()), new Properties());
-                            return xml.getSource(null);
-                        } 
+                        return xml.getSource(null);
                     }
                     return new StreamSource(new StringReader((String)value));
                 }

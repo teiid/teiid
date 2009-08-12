@@ -561,7 +561,6 @@ public class ProcedurePlan extends BaseProcessorPlan {
         String rsKey = rsName.toUpperCase();
         CursorState state = this.cursorStates.remove(rsKey);
         if(state != null) {
-        	state.ts.closeSource();
             try {
     			this.bufferMgr.removeTupleSource(state.tsID);
     		} catch (TupleSourceNotFoundException e) {

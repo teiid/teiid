@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.InvalidReferenceException;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.CorePlugin;
@@ -54,8 +53,6 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
             return new String(result, 0, read);
         } catch (SQLException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$            
-        } catch(InvalidReferenceException e) {
-            throw new TransformationException(e, CorePlugin.Util.getString("remote_lob_access")); //$NON-NLS-1$
         } catch (IOException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$
         }

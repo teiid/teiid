@@ -69,12 +69,7 @@ public class TestXMLValue extends TestCase {
         assertEquals(pkey, read.getPersistenceStreamId());
         
         // and lost the original object
-        try {
-            read.getCharacterStream();
-            fail("this must thrown a reference stream exception"); //$NON-NLS-1$
-        } catch (InvalidReferenceException e) {
-            // pass
-        }
+        assertNull(read.getReference());
         
         saved.delete();
     }

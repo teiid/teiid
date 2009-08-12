@@ -30,20 +30,15 @@ import java.sql.Blob;
 import java.sql.SQLException;
 
 import javax.sql.rowset.serial.SerialBlob;
-import javax.sql.rowset.serial.SerialException;
 
-import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.MetaMatrixRuntimeException;
-import com.metamatrix.core.util.ArgCheck;
 
 /**
  * Represent a value of type "blob", which can be streamable from client
  */
-public final class BlobType implements Streamable, Blob {
+public final class BlobType extends Streamable<Blob> implements Blob {
 
-	private transient Blob srcBlob;
-	private String streamId;
-	private String persistentId;
+	private static final long serialVersionUID = 1294191629070433450L;
 	private long length = -1;
     
     /**
@@ -54,8 +49,7 @@ public final class BlobType implements Streamable, Blob {
     }
 
     public BlobType(Blob blob) {
-    	ArgCheck.isNotNull(blob);
-        this.srcBlob = blob;
+    	super(blob);
         try {
             this.length = blob.length();
         } catch (SQLException e) {
@@ -63,52 +57,18 @@ public final class BlobType implements Streamable, Blob {
         }
     }
     
-    public Blob getSourceBlob() {
-    	return srcBlob;
-    }
-    
-    /** 
-     * @see com.metamatrix.common.types.Streamable#getReferenceStreamId()
-     */
-    public String getReferenceStreamId() {
-        return this.streamId;
-    }
-    
-    /** 
-     * @see com.metamatrix.common.types.Streamable#setReferenceStreamId(java.lang.String)
-     */
-    public void setReferenceStreamId(String id) {
-        this.streamId = id;
-    }
-    
-    /** 
-     * @see com.metamatrix.common.types.Streamable#getPersistenceStreamId()
-     */
-    public String getPersistenceStreamId() {
-        return persistentId;
-    }
-
-    /** 
-     * @see com.metamatrix.common.types.Streamable#setPersistenceStreamId(java.lang.String)
-     */
-    public void setPersistenceStreamId(String id) {
-        this.persistentId = id;
-    }    
-    
     /** 
      * @see java.sql.Blob#getBinaryStream()
      */
     public InputStream getBinaryStream() throws SQLException {
-        checkReference();
-        return this.srcBlob.getBinaryStream();
+        return this.reference.getBinaryStream();
     }
 
     /** 
      * @see java.sql.Blob#getBytes(long, int)
      */
     public byte[] getBytes(long pos, int length) throws SQLException {
-        checkReference();
-        return this.srcBlob.getBytes(pos, length);
+        return this.reference.getBytes(pos, length);
     }
 
     /** 
@@ -121,32 +81,28 @@ public final class BlobType implements Streamable, Blob {
         }
         
         // if did not find before then do it again.
-        checkReference();
-        return this.srcBlob.length();
+        return this.reference.length();
     }
 
     /** 
      * @see java.sql.Blob#position(java.sql.Blob, long)
      */
     public long position(Blob pattern, long start) throws SQLException {
-        checkReference();
-        return this.srcBlob.position(pattern, start);
+        return this.reference.position(pattern, start);
     }
 
     /** 
      * @see java.sql.Blob#position(byte[], long)
      */
     public long position(byte[] pattern, long start) throws SQLException {
-        checkReference();
-        return this.srcBlob.position(pattern, start);
+        return this.reference.position(pattern, start);
     }
 
     /** 
      * @see java.sql.Blob#setBinaryStream(long)
      */
     public OutputStream setBinaryStream(long pos) throws SQLException {
-        checkReference();
-        return this.srcBlob.setBinaryStream(pos);
+        return this.reference.setBinaryStream(pos);
     }
 
     /** 
@@ -157,61 +113,21 @@ public final class BlobType implements Streamable, Blob {
                         byte[] bytes,
                         int offset,
                         int len) throws SQLException {
-        checkReference();
-        return this.srcBlob.setBytes(pos, bytes, offset, len);
+        return this.reference.setBytes(pos, bytes, offset, len);
     }
 
     /** 
      * @see java.sql.Blob#setBytes(long, byte[])
      */
     public int setBytes(long pos, byte[] bytes) throws SQLException {
-        checkReference();
-        return this.srcBlob.setBytes(pos, bytes);
+        return this.reference.setBytes(pos, bytes);
     }
 
     /** 
      * @see java.sql.Blob#truncate(long)
      */
     public void truncate(long len) throws SQLException {
-        checkReference();
-        this.srcBlob.truncate(len);
-    }
-    
-    /** 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
-    public boolean equals(Object o) {
-    	if (this == o) {
-    		return true;
-    	}
-    	
-    	if (!(o instanceof BlobType)) {
-    		return false;
-    	}
-    	
-    	BlobType other = (BlobType)o;
-    	
-    	if (this.srcBlob != null) {
-    		return this.srcBlob.equals(other.srcBlob);
-    	}
-    	
-    	return this.persistentId == other.persistentId
-				&& this.streamId == other.streamId;
-
-    }
-
-    /** 
-     * @see java.lang.Object#toString()
-     */
-    public String toString() {
-        checkReference();
-        return srcBlob.toString();
-    }    
-        
-    private void checkReference() {
-        if (this.srcBlob == null) {
-            throw new InvalidReferenceException(CorePlugin.Util.getString("BlobValue.InvalidReference")); //$NON-NLS-1$
-        }
+        this.reference.truncate(len);
     }
     
     /**
@@ -234,14 +150,12 @@ public final class BlobType implements Streamable, Blob {
     }
     //## JDBC4.0-begin ##
 	public void free() throws SQLException {
-		checkReference();
-		this.srcBlob.free();
+		this.reference.free();
 	}
 
 	public InputStream getBinaryStream(long pos, long length)
 			throws SQLException {
-		checkReference();
-		return this.srcBlob.getBinaryStream(pos, length);
+		return this.reference.getBinaryStream(pos, length);
 	}
 	//## JDBC4.0-end ##
 	

@@ -28,7 +28,6 @@ import java.sql.SQLException;
 
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.InvalidReferenceException;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.CorePlugin;
 
@@ -65,9 +64,7 @@ public class ClobToStringTransform extends AnyToStringTransform {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$            
         } catch(IOException e) {
             throw new TransformationException(e, CorePlugin.Util.getString("failed_convert", new Object[] {getSourceType().getName(), getTargetType().getName()})); //$NON-NLS-1$
-        } catch(InvalidReferenceException e) {
-            throw new TransformationException(e, CorePlugin.Util.getString("remote_lob_access")); //$NON-NLS-1$
-        }
+        } 
     }
 
     /**

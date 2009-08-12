@@ -71,7 +71,6 @@ import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.InvalidReferenceException;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
@@ -274,7 +273,7 @@ public class XMLPlan extends BaseProcessorPlan {
             // if this is the first chunk, then create a tuple source id for this sequence of chunks
             if (!this.docInProgress) {
                 this.docInProgress = true;
-                this.docInProgressTupleSourceId = XMLUtil.createXMLTupleSource(this.bufferMgr, this.resultsTupleSourceId.getStringID());
+                this.docInProgressTupleSourceId = XMLUtil.createXMLTupleSource(this.bufferMgr, this.getContext().getConnectionID());
                 this.chunkPosition = 1;
             }
             
@@ -287,8 +286,8 @@ public class XMLPlan extends BaseProcessorPlan {
                 
                 // we want this to be naturally feed by chunks whether inside
                 // or out side the processor
-                xml = new XMLType();
-                xml.setPersistenceStreamId(this.docInProgressTupleSourceId.getStringID());
+                xml = new XMLType(XMLUtil.getFromBufferManager(bufferMgr, this.docInProgressTupleSourceId, getProperties()));
+                this.bufferMgr.setPersistentTupleSource(this.docInProgressTupleSourceId, xml);
                 
                 //reset current document state.
                 this.docInProgress = false;
@@ -356,12 +355,7 @@ public class XMLPlan extends BaseProcessorPlan {
         Reader source = null;
 
         try {        
-            try {
-                source = xmlDoc.getCharacterStream();
-            } catch (InvalidReferenceException e) {
-                xmlDoc = XMLUtil.getFromBufferManager(this.bufferMgr, new TupleSourceID(xmlDoc.getPersistenceStreamId()), props);
-                source = xmlDoc.getCharacterStream();
-            }
+            source = xmlDoc.getCharacterStream();
         
             // Validate against schema
             if(this.shouldValidate) {

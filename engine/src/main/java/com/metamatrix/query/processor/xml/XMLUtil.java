@@ -32,18 +32,17 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BufferManager;
+import com.metamatrix.common.buffer.BufferManagerLobChunkStream;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.common.lob.BufferManagerLobChunkStream;
 import com.metamatrix.common.lob.ByteLobChunkStream;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.lob.LobChunkInputStream;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.XMLReaderFactory;
-import com.metamatrix.common.types.XMLType;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 
@@ -95,15 +94,8 @@ public class XMLUtil {
      * This will reconstruct the XML object from the buffer manager from given 
      * buffer manager id. 
      */
-    public static XMLType getFromBufferManager(final BufferManager bufferMgr, final TupleSourceID sourceId, Properties props) {
-        SQLXML sqlXML = new SQLXMLImpl(new BufferMangerXMLReaderFactory(bufferMgr, sourceId), props);
-        
-        // this is object to be sent to the client. The reference
-        // id will be set by the buffer manager.
-        XMLType xml = new XMLType(sqlXML);
-        xml.setPersistenceStreamId(sourceId.getStringID());
-        
-        return xml;
+    public static SQLXML getFromBufferManager(final BufferManager bufferMgr, final TupleSourceID sourceId, Properties props) {
+        return new SQLXMLImpl(new BufferMangerXMLReaderFactory(bufferMgr, sourceId), props);
     }
     
     /**

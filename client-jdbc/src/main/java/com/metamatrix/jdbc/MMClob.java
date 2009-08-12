@@ -72,7 +72,7 @@ public class MMClob implements Clob {
 	
     public static Clob newInstance(StreamingLobChunckProducer.Factory lobChunckFactory, ClobType clob) throws SQLException {
     	if (!Boolean.getBoolean(Streamable.FORCE_STREAMING)) {
-            Clob sourceClob = clob.getSourceClob();
+            Clob sourceClob = clob.getReference();
             if (sourceClob != null) {
             	return sourceClob;
             }

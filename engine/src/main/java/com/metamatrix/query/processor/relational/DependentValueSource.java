@@ -103,6 +103,7 @@ public class DependentValueSource implements
         			result.add(value);
         		}
         	}
+        	its.closeSource();
         	if (cachedSets == null) {
         		cachedSets = new HashMap<Expression, HashSet<Object>>();
         	}

@@ -236,19 +236,7 @@ public class TestBufferManagerImpl extends TestCase {
         assertTrue(xml1.getPersistenceStreamId() == null);
         assertTrue(xml2.getPersistenceStreamId() == null);
         
-        TupleSourceInfo info = mgr.getTupleSourceInfo(new TupleSourceID(xml1.getReferenceStreamId()), true);
-        // make sure the group name of the reference lob, is same as part batch id
-        assertEquals(id.getStringID(), info.getGroupInfo().getGroupName());
-     
-        // now delete the parent tuple source, this should delete the 
-        // all the kids with same name
-        mgr.removeTupleSource(id);
-                
-        try {
-            mgr.getTupleSource(new TupleSourceID(xml2.getReferenceStreamId()));
-            fail("this is already should have been cleaned up by above one"); //$NON-NLS-1$
-        } catch (TupleSourceNotFoundException e) {
-        }
+        assertNotNull(mgr.getStreamable(id, xml1.getReferenceStreamId()));
     }
     
     public void testAddStreamablePart() throws Exception {

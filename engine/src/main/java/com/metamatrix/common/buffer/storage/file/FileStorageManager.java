@@ -41,7 +41,6 @@ import java.util.Properties;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.buffer.BufferManagerPropertyNames;
-import com.metamatrix.common.buffer.LobTupleBatch;
 import com.metamatrix.common.buffer.StorageManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
@@ -172,16 +171,6 @@ public class FileStorageManager implements StorageManager {
     public void addBatch(TupleSourceID sourceID, TupleBatch batch, String[] types)
         throws MetaMatrixComponentException {
 
-    	/* Right now we do not support the saving of the lobs to the disk.
-         * by throwing an exception the memory is never released for lobs, which is same
-         * as keeping them in a map.  This is not going to be memory hog because, the actual
-         * lob (clob or blob) are backed by connector, xml is backed by already persisted 
-         * tuple source. Here we are only saving the referenes to the actual objects.
-         */
-        if (batch instanceof LobTupleBatch) {
-        	throw new MetaMatrixComponentException(QueryExecPlugin.Util.getString("FileStorageManager.can_not_save_lobs")); //$NON-NLS-1$
-        }
-        
         // Defect 13342 - addBatch method now creates spill files if the total bytes exceeds the max file size limit
         TupleSourceInfo tsInfo = getTupleSourceInfo(sourceID, true);
         synchronized (tsInfo) {

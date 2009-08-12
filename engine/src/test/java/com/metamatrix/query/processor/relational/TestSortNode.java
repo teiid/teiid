@@ -107,13 +107,12 @@ public class TestSortNode {
     }
 
     public static int getIntBatchSize() {
-        List[] expected = new List[] { 
-                Arrays.asList(new Object[] { new Integer(0) }), 
-           };     
+        List[] expected = new List[BATCH_SIZE];
+        Arrays.fill(expected, Arrays.asList(1));
         
         String[] types = { "integer" };     //$NON-NLS-1$
 
-        int size = (int)SizeUtility.getBatchSize( types, expected ) * BATCH_SIZE;
+        int size = (int)SizeUtility.getBatchSize( types, expected );
         return size;
     }
     

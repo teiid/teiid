@@ -20,24 +20,22 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.common.lob;
+package com.metamatrix.common.buffer;
 
 
 import java.io.IOException;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.CommonPlugin;
-import com.metamatrix.common.buffer.BufferManager;
-import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
+import com.metamatrix.common.lob.LobChunk;
+import com.metamatrix.common.lob.LobChunkProducer;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.util.LogConstants;
 
 public class BufferManagerLobChunkStream  implements LobChunkProducer {
-    TupleSourceID sourceId;
-    BufferManager bufferMgr;
-    int position = 0;
+    private TupleSourceID sourceId;
+    private BufferManager bufferMgr;
+    private int position = 0;
     
     public BufferManagerLobChunkStream(String persitentId, BufferManager bufferMgr) {
         this.sourceId = new TupleSourceID(persitentId);

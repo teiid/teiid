@@ -22,6 +22,7 @@
 
 package com.metamatrix.common.buffer.impl;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,8 +39,8 @@ class TupleGroupInfo {
     
     private String groupName;
     /** The bytes of memory used by this tuple group*/
-    private long memoryUsed;
-    private Set<TupleSourceID> tupleSourceIDs = new HashSet<TupleSourceID>();
+    private volatile long memoryUsed;
+    private Set<TupleSourceID> tupleSourceIDs = Collections.synchronizedSet(new HashSet<TupleSourceID>());
     
     TupleGroupInfo(String groupName) {
         this.groupName = groupName;
@@ -54,17 +55,14 @@ class TupleGroupInfo {
     }
     
     long getGroupMemoryUsed() {
-        // no locking required. See MemoryState.NOTE1
         return memoryUsed;
     }
     
     long reserveMemory(long bytes) {
-        // no locking required. See MemoryState.NOTE1
         return memoryUsed += bytes;
     }
     
     long releaseMemory(long bytes) {
-        // no locking required. See MemoryState.NOTE1
         return memoryUsed -= bytes;
     }
 }

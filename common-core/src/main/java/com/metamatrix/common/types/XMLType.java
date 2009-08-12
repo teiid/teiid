@@ -38,125 +38,57 @@ import com.metamatrix.core.jdbc.SQLXML;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 
-import com.metamatrix.core.CorePlugin;
-
 /**
  * This class represents the SQLXML object along with the Streamable interface. This is
  * class used everywhere in the MetaMatrix framework, but clients are restricted to use
  * only SQLXML interface on top of this.
  */
-public final class XMLType implements Streamable, SQLXML {
+public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 
-    private transient SQLXML srcXML;
-    private String referenceStreamId;
-    private String persistenceStreamId;
+	private static final long serialVersionUID = -7922647237095135723L;
     
     public XMLType(){
         
     }
     
-    public SQLXML getSourceSQLXML() {
-    	return srcXML;
-    }
-         
     public XMLType(SQLXML xml) {      
-        if (xml == null) {
-            throw new IllegalArgumentException(CorePlugin.Util.getString("XMLValue.isNUll")); //$NON-NLS-1$
-        }
-        
-        // this will serve as the in VM reference
-        this.srcXML = xml;
+        super(xml);
     }    
-            
-    public String getReferenceStreamId() {
-        return this.referenceStreamId;
-    }
-    
-    public void setReferenceStreamId(String id) {
-        this.referenceStreamId = id;
-    }
-    
-    public String getPersistenceStreamId() {
-        return persistenceStreamId;
-    }
-
-    public void setPersistenceStreamId(String id) {
-        this.persistenceStreamId = id;
-    }      
-        
+                    
     public InputStream getBinaryStream() throws SQLException {
-        checkReference();
-        return this.srcXML.getBinaryStream();
+        return this.reference.getBinaryStream();
     }
 
     public Reader getCharacterStream() throws SQLException {
-        checkReference();
-        return this.srcXML.getCharacterStream();
+        return this.reference.getCharacterStream();
     }
 
     public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
-        checkReference();
-        return this.srcXML.getSource(sourceClass);
+        return this.reference.getSource(sourceClass);
     }
 
     public String getString() throws SQLException {
-        checkReference();
-        return this.srcXML.getString();
+        return this.reference.getString();
     }
 
     public OutputStream setBinaryStream() throws SQLException {
-        checkReference();
-        return this.srcXML.setBinaryStream();
+        return this.reference.setBinaryStream();
     }
 
     public Writer setCharacterStream() throws SQLException {
-        checkReference();
-        return this.srcXML.setCharacterStream();
+        return this.reference.setCharacterStream();
     }
 
     public void setString(String value) throws SQLException {
-        checkReference();
-        this.srcXML.setString(value);
-    }
-
-    public boolean equals(Object o) {
-    	if (this == o) {
-    		return true;
-    	}
-    	
-    	if (!(o instanceof XMLType)) {
-    		return false;
-    	}
-    	
-    	XMLType other = (XMLType)o;
-    	
-    	if (this.srcXML != null) {
-    		return this.srcXML.equals(other.srcXML);
-    	}
-    	
-    	return this.persistenceStreamId == other.persistenceStreamId
-				&& this.referenceStreamId == other.referenceStreamId;
-    }
-
-    public String toString() {
-        checkReference();
-        return srcXML.toString();
-    }
-        
-    private void checkReference() {
-        if (this.srcXML == null) {
-            throw new InvalidReferenceException(CorePlugin.Util.getString("XMLValue.InvalidReference")); //$NON-NLS-1$
-        }
+        this.reference.setString(value);
     }
 
 	public void free() throws SQLException {
-		checkReference();
-		this.srcXML.free();
+		this.reference.free();
 	}
 
 	public <T extends Result> T setResult(Class<T> resultClass)
 			throws SQLException {
-		checkReference();
-		return this.srcXML.setResult(resultClass);
+		return this.reference.setResult(resultClass);
 	}      
 }

@@ -50,6 +50,7 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
+import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.XMLType;
@@ -215,16 +216,18 @@ public class TestProcessor {
         }
     }
 
-    private void helpProcessException(ProcessorPlan plan, ProcessorDataManager dataManager) {
+    private void helpProcessException(ProcessorPlan plan, ProcessorDataManager dataManager) throws TupleSourceNotFoundException, MetaMatrixComponentException {
         helpProcessException(plan, dataManager, null);
     }
     
-    private void helpProcessException(ProcessorPlan plan, ProcessorDataManager dataManager, String expectedErrorMessage) {
-
+    private void helpProcessException(ProcessorPlan plan, ProcessorDataManager dataManager, String expectedErrorMessage) throws TupleSourceNotFoundException, MetaMatrixComponentException {
+    	TupleSourceID tsId = null;
+    	BufferManager bufferMgr = null;
         try {   
-            BufferManager bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
+            bufferMgr = BufferManagerFactory.getStandaloneBufferManager();
             CommandContext context = new CommandContext("0", "test", null, null, null); //$NON-NLS-1$ //$NON-NLS-2$
             QueryProcessor processor = new QueryProcessor(plan, context, bufferMgr, dataManager);
+            tsId = processor.getResultsID();
             processor.process();
             fail("Expected error during processing, but got none."); //$NON-NLS-1$
         } catch(MetaMatrixCoreException e) {
@@ -232,6 +235,8 @@ public class TestProcessor {
             if(expectedErrorMessage != null) {
                 assertEquals(expectedErrorMessage, e.getMessage());
             }
+        } finally {
+        	bufferMgr.removeTupleSource(tsId);
         }
     }
         
@@ -2296,7 +2301,7 @@ public class TestProcessor {
      * Tests a scalar subquery which returns more than one rows
      * causes the expected Exception
      */
-    @Test public void testSubqueryScalarException() {
+    @Test public void testSubqueryScalarException() throws Exception {
         String sql = "SELECT e1, (SELECT e2 FROM pm2.g1) FROM pm1.g1"; //$NON-NLS-1$
 
         // Construct data manager with data
