@@ -74,7 +74,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	 * Configuration state
 	 */
     private long sessionMaxLimit;
-	private long sessionTimeLimit;
+	private long sessionExpirationTimeLimit;
 	
 	/*
 	 * Injected state
@@ -99,7 +99,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
     			if (currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
     				LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.keepaliveFailed", info.getSessionID())); //$NON-NLS-1$
     				closeSession(info.getSessionID());
-    			} else if (sessionTimeLimit > 0 && currentTime - info.getTimeCreated() > sessionTimeLimit) {
+    			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getTimeCreated() > sessionExpirationTimeLimit) {
     				LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.expireSession", info.getSessionID())); //$NON-NLS-1$
     				closeSession(info.getSessionID());
     			}
@@ -302,23 +302,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	public void setMembershipService(MembershipServiceInterface membershipService) {
 		this.membershipService = membershipService;
 	}
-	
-    public long getSessionMaxLimit() {
-		return sessionMaxLimit;
-	}
-
-	public void setSessionMaxLimit(long sessionMaxLimit) {
-		this.sessionMaxLimit = sessionMaxLimit;
-	}
-
-	public long getSessionTimeLimit() {
-		return sessionTimeLimit;
-	}
-
-	public void setSessionTimeLimit(long sessionTimeLimit) {
-		this.sessionTimeLimit = sessionTimeLimit;
-	}
-	
+		
 	@Inject
 	public void setDqpCore(DQPCore dqpCore) {
 		this.dqpCore = dqpCore;
@@ -327,7 +311,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	@Override
 	public void initialize(Properties props) throws ApplicationInitializationException {
 		this.sessionMaxLimit = Long.parseLong(props.getProperty(MAX_SESSIONS, DEFAULT_MAX_SESSIONS));
-		this.sessionTimeLimit = Long.parseLong(props.getProperty(SESSION_TIMEOUT, DEFAULT_SESSION_TIMEOUT));
+		this.sessionExpirationTimeLimit = Long.parseLong(props.getProperty(SESSION_EXPIRATION, DEFAULT_SESSION_EXPIRATION));
 	}
 
 	@Override

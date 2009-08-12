@@ -58,10 +58,10 @@ public interface SessionServiceInterface extends ApplicationService {
     public static String NAME = "SessionService"; //$NON-NLS-1$
 
     public static final String DEFAULT_MAX_SESSIONS = "5000"; //$NON-NLS-1$
-    public static final String DEFAULT_SESSION_TIMEOUT = "600000"; //$NON-NLS-1$
+    public static final String DEFAULT_SESSION_EXPIRATION = "0"; //$NON-NLS-1$
     
     public static final String MAX_SESSIONS = "session.maxSessions"; //$NON-NLS-1$
-    public static final String SESSION_TIMEOUT = "session.timeoutInMilli"; //$NON-NLS-1$
+    public static final String SESSION_EXPIRATION = "session.expirationTimeInMilli"; //$NON-NLS-1$
     
     /**
      * Create a session for the given user authenticating against the given <code>Credentials</code>.
