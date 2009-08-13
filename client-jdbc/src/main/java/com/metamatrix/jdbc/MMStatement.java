@@ -662,7 +662,6 @@ public class MMStatement extends WrapperImpl implements Statement {
      */
     public void setFetchDirection(int direction) throws SQLException {
         checkStatement();
-        this.fetchDirection = direction;
     }
 
     /**

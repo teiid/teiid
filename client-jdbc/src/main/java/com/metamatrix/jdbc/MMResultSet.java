@@ -122,9 +122,9 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		// server latency-related timestamp
 		this.processingTimestamp = resultsMsg.getProcessingTimestamp();
         this.requestID = statement.getCurrentRequestID();
-        this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg));
+        this.cursorType = statement.getResultSetType();
+        this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
         setResultsData(resultsMsg);
-        cursorType = statement.getResultSetType();
         this.serverTimeZone = statement.getServerTimeZone();
 
 		if (metadata == null) {
@@ -142,7 +142,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		if (this.parameters > 0) {
 			rmetadata = FilteredResultsMetadata.newInstance(rmetadata, resultColumns);
 		}
-		this.fetchSize = resultsMsg.getFetchSize();
+		this.fetchSize = statement.getFetchSize();
 	}
 	
 	public void setMaxFieldSize(int maxFieldSize) {

@@ -50,7 +50,6 @@ public class TestResultsMessage extends TestCase {
                                            DataTypeManager.DefaultDataTypes.BIG_INTEGER,
                                            DataTypeManager.DefaultDataTypes.BIG_INTEGER,
                                            DataTypeManager.DefaultDataTypes.BIG_INTEGER});
-        message.setFetchSize(100);
         message.setFinalRow(200);
         message.setFirstRow(1);
         message.setLastRow(100);
@@ -58,7 +57,6 @@ public class TestResultsMessage extends TestCase {
         parameters.add(new ParameterInfo(ParameterInfo.IN, 0));
         parameters.add(new ParameterInfo(ParameterInfo.RESULT_SET, 5));
         message.setParameters(parameters);
-        message.setPartialResults(false);
         Map planDescs = new HashMap();
         planDescs.put("key1", "val1"); //$NON-NLS-1$ //$NON-NLS-2$
         planDescs.put("key2", "val2"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -103,7 +101,6 @@ public class TestResultsMessage extends TestCase {
         assertEquals(DataTypeManager.DefaultDataTypes.BIG_INTEGER, copy.getDataTypes()[2]);
         assertEquals(DataTypeManager.DefaultDataTypes.BIG_INTEGER, copy.getDataTypes()[3]);
         
-        assertEquals(100, copy.getFetchSize());
         assertEquals(200, copy.getFinalRow());
         assertEquals(1, copy.getFirstRow());
         assertEquals(100, copy.getLastRow());
@@ -116,8 +113,6 @@ public class TestResultsMessage extends TestCase {
         ParameterInfo info2 = (ParameterInfo) copy.getParameters().get(1);
         assertEquals(ParameterInfo.RESULT_SET, info2.getType());
         assertEquals(5, info2.getNumColumns());
-        
-        assertFalse(copy.isPartialResults());
         
         assertNotNull(copy.getPlanDescription());
         assertEquals(4, copy.getPlanDescription().size());

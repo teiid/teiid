@@ -52,7 +52,6 @@ public class TestAllResultsImpl extends TestCase {
 	private static final long REQUEST_ID = 0;
 	private static final int TYPE_FORWARD_ONLY = ResultSet.TYPE_FORWARD_ONLY;
 	private static final int TYPE_SCROLL_SENSITIVE = ResultSet.TYPE_SCROLL_SENSITIVE;
-	private static final int TYPE_SCROLL_INSENSITIVE = ResultSet.TYPE_SCROLL_INSENSITIVE;
 
 	private MMStatement statement;
 
@@ -290,15 +289,13 @@ public class TestAllResultsImpl extends TestCase {
 		verify(statement, times(0)).close();
 	}
 
-	public void testGetFetchSize() {
-		try {
-			MMResultSet rs = new MMResultSet(exampleResultsMsg2(),
-					statement);
-			assertEquals(500, rs.getFetchSize()); 
-			rs.close();
-		} catch (SQLException se) {
-			// should never happen;
-		}
+	public void testGetFetchSize() throws Exception {
+		MMStatement s = mock(MMStatement.class);
+		stub(s.getFetchSize()).toReturn(500);
+		MMResultSet rs = new MMResultSet(exampleResultsMsg2(), s);
+		assertEquals(500, rs.getFetchSize()); 
+		rs.setFetchSize(100);
+		assertEquals(100, rs.getFetchSize());
 	}
 
 	// //////////////////////Functions refer to ResultSet's TYPE_FORWARD_ONLY///
@@ -778,7 +775,7 @@ public class TestAllResultsImpl extends TestCase {
 			MetaMatrixProcessingException, SQLException {
 		ClientSideDQP dqp = mock(ClientSideDQP.class);
 		stub(statement.getDQP()).toReturn(dqp);
-
+		stub(statement.getFetchSize()).toReturn(fetchSize);
 		for (int i = batchLength; i < totalLength; i += batchLength) {
 			//forward requests
 			ResultsFuture<ResultsMessage> nextBatch = mock(ResultsFuture.class);
@@ -843,14 +840,12 @@ public class TestAllResultsImpl extends TestCase {
 	private MMResultSet helpGetResultSetImpl(int type)
 			throws SQLException {
 		ResultsMessage rsMsg = exampleResultsMsg2();
-		rsMsg.setCursorType(type);
 		MMResultSet rs = new MMResultSet(rsMsg, statement);
 		return rs;
 	}
 
 	private MMResultSet helpGetNoResults(int type) throws SQLException {
 		ResultsMessage rsMsg = exampleResultsMsg3();
-		rsMsg.setCursorType(type);
 		MMResultSet rs = new MMResultSet(rsMsg, statement);
 		return rs;
 	}
@@ -870,8 +865,6 @@ public class TestAllResultsImpl extends TestCase {
 		resultsMsg.setFinalRow(results.length);
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);
-		resultsMsg.setFetchSize(500);
-		resultsMsg.setCursorType(TYPE_SCROLL_INSENSITIVE);
 		return resultsMsg;
 	}
 
@@ -891,9 +884,6 @@ public class TestAllResultsImpl extends TestCase {
 		resultsMsg.setFinalRow(results.length);
 		resultsMsg.setLastRow(results.length);
 		resultsMsg.setFirstRow(1);
-		resultsMsg.setFetchSize(500);
-		resultsMsg.setCursorType(TYPE_SCROLL_INSENSITIVE);
-
 		return resultsMsg;
 	}
 
@@ -911,14 +901,11 @@ public class TestAllResultsImpl extends TestCase {
 		resultsMsg.setResults(results);
 		resultsMsg.setColumnNames(new String[] { "IntKey" }); //$NON-NLS-1$
 		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.INTEGER }); 
-		resultsMsg.setPartialResults(false);
 		resultsMsg.setFirstRow(begin);
 		if (lastBatch) {
 			resultsMsg.setFinalRow(begin + results.length - 1);
 		}
 		resultsMsg.setLastRow(begin + results.length - 1);
-		resultsMsg.setFetchSize(fetchSize);
-		resultsMsg.setCursorType(TYPE_SCROLL_INSENSITIVE);
 		return resultsMsg;
 	}
 
@@ -942,12 +929,9 @@ public class TestAllResultsImpl extends TestCase {
 		resultsMsg.setResults(new List[] {Arrays.asList(new Timestamp(0))});
 		resultsMsg.setColumnNames(new String[] { "TS" }); //$NON-NLS-1$
 		resultsMsg.setDataTypes(new String[] { MMJDBCSQLTypeInfo.TIMESTAMP }); 
-		resultsMsg.setPartialResults(false);
 		resultsMsg.setFirstRow(1);
 		resultsMsg.setFinalRow(1);
 		resultsMsg.setLastRow(1);
-		resultsMsg.setFetchSize(1);
-		resultsMsg.setCursorType(TYPE_SCROLL_INSENSITIVE);
 		MMResultSet rs = new MMResultSet(resultsMsg, statement);
 		assertTrue(rs.next());
 		//assumes the mock statement is setup with GMT-5 server and GMT-6 client

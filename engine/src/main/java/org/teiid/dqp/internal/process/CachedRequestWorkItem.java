@@ -83,7 +83,6 @@ public class CachedRequestWorkItem extends RequestWorkItem {
         if(isFinal){
             response.setFinalRow(cResult.getFinalRow());
         }
-        response.setPartialResults(!isFinal);
         
         this.resultsCursor.resultsSent();
         this.resultsReceiver.receiveResults(response);

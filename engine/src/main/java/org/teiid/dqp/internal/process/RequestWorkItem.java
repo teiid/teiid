@@ -447,13 +447,6 @@ public class RequestWorkItem extends AbstractWorkItem {
             response.setUpdateResult(this.returnsUpdateCount);
             // set final row
             response.setFinalRow(finalRowCount);
-            // Results are partial if the rowcount is not yet known,
-            // or if the last row of this batch is less than the row count
-            boolean isPartialResultSet = finalRowCount < 0
-                                         || batch.getEndRow() < finalRowCount;
-            
-            // set parital result
-            response.setPartialResults(isPartialResultSet);
 
             // send any schemas associated with the results
             response.setSchemas(this.schemas);

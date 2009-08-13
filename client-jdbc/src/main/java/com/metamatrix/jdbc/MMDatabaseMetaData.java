@@ -124,8 +124,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     
     final private static class RUNTIME_MODEL{
         public final static String VIRTUAL_MODEL_NAME = "System"; //$NON-NLS-1$
-        public final static String ODBC_SYSTEM_MODEL_NAME = "System.ODBC"; //$NON-NLS-1$
-        public final static String WSDL_SYSTEM_MODEL_NAME = "DataServiceSystemModel"; //$NON-NLS-1$
         public final static String JDBC_SYSTEM_MODEL_NAME = "System.JDBC"; //$NON-NLS-1$
     }
 
@@ -508,13 +506,10 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
         ResultsMessage resultsMsg = new ResultsMessage();
         resultsMsg.setColumnNames(columnNames);
         resultsMsg.setDataTypes(dataTypes);
-        resultsMsg.setPartialResults(false);
         resultsMsg.setFirstRow(1);
         resultsMsg.setLastRow(records.size());
         resultsMsg.setFinalRow(records.size());
         resultsMsg.setResults((List[])records.toArray(new List[records.size()]));
-        resultsMsg.setFetchSize(500);
-
         return resultsMsg;
     }
 

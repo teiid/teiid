@@ -66,9 +66,6 @@ public class ResultsMessage implements Externalizable {
     /** Last row index */
     private int lastRow;
 
-    /** Flag indicating whether this result set is part or all of the entire result set */
-    private boolean partialResultsFlag;
-
     /** Final row index in complete result set, if known */
     private int finalRow = -1;
 
@@ -80,12 +77,6 @@ public class ResultsMessage implements Externalizable {
 
     /** This object represents the time when results are produced on the server. */
     private Date completedTimestamp;
-
-    /** Fetch size for the results, if appropriate */
-    private int fetchSize;
-
-    /** Cursor type for the results, if appropriate */
-    private int cursorType;
 
     /** OPTION DEBUG log if OPTION DEBUG was used */
     private String debugLog;
@@ -115,8 +106,6 @@ public class ResultsMessage implements Externalizable {
         if(requestMsg != null){
             this.processingTimestamp = requestMsg.getProcessingTimestamp();
             this.completedTimestamp = new Date();
-            this.fetchSize = requestMsg.getFetchSize();
-            this.cursorType = requestMsg.getCursorType();
         }
         this.results = new ArrayList[0];
 
@@ -127,7 +116,6 @@ public class ResultsMessage implements Externalizable {
         setResults( results );
         setFirstRow( 1 );
         setLastRow( results.length );
-        setPartialResults( false );
 
         this.columnNames = columnNames;
         this.dataTypes = dataTypes;
@@ -175,13 +163,6 @@ public class ResultsMessage implements Externalizable {
      */
     public int getLastRow() {
         return lastRow;
-    }
-
-    /**
-     * @return
-     */
-    public boolean isPartialResults() {
-        return partialResultsFlag;
     }
 
     /**
@@ -236,13 +217,6 @@ public class ResultsMessage implements Externalizable {
      */
     public void setLastRow(int i) {
         lastRow = i;
-    }
-
-    /**
-     * @param b
-     */
-    public void setPartialResults(boolean b) {
-        partialResultsFlag = b;
     }
 
     /**
@@ -301,34 +275,6 @@ public class ResultsMessage implements Externalizable {
         this.dataTypes = dataTypes;
     }
 
-    /**
-     * @return
-     */
-    public int getFetchSize() {
-        return fetchSize;
-    }
-
-    /**
-     * @param i
-     */
-    public void setFetchSize(int fetchSize) {
-        this.fetchSize = fetchSize;
-    }
-
-    /**
-     * @return
-     */
-    public int getCursorType() {
-        return cursorType;
-    }
-
-    /**
-     * @param i
-     */
-    public void setCursorType(int cursorType) {
-        this.cursorType = cursorType;
-    }
-
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 
         columnNames = ExternalizeUtil.readStringArray(in);
@@ -354,7 +300,6 @@ public class ResultsMessage implements Externalizable {
 
         firstRow = in.readInt();
         lastRow = in.readInt();
-        partialResultsFlag = in.readBoolean();
         finalRow = in.readInt();
 
         //Parameters
@@ -362,8 +307,6 @@ public class ResultsMessage implements Externalizable {
 
         processingTimestamp = (Date)in.readObject();
         completedTimestamp = (Date)in.readObject();
-        fetchSize = in.readInt();
-        cursorType = in.readInt();
         debugLog = (String)in.readObject();
         annotations = (Collection)in.readObject();
         isUpdateResult = in.readBoolean();
@@ -395,7 +338,6 @@ public class ResultsMessage implements Externalizable {
         ExternalizeUtil.writeCollection(out, schemas);
         out.writeInt(firstRow);
         out.writeInt(lastRow);
-        out.writeBoolean(partialResultsFlag);
         out.writeInt(finalRow);
 
         // Parameters
@@ -403,8 +345,6 @@ public class ResultsMessage implements Externalizable {
 
         out.writeObject(processingTimestamp);
         out.writeObject(completedTimestamp);
-        out.writeInt(fetchSize);
-        out.writeInt(cursorType);
         out.writeObject(debugLog);
         out.writeObject(annotations);
         out.writeBoolean(isUpdateResult);

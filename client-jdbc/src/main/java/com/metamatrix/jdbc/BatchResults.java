@@ -67,22 +67,24 @@ public class BatchResults {
 	    }
 	    
 	}
+	
+	static final int DEFAULT_SAVED_BATCHES = 3;
 		
-    private static final int SAVED_BATCHES = 3;
-
-    private ArrayList<Batch> batches = new ArrayList<Batch>(SAVED_BATCHES + 1);
+    private ArrayList<Batch> batches = new ArrayList<Batch>();
     
     private int currentRowNumber;
     private int lastRowNumber = -1;
     private int highestRowNumber;
     private BatchFetcher batchFetcher;
+    private int savedBatches = DEFAULT_SAVED_BATCHES;
     
     public BatchResults(List[] batch, int beginRow, int endRow, boolean isLast) {
     	this.setBatch(new Batch(batch, beginRow, endRow, isLast));
     }
     
-    public BatchResults(BatchFetcher batchFetcher, Batch batch) {
+    public BatchResults(BatchFetcher batchFetcher, Batch batch, int savedBatches) {
 		this.batchFetcher = batchFetcher;
+		this.savedBatches = savedBatches;
 		this.setBatch(batch);
 	}
 
@@ -197,6 +199,9 @@ public class BatchResults {
     }
         
     private void requestBatchAndWait(int beginRow) throws SQLException{
+    	if (batches.size() == savedBatches) {
+        	batches.remove(savedBatches - 1);
+        }
     	setBatch(batchFetcher.requestBatch(beginRow));
 	}
 
@@ -207,9 +212,6 @@ public class BatchResults {
         }
         highestRowNumber = Math.max(batch.getEndRow(), highestRowNumber); 
         this.batches.add(0, batch);
-        if (batches.size() > SAVED_BATCHES) {
-        	batches.remove(SAVED_BATCHES);
-        }
 	}
 
 	public boolean hasNext() throws SQLException {
