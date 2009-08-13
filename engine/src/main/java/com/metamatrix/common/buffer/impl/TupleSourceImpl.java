@@ -40,7 +40,6 @@ class TupleSourceImpl implements IndexedTupleSource {
 	private final BufferManagerImpl bufferManagerImpl;
 	private TupleSourceID tupleSourceID;
     private List<?> schema;
-    private int batchSize;
     private WeakReference<TupleBatch> currentBatch;
     private int currentRow = 1;
     private int mark = 1;
@@ -50,7 +49,6 @@ class TupleSourceImpl implements IndexedTupleSource {
         this.bufferManagerImpl = bufferManagerImpl;
 		this.tupleSourceID = tupleSourceID;
         this.schema = schema;
-        this.batchSize = batchSize;
     }
     
     @Override
@@ -122,7 +120,7 @@ class TupleSourceImpl implements IndexedTupleSource {
         TupleBatch batch = getCurrentBatch();
         if(batch != null ) {
             try {
-                this.bufferManagerImpl.unpinTupleBatch(this.tupleSourceID, batch.getBeginRow(), batch.getEndRow());
+                this.bufferManagerImpl.unpinTupleBatch(this.tupleSourceID, batch.getBeginRow());
             } catch (TupleSourceNotFoundException e) {
 				throw new MetaMatrixComponentException(e);
 			} finally {
@@ -143,7 +141,7 @@ class TupleSourceImpl implements IndexedTupleSource {
         } 
         
         try{
-            batch = this.bufferManagerImpl.pinTupleBatch(this.tupleSourceID, currentRow, (currentRow + batchSize -1));
+            batch = this.bufferManagerImpl.pinTupleBatch(this.tupleSourceID, currentRow);
             currentBatch = new WeakReference<TupleBatch>(batch);
         } catch (MemoryNotAvailableException e) {
             /* Defect 18499 - ProcessWorker doesn't know how to handle MemoryNotAvailableException properly,

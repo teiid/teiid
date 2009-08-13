@@ -22,6 +22,8 @@
 
 package com.metamatrix.common.buffer.impl;
 
+import static org.junit.Assert.*;
+
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -32,7 +34,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -59,20 +61,12 @@ import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */
-public class TestBufferManagerImpl extends TestCase {
-
-    /**
-     * Constructor for TestBufferManagerImpl.
-     * @param arg0
-     */
-    public TestBufferManagerImpl(String arg0) {
-        super(arg0);
-    }
+public class TestBufferManagerImpl {
 
     public static BufferManager getTestBufferManager(long bytesAvailable, StorageManager sm2) throws MetaMatrixComponentException {
         // Get the properties for BufferManager
         Properties bmProps = new Properties();                        
-        bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, "" + bytesAvailable); //$NON-NLS-1$
+        bmProps.setProperty(BufferManagerPropertyNames.MEMORY_AVAILABLE, String.valueOf(bytesAvailable));
         bmProps.setProperty(BufferManagerPropertyNames.MANAGEMENT_INTERVAL, "0"); //$NON-NLS-1$
         BufferManager bufferManager = new BufferManagerImpl();
         bufferManager.initialize("local", bmProps); //$NON-NLS-1$
@@ -164,14 +158,14 @@ public class TestBufferManagerImpl extends TestCase {
         ts.closeSource();
     }    
 
-    public void testSpanStorage() throws Exception {
+    @Test public void testSpanStorage() throws Exception {
         helpTestAddBatches(createFakeDatabaseStorageManager(), 
                            1, 
                            50, 
                            100);    
     }
  
-    public void testStandalone() throws Exception {
+    @Test public void testStandalone() throws Exception {
         helpTestAddBatches(null, 
                            10, 
                            5, 
@@ -212,7 +206,7 @@ public class TestBufferManagerImpl extends TestCase {
         return subRows;
     }
     
-    public void testCreateLobReference() throws Exception {
+    @Test public void testCreateLobReference() throws Exception {
         final BufferManagerImpl mgr = (BufferManagerImpl)getTestBufferManager(1, createFakeDatabaseStorageManager());
 
         XMLType xml1 = new XMLType(new SQLXMLImpl("<foo/>")); //$NON-NLS-1$
@@ -231,15 +225,24 @@ public class TestBufferManagerImpl extends TestCase {
         
         // when adding to the tuple source the reference id is assigned
         // but not the persistence stream id.
-        assertTrue(xml1.getReferenceStreamId() != null);
-        assertTrue(xml2.getReferenceStreamId() != null);
-        assertTrue(xml1.getPersistenceStreamId() == null);
-        assertTrue(xml2.getPersistenceStreamId() == null);
+        assertNotNull(xml1.getReferenceStreamId());
+        assertNotNull(xml2.getReferenceStreamId());
+        assertNull(xml1.getPersistenceStreamId());
+        assertNull(xml2.getPersistenceStreamId());
         
+        assertNotNull(mgr.getStreamable(id, xml1.getReferenceStreamId()));
+        
+        final TupleSourceID id1 = mgr.createTupleSource(schema, new String[] {DataTypeManager.DefaultDataTypes.XML}, "GROUP1", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        
+        TupleBatch batch1 = new TupleBatch(1, new List[] {xmlList1, xmlList2});
+        mgr.addTupleBatch(id1, batch1);
+
+        //assure that even though we've removed a later tuple source, the reference still exists
+        mgr.removeTupleSource(id1);
         assertNotNull(mgr.getStreamable(id, xml1.getReferenceStreamId()));
     }
     
-    public void testAddStreamablePart() throws Exception {
+    @Test public void testAddStreamablePart() throws Exception {
          final BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         // save the lob
@@ -300,7 +303,7 @@ public class TestBufferManagerImpl extends TestCase {
     }     
     
     
-    public void testPinning1() throws Exception {
+    @Test public void testPinning1() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         List schema = new ArrayList();
@@ -321,9 +324,9 @@ public class TestBufferManagerImpl extends TestCase {
         int readPerBatch = 1000;
         for(int i=1; i<maxRows; i=i+readPerBatch) {
             int end = i+readPerBatch-1;
-            TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i, end);
+            TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i);
             helpCompareBatches(exampleBatch(i, end), checkBatch);
-            mgr.unpinTupleBatch(tsID, i, end);
+            mgr.unpinTupleBatch(tsID, i);
         }
         
         // Remove
@@ -331,7 +334,7 @@ public class TestBufferManagerImpl extends TestCase {
              
     }
 
-    public void testUnpinOfUnpinnedBatch() throws Exception {
+    @Test public void testUnpinOfUnpinnedBatch() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         List schema = new ArrayList();
@@ -352,20 +355,28 @@ public class TestBufferManagerImpl extends TestCase {
         int readPerBatch = 100;
         for(int i=1; i<maxRows; i=i+readPerBatch) {
             int end = i+readPerBatch-1;
-            mgr.unpinTupleBatch(tsID, i, end);
+            mgr.unpinTupleBatch(tsID, i);
         }
 
         // Walk through by 100's pinning and unpinning
-        for(int i=1; i<maxRows; i=i+readPerBatch) {
-            int end = i+readPerBatch-1;
-            TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i, end);
-            helpCompareBatches(exampleBatch(i, end), checkBatch);
-            mgr.unpinTupleBatch(tsID, i, end);
-        }
+        helpTestPinAndUnpin(mgr, tsID, maxRows, writePerBatch, readPerBatch);
 
         // Remove
         mgr.removeTupleSource(tsID);
     }
+
+	private void helpTestPinAndUnpin(BufferManager mgr, TupleSourceID tsID,
+			int maxRows, int writePerBatch, int readPerBatch)
+			throws TupleSourceNotFoundException, MemoryNotAvailableException,
+			MetaMatrixComponentException {
+		for(int i=1; i<maxRows; i=i+readPerBatch) {
+            int end = (1+i/writePerBatch)*writePerBatch;
+            int begin = end - writePerBatch + 1;
+            TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i);
+            helpCompareBatches(exampleBatch(begin, end), checkBatch);
+            mgr.unpinTupleBatch(tsID, i);
+        }
+	}
     
     
     private TupleBatch exampleBigBatch(int begin, int end, int charsPerRow) {        
@@ -385,7 +396,7 @@ public class TestBufferManagerImpl extends TestCase {
         return new TupleBatch(begin, rows);        
     }
 
-    public void testDeadlockOnMultiThreadClean() throws Exception {
+    @Test public void testDeadlockOnMultiThreadClean() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
 
         List schema = new ArrayList();
@@ -422,7 +433,7 @@ public class TestBufferManagerImpl extends TestCase {
         }        
     }
     
-    public void testSessionMax_Fail() throws Exception {
+    @Test public void testSessionMax_Fail() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
@@ -443,8 +454,8 @@ public class TestBufferManagerImpl extends TestCase {
             // Walk through by 1000's pinning and unpinning
             int readPerBatch = 1000;
             for(int i=1; i<maxRows; i=i+readPerBatch) {
-                int end = i+readPerBatch-1;
-                TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i, end);
+            	int end = (1+i/writePerBatch)*writePerBatch;
+                TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i);
                 helpCompareBatches(exampleBatch(i, end), checkBatch);
             }
             fail("Should have failed"); //$NON-NLS-1$
@@ -463,7 +474,7 @@ public class TestBufferManagerImpl extends TestCase {
      * @throws Exception
      * @since 4.3
      */
-    public void testDefect_18499() throws Exception {
+    @Test public void testDefect_18499() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         List schema = new ArrayList();
         schema.add("col"); //$NON-NLS-1$
@@ -484,7 +495,7 @@ public class TestBufferManagerImpl extends TestCase {
         }
     }
     
-    public void testDefect18497() throws Exception {
+    @Test public void testDefect18497() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
@@ -504,12 +515,7 @@ public class TestBufferManagerImpl extends TestCase {
             
             // Walk through by 1000's pinning and unpinning
             int readPerBatch = 1000;
-            for(int i=1; i<maxRows; i=i+readPerBatch) {
-                int end = i+readPerBatch-1;
-                TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i, end);
-                helpCompareBatches(exampleBatch(i, end), checkBatch);
-                mgr.unpinTupleBatch(tsID, i, end);
-            }
+            helpTestPinAndUnpin(mgr, tsID, maxRows, writePerBatch, readPerBatch);
         } finally {
             // Remove
             mgr.removeTupleSource(tsID);
@@ -518,7 +524,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
     
     //two threads do the cleaning at the same time
-    public void testDefect19325() throws Exception{
+    @Test public void testDefect19325() throws Exception{
         BufferManagerImpl mgr = (BufferManagerImpl)getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         List schema = new ArrayList();
@@ -554,7 +560,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
     
     //test many small batches
-    public void testSmallBatches() throws Exception{
+    @Test public void testSmallBatches() throws Exception{
         BufferManager mgr = getTestBufferManager(50, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
@@ -588,7 +594,7 @@ public class TestBufferManagerImpl extends TestCase {
     }
     
     //going backward
-    public void testPinning2() throws Exception {
+    @Test public void testPinning2() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         List schema = new ArrayList();
@@ -607,21 +613,11 @@ public class TestBufferManagerImpl extends TestCase {
         
         // Walk through by 100's pinning and unpinning
         int readPerBatch = 100;
-        for(int i=maxRows; i>=1; i=i-readPerBatch) {
-            int end = i-readPerBatch+1;
-            TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i, end);
-            helpCompareBatches(exampleBatch(end, i), checkBatch);
-            mgr.unpinTupleBatch(tsID, end, i);
-        }
+        helpTestPinAndUnpin(mgr, tsID, maxRows, writePerBatch, readPerBatch);
         
         // Walk through by 2000's pinning and unpinning
         readPerBatch = 2000;
-        for(int i=maxRows; i>=1; i=i-readPerBatch) {
-            int end = i-readPerBatch+1;
-            TupleBatch checkBatch = mgr.pinTupleBatch(tsID, i, end);
-            helpCompareBatches(exampleBatch(end + (readPerBatch - writePerBatch), i), checkBatch);
-            mgr.unpinTupleBatch(tsID, end + (readPerBatch - writePerBatch), i);
-        }
+        helpTestPinAndUnpin(mgr, tsID, maxRows, writePerBatch, readPerBatch);
         
         // Remove
         mgr.removeTupleSource(tsID);
@@ -679,8 +675,8 @@ public class TestBufferManagerImpl extends TestCase {
                         int batch = random.nextInt(batches);
                         begin = 1 + (batch * rowsPerBatch);
                         end = begin + rowsPerBatch - 1;
-                        bufferMgr.pinTupleBatch(tsID, begin, end);
-                        bufferMgr.unpinTupleBatch(tsID, begin, end);
+                        bufferMgr.pinTupleBatch(tsID, begin);
+                        bufferMgr.unpinTupleBatch(tsID, begin);
                     } catch(MemoryNotAvailableException e) {
                         
                     }
@@ -690,7 +686,7 @@ public class TestBufferManagerImpl extends TestCase {
                 e.printStackTrace();
             } finally {
                 try {
-                    bufferMgr.unpinTupleBatch(tsID, begin, end);
+                    bufferMgr.unpinTupleBatch(tsID, begin);
                 } catch(Exception e) {
                     // ignore
                 }

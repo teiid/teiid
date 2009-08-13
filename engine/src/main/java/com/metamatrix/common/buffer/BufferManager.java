@@ -147,26 +147,24 @@ public interface BufferManager {
      * 
      * @param tupleSourceID Tuple source identifier
      * @param beginRow First row index to return
-     * @param maxEndRow Maximum last row index to return, may be less actually returned
      * @return Batch of rows starting from beginRow and not past maxEndRow
      * @throws TupleSourceNotFoundException if tuple source could not be found
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      * @throws MemoryNotAvailableException If memory was not available for the pin
      */
-    TupleBatch pinTupleBatch(TupleSourceID tupleSourceID, int beginRow, int maxEndRow) 
+    TupleBatch pinTupleBatch(TupleSourceID tupleSourceID, int beginRow) 
     throws TupleSourceNotFoundException, MemoryNotAvailableException, MetaMatrixComponentException;
 
     /**
      * Unpins a range of rows from the given tuple source
      * @param tupleSourceID Tuple source identifier
      * @param firstRow First row to unpin
-     * @param lastRow Last row to unpin (inclusive)
      * @throws TupleSourceNotFoundException if tuple source could not be found
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
      */
-    void unpinTupleBatch(TupleSourceID tupleSourceID, int firstRow, int lastRow) 
+    void unpinTupleBatch(TupleSourceID tupleSourceID, int firstRow) 
     throws TupleSourceNotFoundException, MetaMatrixComponentException;
 
 	/**
@@ -278,14 +276,16 @@ public interface BufferManager {
      * @throws TupleSourceNotFoundException
      * @throws MetaMatrixComponentException
      */
-    public Streamable<?> getStreamable(TupleSourceID id, String referenceId) 
+    Streamable<?> getStreamable(TupleSourceID id, String referenceId) 
     throws TupleSourceNotFoundException, MetaMatrixComponentException;
     
     /**
-     * Assign the tuplesource as the persistent stream for the streamable
+     * Assign the {@link TupleSource} as the persistent stream for the {@link Streamable}
      * @param id
      * @param s
      * @throws TupleSourceNotFoundException 
      */
-    public void setPersistentTupleSource(TupleSourceID id, Streamable<? extends Object> s) throws TupleSourceNotFoundException;
+    void setPersistentTupleSource(TupleSourceID id, Streamable<? extends Object> s)
+    throws TupleSourceNotFoundException;
+    
 }

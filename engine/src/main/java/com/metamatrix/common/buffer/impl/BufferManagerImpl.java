@@ -460,8 +460,6 @@ public class BufferManagerImpl implements BufferManager {
         // Look up info
         TupleSourceInfo info = getTupleSourceInfo(tupleSourceID, true);
         
-        // if there are lobs in source then we need to keep manage then
-        // in a separate tuple sources.
         if (info.lobsInSource()) {
             correctLobReferences(info, tupleBatch);
         }        
@@ -477,7 +475,9 @@ public class BufferManagerImpl implements BufferManager {
 
         synchronized(info) {
             if(info.isRemoved()) {
-                releaseMemory(bytes, info.getGroupInfo());
+            	if(location != ManagedBatch.PERSISTENT) {
+            		releaseMemory(bytes, info.getGroupInfo());
+            	}
                 throw new TupleSourceNotFoundException(QueryExecPlugin.Util.getString("BufferManagerImpl.tuple_source_not_found", tupleSourceID)); //$NON-NLS-1$
             }
 
@@ -510,22 +510,22 @@ public class BufferManagerImpl implements BufferManager {
             info.setRowCount(tupleBatch.getEndRow());
         }
     }
-
+    
     /**
-     * Pin a tuple source in memory and return it.  This batch must be unpinned by
+     * Pin a tuple batch in memory and return it.  This batch must be unpinned by
      * passed the identical tuple source ID and beginning row.
+     * NOTE: the returned {@link TupleBatch} will have the exact same bounds as the {@link ManagedBatch}
      * @param tupleSourceID Tuple source identifier
      * @param beginRow Beginning row
-     * @param maxEndRow Max end row to return
      * @throws TupleSourceNotFoundException If tuple source not found
      * @throws MetaMatrixComponentException If an internal server error occurred
      * @throws MemoryNotAvailableException If memory was not available for the pin
      */
-    public TupleBatch pinTupleBatch(TupleSourceID tupleSourceID, int beginRow, int maxEndRow)
+    public TupleBatch pinTupleBatch(TupleSourceID tupleSourceID, int beginRow)
         throws TupleSourceNotFoundException, MemoryNotAvailableException, MetaMatrixComponentException {
 
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, new Object[]{"Pinning tupleBatch for", tupleSourceID, "beginRow:", beginRow, "maxEndRow:", maxEndRow}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, new Object[]{"Pinning tupleBatch for", tupleSourceID, "beginRow:", beginRow}); //$NON-NLS-1$ //$NON-NLS-2$
         }
 
         this.pinRequests.incrementAndGet();
@@ -537,98 +537,63 @@ public class BufferManagerImpl implements BufferManager {
         synchronized (info) {
         	mbatch = info.getBatch(beginRow);
         }
-        if(mbatch == null) {
-            return new TupleBatch(beginRow, Collections.EMPTY_LIST);
-        } 
-
-        int endRow = 0;
-        int pass = 0;
-        //if the client request previous batch, the end row 
-        //is smaller than the begin row
-        if(beginRow > maxEndRow) {
-            endRow = Math.min(beginRow, mbatch.getEndRow());
-            beginRow = Math.max(maxEndRow, mbatch.getBeginRow());
-        }else {
-            endRow = Math.min(maxEndRow, mbatch.getEndRow());
-        }
-        int count = endRow - beginRow + 1;
-        if (count == 0) {
+        if (mbatch == null || beginRow == mbatch.getEndRow() + 1) {
         	return new TupleBatch(beginRow, Collections.EMPTY_LIST);
         }
         long memoryRequiredByBatch = mbatch.getSize();
 
         TupleBatch memoryBatch = null;
 
-        while(pass < 2) {
-            if(pass == 1) {
-                if(memoryAvailability == BufferManagerImpl.MEMORY_EXCEED_MAX) {
-                    clean(memoryRequiredByBatch, null);
-                }else {
-                    //exceed session limit
-                    clean(memoryRequiredByBatch, info.getGroupInfo()); 
-                }
-            }
+        for (int pass = 0; pass < 2; pass++) {
+        	if (memoryAvailability == BufferManagerImpl.MEMORY_EXCEED_MAX) {
+        		clean(memoryRequiredByBatch, null);
+        	} else if (memoryAvailability == BufferManagerImpl.MEMORY_EXCEED_SESSION_MAX) {
+        		clean(memoryRequiredByBatch, info.getGroupInfo());
+        	}
             
             synchronized(info) {
                 if(mbatch.getLocation() == ManagedBatch.PINNED) {
                     // Load batch from memory - already pinned
                     memoryBatch = mbatch.getBatch();
-    
-                } else if(mbatch.getLocation() == ManagedBatch.UNPINNED) {
+                    break;
+                }
+                if(mbatch.getLocation() == ManagedBatch.UNPINNED) {
                     // Already in memory - just move from unpinned to pinned
                     this.unpinned.remove(mbatch);
                     pin(mbatch);
     
                     // Load batch from memory
                     memoryBatch = mbatch.getBatch();
-                                                
-                } else {
-                    memoryRequiredByBatch = mbatch.getSize();
-                    
-                    // Try to reserve some memory
-                    if((memoryAvailability = reserveMemory(memoryRequiredByBatch, info.getGroupInfo())) != BufferManagerImpl.MEMORY_AVAILABLE) {
-                        if(pass == 0) {
-                            // Break and try to clean - it is important to break out of the synchronized block
-                            // here so that the clean does not cause a deadlock on this TupleSourceInfo
-                            pass++;
-                            continue;
-                        } 
-
-                        // Failed to reserve the memory even after a clean, so record the failure and fail the pin
-                        this.pinFailures.incrementAndGet();
-
-                        // Couldn't reserve memory, so throw exception
-                        throw new MemoryNotAvailableException(QueryExecPlugin.Util.getString("BufferManagerImpl.no_memory_available")); //$NON-NLS-1$
-                    }
-
-                    this.pinnedFromDisk.incrementAndGet();
-
-                    // Memory was reserved, so move from persistent to memory and pin
-                    int internalBeginRow = mbatch.getBeginRow();
-                    memoryBatch = diskMgr.getBatch(tupleSourceID, internalBeginRow, info.getTypes());
-    
-                    mbatch.setBatch(memoryBatch);
-                    if (info.lobsInSource()) {
-                    	correctLobReferences(info, memoryBatch);
-                    }
-                    pin(mbatch);
+                    break;                            
+                } 
+                memoryRequiredByBatch = mbatch.getSize();
+                
+                // Try to reserve some memory
+                if((memoryAvailability = reserveMemory(memoryRequiredByBatch, info.getGroupInfo())) != BufferManagerImpl.MEMORY_AVAILABLE) {
+                	continue;
                 }
+
+                this.pinnedFromDisk.incrementAndGet();
+
+                // Memory was reserved, so move from persistent to memory and pin
+                int internalBeginRow = mbatch.getBeginRow();
+                memoryBatch = diskMgr.getBatch(tupleSourceID, internalBeginRow, info.getTypes());
+
+                mbatch.setBatch(memoryBatch);
+                if (info.lobsInSource()) {
+                	correctLobReferences(info, memoryBatch);
+                }
+                pin(mbatch);
             }
-            
-            break;
+        }
+        
+        if (memoryBatch == null) {
+            // Failed to reserve the memory even after a clean, so record the failure and fail the pin
+            this.pinFailures.incrementAndGet();
+            throw new MemoryNotAvailableException(QueryExecPlugin.Util.getString("BufferManagerImpl.no_memory_available")); //$NON-NLS-1$
         }
 
-        // Batch should now be pinned in memory, so grab it and build a correctly
-        // sized batch to return
-        if(beginRow == memoryBatch.getBeginRow() && count == memoryBatch.getRowCount()) {
-            return memoryBatch;
-        }
-
-        int firstOffset = beginRow - memoryBatch.getBeginRow();
-        List[] memoryRows = memoryBatch.getAllTuples();
-        List[] rows = new List[count];
-        System.arraycopy(memoryRows, firstOffset, rows, 0, count);
-        return new TupleBatch(beginRow, rows);
+        return memoryBatch;
     }
     
 	private void pin(ManagedBatch mbatch) {
@@ -647,7 +612,7 @@ public class BufferManagerImpl implements BufferManager {
      * @throws TupleSourceNotFoundException If tuple source not found
      * @throws MetaMatrixComponentException If an internal server error occurred
      */
-    public void unpinTupleBatch(TupleSourceID tupleSourceID, int beginRow, int endRow)
+    public void unpinTupleBatch(TupleSourceID tupleSourceID, int beginRow)
         throws TupleSourceNotFoundException, MetaMatrixComponentException {
 
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
@@ -891,10 +856,8 @@ public class BufferManagerImpl implements BufferManager {
         
         // Look up info
         TupleSourceInfo info = getTupleSourceInfo(tupleSourceID, true);
-        short location = ManagedBatch.PERSISTENT;
         
         synchronized(info) {
-
             List<LobChunk> data = new ArrayList<LobChunk>();
             data.add(streamChunk);
             TupleBatch batch = new TupleBatch(beginRow, new List[] {data});
@@ -902,7 +865,7 @@ public class BufferManagerImpl implements BufferManager {
                         
             // Update tuple source state (we could calculate the size of stream if need to)
             ManagedBatch managedBatch = new ManagedBatch(tupleSourceID, beginRow, batch.getEndRow(), 0);
-            managedBatch.setLocation(location);
+            managedBatch.setLocation(ManagedBatch.PERSISTENT);
 
             // Update info with new rows
             info.addBatch(managedBatch);
@@ -932,7 +895,7 @@ public class BufferManagerImpl implements BufferManager {
     	for (ManagedBatch managedBatch : pinnedByThread) {
     		try {
     			//TODO: add trace logging about the batch that is being unpinned
-    			unpinTupleBatch(managedBatch.getTupleSourceID(), managedBatch.getBeginRow(), managedBatch.getEndRow());
+    			unpinTupleBatch(managedBatch.getTupleSourceID(), managedBatch.getBeginRow());
     		} catch (TupleSourceNotFoundException err) {
     		} catch (MetaMatrixComponentException err) {
     			e = err;

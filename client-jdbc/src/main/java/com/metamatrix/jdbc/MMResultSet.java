@@ -101,6 +101,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
     private Map updatedPlanDescription;
     private ResultsMessage resultsMsg;
     private int maxFieldSize;
+    private int fetchSize;
 
 	/**
 	 * Constructor.
@@ -121,7 +122,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		// server latency-related timestamp
 		this.processingTimestamp = resultsMsg.getProcessingTimestamp();
         this.requestID = statement.getCurrentRequestID();
-        this.batchResults = new BatchResults(this, resultsMsg.getFetchSize(), getCurrentBatch(resultsMsg));
+        this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg));
         setResultsData(resultsMsg);
         cursorType = statement.getResultSetType();
         this.serverTimeZone = statement.getServerTimeZone();
@@ -141,6 +142,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 		if (this.parameters > 0) {
 			rmetadata = FilteredResultsMetadata.newInstance(rmetadata, resultColumns);
 		}
+		this.fetchSize = resultsMsg.getFetchSize();
 	}
 	
 	public void setMaxFieldSize(int maxFieldSize) {
@@ -230,7 +232,7 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
      * have been reset by the server.
      */
     public int getFetchSize() throws SQLException {
-        return this.batchResults.getFetchSize();
+        return this.fetchSize;
     }
 
     /**
@@ -341,11 +343,11 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
     	return updatedPlanDescription;
     }
     
-    public Batch requestBatch(int beginRow, int endRow) throws SQLException{
-    	logger.fine("CursorResultsImpl.requestBatch] thread name: " + Thread.currentThread().getName() + " requestID: " + requestID + " beginRow: " + beginRow + " endinRow: " + endRow ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    public Batch requestBatch(int beginRow) throws SQLException{
+    	logger.fine("CursorResultsImpl.requestBatch] thread name: " + Thread.currentThread().getName() + " requestID: " + requestID + " beginRow: " + beginRow ); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     	checkClosed();
         try {
-        	ResultsFuture<ResultsMessage> results = statement.getDQP().processCursorRequest(requestID, beginRow, endRow);
+        	ResultsFuture<ResultsMessage> results = statement.getDQP().processCursorRequest(requestID, beginRow, fetchSize);
         	ResultsMessage currentResultMsg = results.get();
     		this.setResultsData(currentResultMsg);
     		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
@@ -1516,7 +1518,16 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	}
 
 	public void setFetchSize(int rows) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		checkClosed();
+        if ( rows < 0 ) {
+            throw new MMSQLException(JDBCPlugin.Util.getString("MMStatement.Invalid_fetch_size")); //$NON-NLS-1$
+        }
+        // sets the fetch size on this statement
+        if (rows == 0) {
+            this.fetchSize = BaseDataSource.DEFAULT_FETCH_SIZE;
+        } else {
+            this.fetchSize = rows;
+        }
 	}
 
 	public void updateArray(int columnIndex, Array x) throws SQLException {
@@ -1526,7 +1537,6 @@ public class MMResultSet extends WrapperImpl implements com.metamatrix.jdbc.api.
 	public void updateArray(String columnLabel, Array x) throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();	
 	}
-
 
 	public void updateAsciiStream(int columnIndex, InputStream x, int length)
 			throws SQLException {

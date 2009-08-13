@@ -269,14 +269,14 @@ public class DQPCore extends Application implements ClientSideDQP {
     }
 	
 	public ResultsFuture<ResultsMessage> processCursorRequest(long reqID,
-			int batchFirst, int batchLast) throws MetaMatrixProcessingException {
+			int batchFirst, int fetchSize) throws MetaMatrixProcessingException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "DQP process cursor request from " + batchFirst + " to " + batchLast);  //$NON-NLS-1$//$NON-NLS-2$
+            LogManager.logDetail(LogConstants.CTX_DQP, "DQP process cursor request from " + batchFirst);  //$NON-NLS-1$
         }
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
 		RequestWorkItem workItem = getRequestWorkItem(workContext.getRequestID(reqID));
-		workItem.requestMore(batchFirst, batchLast, resultsFuture.getResultsReceiver());
+		workItem.requestMore(batchFirst, batchFirst + Math.min(fetchSize, maxFetchSize) - 1, resultsFuture.getResultsReceiver());
 		return resultsFuture;
 	}
 

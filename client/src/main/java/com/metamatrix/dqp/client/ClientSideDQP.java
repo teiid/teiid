@@ -39,7 +39,7 @@ public interface ClientSideDQP {
 	
 	ResultsFuture<ResultsMessage> executeRequest(long reqID, RequestMessage message) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 	
-	ResultsFuture<ResultsMessage> processCursorRequest(long reqID, int batchFirst, int batchLast) throws MetaMatrixProcessingException;
+	ResultsFuture<ResultsMessage> processCursorRequest(long reqID, int batchFirst, int fetchSize) throws MetaMatrixProcessingException;
 
 	ResultsFuture<?> closeRequest(long requestID) throws MetaMatrixProcessingException, MetaMatrixComponentException;
 	

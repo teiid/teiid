@@ -783,13 +783,13 @@ public class TestAllResultsImpl extends TestCase {
 			//forward requests
 			ResultsFuture<ResultsMessage> nextBatch = mock(ResultsFuture.class);
 			stub(nextBatch.get()).toReturn(exampleResultsMsg4(i + 1, Math.min(batchLength, totalLength - i), fetchSize, i + batchLength >= totalLength));
-			stub(dqp.processCursorRequest(REQUEST_ID, i + 1, i + fetchSize)).toReturn(nextBatch);
+			stub(dqp.processCursorRequest(REQUEST_ID, i + 1, fetchSize)).toReturn(nextBatch);
 			
 			if (i + batchLength < totalLength) {
 				//backward requests
 				ResultsFuture<ResultsMessage> previousBatch = mock(ResultsFuture.class);
 				stub(previousBatch.get()).toReturn(exampleResultsMsg4(i - batchLength + 1, i, fetchSize, false));
-				stub(dqp.processCursorRequest(REQUEST_ID, i, i - fetchSize + 1)).toReturn(previousBatch);
+				stub(dqp.processCursorRequest(REQUEST_ID, i, fetchSize)).toReturn(previousBatch);
 			}
 		}
 		

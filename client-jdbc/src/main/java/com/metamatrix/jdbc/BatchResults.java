@@ -76,16 +76,13 @@ public class BatchResults {
     private int lastRowNumber = -1;
     private int highestRowNumber;
     private BatchFetcher batchFetcher;
-    private int fetchSize;
     
-    public BatchResults(List[] batch, int beginRow, int endRow, boolean isLast, int fetchSize) {
-    	this.fetchSize = fetchSize;
+    public BatchResults(List[] batch, int beginRow, int endRow, boolean isLast) {
     	this.setBatch(new Batch(batch, beginRow, endRow, isLast));
     }
     
-    public BatchResults(BatchFetcher batchFetcher, int fetchSize, Batch batch) {
+    public BatchResults(BatchFetcher batchFetcher, Batch batch) {
 		this.batchFetcher = batchFetcher;
-		this.fetchSize = fetchSize;
 		this.setBatch(batch);
 	}
 
@@ -97,20 +94,12 @@ public class BatchResults {
     	if (currentRowNumber == 0 || (lastRowNumber != -1 && currentRowNumber > lastRowNumber)) {
     		return null;
     	}
-    	int closestMax = currentRowNumber + fetchSize - 1;
-    	int closestMin = Math.max(1, currentRowNumber - fetchSize + 1);
     	for (int i = 0; i < batches.size(); i++) {
     		Batch batch = batches.get(i);
     		if (currentRowNumber < batch.getBeginRow()) {
-    			if (i != SAVED_BATCHES - 1) {
-    				closestMax = Math.min(batch.getBeginRow(), closestMax);
-    			}
     			continue;
     		}
 			if (currentRowNumber > batch.getEndRow()) {
-				if (i != SAVED_BATCHES - 1) {
-					closestMin = Math.max(batch.getEndRow(), closestMin);
-				}
 				continue;
 			}
 			if (i != 0) {
@@ -118,17 +107,13 @@ public class BatchResults {
 			}
 			return batch.getRow(currentRowNumber);
 		}
-    	if (closestMax - currentRowNumber >= currentRowNumber - closestMin) {
-        	requestBatchAndWait(currentRowNumber, closestMax);
-    	} else {
-    		requestBatchAndWait(currentRowNumber, closestMin);
-    	}
+		requestBatchAndWait(currentRowNumber);
     	Batch batch = batches.get(0);
         return batch.getRow(currentRowNumber);
     }
     
 	private void requestNextBatch() throws SQLException {
-		requestBatchAndWait(highestRowNumber + 1, highestRowNumber + fetchSize);
+		requestBatchAndWait(highestRowNumber + 1);
 	}
     
     public boolean next() throws SQLException{
@@ -164,10 +149,6 @@ public class BatchResults {
     public void setBatchFetcher(BatchFetcher batchFetcher) {
         this.batchFetcher = batchFetcher;
     }
-    
-    public int getFetchSize() {
-        return fetchSize;
-    } 
     
     public boolean absolute(int row) throws SQLException {
     	return absolute(row, 0);
@@ -215,8 +196,8 @@ public class BatchResults {
         return currentRowNumber;
     }
         
-    private void requestBatchAndWait(int beginRow, int endRow) throws SQLException{
-    	setBatch(batchFetcher.requestBatch(beginRow, endRow));
+    private void requestBatchAndWait(int beginRow) throws SQLException{
+    	setBatch(batchFetcher.requestBatch(beginRow));
 	}
 
 	private void setBatch(Batch batch) {

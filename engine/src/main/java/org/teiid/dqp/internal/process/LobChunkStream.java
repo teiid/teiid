@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
 
-import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.lob.ByteLobChunkStream;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.lob.LobChunkProducer;
@@ -45,7 +44,7 @@ class LobChunkStream implements LobChunkProducer {
 
     LobChunkProducer internalStream = null;
     
-    public LobChunkStream(Streamable<?> streamable, int chunkSize, BufferManager bufferMgr) 
+    public LobChunkStream(Streamable<?> streamable, int chunkSize) 
         throws IOException {
         
         try {

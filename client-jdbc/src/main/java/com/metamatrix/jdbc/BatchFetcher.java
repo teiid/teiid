@@ -30,5 +30,5 @@ import com.metamatrix.jdbc.BatchResults.Batch;
  * @since 4.3
  */
 public interface BatchFetcher {
-	Batch requestBatch(int beginRow, int endRow) throws SQLException;
+	Batch requestBatch(int beginRow) throws SQLException;
 }

@@ -164,7 +164,7 @@ public class SortUtility {
 	        while(!doneReading) {
 	            try {
 	                // Load and pin batch
-	                TupleBatch batch = bufferManager.pinTupleBatch(sourceID, sortPhaseRow, sortPhaseRow + batchSize - 1);
+	                TupleBatch batch = bufferManager.pinTupleBatch(sourceID, sortPhaseRow);
 	
 	                if (batch.getRowCount() == 0) {
 	                	if (bufferManager.getStatus(sourceID) == TupleSourceStatus.FULL) {
@@ -205,7 +205,7 @@ public class SortUtility {
 	
 	        // Clean up - unpin rows
 	        for (int[] bounds : pinned) {
-	            bufferManager.unpinTupleBatch(sourceID, bounds[0], bounds[1]);
+	            bufferManager.unpinTupleBatch(sourceID, bounds[0]);
 	        }
         }
 
@@ -245,7 +245,7 @@ public class SortUtility {
             for(; sortedIndex<activeTupleIDs.size(); sortedIndex++) {
                 TupleSourceID activeID = activeTupleIDs.get(sortedIndex);
                 try {
-                    TupleBatch sortedBatch = bufferManager.pinTupleBatch(activeID, 1, this.batchSize);
+                    TupleBatch sortedBatch = bufferManager.pinTupleBatch(activeID, 1);
                     workingBatches.add(sortedBatch);
                 } catch(MemoryNotAvailableException e) {
                     break;
@@ -379,10 +379,9 @@ public class SortUtility {
             TupleSourceID tsID = unpinWorkingBatch(batchIndex, currentBatch);
 
             int beginRow = workingPointers[batchIndex];
-            int endRow = beginRow + this.batchSize - 1;
 
             try {
-                TupleBatch newBatch = bufferManager.pinTupleBatch(tsID, beginRow, endRow);
+                TupleBatch newBatch = bufferManager.pinTupleBatch(tsID, beginRow);
                 if(newBatch.getRowCount() == 0) {
                     // Done with this working batch
                     workingBatches.set(batchIndex, null);
@@ -400,8 +399,7 @@ public class SortUtility {
                                                                     MetaMatrixComponentException {
         TupleSourceID tsID = activeTupleIDs.get(batchIndex);
         int lastBeginRow = currentBatch.getBeginRow();
-        int lastEndRow = currentBatch.getEndRow();
-        bufferManager.unpinTupleBatch(tsID, lastBeginRow, lastEndRow);
+        bufferManager.unpinTupleBatch(tsID, lastBeginRow);
         return tsID;
     }
 

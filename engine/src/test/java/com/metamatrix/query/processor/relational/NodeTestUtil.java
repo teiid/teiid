@@ -95,11 +95,10 @@ public class NodeTestUtil {
         private boolean wasBlocked;
         
         /** 
-         * @see com.metamatrix.common.buffer.impl.BufferManagerImpl#pinTupleBatch(com.metamatrix.common.buffer.TupleSourceID, int, int)
+         * @see com.metamatrix.common.buffer.impl.BufferManagerImpl#pinTupleBatch(com.metamatrix.common.buffer.TupleSourceID, int)
          */
         public TupleBatch pinTupleBatch(TupleSourceID tupleSourceID,
-                                        int beginRow,
-                                        int maxEndRow) throws TupleSourceNotFoundException,
+                                        int beginRow) throws TupleSourceNotFoundException,
                                                       MemoryNotAvailableException,
                                                       MetaMatrixComponentException {
             if (blockOn != null && blockOn.contains(new Integer(++pinCount))) {
@@ -109,7 +108,7 @@ public class NodeTestUtil {
             
             wasBlocked = false;
             
-            return super.pinTupleBatch(tupleSourceID, beginRow, maxEndRow);
+            return super.pinTupleBatch(tupleSourceID, beginRow);
         }
 
         

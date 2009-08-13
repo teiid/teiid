@@ -148,9 +148,8 @@ public class SortNode extends RelationalNode {
             return terminationBatch;
         }
         int beginPinned = this.outputBeginRow;
-        int endPinned = this.outputBeginRow+getBatchSize()-1;
         try {
-            TupleBatch outputBatch = getBufferManager().pinTupleBatch(outputID, beginPinned, endPinned);
+            TupleBatch outputBatch = getBufferManager().pinTupleBatch(outputID, beginPinned);
             
             this.outputBeginRow += outputBatch.getRowCount();
 
@@ -164,7 +163,7 @@ public class SortNode extends RelationalNode {
         } catch(MemoryNotAvailableException e) {
             throw BlockedOnMemoryException.INSTANCE;
         } finally {
-            getBufferManager().unpinTupleBatch(outputID, beginPinned, endPinned);
+            getBufferManager().unpinTupleBatch(outputID, beginPinned);
         }
     }
 

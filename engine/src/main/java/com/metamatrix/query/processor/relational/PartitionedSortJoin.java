@@ -106,7 +106,7 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
     	this.matchEnd = -1;
     }
 	
-    //TODO: save partial work
+    //TODO: save partial work or combine with the sort operation
     public void computeBatchBounds(SourceState state) throws TupleSourceNotFoundException, MetaMatrixComponentException {
     	if (endTuples != null) {
     		return;
@@ -117,12 +117,12 @@ public class PartitionedSortJoin extends MergeJoinStrategy {
         while (beginRow <= state.getRowCount()) {
         	TupleBatch batch = null;
         	try {
-        		batch = this.joinNode.getBufferManager().pinTupleBatch(state.getTupleSourceID(), beginRow, beginRow + this.joinNode.getBatchSize() - 1);
+        		batch = this.joinNode.getBufferManager().pinTupleBatch(state.getTupleSourceID(), beginRow);
         		if (batch.getRowCount() == 0) {
         			break;
         		}
         		beginRow = batch.getEndRow() + 1; 
-        		this.joinNode.getBufferManager().unpinTupleBatch(state.getTupleSourceID(), batch.getBeginRow(), batch.getEndRow());
+        		this.joinNode.getBufferManager().unpinTupleBatch(state.getTupleSourceID(), batch.getBeginRow());
         		if (!bounds.isEmpty()) {
         			overlap.add(comp.compare(bounds.get(bounds.size() - 1), batch.getTuple(batch.getBeginRow())) == 0);
         		}

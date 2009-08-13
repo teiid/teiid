@@ -120,7 +120,7 @@ public class LobWorkItem implements Runnable {
         // get the reference object in the buffer manager, and try to stream off
         // the original sources.
         Streamable<?> streamable = dqpCore.getBufferManager().getStreamable(parent.resultsID, referenceStreamId);
-        return new LobChunkStream(streamable, chunkSize, dqpCore.getBufferManager());                        
+        return new LobChunkStream(streamable, chunkSize);                        
     }
     
     synchronized void setResultsReceiver(ResultsReceiver<LobChunk> resultsReceiver) {

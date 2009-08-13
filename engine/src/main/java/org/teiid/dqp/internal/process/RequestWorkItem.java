@@ -59,7 +59,6 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
-import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.exception.SourceWarning;
 import com.metamatrix.dqp.message.AtomicRequestID;
@@ -104,7 +103,6 @@ public class RequestWorkItem extends AbstractWorkItem {
 			}
 			this.begin = beginRow;
 			this.end = endRow;
-			Assertion.assertTrue(end - begin >= 0);
 			this.resultsRequested = true;
 		}
 		
@@ -427,8 +425,19 @@ public class RequestWorkItem extends AbstractWorkItem {
 	    
         try {
         	if (batch == null || batch.getBeginRow() > this.resultsCursor.begin) {
-        		batch = this.bufferMgr.pinTupleBatch(resultsID, resultsCursor.begin, resultsCursor.end);
+        		batch = this.bufferMgr.pinTupleBatch(resultsID, resultsCursor.begin);
         		pinned = true;
+        		//TODO: support fetching more than 1 batch
+        		int count = this.resultsCursor.end - this.resultsCursor.begin + 1;
+        		if (batch.getRowCount() > count) {
+        			int beginRow = Math.min(this.resultsCursor.begin, batch.getEndRow() - count + 1);
+        			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
+            		int firstOffset = beginRow - batch.getBeginRow();
+                    List[] memoryRows = batch.getAllTuples();
+                    List[] rows = new List[count];
+                    System.arraycopy(memoryRows, firstOffset, rows, 0, endRow - beginRow + 1);
+                    batch = new TupleBatch(beginRow, rows);
+        		}
         	}
             int finalRowCount = doneProducingBatches?this.processor.getHighestRow():-1;
             
@@ -480,7 +489,7 @@ public class RequestWorkItem extends AbstractWorkItem {
         } finally {
             try {
                 if (pinned) {
-                    this.bufferMgr.unpinTupleBatch(this.resultsID, batch.getBeginRow(), batch.getEndRow());
+                    this.bufferMgr.unpinTupleBatch(this.resultsID, batch.getBeginRow());
                 }
             } catch (Exception e) {
                 // ignore - nothing more we can do

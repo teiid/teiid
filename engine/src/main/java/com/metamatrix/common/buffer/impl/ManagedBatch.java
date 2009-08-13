@@ -192,7 +192,7 @@ class ManagedBatch {
             return true;
         }
         
-        if(obj == null || ! (obj instanceof ManagedBatch)) {
+        if(! (obj instanceof ManagedBatch)) {
             return false;
         }
         
