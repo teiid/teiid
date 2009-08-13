@@ -51,7 +51,7 @@ import com.metamatrix.dqp.service.ConfigurationService;
 public class EmbeddedBufferService extends EmbeddedBaseDQPService implements BufferService {
 
     // Constants
-    private static final String DEFAULT_MANAGEMENT_INTERVAL = "0"; //$NON-NLS-1$
+    private static final String DEFAULT_MANAGEMENT_INTERVAL = "500"; //$NON-NLS-1$
     private static final String DEFAULT_LOG_STATS_INTERVAL = DEFAULT_MANAGEMENT_INTERVAL;
     private static final String DEFAULT_SESSION_USE_PERCENTAGE = "100"; //$NON-NLS-1$
     private static final String DEFAULT_MAX_OPEN_FILES = "10"; //$NON-NLS-1$

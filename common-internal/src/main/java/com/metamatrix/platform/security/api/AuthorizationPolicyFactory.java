@@ -49,7 +49,6 @@ import org.xml.sax.SAXParseException;
 
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.LogConstants;
-import com.metamatrix.platform.security.util.RolePermissionFactory;
 
 /**
  * The class build the Policies from the xml file or converts the policies to xml file for importing and exporting of the policy

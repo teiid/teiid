@@ -68,7 +68,7 @@ public interface DQPEmbeddedProperties {
         /**
          * Determines amount of memory to use in-memory before buffering to 
          * disk.  This property is not used if DQP_BUFFER_USEDISK = true.  The 
-         * value is in megabytes.  Default value is 32.   
+         * value is in megabytes.  Default value is 64.   
          */
         public static final String DQP_BUFFER_MEMORY = BUFFER_PREFIX + ".memory"; //$NON-NLS-1$
         

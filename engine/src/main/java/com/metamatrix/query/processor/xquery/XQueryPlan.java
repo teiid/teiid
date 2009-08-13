@@ -38,7 +38,6 @@ import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
-import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.common.types.XMLType;
@@ -64,7 +63,6 @@ public class XQueryPlan extends BaseProcessorPlan {
     private ProcessorDataManager dataManager;
 
     private int chunkSize = Streamable.STREAMING_BATCH_SIZE_IN_BYTES;
-    private TupleSourceID resultsTupleSourceId;
 
     /**
      * Constructor
@@ -113,10 +111,6 @@ public class XQueryPlan extends BaseProcessorPlan {
      * @see com.metamatrix.query.processor.ProcessorPlan#open()
      */
     public void open() throws MetaMatrixComponentException {
-        // no plans to open, processing is done in Xquery engine
-        if (this.resultsTupleSourceId == null) {
-            this.resultsTupleSourceId = XMLUtil.createXMLTupleSource(bufferMgr, getContext().getConnectionID());
-        }                
     }
 
     /**
@@ -175,10 +169,6 @@ public class XQueryPlan extends BaseProcessorPlan {
             rows.add(row);        
             TupleBatch batch = new TupleBatch(1, rows);
             batch.setTerminationFlag(true);
-            
-            // add the top to buffer and return the batch.
-            this.bufferMgr.addTupleBatch(this.resultsTupleSourceId, batch);
-            this.bufferMgr.setStatus(this.resultsTupleSourceId, TupleSourceStatus.FULL);            
             return batch;
         } catch (TupleSourceNotFoundException e) {
             throw new MetaMatrixComponentException(e);
@@ -190,14 +180,6 @@ public class XQueryPlan extends BaseProcessorPlan {
      * @see com.metamatrix.query.processor.ProcessorPlan#close()
      */
     public void close() throws MetaMatrixComponentException {
-        if (this.resultsTupleSourceId != null) {
-            try {
-                this.bufferMgr.removeTupleSource(this.resultsTupleSourceId);
-            } catch (TupleSourceNotFoundException e) {
-                // ignore and go on, may be removed already.
-            }
-            this.resultsTupleSourceId = null;
-        }
     }
 
     /**

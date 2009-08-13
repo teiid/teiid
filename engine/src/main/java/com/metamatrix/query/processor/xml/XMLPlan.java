@@ -66,7 +66,6 @@ import com.metamatrix.common.buffer.BlockedOnMemoryException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSourceID;
-import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
@@ -107,11 +106,6 @@ public class XMLPlan extends BaseProcessorPlan {
 
     private int nextBatchCount = 1;
         
-    // this is tuple source id for the main batch of results, where multiple
-    // xml documents are stored. This is different from the individual tuple source
-    // id that each XML document is stored. This would be parent tuple source.
-    TupleSourceID resultsTupleSourceId = null;
-    
     // is document in progress currently?
     boolean docInProgress = false;
     TupleSourceID docInProgressTupleSourceId = null;
@@ -175,9 +169,6 @@ public class XMLPlan extends BaseProcessorPlan {
     }
 
     public void open() throws MetaMatrixComponentException {
-        if (this.resultsTupleSourceId == null) {
-            this.resultsTupleSourceId = XMLUtil.createXMLTupleSource(bufferMgr, getContext().getConnectionID());
-        }        
     }
 
     /**
@@ -194,7 +185,6 @@ public class XMLPlan extends BaseProcessorPlan {
 	        if (rows == null){
 	        	TupleBatch batch = new TupleBatch(nextBatchCount++, Collections.EMPTY_LIST); 
 	        	batch.setTerminationFlag(true);
-                addBatchToBufferManager(batch);
 	        	return batch;
 	        }
             
@@ -205,21 +195,8 @@ public class XMLPlan extends BaseProcessorPlan {
 	        TupleBatch batch = new TupleBatch(nextBatchCount++, listOfRows);
             // when true; multiple doc return fails.
     	    batch.setTerminationFlag(false);
-            addBatchToBufferManager(batch);
         	return batch;
         }
-    }
-
-    
-    void addBatchToBufferManager(TupleBatch batch) throws MetaMatrixComponentException {        
-        try {
-            this.bufferMgr.addTupleBatch(this.resultsTupleSourceId, batch);
-            if (batch.getTerminationFlag()) {
-                this.bufferMgr.setStatus(this.resultsTupleSourceId, TupleSourceStatus.FULL);
-            }
-        } catch (TupleSourceNotFoundException e) {
-            throw new MetaMatrixComponentException(e);
-        } 
     }
     
     /**
@@ -614,14 +591,6 @@ public class XMLPlan extends BaseProcessorPlan {
      * @see com.metamatrix.query.processor.ProcessorPlan#close()
      */
     public void close() throws MetaMatrixComponentException {
-        if (this.resultsTupleSourceId != null) {
-            try {
-                this.bufferMgr.removeTupleSource(this.resultsTupleSourceId);
-            } catch (TupleSourceNotFoundException e) {
-                // ignore and go on, may be removed already.
-            }
-            this.resultsTupleSourceId = null;
-        }
     }
 
     public String toString() {
