@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+   <appender name="ASYNC" class="org.apache.log4j.AsyncAppender">
+     <appender-ref ref="FILE"/>
+   </appender>
+
+   <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
+     <param name="File" value="${dqp.log4jFile}"/>
+     <param name="MaxFileSize" value="1000KB"/>
+     <param name="MaxBackupIndex" value="25"/>
+
+     <layout class="org.apache.log4j.PatternLayout">
+       <param name="ConversionPattern" value="%d %p [%t] %c - %m%n"/>
+     </layout>	    
+   </appender>
+
+   <!-- Console Appender
+   <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+      <param name="Target" value="System.out"/>
+      <param name="Threshold" value="INFO"/>
+      <layout class="org.apache.log4j.PatternLayout">
+         <param name="ConversionPattern" value="%d %p [%t] %c - %m%n"/>
+      </layout>
+   </appender>
+   -->
+   
+   <!-- ================ -->
+   <!-- categories       -->
+   <!-- ================ -->
+
+   <category name="org.jgroups">
+      <priority value="WARN"/>
+   </category>
+   
+   <category name="com.arjuna">
+     <priority value="WARN" />
+   </category>
+
+   <category name="org.jboss">
+      <priority value="WARN"/>
+   </category>
+   
+   <category name="org.teiid">
+     <priority value="WARN" />
+   </category>
+   
+   <!-- un-comment to enable COMMAND log
+   <appender name="COMMAND" class="org.apache.log4j.RollingFileAppender">
+      <param name="File" value="log/command.log"/>
+     <param name="MaxFileSize" value="1000KB"/>
+     <param name="MaxBackupIndex" value="25"/>
+      <layout class="org.apache.log4j.PatternLayout">
+         <param name="ConversionPattern" value="%d %p [%t] %c - %m%n"/>
+      </layout>
+   </appender>   
+    
+   <category name="org.teiid.COMMAND_LOG">
+      <priority value="INFO"/>
+      <appender-ref ref="COMMAND"/>
+   </category>
+   -->
+   
+   <!-- Un-comment to enable AUDIT log    
+   <appender name="AUDIT" class="org.apache.log4j.RollingFileAppender">
+      <param name="File" value="log/audit.log"/>
+     <param name="MaxFileSize" value="1000KB"/>
+     <param name="MaxBackupIndex" value="25"/>
+      <layout class="org.apache.log4j.PatternLayout">
+         <param name="ConversionPattern" value="%d %p [%t] %c - %m%n"/>
+      </layout>
+   </appender>   
+   
+   <category name="org.teiid.AUDIT_LOG">
+      <priority value="INFO"/>      
+      <appender-ref ref="AUDIT"/>      
+   </category>
+    -->
+   
+   <root>
+      <appender-ref ref="ASYNC"/>
+   </root>
+
+</log4j:configuration>
