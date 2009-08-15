@@ -119,7 +119,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		@Override
 		public void validate(Object value) throws QueryValidatorException {
 			if (((Integer)value).intValue() < 0) {
-				throw new QueryValidatorException(QueryPlugin.Util.getString(msgKey)); //$NON-NLS-1$
+				throw new QueryValidatorException(QueryPlugin.Util.getString(msgKey)); 
 			}
 		}
 	}
@@ -162,7 +162,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	public void visit(Delete obj) {
     	validateNoXMLUpdates(obj);
         validateHasProjectedSymbols(obj);
-        validateGroupUpdatable(obj);
+        validateGroupSupportsUpdate(obj.getGroup());
         if (obj.getGroup().isTempTable()) {
             handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.update_temp", obj.getGroup()), obj.getGroup()); //$NON-NLS-1$
         }
@@ -201,7 +201,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(Insert obj) {
         validateNoXMLUpdates(obj);
         validateHasProjectedSymbols(obj);
-        validateGroupUpdatable(obj);
+        validateGroupSupportsUpdate(obj.getGroup());
         validateInsert(obj);
     }
 
@@ -269,28 +269,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(Update obj) {
         validateNoXMLUpdates(obj);
         validateHasProjectedSymbols(obj);
-        validateGroupUpdatable(obj);
+        validateGroupSupportsUpdate(obj.getGroup());
         validateUpdate(obj);
     }
 
     public void visit(Into obj) {
         GroupSymbol target = obj.getGroup();
-        validateInsertGroup(obj, target);
+        validateGroupSupportsUpdate(target);
     }
 
-    private void validateInsertGroup(LanguageObject obj,
-                                     GroupSymbol target) {
-        try {
-            if(!target.isTempGroupSymbol() && getMetadata().isVirtualGroup(target.getMetadataID())) {
-                handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0070),obj);
-            } else {
-                validateGroupSupportsUpdate(target);
-            }
-        } catch (MetaMatrixComponentException e) {
-            handleException(e, obj);
-        }
-    }
-    
     public void visit(Function obj) {
     	if(FunctionLibrary.LOOKUP.equalsIgnoreCase(obj.getName())) {
     		try {
@@ -658,25 +645,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0032), obj);
         }
         if(obj.getLimit() != null) {
-            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.limit_not_valid_for_xml"), obj);
+            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.limit_not_valid_for_xml"), obj); //$NON-NLS-1$
         }
     }
     
-    protected void validateGroupSupportsUpdate(GroupSymbol groupSymbol) throws QueryMetadataException, MetaMatrixComponentException {
-        if(! getMetadata().groupSupports(groupSymbol.getMetadataID(), SupportConstants.Group.UPDATE)) {
-            handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0033, SQLStringVisitor.getSQLString(groupSymbol)), groupSymbol);
-        }
+    protected void validateGroupSupportsUpdate(GroupSymbol groupSymbol) {
+    	try {
+	    	if(! getMetadata().groupSupports(groupSymbol.getMetadataID(), SupportConstants.Group.UPDATE)) {
+	            handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0033, SQLStringVisitor.getSQLString(groupSymbol)), groupSymbol);
+	        }
+	    } catch (MetaMatrixComponentException e) {
+	        handleException(e, groupSymbol);
+	    }
     }
     
-    protected void validateGroupUpdatable(Command obj) {
-        try {
-            Collection groups = GroupCollectorVisitor.getGroups(obj, true);
-            validateGroupSupportsUpdate((GroupSymbol) groups.iterator().next());
-        } catch(MetaMatrixComponentException e) {
-            handleException(e, obj);
-        }
-    }
-
     protected void validateSetQuery(SetQuery query) {
         // Walk through sub queries - validate each one separately and
         // also check the columns of each for comparability
@@ -764,11 +746,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				}
 			}
 
-            if ( obj.getQueryExpression() != null) {
-                validateInsertGroup(obj, obj.getGroup());
-                return;
-            }
-            
             //check to see if the elements support nulls in metadata,
             // if any of the value present in the insert are null
             while(valIter.hasNext() && varIter.hasNext()) {

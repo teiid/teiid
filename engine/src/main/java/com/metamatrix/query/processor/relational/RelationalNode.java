@@ -89,6 +89,10 @@ public abstract class RelationalNode implements Cloneable, Describable{
 		this.nodeID = nodeID;
 	}
 	
+	public boolean isLastBatch() {
+		return lastBatch;
+	}
+	
 	public void setContext(CommandContext context) {
 		this.context = context;
 	}
@@ -247,14 +251,13 @@ public abstract class RelationalNode implements Cloneable, Describable{
     public TupleBatch nextBatch() throws BlockedException,  MetaMatrixComponentException, MetaMatrixProcessingException {
         boolean recordStats = this.context != null && (this.context.getCollectNodeStatistics() || this.context.getProcessDebug());
         
-        //start timer for this batch
-        if(recordStats && this.context.getCollectNodeStatistics()) {
-            this.nodeStatistics.startBatchTimer();
-        }
-
         TupleBatch batch = null;
         try {
             while (true) {
+            	//start timer for this batch
+                if(recordStats && this.context.getCollectNodeStatistics()) {
+                    this.nodeStatistics.startBatchTimer();
+                }
                 batch = nextBatchDirect();
                 if (recordStats) {
                     if(this.context.getCollectNodeStatistics()) {
@@ -271,7 +274,7 @@ public abstract class RelationalNode implements Cloneable, Describable{
                 //24663: only return non-zero batches. 
                 //there have been several instances in the code that have not correctly accounted for non-terminal zero length batches
                 //this processing style however against the spirit of batch processing (but was already utilized by Sort and Grouping nodes)
-                if (batch.getSize() != 0 || batch.getTerminationFlag()) {
+                if (batch.getRowCount() != 0 || batch.getTerminationFlag()) {
                     break;
                 }
             }

@@ -63,17 +63,21 @@ public class PlanExecutionNode extends RelationalNode {
     
 	public void open() 
 		throws MetaMatrixComponentException, MetaMatrixProcessingException {
-
+		super.open();
         // Initialize plan for execution
         CommandContext subContext = (CommandContext) getContext().clone();
         subContext.pushVariableContext(new VariableContext());
         plan.initialize(subContext, getDataManager(), this.getBufferManager());        
         
-        if (prepareNextCommand()) {
+        if (openPlanImmediately() && prepareNextCommand()) {
             needsProcessing = true;
             plan.open();
             isOpen = true;
         }
+	}
+	
+	protected boolean openPlanImmediately() {
+		return true;
 	}
 	
 	public TupleBatch nextBatchDirect()
@@ -104,18 +108,20 @@ public class PlanExecutionNode extends RelationalNode {
         }
         
 		TupleBatch batch = plan.nextBatch();
-        boolean lastBatch = batch.getTerminationFlag();
        
-        if(lastBatch) {
-            if (!hasNextCommand()) {
-                terminateBatches();
-            } else {
-                lastBatch = false;
-                resetPlan();
-            }
+        for (List tuple : batch.getAllTuples()) {
+            addBatchRow(tuple);
+		}
+        
+        if(batch.getTerminationFlag()) {
+        	if (hasNextCommand()) {
+        		resetPlan();
+        	} else {
+        		terminateBatches();
+        	}
         }
-        batch.setTerminationFlag(lastBatch);
-        return batch;
+        
+        return pullBatch();
 	}
 
     protected boolean prepareNextCommand() throws BlockedException,

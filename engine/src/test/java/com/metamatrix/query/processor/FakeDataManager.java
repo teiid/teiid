@@ -23,6 +23,7 @@
 package com.metamatrix.query.processor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +39,9 @@ import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CommandContainer;
+import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.From;
+import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.SetQuery;
@@ -146,7 +149,7 @@ public class FakeDataManager implements ProcessorDataManager {
 		*  either came from a BatchedUpdateCommand or a signle 
 		*  command from an Update command.
 		*/
-		List<TranslatableProcedureContainer> updateCommands = new ArrayList<TranslatableProcedureContainer>();
+		List<Command> updateCommands = new ArrayList<Command>();
 		
 		// Apply query criteria to tuples
 		if(command instanceof Query){
@@ -177,48 +180,51 @@ public class FakeDataManager implements ProcessorDataManager {
 			    tuples = new List[filteredTuples.size()];
 			    filteredTuples.toArray(tuples);
 			}
-		} else if ( command instanceof TranslatableProcedureContainer ) {
+		} else if ( command instanceof Insert || command instanceof Update || command instanceof Delete) {
 			// add single update command to a list to be executed
-			updateCommands.add((TranslatableProcedureContainer)command);
+			updateCommands.add(command);
 		} else if ( command instanceof BatchedUpdateCommand ) {
-        	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 )
+        	if ( ((CommandContainer) command).getContainedCommands() != null && ((CommandContainer) command).getContainedCommands().size() > 0 ) {
 				// add all update commands to a list to be executed
-        		for ( int i = 0; i < ((CommandContainer) command).getContainedCommands().size(); i++ ) 
-        			if ( ((CommandContainer) command).getContainedCommands().get(i) instanceof TranslatableProcedureContainer ) {
-        				updateCommands.add(((TranslatableProcedureContainer) ((CommandContainer) command).getContainedCommands().get(i)));
-        		}
+        		updateCommands.addAll(((CommandContainer) command).getContainedCommands());
+        	}
 		}
 		
 		// if we had update commands added to the list, execute them now
 		if ( updateCommands.size() > 0 ) {
 		    List<List<Integer>> filteredTuples = new ArrayList<List<Integer>>();
 			for ( int c = 0; c < updateCommands.size(); c++ ) {
-				TranslatableProcedureContainer update = updateCommands.get(c);
-				if ( update.getCriteria() != null ) {
-				    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
-		            Map<Object, Integer> lookupMap = new HashMap<Object, Integer>();
-		            for(int i=0; i<elements.size(); i++) { 
-		                Object element = elements.get(i);
-	                    mapElementToIndex(lookupMap, element, new Integer(i), group);        
-		            }
-		            for(int i=0; i<projectedSymbols.size(); i++) { 
-		            	Object element = projectedSymbols.get(i);
-	                    mapElementToIndex(lookupMap, element, new Integer(columnMap[i]), group);
-		            }
-				    
-				    int updated = 0;
-				    for(int i=0; i<tuples.length; i++) {
-		                try {
-		    				if(new Evaluator(lookupMap, null, null).evaluate(update.getCriteria(), tuples[i])) {
-		                        updated++;
-		                    }
-		                } catch(CriteriaEvaluationException e) {
-		                    throw new MetaMatrixComponentException(e, e.getMessage());
-		                }
-				    }
-			    	List<Integer> updateTuple = new ArrayList<Integer>(1);
-			    	updateTuple.add( new Integer(updated) );
-                    filteredTuples.add(updateTuple);
+				Command cmd = updateCommands.get(c);
+				if (cmd instanceof TranslatableProcedureContainer) {
+					TranslatableProcedureContainer update = (TranslatableProcedureContainer)cmd;
+					if ( update.getCriteria() != null ) {
+					    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
+			            Map<Object, Integer> lookupMap = new HashMap<Object, Integer>();
+			            for(int i=0; i<elements.size(); i++) { 
+			                Object element = elements.get(i);
+		                    mapElementToIndex(lookupMap, element, new Integer(i), group);        
+			            }
+			            for(int i=0; i<projectedSymbols.size(); i++) { 
+			            	Object element = projectedSymbols.get(i);
+		                    mapElementToIndex(lookupMap, element, new Integer(columnMap[i]), group);
+			            }
+					    
+					    int updated = 0;
+					    for(int i=0; i<tuples.length; i++) {
+			                try {
+			    				if(new Evaluator(lookupMap, null, null).evaluate(update.getCriteria(), tuples[i])) {
+			                        updated++;
+			                    }
+			                } catch(CriteriaEvaluationException e) {
+			                    throw new MetaMatrixComponentException(e, e.getMessage());
+			                }
+					    }
+				    	List<Integer> updateTuple = new ArrayList<Integer>(1);
+				    	updateTuple.add( new Integer(updated) );
+	                    filteredTuples.add(updateTuple);
+					}
+				} else {
+					filteredTuples.add(Arrays.asList(1)); //TODO: check for bulk
 				}
 			}
 		    tuples = new List[filteredTuples.size()];

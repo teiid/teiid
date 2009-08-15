@@ -1631,8 +1631,8 @@ public class TestValidator extends TestCase {
                 FakeMetadataObject.Props.UPDATE_PROCEDURE);
     }
     
-    public void testInvalidSelectIntoVirtualGroup() {
-        helpValidate("SELECT e1, e2, e3, e4 INTO vm1.g1 FROM pm1.g2", new String[] {"vm1.g1"}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
+    public void testSelectIntoVirtualGroup() {
+        helpValidate("SELECT e1, e2, e3, e4 INTO vm1.g1 FROM pm1.g2", new String[] {}, FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
         
         String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1642,7 +1642,7 @@ public class TestValidator extends TestCase {
 
         String userQuery = "UPDATE vm1.g3 SET x='x' where y = 1"; //$NON-NLS-1$
 
-        helpFailProcedure(procedure, userQuery,
+        helpValidateProcedure(procedure, userQuery,
                 FakeMetadataObject.Props.UPDATE_PROCEDURE);
     }
     
@@ -1945,18 +1945,11 @@ public class TestValidator extends TestCase {
         helpValidate("update #temp set e1 = 1", new String[] {"#temp"}, metadata); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testSelectIntoVirtual() throws Exception {
-        QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
-        Command command = helpResolve("select * into vm1.g1 from pm1.g1", metadata); //$NON-NLS-1$
-        ValidatorReport report = Validator.validate(command, metadata);
-        assertEquals("The target table for a SELECT INTO or an INSERT with a query expression can only be a physical table or a temporary table.", report.toString()); //$NON-NLS-1$
-    }
-    
     public void testInsertIntoVirtualWithQuery() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         Command command = helpResolve("insert into vm1.g1 select 1, 2, true, 3", metadata); //$NON-NLS-1$
         ValidatorReport report = Validator.validate(command, metadata);
-        assertEquals("The target table for a SELECT INTO or an INSERT with a query expression can only be a physical table or a temporary table.", report.toString()); //$NON-NLS-1$
+        assertTrue(report.getItems().isEmpty());
     }
     
     public void testDynamicIntoDeclaredTemp() throws Exception {

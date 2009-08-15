@@ -55,10 +55,6 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
         this.inputReferences = references;
     }
     
-    /**
-     * @throws TupleSourceNotFoundException
-     * @see com.metamatrix.query.processor.relational.PlanExecutionNode#prepareNextCommand()
-     */
     protected boolean prepareNextCommand(VariableContext context) throws BlockedException,
                                           MetaMatrixComponentException, MetaMatrixProcessingException {
 

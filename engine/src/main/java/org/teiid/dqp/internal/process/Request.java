@@ -281,7 +281,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         if (multiSourceModels != null) {
             MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(
 					metadata, idGenerator, analysisRecord, capabilitiesFinder,
-					multiSourceModels, vdbName, vdbService, vdbVersion);
+					multiSourceModels, vdbName, vdbService, vdbVersion, context);
             context.setPlanToProcessConverter(modifier);
         }
 

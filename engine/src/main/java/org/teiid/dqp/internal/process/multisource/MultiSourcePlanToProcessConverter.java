@@ -46,6 +46,7 @@ import com.metamatrix.query.processor.relational.UnionAllNode;
 import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.navigator.DeepPreOrderNavigator;
+import com.metamatrix.query.util.CommandContext;
 
 public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 	
@@ -57,8 +58,8 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 	public MultiSourcePlanToProcessConverter(QueryMetadataInterface metadata,
 			IDGenerator idGenerator, AnalysisRecord analysisRecord,
 			CapabilitiesFinder capFinder, Set<String> multiSourceModels,
-			String vdbName, VDBService vdbService, String vdbVersion) {
-		super(metadata, idGenerator, analysisRecord, capFinder);
+			String vdbName, VDBService vdbService, String vdbVersion, CommandContext context) {
+		super(metadata, idGenerator, analysisRecord, capFinder, context);
 		this.multiSourceModels = multiSourceModels;
 		this.vdbName = vdbName;
 		this.vdbService = vdbService;

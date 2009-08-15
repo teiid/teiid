@@ -22,6 +22,7 @@
 
 package com.metamatrix.query.optimizer.relational;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -29,6 +30,8 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
+import com.metamatrix.api.exception.query.QueryResolverException;
+import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerID;
 import com.metamatrix.core.id.IntegerIDFactory;
@@ -37,6 +40,7 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataID;
+import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -49,6 +53,7 @@ import com.metamatrix.query.processor.relational.DependentAccessNode;
 import com.metamatrix.query.processor.relational.DependentProcedureAccessNode;
 import com.metamatrix.query.processor.relational.DependentProcedureExecutionNode;
 import com.metamatrix.query.processor.relational.GroupingNode;
+import com.metamatrix.query.processor.relational.InsertPlanExecutionNode;
 import com.metamatrix.query.processor.relational.JoinNode;
 import com.metamatrix.query.processor.relational.LimitNode;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy;
@@ -66,18 +71,24 @@ import com.metamatrix.query.processor.relational.UnionAllNode;
 import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
+import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolverUtil;
+import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
+import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class PlanToProcessConverter {
@@ -85,12 +96,14 @@ public class PlanToProcessConverter {
 	private IDGenerator idGenerator;
 	private AnalysisRecord analysisRecord;
 	private CapabilitiesFinder capFinder;
+	private CommandContext context;
 	
-	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder) {
+	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder, CommandContext context) {
 		this.metadata = metadata;
 		this.idGenerator = idGenerator;
 		this.analysisRecord = analysisRecord;
 		this.capFinder = capFinder;
+		this.context = context;
 	}
 	
     public RelationalPlan convert(PlanNode planNode)
@@ -155,31 +168,51 @@ public class PlanToProcessConverter {
 			case NodeConstants.Types.PROJECT:
                 GroupSymbol intoGroup = (GroupSymbol) node.getProperty(NodeConstants.Info.INTO_GROUP);
                 if(intoGroup != null) {
-                    ProjectIntoNode pinode = new ProjectIntoNode(getID());
-                    pinode.setIntoGroup(intoGroup);
                     try {
                         // Figure out what elements should be inserted based on what is being projected 
                         // from child node
-                        List allIntoElements = ResolverUtil.resolveElementsInGroup(intoGroup, metadata);
+                        List<ElementSymbol> allIntoElements = ResolverUtil.resolveElementsInGroup(intoGroup, metadata);
                         
-                        pinode.setIntoElements(allIntoElements);
-
+                        
                         Object groupID = intoGroup.getMetadataID();
                         Object modelID = metadata.getModelID(groupID);
                         String modelName = metadata.getFullName(modelID);
-                        pinode.setModelName(modelName);
-                        if (!metadata.isVirtualGroup(groupID) && !metadata.isTemporaryTable(groupID)) {
-                            SourceCapabilities caps = capFinder.findCapabilities(modelName);
-                            pinode.setDoBatching(caps.supportsCapability(Capability.BATCHED_UPDATES));
-                            pinode.setDoBulkInsert(caps.supportsCapability(Capability.BULK_UPDATE));
-                        } else if (metadata.isTemporaryTable(groupID)) {
-                            pinode.setDoBulkInsert(true);
+                        if (metadata.isVirtualGroup(groupID)) {
+                        	List<Reference> references = new ArrayList<Reference>(allIntoElements.size());
+                        	for (int i = 0; i < allIntoElements.size(); i++) {
+                        		Reference ref = new Reference(i);
+                        		ref.setType(allIntoElements.get(i).getType());
+								references.add(ref);
+							}
+                        	Insert insert = new Insert(intoGroup, allIntoElements, references);
+                        	QueryResolver.resolveCommand(insert, metadata, analysisRecord);
+                        	QueryRewriter.rewrite(insert, null, metadata, context);
+                        	ProcessorPlan plan = QueryOptimizer.optimizePlan(insert, metadata, idGenerator, capFinder, analysisRecord, context);
+                        	InsertPlanExecutionNode ipen = new InsertPlanExecutionNode(getID());
+                        	ipen.setProcessorPlan(plan);
+                        	ipen.setReferences(references);
+                        	processNode = ipen;
+                        } else {
+	                        ProjectIntoNode pinode = new ProjectIntoNode(getID());
+	                        pinode.setIntoGroup(intoGroup);
+	                        pinode.setIntoElements(allIntoElements);
+	                        pinode.setModelName(modelName);
+	                        processNode = pinode;
+	                        if (!metadata.isTemporaryTable(groupID)) {
+	                            SourceCapabilities caps = capFinder.findCapabilities(modelName);
+	                            pinode.setDoBatching(caps.supportsCapability(Capability.BATCHED_UPDATES));
+	                            pinode.setDoBulkInsert(caps.supportsCapability(Capability.BULK_UPDATE));
+	                        } else {
+	                            pinode.setDoBulkInsert(true);
+	                        } 
                         }
                     } catch(QueryMetadataException e) {
                         throw new MetaMatrixComponentException(e);
+                    } catch(QueryResolverException e) {
+                        throw new MetaMatrixComponentException(e);
+                    } catch(QueryValidatorException e) {
+                        throw new MetaMatrixComponentException(e);
                     }
-
-                    processNode = pinode;
 
                 } else {
                     List symbols = (List) node.getProperty(NodeConstants.Info.PROJECT_COLS);

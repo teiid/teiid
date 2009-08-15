@@ -147,7 +147,7 @@ public class RelationalPlanner implements CommandPlanner {
         	planToProcessConverter = context.getPlanToProcessConverter();
         }
         if (planToProcessConverter == null) {
-        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder);
+        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder, context);
         }
         
         RelationalPlan result = planToProcessConverter.convert(plan);

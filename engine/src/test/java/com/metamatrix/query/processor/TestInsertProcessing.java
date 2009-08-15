@@ -183,14 +183,6 @@ public class TestInsertProcessing {
         }; 
         
         helpProcess(plan, dataManager, expected);
-        
-        Insert insert = (Insert)dataManager.getCommandHistory().iterator().next();
-        //List lst = (List)insert.getParameterValues().get(0);
-        //Object value0 = lst.get(0);
-        //Object value1 = lst.get(1);
-        
-        //assertEquals(DataTypeManager.DefaultDataClasses.BIG_INTEGER, value0.getClass());
-        //assertEquals(DataTypeManager.DefaultDataClasses.FLOAT, value1.getClass());
     }
 
     
@@ -392,6 +384,23 @@ public class TestInsertProcessing {
             assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
             assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
         }        
+    }
+    
+    @Test public void testInsertIntoVirtualWithQueryExpression() { 
+        String sql = "insert into vm1.g1 (e1, e2, e3, e4) select * from pm1.g1"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(6),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+        
+        // Plan query
+        ProcessorPlan plan = helpGetPlan(sql, FakeMetadataFactory.example1Cached());
+
+        // Run query
+        helpProcess(plan, dataManager, expected);
     }
 
 }
