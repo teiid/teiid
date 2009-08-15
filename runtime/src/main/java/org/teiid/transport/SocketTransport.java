@@ -27,6 +27,7 @@ import java.net.UnknownHostException;
 import java.security.GeneralSecurityException;
 import java.util.Properties;
 
+import com.google.inject.name.Named;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPoolStats;
@@ -61,12 +62,12 @@ public class SocketTransport {
 		this.sessionSerice = sessionService;
 	}
 	
-    public void start() {
+    public void start(@Named(DQPEmbeddedProperties.HOST_ADDRESS) InetAddress hostAddress) {
         int socketPort = PropertiesUtils.getIntProperty(this.props, DQPEmbeddedProperties.SERVER_PORT, DEFAULT_SERVER_PORT);
         int maxThreads = PropertiesUtils.getIntProperty(this.props, DQPEmbeddedProperties.MAX_THREADS, DEFAULT_MAX_THREADS);
         int inputBufferSize = PropertiesUtils.getIntProperty(this.props, DQPEmbeddedProperties.INPUT_BUFFER_SIZE, DEFAULT_INPUT_BUFFER_SIZE);
         int outputBufferSize = PropertiesUtils.getIntProperty(this.props, DQPEmbeddedProperties.OUTPUT_BUFFER_SIZE, DEFAULT_OUTPUT_BUFFER_SIZE);
-        String bindAddress = ((InetAddress)props.get(DQPEmbeddedProperties.HOST_ADDRESS)).getHostAddress();
+        String bindAddress = hostAddress.getHostAddress();
         
         try {
 			SSLConfiguration helper = new SSLConfiguration();

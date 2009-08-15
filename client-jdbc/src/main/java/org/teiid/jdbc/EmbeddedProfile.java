@@ -55,6 +55,8 @@ import com.metamatrix.common.protocol.MMURLConnection;
 import com.metamatrix.common.protocol.MetaMatrixURLStreamHandlerFactory;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.MetaMatrixCoreException;
+import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.JDBCPlugin;
@@ -141,9 +143,9 @@ final class EmbeddedProfile {
 		}
         
         // now create the connection
-        EmbeddedTransport transport = getDQPTransport(dqpURL, info);                        
+        EmbeddedTransport transport = getDQPTransport(dqpURL);                        
         
-        MMConnection conn = transport.createConnection(dqpURL, info);
+        MMConnection conn = transport.createConnection(info);
         
         return conn;
     }
@@ -156,13 +158,13 @@ final class EmbeddedProfile {
      * @throws SQLException
      * @since 4.4
      */
-    private synchronized static EmbeddedTransport getDQPTransport(URL dqpURL, Properties info) throws SQLException {      
+    private synchronized static EmbeddedTransport getDQPTransport(URL dqpURL) throws SQLException {      
         EmbeddedTransport transport = currentTransport;
         if (transport == null || !currentTransport.getURL().equals(dqpURL)) {
         	// shutdown any previous instance; we do encourage single instance in a given VM
        		shutdown();
        		try {
-       			transport = new EmbeddedTransport(dqpURL, info);
+       			transport = new EmbeddedTransport(dqpURL);
        		} catch (SQLException e) {
                 logger.log(Level.SEVERE, "Could not start the embedded engine", e); //$NON-NLS-1$
        			throw e;
@@ -290,21 +292,18 @@ final class EmbeddedProfile {
 		private ServerConnectionFactory connectionFactory;
         private ClassLoader classLoader; 
         private URL url;
-        Properties props;
 
-        public EmbeddedTransport(URL dqpURL, Properties info) throws SQLException {
-
+        public EmbeddedTransport(URL dqpURL) throws SQLException {
         	this.url = dqpURL;
         	
             //Load the properties from dqp.properties file
-            this.props = loadDQPProperties(dqpURL);
-            this.props.putAll(info);
+            Properties props = loadDQPProperties(dqpURL);
             
-            this.props = PropertiesUtils.resolveNestedProperties(this.props);
+            props = PropertiesUtils.resolveNestedProperties(props);
                         
             // a non-delegating class loader will be created from where all third party dependent jars can be loaded
             ArrayList<URL> runtimeClasspathList = new ArrayList<URL>();
-            String libLocation = this.props.getProperty(DQPEmbeddedProperties.DQP_LIBDIR, "./lib/"); //$NON-NLS-1$
+            String libLocation = props.getProperty(DQPEmbeddedProperties.DQP_LIBDIR, "./lib/"); //$NON-NLS-1$
             if (!libLocation.endsWith("/")) { //$NON-NLS-1$
             	libLocation = libLocation + "/"; //$NON-NLS-1$
             }
@@ -315,7 +314,7 @@ final class EmbeddedProfile {
 	            runtimeClasspathList.addAll(libClassPath(dqpURL, libLocation, MMURLConnection.DATE));
             
 	            try {
-		            String configLocation = this.props.getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, "./deploy/"); //$NON-NLS-1$ 
+		            String configLocation = props.getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, "./deploy/"); //$NON-NLS-1$ 
 		            if (!configLocation.endsWith("/")) { //$NON-NLS-1$
 		            	configLocation = configLocation + "/"; //$NON-NLS-1$
 		            }
@@ -331,15 +330,23 @@ final class EmbeddedProfile {
             String logMsg = getResourceMessage("EmbeddedDriver.use_classpath"); //$NON-NLS-1$
             logger.log(Level.FINER, logMsg + " " + Arrays.toString(dqpClassPath)); //$NON-NLS-1$
 
+            props.setProperty(DQPEmbeddedProperties.BOOTURL, url.toExternalForm());
+            props.setProperty(DQPEmbeddedProperties.TEIID_HOME, getHomeDirectory(props));
             // Now using this class loader create the connection factory to the dqp.            
             ClassLoader current = Thread.currentThread().getContextClassLoader();            
             try {
                 Thread.currentThread().setContextClassLoader(this.classLoader);            
                 String className = "com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl"; //$NON-NLS-1$
-                Class<?> clazz = this.classLoader.loadClass(className);            
-                this.connectionFactory = (ServerConnectionFactory)clazz.newInstance();                
-            } catch (Exception e) {
-            	throw MMSQLException.create(e, "Could not load the embedded server, please ensure that your classpath is set correctly."); //$NON-NLS-1$                
+                try {
+	                this.connectionFactory = (ServerConnectionFactory)ReflectionHelper.create(className, null, this.classLoader);            
+	            } catch (MetaMatrixCoreException e) {
+	            	throw MMSQLException.create(e, "Could not load the embedded server, please ensure that your classpath is set correctly."); //$NON-NLS-1$
+	            }
+	            try {
+					this.connectionFactory.initialize(props);
+				} catch (MetaMatrixCoreException e) {
+					throw MMSQLException.create(e);
+				}
             } finally {
                 Thread.currentThread().setContextClassLoader(current);
             }                        
@@ -416,14 +423,12 @@ final class EmbeddedProfile {
          * @param info
          * @return Connection
          */
-        MMConnection createConnection(URL url, Properties info) throws SQLException {
+        MMConnection createConnection(Properties info) throws SQLException {
             ClassLoader current = null;            
             try {
                 current = Thread.currentThread().getContextClassLoader();             
                 Thread.currentThread().setContextClassLoader(classLoader);       
                 try {
-                	info.setProperty(DQPEmbeddedProperties.BOOTURL, url.toExternalForm());
-                	info.setProperty(DQPEmbeddedProperties.TEIID_HOME, getHomeDirectory(url));
 					ServerConnection conn = connectionFactory.createConnection(info);
 					return new MMConnection(conn, info, url.toExternalForm());
 				} catch (CommunicationException e) {
@@ -436,15 +441,9 @@ final class EmbeddedProfile {
             }            
         }
         
-        String getHomeDirectory(URL url) throws SQLException {
+        String getHomeDirectory(Properties props) throws SQLException {
         	try {
-        		// check the system wide
-        		String teiidHome = System.getProperty(DQPEmbeddedProperties.TEIID_HOME);
-
-        		// then check the deploy.properties
-        		if (teiidHome == null) {
-        			teiidHome = this.props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
-        		}
+    			String teiidHome = props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
         		
         		if (teiidHome == null) {
     	        	if (EmbeddedProfile.getDefaultConnectionURL().equals(url.toString())) {

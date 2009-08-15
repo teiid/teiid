@@ -164,7 +164,7 @@ public class TestCommSockets {
 		p.setProperty(MMURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
 		if (sscf == null) {
 			sscf = new SocketServerConnectionFactory();
-			sscf.init(socketConfig);
+			sscf.initialize(socketConfig);
 		}
 		return sscf.createConnection(p);
 	}

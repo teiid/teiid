@@ -22,7 +22,7 @@
 
 package com.metamatrix.jdbc;
 
-import static org.teiid.dqp.internal.process.Util.convertStats;
+import static org.teiid.dqp.internal.process.Util.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +31,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Properties;
 
@@ -58,7 +59,9 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.protocol.URLHelper;
 import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.JMXUtil;
+import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.MixinProxy;
 import com.metamatrix.dqp.ResourceFinder;
@@ -89,21 +92,15 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     private Thread shutdownThread;
     private ClientServiceRegistry clientServices;
     private String workspaceDirectory;
-    private boolean init = false;
     private SocketTransport socketTransport;
     private JMXUtil jmxServer;
     private boolean restart = false;
+	private InetAddress address;
     
 	@Override
 	public ServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
-    	try {
-    		initialize(connectionProperties);
-            return new LocalServerConnection(connectionProperties, this.clientServices);
-    	} catch (ApplicationInitializationException e) {
-            throw new ConnectionException(e, e.getMessage());
-		}
+        return new LocalServerConnection(connectionProperties, this.clientServices);
 	}
-    
         
     /**
      * When the DQP is restarted using the admin API, it only shuts it down, it gets
@@ -114,26 +111,13 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
      * @throws ApplicationInitializationException 
      * @since 4.3
      */
-     public synchronized void initialize(Properties info) throws ApplicationInitializationException {
-    	if (this.init) {
-    		return;
-    	}
-        
-        URL bootstrapURL = null;
-        Properties props = new Properties(System.getProperties());
-        String processName = "embedded"; //$NON-NLS-1$
+     public void initialize(Properties props) throws MetaMatrixCoreException {
+        URL bootstrapURL = URLHelper.buildURL(props.getProperty(DQPEmbeddedProperties.BOOTURL));
+        String processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME, "embedded"); //$NON-NLS-1$
         
         try {
-			bootstrapURL = URLHelper.buildURL(info.getProperty(DQPEmbeddedProperties.BOOTURL));
-			props.putAll(PropertiesUtils.loadFromURL(bootstrapURL));
-			props.putAll(info);
-			props = PropertiesUtils.resolveNestedProperties(props);
-			
-			processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME, processName); 
-			props.setProperty(DQPEmbeddedProperties.PROCESSNAME, processName);
-			
 	        // Create a temporary workspace directory
-			String teiidHome = info.getProperty(DQPEmbeddedProperties.TEIID_HOME);
+			String teiidHome = props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
 	        this.workspaceDirectory = createWorkspace(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR, "work"), processName); //$NON-NLS-1$
 	        props.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, this.workspaceDirectory);
 	        
@@ -158,8 +142,9 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 		}
 		
 		this.jmxServer = new JMXUtil(processName);
-		
-        EmbeddedGuiceModule config = new EmbeddedGuiceModule(bootstrapURL, props, this.jmxServer);
+		address = resolveHostAddress(props.getProperty(DQPEmbeddedProperties.BIND_ADDRESS));
+
+        EmbeddedGuiceModule config = new EmbeddedGuiceModule(bootstrapURL, props, this.jmxServer, address);
 		Injector injector = Guice.createInjector(config);
 		ResourceFinder.setInjector(injector);
 		config.setInjector(injector);
@@ -182,16 +167,30 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         boolean enableSocketTransport = PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.ENABLE_SOCKETS, false);
         if (enableSocketTransport) {
 	        this.socketTransport = new SocketTransport(props, this.clientServices, (SessionServiceInterface)findService(DQPServiceNames.SESSION_SERVICE));
-	        this.socketTransport.start();
+	        this.socketTransport.start(address);
         }
         
     	this.shutdownThread = new ShutdownWork();
     	Runtime.getRuntime().addShutdownHook(this.shutdownThread);
         
         this.starttime = System.currentTimeMillis();
-        this.init = true;
         DQPEmbeddedPlugin.logInfo("DQPEmbeddedManager.start_dqp", new Object[] {new Date(System.currentTimeMillis()).toString()}); //$NON-NLS-1$
     }
+     
+    public InetAddress getAddress() {
+		return address;
+	}
+     
+ 	private InetAddress resolveHostAddress(String bindAddress) {
+		try {
+			if (bindAddress == null) {
+				return NetUtils.getInstance().getInetAddress();
+			}
+			return NetUtils.resolveHostByName(bindAddress);	
+		} catch (UnknownHostException e) {
+			throw new MetaMatrixRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
+		}
+	}
     
 	private ClientServiceRegistry createClientServices(ConfigurationService configService) {
     	ClientServiceRegistry services  = new ClientServiceRegistry();
@@ -338,8 +337,6 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         
         // shutdown the cache.
         ResourceFinder.getCacheFactory().destroy();
-        
-        this.init = false;
         
 		this.restart = restart;
     }

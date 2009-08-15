@@ -26,8 +26,11 @@ import java.util.Properties;
 
 import com.metamatrix.common.comm.exception.CommunicationException;
 import com.metamatrix.common.comm.exception.ConnectionException;
+import com.metamatrix.core.MetaMatrixCoreException;
 
 public interface ServerConnectionFactory {
+	
+	void initialize(Properties info) throws MetaMatrixCoreException;
 	
     /**
      * Establish a connection to the server.  

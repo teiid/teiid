@@ -106,6 +106,7 @@ class Log4JUtil {
 		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_COMMANDLOGGING);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_AUDITLOGGING);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_QUERY_SERVICE);
+		contexts.add(ROOT_CONTEXT+com.metamatrix.dqp.util.LogConstants.CTX_PROCESS_INFO_LOG);
 
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_CONFIG);
 		contexts.add(ROOT_CONTEXT+com.metamatrix.common.util.LogConstants.CTX_COMMUNICATION);

@@ -22,7 +22,6 @@
 
 package com.metamatrix.jdbc;
 
-import java.io.File;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -32,7 +31,6 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.metamatrix.core.log.LogListener;
-import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 
 @Singleton
 class LogListernerProvider implements Provider<LogListener> {
@@ -42,11 +40,6 @@ class LogListernerProvider implements Provider<LogListener> {
 	
 	@Override
 	public LogListener get() {
-        String logDirectory = this.props.getProperty(DQPEmbeddedProperties.DQP_LOGDIR);
-        String processName = this.props.getProperty(DQPEmbeddedProperties.PROCESSNAME);        
-
-    	File logFile = new File(logDirectory, "teiid_"+processName+".log"); //$NON-NLS-1$ //$NON-NLS-2$
-    	System.setProperty("dqp.log4jFile", logFile.getAbsolutePath()); //$NON-NLS-1$ // hack
     	return new Log4jListener();
 	}
 

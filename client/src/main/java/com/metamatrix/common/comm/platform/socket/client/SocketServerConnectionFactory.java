@@ -170,7 +170,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 					}
 				}
 			}
-			INSTANCE.init(props);
+			INSTANCE.initialize(props);
 		}
 		return INSTANCE;
 	}
@@ -178,11 +178,12 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 	public SocketServerConnectionFactory() {
 		
 	}
-		
-	public void init(final Properties props) {
-		PropertiesUtils.setBeanProperties(this, props, "org.teiid.sockets"); //$NON-NLS-1$
+	
+	@Override
+	public void initialize(Properties info) {
+		PropertiesUtils.setBeanProperties(this, info, "org.teiid.sockets"); //$NON-NLS-1$
 		this.pingTimer = new Timer("SocketPing", true); //$NON-NLS-1$
-		this.channelFactory = new OioOjbectChannelFactory(props);
+		this.channelFactory = new OioOjbectChannelFactory(info);
 	}
 			
 	public SocketServerInstance getServerInstance(HostInfo info, boolean ssl) throws CommunicationException, IOException {

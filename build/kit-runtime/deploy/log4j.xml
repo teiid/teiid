@@ -7,7 +7,7 @@
    </appender>
 
    <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
-     <param name="File" value="${dqp.log4jFile}"/>
+     <param name="File" value="log/teiid.log"/>
      <param name="MaxFileSize" value="1000KB"/>
      <param name="MaxBackupIndex" value="25"/>
 
@@ -48,7 +48,7 @@
    
    <!-- un-comment to enable COMMAND log
    <appender name="COMMAND" class="org.apache.log4j.RollingFileAppender">
-      <param name="File" value="log/command.log"/>
+     <param name="File" value="log/command.log"/>
      <param name="MaxFileSize" value="1000KB"/>
      <param name="MaxBackupIndex" value="25"/>
       <layout class="org.apache.log4j.PatternLayout">
@@ -64,7 +64,7 @@
    
    <!-- Un-comment to enable AUDIT log    
    <appender name="AUDIT" class="org.apache.log4j.RollingFileAppender">
-      <param name="File" value="log/audit.log"/>
+     <param name="File" value="log/audit.log"/>
      <param name="MaxFileSize" value="1000KB"/>
      <param name="MaxBackupIndex" value="25"/>
       <layout class="org.apache.log4j.PatternLayout">
@@ -75,6 +75,22 @@
    <category name="org.teiid.AUDIT_LOG">
       <priority value="INFO"/>      
       <appender-ref ref="AUDIT"/>      
+   </category>
+    -->
+
+   <!-- Un-comment to enable Process Info log    
+   <appender name="PROCESS_INFO" class="org.apache.log4j.RollingFileAppender">
+     <param name="File" value="log/process_info.log"/>
+     <param name="MaxFileSize" value="1000KB"/>
+     <param name="MaxBackupIndex" value="25"/>
+      <layout class="org.apache.log4j.PatternLayout">
+         <param name="ConversionPattern" value="%d %p [%t] %c - %m%n"/>
+      </layout>
+   </appender>   
+   
+   <category name="org.teiid.PROCESS_INFO_LOG">
+      <priority value="INFO"/>      
+      <appender-ref ref="PROCESS_INFO"/>      
    </category>
     -->
    

@@ -27,13 +27,26 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
-import com.metamatrix.common.application.exception.ApplicationInitializationException;
+import com.metamatrix.common.config.api.ExtensionModule;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.util.ApplicationInfo;
+import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.JMXUtil.FailedToRegisterException;
+import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.core.util.FileUtils;
+import com.metamatrix.core.util.ZipFileUtil;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+import com.metamatrix.dqp.embedded.services.EmbeddedConfigurationService;
+import com.metamatrix.dqp.service.DQPServiceNames;
+import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
 
 public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean  {
@@ -50,11 +63,11 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 			initialize(this.props);
 			
 			getJMXServer().register(TYPE, NAME, this); 
-						
-		}  catch (ApplicationInitializationException e) {
-			throw new MetaMatrixRuntimeException(e);
+									
 		} catch (FailedToRegisterException e) {
 			throw new MetaMatrixRuntimeException(e.getCause());
+		} catch (MetaMatrixCoreException e) {
+			throw new MetaMatrixRuntimeException(e);
 		} 
 	}
 	
@@ -85,7 +98,6 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 		}
 		return true;
 	}	
-
 	
 	private static Properties loadConfiguration(String configFile) {
 		File f = new File (configFile);
@@ -97,13 +109,14 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 		Properties props = null;
 		try {
 			FileReader bootProperties = new FileReader(f); 
-			props = new Properties();
+			props = new Properties(System.getProperties());
 			props.load(bootProperties);
 			
 			// enable socket communication by default.
 			props.setProperty(DQPEmbeddedProperties.ENABLE_SOCKETS, Boolean.TRUE.toString());
 			props.setProperty(DQPEmbeddedProperties.BOOTURL, f.getCanonicalPath());
 			props.setProperty(DQPEmbeddedProperties.TEIID_HOME, System.getProperty(DQPEmbeddedProperties.TEIID_HOME,f.getParentFile().getCanonicalPath()));
+			props = PropertiesUtils.resolveNestedProperties(props);
 		} catch (IOException e) {
 			System.out.println("Failed to load bootstrap properties file."); //$NON-NLS-1$
 			e.printStackTrace();
@@ -173,6 +186,10 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 		
 		System.out.println("Teiid Server started on port = "+ port + " in "+time/1000+" Secs"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_PROCESS_INFO_LOG, MessageLevel.INFO)) {
+			s.logProcessInfo();
+		}
+		
 		// wait.
 		while(s.isAlive()) {
 	        try {
@@ -192,4 +209,79 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 			System.exit(10);
 		}
 	}
+	
+    public void logProcessInfo() {
+        ApplicationInfo info = ApplicationInfo.getInstance();
+        StringBuffer sb = new StringBuffer("Process Information"); //$NON-NLS-1$
+
+        sb.append('\n');
+        sb.append(" Process Name:               " + props.getProperty(DQPEmbeddedProperties.PROCESSNAME) ); //$NON-NLS-1$
+        sb.append('\n');
+        sb.append(" Hostname:              " + getAddress().getCanonicalHostName() ); //$NON-NLS-1$
+        sb.append('\n');
+        sb.append(" Version:               ").append(ApplicationInfo.getInstance().getReleaseNumber()); //$NON-NLS-1$
+        sb.append('\n');
+        sb.append(" Build Date:            ").append(ApplicationInfo.getInstance().getBuildDate()); //$NON-NLS-1$
+                        
+        sb.append("\n---- System Properties ----\n");  //$NON-NLS-1$             
+        sb.append(PropertiesUtils.prettyPrint(System.getProperties()));
+
+        sb.append("\n---- Deploy Properties ----\n");  //$NON-NLS-1$                             
+        sb.append(PropertiesUtils.prettyPrint(props));
+                    
+        sb.append("\n# of Processors: " + java.lang.Runtime.getRuntime().availableProcessors());//$NON-NLS-1$  
+        sb.append("\nMax Avail memory: " + java.lang.Runtime.getRuntime().maxMemory());//$NON-NLS-1$               
+        sb.append("\nFree memory: " + java.lang.Runtime.getRuntime().freeMemory());//$NON-NLS-1$  
+        
+        sb.append(info.getClasspathInfo());
+        
+        sb.append("\n\n---- Extension Jars Manifest Info ----\n");  //$NON-NLS-1$             
+
+        logManifestInfoForExtensionModules(sb);
+        
+        LogManager.logInfo(LogConstants.CTX_PROCESS_INFO_LOG, sb.toString());
+    }
+    
+    private void logManifestInfoForExtensionModules(StringBuffer sb) {
+        try {
+        	EmbeddedConfigurationService ecs = (EmbeddedConfigurationService)getDQP().getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE);
+            for (ExtensionModule module : ecs.getExtensionModules()) {
+                sb.append("\n == Jar: " + module.getName() + " ===== " );  //$NON-NLS-1$ //$NON-NLS-2$  
+                
+                File tempArchive = File.createTempFile("teiid", ".jar"); //$NON-NLS-1$ //$NON-NLS-2$
+                tempArchive.deleteOnExit();
+            	FileUtils.write(module.getFileContents(), tempArchive);
+                
+                Manifest m = ZipFileUtil.getManifest(tempArchive);
+                tempArchive.delete();
+                if (m != null) {
+                    // only print the manifest info for MetaMatrix related jars that have
+                    // the product information section
+                    Attributes manifestAttributes = m.getMainAttributes();
+                    if(manifestAttributes == null || manifestAttributes.isEmpty()){
+                        continue;
+                        
+                    } 
+                                                
+                    for (Iterator ita = manifestAttributes.keySet().iterator(); ita.hasNext();) {
+                        Object n =  ita.next();
+                        Object v = manifestAttributes.get(n);
+                        
+                        sb.append("\n");//$NON-NLS-1$
+                        sb.append("   ");//$NON-NLS-1$
+                        sb.append(n.toString());
+                        sb.append(":        "); //$NON-NLS-1$
+                        sb.append(v.toString());
+                        
+                    }
+                    sb.append("\n");//$NON-NLS-1$
+                    
+                } 
+            }
+        } catch(Exception e) {
+            sb.append("**** Error: Unable to list manifest - msg: " + e.getMessage());//$NON-NLS-1$
+        } 
+        
+    }
+
 }

@@ -22,6 +22,7 @@
 
 package com.metamatrix.dqp.embedded;
 
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
@@ -54,7 +55,7 @@ public class TestEmbeddedConfigSource extends TestCase {
     	URL url = buildDQPUrl(UnitTestUtil.getTestDataPath() + "/bqt/fakebqt.properties"); //$NON-NLS-1$
     	p.load(url.openStream());
     	
-    	EmbeddedGuiceModule source = new EmbeddedGuiceModule(url, p, new JMXUtil("test")); //$NON-NLS-1$       
+    	EmbeddedGuiceModule source = new EmbeddedGuiceModule(url, p, new JMXUtil("test"), InetAddress.getLocalHost() ); //$NON-NLS-1$       
 		Injector injector = Guice.createInjector(source);
 		source.setInjector(injector);
 

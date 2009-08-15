@@ -24,7 +24,6 @@ package com.metamatrix.jdbc;
 
 import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +45,6 @@ import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.util.JMXUtil;
-import com.metamatrix.common.util.NetUtils;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.LogListener;
@@ -70,12 +68,14 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 	private Properties props;
 	private URL bootstrapURL;
 	private JMXUtil jmx;
+	private InetAddress bindAddress;
 	Injector injector;
 	
-	public EmbeddedGuiceModule(URL bootstrapURL, Properties props, JMXUtil jmxUtil) {
+	public EmbeddedGuiceModule(URL bootstrapURL, Properties props, JMXUtil jmxUtil, InetAddress bindAddress) {
 		this.bootstrapURL = bootstrapURL;
 		this.props = props;
 		this.jmx = jmxUtil;
+		this.bindAddress = bindAddress;
 	}
 	
 	@Override
@@ -87,9 +87,7 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 		bind(Properties.class).annotatedWith(Names.named("DQPProperties")).toInstance(this.props); //$NON-NLS-1$
 		bind(JMXUtil.class).annotatedWith(Names.named("jmx")).toInstance(this.jmx); //$NON-NLS-1$
 
-		InetAddress address = resolveHostAddress(props.getProperty(DQPEmbeddedProperties.BIND_ADDRESS));
-		bind(InetAddress.class).annotatedWith(Names.named(DQPEmbeddedProperties.HOST_ADDRESS)).toInstance(address);
-		this.props.put(DQPEmbeddedProperties.HOST_ADDRESS, address);
+		bind(InetAddress.class).annotatedWith(Names.named(DQPEmbeddedProperties.HOST_ADDRESS)).toInstance(bindAddress);
 
 		bind(Cache.class).toProvider(CacheProvider.class).in(Scopes.SINGLETON);
 		bind(CacheFactory.class).to(JBossCacheFactory.class).in(Scopes.SINGLETON);
@@ -103,18 +101,7 @@ public class EmbeddedGuiceModule extends AbstractModule implements DQPConfigSour
 		// this needs to be removed.
 		binder().requestStaticInjection(LogManager.class);
 	}
-	
-	private InetAddress resolveHostAddress(String bindAddress) {
-		try {
-			if (bindAddress == null) {
-				return NetUtils.getInstance().getInetAddress();
-			}
-			return NetUtils.resolveHostByName(bindAddress);	
-		} catch (UnknownHostException e) {
-			throw new MetaMatrixRuntimeException("Failed to resolve the bind address"); //$NON-NLS-1$
-		}
-	}
-	
+		
 	private void configureServices() {
 		Map<String, Class<? extends ApplicationService>> defaults = getDefaultServiceClasses();
 		for(int i=0; i<DQPServiceNames.ALL_SERVICES.length; i++) {
