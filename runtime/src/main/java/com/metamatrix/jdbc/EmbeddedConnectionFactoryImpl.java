@@ -112,10 +112,11 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
      * @since 4.3
      */
      public void initialize(Properties props) throws MetaMatrixCoreException {
-        URL bootstrapURL = URLHelper.buildURL(props.getProperty(DQPEmbeddedProperties.BOOTURL));
+        URL bootstrapURL = null;
         String processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME, "embedded"); //$NON-NLS-1$
         
         try {
+        	bootstrapURL = URLHelper.buildURL(props.getProperty(DQPEmbeddedProperties.BOOTURL));
 	        // Create a temporary workspace directory
 			String teiidHome = props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
 	        this.workspaceDirectory = createWorkspace(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR, "work"), processName); //$NON-NLS-1$
