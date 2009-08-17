@@ -63,41 +63,41 @@
    <!-- categories       -->
    <!-- ================ -->
 
-   <category name="org.jgroups">
+   <logger name="org.jgroups">
       <priority value="WARN"/>
-   </category>
+   </logger>
    
-   <category name="com.arjuna">
+   <logger name="com.arjuna">
      <priority value="WARN" />
-   </category>
+   </logger>
 
-   <category name="org.jboss">
+   <logger name="org.jboss">
       <priority value="WARN"/>
-   </category>
+   </logger>
    
-   <category name="org.teiid">
+   <logger name="org.teiid">
      <priority value="WARN" />
-   </category>   
+   </logger>   
    
    <!-- un-comment to enable COMMAND log
-   <category name="org.teiid.COMMAND_LOG">
+   <logger name="org.teiid.COMMAND_LOG" additivity="false">
       <priority value="INFO"/>
       <appender-ref ref="COMMAND"/>
-   </category>
+   </logger>
    -->
    
    <!-- Un-comment to enable AUDIT log
-   <category name="org.teiid.AUDIT_LOG">
+   <logger name="org.teiid.AUDIT_LOG" additivity="false">
       <priority value="INFO"/>      
       <appender-ref ref="AUDIT"/>      
-   </category>
+   </logger>
     -->
    
    <!-- Un-comment to enable Process Info log
-   <category name="org.teiid.PROCESS_INFO_LOG">
+   <logger name="org.teiid.PROCESS_INFO_LOG" additivity="false">
       <priority value="INFO"/>      
       <appender-ref ref="PROCESS_INFO"/>      
-   </category>
+   </logger>
     -->
    
    <root>
