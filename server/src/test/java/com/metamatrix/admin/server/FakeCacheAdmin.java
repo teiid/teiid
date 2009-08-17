@@ -39,7 +39,6 @@ import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.platform.service.api.CacheAdmin;
 import com.metamatrix.platform.service.api.ServiceID;
 import com.metamatrix.platform.service.api.ServiceInterface;
@@ -162,12 +161,5 @@ public class FakeCacheAdmin implements CacheAdmin, ServiceInterface {
 	public ServiceData getServiceData() {
 		return null;
 	}
-
-	@Override
-	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
-		return null;
-	}
-	
-	
 
 }

@@ -31,12 +31,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.adminapi.ConnectionPool;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -227,12 +229,16 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
      * @see com.metamatrix.dqp.service.DataService#getConnectionPoolStatistics(java.lang.String)
      * @since 6.1
      */
-    public Collection getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException {
+    public Collection<? extends ConnectionPool> getConnectionPoolStatistics(String connectorBindingName) throws MetaMatrixComponentException {
     	ConnectorBinding binding = getConnectorBinding(connectorBindingName);
         if (binding != null) {
             ConnectorManager mgr = getConnectorManager(binding);
             if (mgr != null ) {  
-            	return mgr.getConnectionPoolStats();
+            	Collection<MMConnectionPool> result = mgr.getConnectionPoolStats();
+            	for (MMConnectionPool mmConnectionPool : result) {
+					mmConnectionPool.setConnectorBindingIdentifier(binding.getDeployedName());
+				}
+            	return result;
             }
         }
         throw new ComponentNotFoundException(DQPEmbeddedPlugin.Util.getString("DataService.Unable_to_find_connector_manager_for_{0}_1", new Object[] { connectorBindingName })); //$NON-NLS-1$

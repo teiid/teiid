@@ -160,7 +160,7 @@ public interface MonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 6.1
      */
-    Collection getConnectionPoolStats(String identifier) throws AdminException;
+    Collection<? extends ConnectionPool> getConnectionPoolStats(String identifier) throws AdminException;
         
 
     /**

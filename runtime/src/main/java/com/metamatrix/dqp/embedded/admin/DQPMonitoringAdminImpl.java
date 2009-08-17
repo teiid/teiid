@@ -35,6 +35,7 @@ import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.ConnectionPool;
 import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.MonitoringAdmin;
 import org.teiid.adminapi.ProcessObject;
@@ -359,7 +360,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
     }
 
 	@Override
-	public Collection getConnectionPoolStats(String identifier)
+	public Collection<? extends ConnectionPool> getConnectionPoolStats(String identifier)
 			throws AdminException {
 		
 		try {

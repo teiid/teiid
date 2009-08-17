@@ -22,48 +22,52 @@
 
 package org.teiid.adminapi;
 
+import java.io.Serializable;
+
 
 /** 
- * This object holds the statisics for a ConnectionPool that is being utilized by a Connector.
+ * This object holds the statistics for a ConnectionPool that is being utilized by a Connector.
  * As per how many available connections
  * processed etc.
- * <p>An identifier for QueueWorkerPool, is nothing but the modules it self, like "DQP", 
+ * <p>An identifier for ConnectionPool, is nothing but the modules it self, like "DQP", 
  * "QueryService" or Connector Binding names etc.</p> 
  * 
  * @since 4.3
  */
-public interface ConnectionPool extends AdminObject {
+public interface ConnectionPool extends Serializable {
     /** 
      * @return Returns total number of current connections in the Connection Pool 
-     * @since 6.1
      */
-    public int getTotalConnections();
+    int getTotalConnections();
     
     /** 
      * @return Returns the number of connections waiting for use in the connection pool. 
-     * @since 6.1
      */
-    public int getConnectionsWaiting();
+    int getConnectionsWaiting();
     
     /** 
      * @return Returns the number of Connections currently in use by clients. 
-     * 
-     * @since 6.1
      */
-    public int getConnectionsInuse();
+    int getConnectionsInuse();
     
     /** 
      * @return Returns the number of Connections created since the Connection Pool was created. 
-     * @since 6.1
      */
     long getConnectionsCreated();
-    
     
     /**
      * @return The number of Connections destroyed since the Connection Pool was created. 
      */
     long getConnectionsDestroyed();
-    
 
+    /**
+     * @return true if this represents an XA connection pool
+     */
+	boolean isXAPoolType();
+
+	/**
+	 * @return the identifier of the connector binding this pool is used with
+	 */
+	String getConnectorBindingIdentifier();
 
 }

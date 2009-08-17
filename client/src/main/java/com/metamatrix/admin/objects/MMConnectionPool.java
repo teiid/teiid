@@ -2,30 +2,14 @@ package com.metamatrix.admin.objects;
 
 import org.teiid.adminapi.ConnectionPool;
 
-public class MMConnectionPool extends MMAdminObject implements ConnectionPool {
+public class MMConnectionPool implements ConnectionPool {
 	
 	/**
 	 * @since 6.1
 	 */
 	private static final long serialVersionUID = -2341549955193216875L;
 	
-	/** 
-	*  This will the name of the connector binding
-	*/
-	private String connectorBindingName;
-
-
-	/**
-	 * This will be identifier used in the registry to identify the connector
-	 * binding and in which host and process that it's running in
-	 */
-	private String connectorBindingIdentifier;
-	
-	
-	private int poolType;
-	
-
-	// current state
+	private boolean xa;
 	/**
 	 * Number of connections currently in use by a client
 	 */
@@ -39,8 +23,6 @@ public class MMConnectionPool extends MMAdminObject implements ConnectionPool {
 	 */
 	private int totalConnections;
 	
-	
-	// total counts never reset
 	/**
 	 * Total number of connections that have been destroyed since the inception of the pool
 	 */
@@ -49,41 +31,26 @@ public class MMConnectionPool extends MMAdminObject implements ConnectionPool {
 	 * Total number of connections that have been created since the inception of the pool
 	 */
 	private long connectionsCreated;
+	
+	private String connectorBindingIdentifier;
 
-	
-	public MMConnectionPool() {
-	}
-	
 	public boolean isXAPoolType() {
-		return (this.poolType==1?true:false);
+		return xa;
 	}
 	
-	public int getPoolType() {
-		return this.poolType;
+	public void setXa(boolean xa) {
+		this.xa = xa;
 	}
 	
-	public void setPoolType(int type) {
-		this.poolType = type;
-	}
-		
-	public String getConnectorBindingName() {
-		return connectorBindingName;
-	}
-	
-	public void setConnectorBindingName(String bindingName) {
-		this.connectorBindingName = bindingName;
-	}
-
-	
+	@Override
 	public String getConnectorBindingIdentifier() {
 		return connectorBindingIdentifier;
 	}
-
-	public void setConnectorBindingIdentifier(String identifier) {
-		this.connectorBindingIdentifier = identifier;
-	}	
-
-
+	
+	public void setConnectorBindingIdentifier(String connectorBindingIdentifier) {
+		this.connectorBindingIdentifier = connectorBindingIdentifier;
+	}
+	
 	public int getConnectionsInuse() {
 		return this.connectionInUse;
 	}
@@ -134,7 +101,7 @@ public class MMConnectionPool extends MMAdminObject implements ConnectionPool {
     public String toString() {
         StringBuffer str = new StringBuffer();
         
-        str.append(this.getIdentifier() + " ConnectionPoolStats:\n"); //$NON-NLS-1$
+        str.append(this.connectorBindingIdentifier + " ConnectionPoolStats:\n"); //$NON-NLS-1$
         str.append("\tisXAPoolType = " + isXAPoolType()); //$NON-NLS-1$
         str.append("\ttotalConnections = " + this.totalConnections); //$NON-NLS-1$
         str.append("\tinUseConnections = " + this.connectionInUse); //$NON-NLS-1$

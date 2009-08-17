@@ -543,6 +543,8 @@ public class AbstractAdminImpl {
                 return parent.getVDBs(identifier);
             case MMAdminObject.OBJECT_TYPE_TRANSACTION:
                 return parent.getTransactions();
+            case MMAdminObject.OBJECT_TYPE_CONNECTION_POOL:
+                return parent.getConnectionPoolStats(identifier);
             case MMAdminObject.OBJECT_TYPE_ENTITLEMENT:                
             case MMAdminObject.OBJECT_TYPE_MODEL:
             case MMAdminObject.OBJECT_TYPE_PROPERTY_DEFINITION:

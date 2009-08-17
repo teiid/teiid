@@ -22,12 +22,12 @@
 
 package org.teiid.dqp.internal.pooling.connector;
 
-import java.util.Collection;
+import static org.junit.Assert.*;
+
+import java.util.List;
 import java.util.Properties;
 
 import javax.transaction.Transaction;
-
-import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -38,6 +38,7 @@ import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 
+import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.common.application.ApplicationEnvironment;
 
 public class TestPooledConnector {
@@ -54,8 +55,14 @@ public class TestPooledConnector {
 		XAConnection conn1 = pc.getXAConnection(Mockito.mock(ExecutionContext.class), tc);
 		assertSame(conn, conn1);
 		
-		Collection stats = pc.getConnectionPoolStats();
+		List<MMConnectionPool> stats = pc.getConnectionPoolStats();
 		assertEquals(2, stats.size());
+		assertEquals(1, stats.get(1).getConnectionsCreated());
+		conn1.close(); //this is still in a txn so it should still be in use
+		
+		stats = pc.getConnectionPoolStats();
+		assertEquals(1, stats.get(1).getConnectionsInuse());
+		
 		pc.stop();
 	}
 

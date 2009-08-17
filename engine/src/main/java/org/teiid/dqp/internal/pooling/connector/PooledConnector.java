@@ -23,9 +23,9 @@
 package org.teiid.dqp.internal.pooling.connector;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.transaction.RollbackException;
@@ -42,7 +42,7 @@ import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWrapper;
 
-import com.metamatrix.common.stats.ConnectionPoolStats;
+import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.dqp.service.ConnectorStatus;
 
 
@@ -91,22 +91,15 @@ public class PooledConnector extends ConnectorWrapper {
 	private ConnectionPool pool;
 	private ConnectionPool xaPool;
 	
-	private ConnectionPoolStats poolStats=null;
-	private ConnectionPoolStats xaPoolStats=null;
-	
 	private Map<String, ConnectionWrapper> idToConnections = Collections.synchronizedMap(new HashMap<String, ConnectionWrapper>());
 	private ConnectorEnvironment environment;
 	
 	public PooledConnector(Connector actualConnector) {
 		super(actualConnector);
 		pool = new ConnectionPool(this);
-		poolStats = new ConnectionPoolStats(ConnectionPoolStats.NON_XA_POOL_TYPE);
-		poolStats.setConnectorBindingName(this.getConnectorBindingName());
 		
 		if (actualConnector instanceof XAConnector) {
 			xaPool = new ConnectionPool(this);
-			xaPoolStats = new ConnectionPoolStats(ConnectionPoolStats.XA_POOL_TYPE);
-			xaPoolStats.setConnectorBindingName(this.getConnectorBindingName());
 		}
 	}
 
@@ -178,15 +171,16 @@ public class PooledConnector extends ConnectorWrapper {
         return conn;
 	}
 
-	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
-		Collection<ConnectionPoolStats> pools = new ArrayList<ConnectionPoolStats>(2);
+	public List<MMConnectionPool> getConnectionPoolStats() {
+		List<MMConnectionPool> pools = new ArrayList<MMConnectionPool>(2);
 
-		setStats(pool, poolStats);
-		pools.add(poolStats);
+		MMConnectionPool stats = getStats(pool);
+		pools.add(stats);
 		
 		if (xaPool != null) {
-			setStats(xaPool, xaPoolStats);
-			pools.add(xaPoolStats);
+			stats = getStats(xaPool);
+			stats.setXa(true);
+			pools.add(stats);
 		}
 		
 		return pools;
@@ -206,13 +200,14 @@ public class PooledConnector extends ConnectorWrapper {
 		return super.testConnection();
 	}
 	
-	private void setStats(ConnectionPool connpool, ConnectionPoolStats stats) {
-
+	private MMConnectionPool getStats(ConnectionPool connpool) {
+		MMConnectionPool stats = new MMConnectionPool();
 		stats.setConnectionsWaiting(connpool.getNumberOfConnectinsWaiting());
 		stats.setConnectionsCreated(connpool.getTotalCreatedConnectionCount());
 		stats.setConnectionsDestroyed(connpool.getTotalDestroyedConnectionCount());
 		stats.setConnectionsInUse(connpool.getNumberOfConnectionsInUse());
 		stats.setTotalConnections(connpool.getTotalConnectionCount());
+		return stats;
 	}
 
 }

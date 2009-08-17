@@ -44,6 +44,7 @@ import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
@@ -64,7 +65,6 @@ import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.object.PropertyDefinition;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.common.util.LogCommonConstants;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.common.util.crypto.CryptoException;
@@ -422,9 +422,7 @@ public class ConnectorService extends AbstractService implements ConnectorServic
         LogManager.logInfo(LogCommonConstants.CTX_CONFIG, ServerPlugin.Util.getString(messageProperty, value)); 
     }
     
-	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
-//		return Collections.EMPTY_LIST;
-		
+	public Collection<MMConnectionPool> getConnectionPoolStats() {
 		return this.connectorMgr.getConnectionPoolStats();
 	}
     

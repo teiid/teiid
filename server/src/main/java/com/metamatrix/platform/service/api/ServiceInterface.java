@@ -30,7 +30,6 @@ import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.platform.service.controller.ServiceData;
 
 public interface ServiceInterface {
@@ -121,15 +120,6 @@ public interface ServiceInterface {
      * If there is no queue with the given name, null is returned.
      */
     WorkerPoolStats getQueueStatistics(String name);
-    
-    
-    /**
-     * Returns a list of ConnectionPoolStat objects for the specific 
-     * ConnectorBinding service
-     * If there are no ConnectionPoolStats, null is returned.
-     */
-    Collection<ConnectionPoolStats> getConnectionPoolStats();
-    
     
     /**
      * There are reflective based calls on this

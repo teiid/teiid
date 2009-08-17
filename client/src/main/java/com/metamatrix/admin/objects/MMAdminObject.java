@@ -31,6 +31,7 @@ import java.util.Properties;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.ConnectionPool;
 import org.teiid.adminapi.Transaction;
 
 import com.metamatrix.admin.AdminPlugin;
@@ -94,7 +95,8 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
     public static final int OBJECT_TYPE_VDB = 21;
     /**Object type code for TRANSACTION*/
     public static final int OBJECT_TYPE_TRANSACTION = 22;
-    
+    /**Object type code for CONNECTION_POOL*/
+    public static final int OBJECT_TYPE_CONNECTION_POOL = 23;
     
     
     //map of String (class name) to Integer (object type code)
@@ -124,6 +126,7 @@ public abstract class MMAdminObject implements AdminObject, Serializable {
         objectTypeMap.put(org.teiid.adminapi.User.class.getName(), new Integer(OBJECT_TYPE_USER));        
         objectTypeMap.put(org.teiid.adminapi.VDB.class.getName(), new Integer(OBJECT_TYPE_VDB));        
         objectTypeMap.put(Transaction.class.getName(), Integer.valueOf(OBJECT_TYPE_TRANSACTION));
+        objectTypeMap.put(ConnectionPool.class.getName(), Integer.valueOf(OBJECT_TYPE_CONNECTION_POOL));
     }
     
     

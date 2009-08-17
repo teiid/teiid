@@ -22,22 +22,16 @@
 
 package com.metamatrix.admin.server;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.teiid.adminapi.Resource;
-
 import com.metamatrix.common.actions.ActionDefinition;
-import com.metamatrix.common.actions.CreateObject;
 import com.metamatrix.common.actions.ModificationException;
 import com.metamatrix.common.application.ClassLoaderManager;
 import com.metamatrix.common.comm.ClientServiceRegistry;
@@ -56,25 +50,15 @@ import com.metamatrix.common.config.api.DeployedComponent;
 import com.metamatrix.common.config.api.DeployedComponentID;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.config.api.HostID;
-import com.metamatrix.common.config.api.HostType;
 import com.metamatrix.common.config.api.ServiceComponentDefnID;
-import com.metamatrix.common.config.api.SharedResource;
-import com.metamatrix.common.config.api.SharedResourceID;
 import com.metamatrix.common.config.api.VMComponentDefn;
 import com.metamatrix.common.config.api.VMComponentDefnID;
 import com.metamatrix.common.config.api.exceptions.ConfigurationException;
 import com.metamatrix.common.config.api.exceptions.InvalidConfigurationException;
-import com.metamatrix.common.config.model.BasicComponentObject;
 import com.metamatrix.common.config.model.BasicConfigurationObjectEditor;
-import com.metamatrix.common.config.model.BasicConnectorBindingType;
-import com.metamatrix.common.config.model.BasicHost;
-import com.metamatrix.common.config.model.BasicSharedResource;
-import com.metamatrix.common.config.model.ConfigurationModelContainerImpl;
 import com.metamatrix.common.config.xml.XMLConfigurationImportExportUtility;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
-import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.platform.PlatformPlugin;
 import com.metamatrix.platform.config.ConfigUpdateMgr;
 import com.metamatrix.platform.config.api.service.ConfigurationServiceInterface;
@@ -867,19 +851,5 @@ public class FakeConfigurationService implements ConfigurationServiceInterface {
 	public ServiceData getServiceData() {
 		return null;
 	}
-
-
-
-
-
-
-
-
-	@Override
-	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
-		return null;
-	}
-	
-	
 
 }

@@ -48,16 +48,8 @@ public class BasicExtensionModule extends BasicComponentDefn implements Extensio
     }
     
     public BasicExtensionModule(String name, String description, byte[] contents) {
-        super(new ConfigurationID(name), new ExtensionID(name), new ComponentTypeID(name));
-        this.type = sniffType(name);        
-        this.contents = contents;
-        setDescription(description);
-        
-        if (contents == null ) {
-            throw new IllegalArgumentException();
-        }        
+        this(name, sniffType(name), description, contents);
     }
-    
 
     protected BasicExtensionModule(BasicExtensionModule component) {
         super(component);

@@ -128,19 +128,10 @@ public class ConnectionPool {
      */
     private volatile int totalConnectionCount;
     /**
-     * Total number of connections that have been created since the inception of this pool
-     */
-    private volatile int totalCreatedConnections;
-    /**
      * Total number of connections that have been destroyed since the inception of this pool
      */
     private volatile int totalDestroyedConnections;
     
-    /**
-     * The number of connections currently in use by a client
-     */
-    private volatile int totalConnectionsInUse;
-
     private volatile boolean shuttingDownPool;
 
     /**
@@ -265,7 +256,6 @@ public class ConnectionPool {
 	                        LogManager.logDetail(CTX_CONNECTOR,  new Object[] {"Existing connection leased for", id}); //$NON-NLS-1$
 	                        connLists.used.addLast(conn);
 	                        success = true;
-	                        this.totalConnectionsInUse++;
 	                        return conn;
 						} catch (ConnectorException e) {
 							LogManager.logDetail(CTX_CONNECTOR,  new Object[] {"Existing connection failed to have identity updated", id}); //$NON-NLS-1$
@@ -287,7 +277,6 @@ public class ConnectionPool {
             }
             
             updateStateWithNewConnection(id, connection, idSize);
-            this.totalConnectionsInUse++;
             success = true;
             return connection;
         } catch (InterruptedException err) {
@@ -307,14 +296,14 @@ public class ConnectionPool {
     private void updateStateWithNewConnection(ConnectorIdentity id,
                                               ConnectionWrapper connection,
                                               int idSize) {
-        Collection ids = null;
+        Collection<ConnectionsForId> ids = null;
         
         synchronized (this.lock) {
             this.reverseIdConnections.put(connection, id);
             this.totalConnectionCount++;
              
             if (this.totalConnectionCount > this.maxConnections) {
-                ids = new ArrayList(this.idConnections.values());
+                ids = new ArrayList<ConnectionsForId>(this.idConnections.values());
             }
             
             // Log warnings if we hit the max connection count or the max count per pool - if both
@@ -330,8 +319,8 @@ public class ConnectionPool {
         //release any unused connection
         //TODO: this search is biased and slow
         if (ids != null) { 
-            for (Iterator i = ids.iterator(); i.hasNext() && this.totalConnectionCount > this.maxConnections;) {
-                ConnectionsForId connsForId = (ConnectionsForId)i.next();
+            for (Iterator<ConnectionsForId> i = ids.iterator(); i.hasNext() && this.totalConnectionCount > this.maxConnections;) {
+                ConnectionsForId connsForId = i.next();
                 synchronized (connsForId) {
                     if (connsForId.unused.isEmpty()) {
                         continue;
@@ -354,7 +343,6 @@ public class ConnectionPool {
         		connection = this.connectionFactory.getActualConnector().getConnection(id);
         	}
         	sourceConnection = new ConnectionWrapper(connection, this, testConnectInterval);
-            this.totalCreatedConnections++;
 
         	LogManager.logTrace(CTX_CONNECTOR, new Object[] {"Connection pool created a connection for", id}); //$NON-NLS-1$
         } catch (ConnectorException e) {
@@ -376,7 +364,6 @@ public class ConnectionPool {
         }
         
         synchronized (connLists) {
-        	totalConnectionsInUse--;
             //release it only if there is one.
             //If the same connection is to be released twice, just ignore
             if ( connLists.used.remove(connection)) {
@@ -416,23 +403,22 @@ public class ConnectionPool {
     }
 
     protected void cleanUp(boolean forceClose) {        
-        Map values = null;
+        Map<ConnectorIdentity, ConnectionsForId> values = null;
         synchronized (this.lock) {
-            values = new HashMap(this.idConnections);
+            values = new HashMap<ConnectorIdentity, ConnectionsForId>(this.idConnections);
         }
         
-        for (Iterator i = values.entrySet().iterator(); i.hasNext();) {
-        	Map.Entry entry = (Map.Entry)i.next();
-            ConnectionsForId connLists = (ConnectionsForId)entry.getValue();
+        for (Map.Entry<ConnectorIdentity, ConnectionsForId> entry : values.entrySet()) {
+            ConnectionsForId connLists = entry.getValue();
 
             synchronized (connLists) {
-                for ( Iterator unusedIter = connLists.unused.iterator(); unusedIter.hasNext(); ) {
-                    ConnectionWrapper unusedConnection = (ConnectionWrapper) unusedIter.next();
+                for ( Iterator<ConnectionWrapper> unusedIter = connLists.unused.iterator(); unusedIter.hasNext(); ) {
+                    ConnectionWrapper unusedConnection = unusedIter.next();
                     if (forceClose || (enableShrinking && System.currentTimeMillis() - unusedConnection.getTimeReturnedToPool() >= this.liveAndUnusedTime)
                             || !unusedConnection.isAlive() ) {
                         unusedIter.remove();
                         
-                        closeSourceConnection(unusedConnection, (ConnectorIdentity)entry.getKey());
+                        closeSourceConnection(unusedConnection, entry.getKey());
                     }
                 }
             }
@@ -502,7 +488,7 @@ public class ConnectionPool {
     }
     
     int getTotalCreatedConnectionCount() {
-    	return this.totalCreatedConnections;
+    	return this.totalDestroyedConnections + this.totalConnectionCount;
     }
     
     int getTotalDestroyedConnectionCount() {
@@ -510,11 +496,11 @@ public class ConnectionPool {
     }
     
     int getNumberOfConnectionsInUse() {
-    	return this.totalConnectionsInUse;
+    	return maxConnections - this.poolSemaphore.availablePermits();
     }
     
     int getNumberOfConnectinsWaiting() {
-    	return this.totalConnectionCount - this.totalConnectionsInUse;
+    	return this.totalConnectionCount - getNumberOfConnectionsInUse();
     }
 
 }

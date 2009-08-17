@@ -22,7 +22,7 @@
 
 package com.metamatrix.admin.server;
 
-import static org.teiid.dqp.internal.process.Util.convertStats;
+import static org.teiid.dqp.internal.process.Util.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +46,6 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.Resource;
 import org.teiid.adminapi.Service;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.SystemObject;
@@ -84,7 +83,6 @@ import com.metamatrix.common.config.model.BasicDeployedComponent;
 import com.metamatrix.common.extensionmodule.ExtensionModuleDescriptor;
 import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.core.util.DateUtil;
 import com.metamatrix.core.util.FileUtil;
 import com.metamatrix.core.util.FileUtils;
@@ -910,31 +908,14 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			            String[] identifierParts = new String[] {binding.getHostName(), 
 	 			                component.getVMComponentDefnID().getName(), 
 	 			                component.getServiceComponentDefnID().getFullName()};                
- 			            if (identifierMatches(identifier, identifierParts)) {
- 			            	 			                
- 		 			        Collection statsCollection = getRuntimeStateAdminAPIHelper().getConnectionPoolStats(binding);
- 		 			        if (statsCollection != null) {
-	 		 			        for (Iterator iter2 = statsCollection.iterator(); iter2.hasNext();) {
-	 		 			        	ConnectionPoolStats stats = (ConnectionPoolStats) iter2.next();
-	 		 			        	
-	 		 			        	MMConnectionPool mmstats = new MMConnectionPool();
-	 		 			        	
-	 		 			        	mmstats.setConnectorBindingName(component.getServiceComponentDefnID().getFullName());
-	 		 			        	mmstats.setConnectorBindingIdentifier(component.getFullName());
-	 		 			        	
-	 		 			        	mmstats.setConnectionsInUse(stats.getConnectionsInuse());
-	 		 			        	mmstats.setConnectionsCreated(stats.getConnectionsCreated());
-	 		 			        	mmstats.setConnectionsDestroyed(stats.getConnectionsDestroyed());
-	 		 			        	mmstats.setConnectionsWaiting(stats.getConnectionsWaiting());
-	 		 			        	mmstats.setTotalConnections(stats.getTotalConnections());	 		 			        	
-	 		 			        	
-	 		 			        	results.add(mmstats);	 		 			        	
-	 		 			        }
- 		 			        }
-
- 			            }
- 			    	
- 			                
+		            if (identifierMatches(identifier, identifierParts)) {
+		            	 			                
+	 			        Collection<MMConnectionPool> statsCollection = getRuntimeStateAdminAPIHelper().getConnectionPoolStats(binding);
+	 			        for (MMConnectionPool mmConnectionPool : statsCollection) {
+	 			        	mmConnectionPool.setConnectorBindingIdentifier(component.getFullName());
+	 			        	results.add(mmConnectionPool);	 		 			        	
+						}
+		            }
  			    }
  			}
  		} catch (MetaMatrixComponentException e) {

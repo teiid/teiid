@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
+import org.teiid.adminapi.ConnectionPool;
 import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
@@ -161,10 +162,10 @@ public interface DataService extends ApplicationService {
     /**
      * Get connection pool statistics for connector binding 
      * @param connectorBindingName - Name of the connector binding
-     * @return a list of {@link com.metamatrix.common.stats.ConnectionPoolStats}
+     * @return a list of {@link com.metamatrix.admin.objects.ConnectionPoolStatsImpl}
      * @throws MetaMatrixComponentException
      * @since 6.1
      */
-    Collection getConnectionPoolStatistics(String connectorBindingName)
+    Collection<? extends ConnectionPool> getConnectionPoolStatistics(String connectorBindingName)
         throws MetaMatrixComponentException;
 }

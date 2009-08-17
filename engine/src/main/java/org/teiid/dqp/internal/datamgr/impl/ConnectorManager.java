@@ -60,6 +60,7 @@ import org.teiid.dqp.internal.pooling.connector.PooledConnector;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.transaction.TransactionProvider;
 
+import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
@@ -70,7 +71,6 @@ import com.metamatrix.common.log.LogManager;
 import com.metamatrix.common.queue.WorkerPool;
 import com.metamatrix.common.queue.WorkerPoolFactory;
 import com.metamatrix.common.queue.WorkerPoolStats;
-import com.metamatrix.common.stats.ConnectionPoolStats;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.log.MessageLevel;
@@ -741,7 +741,7 @@ public class ConnectorManager implements ApplicationService {
 		}
 	}
 
-	public Collection<ConnectionPoolStats> getConnectionPoolStats() {
+	public Collection<MMConnectionPool> getConnectionPoolStats() {
 	     if (connector instanceof  PooledConnector) {
     	 	PooledConnector pc = (PooledConnector) connector;
     	 	

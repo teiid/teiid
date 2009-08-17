@@ -34,7 +34,6 @@ import java.util.Map;
 
 import org.teiid.adminapi.AdminException;
 
-import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MultipleException;
 import com.metamatrix.api.exception.security.AuthorizationException;
@@ -71,6 +70,7 @@ import com.metamatrix.platform.util.PlatformProxyHelper;
 import com.metamatrix.platform.vm.api.controller.ProcessManagement;
 import com.metamatrix.platform.vm.controller.ProcessStatistics;
 import com.metamatrix.server.HostManagement;
+import com.metamatrix.server.connector.service.ConnectorServiceInterface;
 
 
 /**
@@ -215,8 +215,8 @@ public class RuntimeStateAdminAPIHelper {
      */
     public Collection getConnectionPoolStats(ServiceRegistryBinding binding) throws MetaMatrixComponentException {
 		ServiceInterface service = binding.getService();
-		if (service != null) {
-		    return service.getConnectionPoolStats();
+		if (service instanceof ConnectorServiceInterface) {
+		    return ((ConnectorServiceInterface)service).getConnectionPoolStats();
 		}
         return Collections.EMPTY_LIST;
     }  

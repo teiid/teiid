@@ -27,10 +27,12 @@
 package com.metamatrix.server.connector.service;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
@@ -69,5 +71,7 @@ public interface ConnectorServiceInterface extends ServiceInterface {
 	void closeRequest(AtomicRequestID request) throws MetaMatrixComponentException;
 	
 	void requestBatch(AtomicRequestID request) throws MetaMatrixComponentException;
+	
+	Collection<MMConnectionPool> getConnectionPoolStats();
 
 }
