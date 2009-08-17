@@ -246,7 +246,7 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
         try {
         	EmbeddedConfigurationService ecs = (EmbeddedConfigurationService)getDQP().getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE);
             for (ExtensionModule module : ecs.getExtensionModules()) {
-                sb.append("\n == Jar: " + module.getName() + " ===== " );  //$NON-NLS-1$ //$NON-NLS-2$  
+                sb.append("\n == Jar: " + module.getFullName() + " ===== " );  //$NON-NLS-1$ //$NON-NLS-2$  
                 
                 File tempArchive = File.createTempFile("teiid", ".jar"); //$NON-NLS-1$ //$NON-NLS-2$
                 tempArchive.deleteOnExit();
