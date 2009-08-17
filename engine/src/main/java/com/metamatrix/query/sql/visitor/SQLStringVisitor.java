@@ -139,12 +139,12 @@ public class SQLStringVisitor extends LanguageVisitor {
      * @return Complete SQL string for the visited nodes
      */
     public String getSQLString() {
-        StringBuffer output = new StringBuffer();
+        StringBuilder output = new StringBuilder();
         getSQLString(this.parts, output);
         return output.toString();
     }
     
-    public static void getSQLString(List<Object> parts, StringBuffer output) {
+    public static void getSQLString(List<Object> parts, StringBuilder output) {
         for (Object object : parts) {
             if (object instanceof List) {
                 getSQLString((List<Object>)object, output);
