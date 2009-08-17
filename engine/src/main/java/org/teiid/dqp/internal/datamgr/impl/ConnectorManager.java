@@ -603,6 +603,9 @@ public class ConnectorManager implements ApplicationService {
      * @param qr Request that contains the MetaMatrix command information in the transaction.
      */
     void logSRCCommand(AtomicRequestMessage qr, ExecutionContext context, short cmdStatus, int finalRowCnt) {
+    	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO)) {
+    		return;
+    	}
         String sqlStr = null;
         if(cmdStatus == CommandLogMessage.CMD_STATUS_NEW){
         	Command cmd = qr.getCommand();

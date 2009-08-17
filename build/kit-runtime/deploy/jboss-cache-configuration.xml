@@ -12,7 +12,7 @@
         </loader>
     </loaders>
     
-    <eviction wakeUpInterval="3000">
+    <eviction wakeUpInterval="15000">
         <default algorithmClass="org.jboss.cache.eviction.LRUAlgorithm" eventQueueSize="100000">
             <property name="maxNodes" value="10000" />
             <!-- 0 = immediate eviction, -1 = no limit -->

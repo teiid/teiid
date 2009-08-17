@@ -143,7 +143,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      * @param object
      * @param valuesbuffer
      */
-    private void translateSQLType(Class type, Object obj, StringBuffer valuesbuffer) {
+    private void translateSQLType(Class type, Object obj, StringBuilder valuesbuffer) {
         if (obj == null) {
             valuesbuffer.append(NULL);
         } else {

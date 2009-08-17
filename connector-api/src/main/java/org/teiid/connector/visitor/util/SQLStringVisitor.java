@@ -92,7 +92,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor implements SQLRese
     protected static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
     protected static final String UNDEFINED_PARAM = "?"; //$NON-NLS-1$
     
-    protected StringBuffer buffer = new StringBuffer();
+    protected StringBuilder buffer = new StringBuilder();
                 
     /**
      * Gets the name of a group or element from the RuntimeMetadata

@@ -505,6 +505,10 @@ public class DQPCore extends Application implements ClientSideDQP {
 	}
     
     void logMMCommand(RequestWorkItem workItem, boolean isBegin, boolean isCancel, int rowCount) {
+    	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.INFO)) {
+    		return;
+    	}
+    	
         RequestMessage msg = workItem.requestMsg;
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         RequestID rID = new RequestID(workContext.getConnectionID(), msg.getExecutionId());
