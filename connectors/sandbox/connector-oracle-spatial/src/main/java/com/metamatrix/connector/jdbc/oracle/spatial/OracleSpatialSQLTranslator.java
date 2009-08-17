@@ -131,7 +131,7 @@ public class OracleSpatialSQLTranslator extends OracleSQLTranslator {
 	            int indx1 = funcName.indexOf("SDO"); //$NON-NLS-1$
 	            int indx2 = funcName.indexOf("RELATE"); //$NON-NLS-1$
 	            if (indx1 >= 0 && indx2 > indx1)
-	                return comment + " /* + ORDERED */"; //$NON-NLS-1$
+	                return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
 	        }
 		}
         return comment;

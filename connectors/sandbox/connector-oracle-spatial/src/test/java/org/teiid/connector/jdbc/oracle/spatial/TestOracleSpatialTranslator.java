@@ -116,9 +116,7 @@ public class TestOracleSpatialTranslator {
      * 
      * @throws Exception
      */
-    @Ignore("TEIID-757: Translator needs fixing so that spacing is valid between hint and query")  
     @Test public void testRewrite_sdo_relate() throws Exception {
-    	// TODO TEIID-757: Translator needs fixing so that spacing is valid between hint and query
         String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_relate(A.OBJECTVALUE, b.OBJECTVALUE, 'mask=ANYINTERACT') = true"; //$NON-NLS-1$
         String output = "SELECT /*+ ORDERED */ A.IntKey FROM SmallA A, SmallB B WHERE SDO_RELATE(A.ObjectValue, B.ObjectValue, 'mask=ANYINTERACT') = 'true'";  //$NON-NLS-1$
 
