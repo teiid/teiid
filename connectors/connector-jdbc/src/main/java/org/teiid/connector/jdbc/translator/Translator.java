@@ -56,7 +56,6 @@ import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.ISetQuery;
 import org.teiid.connector.language.IParameter.Direction;
-import org.teiid.connector.visitor.util.SQLReservedWords;
 
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.util.ReflectionHelper;

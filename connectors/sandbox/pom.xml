@@ -15,6 +15,5 @@
     <module>connector-yahoo</module>
     <module>connector-exec</module>
     <module>connector-object</module>
-    <module>connector-oracle-spatial</module>
   </modules>
 </project>

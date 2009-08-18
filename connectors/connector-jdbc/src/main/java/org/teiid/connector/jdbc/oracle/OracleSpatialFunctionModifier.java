@@ -20,46 +20,48 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.jdbc.oracle.spatial;
+package org.teiid.connector.jdbc.oracle;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILiteral;
 
 
-public class WithinDistanceFunctionModifier extends OracleSpatialFunctionModifier {
-
-    public IExpression modify(IFunction function) {
-        function.setName("SDO_WITHIN_DISTANCE"); //$NON-NLS-1$
-        return function;
-    }
+public class OracleSpatialFunctionModifier extends BasicFunctionModifier {
 
     /**
-     * Implement this method to change how the function is translated into the SQL string In this case, if either of the first two
-     * parameters are a Literal String, then we need to put the literal itself in the SQL to be passed to Oracle, without the tick
-     * marks
+     * If either of the first two parameters are a Literal String, then we need to put the literal itself in the SQL
+     * to be passed to Oracle, without the tick marks
      */
-    public List translate(IFunction function) {
-        List<Object> objs = new ArrayList<Object>();
-        objs.add("SDO_WITHIN_DISTANCE"); // recast name from sdoNN to SDO_NN //$NON-NLS-1$
-        objs.add("("); //$NON-NLS-1$
+    public List<?> translate(IFunction function) {
         List<IExpression> params = function.getParameters();
-        //if it doesn't have 3 parms, it is not a version of SDO_RELATE which
-        // we are prepared to translate
-        if (params.size() == 3) {
-            addParamWithConversion(objs, params.get(0));
-            objs.add(", "); //comma between parms //$NON-NLS-1$
+    	List<Object> objs = new ArrayList<Object>();
+        objs.add(function.getName());
+        objs.add("("); //$NON-NLS-1$
+        addParamWithConversion(objs, params.get(0));
+        objs.add(", "); //$NON-NLS-1$
 
-            addParamWithConversion(objs, params.get(1));
+        addParamWithConversion(objs, params.get(1));
+        for (int i = 2; i < params.size(); i++) {
             objs.add(", "); //$NON-NLS-1$
-            objs.add(params.get(2));
-        } else {
-            return super.translate(function);
+            objs.add(params.get(i));
         }
         objs.add(")"); //$NON-NLS-1$
-
         return objs;
     }
+	
+	protected void addParamWithConversion(List<Object> objs,
+                                          IExpression expression) {
+		if ((expression instanceof ILiteral) 
+				&& (((ILiteral) expression).getValue() instanceof String)) {
+			objs.add(((ILiteral) expression).getValue());
+		} else {
+			objs.add(expression);
+		}
+    }
+    
 }

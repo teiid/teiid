@@ -22,8 +22,11 @@
 
 package org.teiid.connector.jdbc.oracle;
 
+import java.io.File;
+import java.net.URL;
 import java.util.Properties;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -35,6 +38,8 @@ import org.teiid.connector.language.ICommand;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
 import com.metamatrix.cdk.unittest.FakeTranslationFactory;
+import com.metamatrix.query.function.FunctionLibraryManager;
+import com.metamatrix.query.function.UDFSource;
 
 public class TestOracleTranslator {
 	
@@ -43,20 +48,35 @@ public class TestOracleTranslator {
      */
     private static Translator TRANSLATOR; 
 
-    /**
-     * Performs setup tasks that should be executed prior to an instance of this
-     * class being created.  This method should only be executed once and does 
-     * not protect from multiple executions.  It is intended to be executed by 
-     * the JUnit4 test framework.
-     * <p>
-     * This method sets {@link TestOracleTranslator#TRANSLATOR} to an instance 
-     * of {@link OracleSQLTranslator} and then calls its {@link OracleSQLTranslator#initialize(ConnectorEnvironment)}
-     * method.
-     * @throws Exception
-     */
     @BeforeClass public static void oneTimeSetup() throws Exception {
         TRANSLATOR = new OracleSQLTranslator();        
         TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
+        // Define a UDFSource to hold the reference to our function definitions
+        File udfFile = new File("src/main/resources/OracleSpatialFunctions.xmi"); //$NON-NLS-1$;
+        URL[] urls = new URL[0];            
+        UDFSource udfSource = new UDFSource(udfFile.toURI().toURL(), urls);
+        FunctionLibraryManager.deregisterSource(udfSource);
+        FunctionLibraryManager.registerSource(udfSource);
+    }
+
+    /**
+     * Performs cleanup tasks that should be executed after all test methods 
+     * have been executed.  This method should only be executed once and does 
+     * not protect from multiple executions.  It is intended to be executed by 
+     * the JUnit4 test framework.
+     * <p>
+     * This method unloads the function definitions supported by the Oracle Spatial 
+     * Connector from the global instance of <code>FunctionLibraryManager</code> 
+     * so that they are no longer resolvable during query parsing. 
+     * 
+     * @throws Exception
+     */
+    @AfterClass public static void oneTimeFinished() throws Exception {
+        // Define a UDFSource to hold the reference to our function definitions
+        File udfFile = new File("src/main/resources/OracleSpatialFunctions.xmi"); //$NON-NLS-1$;
+        URL[] urls = new URL[0];            
+        UDFSource udfSource = new UDFSource(udfFile.toURI().toURL(), urls);
+        FunctionLibraryManager.deregisterSource(udfSource);
     }
 
 	private void helpTestVisitor(String input, String expectedOutput) throws ConnectorException {
@@ -285,6 +305,112 @@ public class TestOracleTranslator {
     @Test public void testConcat2() throws Exception {        
         String input = "select concat2(stringnum, stringkey) from bqt1.Smalla"; //$NON-NLS-1$
         String output = "SELECT CASE WHEN (SmallA.StringNum IS NULL) AND (SmallA.StringKey IS NULL) THEN NULL ELSE concat(nvl(SmallA.StringNum, ''), nvl(SmallA.StringKey, '')) END FROM SmallA"; //$NON-NLS-1$
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    /**
+     * Test a query which uses 
+     * <code>sdo_relate(Object element, Object element, String literal) in its 
+     * criteria into a source specific command.
+     * 
+     * @throws Exception
+     */
+    @Test public void testRewrite_sdo_relate() throws Exception {
+        String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_relate(A.OBJECTVALUE, b.OBJECTVALUE, 'mask=ANYINTERACT') = true"; //$NON-NLS-1$
+        String output = "SELECT /*+ ORDERED */ A.IntKey FROM SmallA A, SmallB B WHERE sdo_relate(A.ObjectValue, B.ObjectValue, 'mask=ANYINTERACT') = 'true'";  //$NON-NLS-1$
+
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+
+    /**
+     * Test a query which uses 
+     * <code>sdo_within_distance(Object element, String literal, String literal) 
+     * in its criteria into a source specific command.
+     * 
+     * @throws Exception
+     */
+    @Test public void testRewrite_sdo_within_distance() throws Exception {
+        String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance(OBJECTVALUE, 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.ObjectValue, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
+
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+
+    /**
+     * Test a query which uses 
+     * <code>sdo_within_distance(String literal, Object element, String literal) 
+     * in its criteria into a source specific command.
+     * 
+     * @throws Exception
+     */
+    @Test public void testRewrite_sdo_within_distance2() throws Exception {
+        String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance('SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', OBJECTVALUE, 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), SmallA.ObjectValue, 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
+
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+
+    /**
+     * Test a query which uses 
+     * <code>sdo_within_distance(String element, String literal, String literal) 
+     * in its criteria into a source specific command.
+     * 
+     * @throws Exception
+     */
+    @Test public void testRewrite_sdo_within_distance3() throws Exception {
+        String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance(STRINGKEY, 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
+        // using ? for bind value as rewriter marks the criteria as bindEligible 
+        // due to literal of type Object appearing in left side of criteria.  
+        // The literal Object is a result of the sdo_within_distance function 
+        // signature being sdo_within_distance(string, object, string) : string 
+        // as the signature was the best match for this query.
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.StringKey, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = ?";  //$NON-NLS-1$
+
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+
+    /**
+     * Test a query which uses 
+     * <code>sdo_within_distance(String literal, String literal, String literal) 
+     * in its criteria into a source specific command.
+     * 
+     * @throws Exception
+     */
+    @Test public void testRewrite_sdo_within_distance4() throws Exception {
+        String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance('SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
+        // using ? for bind value as rewriter marks the criteria as bindEligible 
+        // due to literal of type Object appearing in left side of criteria.  
+        // The literal Object is a result of the sdo_within_distance function 
+        // signature being sdo_within_distance(string, object, string) : string 
+        // as the signature was the best match for this query.
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = ?";  //$NON-NLS-1$
+
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+
+    /**
+     * Test a query which uses 
+     * <code>sdo_within_distance(Object element, Object element, String literal) 
+     * in its criteria into a source specific command.
+     * 
+     * @throws Exception
+     */
+    @Test public void testRewrite_sdo_within_distance5() throws Exception {
+        String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_within_distance(a.OBJECTVALUE, b.OBJECTVALUE, 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
+        String output = "SELECT A.IntKey FROM SmallA A, SmallB B WHERE sdo_within_distance(A.ObjectValue, B.ObjectValue, 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
+
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
