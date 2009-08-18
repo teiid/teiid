@@ -379,7 +379,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 		
 		Properties props = getProperties();
 		
-		String hostName = ((InetAddress)props.get(DQPEmbeddedProperties.HOST_ADDRESS)).getHostName();
+		String hostName = getAddress().getHostName();
 		String processName = props.getProperty(DQPEmbeddedProperties.PROCESSNAME);
 
 		String[] identifierParts = new String[] {hostName, processName};
@@ -389,7 +389,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 		
 		process.setEnabled(true);
 		process.setCreated(new Date(getStartTime()));
-		process.setInetAddress((InetAddress)props.get(DQPEmbeddedProperties.HOST_ADDRESS));
+		process.setInetAddress(getAddress());
 		process.setFreeMemory(rt.freeMemory());
 		process.setTotalMemory(rt.totalMemory());
 		process.setProperties(PropertiesUtils.clone(props));
