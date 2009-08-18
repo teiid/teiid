@@ -64,38 +64,38 @@
    <!-- ================ -->
 
    <logger name="org.jgroups">
-      <priority value="WARN"/>
+      <level value="WARN"/>
    </logger>
    
    <logger name="com.arjuna">
-     <priority value="WARN" />
+     <level value="WARN" />
    </logger>
 
    <logger name="org.jboss">
-      <priority value="WARN"/>
+      <level value="WARN"/>
    </logger>
    
    <logger name="org.teiid">
-     <priority value="WARN" />
+     <level value="WARN" />
    </logger>   
    
    <!-- un-comment to enable COMMAND log
    <logger name="org.teiid.COMMAND_LOG" additivity="false">
-      <priority value="INFO"/>
+      <level value="INFO"/>
       <appender-ref ref="COMMAND"/>
    </logger>
    -->
    
    <!-- Un-comment to enable AUDIT log
    <logger name="org.teiid.AUDIT_LOG" additivity="false">
-      <priority value="INFO"/>      
+      <level value="INFO"/>      
       <appender-ref ref="AUDIT"/>      
    </logger>
     -->
    
    <!-- Un-comment to enable Process Info log
    <logger name="org.teiid.PROCESS_INFO_LOG" additivity="false">
-      <priority value="INFO"/>      
+      <level value="INFO"/>      
       <appender-ref ref="PROCESS_INFO"/>      
    </logger>
     -->
