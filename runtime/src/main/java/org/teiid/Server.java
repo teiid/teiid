@@ -99,7 +99,7 @@ public class Server extends EmbeddedConnectionFactoryImpl implements ServerMBean
 		return true;
 	}	
 	
-	private static Properties loadConfiguration(String configFile) {
+	static Properties loadConfiguration(String configFile) {
 		File f = new File (configFile);
 		if (!f.exists()) {
 			System.out.println("Missing the bootstrap properties file, failed to start"); //$NON-NLS-1$

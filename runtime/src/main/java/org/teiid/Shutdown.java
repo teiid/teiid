@@ -1,13 +1,9 @@
 package org.teiid;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.management.MBeanServerConnection;
@@ -27,7 +23,7 @@ public class Shutdown {
 			System.exit(-1);
 		}
 		
-		Properties props = loadConfiguration(args[0]);
+		Properties props = Server.loadConfiguration(args[0]);
 		
 		JMXUtil jmx = new JMXUtil(props.getProperty(DQPEmbeddedProperties.PROCESSNAME));
 		
@@ -42,31 +38,6 @@ public class Shutdown {
 		server.shutdown();
 	}
 	
-	private static Properties loadConfiguration(String configFile) {
-		File f = new File (configFile);
-		if (!f.exists()) {
-			System.out.println("Missing the bootstrap properties file, failed to start"); //$NON-NLS-1$
-			System.exit(-3);			
-		}
-		
-		Properties props = null;
-		try {
-			FileReader bootProperties = new FileReader(f); 
-			props = new Properties();
-			props.load(bootProperties);
-			
-			// enable socket communication by default.
-			props.setProperty(DQPEmbeddedProperties.ENABLE_SOCKETS, Boolean.TRUE.toString());
-			props.setProperty(DQPEmbeddedProperties.BOOTURL, f.getCanonicalPath());
-			props.setProperty(DQPEmbeddedProperties.TEIID_HOME,f.getParentFile().getCanonicalPath());
-		} catch (IOException e) {
-			System.out.println("Failed to load bootstrap properties file."); //$NON-NLS-1$
-			e.printStackTrace();
-			System.exit(-3);
-		}	
-		return props;
-	}	
-
 	/**
 	 * Taken from JBoss AS Shutdown.java class.
 	 */
@@ -81,13 +52,11 @@ public class Shutdown {
 
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			String methodName = method.getName();
-			Class[] sigTypes = method.getParameterTypes();
-			ArrayList sigStrings = new ArrayList();
-			for (int s = 0; s < sigTypes.length; s++) {
-				sigStrings.add(sigTypes[s].getName());
-			}
+			Class<?>[] sigTypes = method.getParameterTypes();
 			String[] sig = new String[sigTypes.length];
-			sigStrings.toArray(sig);
+			for (int s = 0; s < sigTypes.length; s++) {
+				sig[s] = sigTypes[s].getName();
+			}
 			Object value = null;
 			try {
 				value = server.invoke(serverName, methodName, args, sig);
