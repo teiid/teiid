@@ -116,7 +116,7 @@ public class TestOracleTranslator {
             output, TRANSLATOR);        
     }
     
-	@Test public void testRewriteConversion1() throws Exception {
+	@Test public void testConversion1() throws Exception {
         String input = "SELECT char(convert(STRINGNUM, integer) + 100) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT chr((to_number(SmallA.StringNum) + 100)) FROM SmallA";  //$NON-NLS-1$
 
@@ -125,7 +125,7 @@ public class TestOracleTranslator {
             TRANSLATOR);
     }
           
-    @Test public void testRewriteConversion2() throws Exception {
+    @Test public void testConversion2() throws Exception {
         String input = "SELECT convert(STRINGNUM, long) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_number(SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
@@ -134,7 +134,7 @@ public class TestOracleTranslator {
                 TRANSLATOR);
     }
           
-    @Test public void testRewriteConversion3() throws Exception {
+    @Test public void testConversion3() throws Exception {
         String input = "SELECT convert(convert(STRINGNUM, long), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(to_number(SmallA.StringNum)) FROM SmallA";  //$NON-NLS-1$
 
@@ -143,7 +143,7 @@ public class TestOracleTranslator {
                 TRANSLATOR);
     }
           
-    @Test public void testRewriteConversion4() throws Exception {
+    @Test public void testConversion4() throws Exception {
         String input = "SELECT convert(convert(TIMESTAMPVALUE, date), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(trunc(SmallA.TimestampValue), 'YYYY-MM-DD') FROM SmallA";  //$NON-NLS-1$
 
@@ -151,7 +151,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteConversion5() throws Exception {
+    @Test public void testConversion5() throws Exception {
         String input = "SELECT convert(convert(TIMESTAMPVALUE, time), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(to_date(('1970-01-01 ' || to_char(SmallA.TimestampValue, 'HH24:MI:SS')), 'YYYY-MM-DD HH24:MI:SS'), 'HH24:MI:SS') FROM SmallA";  //$NON-NLS-1$
 
@@ -159,7 +159,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteConversion6() throws Exception {
+    @Test public void testConversion6() throws Exception {
         String input = "SELECT convert(convert(TIMEVALUE, timestamp), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(cast(SmallA.TimeValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF') FROM SmallA";  //$NON-NLS-1$
 
@@ -167,7 +167,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteConversion8() throws Exception {
+    @Test public void testConversion8() throws Exception {
         String input = "SELECT nvl(INTNUM, 'otherString') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT nvl(to_char(SmallA.IntNum), 'otherString') FROM SmallA";  //$NON-NLS-1$
 
@@ -175,7 +175,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteConversion7() throws Exception {
+    @Test public void testConversion7() throws Exception {
         String input = "SELECT convert(convert(STRINGNUM, integer), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(to_number(SmallA.StringNum)) FROM SmallA";  //$NON-NLS-1$
 
@@ -184,7 +184,7 @@ public class TestOracleTranslator {
                 TRANSLATOR);
     }
     @Ignore("TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is used as is")
-    @Test public void testRewriteLocate() throws Exception {
+    @Test public void testLocate() throws Exception {
         // TODO TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is used as is
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT instr('chimp', to_char(SmallA.IntNum), 1) FROM SmallA";  //$NON-NLS-1$
@@ -193,7 +193,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteLocate2() throws Exception {
+    @Test public void testLocate2() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp') FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT instr('chimp', SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
@@ -202,7 +202,7 @@ public class TestOracleTranslator {
                 TRANSLATOR);
     }
     @Ignore("TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is used as is")
-    @Test public void testRewriteLocate3() throws Exception {
+    @Test public void testLocate3() throws Exception {
         // TODO TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is used as is
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
         String output = "SELECT instr('234567890', to_char(SmallA.IntNum), 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
@@ -211,7 +211,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteLocate4() throws Exception {
+    @Test public void testLocate4() throws Exception {
         String input = "SELECT locate('c', 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT 1 FROM SmallA";  //$NON-NLS-1$
 
@@ -220,7 +220,7 @@ public class TestOracleTranslator {
                 TRANSLATOR);
     }
     @Ignore("TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is 1 if a value of < 1 is given")
-    @Test public void testRewriteLocate5() throws Exception {
+    @Test public void testLocate5() throws Exception {
         // TODO TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is 1 if a value of < 1 is given
         String input = "SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT instr('chimp', SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$
@@ -229,7 +229,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteSubstring1() throws Exception {
+    @Test public void testSubstring1() throws Exception {
         String input = "SELECT substring(StringNum, 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT substr(SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$
 
@@ -237,7 +237,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteSubstring2() throws Exception {
+    @Test public void testSubstring2() throws Exception {
         String input = "SELECT substring(StringNum, 1, 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT substr(SmallA.StringNum, 1, 1) FROM SmallA";  //$NON-NLS-1$
 
@@ -245,7 +245,7 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testRewriteUnionWithOrderBy() throws Exception {
+    @Test public void testUnionWithOrderBy() throws Exception {
         String input = "SELECT IntKey FROM BQT1.SMALLA UNION SELECT IntKey FROM BQT1.SMALLB ORDER BY IntKey"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA UNION SELECT SmallB.IntKey FROM SmallB ORDER BY IntKey NULLS FIRST";  //$NON-NLS-1$
 
@@ -317,7 +317,7 @@ public class TestOracleTranslator {
      * 
      * @throws Exception
      */
-    @Test public void testRewrite_sdo_relate() throws Exception {
+    @Test public void test_sdo_relate() throws Exception {
         String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_relate(A.OBJECTVALUE, b.OBJECTVALUE, 'mask=ANYINTERACT') = true"; //$NON-NLS-1$
         String output = "SELECT /*+ ORDERED */ A.IntKey FROM SmallA A, SmallB B WHERE sdo_relate(A.ObjectValue, B.ObjectValue, 'mask=ANYINTERACT') = 'true'";  //$NON-NLS-1$
 
@@ -333,7 +333,7 @@ public class TestOracleTranslator {
      * 
      * @throws Exception
      */
-    @Test public void testRewrite_sdo_within_distance() throws Exception {
+    @Test public void test_sdo_within_distance() throws Exception {
         String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance(OBJECTVALUE, 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SmallA.ObjectValue, SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 
@@ -349,7 +349,7 @@ public class TestOracleTranslator {
      * 
      * @throws Exception
      */
-    @Test public void testRewrite_sdo_within_distance2() throws Exception {
+    @Test public void test_sdo_within_distance2() throws Exception {
         String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance('SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', OBJECTVALUE, 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT SmallA.IntKey FROM SmallA WHERE sdo_within_distance(SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL), SmallA.ObjectValue, 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 
@@ -365,9 +365,9 @@ public class TestOracleTranslator {
      * 
      * @throws Exception
      */
-    @Test public void testRewrite_sdo_within_distance3() throws Exception {
+    @Test public void test_sdo_within_distance3() throws Exception {
         String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance(STRINGKEY, 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
-        // using ? for bind value as rewriter marks the criteria as bindEligible 
+        // using ? for bind value as r marks the criteria as bindEligible 
         // due to literal of type Object appearing in left side of criteria.  
         // The literal Object is a result of the sdo_within_distance function 
         // signature being sdo_within_distance(string, object, string) : string 
@@ -386,9 +386,9 @@ public class TestOracleTranslator {
      * 
      * @throws Exception
      */
-    @Test public void testRewrite_sdo_within_distance4() throws Exception {
+    @Test public void test_sdo_within_distance4() throws Exception {
         String input = "SELECT INTKEY FROM BQT1.SMALLA WHERE sdo_within_distance('SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'SDO_GEOMETRY(2001, 8307, MDSYS.SDO_POINT_TYPE(90.0, -45.0, NULL), NULL, NULL)', 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
-        // using ? for bind value as rewriter marks the criteria as bindEligible 
+        // using ? for bind value as r marks the criteria as bindEligible 
         // due to literal of type Object appearing in left side of criteria.  
         // The literal Object is a result of the sdo_within_distance function 
         // signature being sdo_within_distance(string, object, string) : string 
@@ -407,7 +407,7 @@ public class TestOracleTranslator {
      * 
      * @throws Exception
      */
-    @Test public void testRewrite_sdo_within_distance5() throws Exception {
+    @Test public void test_sdo_within_distance5() throws Exception {
         String input = "SELECT a.INTKEY FROM BQT1.SMALLA A, BQT1.SMALLB B WHERE sdo_within_distance(a.OBJECTVALUE, b.OBJECTVALUE, 'DISTANCE=25.0 UNIT=NAUT_MILE') = true"; //$NON-NLS-1$
         String output = "SELECT A.IntKey FROM SmallA A, SmallB B WHERE sdo_within_distance(A.ObjectValue, B.ObjectValue, 'DISTANCE=25.0 UNIT=NAUT_MILE') = 'true'";  //$NON-NLS-1$
 

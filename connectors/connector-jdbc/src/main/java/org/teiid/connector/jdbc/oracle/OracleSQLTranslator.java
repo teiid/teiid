@@ -39,13 +39,11 @@ import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
-import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
-import org.teiid.connector.language.ICriteria;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.IGroup;
@@ -54,16 +52,12 @@ import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.ILimit;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.IQueryCommand;
-import org.teiid.connector.language.ISelect;
 import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.language.ISetQuery.Operation;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.visitor.util.CollectorVisitor;
 import org.teiid.connector.visitor.util.SQLReservedWords;
 
-
-/**
- */
 public class OracleSQLTranslator extends Translator {
 
 	/*
@@ -115,37 +109,6 @@ public class OracleSQLTranslator extends Translator {
     
     @Override
     public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
-    	if (command instanceof IQuery) {
-    		IQuery query = (IQuery)command;
-            
-            ISelect select = ((IQuery)command).getSelect();
-            List<ISelectSymbol> symbols = select.getSelectSymbols();
-            
-            Collection<IFunction> functions = CollectorVisitor.collectObjects(IFunction.class, select);
-            for (IFunction function : functions) {
-				if (function.getName().equalsIgnoreCase("SDO_NN_DISTANCE")) {//$NON-NLS-1$
-                    ICriteria criteria = query.getWhere();
-                    if(criteria == null || criteria.toString().indexOf("SDO_NN") == -1){ //$NON-NLS-1$
-                	    throw(new ConnectorException(
-                	    	JDBCPlugin.Util.getString("OracleSpatialSQLTranslator.SDO_NN_DEPENDENCY_ERROR"))); //$NON-NLS-1$
-                	}
-                    break;
-				}
-			}
-            
-            for (int i = 0; i < symbols.size(); i++) {
-            	ISelectSymbol symbol = symbols.get(i);
-            	if (symbol.getExpression().getType().equals(Object.class)) {
-                    String outName = symbol.getOutputName();
-                    int lIndx = outName.lastIndexOf("."); //$NON-NLS-1$
-                    symbol.setOutputName(outName.substring(lIndx + 1));
-                    symbol.setExpression(getLanguageFactory().createLiteral(null, TypeFacility.RUNTIME_TYPES.OBJECT));
-                    symbol.setAlias(true);
-                }
-            }
-            return query;
-    	}
-    	
     	if (!(command instanceof IInsert)) {
     		return command;
     	}
@@ -294,16 +257,13 @@ public class OracleSQLTranslator extends Translator {
 	        // query.
 	        // Right now, we look through all functions passed in the query
 	        // (returned as a collection)
-	        // Then we check if any of those functions contain the strings 'sdo' and
-	        // 'relate'
+	        // Then we check if any of those functions are sdo_relate
 	        // If so, the ORDERED hint is added, if not, it isn't
 	        Collection<IFunction> col = CollectorVisitor.collectObjects(IFunction.class, command);
 	        for (IFunction func : col) {
-	            String funcName = func.getName().toUpperCase();
-	            int indx1 = funcName.indexOf("SDO"); //$NON-NLS-1$
-	            int indx2 = funcName.indexOf("RELATE"); //$NON-NLS-1$
-	            if (indx1 >= 0 && indx2 > indx1)
+	            if (func.getName().equalsIgnoreCase(RELATE)) {
 	                return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
+	            }
 	        }
 		}
     	return comment;
