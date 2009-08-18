@@ -68,15 +68,15 @@ JAVA_OPTS="$JAVA_OPTS -Xms128m -Xmx256m -XX:MaxPermSize=256m"
 JAVA_OPTS="$JAVA_OPTS -Djava.util.logging.config.file=log.properties"
 
 # Print the env settings
-echo "========================================================================="
+echo "======================================================================"
 echo ""
-echo "  Teiid AdminSehll Bootstrap Environment"
+echo "  Teiid AdminShell Bootstrap Environment"
 echo ""
-echo "	TEIID_HOME  = $TEIID_HOME"
-echo "	CLASSPATH   = $TEIID_CLASSPATH"
-echo "	JAVA        = $JAVA"
+echo "  TEIID_HOME  = $TEIID_HOME"
+echo "  CLASSPATH   = $TEIID_CLASSPATH"
+echo "  JAVA        = $JAVA"
 echo ""
-echo "========================================================================="
+echo "======================================================================"
 echo ""
 
 $JAVA $JAVA_OPTS -cp $TEIID_CLASSPATH -Xmx256m  org.teiid.AdminShell $*
