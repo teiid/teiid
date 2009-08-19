@@ -60,8 +60,9 @@ public class ServerAdminFactory {
     	private Properties p;
     	private boolean closed;
     	
-    	public ReconnectingProxy(Properties p) {
+    	public ReconnectingProxy(Properties p) throws ConnectionException, CommunicationException {
     		this.p = p;
+    		this.registry = serverConnectionFactory.createConnection(p);
 		}
     	
     	private synchronized Admin getTarget() throws AdminComponentException, CommunicationException {
@@ -214,14 +215,20 @@ public class ServerAdminFactory {
     	return createAdmin(p);
     }
 
-	public Admin createAdmin(Properties p) {
+	public Admin createAdmin(Properties p) throws AdminException {
 		p = PropertiesUtils.clone(p);
 		p.remove(MMURL.JDBC.VDB_NAME);
 		p.remove(MMURL.JDBC.VDB_VERSION);
     	p.setProperty(MMURL.CONNECTION.AUTO_FAILOVER, Boolean.TRUE.toString());
-		Admin serverAdmin = (Admin)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { Admin.class }, new ReconnectingProxy(p));
     	
-       return serverAdmin;
+		try {
+			Admin serverAdmin = (Admin)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] { Admin.class }, new ReconnectingProxy(p));
+			return serverAdmin;
+		} catch (ConnectionException e) {				
+			throw new AdminComponentException(e.getMessage());
+		} catch (CommunicationException e) {
+			throw new AdminComponentException(e.getMessage());
+		}
     }
     
 }
