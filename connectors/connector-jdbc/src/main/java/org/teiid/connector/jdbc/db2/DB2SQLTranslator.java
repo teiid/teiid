@@ -34,6 +34,7 @@ import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.api.TypeFacility.RUNTIME_TYPES;
 import org.teiid.connector.jdbc.translator.AliasModifier;
+import org.teiid.connector.jdbc.translator.LOCATEFunctionModifier;
 import org.teiid.connector.jdbc.translator.MODFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
@@ -49,8 +50,6 @@ import org.teiid.connector.language.IJoin.JoinType;
 import org.teiid.connector.visitor.framework.HierarchyVisitor;
 
 
-/**
- */
 public class DB2SQLTranslator extends Translator {
 
 	@Override
@@ -60,6 +59,7 @@ public class DB2SQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LOCATEFunctionModifier(getLanguageFactory(), "LOCATE")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
 
         List<Class<?>> supportedModTypes = new ArrayList<Class<?>>(3);

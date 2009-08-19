@@ -29,6 +29,7 @@ import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.db2.DB2SQLTranslator;
 import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
+import org.teiid.connector.jdbc.translator.LOCATEFunctionModifier;
 
 
 
@@ -46,6 +47,7 @@ public class DerbySQLTranslator extends DB2SQLTranslator {
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier()); 
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier()); 
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LOCATEFunctionModifier(getLanguageFactory(), "LOCATE")); //$NON-NLS-1$
         
         //overrides of db2 functions
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier()); 

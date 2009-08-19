@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.connector.jdbc.db2;
+package org.teiid.connector.jdbc.derby;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,13 +41,13 @@ import com.metamatrix.core.util.UnitTestUtil;
 
 /**
  */
-public class TestDB2SqlTranslator {
+public class TestDerbySQLTranslator {
 
-    private static DB2SQLTranslator TRANSLATOR; 
+    private static DerbySQLTranslator TRANSLATOR; 
 
     @BeforeClass
     public static void setUp() throws ConnectorException {
-        TRANSLATOR = new DB2SQLTranslator();        
+        TRANSLATOR = new DerbySQLTranslator();        
         TRANSLATOR.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
     }
     
@@ -88,9 +88,30 @@ public class TestDB2SqlTranslator {
     }
     
     @Test
+    public void testConcat_useLiteral() throws Exception {
+        String input = "select concat(stringnum,'_xx') from BQT1.Smalla"; //$NON-NLS-1$
+        String output = "SELECT {fn concat(SmallA.StringNum, '_xx')} FROM SmallA";  //$NON-NLS-1$
+        
+        helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
+                input, 
+                output);
+
+    }
+
+    @Test
+    public void testConcat() throws Exception {
+        String input = "select concat(stringnum, stringnum) from BQT1.Smalla"; //$NON-NLS-1$       
+        String output = "SELECT {fn concat(SmallA.StringNum, SmallA.StringNum)} FROM SmallA";  //$NON-NLS-1$
+        
+        helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
+                input, 
+                output);
+    }    
+    
+    @Test
     public void testConcat2_useLiteral() throws Exception {
         String input = "select concat2(stringnum,'_xx') from BQT1.Smalla"; //$NON-NLS-1$
-        String output = "SELECT concat(coalesce(SmallA.StringNum, ''), '_xx') FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT {fn concat(coalesce(SmallA.StringNum, ''), '_xx')} FROM SmallA";  //$NON-NLS-1$
         
         helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
                 input, 
@@ -101,7 +122,7 @@ public class TestDB2SqlTranslator {
     @Test
     public void testConcat2() throws Exception {
         String input = "select concat2(stringnum, stringnum) from BQT1.Smalla"; //$NON-NLS-1$       
-        String output = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, '')) END FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE {fn concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, ''))} END FROM SmallA";  //$NON-NLS-1$
         
         helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
                 input, 

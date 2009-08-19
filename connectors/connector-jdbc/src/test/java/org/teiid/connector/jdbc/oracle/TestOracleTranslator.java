@@ -28,7 +28,6 @@ import java.util.Properties;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.jdbc.MetadataFactory;
@@ -183,34 +182,66 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Ignore("TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is used as is")
+
+    /**
+     * Test the translator's ability to rewrite the LOCATE() function in a form 
+     * suitable for the data source.
+     * <p>
+     * <code>SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA</code>
+     *  
+     * @throws Exception
+     */
     @Test public void testLocate() throws Exception {
-        // TODO TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is used as is
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT instr('chimp', to_char(SmallA.IntNum), 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT INSTR('chimp', to_char(SmallA.IntNum), 1) FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
+
+    /**
+     * Test the translator's ability to rewrite the LOCATE() function in a form 
+     * suitable for the data source.
+     * <p>
+     * <code>SELECT locate(STRINGNUM, 'chimp') FROM BQT1.SMALLA</code>
+     *  
+     * @throws Exception
+     */
     @Test public void testLocate2() throws Exception {
         String input = "SELECT locate(STRINGNUM, 'chimp') FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT instr('chimp', SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT INSTR('chimp', SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
-    @Ignore("TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is used as is")
+
+    /**
+     * Test the translator's ability to rewrite the LOCATE() function in a form 
+     * suitable for the data source.
+     * <p>
+     * <code>SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26</code>
+     *  
+     * @throws Exception
+     */
     @Test public void testLocate3() throws Exception {
-        // TODO TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is used as is
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
-        String output = "SELECT instr('234567890', to_char(SmallA.IntNum), 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
+        String output = "SELECT INSTR('234567890', to_char(SmallA.IntNum), 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
+
+    /**
+     * Test the translator's ability to rewrite the LOCATE() function in a form 
+     * suitable for the data source.
+     * <p>
+     * <code>SELECT locate('c', 'chimp', 1) FROM BQT1.SMALLA</code>
+     *  
+     * @throws Exception
+     */
     @Test public void testLocate4() throws Exception {
         String input = "SELECT locate('c', 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT 1 FROM SmallA";  //$NON-NLS-1$
@@ -219,16 +250,58 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Ignore("TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is 1 if a value of < 1 is given")
+
+    /**
+     * Test the translator's ability to rewrite the LOCATE() function in a form 
+     * suitable for the data source.
+     * <p>
+     * <code>SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA</code>
+     *  
+     * @throws Exception
+     */
     @Test public void testLocate5() throws Exception {
-        // TODO TEIID-754: Fix Oracle translator so fromPosition of LOCATE function is 1 if a value of < 1 is given
         String input = "SELECT locate(STRINGNUM, 'chimp', -5) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT instr('chimp', SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT INSTR('chimp', SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
     }
+
+    /**
+     * Test the translator's ability to rewrite the LOCATE() function in a form 
+     * suitable for the data source.
+     * <p>
+     * <code>SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA</code>
+     *  
+     * @throws Exception
+     */
+    @Test public void testLocate6() throws Exception {
+        String input = "SELECT locate(STRINGNUM, 'chimp', INTNUM) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT INSTR('chimp', SmallA.StringNum, CASE WHEN SmallA.IntNum < 1 THEN 1 ELSE SmallA.IntNum END) FROM SmallA";  //$NON-NLS-1$
+
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+
+    /**
+     * Test the translator's ability to rewrite the LOCATE() function in a form 
+     * suitable for the data source.
+     * <p>
+     * <code>SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA</code>
+     *  
+     * @throws Exception
+     */
+    @Test public void testLocate7() throws Exception {
+        String input = "SELECT locate(STRINGNUM, 'chimp', LOCATE(STRINGNUM, 'chimp') + 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT INSTR('chimp', SmallA.StringNum, CASE WHEN (INSTR('chimp', SmallA.StringNum) + 1) < 1 THEN 1 ELSE (INSTR('chimp', SmallA.StringNum) + 1) END) FROM SmallA";  //$NON-NLS-1$
+
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+
     @Test public void testSubstring1() throws Exception {
         String input = "SELECT substring(StringNum, 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT substr(SmallA.StringNum, 1) FROM SmallA";  //$NON-NLS-1$

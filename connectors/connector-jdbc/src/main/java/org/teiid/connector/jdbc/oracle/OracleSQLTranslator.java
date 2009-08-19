@@ -42,7 +42,9 @@ import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.translator.AliasModifier;
 import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
+import org.teiid.connector.jdbc.translator.LOCATEFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
+import org.teiid.connector.jdbc.translator.LOCATEFunctionModifier.ParameterOrder;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IFunction;
@@ -96,7 +98,7 @@ public class OracleSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "Q"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "D"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "DDD"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LOCATEFunctionModifier(getLanguageFactory(), "INSTR", ParameterOrder.SOURCE_SEARCH_INDEX)); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));

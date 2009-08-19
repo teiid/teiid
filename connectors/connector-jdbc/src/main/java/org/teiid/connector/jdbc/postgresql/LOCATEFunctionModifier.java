@@ -26,17 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 
-public class LocateFunctionModifier extends BasicFunctionModifier {
+public class LOCATEFunctionModifier extends org.teiid.connector.jdbc.translator.LOCATEFunctionModifier {
 	
-	private ILanguageFactory factory; 
-	
-	public LocateFunctionModifier(ILanguageFactory factory) {
-		this.factory = factory;
+	public LOCATEFunctionModifier(ILanguageFactory factory) {
+		super(factory);
 	}
 
 	@Override
@@ -47,7 +44,7 @@ public class LocateFunctionModifier extends BasicFunctionModifier {
 		parts.add(params.get(0));		
 		parts.add(" in "); //$NON-NLS-1$
 		if (params.size() == 3) {
-			parts.add(factory.createFunction("substr", params.subList(1, 3), TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
+			parts.add(this.getLanguageFactory().createFunction("substr", params.subList(1, 3), TypeFacility.RUNTIME_TYPES.STRING)); //$NON-NLS-1$
 		} else {
 			parts.add(params.get(1));
 		}
