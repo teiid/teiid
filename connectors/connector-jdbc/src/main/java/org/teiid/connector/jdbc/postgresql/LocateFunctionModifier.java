@@ -30,9 +30,9 @@ import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 
-public class LOCATEFunctionModifier extends org.teiid.connector.jdbc.translator.LOCATEFunctionModifier {
+public class LocateFunctionModifier extends org.teiid.connector.jdbc.translator.LocateFunctionModifier {
 	
-	public LOCATEFunctionModifier(ILanguageFactory factory) {
+	public LocateFunctionModifier(ILanguageFactory factory) {
 		super(factory);
 	}
 

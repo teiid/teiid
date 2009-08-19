@@ -45,7 +45,7 @@ import com.metamatrix.cdk.api.EnvironmentUtility;
  * Test <code>ModFunctionModifier</code> by invoking its methods with varying 
  * parameters to validate it performs as designed and expected. 
  */
-public class TestMODFunctionModifier extends TestCase {
+public class TestModFunctionModifier extends TestCase {
 
     private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
 
@@ -53,7 +53,7 @@ public class TestMODFunctionModifier extends TestCase {
      * Constructor for TestModFunctionModifier.
      * @param name
      */
-    public TestMODFunctionModifier(String name) {
+    public TestModFunctionModifier(String name) {
         super(name);
     }
 
@@ -143,9 +143,9 @@ public class TestMODFunctionModifier extends TestCase {
 					throws ConnectorException {
 				super.initialize(env);
 				if (modFunctionName == null) {
-					registerFunctionModifier(SourceSystemFunctions.MOD, new MODFunctionModifier(getLanguageFactory()));
+					registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(getLanguageFactory()));
 				} else {
-					registerFunctionModifier(SourceSystemFunctions.MOD, new MODFunctionModifier(getLanguageFactory(), modFunctionName, supportedTypes));
+					registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(getLanguageFactory(), modFunctionName, supportedTypes));
 				}
 			}
     	};
@@ -163,9 +163,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Short} constants for both parameters returns MOD(x,y). 
-     * {@link MODFunctionModifier} will be constructed without specifying a 
+     * {@link ModFunctionModifier} will be constructed without specifying a 
      * function name or a supported type list.
      * 
      * @throws Exception
@@ -180,9 +180,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Short} constants for both parameters returns MOD(x,y). 
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "MOD" but without a supported type list.
      *  
      * @throws Exception
@@ -197,9 +197,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Short} constants for both parameters returns MOD(x,y). 
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "MOD" and a supported type list which contains {@link Short}. 
      * 
      * @throws Exception
@@ -216,9 +216,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Short} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" and a supported type list which 
      * does not contains {@link Short}. 
      * 
@@ -236,9 +236,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Short} constants for both parameters returns (x % y).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and no supported type list. 
      * 
      * @throws Exception
@@ -253,9 +253,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Short} constants for both parameters returns (x % y).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and a supported type list which contains {@link Short}. 
      * 
      * @throws Exception
@@ -272,9 +272,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Short} constants for both parameters returns 
-     * (10 - (TRUNC((10 / 6), 0) * 6)).  {@link MODFunctionModifier} will be 
+     * (10 - (TRUNC((10 / 6), 0) * 6)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and a supported type list does not 
      * contain {@link Short}. 
      * 
@@ -292,9 +292,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Integer} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed without 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed without 
      * specifying a function name or a supported type list.
      * 
      * @throws Exception
@@ -309,9 +309,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Integer} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed with a 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" but without a supported type list.
      *  
      * @throws Exception
@@ -326,9 +326,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Integer} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed with a 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" and a supported type list which contains {@link Integer}. 
      * 
      * @throws Exception
@@ -345,9 +345,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Integer} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" and a supported type list which 
      * does not contain {@link Integer}. 
      * 
@@ -365,9 +365,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Integer} constants for both parameters returns (x % y).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and no supported type list. 
      * 
      * @throws Exception
@@ -382,9 +382,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Integer} constants for both parameters returns (x % y).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and a supported type list which contains {@link Integer}. 
      * 
      * @throws Exception
@@ -401,9 +401,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Integer} constants for both parameters returns 
-     * (10 - (TRUNC((10 / 6), 0) * 6)).  {@link MODFunctionModifier} will be 
+     * (10 - (TRUNC((10 / 6), 0) * 6)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and a supported type list that 
      * does not contain {@link Integer}. 
      * 
@@ -421,9 +421,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Long} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed without 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed without 
      * specifying a function name or a supported type list.
      * 
      * @throws Exception
@@ -438,9 +438,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Long} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed with a 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" but without a supported type list.
      *  
      * @throws Exception
@@ -455,9 +455,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Long} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed with a 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" and a supported type list which contains {@link Long}. 
      * 
      * @throws Exception
@@ -474,9 +474,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Long} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" and a supported type list which 
      * does not contain {@link Long}. 
      * 
@@ -494,9 +494,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Long} constants for both parameters returns (x % y).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and no supported type list. 
      * 
      * @throws Exception
@@ -511,9 +511,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Long} constants for both parameters returns (x % y).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and a supported type list which contains {@link Long}. 
      * 
      * @throws Exception
@@ -530,9 +530,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Long} constants for both parameters returns 
-     * (10 - (TRUNC((10 / 6), 0) * 6)).  {@link MODFunctionModifier} will be 
+     * (10 - (TRUNC((10 / 6), 0) * 6)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and a supported type list that 
      * does not contain {@link Long}. 
      * 
@@ -550,9 +550,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Float} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed without specifying a function name or a supported type list.
      * 
      * @throws Exception
@@ -567,9 +567,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Float} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" but without a supported type 
      * list.
      *  
@@ -585,9 +585,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Float} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed with a 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" and a supported type list which contains {@link Float}. 
      * 
      * @throws Exception
@@ -604,9 +604,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link Float} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" and a supported type list which 
      * does not contain {@link Float}. 
      * 
@@ -624,9 +624,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Float} constants for both parameters returns  
-     * (x - (TRUNC((x / y), 0) * x)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * x)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and no supported type list. 
      * 
      * @throws Exception
@@ -641,9 +641,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Float} constants for both parameters returns (x % y).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and a supported type list which contains {@link Float}. 
      * 
      * @throws Exception
@@ -660,9 +660,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link Float} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * x)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * x)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and a supported type list that 
      * does not contain {@link Float}. 
      * 
@@ -680,9 +680,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link BigInteger} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed without specifying a function name or a supported type list.
      * 
      * @throws Exception
@@ -697,9 +697,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link BigInteger} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" but without a supported type 
      * list.
      *  
@@ -715,9 +715,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link BigInteger} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed with a 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" and a supported type list which contains {@link BigInteger}. 
      * 
      * @throws Exception
@@ -734,9 +734,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link BigInteger} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" and a supported type list which 
      * does not contain {@link BigInteger}. 
      * 
@@ -754,9 +754,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link BigInteger} constants for both parameters returns  
-     * (x - (TRUNC((x / y), 0) * x)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * x)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and no supported type list. 
      * 
      * @throws Exception
@@ -771,9 +771,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link BigInteger} constants for both parameters returns 
-     * (x % y).  {@link MODFunctionModifier} will be constructed with a function 
+     * (x % y).  {@link ModFunctionModifier} will be constructed with a function 
      * name of "%" and a supported type list which contains {@link BigInteger}. 
      * 
      * @throws Exception
@@ -790,9 +790,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link BigInteger} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * x)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * x)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and a supported type list that 
      * does not contain {@link BigInteger}. 
      * 
@@ -810,9 +810,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link BigDecimal} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed without specifying a function name or a supported type list.
      * 
      * @throws Exception
@@ -827,9 +827,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link BigDecimal} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" but without a supported type 
      * list.
      *  
@@ -845,9 +845,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link BigDecimal} constants for both parameters returns 
-     * MOD(x,y).  {@link MODFunctionModifier} will be constructed with a 
+     * MOD(x,y).  {@link ModFunctionModifier} will be constructed with a 
      * function name of "MOD" and a supported type list which contains {@link BigDecimal}. 
      * 
      * @throws Exception
@@ -864,9 +864,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,y) using {@link BigDecimal} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * y)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * y)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" and a supported type list which 
      * does not contain {@link BigDecimal}. 
      * 
@@ -884,9 +884,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link BigDecimal} constants for both parameters returns  
-     * (x - (TRUNC((x / y), 0) * x)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * x)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and no supported type list. 
      * 
      * @throws Exception
@@ -901,9 +901,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link BigDecimal} constants for both parameters returns 
-     * (x % y).  {@link MODFunctionModifier} will be constructed with a function 
+     * (x % y).  {@link ModFunctionModifier} will be constructed with a function 
      * name of "%" and a supported type list which contains {@link BigDecimal}. 
      * 
      * @throws Exception
@@ -920,9 +920,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * x % y using {@link BigDecimal} constants for both parameters returns 
-     * (x - (TRUNC((x / y), 0) * x)).  {@link MODFunctionModifier} will be 
+     * (x - (TRUNC((x / y), 0) * x)).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and a supported type list that 
      * does not contain {@link BigDecimal}. 
      * 
@@ -940,9 +940,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(e1,y) using a {@link Integer} element and a {@link Integer} constant 
-     * for parameters returns MOD(e1,y).  {@link MODFunctionModifier} will be 
+     * for parameters returns MOD(e1,y).  {@link ModFunctionModifier} will be 
      * constructed without specifying a function name or a supported type list.
      * 
      * @throws Exception
@@ -957,9 +957,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(e1,y) using a {@link Integer} element and a {@link Integer} constant 
-     * for parameters returns MOD(e1,y).  {@link MODFunctionModifier} will be 
+     * for parameters returns MOD(e1,y).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" but without a supported type 
      * list.
      *  
@@ -975,9 +975,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(e1,y) using a {@link Integer} element and a {@link Integer} constant 
-     * for parameters returns MOD(e1,y).  {@link MODFunctionModifier} will be 
+     * for parameters returns MOD(e1,y).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "MOD" and a supported type list which 
      * contains {@link Integer}. 
      * 
@@ -995,10 +995,10 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(e1,y) using a {@link Integer} element and a {@link Integer} constant 
      * for parameters returns (e1 - (TRUNC((e1 / y), 0) * y)).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "MOD" and a supported type list which does not contain {@link Integer}. 
      * 
      * @throws Exception
@@ -1015,9 +1015,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * e1 % y using a {@link Integer} element and a {@link Integer} constant for 
-     * parameters returns (e1 % y).  {@link MODFunctionModifier} will be 
+     * parameters returns (e1 % y).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and no supported type list. 
      * 
      * @throws Exception
@@ -1032,9 +1032,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * e1 % y using a {@link Integer} element and a {@link Integer} constant for 
-     * parameters returns (e1 % y).  {@link MODFunctionModifier} will be 
+     * parameters returns (e1 % y).  {@link ModFunctionModifier} will be 
      * constructed with a function name of "%" and a supported type list which 
      * contains {@link Integer}. 
      * 
@@ -1052,10 +1052,10 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * e1 % y using a {@link Integer} element and a {@link Integer} constant for 
      * parameters returns (e1 - (TRUNC((e1 / y), 0) * y)).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and a supported type list that does not contain {@link Integer}. 
      * 
      * @throws Exception
@@ -1072,10 +1072,10 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(e1,y) using a {@link BigDecimal} element and a {@link BigDecimal} 
      * constant for parameters returns (e1 - (TRUNC((e1 / y), 0) * y)).  
-     * {@link MODFunctionModifier} will be constructed without specifying a 
+     * {@link ModFunctionModifier} will be constructed without specifying a 
      * function name or a supported type list.
      * 
      * @throws Exception
@@ -1090,10 +1090,10 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(e1,y) using a {@link BigDecimal} element and a {@link BigDecimal} 
      * constant for parameters returns (e1 - (TRUNC((e1 / y), 0) * y)).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "MOD" but without a supported type list.
      *  
      * @throws Exception
@@ -1108,9 +1108,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(e1,y) using a {@link BigDecimal} element and a {@link BigDecimal} 
-     * constant for parameters returns MOD(e1,y).  {@link MODFunctionModifier} 
+     * constant for parameters returns MOD(e1,y).  {@link ModFunctionModifier} 
      * will be constructed with a function name of "MOD" and a supported type 
      * list which contains {@link BigDecimal}. 
      * 
@@ -1128,10 +1128,10 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(e1,y) using a {@link BigDecimal} element and a {@link BigDecimal} 
      * constant for parameters returns (e1 - (TRUNC((e1 / y), 0) * y)).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "MOD" and a supported type list which does not contain {@link BigDecimal}. 
      * 
      * @throws Exception
@@ -1148,9 +1148,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * e1 % y using a {@link BigDecimal} element and a {@link BigDecimal} 
-     * constant for parameters returns (e1 % y).  {@link MODFunctionModifier} 
+     * constant for parameters returns (e1 % y).  {@link ModFunctionModifier} 
      * will be constructed with a function name of "%" and no supported type 
      * list. 
      * 
@@ -1166,9 +1166,9 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * e1 % y using a {@link BigDecimal} element and a {@link BigDecimal} 
-     * constant for parameters returns (e1 % y).  {@link MODFunctionModifier} 
+     * constant for parameters returns (e1 % y).  {@link ModFunctionModifier} 
      * will be constructed with a function name of "%" and a supported type list 
      * which contains {@link BigDecimal}. 
      * 
@@ -1186,10 +1186,10 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * e1 % y using a {@link BigDecimal} element and a {@link BigDecimal} 
      * constant for parameters returns (e1 - (TRUNC((e1 / y), 0) * y)).  
-     * {@link MODFunctionModifier} will be constructed with a function name of 
+     * {@link ModFunctionModifier} will be constructed with a function name of 
      * "%" and a supported type list that does not contain {@link BigDecimal}. 
      * 
      * @throws Exception
@@ -1206,12 +1206,12 @@ public class TestMODFunctionModifier extends TestCase {
     }
 
     /**
-     * Test {@link MODFunctionModifier#modify(IFunction)} to validate a call to 
+     * Test {@link ModFunctionModifier#modify(IFunction)} to validate a call to 
      * MOD(x,e1) using a {@link Float} literal and a {@link Float} element for 
-     * parameters returns (x - (floor((x / e1)) * e1)).  {@link MODFunctionModifier} 
+     * parameters returns (x - (floor((x / e1)) * e1)).  {@link ModFunctionModifier} 
      * will be constructed with a function name of "MOD" and no supported type 
      * list.  The test explicitly overrides 
-     * {@link MODFunctionModifier#getQuotientExpression(IExpression)} to produce 
+     * {@link ModFunctionModifier#getQuotientExpression(IExpression)} to produce 
      * output that uses the floor(z) function. 
      * 
      * @throws Exception
@@ -1232,7 +1232,7 @@ public class TestMODFunctionModifier extends TestCase {
 			public void initialize(ConnectorEnvironment env)
 					throws ConnectorException {
 				super.initialize(env);
-				registerFunctionModifier(SourceSystemFunctions.MOD, new MODFunctionModifier(getLanguageFactory(), modFunctionName, null) {
+				registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(getLanguageFactory(), modFunctionName, null) {
 					@Override
 					protected IExpression getQuotientExpression(
 							IExpression division) {

@@ -34,8 +34,8 @@ import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.api.TypeFacility.RUNTIME_TYPES;
 import org.teiid.connector.jdbc.translator.AliasModifier;
-import org.teiid.connector.jdbc.translator.LOCATEFunctionModifier;
-import org.teiid.connector.jdbc.translator.MODFunctionModifier;
+import org.teiid.connector.jdbc.translator.LocateFunctionModifier;
+import org.teiid.connector.jdbc.translator.ModFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IExpression;
@@ -59,14 +59,14 @@ public class DB2SQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LOCATEFunctionModifier(getLanguageFactory(), "LOCATE")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
 
         List<Class<?>> supportedModTypes = new ArrayList<Class<?>>(3);
         supportedModTypes.add(RUNTIME_TYPES.SHORT);
         supportedModTypes.add(RUNTIME_TYPES.INTEGER);
         supportedModTypes.add(RUNTIME_TYPES.LONG);
-        registerFunctionModifier(SourceSystemFunctions.MOD, new MODFunctionModifier(getLanguageFactory(), "MOD", supportedModTypes));  //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(getLanguageFactory(), "MOD", supportedModTypes));  //$NON-NLS-1$
     }
 		
 	@SuppressWarnings("unchecked")

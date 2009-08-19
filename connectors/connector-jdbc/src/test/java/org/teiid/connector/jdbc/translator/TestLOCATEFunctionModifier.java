@@ -31,11 +31,9 @@ import org.junit.Test;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
-import org.teiid.connector.jdbc.translator.LOCATEFunctionModifier.ParameterOrder;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
-import org.teiid.connector.language.ILiteral;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
@@ -60,7 +58,7 @@ public class TestLOCATEFunctionModifier {
      * @throws Exception
      */
     public IExpression helpTestLocate(IExpression[] args, String expectedStr) throws Exception {
-    	return this.helpTestLocate(null, null, args, expectedStr);
+    	return this.helpTestLocate(LocateFunctionModifier.LOCATE, false, args, expectedStr);
     }
 
     /**
@@ -82,7 +80,7 @@ public class TestLOCATEFunctionModifier {
      * @return On success, the modified expression.
      * @throws Exception
      */
-    public IExpression helpTestLocate(final String locateFunctionName, final ParameterOrder parameterOrder, IExpression[] args, String expectedStr) throws Exception {
+    public IExpression helpTestLocate(final String locateFunctionName, final boolean parameterOrder, IExpression[] args, String expectedStr) throws Exception {
     	IExpression param1 = null;
     	IExpression param2 = null;
     	IExpression param3 = null;
@@ -106,7 +104,7 @@ public class TestLOCATEFunctionModifier {
 			public void initialize(ConnectorEnvironment env)
 					throws ConnectorException {
 				super.initialize(env);
-				registerFunctionModifier(SourceSystemFunctions.LOCATE, new LOCATEFunctionModifier(getLanguageFactory(), locateFunctionName, parameterOrder));
+				registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), locateFunctionName, parameterOrder));
 			}
     	};
     	
@@ -123,11 +121,11 @@ public class TestLOCATEFunctionModifier {
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str) using constants for both parameters 
      * returns LOCATE(search_str, source_str). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed without specifying a 
+     * {@link LocateFunctionModifier} will be constructed without specifying a 
      * function name or parameter order.
      * 
      * @throws Exception
@@ -142,11 +140,11 @@ public class TestLOCATEFunctionModifier {
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str) using constants for both parameters 
      * returns locate(search_str, source_str). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying a function  
+     * {@link LocateFunctionModifier} will be constructed specifying a function  
      * name of locate but no parameter order.
      * 
      * @throws Exception
@@ -157,15 +155,15 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createLiteral("abcdefg", String.class) //$NON-NLS-1$
         };
         // locate / default
-        helpTestLocate("locate", null, args, "locate('a', 'abcdefg')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLocate("locate", false, args, "locate('a', 'abcdefg')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str) using constants for both parameters 
      * returns INSTR(source_str, search_str). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying a function  
+     * {@link LocateFunctionModifier} will be constructed specifying a function  
      * name of INSTR and a parameter order of {@link ParameterOrder#SOURCE_SEARCH_INDEX}. 
      * 
      * @throws Exception
@@ -176,15 +174,15 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createLiteral("abcdefg", String.class) //$NON-NLS-1$
         };
         // INSTR / SOURCE_SEARCH_INDEX
-        helpTestLocate("INSTR", ParameterOrder.SOURCE_SEARCH_INDEX, args, "INSTR('abcdefg', 'a')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLocate("INSTR", true, args, "INSTR('abcdefg', 'a')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str) using constants for both parameters 
      * returns locate(search_str, source_str). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying a function  
+     * {@link LocateFunctionModifier} will be constructed specifying a function  
      * name of locate and a parameter order of {@link ParameterOrder#DEFAULT}.
      * 
      * @throws Exception
@@ -195,15 +193,15 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createLiteral("abcdefg", String.class) //$NON-NLS-1$
         };
         // locate / DEFAULT
-        helpTestLocate("locate", ParameterOrder.DEFAULT, args, "locate('a', 'abcdefg')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLocate("locate", false, args, "locate('a', 'abcdefg')"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str, 1) using constants for all parameters 
      * returns INSTR(source_str, search_str, 1). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying a function  
+     * {@link LocateFunctionModifier} will be constructed specifying a function  
      * name of INSTR and a parameter order of {@link ParameterOrder#SOURCE_SEARCH_INDEX}.
      * 
      * @throws Exception
@@ -215,15 +213,15 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createLiteral(1, Integer.class)
         };
         // INSTR / SOURCE_SEARCH_INDEX
-        helpTestLocate("INSTR", ParameterOrder.SOURCE_SEARCH_INDEX, args, "INSTR('abcdefg', 'a', 1)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLocate("INSTR", true, args, "INSTR('abcdefg', 'a', 1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str, 4) using constants for all parameters 
      * returns LOCATE(search_str, source_str, 5). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying no function  
+     * {@link LocateFunctionModifier} will be constructed specifying no function  
      * name or parameter order.
      * 
      * @throws Exception
@@ -235,15 +233,15 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createLiteral(4, Integer.class)
         };
         // default / default
-        helpTestLocate(null, null, args, "LOCATE('a', 'abcdefg', 4)"); //$NON-NLS-1$
+        helpTestLocate(args, "LOCATE('a', 'abcdefg', 4)"); //$NON-NLS-1$
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str, -5) using constants for all parameters 
      * returns LOCATE(search_str, source_str, 1). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying no function  
+     * {@link LocateFunctionModifier} will be constructed specifying no function  
      * name or parameter order.
      * 
      * @throws Exception
@@ -255,15 +253,15 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createLiteral(-5, Integer.class)
         };
         // default / default
-        helpTestLocate(null, null, args, "LOCATE('a', 'abcdefg', 1)"); //$NON-NLS-1$
+        helpTestLocate(args, "LOCATE('a', 'abcdefg', 1)"); //$NON-NLS-1$
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str, null) using constants for all parameters 
      * returns LOCATE(search_str, source_str, NULL). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying no function  
+     * {@link LocateFunctionModifier} will be constructed specifying no function  
      * name or parameter order.
      * 
      * @throws Exception
@@ -275,15 +273,15 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createLiteral(null, Integer.class)
         };
         // default / default
-        helpTestLocate(null, null, args, "LOCATE('a', 'abcdefg', NULL)"); //$NON-NLS-1$
+        helpTestLocate(args, "LOCATE('a', 'abcdefg', NULL)"); //$NON-NLS-1$
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str, e1) using an element for start index 
      * parameter returns INSTR(source_str, search_str, CASE WHEN e1 < 1 THEN 1 ELSE e1 END). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying a function  
+     * {@link LocateFunctionModifier} will be constructed specifying a function  
      * name of INSTR and a parameter order of {@link ParameterOrder#SOURCE_SEARCH_INDEX}.
      * 
      * @throws Exception
@@ -295,15 +293,15 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createElement("e1", null, null, Integer.class) //$NON-NLS-1$
         };
         // INSTR / SOURCE_SEARCH_INDEX
-        helpTestLocate("INSTR", ParameterOrder.SOURCE_SEARCH_INDEX, args, "INSTR('abcdefg', 'a', CASE WHEN e1 < 1 THEN 1 ELSE e1 END)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestLocate("INSTR", true, args, "INSTR('abcdefg', 'a', CASE WHEN e1 < 1 THEN 1 ELSE e1 END)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
+     * Test {@link LocateFunctionModifier#modify(IFunction)} to validate a call 
      * to LOCATE(search_str, source_str, e1) using an element for start index 
      * parameter returns LOCATE(search_str, source_str, CASE WHEN e1 < 0 THEN 0 ELSE e1 END). 
      * <p>
-     * {@link LOCATEFunctionModifier} will be constructed specifying no function  
+     * {@link LocateFunctionModifier} will be constructed specifying no function  
      * name and no parameter order.
      * 
      * @throws Exception
@@ -315,99 +313,7 @@ public class TestLOCATEFunctionModifier {
                 LANG_FACTORY.createElement("e1", null, null, Integer.class) //$NON-NLS-1$
         };
         // default / default
-        helpTestLocate(null, null, args, "LOCATE('a', 'abcdefg', CASE WHEN e1 < 1 THEN 1 ELSE e1 END)"); //$NON-NLS-1$
-    }
-
-    /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
-     * to LOCATE(search_str, source_str, e1) using an element for start index 
-     * parameter returns LOCATE(search_str, source_str, e1).
-     * <p> 
-     * {@link LOCATEFunctionModifier} will be constructed specifying no function  
-     * name, no parameter order, and no string index base.  The test explicitly 
-     * overrides {@link LOCATEFunctionModifier#getStartIndexExpression(IExpression)} 
-     * to produce output that does not use the searched case expression for the 
-     * element. 
-     * 
-     * @throws Exception
-     */
-    @Test public void testOverrideGetStartIndexExpression() throws Exception {
-    	final String expectedStr = "LOCATE('a', 'abcdefg', e1)"; //$NON-NLS-1$
-    	
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createLiteral("a", String.class), //$NON-NLS-1$
-                LANG_FACTORY.createLiteral("abcdefg", String.class), //$NON-NLS-1$
-                LANG_FACTORY.createElement("e1", null, null, Integer.class) //$NON-NLS-1$
-        };
-    	IFunction func = LANG_FACTORY.createFunction(SourceSystemFunctions.LOCATE, args, Integer.class);
-
-    	final Translator trans = new Translator() {
-			@Override
-			public void initialize(ConnectorEnvironment env)
-					throws ConnectorException {
-				super.initialize(env);
-				registerFunctionModifier(SourceSystemFunctions.LOCATE, new LOCATEFunctionModifier(getLanguageFactory(), null, null) {
-					@Override
-					protected IExpression getStartIndexExpression(
-							IExpression startIndex) {
-				    	return startIndex;
-					}
-					
-				});
-			}
-    	};
-
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
-
-        IExpression expr = trans.getFunctionModifiers().get(SourceSystemFunctions.LOCATE).modify(func);
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);
-        assertEquals("Modified function does not match", expectedStr, sqlVisitor.toString()); //$NON-NLS-1$
-    }
-
-    /**
-     * Test {@link LOCATEFunctionModifier#modify(IFunction)} to validate a call 
-     * to LOCATE(search_str, source_str, 1) using a literal for start index 
-     * parameter returns LOCATE(search_str, source_str, (1 + 1)).
-     * <p> 
-     * {@link LOCATEFunctionModifier} will be constructed specifying no function  
-     * name, no parameter order.  The test explicitly overrides {@link LOCATEFunctionModifier#getStartIndexExpression(ILiteral)} 
-     * to produce output that adds <code>1</code> to the literal. 
-     * 
-     * @throws Exception
-     */
-    @Test public void testOverrideGetStartIndexExpression2() throws Exception {
-    	final String expectedStr = "LOCATE('a', 'abcdefg', (1 + 1))"; //$NON-NLS-1$
-    	
-        IExpression[] args = new IExpression[] {
-                LANG_FACTORY.createLiteral("a", String.class), //$NON-NLS-1$
-                LANG_FACTORY.createLiteral("abcdefg", String.class), //$NON-NLS-1$
-                LANG_FACTORY.createLiteral(1, Integer.class)
-        };
-    	IFunction func = LANG_FACTORY.createFunction(SourceSystemFunctions.LOCATE, args, Integer.class);
-
-    	final Translator trans = new Translator() {
-			@Override
-			public void initialize(ConnectorEnvironment env)
-					throws ConnectorException {
-				super.initialize(env);
-				registerFunctionModifier(SourceSystemFunctions.LOCATE, new LOCATEFunctionModifier(getLanguageFactory(), null, null) {
-					@Override
-					protected IExpression getStartIndexExpression(
-							ILiteral startIndex) {
-				    	return LANG_FACTORY.createFunction("+", Arrays.asList(startIndex, LANG_FACTORY.createLiteral(1, Integer.class)), Integer.class); //$NON-NLS-1$
-					}
-					
-				});
-			}
-    	};
-
-        trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
-
-        IExpression expr = trans.getFunctionModifiers().get(SourceSystemFunctions.LOCATE).modify(func);
-        SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);
-        assertEquals("Modified function does not match", expectedStr, sqlVisitor.toString()); //$NON-NLS-1$
+        helpTestLocate(args, "LOCATE('a', 'abcdefg', CASE WHEN e1 < 1 THEN 1 ELSE e1 END)"); //$NON-NLS-1$
     }
     
 }

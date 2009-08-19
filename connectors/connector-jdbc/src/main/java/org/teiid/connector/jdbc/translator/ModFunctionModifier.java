@@ -45,7 +45,7 @@ import org.teiid.connector.language.ILanguageFactory;
  * 
  * @since 6.2
  */
-public class MODFunctionModifier extends AliasModifier {
+public class ModFunctionModifier extends AliasModifier {
 
 	private static List<Class<?>> DEFAULT_TYPELIST = new ArrayList<Class<?>>(4);
 	static {
@@ -70,7 +70,7 @@ public class MODFunctionModifier extends AliasModifier {
 	 * 
 	 * @param langFactory the language factory associated with translation
 	 */
-    public MODFunctionModifier(ILanguageFactory langFactory) {
+    public ModFunctionModifier(ILanguageFactory langFactory) {
     	this(langFactory, DEFAULT_FUNCTIONNAME, DEFAULT_TYPELIST);
     }
 	
@@ -93,13 +93,13 @@ public class MODFunctionModifier extends AliasModifier {
      * @param supportedTypeList a list of type classes that is supported by the 
      *                          data source's MOD function
      */
-    public MODFunctionModifier(ILanguageFactory langFactory, String functionName, List<Class<?>>supportedTypeList) {
+    public ModFunctionModifier(ILanguageFactory langFactory, String functionName, List<Class<?>>supportedTypeList) {
     	super(functionName);
         this.langFactory = langFactory;
         if ( supportedTypeList != null ) {
         	this.supTypeList = supportedTypeList;
         } else {
-        	this.supTypeList = MODFunctionModifier.DEFAULT_TYPELIST;
+        	this.supTypeList = ModFunctionModifier.DEFAULT_TYPELIST;
         }
     }
 	

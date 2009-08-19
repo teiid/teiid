@@ -33,7 +33,7 @@ import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.SourceSystemFunctions;
-import org.teiid.connector.jdbc.translator.LOCATEFunctionModifier;
+import org.teiid.connector.jdbc.translator.LocateFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 
 
@@ -51,7 +51,7 @@ public class MySQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.BITNOT, new BitFunctionModifier("~", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITOR, new BitFunctionModifier("|", getLanguageFactory())); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.BITXOR, new BitFunctionModifier("^", getLanguageFactory())); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LOCATEFunctionModifier(getLanguageFactory(), "LOCATE")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
     }  
 	
 	@Override
