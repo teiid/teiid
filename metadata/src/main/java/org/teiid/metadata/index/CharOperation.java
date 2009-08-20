@@ -89,11 +89,6 @@ public final class CharOperation {
 		int iPattern = 0;
 		int iName = 0;
 
-		if (patternEnd < 0)
-			patternEnd = pattern.length;
-		if (nameEnd < 0)
-			nameEnd = name.length;
-
 		/* check first segment */
 		char patternChar = 0;
 		while ((iPattern < patternEnd)
@@ -114,6 +109,9 @@ public final class CharOperation {
 		/* check sequence of star+segment */
 		int segmentStart;
 		if (patternChar == '*') {
+			if (patternEnd == 1) {
+				return true;
+			}
 			segmentStart = ++iPattern; // skip star
 		} else {
 			segmentStart = 0; // force iName check

@@ -344,13 +344,10 @@ public class MetadataResultsPostProcessor {
                 if(!CharOperation.match(literalString.toCharArray(), valueString.toCharArray(), !literalCriteria.hasFieldWithCaseFunctions())) {
                     criteriaPassed = false;
                 }
-            } else {
-                // non string just check if they equal
-                if(value != null && !value.equals(evaluatedLiteral)) {
-                    criteriaPassed = false;
-                } else if(value == null && evaluatedLiteral != null) {
-                    criteriaPassed = false;
-                }
+            } else if(value == null || evaluatedLiteral == null) {
+                criteriaPassed = false;
+            } else if (((Comparable)value).compareTo(evaluatedLiteral) != 0) {
+                criteriaPassed = false;
             }
         // post processing literal criteria
         } 

@@ -112,7 +112,7 @@ public class TestMetadataResultsPostProcessor extends TestCase {
         assertNotNull(filteredRecord);
     }
     
-    public void testFilterNullMatch() {
+    public void testFilterNullNotEqualNull() {
         String uuid = null;
         
         MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.UUID_FIELD, uuid); 
@@ -126,7 +126,7 @@ public class TestMetadataResultsPostProcessor extends TestCase {
         MetadataResultsPostProcessor processor = helpGetProcessor();
         Object filteredRecord = processor.filterBySearchCriteria(columnRecord, criteria);
 
-        assertNotNull(filteredRecord);
+        assertNull(filteredRecord);
     }
     
     public void testFilterNullMisMatch() {

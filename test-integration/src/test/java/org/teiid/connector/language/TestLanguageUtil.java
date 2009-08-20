@@ -95,7 +95,7 @@ public class TestLanguageUtil extends TestCase {
 
     public void testSeparateCrit_NOT() throws Exception {
         helpTestSeparateByAnd("((NOT (intkey = 1 AND intkey = 2)) AND (intkey = 3) AND (intkey = 4))",  //$NON-NLS-1$
-            new String[] { "NOT ((SmallA.IntKey = 1) AND (SmallA.IntKey = 2))", //$NON-NLS-1$
+            new String[] { "(SmallA.IntKey <> 1) OR (SmallA.IntKey <> 2)", //$NON-NLS-1$
                 "SmallA.IntKey = 3", //$NON-NLS-1$
                 "SmallA.IntKey = 4" }); //$NON-NLS-1$        
     }

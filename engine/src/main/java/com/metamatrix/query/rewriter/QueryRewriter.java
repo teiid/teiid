@@ -116,6 +116,7 @@ import com.metamatrix.query.sql.lang.TranslatableProcedureContainer;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.lang.XQuery;
+import com.metamatrix.query.sql.lang.PredicateCriteria.Negatable;
 import com.metamatrix.query.sql.navigator.PostOrderNavigator;
 import com.metamatrix.query.sql.navigator.PreOrderNavigator;
 import com.metamatrix.query.sql.proc.AssignmentStatement;
@@ -186,7 +187,7 @@ public class QueryRewriter {
     private ProcessorDataManager dataMgr;
     private Map variables; //constant propagation
     private int commandType;
-   
+    
     private QueryRewriter(QueryMetadataInterface metadata,
 			CommandContext context, CreateUpdateProcedureCommand procCommand) {
 		this.metadata = metadata;
@@ -314,23 +315,17 @@ public class QueryRewriter {
         return result;
 	}
     
-    private Option mergeOptions( Option sourceOption, Option targetOption ) {
-        if ( sourceOption == null ) {
-            return targetOption;
-        }
-        if ( sourceOption.getPlanOnly() == true ) {
+    private void mergeOptions( Option sourceOption, Option targetOption ) {
+        if ( sourceOption.getPlanOnly()) {
             targetOption.setPlanOnly( true );
         }
-        if ( sourceOption.getDebug() == true ) {
+        if ( sourceOption.getDebug()) {
             targetOption.setDebug( true );
         }
-        if ( sourceOption.getShowPlan() == true ) {
+        if ( sourceOption.getShowPlan()) {
             targetOption.setShowPlan( true );
         }
-        
-        return targetOption;
     }
-    
 	
     private Command removeProceduralWrapper(Command command) throws QueryValidatorException {
         
@@ -361,7 +356,7 @@ public class QueryRewriter {
                 return command;
             }
             try {
-                Object value = Evaluator.evaluate(expr);
+                Object value = new Evaluator(Collections.emptyMap(), this.dataMgr, context).evaluate(expr, Collections.emptyList());
 
                 //check contraint
                 if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
@@ -388,11 +383,9 @@ public class QueryRewriter {
         if (child != null && child.getType() != Command.TYPE_DYNAMIC) {
             if ( child.getOption() == null ) {
                 child.setOption( command.getOption() );                
-            } else {
-                Option merged = mergeOptions( command.getOption(), child.getOption() );
-                child.setOption(merged);
+            } else if (command.getOption() != null) {
+                mergeOptions( command.getOption(), child.getOption() );
             }
-            
             return child;        
         }
         return command;
@@ -438,8 +431,7 @@ public class QueryRewriter {
 			case Statement.TYPE_IF:
 				IfStatement ifStmt = (IfStatement) statement;
 				Criteria ifCrit = ifStmt.getCondition();
-				Criteria evalCrit = rewriteCriteria(ifCrit, false);
-                evalCrit = evaluateCriteria(evalCrit);
+				Criteria evalCrit = rewriteCriteria(ifCrit);
                 
 				ifStmt.setCondition(evalCrit);
 				if(evalCrit.equals(TRUE_CRITERIA)) {
@@ -507,13 +499,12 @@ public class QueryRewriter {
             case Statement.TYPE_WHILE:
                 WhileStatement whileStatement = (WhileStatement) statement;
                 Criteria crit = whileStatement.getCondition();
-                crit = rewriteCriteria(crit, false);
-                evalCrit = evaluateCriteria(crit);
+                crit = rewriteCriteria(crit);
                 
-                whileStatement.setCondition(evalCrit);
-                if(evalCrit.equals(TRUE_CRITERIA)) {
+                whileStatement.setCondition(crit);
+                if(crit.equals(TRUE_CRITERIA)) {
                     throw new QueryValidatorException(QueryExecPlugin.Util.getString("QueryRewriter.infinite_while")); //$NON-NLS-1$
-                } else if(evalCrit.equals(FALSE_CRITERIA) || evalCrit.equals(UNKNOWN_CRITERIA)) {
+                } else if(crit.equals(FALSE_CRITERIA) || crit.equals(UNKNOWN_CRITERIA)) {
                     return null;
                 } 
                 whileStatement.setBlock(rewriteBlock(whileStatement.getBlock()));
@@ -571,7 +562,7 @@ public class QueryRewriter {
 			hasCritElmts = selector.getElements();
 			// collect elements present on the user's criteria and check if
 			// all of the hasCriteria elements are among them
-			Collection userElmnts = ElementCollectorVisitor.getElements(userCrit, true);
+			Collection<ElementSymbol> userElmnts = ElementCollectorVisitor.getElements(userCrit, true);
 			if(!userElmnts.containsAll(hasCritElmts)) {
 				return FALSE_CRITERIA;
 			}
@@ -590,7 +581,7 @@ public class QueryRewriter {
     		Criteria predicateCriteria = (Criteria) criteriaIter.next();
     		// atleast one of the hasElemnets should be on this predicate else
     		// proceed to the next predicate
-			Collection predElmnts = ElementCollectorVisitor.getElements(predicateCriteria, true);
+			Collection<ElementSymbol> predElmnts = ElementCollectorVisitor.getElements(predicateCriteria, true);
 			if(selector.hasElements()) {
 				Iterator hasIter = hasCritElmts.iterator();
 				boolean containsElmnt = false;
@@ -701,7 +692,7 @@ public class QueryRewriter {
 		translatedCriteria = translateVisitor.getTranslatedCriteria();
 		((TranslatableProcedureContainer)userCmd).addImplicitParameters(translateVisitor.getImplicitParams());
 		
-		translatedCriteria = rewriteCriteria(translatedCriteria, false);
+		translatedCriteria = rewriteCriteria(translatedCriteria);
 
 		// apply any implicit conversions
 		try {
@@ -732,7 +723,7 @@ public class QueryRewriter {
         // Rewrite criteria
         Criteria crit = query.getCriteria();
         if(crit != null) {
-            crit = rewriteCriteria(crit, false);
+            crit = rewriteCriteria(crit);
             if(crit == TRUE_CRITERIA) {
                 query.setCriteria(null);
             } else {
@@ -817,7 +808,7 @@ public class QueryRewriter {
         // Rewrite having
         Criteria having = query.getHaving();
         if(having != null) {
-            query.setHaving(rewriteCriteria(having, false));
+            query.setHaving(rewriteCriteria(having));
         }
                 
         rewriteExpressions(query.getSelect());
@@ -1018,7 +1009,7 @@ public class QueryRewriter {
 			//rewrite join crits by rewriting a compound criteria
 			Criteria criteria = new CompoundCriteria(new ArrayList(joinCrits));
             joinCrits.clear();
-            criteria = rewriteCriteria(criteria, false);
+            criteria = rewriteCriteria(criteria);
             if (criteria instanceof CompoundCriteria && ((CompoundCriteria)criteria).getOperator() == CompoundCriteria.AND) {
                 joinCrits.addAll(((CompoundCriteria)criteria).getCriteria());
             } else {
@@ -1052,7 +1043,7 @@ public class QueryRewriter {
      * @return The re-written criteria
      */
     public static Criteria rewriteCriteria(Criteria criteria, CreateUpdateProcedureCommand procCommand, CommandContext context, QueryMetadataInterface metadata) throws QueryValidatorException {
-    	return new QueryRewriter(metadata, context, procCommand).rewriteCriteria(criteria, false);
+    	return new QueryRewriter(metadata, context, procCommand).rewriteCriteria(criteria);
     }
 
 	/**
@@ -1062,9 +1053,9 @@ public class QueryRewriter {
 	 * in the procedural language.
 	 * @return The re-written criteria
 	 */
-    private Criteria rewriteCriteria(Criteria criteria, boolean preserveUnknown) throws QueryValidatorException {
-		if(criteria instanceof CompoundCriteria) {
-            return rewriteCriteria((CompoundCriteria)criteria, true, preserveUnknown);
+    private Criteria rewriteCriteria(Criteria criteria) throws QueryValidatorException {
+    	if(criteria instanceof CompoundCriteria) {
+            return rewriteCriteria((CompoundCriteria)criteria, true);
 		} else if(criteria instanceof NotCriteria) {
 			criteria = rewriteCriteria((NotCriteria)criteria);
 		} else if(criteria instanceof CompareCriteria) {
@@ -1078,7 +1069,7 @@ public class QueryRewriter {
         } else if(criteria instanceof IsNullCriteria) {
             criteria = rewriteCriteria((IsNullCriteria)criteria);
         } else if(criteria instanceof BetweenCriteria) {
-            criteria = rewriteCriteria((BetweenCriteria)criteria, preserveUnknown);
+            criteria = rewriteCriteria((BetweenCriteria)criteria);
 		} else if(criteria instanceof HasCriteria) {
             criteria = rewriteCriteria((HasCriteria)criteria);
 		} else if(criteria instanceof TranslateCriteria) {
@@ -1094,7 +1085,7 @@ public class QueryRewriter {
         } else if (criteria instanceof DependentSetCriteria) {
             criteria = rewriteCriteria((AbstractSetCriteria)criteria);
         }
-
+    	
         return evaluateCriteria(criteria);
 	}
     
@@ -1106,7 +1097,7 @@ public class QueryRewriter {
      */
     public static Criteria optimizeCriteria(CompoundCriteria criteria) {
         try {
-            return new QueryRewriter(null, null, null).rewriteCriteria(criteria, false, false);
+            return new QueryRewriter(null, null, null).rewriteCriteria(criteria, false);
         } catch (QueryValidatorException err) {
             //shouldn't happen
             return criteria;
@@ -1116,20 +1107,17 @@ public class QueryRewriter {
     /** May be simplified if this is an AND and a sub criteria is always
      * false or if this is an OR and a sub criteria is always true
      */
-    private Criteria rewriteCriteria(CompoundCriteria criteria, boolean rewrite, boolean preserveUnknown) throws QueryValidatorException {
-        List crits = criteria.getCriteria();
+    private Criteria rewriteCriteria(CompoundCriteria criteria, boolean rewrite) throws QueryValidatorException {
+        List<Criteria> crits = criteria.getCriteria();
         int operator = criteria.getOperator();
 
         // Walk through crits and collect converted ones
-        LinkedHashSet newCrits = new LinkedHashSet(crits.size());
-        Iterator critIter = crits.iterator();
-        while(critIter.hasNext()) {
-            Criteria converted = (Criteria) critIter.next();
+        LinkedHashSet<Criteria> newCrits = new LinkedHashSet<Criteria>(crits.size());
+        for (Criteria converted : crits) {
             if (rewrite) {
-                converted = rewriteCriteria(converted, preserveUnknown);
-                converted = evaluateCriteria(converted);
+                converted = rewriteCriteria(converted);
             } else if (converted instanceof CompoundCriteria) {
-                converted = rewriteCriteria((CompoundCriteria)converted, false, preserveUnknown);
+                converted = rewriteCriteria((CompoundCriteria)converted, false);
             }
 
             //begin boolean optimizations
@@ -1143,25 +1131,20 @@ public class QueryRewriter {
                     // this AND must be false as at least one branch is always false
                     return converted;
                 }
+            } else if (converted == UNKNOWN_CRITERIA) {
+                if (operator == CompoundCriteria.AND) {
+                    return FALSE_CRITERIA;
+                } 
+            	continue;
             } else {
                 if (converted instanceof CompoundCriteria) {
                     CompoundCriteria other = (CompoundCriteria)converted;
                     if (other.getOperator() == criteria.getOperator()) {
-                        Iterator i = other.getCriteria().iterator();
-                        while (i.hasNext()) {
-                            newCrits.add(i.next());
-                        }
+                        newCrits.addAll(other.getCriteria());
                         continue;
                     } 
                 } 
-                //if we're not interested in preserving unknowns, then treat unknown as false
-                if (!preserveUnknown && converted == UNKNOWN_CRITERIA) {
-                    if (operator == CompoundCriteria.AND) {
-                        return FALSE_CRITERIA;
-                    }
-                } else {
-                    newCrits.add(converted);
-                }
+                newCrits.add(converted);
             }            
 		}
 
@@ -1172,7 +1155,7 @@ public class QueryRewriter {
             return FALSE_CRITERIA;
         } else if(newCrits.size() == 1) {
             // Only one sub crit now, so just return it
-            return (Criteria) newCrits.iterator().next();
+            return newCrits.iterator().next();
         } else {
             criteria.getCriteria().clear();
             criteria.getCriteria().addAll(newCrits);
@@ -1183,7 +1166,7 @@ public class QueryRewriter {
     private Criteria evaluateCriteria(Criteria crit) throws QueryValidatorException {
         if(EvaluatableVisitor.isFullyEvaluatable(crit, true)) {
             try {
-            	Boolean eval = new Evaluator(Collections.emptyMap(), null, null).evaluateTVL(crit, Collections.emptyList());
+            	Boolean eval = new Evaluator(Collections.emptyMap(), this.dataMgr, context).evaluateTVL(crit, Collections.emptyList());
                 
                 if (eval == null) {
                     return UNKNOWN_CRITERIA;
@@ -1204,12 +1187,21 @@ public class QueryRewriter {
         
         return crit;
     }
-    
 
 	private Criteria rewriteCriteria(NotCriteria criteria) throws QueryValidatorException {
-        Criteria innerCrit = rewriteCriteria(criteria.getCriteria(), true);
-        
-        innerCrit = evaluateCriteria(innerCrit);
+		Criteria innerCrit = criteria.getCriteria(); 
+        if (innerCrit instanceof CompoundCriteria) {
+        	//reduce to only negation of predicates, so that the null/unknown handling criteria is applied appropriately
+    		return rewriteCriteria(Criteria.toConjunctiveNormalForm(criteria));
+        } 
+        if (innerCrit instanceof Negatable) {
+        	((Negatable) innerCrit).negate();
+        	return rewriteCriteria(innerCrit);
+        }
+        if (innerCrit instanceof NotCriteria) {
+        	return rewriteCriteria(((NotCriteria)innerCrit).getCriteria());
+        }
+        innerCrit = rewriteCriteria(innerCrit);
         if(innerCrit == TRUE_CRITERIA) {
             return FALSE_CRITERIA;
         } else if(innerCrit == FALSE_CRITERIA) {
@@ -1217,11 +1209,6 @@ public class QueryRewriter {
         } else if (innerCrit == UNKNOWN_CRITERIA) {
             return UNKNOWN_CRITERIA;
         }
-        
-        if (innerCrit instanceof NotCriteria) {
-            return ((NotCriteria)innerCrit).getCriteria();
-        }
-        
         criteria.setCriteria(innerCrit);
         return criteria;
 	}
@@ -1232,7 +1219,7 @@ public class QueryRewriter {
      * @return
      * @throws QueryValidatorException
      */
-    private Criteria rewriteCriteria(BetweenCriteria criteria, boolean preserveUnknown) throws QueryValidatorException {
+    private Criteria rewriteCriteria(BetweenCriteria criteria) throws QueryValidatorException {
         CompareCriteria lowerCriteria = new CompareCriteria(criteria.getExpression(),
                                                             criteria.isNegated() ? CompareCriteria.LT: CompareCriteria.GE,
                                                             criteria.getLowerExpression());
@@ -1243,14 +1230,23 @@ public class QueryRewriter {
                                                             lowerCriteria,
                                                             upperCriteria);
 
-        return rewriteCriteria(newCriteria, preserveUnknown);
+        return rewriteCriteria(newCriteria);
     }
 
 	private Criteria rewriteCriteria(CompareCriteria criteria) throws QueryValidatorException {
 		Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
 		Expression rightExpr = rewriteExpressionDirect(criteria.getRightExpression());
+		criteria.setLeftExpression(leftExpr);
+		criteria.setRightExpression(rightExpr);
 
-        if(!EvaluatableVisitor.willBecomeConstant(rightExpr) && EvaluatableVisitor.willBecomeConstant(leftExpr)) {
+        if (isNull(leftExpr) || isNull(rightExpr)) {
+            return UNKNOWN_CRITERIA;
+        }
+
+        boolean rightConstant = false;
+        if(EvaluatableVisitor.willBecomeConstant(rightExpr)) {
+        	rightConstant = true;
+        } else if (EvaluatableVisitor.willBecomeConstant(leftExpr)) {
             // Swap in this particular case for connectors
             criteria.setLeftExpression(rightExpr);
             criteria.setRightExpression(leftExpr);
@@ -1262,19 +1258,18 @@ public class QueryRewriter {
                 case CompareCriteria.GT:    criteria.setOperator(CompareCriteria.LT);   break;
                 case CompareCriteria.GE:    criteria.setOperator(CompareCriteria.LE);   break;
             }
-
-		} else {
-			criteria.setLeftExpression(leftExpr);
-			criteria.setRightExpression(rightExpr);
-		}
-
-        if(criteria.getLeftExpression() instanceof Function && EvaluatableVisitor.willBecomeConstant(criteria.getRightExpression())) {
-            criteria = simplifyWithInverse(criteria);
-        }
+            rightConstant = true;
+		} 
         
-        if (isNull(criteria.getLeftExpression()) || isNull(criteria.getRightExpression())) {
-            return UNKNOWN_CRITERIA;
-        }
+    	Function f = null;
+    	while (rightConstant && f != criteria.getLeftExpression() && criteria.getLeftExpression() instanceof Function) {
+            f = (Function)criteria.getLeftExpression();
+        	Criteria result = simplifyWithInverse(criteria);
+        	if (!(result instanceof CompareCriteria)) {
+        		return result;
+        	}
+        	criteria = (CompareCriteria)result;
+    	}
         
         Criteria modCriteria = simplifyTimestampMerge(criteria);
         if(modCriteria instanceof CompareCriteria) {
@@ -1310,7 +1305,7 @@ public class QueryRewriter {
         return criteria;
     }
     
-    private CompareCriteria simplifyWithInverse(CompareCriteria criteria) throws QueryValidatorException {
+    private Criteria simplifyWithInverse(CompareCriteria criteria) throws QueryValidatorException {
         Expression leftExpr = criteria.getLeftExpression();
         
         Function leftFunction = (Function) leftExpr;
@@ -1465,10 +1460,6 @@ public class QueryRewriter {
         criteria.setRightExpression(combinedConst);
         criteria.setOperator(operator);
 
-        if (expr instanceof Function) {
-            return simplifyWithInverse(criteria);
-        }
-        
         // Return new simplified criteria
         return criteria;
     }
@@ -1496,16 +1487,12 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      * @since 4.2
      */
-    private CompareCriteria simplifyConvertFunction(CompareCriteria crit) throws QueryValidatorException {
+    private Criteria simplifyConvertFunction(CompareCriteria crit) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getLeftExpression();
         Constant rightConstant = (Constant) crit.getRightExpression();
         Expression leftExpr = leftFunction.getArgs()[0];
         
         String leftExprTypeName = DataTypeManager.getDataTypeName(leftExpr.getType());
-        
-        if (leftExpr.getType() == DataTypeManager.DefaultDataClasses.NULL) {
-            return crit;
-        }
         
         Constant result = null;
         try {
@@ -1515,19 +1502,12 @@ public class QueryRewriter {
         }
         
         if (result == null) {
-        	if (crit.getOperator() == CompareCriteria.EQ) {
-                return FALSE_CRITERIA;
-            }
-            return TRUE_CRITERIA;
+        	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
         }
         
-        crit.setRightExpression(result);
+    	crit.setRightExpression(result);
         crit.setLeftExpression(leftExpr);
 
-        if (leftExpr instanceof Function) {
-            return simplifyWithInverse(crit);
-        }
-        
         return crit;
     }
 
@@ -1595,14 +1575,17 @@ public class QueryRewriter {
         	if (!removedSome) {
         		return crit; //just return as is
         	}
-        	return rewriteCriteria(crit);
+        } else {
+        	if (newValues.isEmpty()) {
+        		return getSimpliedCriteria(crit, leftExpr, !crit.isNegated(), true);
+        	}
+	        crit.setExpression(leftExpr);
+	        crit.setValues(newValues);
         }
-        crit.setExpression(leftExpr);
-        crit.setValues(newValues);
         return rewriteCriteria(crit);
     }
         
-    private CompareCriteria simplifyParseFormatFunction(CompareCriteria crit) throws QueryValidatorException {
+    private Criteria simplifyParseFormatFunction(CompareCriteria crit) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getLeftExpression();
         String funcName = leftFunction.getName().toLowerCase();
         String inverseFunction = null;
@@ -1668,10 +1651,7 @@ public class QueryRewriter {
                     result = funcLib.invokeFunction(reverseFunction, new Object[] { result, format } );
                     if (!example.equals(result)) {
                         if (parseFunction) {
-                            if (crit.getOperator() == CompareCriteria.EQ) {
-                                return FALSE_CRITERIA;
-                            }
-                            return TRUE_CRITERIA;
+                        	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
                         }
                         //the format is loosing information, so it must not be invertable
                         return crit;
@@ -1705,9 +1685,6 @@ public class QueryRewriter {
         } catch(FunctionExecutionException e) {
             //Not all numeric formats are invertable, so just return the criteria as it may still be valid
             return crit;
-        }
-        if (leftExpr instanceof Function) {
-            return simplifyWithInverse(crit);
         }
         return crit;
     }
@@ -1880,40 +1857,49 @@ public class QueryRewriter {
         }
 
         Expression rightExpr = criteria.getRightExpression();
-        if(rightExpr instanceof Constant) {
+        if(rightExpr instanceof Constant && rightExpr.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
             Constant constant = (Constant) rightExpr;
-            if(constant.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
-                String value = (String) constant.getValue();
+            String value = (String) constant.getValue();
 
-                char escape = criteria.getEscapeChar();
+            char escape = criteria.getEscapeChar();
 
-                // Check whether escape char is unnecessary and remove it
-                if(escape != MatchCriteria.NULL_ESCAPE_CHAR) {                            
-                    if(value.indexOf(escape) < 0) {
-                        criteria.setEscapeChar(MatchCriteria.NULL_ESCAPE_CHAR);
-                    }
-                }
+            // Check whether escape char is unnecessary and remove it
+            if(escape != MatchCriteria.NULL_ESCAPE_CHAR && value.indexOf(escape) < 0) {
+                criteria.setEscapeChar(MatchCriteria.NULL_ESCAPE_CHAR);
+            }
 
-                // if the value of this string constant is '%', then we know the crit will 
-                // always be true                    
-                if ( value.equals( String.valueOf(MatchCriteria.WILDCARD_CHAR)) ) { 
-                    return criteria.isNegated()?FALSE_CRITERIA:TRUE_CRITERIA;                        
-                }  
-                
-                // if both left and right expressions are strings, and the LIKE match characters ('*', '_') are not present 
-                //  in the right expression, rewrite the criteria as EQUALs rather than LIKE
-                if(DataTypeManager.DefaultDataClasses.STRING.equals(criteria.getLeftExpression().getType()) && value.indexOf(escape) < 0 && value.indexOf(MatchCriteria.MATCH_CHAR) < 0 && value.indexOf(MatchCriteria.WILDCARD_CHAR) < 0) {
-                    if (value.equals(MatchCriteria.WILDCARD_CHAR)) {
-                    	return TRUE_CRITERIA;
-                    }
-                	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()));
-                }
+            // if the value of this string constant is '%', then we know the crit will 
+            // always be true                    
+            if ( value.equals( String.valueOf(MatchCriteria.WILDCARD_CHAR)) ) { 
+                return getSimpliedCriteria(criteria, criteria.getLeftExpression(), !criteria.isNegated(), true);                                        
+            } 
+            
+            // if both left and right expressions are strings, and the LIKE match characters ('*', '_') are not present 
+            //  in the right expression, rewrite the criteria as EQUALs rather than LIKE
+            if(DataTypeManager.DefaultDataClasses.STRING.equals(criteria.getLeftExpression().getType()) && value.indexOf(escape) < 0 && value.indexOf(MatchCriteria.MATCH_CHAR) < 0 && value.indexOf(MatchCriteria.WILDCARD_CHAR) < 0) {
+            	return rewriteCriteria(new CompareCriteria(criteria.getLeftExpression(), criteria.isNegated()?CompareCriteria.NE:CompareCriteria.EQ, criteria.getRightExpression()));
             }
         }
 
 		return criteria;
 	}
     
+	private Criteria getSimpliedCriteria(Criteria crit, Expression a, boolean outcome, boolean nullPossible) {
+		if (nullPossible) {
+			if (outcome) {
+				if (this.dataMgr != null) {
+					return crit;
+				}
+				IsNullCriteria inc = new IsNullCriteria(a);
+				inc.setNegated(true);
+				return inc;
+			}
+		} else if (outcome) {
+			return TRUE_CRITERIA;
+		}
+		return FALSE_CRITERIA;
+	}
+	
     private Criteria rewriteCriteria(AbstractSetCriteria criteria) throws QueryValidatorException {
         criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
         
@@ -1923,7 +1909,6 @@ public class QueryRewriter {
 
         return criteria;
     }
-
 
 	private Criteria rewriteCriteria(SetCriteria criteria) throws QueryValidatorException {
 		criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
@@ -2202,8 +2187,8 @@ public class QueryRewriter {
     	if(exprs.length == 3){
     		decodeDelimiter = (String)((Constant)exprs[2]).getValue();
     	}
-    	List newWhens = new ArrayList();
-    	List newThens = new ArrayList();
+    	List<Criteria> newWhens = new ArrayList<Criteria>();
+    	List<Constant> newThens = new ArrayList<Constant>();
         Constant elseConst = null;
         StringTokenizer tokenizer = new StringTokenizer(decodeString, decodeDelimiter);
         while (tokenizer.hasMoreTokens()) {
@@ -2295,13 +2280,13 @@ public class QueryRewriter {
     private Expression rewriteCaseExpression(SearchedCaseExpression expr)
         throws QueryValidatorException {
         int whenCount = expr.getWhenCount();
-        ArrayList whens = new ArrayList(whenCount);
-        ArrayList thens = new ArrayList(whenCount);
+        ArrayList<Criteria> whens = new ArrayList<Criteria>(whenCount);
+        ArrayList<Expression> thens = new ArrayList<Expression>(whenCount);
 
         for (int i = 0; i < whenCount; i++) {
             
             // Check the when to see if this CASE can be rewritten due to an always true/false when
-            Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i), false);
+            Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i));
             if(rewrittenWhen == TRUE_CRITERIA) {
                 // WHEN is always true, so just return the THEN
                 return rewriteExpressionDirect(expr.getThenExpression(i));
@@ -2521,7 +2506,7 @@ public class QueryRewriter {
 		// Rewrite criteria
 		Criteria crit = update.getCriteria();
 		if(crit != null) {
-			update.setCriteria(rewriteCriteria(crit, false));
+			update.setCriteria(rewriteCriteria(crit));
 		}
 
 		return update;
@@ -2563,7 +2548,7 @@ public class QueryRewriter {
 		// Rewrite criteria
 		Criteria crit = delete.getCriteria();
 		if(crit != null) {
-			delete.setCriteria(rewriteCriteria(crit, false));
+			delete.setCriteria(rewriteCriteria(crit));
 		}
 
 		return delete;

@@ -22,6 +22,7 @@
 
 package com.metamatrix.query.sql.lang;
 
+import com.metamatrix.query.sql.lang.PredicateCriteria.Negatable;
 import com.metamatrix.query.sql.symbol.Expression;
 
 /**
@@ -29,7 +30,7 @@ import com.metamatrix.query.sql.symbol.Expression;
  * IN criteria:  {@link SetCriteria} (where values are specified) and {@link SubquerySetCriteria}
  * (where a subquery is defined and will supply the values for the IN set).  
  */
-public abstract class AbstractSetCriteria extends PredicateCriteria {
+public abstract class AbstractSetCriteria extends PredicateCriteria implements Negatable {
 
     /** The left expression */
     private Expression expression;
@@ -74,6 +75,11 @@ public abstract class AbstractSetCriteria extends PredicateCriteria {
      */
     public void setNegated(boolean negationFlag) {
         negated = negationFlag;
+    }
+    
+    @Override
+    public void negate() {
+    	this.negated = !this.negated;
     }
 
     /**

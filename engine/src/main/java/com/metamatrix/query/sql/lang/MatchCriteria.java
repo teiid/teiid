@@ -29,6 +29,7 @@ import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageVisitor;
+import com.metamatrix.query.sql.lang.PredicateCriteria.Negatable;
 import com.metamatrix.query.sql.symbol.Expression;
 
 /**
@@ -38,7 +39,7 @@ import com.metamatrix.query.sql.symbol.Expression;
  * match character.  The escape character can be used to escape an actual % or _ within a
  * match string. 
  */
-public class MatchCriteria extends PredicateCriteria {
+public class MatchCriteria extends PredicateCriteria implements Negatable {
 
 	/** The default wildcard character - '%' */
 	public static final char WILDCARD_CHAR = '%';
@@ -157,6 +158,11 @@ public class MatchCriteria extends PredicateCriteria {
      */
     public void setNegated(boolean negationFlag) {
         negated = negationFlag;
+    }
+    
+    @Override
+    public void negate() {
+    	this.negated = !this.negated;
     }
 
     public void acceptVisitor(LanguageVisitor visitor) {

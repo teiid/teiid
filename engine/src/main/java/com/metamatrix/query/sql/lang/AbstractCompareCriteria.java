@@ -65,27 +65,6 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria {
      */
     private int operator = EQ;
 
-//    /**
-//     * Constructs a default instance of this class.
-//     */
-//    public AbstractCompareCriteria() {
-//        super();
-//    }
-
-//    /**
-//     * Constructs an instance of this class for a specific "operand operator
-//     * operand" clause.
-//     *
-//     * @param identifier The variable being compared
-//     * @param value The value the variable is being compared to (literal or variable)
-//     * @param operator The operator representing how the variable and value are to
-//     *                 be compared
-//     */
-//    public AbstractCompareCriteria( Expression leftExpression, int operator, Expression rightExpression ) {
-//        super();
-//        set(leftExpression, operator, rightExpression);
-//    }
-
     /**
      * Returns the operator.
      * @return The operator
@@ -154,6 +133,5 @@ public abstract class AbstractCompareCriteria extends PredicateCriteria {
             default: return "??"; //$NON-NLS-1$
         }
     }
-
-    
+        
 }  // END CLASS

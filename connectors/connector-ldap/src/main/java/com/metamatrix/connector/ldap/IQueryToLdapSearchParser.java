@@ -476,7 +476,7 @@ public class IQueryToLdapSearchParser {
 			while(itr.hasNext()) {
 				ICriteria c = (ICriteria)itr.next();
 				// recurse on each criterion
-				filterList = getSearchFilterFromWhereClause(c, filterList);
+				filterList.addAll(getSearchFilterFromWhereClause(c, new LinkedList()));
 			}
 			filterList.add(")"); //$NON-NLS-1$
 			
@@ -527,7 +527,7 @@ public class IQueryToLdapSearchParser {
 		} else if (criteria instanceof INotCriteria) {
 			logger.logTrace("Parsing NOT criteria."); //$NON-NLS-1$
 			isNegated = true;
-			filterList = getSearchFilterFromWhereClause(((INotCriteria)criteria).getCriteria(), filterList);
+			filterList.addAll(getSearchFilterFromWhereClause(((INotCriteria)criteria).getCriteria(), new LinkedList()));
 		}
 		
 		if (isNegated) {

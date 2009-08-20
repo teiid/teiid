@@ -34,6 +34,12 @@ package com.metamatrix.query.sql.lang;
  */
 public abstract class PredicateCriteria extends Criteria {
    
+	public interface Negatable {
+		
+		void negate();
+		
+	}
+	
     /**
      * Constructs a default instance of this class.
      */

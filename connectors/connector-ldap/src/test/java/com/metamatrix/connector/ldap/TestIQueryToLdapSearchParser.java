@@ -191,7 +191,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
         // Set Expected SearchDetails Values
         //-----------------------------------
         String expectedContextName = "ou=people,dc=metamatrix,dc=com"; //$NON-NLS-1$
-        String expectedContextFilter = "(!(|(cn=R*)(cn=S*)))"; //$NON-NLS-1$
+        String expectedContextFilter = "(&(!(cn=R*))(!(cn=S*)))"; //$NON-NLS-1$
         
         List expectedAttrNameList = new ArrayList();
         expectedAttrNameList.add("uid"); //$NON-NLS-1$

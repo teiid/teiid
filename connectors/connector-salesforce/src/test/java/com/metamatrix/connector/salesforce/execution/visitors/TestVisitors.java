@@ -89,7 +89,7 @@ public class TestVisitors {
 		IQuery command = (IQuery)translationUtility.parseCommand("select * from Account where not (Name = 'foo' and Stuff = 'bar')"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
-		assertEquals("SELECT id, AccountName, Stuff FROM Account WHERE NOT ((AccountName = 'foo') AND (Stuff = 'bar'))", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		assertEquals("SELECT id, AccountName, Stuff FROM Account WHERE (AccountName != 'foo') OR (Stuff != 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
 	@Test public void testCountStart() throws Exception {

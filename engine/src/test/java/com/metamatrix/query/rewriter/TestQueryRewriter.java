@@ -203,11 +203,11 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteUnknown6() {
-        helpTestRewriteCriteria("not(pm1.g1.e1 = '1' and '1' = convert(null, string))", "NOT ((pm1.g1.e1 = '1') and (NULL <> NULL))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(pm1.g1.e1 = '1' and '1' = convert(null, string))", "pm1.g1.e1 <> '1'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
         
     @Test public void testRewriteUnknown7() {
-        helpTestRewriteCriteria("not(pm1.g1.e1 = '1' or '1' = convert(null, string))", "NOT ((pm1.g1.e1 = '1') or (NULL <> NULL))"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(pm1.g1.e1 = '1' or '1' = convert(null, string))", "1 = 0"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteUnknown8() {
@@ -224,6 +224,10 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteInCriteriaWithSingleValue1() {
         helpTestRewriteCriteria("pm1.g1.e1 not in ('1')", "pm1.g1.e1 != '1'"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteInCriteriaWithConvert() {
+        helpTestRewriteCriteria("convert(pm1.g1.e2, string) not in ('x')", "pm1.g1.e2 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteInCriteriaWithNoValues() throws Exception {
@@ -435,7 +439,7 @@ public class TestQueryRewriter {
 
     @Test public void testRewriteCrit_parseTimestamp3() {
         helpTestRewriteCriteria("PARSETimestamp(pm3.g1.e1, 'yyyy dd mm') <> {ts'2003-05-01 13:25:04.5'}", //$NON-NLS-1$
-                                "1 = 1" );         //$NON-NLS-1$
+                                "pm3.g1.e1 is not null" );         //$NON-NLS-1$
     }
     
     @Test public void testRewriteCrit_parseTimestamp4() {
@@ -743,7 +747,7 @@ public class TestQueryRewriter {
     }   
     
     @Test public void testRewriteNot3() {
-        helpTestRewriteCriteria("NOT (pm1.g1.e1='x')", "NOT (pm1.g1.e1 = 'x')");     //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("NOT (pm1.g1.e1='x')", "pm1.g1.e1 <> 'x'");     //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteDefect1() {
@@ -1597,7 +1601,7 @@ public class TestQueryRewriter {
     
     /** Check that this returns true, x is not convertable to an int */
     @Test public void testRewriteCase1954f1() {
-        helpTestRewriteCriteria("convert(pm1.g1.e2, string) != 'x'", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("convert(pm1.g1.e2, string) != 'x'", "pm1.g1.e2 is not null"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCase1954Set() {
@@ -1957,16 +1961,16 @@ public class TestQueryRewriter {
                                             new Class[] { DataTypeManager.DefaultDataClasses.STRING});
     }
 
-    private void verifyProjectedTypesOnUnionBranches(String unionQuery, Class[] types) throws QueryValidatorException, QueryParserException, QueryResolverException, MetaMatrixComponentException {
+    private void verifyProjectedTypesOnUnionBranches(String unionQuery, Class<?>[] types) throws QueryValidatorException, QueryParserException, QueryResolverException, MetaMatrixComponentException {
         SetQuery union = (SetQuery)QueryParser.getQueryParser().parseCommand(unionQuery);
         QueryResolver.resolveCommand(union, FakeMetadataFactory.example1Cached());
         
         union = (SetQuery)QueryRewriter.rewrite(union, null, FakeMetadataFactory.example1Cached(), null);
         
         for (QueryCommand query : union.getQueryCommands()) {
-            List projSymbols = query.getProjectedSymbols();
+            List<SingleElementSymbol> projSymbols = query.getProjectedSymbols();
             for(int i=0; i<projSymbols.size(); i++) {
-                assertEquals("Found type mismatch at column " + i, types[i], ((SingleElementSymbol) projSymbols.get(i)).getType()); //$NON-NLS-1$
+                assertEquals("Found type mismatch at column " + i, types[i], projSymbols.get(i).getType()); //$NON-NLS-1$
             }                
         }
     }
@@ -2074,16 +2078,14 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria("coalesce(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", "ifnull(convert(pm1.g1.e2, double), pm1.g1.e4) = 1", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testProcWithNull() throws Exception {
+    /**
+     * Should fail since null is not allowed as an input
+     * @throws Exception
+     */
+    @Test(expected=QueryValidatorException.class) public void testProcWithNull() throws Exception {
         String sql = "exec pm1.vsp26(1, null)"; //$NON-NLS-1$
         
-        try {
-        	helpTestRewriteCommand(sql, "", FakeMetadataFactory.example1Cached());
-        	fail("expected exception");
-        } catch (QueryValidatorException e) {
-        	
-        }
-        
+    	helpTestRewriteCommand(sql, "", FakeMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
 
     /**
@@ -2201,9 +2203,44 @@ public class TestQueryRewriter {
     	assertEquals( "e2 <= 5", ccrit.getCriteria(1).toString() ); //$NON-NLS-1$
     }
     
-    @Test public void testRewriteLike() {
+    @Test public void testRewriteNullHandling() {
     	String original = "pm1.g1.e1 like '%'"; //$NON-NLS-1$
-    	String expected = "1 = 1"; //$NON-NLS-1$
+    	String expected = "pm1.g1.e1 is not null"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling1() {
+    	String original = "not(pm1.g1.e1 like '%' or pm1.g1.e1 = '1')"; //$NON-NLS-1$
+    	String expected = "1 = 0"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling2() {
+    	String original = "not(pm1.g1.e1 like '%' and pm1.g1.e1 = '1')"; //$NON-NLS-1$
+    	String expected = "pm1.g1.e1 <> '1'"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling3() {
+    	String original = "pm1.g1.e1 like '%' or pm1.g1.e1 = '1'"; //$NON-NLS-1$
+    	String expected = "(pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e1 = '1')"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling4() {
+    	String original = "not((pm1.g1.e1 like '%' or pm1.g1.e1 = '1') and pm1.g1.e2 < 5)"; //$NON-NLS-1$
+    	String expected = "(pm1.g1.e2 < 5) AND ((pm1.g1.e2 < 5) OR (pm1.g1.e1 <> '1'))"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
+    @Test public void testRewriteNullHandling5() {
+    	String original = "not(pm1.g1.e1 not like '%' and pm1.g1.e3 = '1') or pm1.g1.e2 < 5"; //$NON-NLS-1$
+    	String expected = "(pm1.g1.e1 IS NOT NULL) OR (pm1.g1.e3 <> TRUE) OR (pm1.g1.e2 < 5)"; //$NON-NLS-1$
     	
     	helpTestRewriteCriteria(original, expected);
     }

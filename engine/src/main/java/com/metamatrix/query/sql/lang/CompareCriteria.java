@@ -25,6 +25,7 @@ package com.metamatrix.query.sql.lang;
 import com.metamatrix.core.util.EquivalenceUtil;
 import com.metamatrix.core.util.HashCodeUtil;
 import com.metamatrix.query.sql.LanguageVisitor;
+import com.metamatrix.query.sql.lang.PredicateCriteria.Negatable;
 import com.metamatrix.query.sql.symbol.Expression;
 
 /**
@@ -40,7 +41,7 @@ import com.metamatrix.query.sql.symbol.Expression;
  * <LI>5 &lt;= length(companyName)</LI>
  * </UL>
  */
-public class CompareCriteria extends AbstractCompareCriteria {
+public class CompareCriteria extends AbstractCompareCriteria implements Negatable {
 
 	/** The right-hand expression. */
 	private Expression rightExpression;
@@ -171,5 +172,22 @@ public class CompareCriteria extends AbstractCompareCriteria {
 		result.isOptional = isOptional;
 		return result;
 	}
+	
+    @Override
+    public void negate() {
+    	this.setOperator(getInverseOperator(this.getOperator()));
+    }
+    
+    public static int getInverseOperator(int op) {
+    	switch ( op ) {
+        case EQ: return NE; 
+        case NE: return EQ;
+        case LT: return GE;
+        case GT: return LE;
+        case LE: return GT;
+        case GE: return LT;
+        default: return -1;
+    	}
+    }
 	
 }  // END CLASS

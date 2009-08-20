@@ -23,17 +23,18 @@
 package com.metamatrix.query.sql.lang;
 
 import com.metamatrix.query.sql.*;
+import com.metamatrix.query.sql.lang.PredicateCriteria.Negatable;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.core.util.EquivalenceUtil;
 
 /**
  * Represents criteria such as:  "<expression> IS NULL".
  */
-public class IsNullCriteria extends PredicateCriteria {
+public class IsNullCriteria extends PredicateCriteria implements Negatable {
 
 	private Expression expression;
     /** Negation flag. Indicates whether the criteria expression contains a NOT. */
-    private boolean negated = false;
+    private boolean negated;
 	
     /**
      * Constructs a default instance of this class.
@@ -78,6 +79,11 @@ public class IsNullCriteria extends PredicateCriteria {
      */
     public void setNegated(boolean negationFlag) {
         negated = negationFlag;
+    }
+    
+    @Override
+    public void negate() {
+    	this.negated = !this.negated;
     }
 
     public void acceptVisitor(LanguageVisitor visitor) {
