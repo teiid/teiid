@@ -80,4 +80,16 @@ public class SalesforceCapabilities extends BasicConnectorCapabilities {
         return true;
     }
 
+	@Override
+	public SupportedJoinCriteria getSupportedJoinCriteria() {
+		return SupportedJoinCriteria.KEY;
+	}
+
+	@Override
+	public boolean supportsOuterJoins() {
+		return true;
+	}
+    
+    
+
 }

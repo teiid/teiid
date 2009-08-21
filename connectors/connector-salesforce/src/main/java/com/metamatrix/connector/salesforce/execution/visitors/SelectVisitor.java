@@ -31,6 +31,7 @@ import org.teiid.connector.language.IAggregate;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFrom;
+import org.teiid.connector.language.IFromItem;
 import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.ISelect;
@@ -38,6 +39,7 @@ import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.metadata.runtime.Element;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
+import com.metamatrix.connector.salesforce.Constants;
 import com.metamatrix.connector.salesforce.Messages;
 import com.metamatrix.connector.salesforce.Util;
 
@@ -47,10 +49,9 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	private Map<String, Integer> selectSymbolNameToIndex = new HashMap<String, Integer>();
 	private int selectSymbolCount;
 	private int idIndex = -1; // index of the ID select symbol.
-	private StringBuffer selectSymbols = new StringBuffer();
-	private StringBuffer limitClause = new StringBuffer();
-	//private StringBuffer orderByClause = new StringBuffer();
-
+	protected List<ISelectSymbol> selectSymbols;
+	protected StringBuffer limitClause = new StringBuffer();
+	
 	public SelectVisitor(RuntimeMetadata metadata) {
 		super(metadata);
 	}
@@ -71,10 +72,9 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 					Messages.getString("SelectVisitor.distinct.not.supported")));
 		}
 		try {
-			List<ISelectSymbol> symbols = select.getSelectSymbols();
-			selectSymbolCount = symbols.size();
-			Iterator<ISelectSymbol> symbolIter = symbols.iterator();
-			boolean firstTime = true;
+			selectSymbols = select.getSelectSymbols();
+			selectSymbolCount = selectSymbols.size();
+			Iterator<ISelectSymbol> symbolIter = selectSymbols.iterator();
 			int index = 0;
 			while (symbolIter.hasNext()) {
 				ISelectSymbol symbol = symbolIter.next();
@@ -94,14 +94,6 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 					if (nameInSource.equalsIgnoreCase("id")) {
 						idIndex = index;
 					}
-					if (!firstTime) {
-						selectSymbols.append(", ");
-					} else {
-						firstTime = false;
-					}
-					selectSymbols.append(nameInSource);
-				} else if (expression instanceof IAggregate) {
-					selectSymbols.append("count()"); //$NON-NLS-1$
 				}
 				++index;
 			}
@@ -114,27 +106,23 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 	public void visit(IFrom from) {
 		super.visit(from);
 		try {
-			IGroup group = (IGroup) from.getItems().get(0);
-			loadColumnMetadata(group);
+			// could be a join here, but if so we do nothing and handle 
+			// it in visit(IJoin join).
+			IFromItem fromItem = (IFromItem) from.getItems().get(0);
+			if(fromItem instanceof IGroup) {
+				table = ((IGroup)fromItem).getMetadataObject();
+		        String supportsQuery = (String)table.getProperties().get(Constants.SUPPORTS_QUERY);
+		        if (!Boolean.valueOf(supportsQuery)) {
+		            throw new ConnectorException(table.getNameInSource() + " "
+		                                         + Messages.getString("CriteriaVisitor.query.not.supported"));
+		        }
+				loadColumnMetadata((IGroup)fromItem);
+			}
 		} catch (ConnectorException ce) {
 			exceptions.add(ce);
 		}
 	}
-
-/*
-	@Override
-	public void visit(IOrderBy orderBy) {
-		super.visit(orderBy);
-		List items = orderBy.getItems();
-		if(items.size() > 1) {
-			exceptions.add(new ConnectorException("Salesforce cannot support more than one item in the ORDER BY clause"));
-		}
-		StringBuffer result = new StringBuffer();
-		result.append(ORDER_BY).append(SPACE);
-		result.append(items.get(0));
-		orderByClause = result;
-	}
-*/
+	
 	/*
 	 * The SOQL SELECT command uses the following syntax: SELECT fieldList FROM
 	 * objectType [WHERE The Condition Expression (WHERE Clause)] [ORDER BY]
@@ -147,7 +135,8 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		}
 		StringBuffer result = new StringBuffer();
 		result.append(SELECT).append(SPACE);
-		result.append(selectSymbols).append(SPACE);
+		addSelectSymbols(table.getNameInSource(), result);
+		result.append(SPACE);
 		result.append(FROM).append(SPACE);
 		result.append(table.getNameInSource()).append(SPACE);
 		addCriteriaString(result);
@@ -156,6 +145,28 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		Util.validateQueryLength(result);
 		return result.toString();
 	}
+
+	protected void addSelectSymbols(String tableNameInSource, StringBuffer result) throws ConnectorException {
+		boolean firstTime = true;
+		for (ISelectSymbol symbol : selectSymbols) {
+			if (!firstTime) {
+				result.append(", ");
+			} else {
+				firstTime = false;
+			}
+			IExpression expression = symbol.getExpression();
+			if (expression instanceof IElement) {
+				Element element = ((IElement) expression).getMetadataObject();
+				String tableName = element.getParent().getNameInSource();
+				result.append(tableName);
+				result.append('.');
+				result.append(element.getNameInSource());
+			} else if (expression instanceof IAggregate) {
+				result.append("count()"); //$NON-NLS-1$
+			}
+		}
+	}
+
 
 	public int getSelectSymbolCount() {
 		return selectSymbolCount;

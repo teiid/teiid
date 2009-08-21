@@ -58,22 +58,18 @@ import com.sforce.soap.partner.SessionHeader;
 import com.sforce.soap.partner.SforceServiceLocator;
 import com.sforce.soap.partner.SoapBindingStub;
 import com.sforce.soap.partner.fault.ApiFault;
+import com.sforce.soap.partner.fault.InvalidQueryLocatorFault;
 import com.sforce.soap.partner.fault.InvalidSObjectFault;
 import com.sforce.soap.partner.fault.UnexpectedErrorFault;
-import com.sforce.soap.partner.fault.InvalidQueryLocatorFault;
 import com.sforce.soap.partner.sobject.SObject;
 
 public class ConnectionImpl {
 	private SoapBindingStub binding;
 	private ConnectorLogger logger;
-	private long prevTime;
-	private long pingInterval;
 	
-	public ConnectionImpl(String username, String password, URL url, long pingInterval, ConnectorLogger logger) throws ConnectorException {
-		this.pingInterval = pingInterval;
+	public ConnectionImpl(String username, String password, URL url, long pingInterval, ConnectorLogger logger, int timeout) throws ConnectorException {
 		this.logger = logger;
-		login(username, password, url);
-		prevTime = System.currentTimeMillis();
+		login(username, password, url, timeout);
 	}
 	
 	String getUserName() throws ConnectorException {
@@ -90,7 +86,7 @@ public class ConnectionImpl {
 		return binding;
 	}
 	
-	private void login(String username, String password, URL url)
+	private void login(String username, String password, URL url, int timeout)
 			throws ConnectorException {
 		if (!isAlive()) {
 			LoginResult loginResult = null;
@@ -108,6 +104,7 @@ public class ConnectionImpl {
 				CallOptions co = new CallOptions();
 				co.setClient("RedHat/MetaMatrix/");
 				binding.setHeader("SforceService", "CallOptions", co);
+				binding.setTimeout(timeout);
 				loginResult = binding.login(username, password);
 			} catch (ApiFault ex) {
 				throw new ConnectorException(ex.getExceptionMessage());
@@ -157,20 +154,15 @@ public class ConnectionImpl {
 	
 	public boolean isAlive() {
 		boolean result = true;
-		if(null != binding) {
+		if(binding == null) {
+			result = false;
+		} else {
 			try {
-				long currentTime = System.currentTimeMillis();
-				if ((currentTime - prevTime)/1000 > pingInterval) {
-					prevTime = currentTime;
-					binding.getServerTimestamp();
-				}
-			} catch (UnexpectedErrorFault e) {
-				result = false;
-			} catch (RemoteException e) {
+				binding.getServerTimestamp();
+			} catch (Throwable t) {
+				logger.logDetail("Caught Throwable in isAlive", t);
 				result = false;
 			}
-		} else {
-			result = false;
 		}
 		return result;
 	}

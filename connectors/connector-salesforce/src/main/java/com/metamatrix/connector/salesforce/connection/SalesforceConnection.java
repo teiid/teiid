@@ -64,8 +64,19 @@ public class SalesforceConnection extends BasicConnection {
 				}
 			}	catch (NumberFormatException e) {
 				throw new ConnectorException(Messages.getString("SalesforceConnection.bad.ping.value"));
-			} 
-			connection = new ConnectionImpl(username, password, url, pingInterval, env.getLogger());
+			}
+			//600000 - 10 minutes
+			int timeout = 120000; // two minutes
+			try {
+				String timeoutString = env.getProperties().getProperty("SourceConnectionTimeout");
+				if(null != timeoutString) {
+					timeout = Integer.decode(timeoutString).intValue();
+				}
+			}	catch (NumberFormatException e) {
+				throw new ConnectorException(Messages.getString("SalesforceConnection.bad.timeout.value"));
+			}
+			
+			connection = new ConnectionImpl(username, password, url, pingInterval, env.getLogger(), timeout);
 		} catch(Throwable t) {
 			env.getLogger().logError("SalesforceConnection() ErrorMessage: " + t.getMessage());
 			if(t instanceof ConnectorException) {

@@ -277,25 +277,35 @@ public abstract class CriteriaVisitor extends HierarchyVisitor implements ICrite
             Element column = left.getMetadataObject();
             String columnName = column.getNameInSource();
             StringBuffer queryString = new StringBuffer();
+            queryString.append(column.getParent().getNameInSource());
+            queryString.append('.');
             queryString.append(columnName).append(SPACE);
             queryString.append(comparisonOperators.get(compCriteria.getOperator()));
             queryString.append(' ');
-            ILiteral literal = (ILiteral)compCriteria.getRightExpression();
-            if (column.getJavaType().equals(Boolean.class)) {
-                queryString.append(((Boolean)literal.getValue()).toString());
-            } else if (column.getJavaType().equals(java.sql.Timestamp.class)) {
-                Timestamp datetime = (java.sql.Timestamp)literal.getValue();
-                String value = Util.getSalesforceDateTimeFormat().format(datetime);
-                String zoneValue = Util.getTimeZoneOffsetFormat().format(datetime);
-                queryString.append(value).append(zoneValue.subSequence(0, 3)).append(':').append(zoneValue.subSequence(3, 5));
-            } else if (column.getJavaType().equals(java.sql.Time.class)) {
-                String value = Util.getSalesforceDateTimeFormat().format((java.sql.Time)literal.getValue());
-                queryString.append(value);
-            } else if (column.getJavaType().equals(java.sql.Date.class)) {
-                String value = Util.getSalesforceDateFormat().format((java.sql.Date)literal.getValue());
-                queryString.append(value);
-            } else {
-                queryString.append(compCriteria.getRightExpression().toString());
+            IExpression rExp = compCriteria.getRightExpression();
+            if(rExp instanceof ILiteral) {
+            	ILiteral literal = (ILiteral)rExp;
+            	if (column.getJavaType().equals(Boolean.class)) {
+            		queryString.append(((Boolean)literal.getValue()).toString());
+            	} else if (column.getJavaType().equals(java.sql.Timestamp.class)) {
+            		Timestamp datetime = (java.sql.Timestamp)literal.getValue();
+            		String value = Util.getSalesforceDateTimeFormat().format(datetime);
+            		String zoneValue = Util.getTimeZoneOffsetFormat().format(datetime);
+            		queryString.append(value).append(zoneValue.subSequence(0, 3)).append(':').append(zoneValue.subSequence(3, 5));
+            	} else if (column.getJavaType().equals(java.sql.Time.class)) {
+            		String value = Util.getSalesforceDateTimeFormat().format((java.sql.Time)literal.getValue());
+            		queryString.append(value);
+            	} else if (column.getJavaType().equals(java.sql.Date.class)) {
+            		String value = Util.getSalesforceDateFormat().format((java.sql.Date)literal.getValue());
+            		queryString.append(value);
+            	} else {
+            		queryString.append(compCriteria.getRightExpression().toString());
+            	}
+            } else if(rExp instanceof IElement) {
+            	IElement right = (IElement)lExpr;
+                column = left.getMetadataObject();
+                columnName = column.getNameInSource();
+                queryString.append(columnName);
             }
 
             criteriaList.add(queryString.toString());

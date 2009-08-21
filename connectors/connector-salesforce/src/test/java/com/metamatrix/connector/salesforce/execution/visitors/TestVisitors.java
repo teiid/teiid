@@ -40,37 +40,64 @@ public class TestVisitors {
     public static FakeMetadataFacade exampleSalesforce() { 
         // Create models
         FakeMetadataObject salesforceModel = FakeMetadataFactory.createPhysicalModel("SalesforceModel"); //$NON-NLS-1$
+       
+        // Create Account group
+        FakeMetadataObject accounTable = FakeMetadataFactory.createPhysicalGroup("SalesforceModel.Account", salesforceModel); //$NON-NLS-1$
+        accounTable.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "Account"); //$NON-NLS-1$
+        accounTable.setExtensionProp("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
+        // Create Account Columns
+        String[] acctNames = new String[] {
+            "ID", "Name", "Stuff", "Industry"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        };
+        String[] acctTypes = new String[] {  
+            DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING
+        };
         
-        // Create physical groups
-        FakeMetadataObject table = FakeMetadataFactory.createPhysicalGroup("SalesforceModel.Account", salesforceModel); //$NON-NLS-1$
-        table.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "Account"); //$NON-NLS-1$
-        table.setExtensionProp("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
-        // Create physical elements
+        List<FakeMetadataObject> acctCols = FakeMetadataFactory.createElements(accounTable, acctNames, acctTypes);
+        acctCols.get(2).putProperty(FakeMetadataObject.Props.NATIVE_TYPE, "multipicklist"); //$NON-NLS-1$
+        acctCols.get(2).putProperty(FakeMetadataObject.Props.SEARCHABLE_COMPARE, false);
+        acctCols.get(2).putProperty(FakeMetadataObject.Props.SEARCHABLE_LIKE, true);
+        // Set name in source on each column
+        String[] accountNameInSource = new String[] {
+           "id", "AccountName", "Stuff", "Industry"             //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+        };
+        for(int i=0; i<2; i++) {
+            FakeMetadataObject obj = acctCols.get(i);
+            obj.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, accountNameInSource[i]);
+        }
+        
+        // Add all Account to the store
+        FakeMetadataStore store = new FakeMetadataStore();
+        store.addObject(salesforceModel);
+        store.addObject(accounTable);     
+        store.addObjects(acctCols);
+        
+        // Create Contact group
+        FakeMetadataObject contactTable = FakeMetadataFactory.createPhysicalGroup("SalesforceModel.Contact", salesforceModel); //$NON-NLS-1$
+        contactTable.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, "Contact"); //$NON-NLS-1$
+        contactTable.setExtensionProp("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
+        // Create Contact Columns
         String[] elemNames = new String[] {
-            "AccountID", "Name", "Stuff"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            "ContactID", "Name", "AccountId"  //$NON-NLS-1$ //$NON-NLS-2$
         };
         String[] elemTypes = new String[] {  
             DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING 
         };
         
-        List<FakeMetadataObject> cols = FakeMetadataFactory.createElements(table, elemNames, elemTypes);
-        cols.get(2).putProperty(FakeMetadataObject.Props.NATIVE_TYPE, "multipicklist"); //$NON-NLS-1$
-        cols.get(2).putProperty(FakeMetadataObject.Props.SEARCHABLE_COMPARE, false);
-        cols.get(2).putProperty(FakeMetadataObject.Props.SEARCHABLE_LIKE, true);
+        List<FakeMetadataObject> contactCols = FakeMetadataFactory.createElements(contactTable, elemNames, elemTypes);
         // Set name in source on each column
-        String[] nameInSource = new String[] {
-           "id", "AccountName", "Stuff"             //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$  
+        String[] contactNameInSource = new String[] {
+           "id", "ContactName", "accountid"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         };
         for(int i=0; i<2; i++) {
-            FakeMetadataObject obj = cols.get(i);
-            obj.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, nameInSource[i]);
+            FakeMetadataObject obj = contactCols.get(i);
+            obj.putProperty(FakeMetadataObject.Props.NAME_IN_SOURCE, contactNameInSource[i]);
         }
         
-        // Add all objects to the store
-        FakeMetadataStore store = new FakeMetadataStore();
+        // Add all Account to the store
         store.addObject(salesforceModel);
-        store.addObject(table);     
-        store.addObjects(cols);
+        store.addObject(contactTable);     
+        store.addObjects(contactCols);
         
         // Create the facade from the store
         return new FakeMetadataFacade(store);
@@ -82,14 +109,14 @@ public class TestVisitors {
 		IQuery command = (IQuery)translationUtility.parseCommand("select * from Account where Name = 'foo' or Stuff = 'bar'"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
-		assertEquals("SELECT id, AccountName, Stuff FROM Account WHERE (AccountName = 'foo') OR (Stuff = 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE (Account.AccountName = 'foo') OR (Account.Stuff = 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
 	@Test public void testNot() throws Exception {
 		IQuery command = (IQuery)translationUtility.parseCommand("select * from Account where not (Name = 'foo' and Stuff = 'bar')"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
-		assertEquals("SELECT id, AccountName, Stuff FROM Account WHERE (AccountName != 'foo') OR (Stuff != 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE NOT ((Account.AccountName = 'foo') AND (Account.Stuff = 'bar'))", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 	
 	@Test public void testCountStart() throws Exception {
@@ -103,7 +130,28 @@ public class TestVisitors {
 		IQuery command = (IQuery)translationUtility.parseCommand("select * from Account where Name not like '%foo' or Stuff = 'bar'"); //$NON-NLS-1$
 		SelectVisitor visitor = new SelectVisitor(translationUtility.createRuntimeMetadata());
 		visitor.visit(command);
-		assertEquals("SELECT id, AccountName, Stuff FROM Account WHERE (NOT (Account.AccountName LIKE '%foo')) OR (Stuff = 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		assertEquals("SELECT Account.id, Account.AccountName, Account.Stuff, Account.Industry FROM Account WHERE (NOT (Account.AccountName LIKE '%foo')) OR (Account.Stuff = 'bar')", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+	}
+	
+	// I can't really write this test until I see what teiid is going to pass the connectro based upon the user query.
+	// SELECT Account.Name AS c_0, Contact.Name AS c_1 FROM Contact LEFT OUTER JOIN Account ON Account.Id = Contact.AccountId
+	@Test public void testJoin() throws Exception {
+		IQuery command = (IQuery)translationUtility.parseCommand("SELECT Account.Name, Contact.Name FROM Contact LEFT OUTER JOIN Account ON Account.Id = Contact.AccountId"); //$NON-NLS-1$
+		
+		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Account.AccountName, Contact.ContactName FROM Contact", visitor.getQuery().toString().trim()); //$NON-NLS-1$
+		// SELECT Contact.Id, Contact.Name, Account.Name FROM Contact WHERE Account.Industry != 'media'
+		// Looks like using q names will work, but we need to distinguish between the parent and child table somehow cannot send
+		// SELECT Contact.Id, Contact.Name, Account.Name FROM Contact, Account WHERE Account.Industry != 'media'
+	}
+	
+	@Test public void testJoin2() throws Exception {
+		IQuery command = (IQuery)translationUtility.parseCommand("SELECT Account.Name, Contact.Name FROM Account LEFT OUTER JOIN Contact ON Account.Id = Contact.AccountId"); //$NON-NLS-1$
+		
+		SelectVisitor visitor = new JoinQueryVisitor(translationUtility.createRuntimeMetadata());
+		visitor.visit(command);
+		assertEquals("SELECT Account.AccountName, (SELECT Contact.ContactName FROM Contacts) FROM Account", visitor.getQuery().toString().trim()); //$NON-NLS-1$
 	}
 
 }
