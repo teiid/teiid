@@ -99,7 +99,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     
 	@Override
 	public ServerConnection createConnection(Properties connectionProperties) throws CommunicationException, ConnectionException {
-        return new LocalServerConnection(connectionProperties, this.clientServices);
+        return new LocalServerConnection(connectionProperties, this.clientServices, (SessionServiceInterface)findService(DQPServiceNames.SESSION_SERVICE));
 	}
         
     /**
@@ -125,7 +125,9 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 	        // create the deploy directories
 	        File deployDirectory = new File(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, "deploy")); //$NON-NLS-1$
 	        props.setProperty(DQPEmbeddedProperties.DQP_DEPLOYDIR, deployDirectory.getCanonicalPath());
-	        deployDirectory.mkdirs();
+	        if (!deployDirectory.exists()) {
+	        	deployDirectory.mkdirs();
+	        }
 	        
 	        // if there is no separate vdb-definitions specified then use the deploy directory as the location of the vdb
 	        String vdbDefinitions = props.getProperty(DQPEmbeddedProperties.VDB_DEFINITION);
@@ -136,8 +138,9 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 	        // create log directory
 	        File logDirectory = new File(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_LOGDIR, "log")); //$NON-NLS-1$
 	        props.setProperty(DQPEmbeddedProperties.DQP_LOGDIR, logDirectory.getCanonicalPath());
-	        deployDirectory.mkdirs();
-	    	        
+	        if (!logDirectory.exists()) {
+	        	logDirectory.mkdirs();
+	        }
 		} catch (IOException e) {
 			throw new ApplicationInitializationException(e);
 		}

@@ -27,9 +27,14 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
+import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.LogonException;
 import com.metamatrix.client.ExceptionUtil;
@@ -41,6 +46,7 @@ import com.metamatrix.common.comm.platform.CommPlatformPlugin;
 import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
+import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 
 public class LocalServerConnection implements ServerConnection {
 	
@@ -49,9 +55,10 @@ public class LocalServerConnection implements ServerConnection {
 	private DQPWorkContext workContext;
 	private ClassLoader classLoader;
 	ClientServiceRegistry clientServices;
+	SessionServiceInterface sessionService;
 	
 
-	public LocalServerConnection(Properties connectionProperties, ClientServiceRegistry clientServices) throws CommunicationException, ConnectionException{
+	public LocalServerConnection(Properties connectionProperties, ClientServiceRegistry clientServices, SessionServiceInterface sessionService) throws CommunicationException, ConnectionException{
 	
 		this.clientServices = clientServices;		
 		
@@ -62,6 +69,8 @@ public class LocalServerConnection implements ServerConnection {
 		this.result = authenticate(connectionProperties);
 		
 		this.classLoader = Thread.currentThread().getContextClassLoader();
+		
+		this.sessionService = sessionService;
 	}
 
 	public synchronized LogonResult authenticate(Properties connProps) throws ConnectionException, CommunicationException {
@@ -86,14 +95,18 @@ public class LocalServerConnection implements ServerConnection {
 
 		return (T) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new InvocationHandler() {
 
-			public Object invoke(Object arg0, Method arg1, Object[] arg2)
-					throws Throwable {
+			public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
 				if (!isOpen()) {
 					throw ExceptionUtil.convertException(arg1, new MetaMatrixComponentException(JDBCPlugin.Util.getString("LocalTransportHandler.session_inactive"))); //$NON-NLS-1$
-				}
+				}							
 				ClassLoader current = Thread.currentThread().getContextClassLoader();
 				Thread.currentThread().setContextClassLoader(classLoader);
 				DQPWorkContext.setWorkContext(workContext);
+				
+				if (!(iface.equals(ILogon.class))) {					
+					sessionService.validateSession(workContext.getSessionId());
+				}
+				
 				try {
 					return arg1.invoke(clientServices.getClientService(iface), arg2);
 				} catch (InvocationTargetException e) {
@@ -113,6 +126,23 @@ public class LocalServerConnection implements ServerConnection {
 		if (shutdown) {
 			return;
 		}
+		
+		try {
+			//make a best effort to send the logoff
+			Future<?> writeFuture = getService(ILogon.class).logoff();
+			if (writeFuture != null) {
+				writeFuture.get(5000, TimeUnit.MILLISECONDS);
+			}
+		} catch (InvalidSessionException e) {
+			//ignore
+		} catch (InterruptedException e) {
+			//ignore
+		} catch (ExecutionException e) {
+			//ignore
+		} catch (TimeoutException e) {
+			//ignore
+		}
+		
 		this.shutdown = true;
 	}
 
