@@ -71,8 +71,7 @@ public class TestSocketServerConnection extends TestCase {
 		@Override
 		//## JDBC4.0-end ##
 		public ResultsFuture<?> logoff()
-				throws InvalidSessionException,
-				MetaMatrixComponentException {
+				throws InvalidSessionException {
 			return null;
 		}
 
