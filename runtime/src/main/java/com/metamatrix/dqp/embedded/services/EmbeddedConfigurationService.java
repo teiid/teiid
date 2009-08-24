@@ -438,7 +438,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
                 // holds true when DQP restarted. Also, this will be only the case
                 // when shared binding is used.                    
                 def.addConnectorBinding(existing);
-                saveVDB(vdb, vdb.getVersion());
             }            
         }        
     }    
@@ -797,7 +796,11 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         	ArrayList<URL> urlPaths = new ArrayList<URL>();
         	StringTokenizer st = new StringTokenizer(path, ";"); //$NON-NLS-1$
         	while(st.hasMoreElements()) {
-        		urlPaths.add(getFullyQualifiedPath(st.nextToken()));
+        		String extPath = st.nextToken();
+        		if (!extPath.endsWith("/")) { //$NON-NLS-1$
+        			extPath = extPath + "/"; //$NON-NLS-1$
+        		}
+        		urlPaths.add(getFullyQualifiedPath(extPath));
         	}
             return urlPaths.toArray(new URL[urlPaths.size()]);
         }

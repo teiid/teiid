@@ -258,6 +258,9 @@ abstract class BaseAdmin {
             return convertExtensionModule(extModule);
         }         
         else {
+        	if (src == null) {
+        		return null;
+        	}
             throw new UnsupportedOperationException(DQPEmbeddedPlugin.Util.getString("UnSupported_object_conversion"));  //$NON-NLS-1$
         }
     }

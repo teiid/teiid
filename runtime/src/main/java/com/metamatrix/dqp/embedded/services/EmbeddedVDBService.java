@@ -46,7 +46,6 @@ import com.metamatrix.core.vdb.VDBStatus;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.jdbc.JDBCPlugin;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseDoesNotExistException;
 import com.metamatrix.metadata.runtime.api.VirtualDatabaseException;
 import com.metamatrix.vdb.runtime.BasicModelInfo;
@@ -327,7 +326,7 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
         // if not already done so.
         int status = getVDB(vdbName, vdbVersion).getStatus();
         if (status != VDBStatus.ACTIVE) {
-            throw new VirtualDatabaseException(JDBCPlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
+            throw new VirtualDatabaseException(DQPEmbeddedPlugin.Util.getString("VDBService.VDB_does_not_exist._2", vdbName, vdbVersion)); //$NON-NLS-1$
         }
         return vdbVersion;
     }
