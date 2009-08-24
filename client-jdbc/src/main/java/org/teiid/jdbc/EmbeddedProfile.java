@@ -160,7 +160,7 @@ final class EmbeddedProfile {
      */
     private synchronized static EmbeddedTransport getDQPTransport(URL dqpURL) throws SQLException {      
         EmbeddedTransport transport = currentTransport;
-        if (transport == null || !currentTransport.getURL().equals(dqpURL)) {
+        if (transport == null || !transport.isAlive() || !currentTransport.getURL().equals(dqpURL)) {
         	// shutdown any previous instance; we do encourage single instance in a given VM
        		shutdown();
        		try {
@@ -283,7 +283,7 @@ final class EmbeddedProfile {
         	currentTransport = null;
         }
     }
-    
+        
     /** 
      * inner class to hold DQP tansportMap object
      * @since 4.3
@@ -416,6 +416,10 @@ final class EmbeddedProfile {
         void shutdown() {
             this.connectionFactory.shutdown(false);                                    
         }
+        
+        boolean isAlive() {
+        	return this.connectionFactory.isAlive();
+        }        
         
         /**
          * Create a connection to the DQP defined by this transport object based on 

@@ -294,4 +294,10 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 		// only applies in the Embedded scenario.
 	}
 
+	@Override
+	public boolean isAlive() {
+		// only applies in the Embedded scenario.
+		return false;
+	}
+
 }

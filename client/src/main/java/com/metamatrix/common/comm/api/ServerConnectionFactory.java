@@ -47,6 +47,12 @@ public interface ServerConnectionFactory {
 	/**
      * Shutdown the connection factory, including the DQP and all its existing connections 
      */
-    public void shutdown(boolean restart);
+    void shutdown(boolean restart);
+    
+    /**
+     * Is the connection factory alive
+     * @return true if alive; false otherwise.
+     */
+    boolean isAlive();
 	
 }
