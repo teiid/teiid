@@ -49,7 +49,17 @@ class LogConfigurationProvider implements Provider<LogConfiguration> {
 		@Override
 		public int getLogLevel(String context) {
 			Logger log = Log4JUtil.getLogger(context);
-			return Log4JUtil.convert2MessageLevel(log.getLevel());			
+			Level level = log.getLevel();
+			while (level == null) {
+				log = (Logger)log.getParent();
+				if (log != null) {
+					level = log.getLevel();
+				}
+				else {
+					level = Level.ERROR;
+				}
+			}
+			return Log4JUtil.convert2MessageLevel(level);			
 		}
 
 		@Override

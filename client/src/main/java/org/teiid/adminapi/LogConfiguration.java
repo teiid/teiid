@@ -36,7 +36,7 @@ import com.metamatrix.core.log.MessageLevel;
  * 
  * @since 4.3
  */
-public interface LogConfiguration extends AdminObject {
+public interface LogConfiguration {
     
     /**
      * Message level value that specifies that no messages are to be recorded.

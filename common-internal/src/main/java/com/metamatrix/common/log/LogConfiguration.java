@@ -25,7 +25,8 @@ package com.metamatrix.common.log;
 import java.util.Set;
 
 public interface LogConfiguration {
-
+	public static final String ROOT_CONTEXT = "org.teiid."; //$NON-NLS-1$
+	
     /**
      * Get the current configured Log Level for supplied context
      * @param context

@@ -31,45 +31,6 @@ package org.teiid.adminapi;
 public interface EmbeddedLogger {
     
     /**
-     * Message level value that specifies that no messages are to be recorded.
-     */
-    public static final int NONE            = 0;
-
-    /**
-     * Message level value that specifies that critical messages are to be recorded.
-     */
-    public static final int CRITICAL        = 1;
-
-    /**
-     * Message level value that specifies that error messages and critical
-     * messages are to be recorded.
-     */
-    public static final int ERROR           = 2;
-
-    /**
-     * Message level value that specifies that warning, error and critical
-     * messages are to be recorded.
-     */
-    public static final int WARNING         = 3;
-
-    /**
-     * Message level value that specifies that information, warning, error and critical
-     * messages are to be recorded.
-     */
-    public static final int INFO            = 4;
-
-    /**
-     * Message level value that specifies that detailed, information, warning, error and critical
-     * messages are to be recorded.
-     */
-    public static final int DETAIL          = 5;
-
-    /**
-     * Message level value that specifies that all messages are to be recorded.
-     */
-    public static final int TRACE           = 6;
-    
-    /**
      * Logs the given message if the current logging level is &gt;= the logLevel parameter. 
      * @param logLevel logging level for this message
      * @param timestamp timestamp at which this log message was generated

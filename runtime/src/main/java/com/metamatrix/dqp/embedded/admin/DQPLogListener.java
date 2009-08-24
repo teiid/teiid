@@ -23,6 +23,7 @@
 package com.metamatrix.dqp.embedded.admin;
 
 import org.teiid.adminapi.EmbeddedLogger;
+import org.teiid.adminapi.LogConfiguration;
 
 import com.metamatrix.core.log.LogListener;
 import com.metamatrix.core.log.MessageLevel;
@@ -45,27 +46,27 @@ public class DQPLogListener implements LogListener {
     }    
     
 	private int convertLevel(int level) {
-		int logLevel = EmbeddedLogger.INFO;
+		int logLevel = LogConfiguration.INFO;
         
         switch(level) {
             case MessageLevel.WARNING:
-                logLevel = EmbeddedLogger.WARNING;
+                logLevel = LogConfiguration.WARNING;
                 break;
             case MessageLevel.ERROR:
-                logLevel = EmbeddedLogger.ERROR;
+                logLevel = LogConfiguration.ERROR;
                 break;
             case MessageLevel.DETAIL:
-                logLevel = EmbeddedLogger.DETAIL;
+                logLevel = LogConfiguration.DETAIL;
                 break;
             case MessageLevel.TRACE:
-                logLevel = EmbeddedLogger.TRACE;
+                logLevel = LogConfiguration.TRACE;
                 break;
             case MessageLevel.NONE:
-                logLevel = EmbeddedLogger.NONE;
+                logLevel = LogConfiguration.NONE;
                 break;
                 
             default:
-                logLevel = EmbeddedLogger.INFO;
+                logLevel = LogConfiguration.INFO;
         }
 		return logLevel;
 	}

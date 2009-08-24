@@ -27,10 +27,11 @@ import java.util.Set;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import com.metamatrix.common.log.LogConfiguration;
 import com.metamatrix.core.log.MessageLevel;
 
 class Log4JUtil {
-	private static final String ROOT_CONTEXT = "org.teiid."; //$NON-NLS-1$
+	private static final String ROOT_CONTEXT = LogConfiguration.ROOT_CONTEXT;
 	
 	/**
 	 * Convert {@link MessageLevel} to {@link Level}

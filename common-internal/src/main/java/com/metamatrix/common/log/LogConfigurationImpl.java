@@ -31,6 +31,8 @@ import com.metamatrix.core.log.MessageLevel;
 
 public class LogConfigurationImpl implements LogConfiguration, Serializable {
 
+	private static final long serialVersionUID = 4626429149431532292L;
+	
 	Map<String, Integer> contextMap = null;
 	
 	public LogConfigurationImpl() {
@@ -48,11 +50,19 @@ public class LogConfigurationImpl implements LogConfiguration, Serializable {
 
 	@Override
 	public int getLogLevel(String context) {
+		context = fixContext(context);		
 		Integer level = this.contextMap.get(context);
 		if (level != null) {
 			return level;
 		}
 		return MessageLevel.NONE;
+	}
+
+	private String fixContext(String context) {
+		if (context.indexOf('.') == -1) {
+			context = ROOT_CONTEXT+context;
+		}
+		return context;
 	}
 
 	@Override

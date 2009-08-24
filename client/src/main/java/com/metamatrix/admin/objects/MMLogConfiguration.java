@@ -32,7 +32,7 @@ import org.teiid.adminapi.LogConfiguration;
 /** 
  * @since 4.3
  */
-public class MMLogConfiguration extends MMAdminObject implements LogConfiguration {
+public class MMLogConfiguration implements LogConfiguration {
 
 	private static final long serialVersionUID = -4585962928702271706L;
 	Map<String, Integer> contextMap = null;
@@ -55,7 +55,6 @@ public class MMLogConfiguration extends MMAdminObject implements LogConfiguratio
 	public void setLogLevel(String context, int logLevel) {
 		this.contextMap.put(context, logLevel);
 	}
-
 
 	@Override
 	public String toString() {
