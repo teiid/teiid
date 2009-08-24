@@ -49,9 +49,12 @@ public class LogConfigurationImpl implements LogConfiguration, Serializable {
 	}
 
 	@Override
-	public int getLogLevel(String context) {
-		context = fixContext(context);		
+	public int getLogLevel(String context) {				
 		Integer level = this.contextMap.get(context);
+		if (level == null) {
+			context = fixContext(context);	
+		}
+		level = this.contextMap.get(context);
 		if (level != null) {
 			return level;
 		}
