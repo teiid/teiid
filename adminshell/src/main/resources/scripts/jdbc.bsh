@@ -198,9 +198,7 @@ void executeBatch(String[] cmds) throws SQLException {
     }
 } 
 
-private boolean interactive() {
-    return this.interpreter.get("bsh.interactive").toString().equals("true");
-}
+
 
 int FETCHSIZE=1000;
 int MAXROWS=500;

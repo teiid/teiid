@@ -46,7 +46,9 @@ private Connection connectURL (String url, String driver) {
             currentContext().internalAdmin = createExceptionHandlingProxy(mmConn.getAdminAPI());
     		return mmConn;        	
         } catch(e) {
+        	parentContext();
         	print("Failed to connect: {"+e.getMessage()+"}");
+        	debug(e);
         	return null;
         }
     }
@@ -82,18 +84,18 @@ void connectAsAdmin(String username, String password, String url) {
     if (MMURL.isValidServerURL(url)) {
         String contextName = genConnectionName();
         newContext(contextName);        
-
-        //url is in "server URL format": connect via ServerAdminFactory
-        currentContext().internalAdmin = createExceptionHandlingProxy(ServerAdminFactory.getInstance().createAdmin(username, password.toCharArray(), url));
-        currentContext().internalPrompt = currentConnectionName()+"["+url+"] $ ";
-        
+        try {
+            //url is in "server URL format": connect via ServerAdminFactory
+            currentContext().internalAdmin = createExceptionHandlingProxy(ServerAdminFactory.getInstance().createAdmin(username, password.toCharArray(), url));
+            currentContext().internalPrompt = currentConnectionName()+"["+url+"] $ ";
+        } catch(e) {
+        	parentContext();
+        	print("Failed to connect: {"+e.getMessage()+"}");
+        	debug(e);
+        	return null;
+        }        
     } else {
-        String contextName = genConnectionName();
-        newContext(contextName);        
-        
-        //url is in "jdbc URL format": connect via MMServerConnection
-        currentContext().internalConnection = connectDriver("org.teiid.jdbc.TeiidDriver", url, username, password);
-        currentContext().internalAdmin = createExceptionHandlingProxy(currentContext().internalConnection.getAdminAPI());
+    	print("Wrong syntax for the URL.. connection failed.");
     }
 }
 

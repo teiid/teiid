@@ -129,7 +129,13 @@ debug(Object msg){
             for (Object object:msg) {
                 print(object);
             }
-        } else {
+        }  
+        else if (msg instanceof Throwable) {
+			StringWriter sw = new StringWriter();
+			msg.printStackTrace(new PrintWriter(sw));
+			print(sw.getBuffer().toString());
+        } 
+        else {
             print(msg);
         }
     }
@@ -180,8 +186,12 @@ class ExceptionHandler implements InvocationHandler{
 			while (ex instanceof InvocationTargetException) {
 				ex = e.getTargetException();
 			}
-			if (ex instanceof AdminException) {
+			if (interactive()) {
 				print("Error:"+ex.getMessage());
+				debug(ex);
+			}
+			else {
+				throw ex;
 			}
 		} catch(Throwable t) {
 			msg = t.getMessage();
@@ -195,6 +205,10 @@ class ExceptionHandler implements InvocationHandler{
 
 Object createExceptionHandlingProxy(Object obj) {
 	return Proxy.newProxyInstance(obj.getClass().getClassLoader(), obj.getClass().getInterfaces(), new ExceptionHandler(obj));	
+}
+
+boolean interactive() {
+    return this.interpreter.get("bsh.interactive").toString().equals("true");
 }
 
 quit(){
