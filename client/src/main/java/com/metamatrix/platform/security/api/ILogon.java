@@ -50,7 +50,7 @@ public interface ILogon {
     * @throws InvalidSessionException If session has expired or doesn't exist
     * @throws ComponentNotFoundException If couldn't find needed service component
     */
-   ResultsFuture<?> logoff() throws InvalidSessionException, MetaMatrixComponentException;
+   ResultsFuture<?> logoff() throws InvalidSessionException;
    
    void assertIdentity(SessionToken sessionId) throws InvalidSessionException, MetaMatrixComponentException;
 

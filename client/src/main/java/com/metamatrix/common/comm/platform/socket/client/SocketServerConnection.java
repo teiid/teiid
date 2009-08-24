@@ -255,8 +255,6 @@ public class SocketServerConnection implements ServerConnection {
 			writeFuture.get(5000, TimeUnit.MILLISECONDS);
 		} catch (InvalidSessionException e) {
 			//ignore
-		} catch (MetaMatrixComponentException e) {
-			//ignore
 		} catch (InterruptedException e) {
 			//ignore
 		} catch (ExecutionException e) {

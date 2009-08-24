@@ -82,8 +82,7 @@ public interface SessionServiceInterface extends ApplicationService {
      * session
      * @throws SessionServiceException
      */
-    void closeSession(MetaMatrixSessionID sessionID)
-    throws InvalidSessionException, SessionServiceException;
+    void closeSession(MetaMatrixSessionID sessionID) throws InvalidSessionException;
 
     /**
      * Terminates the specified session.  This is an administrative action.
@@ -97,8 +96,7 @@ public interface SessionServiceInterface extends ApplicationService {
      * does not have authority to terminate the <code>terminatedSessionID</code> session
      * @throws SessionServiceException
      */
-    boolean terminateSession(MetaMatrixSessionID terminatedSessionID, MetaMatrixSessionID adminSessionID)
-    throws InvalidSessionException, AuthorizationException, SessionServiceException;
+    boolean terminateSession(MetaMatrixSessionID terminatedSessionID, MetaMatrixSessionID adminSessionID);
 
     /**
      * Get the collection of active user sessions on the system.

@@ -37,6 +37,7 @@ import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.EmbeddedLogger;
 import org.teiid.adminapi.Request;
 import org.teiid.adminapi.RuntimeStateAdmin;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -217,13 +218,9 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements RuntimeState
             }
         }
 
-        // Double iteration because to avoid concurrent modification of underlying map.
+        // terminate the sessions.
         for (MetaMatrixSessionInfo info: matchedConnections) {
-        	try {
-				this.manager.getDQP().terminateConnection(info.getSessionID().toString());
-			} catch (MetaMatrixComponentException e) {
-				throw new AdminComponentException(e);
-			}
+        	getSessionService().terminateSession(info.getSessionID(), DQPWorkContext.getWorkContext().getSessionId());
         }
     }
     

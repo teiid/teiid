@@ -158,5 +158,12 @@ public class DQPWorkContext implements Serializable {
 	public String getClientHostname() {
 		return clientHostname;
 	}
-
+	
+	public void reset() {
+		setSessionToken(null);
+		setAppName(null);
+		setTrustedPayload(null);
+		setVdbName(null);
+		setVdbVersion(null);
+	}
 }

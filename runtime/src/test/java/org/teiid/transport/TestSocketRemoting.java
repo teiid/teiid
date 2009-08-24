@@ -149,8 +149,7 @@ public class TestSocketRemoting extends TestCase {
 		csr.registerClientService(ILogon.class, new ILogon() {
 
 				public ResultsFuture<?> logoff()
-						throws InvalidSessionException,
-						MetaMatrixComponentException {
+						throws InvalidSessionException {
 					ResultsFuture<?> result = new ResultsFuture<Void>();
 					result.getResultsReceiver().exceptionOccurred(new MetaMatrixComponentException("some exception")); //$NON-NLS-1$
 					return result;

@@ -143,23 +143,10 @@ public class LogonImpl implements ILogon {
 		workContext.setVdbVersion(sessionInfo.getProductInfo(ProductInfoConstants.VDB_VERSION));
 		return sessionID;
 	}
-	
-	private void resetDQPContext() {
-		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		workContext.setSessionToken(null);
-		workContext.setAppName(null);
-		workContext.setTrustedPayload(null);
-		workContext.setVdbName(null);
-		workContext.setVdbVersion(null);
-	}	
-	
-	public ResultsFuture<?> logoff() throws InvalidSessionException, MetaMatrixComponentException {
-		try {
-			this.service.closeSession(DQPWorkContext.getWorkContext().getSessionId());
-			resetDQPContext();
-		} catch (SessionServiceException e) {
-			throw new MetaMatrixComponentException(e);
-		} 
+		
+	public ResultsFuture<?> logoff() throws InvalidSessionException {
+		this.service.closeSession(DQPWorkContext.getWorkContext().getSessionId());
+		DQPWorkContext.getWorkContext().reset();
 		return null;
 	}
 

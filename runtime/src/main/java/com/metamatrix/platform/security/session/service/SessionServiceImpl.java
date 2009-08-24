@@ -110,8 +110,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	}
 
 	@Override
-	public void closeSession(MetaMatrixSessionID sessionID)
-			throws InvalidSessionException, SessionServiceException{
+	public void closeSession(MetaMatrixSessionID sessionID) throws InvalidSessionException {
 		LogManager.logDetail(LogConstants.CTX_SESSION, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
 		MetaMatrixSessionInfo info = this.sessionCache.remove(sessionID);
 		if (info == null) {
@@ -254,7 +253,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		}
 		ArrayList<MetaMatrixSessionInfo> results = new ArrayList<MetaMatrixSessionInfo>();
 		for (MetaMatrixSessionInfo info : this.sessionCache.values()) {
-			if (VDBName.equals(info.getProductInfo(ProductInfoConstants.VIRTUAL_DB)) && VDBVersion.equals(info.getProductInfo(ProductInfoConstants.VIRTUAL_DB))) {
+			if (VDBName.equals(info.getProductInfo(ProductInfoConstants.VIRTUAL_DB)) && VDBVersion.equals(info.getProductInfo(ProductInfoConstants.VDB_VERSION))) {
 				results.add(info);
 			}
 		}
@@ -270,7 +269,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	}
 
 	@Override
-	public boolean terminateSession(MetaMatrixSessionID terminatedSessionID,MetaMatrixSessionID adminSessionID) throws AuthorizationException, SessionServiceException {
+	public boolean terminateSession(MetaMatrixSessionID terminatedSessionID,MetaMatrixSessionID adminSessionID) {
 		Object[] params = {adminSessionID, terminatedSessionID};
 		LogManager.logInfo(LogConstants.CTX_SESSION, DQPEmbeddedPlugin.Util.getString( "SessionServiceImpl.terminateSession", params)); //$NON-NLS-1$
 		try {
@@ -329,6 +328,8 @@ public class SessionServiceImpl implements SessionServiceInterface {
 	@Override
 	public void stop() throws ApplicationLifecycleException {
 		this.sessionMonitor.cancel();
+		this.sessionCache.clear();
+		this.sessionListener = null;
 	}
 
 	@Inject
