@@ -129,7 +129,10 @@ public final class PropertiesUtils {
         while ( propNameEnum.hasMoreElements() ) {
             String name = (String) propNameEnum.nextElement();
             if ( name.startsWith(searchStr)) {
-                results.put(name.substring(searchStr.length()), props.get(name));
+            	Object value = props.get(name);
+            	if (value != null) {
+            		results.put(name.substring(searchStr.length()), value);
+            	}
             }
             else if (addAll) {
             	results.put(name, props.get(name));
