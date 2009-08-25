@@ -149,10 +149,6 @@
 							<name>java.io.tmpdir</name>
 							<value>${basedir}/target</value>
 						</property>
-                        <property>
-                            <name>teiid.home</name>
-                            <value>${basedir}/target</value>
-                        </property>                        
 					</systemProperties>
 				</configuration>
 			</plugin>

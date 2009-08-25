@@ -39,12 +39,12 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Stack;
 
 import org.junit.After;
 import org.teiid.adminapi.Admin;
 import org.teiid.jdbc.TeiidDriver;
 
-import com.metamatrix.core.util.UnitTestUtil;
 import com.metamatrix.script.io.MetadataReader;
 import com.metamatrix.script.io.ResultSetReader;
 import com.metamatrix.script.io.StringArrayReader;
@@ -66,14 +66,10 @@ public class AbstractMMQueryTestCase {
     protected Statement internalStatement = null;
     protected int updateCount = -1;
     protected String DELIMITER = "    "; //$NON-NLS-1$ 
+    private Stack<com.metamatrix.jdbc.api.Connection> contexts = new Stack<Connection>();
     
     @After public void tearDown() throws Exception {
     	closeConnection();
-    }
-    
-    public com.metamatrix.jdbc.api.Connection getConnection(String vdb){
-        String propsFile = UnitTestUtil.getTestDataPath()+"/mmquery/mm.properties"; //$NON-NLS-1$
-        return getConnection(vdb, propsFile);
     }
     
     public Admin getAdmin() {
@@ -85,6 +81,18 @@ public class AbstractMMQueryTestCase {
         }
     }
     
+    public void pushConnection() {
+    	this.contexts.push(this.internalConnection);
+    	this.internalConnection = null;
+    }
+    
+    public void popConnection() {
+    	this.internalConnection = this.contexts.pop();
+    }
+    
+    public void setConnection(com.metamatrix.jdbc.api.Connection c) {
+    	this.internalConnection = c;
+    }
     public com.metamatrix.jdbc.api.Connection getConnection(String vdb, String propsFile){
         return getConnection(vdb, propsFile, "");  //$NON-NLS-1$
     }
@@ -392,20 +400,22 @@ public class AbstractMMQueryTestCase {
         if (this.internalStatement != null){
             try {
                 this.internalStatement.close();
-                this.internalStatement = null;
             } catch(SQLException e) {
             	throw new RuntimeException(e);
-            }    
+            } finally {
+                this.internalStatement = null;
+            }
         }
     }
 
     public void closeResultSet() {
         if (this.internalResultSet != null) {        
             try {
-                this.internalResultSet.close();
-                this.internalResultSet = null;
+                this.internalResultSet.close();                
             } catch(SQLException e) {
                 // ignore
+            } finally {
+            	this.internalResultSet = null;            	
             }
         }
     }    

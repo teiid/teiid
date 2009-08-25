@@ -98,22 +98,25 @@ public class LocalServerConnection implements ServerConnection {
 			public Object invoke(Object arg0, Method arg1, Object[] arg2) throws Throwable {
 				if (!isOpen()) {
 					throw ExceptionUtil.convertException(arg1, new MetaMatrixComponentException(JDBCPlugin.Util.getString("LocalTransportHandler.session_inactive"))); //$NON-NLS-1$
-				}							
+				}		
+				Throwable exception = null;
 				ClassLoader current = Thread.currentThread().getContextClassLoader();
-				Thread.currentThread().setContextClassLoader(classLoader);
-				DQPWorkContext.setWorkContext(workContext);
-				
-				if (!(iface.equals(ILogon.class))) {					
-					sessionService.validateSession(workContext.getSessionId());
-				}
-				
 				try {
+					Thread.currentThread().setContextClassLoader(classLoader);
+					DQPWorkContext.setWorkContext(workContext);
+					
+					if (!(iface.equals(ILogon.class))) {					
+						sessionService.validateSession(workContext.getSessionId());
+					}
 					return arg1.invoke(clientServices.getClientService(iface), arg2);
 				} catch (InvocationTargetException e) {
-					throw e.getTargetException();
+					exception = e.getTargetException();
+				} catch(Throwable t){
+					exception = t;
 				} finally {
 					Thread.currentThread().setContextClassLoader(current);
 				}
+				throw ExceptionUtil.convertException(arg1, exception);
 			}
 		});
 	}
