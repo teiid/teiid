@@ -632,6 +632,7 @@ public class TestPropertiesUtils extends TestCase {
         p.setProperty("key4", "${key2}/value4"); //$NON-NLS-1$ //$NON-NLS-2$
         p.setProperty("key5", "${testdirectory}/testdata"); //$NON-NLS-1$ //$NON-NLS-2$
         p.setProperty("key7", "anotherdir/${testdirectory}/${key1}"); //$NON-NLS-1$ //$NON-NLS-2$
+        int currentSize = p.size();
         
         Properties m = PropertiesUtils.resolveNestedProperties(p);
         assertEquals("value1/value2", m.getProperty("key2")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -640,7 +641,7 @@ public class TestPropertiesUtils extends TestCase {
         assertEquals("c:/metamatrix/testdirectory/testdata", m.getProperty("key5")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("anotherdir/c:/metamatrix/testdirectory/value1", m.getProperty("key7")); //$NON-NLS-1$ //$NON-NLS-2$
         assertTrue(p == m); // no cloning.
-
+        assertTrue(currentSize == m.size());
         
         p.setProperty("key6", "${foo}"); //$NON-NLS-1$ //$NON-NLS-2$
         

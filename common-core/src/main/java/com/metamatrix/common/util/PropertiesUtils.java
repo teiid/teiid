@@ -803,6 +803,7 @@ public final class PropertiesUtils {
             }
 
             boolean matched = true;
+            boolean modified = false;
             
             while(matched) {
                 // now match the pattern, then extract and find the value
@@ -821,9 +822,12 @@ public final class PropertiesUtils {
                     	throw new MetaMatrixRuntimeException(CorePlugin.Util.getString("PropertiesUtils.failed_to_resolve_property", nestedkey)); //$NON-NLS-1$
                     }                    
                     value = value.substring(0,start)+nestedvalue+value.substring(end+1);
+                    modified = true;
                 }
             }
-            original.setProperty(key, value);
+            if(modified) {
+            	original.setProperty(key, value);
+            }
         }
         return original;
     }
