@@ -22,12 +22,19 @@
 
 package com.metamatrix.common.types.basic;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public class IntegerToBigIntegerTransform extends AbstractTransform {
+public class FloatingNumberToBigDecimalTransform extends AbstractTransform {
+
+	private Class<?> sourceType;
+	
+	public FloatingNumberToBigDecimalTransform(Class<?> sourceType) {
+		this.sourceType = sourceType;
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -42,23 +49,23 @@ public class IntegerToBigIntegerTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigInteger(String.valueOf(value));
+        return BigDecimal.valueOf(((Number)value).doubleValue());
 	}
 
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
-		return Integer.class;
+	public Class<?> getSourceType() {
+		return sourceType;
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return BigInteger.class;
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.BIG_DECIMAL;
 	}
 
 }

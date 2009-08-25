@@ -30,8 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.core.util.Assertion;
-import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.ReservedWords;
@@ -105,7 +103,6 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SelectSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
-import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
  * <p>The SQLStringVisitor will visit a set of language objects and return the
@@ -1131,34 +1128,32 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit(Constant obj) {
+        Class<?> type = obj.getType();
         Object[] constantParts = null;
         if (obj.isMultiValued()) {
         	constantParts = new Object[] {"?"}; //$NON-NLS-1$
         } else if(obj.isNull()) {
-			constantParts = new Object[] {"null"}; //$NON-NLS-1$
+        	if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
+    			constantParts = new Object[] {ReservedWords.UNKNOWN};
+        	} else {
+    			constantParts = new Object[] {"null"}; //$NON-NLS-1$
+        	}
 		} else {
-		    try {
-                Class type = obj.getType();
-		        if(type.equals(DataTypeManager.DefaultDataClasses.STRING)) {
-			        String strValue = (String) obj.getValue();
-			        strValue = escapeStringValue(strValue);
-				    constantParts = new Object[] { getStringQuoteBegin(), strValue, getStringQuoteEnd() };
-		        } else if(Number.class.isAssignableFrom(type)) {
-                    constantParts = new Object[] { obj.getValue().toString() };
-                } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-                    constantParts = new Object[] { obj.getValue().equals(Boolean.TRUE) ? ReservedWords.TRUE : ReservedWords.FALSE}; 
-			    } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-                    constantParts = new Object[] { "{ts'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
-                } else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
-                    constantParts = new Object[] { "{t'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
-                } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-                    constantParts = new Object[] { "{d'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
-                } else {
-                    constantParts = new Object[] { getStringQuoteBegin(), obj.getValue().toString(), getStringQuoteEnd() };
-                }
-		    } catch(RuntimeException e) {
-                Assertion.failed(QueryPlugin.Util.getString(ErrorMessageKeys.SQL_0026, e.getMessage()));
-		    }
+            if(Number.class.isAssignableFrom(type)) {
+                constantParts = new Object[] { obj.getValue().toString() };
+            } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
+                constantParts = new Object[] { obj.getValue().equals(Boolean.TRUE) ? ReservedWords.TRUE : ReservedWords.FALSE}; 
+		    } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+                constantParts = new Object[] { "{ts'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
+            } else if(type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
+                constantParts = new Object[] { "{t'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
+            } else if(type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
+                constantParts = new Object[] { "{d'", obj.getValue().toString(), "'}" }; //$NON-NLS-1$ //$NON-NLS-2$
+            } else {
+            	String strValue = obj.getValue().toString();
+		        strValue = escapeStringValue(strValue);
+			    constantParts = new Object[] { getStringQuoteBegin(), strValue, getStringQuoteEnd() };
+            }
         }
 
         replaceStringParts(constantParts);

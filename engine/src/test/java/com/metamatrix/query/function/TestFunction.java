@@ -408,7 +408,7 @@ public class TestFunction {
     }
 
     @Test public void testConvertStringBoolean3() throws Exception {
-        helpConvert("x", "boolean", Boolean.FALSE); //$NON-NLS-1$ //$NON-NLS-2$
+        helpConvertFail("x", "boolean"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testConvertStringBoolean4() throws Exception {
@@ -424,7 +424,7 @@ public class TestFunction {
     }
 
     @Test public void testConvertStringChar2() throws Exception {
-        helpConvertFail("xx", "char"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpConvert("xx", "char", new Character('x')); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testConvertStringByte1() throws Exception {
@@ -494,26 +494,17 @@ public class TestFunction {
         helpConvert(ts, "string", "2003-08-22 22:43:53.003333333"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    @Test public void testAscii1() throws Exception {
-        Integer code = (Integer) FunctionMethods.ascii(new Character(' '));
-        assertEquals("Didn't get expected code", 32, code.intValue()); //$NON-NLS-1$
-    }
-
     @Test public void testAscii2() throws Exception {
-        Integer code = (Integer) FunctionMethods.ascii(" "); //$NON-NLS-1$
+        Integer code = FunctionMethods.ascii(" "); //$NON-NLS-1$
         assertEquals("Didn't get expected code", 32, code.intValue()); //$NON-NLS-1$
     }
 
     @Test public void testAscii4() throws Exception {
-        try {
-            FunctionMethods.ascii(""); //$NON-NLS-1$
-            fail("Expected function exception"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {
-        } 
+    	assertNull(FunctionMethods.ascii("")); //$NON-NLS-1$
     }
 
     @Test public void testAscii5() throws Exception {
-        Integer code = (Integer) FunctionMethods.ascii("abc"); //$NON-NLS-1$
+        Integer code = FunctionMethods.ascii("abc"); //$NON-NLS-1$
         assertEquals("Didn't get expected code", 97, code.intValue()); //$NON-NLS-1$
     }
 
@@ -672,7 +663,7 @@ public class TestFunction {
 
     @Test public void testBitnot() throws Exception {
         // Both values are integers
-        Integer result = (Integer) FunctionMethods.bitnot(new Integer(0xF0F));
+        Integer result = FunctionMethods.bitnot(0xF0F);
         assertNotNull("Result should not be null", result); //$NON-NLS-1$
         assertEquals("result should be 0xFFFFF0F0", 0xFFFFF0F0, result.intValue()); //$NON-NLS-1$
     }

@@ -381,8 +381,14 @@
               <entry>false</entry>
             </row>
             <row>
+              <entry>'unknown'</entry>
+              <entry>unknown</entry>
+            </row>
+            <row>
               <entry>other</entry>
-              <entry>false</entry>
+              <entry>
+              	<emphasis>error</emphasis>
+              </entry>
             </row>
             <row>
               <entry morerows="2">Numeric</entry>

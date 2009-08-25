@@ -50,130 +50,106 @@ public final class FunctionMethods {
 
 	// ================== Function = plus =====================
 
-	public static Object plus(Object x, Object y) throws FunctionExecutionException {
-		if(x instanceof Integer) {
-			if(y instanceof Integer) {
-				return new Integer(((Integer)x).intValue() + ((Integer)y).intValue());
-			}
-		} else if(x instanceof Long) {
-			if(y instanceof Long) {
-				return new Long(((Long)x).longValue() + ((Long)y).longValue());
-			}
-		} else if(x instanceof Float) {
-			if(y instanceof Float) {
-				return new Float(((Float)x).floatValue() + ((Float)y).floatValue());
-			}
-		} else if(x instanceof Double) {
-			if(y instanceof Double) {
-				return new Double(((Double)x).doubleValue() + ((Double)y).doubleValue());
-			}
-		} else if(x instanceof BigInteger) {
-			if(y instanceof BigInteger) {
-				return ((BigInteger)x).add((BigInteger) y);
-			}
-		} else if(x instanceof BigDecimal) {
-			if(y instanceof BigDecimal) {
-				return ((BigDecimal)x).add((BigDecimal) y);
-			}
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"plus", x.getClass().getName(), y.getClass().getName()})); //$NON-NLS-1$
+	public static int plus(int x, int y) {
+		return x + y;
+	}
+	
+	public static long plus(long x, long y) {
+		return x + y;
+	}
+	
+	public static float plus(float x, float y) {
+		return x + y;
+	}
+	
+	public static double plus(double x, double y) {
+		return x + y;
+	}
+	
+	public static Object plus(BigInteger x, BigInteger y) {
+		return x.add(y);
+	}
+	
+	public static Object plus(BigDecimal x, BigDecimal y) {
+		return x.add(y);
 	}
 
 	// ================== Function = minus =====================
 
-	public static Object minus(Object x, Object y) throws FunctionExecutionException {
-		if(x instanceof Integer) {
-			if(y instanceof Integer) {
-				return new Integer(((Integer)x).intValue() - ((Integer)y).intValue());
-			}
-		} else if(x instanceof Long) {
-			if(y instanceof Long) {
-				return new Long(((Long)x).longValue() - ((Long)y).longValue());
-			}
-		} else if(x instanceof Float) {
-			if(y instanceof Float) {
-				return new Float(((Float)x).floatValue() - ((Float)y).floatValue());
-			}
-		} else if(x instanceof Double) {
-			if(y instanceof Double) {
-				return new Double(((Double)x).doubleValue() - ((Double)y).doubleValue());
-			}
-		} else if(x instanceof BigInteger) {
-			if(y instanceof BigInteger) {
-				return ((BigInteger)x).subtract((BigInteger) y);
-			}
-		} else if(x instanceof BigDecimal) {
-			if(y instanceof BigDecimal) {
-				return ((BigDecimal)x).subtract((BigDecimal) y);
-			}
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"minus", x.getClass().getName(), y.getClass().getName()})); //$NON-NLS-1$
+	public static int minus(int x, int y) {
+		return x - y;
+	}
+	
+	public static long minus(long x, long y) {
+		return x - y;
+	}
+	
+	public static float minus(float x, float y) {
+		return x - y;
+	}
+	
+	public static double minus(double x, double y) {
+		return x - y;
+	}
+	
+	public static Object minus(BigInteger x, BigInteger y) {
+		return x.subtract(y);
+	}
+	
+	public static Object minus(BigDecimal x, BigDecimal y) {
+		return x.subtract(y);
 	}
 
 	// ================== Function = multiply =====================
 
-	public static Object multiply(Object x, Object y) throws FunctionExecutionException {
-		if(x instanceof Integer) {
-			if(y instanceof Integer) {
-				return new Integer(((Integer)x).intValue() * ((Integer)y).intValue());
-			}
-		} else if(x instanceof Long) {
-			if(y instanceof Long) {
-				return new Long(((Long)x).longValue() * ((Long)y).longValue());
-			}
-		} else if(x instanceof Float) {
-			if(y instanceof Float) {
-				return new Float(((Float)x).floatValue() * ((Float)y).floatValue());
-			}
-		} else if(x instanceof Double) {
-			if(y instanceof Double) {
-				return new Double(((Double)x).doubleValue() * ((Double)y).doubleValue());
-			}
-		} else if(x instanceof BigInteger) {
-			if(y instanceof BigInteger) {
-				return ((BigInteger)x).multiply((BigInteger) y);
-			}
-		} else if(x instanceof BigDecimal) {
-			if(y instanceof BigDecimal) {
-				return ((BigDecimal)x).multiply((BigDecimal) y);
-			}
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"multiply", x.getClass().getName(), y.getClass().getName()})); //$NON-NLS-1$
+	public static int multiply(int x, int y) {
+		return x * y;
+	}
+	
+	public static long multiply(long x, long y) {
+		return x * y;
+	}
+	
+	public static float multiply(float x, float y) {
+		return x * y;
+	}
+	
+	public static double multiply(double x, double y) {
+		return x * y;
+	}
+	
+	public static Object multiply(BigInteger x, BigInteger y) {
+		return x.multiply(y);
+	}
+	
+	public static Object multiply(BigDecimal x, BigDecimal y) {
+		return x.multiply(y);
 	}
 
 	// ================== Function = divide =====================
 
-	public static Object divide(Object x, Object y) throws FunctionExecutionException {
-		if(x instanceof Integer) {
-			if(y instanceof Integer) {
-				return new Integer(((Integer)x).intValue() / ((Integer)y).intValue());
-			}
-		} else if(x instanceof Long) {
-			if(y instanceof Long) {
-				return new Long(((Long)x).longValue() / ((Long)y).longValue());
-			}
-		} else if(x instanceof Float) {
-			if(y instanceof Float) {
-				return new Float(((Float)x).floatValue() / ((Float)y).floatValue());
-			}
-		} else if(x instanceof Double) {
-			if(y instanceof Double) {
-				return new Double(((Double)x).doubleValue() / ((Double)y).doubleValue());
-			}
-		} else if(x instanceof BigInteger) {
-			if(y instanceof BigInteger) {
-				return ((BigInteger)x).divide((BigInteger) y);
-			}
-		} else if(x instanceof BigDecimal) {
-			if(y instanceof BigDecimal) {
-				return ((BigDecimal)x).divide((BigDecimal) y, BigDecimal.ROUND_HALF_UP);
-			}
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"divide", x.getClass().getName(), y.getClass().getName()})); //$NON-NLS-1$
+	public static int divide(int x, int y) {
+		return x / y;
+	}
+	
+	public static long divide(long x, long y) {
+		return x / y;
+	}
+	
+	public static float divide(float x, float y) {
+		return x / y;
+	}
+	
+	public static double divide(double x, double y) {
+		return x / y;
+	}
+	
+	public static Object divide(BigInteger x, BigInteger y) {
+		return x.divide(y);
+	}
+	
+	public static Object divide(BigDecimal x, BigDecimal y) {
+		return x.divide(y, BigDecimal.ROUND_HALF_UP);
 	}
 
 	// ================== Function = abs =====================
@@ -322,48 +298,28 @@ public final class FunctionMethods {
 
 	// ================== Function = sign =====================
 
-	public static  Object sign(Object x) throws FunctionExecutionException {
-		if(x == null) {
-			return null;
-		} else if(x instanceof Integer) {
-			int xVal = ((Integer)x).intValue();
-			if(xVal > 0) {
-				return new Integer(1);
-			} else if(xVal == 0) {
-				return new Integer(0);
-			} 
-			return new Integer(-1);
-		} else if(x instanceof Long) {
-			long xVal = ((Long)x).longValue();
-			if(xVal > 0) {
-				return new Integer(1);
-			} else if(xVal == 0) {
-				return new Integer(0);
-			}
-			return new Integer(-1);
-		} else if(x instanceof Float) {
-			float xVal = ((Float)x).floatValue();
-			if(xVal > 0) {
-				return new Integer(1);
-			} else if(xVal == 0) {
-				return new Integer(0);
-			} 
-			return new Integer(-1);
-		} else if(x instanceof Double) {
-			double xVal = ((Double)x).doubleValue();
-			if(xVal > 0) {
-				return new Integer(1);
-			} else if(xVal == 0) {
-				return new Integer(0);
-			}
-			return new Integer(-1);
-		} else if(x instanceof BigInteger) {
-			return new Integer(((BigInteger)x).signum());
-		} else if(x instanceof BigDecimal) {
-			return new Integer(((BigDecimal)x).signum());
-		}
+	public static Object sign(int x) {
+		return Integer.signum(x);
+	}
+	
+	public static Object sign(long x) {
+		return Long.signum(x);
+	}
 
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "sign", x.getClass().getName())); //$NON-NLS-1$
+	public static Object sign(float x) {
+		return Math.signum(x);
+	}
+	
+	public static Object sign(double x) {
+		return Math.signum(x);
+	}
+	
+	public static Object sign(BigInteger x) {
+		return new Integer(x.signum());
+	}
+	
+	public static Object sign(BigDecimal x) {
+		return new Integer(x.signum());
 	}
 
 	// ================== Function = sqrt =====================
@@ -853,24 +809,15 @@ public final class FunctionMethods {
 
     // ================== Function = ascii =====================
 
-    public static Object ascii(Object ch)
-        throws FunctionExecutionException {
-
-        char c = 0;
-        if(ch instanceof Character) {
-            c = ((Character) ch).charValue();
-        } else if(ch instanceof String) {
-            String s = (String) ch;
-            if(s.length() >= 1) {
-                c = s.charAt(0);
-            } else if(s.length() == 0) {
-                throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0021, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0021));
-            }
-        } else {
-            throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "ascii", ch.getClass().getName())); //$NON-NLS-1$
-        }
-
-        return new Integer(c);
+    public static Integer ascii(String ch) {
+        if(ch.length() == 0) {
+        	return null;
+        } 
+        return (int)ch.charAt(0);
+    }
+    
+    public static Integer ascii(Character ch) {
+        return (int)ch.charValue();
     }
 
     // ================== Function = chr =====================

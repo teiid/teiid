@@ -28,19 +28,27 @@ import com.metamatrix.common.types.*;
  * This class can be subclassed to do a simple anything-->String by
  * just calling toString().  Just extend and implement getSouceType().
  */
-public abstract class AnyToStringTransform extends AbstractTransform {
+public class AnyToStringTransform extends AbstractTransform {
 
+	private Class<?> sourceType;
+	
+	public AnyToStringTransform(Class<?> sourceType) {
+		this.sourceType = sourceType;
+	}
+	
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public abstract Class getSourceType();
+	public Class<?> getSourceType() {
+		return sourceType;
+	}
 	
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
+	public Class<?> getTargetType() {
 		return String.class;
 	}
 

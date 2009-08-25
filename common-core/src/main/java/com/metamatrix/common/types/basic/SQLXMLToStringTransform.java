@@ -28,10 +28,15 @@ import java.sql.SQLException;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLType;
+import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
 import com.metamatrix.core.CorePlugin;
 
 public class SQLXMLToStringTransform extends AnyToStringTransform {
 
+	public SQLXMLToStringTransform() {
+		super(DefaultDataClasses.XML);
+	}
+	
     /**
      * This method transforms a value of the source type into a value
      * of the target type.
@@ -58,14 +63,6 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
         }
     }
 
-    /**
-     * Type of the incoming value.
-     * @return Source type
-     */
-    public Class getSourceType() {
-        return XMLType.class;
-    }
-    
     /** 
      * @see com.metamatrix.common.types.AbstractTransform#isNarrowing()
      */

@@ -53,7 +53,7 @@ public class TestFunctionDescriptorImpl extends TestCase {
         // Build signature
         Class[] objectSignature = new Class[numArgs];
         for(int i=0; i<numArgs; i++) {
-            objectSignature[i] = java.lang.Object.class;
+            objectSignature[i] = Integer.TYPE;
         }
 
         // Find Method

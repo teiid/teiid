@@ -1708,7 +1708,7 @@ public class TestParser extends TestCase {
         query.setSelect(select);
         query.setFrom(from);
         
-        helpTest("SELECT {d'2002-9-1'} FROM m.g1",  //$NON-NLS-1$
+        helpTest("SELECT {d'2002-09-01'} FROM m.g1",  //$NON-NLS-1$
                  "SELECT {d'2002-09-01'} FROM m.g1",  //$NON-NLS-1$
                  query);                    
     }
@@ -1749,7 +1749,7 @@ public class TestParser extends TestCase {
         query.setSelect(select);
         query.setFrom(from);
         
-        helpTest("SELECT {t '5:10:00'} FROM m.g1",  //$NON-NLS-1$
+        helpTest("SELECT {t '05:10:00'} FROM m.g1",  //$NON-NLS-1$
                  "SELECT {t'05:10:00'} FROM m.g1",  //$NON-NLS-1$
                  query);                    
     }
@@ -1779,73 +1779,72 @@ public class TestParser extends TestCase {
 
     /** SELECT {b'true'} FROM m.g1 */
     public void testBooleanLiteralTrue() {
-        GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
+    	Boolean expected = Boolean.TRUE;
+    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+    	String sql = "SELECT {b'true'}";  //$NON-NLS-1$
+    	String expectedSql = "SELECT TRUE";  //$NON-NLS-1$
+    	
+        helpTestLiteral(expected, expectedType, sql, expectedSql);                    
+    }
 
-        Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(Boolean.valueOf("true")))); //$NON-NLS-1$ //$NON-NLS-2$
+	private void helpTestLiteral(Boolean expected, Class<?> expectedType,
+			String sql, String expectedSql) {
+		Select select = new Select();
+        select.addSymbol(new ExpressionSymbol("expr", new Constant(expected, expectedType))); //$NON-NLS-1$
                         
         Query query = new Query();
         query.setSelect(select);
-        query.setFrom(from);
         
-        helpTest("SELECT {b'true'} FROM m.g1",  //$NON-NLS-1$
-                 "SELECT TRUE FROM m.g1",  //$NON-NLS-1$
-                 query);                    
-    }
+        helpTest(sql,
+                 expectedSql,
+                 query);
+	}
     /** SELECT TRUE FROM m.g1 */
     public void testBooleanLiteralTrue2() {
-        GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-
-        Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(Boolean.valueOf("true")))); //$NON-NLS-1$ //$NON-NLS-2$
-                        
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        
-        helpTest("SELECT TRUE FROM m.g1",  //$NON-NLS-1$
-                 "SELECT TRUE FROM m.g1",  //$NON-NLS-1$
-                 query);                    
+    	Boolean expected = Boolean.TRUE;
+    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+    	String sql = "SELECT TRUE";  //$NON-NLS-1$
+    	String expectedSql = "SELECT TRUE";  //$NON-NLS-1$
+    	
+        helpTestLiteral(expected, expectedType, sql, expectedSql);                    
     }
   
     /** SELECT {b'false'} FROM m.g1 */
     public void testBooleanLiteralFalse() {
-        GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-
-        Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(Boolean.valueOf("false")))); //$NON-NLS-1$ //$NON-NLS-2$
-                        
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        
-        helpTest("SELECT {b'false'} FROM m.g1",  //$NON-NLS-1$
-                 "SELECT FALSE FROM m.g1",  //$NON-NLS-1$
-                 query);                    
+    	Boolean expected = Boolean.FALSE;
+    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+    	String sql = "SELECT {b'false'}";  //$NON-NLS-1$
+    	String expectedSql = "SELECT FALSE";  //$NON-NLS-1$
+    	
+        helpTestLiteral(expected, expectedType, sql, expectedSql);                    
     }
     
     /** SELECT FALSE FROM m.g1 */
     public void testBooleanLiteralFalse2() {
-        GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(g);
-
-        Select select = new Select();
-        select.addSymbol(new ExpressionSymbol("expr", new Constant(Boolean.valueOf("false")))); //$NON-NLS-1$ //$NON-NLS-2$
-                        
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        
-        helpTest("SELECT FALSE FROM m.g1",  //$NON-NLS-1$
-                 "SELECT FALSE FROM m.g1",  //$NON-NLS-1$
-                 query);                    
+    	Boolean expected = Boolean.FALSE;
+    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+    	String sql = "SELECT {b'false'}";  //$NON-NLS-1$
+    	String expectedSql = "SELECT FALSE";  //$NON-NLS-1$
+    	
+        helpTestLiteral(expected, expectedType, sql, expectedSql);                    
+    }
+    
+    public void testBooleanLiteralUnknown() {
+    	Boolean expected = null;
+    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+    	String sql = "SELECT {b'unknown'}";  //$NON-NLS-1$
+    	String expectedSql = "SELECT UNKNOWN";  //$NON-NLS-1$
+    	
+        helpTestLiteral(expected, expectedType, sql, expectedSql);
+    }
+    
+    public void testBooleanLiteralUnknown2() {
+    	Boolean expected = null;
+    	Class<?> expectedType = DataTypeManager.DefaultDataClasses.BOOLEAN;
+    	String sql = "SELECT UNKNOWN";  //$NON-NLS-1$
+    	String expectedSql = "SELECT UNKNOWN";  //$NON-NLS-1$
+    	
+        helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
     
     /** SELECT {b 'xyz'} FROM m.g1 */

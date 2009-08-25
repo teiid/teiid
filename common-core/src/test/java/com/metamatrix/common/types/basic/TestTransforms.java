@@ -92,7 +92,7 @@ public class TestTransforms {
         helpTestTransform(new String("0"), Boolean.FALSE); //$NON-NLS-1$
         helpTestTransform(new String("true"), Boolean.TRUE); //$NON-NLS-1$
         helpTestTransform(new String("false"), Boolean.FALSE); //$NON-NLS-1$
-        helpTestTransform(new String("foo"), Boolean.FALSE); //$NON-NLS-1$
+        helpTransformException(new String("foo"), DataTypeManager.DefaultDataClasses.BOOLEAN); //$NON-NLS-1$
     }
     
     @Test public void testByte2Boolean() throws TransformationException {
@@ -149,7 +149,8 @@ public class TestTransforms {
     private String[] dataTypes = TestDataTypeManager.dataTypes;
     private char[][] conversions = TestDataTypeManager.conversions;
     private static boolean isException(String src, String tgt, Object source) {
-        return (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.XML))
+        return (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[0][2])
+            || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.XML))
             || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.CHAR))  
             || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.TIME)) 
             || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)) 
@@ -228,7 +229,7 @@ public class TestTransforms {
     }
     
     @Test public void testStringToTimestampOutOfRange() throws Exception {
-    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, "The string representation '2005-13-01 11:13:01' of a Timestamp value is out of range."); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpTransformException("2005-13-01 11:13:01", DefaultDataClasses.TIMESTAMP, "The string representation '2005-13-01 11:13:01' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testStringToTimeTimestampWithWS() throws Exception {

@@ -413,7 +413,7 @@
 </row>
 <row>
 <entry valign="top"><anchor id="prod82"/>literal ::= </entry>
-<entry valign="top">( &lt;STRINGVAL&gt; | &lt;INTEGERVAL&gt; | &lt;FLOATVAL&gt; | &lt;FALSE&gt; | &lt;TRUE&gt; | &lt;NULL&gt; | ( &lt;BOOLEANTYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;TIMESTAMPTYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;DATETYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;TIMETYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) )</entry>
+<entry valign="top">( &lt;STRINGVAL&gt; | &lt;INTEGERVAL&gt; | &lt;FLOATVAL&gt; | &lt;FALSE&gt; | &lt;TRUE&gt; | &lt;UNKNOWN&gt; | &lt;NULL&gt; | ( &lt;BOOLEANTYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;TIMESTAMPTYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;DATETYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) | ( &lt;TIMETYPE&gt; &lt;STRINGVAL&gt; &lt;RBRACE&gt; ) )</entry>
 </row>
 </tbody>
 </tgroup>

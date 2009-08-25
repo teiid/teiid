@@ -756,7 +756,7 @@
               <para>ASCII(x)</para>
             </entry>
             <entry>
-              <para>Provide ASCII value of character x</para>
+              <para>Provide ASCII value of the left most character in x.  The empty string will as input will return null.</para>
             </entry>
             <entry>
               <para>return type is integer</para>
@@ -782,7 +782,7 @@
                 x and/or y is null, returns null.</para>
             </entry>
             <entry>
-              <para>x, y, is string</para>
+              <para>x, y in {string}</para>
             </entry>
           </row>
           <row>
@@ -795,7 +795,7 @@
                 is null, returns the other value.</para>
             </entry>
             <entry>
-              <para>x, y, is string</para>
+              <para>x, y in {string}</para>
             </entry>
           </row>
           <row>

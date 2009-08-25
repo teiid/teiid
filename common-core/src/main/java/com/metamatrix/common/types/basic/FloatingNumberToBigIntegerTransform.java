@@ -25,9 +25,16 @@ package com.metamatrix.common.types.basic;
 import java.math.BigInteger;
 
 import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public class LongToBigIntegerTransform extends AbstractTransform {
+public class FloatingNumberToBigIntegerTransform extends AbstractTransform {
+
+	private Class<?> sourceType;
+	
+	public FloatingNumberToBigIntegerTransform(Class<?> sourceType) {
+		this.sourceType = sourceType;
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -42,7 +49,12 @@ public class LongToBigIntegerTransform extends AbstractTransform {
 			return value;
 		}
 
-		return new BigInteger(String.valueOf(value)); 
+        String doubleString = String.valueOf(value);
+        int index = doubleString.lastIndexOf("."); //$NON-NLS-1$
+        if(index >= 0) { 
+            return new BigInteger(doubleString.substring(0, index));
+        }
+        return new BigInteger(doubleString);
 	}
 
 	/**
@@ -50,7 +62,7 @@ public class LongToBigIntegerTransform extends AbstractTransform {
 	 * @return Source type
 	 */
 	public Class getSourceType() {
-		return Long.class;
+		return sourceType;
 	}
 
 	/**
@@ -58,7 +70,16 @@ public class LongToBigIntegerTransform extends AbstractTransform {
 	 * @return Target type
 	 */
 	public Class getTargetType() {
-		return BigInteger.class;
+		return DataTypeManager.DefaultDataClasses.BIG_INTEGER;
+	}
+
+	/**
+	 * Flag if the transformation from source to target is 
+	 * a narrowing transformation that may lose information.
+	 * @return True - this transformation is narrowing
+	 */
+	public boolean isNarrowing() {
+		return true;
 	}
 
 }

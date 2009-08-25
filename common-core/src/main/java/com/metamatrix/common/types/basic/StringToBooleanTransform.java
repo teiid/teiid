@@ -22,14 +22,21 @@
 
 package com.metamatrix.common.types.basic;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.TransformationException;
+import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
+import com.metamatrix.core.CorePlugin;
+import com.metamatrix.core.ErrorMessageKeys;
 
 public class StringToBooleanTransform extends AbstractTransform {
 
-    private static final String TRUE = "1"; //$NON-NLS-1$
-    private static final String FALSE = "0"; //$NON-NLS-1$
-    
+    private static final Set<String> TRUE = new HashSet<String>(Arrays.asList("1", "TRUE")); //$NON-NLS-1$ //$NON-NLS-2$
+    private static final Set<String> FALSE = new HashSet<String>(Arrays.asList("0", "FALSE")); //$NON-NLS-1$ //$NON-NLS-2$
+
 	/**
 	 * This method transforms a value of the source type into a value
 	 * of the target type.
@@ -42,30 +49,33 @@ public class StringToBooleanTransform extends AbstractTransform {
 		if(value == null) {
 			return value;
 		}
-		String str = ((String)value).trim();
-        if (TRUE.equals(str)) {
+		String str = ((String)value).trim().toUpperCase();
+        if (TRUE.contains(str)) {
             return Boolean.TRUE;
         }
-        else if (FALSE.equals(str)) {
+        if (FALSE.contains(str)) {
             return Boolean.FALSE;
         }
-		return Boolean.valueOf((String)value);			
+        if ("UNKNOWN".equals(str)) { //$NON-NLS-1$
+        	return null;
+        }
+		throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0013, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0013, getSourceType().getSimpleName(), value));
 	}
 
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
-		return String.class;
+	public Class<?> getSourceType() {
+		return DefaultDataClasses.STRING;
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return Boolean.class;
+	public Class<?> getTargetType() {
+		return DefaultDataClasses.BOOLEAN;
 	}
-
+	
 }

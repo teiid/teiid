@@ -24,8 +24,6 @@ package com.metamatrix.common.types.basic;
 
 import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.TransformationException;
-import com.metamatrix.core.CorePlugin;
-import com.metamatrix.core.ErrorMessageKeys;
 
 public class StringToCharacterTransform extends AbstractTransform {
 
@@ -41,21 +39,21 @@ public class StringToCharacterTransform extends AbstractTransform {
 		if(value == null) {
 			return value;
 		}
-
+		
 		String s = (String) value;
-        switch(s.length()) {
-            case 0: return null;
-            case 1: return new Character( s.charAt(0) );
-            default:
-                throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0017, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0017, value));
+		
+		if (s.length() == 0) {
+			return new Character(' '); 
 		}
+		
+        return new Character( s.charAt(0) );
 	}
 
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
+	public Class<?> getSourceType() {
 		return String.class;
 	}
 
@@ -63,8 +61,13 @@ public class StringToCharacterTransform extends AbstractTransform {
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
+	public Class<?> getTargetType() {
 		return Character.class;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return true;
 	}
 
 }

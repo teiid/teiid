@@ -22,15 +22,50 @@
 
 package com.metamatrix.common.types.basic;
 
-import java.sql.Date;
+import java.math.BigInteger;
 
-public class DateToStringTransform extends AnyToStringTransform {
+import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.TransformationException;
+
+public class FixedNumberToBigIntegerTransform extends AbstractTransform {
+
+	private Class<?> sourceType;
+	
+	public FixedNumberToBigIntegerTransform(Class<?> sourceType) {
+		this.sourceType = sourceType;
+	}
+	
+	/**
+	 * This method transforms a value of the source type into a value
+	 * of the target type.
+	 * @param value Incoming value of source type
+	 * @return Outgoing value of target type
+	 * @throws TransformationException if value is an incorrect input type or
+	 * the transformation fails
+	 */
+	public Object transform(Object value) throws TransformationException {
+		if(value == null) {
+			return value;
+		}
+
+		return BigInteger.valueOf(((Number)value).longValue());
+	}
 
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
-		return Date.class;
+	public Class<?> getSourceType() {
+		return sourceType;
 	}
+
+	/**
+	 * Type of the outgoing value.
+	 * @return Target type
+	 */
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.BIG_INTEGER;
+	}
+
 }

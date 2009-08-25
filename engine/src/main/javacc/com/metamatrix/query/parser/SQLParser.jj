@@ -15,7 +15,7 @@ package com.metamatrix.query.parser;
 
 import java.math.BigInteger;
 import java.util.*;
-import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.*;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.query.QueryPlugin;
 import com.metamatrix.query.sql.LanguageObject;
@@ -2949,7 +2949,7 @@ Constant literal() :
     Token t = null;
     String strVal = null;
     char tickChar = '\'';
-    
+    Class escapeType = null;
     Constant constant = null;
 }
 {
@@ -2995,51 +2995,22 @@ Constant literal() :
 			}
 		}   |
 		
-		t=<FALSE> { constant = new Constant(Boolean.FALSE, DataTypeManager.DefaultDataClasses.BOOLEAN); } |
-		t=<TRUE>  { constant = new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN); }  |
-        t=<NULL>  { constant = new Constant(null); }          |
+		t=<FALSE>    { constant = new Constant(Boolean.FALSE, DataTypeManager.DefaultDataClasses.BOOLEAN); } |
+		t=<TRUE>     { constant = new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN); }  |
+        t=<UNKNOWN>  { constant = new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN); }       |
+        t=<NULL>     { constant = new Constant(null); }          |
         
-        ( <BOOLEANTYPE> t=<STRINGVAL> { 
-	        	String boolStr = t.image.substring(1, t.image.length()-1);
-	        	if(boolStr.equalsIgnoreCase("true")) {  //$NON-NLS-1$
-	        		constant = new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN);
-	        	} else if(boolStr.equalsIgnoreCase("false")) { //$NON-NLS-1$
-	        		constant = new Constant(Boolean.FALSE, DataTypeManager.DefaultDataClasses.BOOLEAN);
-	        	} else {
-					Object[] params = new Object[] { boolStr };
-	        		throw new ParseException(QueryPlugin.Util.getString("SQLParser.Boolean_parse", params)); //$NON-NLS-1$
-		        }
-	        } <RBRACE> ) |
-	
-        ( <TIMESTAMPTYPE> t=<STRINGVAL> { 
-	        	String timestampStr = t.image.substring(1, t.image.length()-1);
+        ( (<BOOLEANTYPE>   { escapeType=DataTypeManager.DefaultDataClasses.BOOLEAN; } |
+          <TIMESTAMPTYPE> { escapeType=DataTypeManager.DefaultDataClasses.TIMESTAMP; } | 
+          <DATETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.DATE; } |
+          <TIMETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.TIME; }) t=<STRINGVAL> { 
+	        	String str = t.image.substring(1, t.image.length()-1);
 	        	try {
-		        	constant = new Constant(java.sql.Timestamp.valueOf(timestampStr), DataTypeManager.DefaultDataClasses.TIMESTAMP);
-		        } catch(IllegalArgumentException e) {
-					Object[] params = new Object[] { timestampStr };
-		        	throw new ParseException(QueryPlugin.Util.getString("SQLParser.Timestamp_parse", params)); //$NON-NLS-1$
-		        }
-	        } <RBRACE>) |
-	            
-        ( <DATETYPE> t=<STRINGVAL> { 
-	        	String dateStr = t.image.substring(1, t.image.length()-1);
-	        	try {
-		        	constant = new Constant(java.sql.Date.valueOf(dateStr), DataTypeManager.DefaultDataClasses.DATE);
-		        } catch(IllegalArgumentException e) {
-					Object[] params = new Object[] { dateStr };
-		        	throw new ParseException(QueryPlugin.Util.getString("SQLParser.Date_parse", params)); //$NON-NLS-1$
-		        }
-        	} <RBRACE>) |
-
-        ( <TIMETYPE> t=<STRINGVAL> { 
-	        	String timeStr = t.image.substring(1, t.image.length()-1);
-	        	try {
-		        	constant = new Constant(java.sql.Time.valueOf(timeStr), DataTypeManager.DefaultDataClasses.TIME);
-		        } catch(IllegalArgumentException e) {
-					Object[] params = new Object[] { timeStr };
-		        	throw new ParseException(QueryPlugin.Util.getString("SQLParser.Time_parse", params)); //$NON-NLS-1$
-		        }
-	        } <RBRACE>) 
+	        		constant = new Constant(DataTypeManager.transformValue(str, escapeType), escapeType);
+	        	} catch (TransformationException e) {
+	        		throw new ParseException(e.getMessage()); //$NON-NLS-1$
+	        	}
+	        } <RBRACE> ) 
 
 	)
 	{

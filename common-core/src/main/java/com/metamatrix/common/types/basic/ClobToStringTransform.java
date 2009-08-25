@@ -29,10 +29,15 @@ import java.sql.SQLException;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
+import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
 import com.metamatrix.core.CorePlugin;
 
 public class ClobToStringTransform extends AnyToStringTransform {
 
+	public ClobToStringTransform() {
+		super(DefaultDataClasses.CLOB);
+	}
+	
     /**
      * This method transforms a value of the source type into a value
      * of the target type.
@@ -67,14 +72,6 @@ public class ClobToStringTransform extends AnyToStringTransform {
         } 
     }
 
-    /**
-     * Type of the incoming value.
-     * @return Source type
-     */
-    public Class getSourceType() {
-        return ClobType.class;
-    }
-    
     /** 
      * @see com.metamatrix.common.types.AbstractTransform#isNarrowing()
      */

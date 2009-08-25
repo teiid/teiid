@@ -269,11 +269,7 @@ public class QueryParser {
     }
      
     private QueryParserException convertParserException(ParseException pe) {
-        QueryParserException qpe = null;
-            
-        qpe = new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", pe.getMessage())); //$NON-NLS-1$                        
-        
-        return qpe;
+        return new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", pe.getMessage())); //$NON-NLS-1$                        
     }
 
     /**
