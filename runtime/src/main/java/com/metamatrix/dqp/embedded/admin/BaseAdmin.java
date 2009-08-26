@@ -104,7 +104,7 @@ abstract class BaseAdmin {
         Cache.QUERY_SERVICE_RESULT_SET_CACHE
         };    
     
-    EmbeddedConnectionFactoryImpl manager = null; 
+    private EmbeddedConnectionFactoryImpl manager = null; 
     
     BaseAdmin(EmbeddedConnectionFactoryImpl manager){
         this.manager = manager;       
@@ -546,7 +546,7 @@ abstract class BaseAdmin {
         MMSystem system = new MMSystem();
         system.setStartTime(new Date(manager.getStartTime()));
         system.setStarted(manager.isAlive());
-        system.setProperties(manager.getProperties());
+        system.setProperties(getConfigurationService().getSystemProperties());
         return system;
     }
 

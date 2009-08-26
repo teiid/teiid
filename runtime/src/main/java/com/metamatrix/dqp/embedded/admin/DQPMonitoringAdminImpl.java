@@ -188,7 +188,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
         List results = new ArrayList();
         if (matches(identifier, "dqp")) { //$NON-NLS-1$
             // First get the queue statistics for the DQP
-            Collection c = manager.getDQP().getQueueStatistics();;
+            Collection c = getManager().getDQP().getQueueStatistics();;
             if (c != null && !c.isEmpty()) {
                 results.addAll(c);
             }
@@ -260,7 +260,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
         
         ArrayList requestList = new ArrayList();
         // List contains both top and atomic requests, only add the top requests
-    	List<RequestInfo> requests = manager.getDQP().getRequests();                 
+    	List<RequestInfo> requests = getManager().getDQP().getRequests();                 
         for(RequestInfo request:requests) {
         	if (request.getConnectorBindingUUID() == null) {
         		requestList.add(request);
@@ -281,7 +281,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
         }
         
         ArrayList atomicRequestList = new ArrayList();
-    	List<RequestInfo> requests = manager.getDQP().getRequests();
+    	List<RequestInfo> requests = getManager().getDQP().getRequests();
         for (RequestInfo request:requests) {
         	if (request.getConnectorBindingUUID() != null) {
         		atomicRequestList.add(request);
@@ -322,7 +322,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
             switch(type) {
             
                 case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-                    Properties properties = manager.getProperties();
+                    Properties properties = getConfigurationService().getSystemProperties();
                     return convertPropertyDefinitions(properties);
                     
                 case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
@@ -374,7 +374,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
 	@Override
 	public Collection<ProcessObject> getProcesses(String processIdentifier) throws AdminException {
 		ArrayList<ProcessObject> list = new ArrayList<ProcessObject>();
-		list.add(this.manager.getProcess());
+		list.add(getManager().getProcess());
 		return list;
 	}
 }

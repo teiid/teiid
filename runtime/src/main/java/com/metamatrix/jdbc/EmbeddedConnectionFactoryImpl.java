@@ -134,13 +134,6 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 	        if (vdbDefinitions == null) {
 	        	props.setProperty(DQPEmbeddedProperties.VDB_DEFINITION, deployDirectory.getCanonicalPath());
 	        }
-	        
-	        // create log directory
-	        File logDirectory = new File(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_LOGDIR, "log")); //$NON-NLS-1$
-	        props.setProperty(DQPEmbeddedProperties.DQP_LOGDIR, logDirectory.getCanonicalPath());
-	        if (!logDirectory.exists()) {
-	        	logDirectory.mkdirs();
-	        }
 		} catch (IOException e) {
 			throw new ApplicationInitializationException(e);
 		}
@@ -278,7 +271,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
     	return this.starttime;
     }
     
-    public Properties getProperties() {
+    private Properties getProperties() {
         if (isAlive()) {
             return ((ConfigurationService)findService(DQPServiceNames.CONFIGURATION_SERVICE)).getSystemProperties();
         }

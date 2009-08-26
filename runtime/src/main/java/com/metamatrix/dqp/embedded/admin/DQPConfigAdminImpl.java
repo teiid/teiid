@@ -22,6 +22,8 @@
 
 package com.metamatrix.dqp.embedded.admin;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -47,7 +49,6 @@ import com.metamatrix.common.application.exception.ApplicationLifecycleException
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ComponentTypeID;
-import com.metamatrix.common.config.api.ConfigurationModelContainer;
 import com.metamatrix.common.config.api.ConnectorArchive;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
@@ -64,7 +65,6 @@ import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.embedded.configuration.ConnectorConfigurationReader;
 import com.metamatrix.dqp.embedded.configuration.ConnectorConfigurationWriter;
-import com.metamatrix.dqp.embedded.configuration.ServerConfigFileWriter;
 import com.metamatrix.dqp.embedded.configuration.VDBConfigurationReader;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.jdbc.EmbeddedConnectionFactoryImpl;
@@ -761,9 +761,11 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
      */
     public char[] exportConfiguration() throws AdminException {
         try {
-            ConfigurationModelContainer model = getConfigurationService().getSystemConfiguration();
-            return ServerConfigFileWriter.writeToCharArray(model);
-        } catch (MetaMatrixComponentException e) {
+        	StringWriter sw = new StringWriter();
+            Properties props = getConfigurationService().getSystemProperties();
+            props.store(sw, "Export of Teiid Configuration Properties"); //$NON-NLS-1$
+            return sw.toString().toCharArray();
+        } catch (IOException e) {
         	throw new AdminComponentException(e);
         }
     }

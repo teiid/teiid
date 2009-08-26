@@ -224,7 +224,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
         if (valid(configFile)) {
             return getFullyQualifiedPath(configFile);
         }
-        return null;
+        return Thread.currentThread().getContextClassLoader().getResource("configuration.xml"); //$NON-NLS-1$
     }
     
     /** 
@@ -978,9 +978,6 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
             this.configurationModel = getSystemConfiguration();        
             ServerConfigFileReader configReader = loadServerConfigFile();
             
-            // Add properties to all the user preferences.
-            getUserPreferences().putAll(configReader.getSystemProperties());
-            
             // Get the alternate connector bindings from the server configuration
             Map connectorBindings = configReader.getConnectorBindings();
             
@@ -1337,7 +1334,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @return true if yes to use buffering; false otherwise
      */
     public boolean useDiskBuffering() {
-        return Boolean.valueOf(getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_USEDISK, "true")).booleanValue(); //$NON-NLS-1$        
+        return Boolean.valueOf(getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_BUFFER_USEDISK, "true")).booleanValue(); //$NON-NLS-1$        
     }
     
     private File getWorkDir() {
@@ -1366,7 +1363,7 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
      * @return must a return a location 
      */
     public String getBufferMemorySize() {
-       return getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_BUFFER_MEMORY, "64"); //$NON-NLS-1$        
+       return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_BUFFER_MEMORY, "64"); //$NON-NLS-1$        
     }
     
     /**  
@@ -1378,10 +1375,10 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
     
     
     public String getProcessorBatchSize() {
-        return getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_PROCESSOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
+        return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_PROCESSOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
     }
     public String getConnectorBatchSize() {
-        return getUserPreferences().getProperty(DQPEmbeddedProperties.BufferService.DQP_CONNECTOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
+        return getUserPreferences().getProperty(DQPEmbeddedProperties.DQP_CONNECTOR_BATCH_SIZE, "2000"); //$NON-NLS-1$
     }
 
 	@Override

@@ -36,7 +36,6 @@ import java.util.Properties;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminOptions;
@@ -375,9 +374,6 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    addVDB(BQT, UnitTestUtil.getTestDataPath()+"/admin/QT_Ora9DSwDEF.vdb"); //$NON-NLS-1$
 	    
 	    Collection<ConnectorType> types = getAdmin().getConnectorTypes(STAR);
-	    for (ConnectorType type:types) {
-	       // System.out.println(type.getName());
-	    }
 	    assertEquals("31 types expected", 31, types.size()); //$NON-NLS-1$
 	    
 	    
@@ -664,10 +660,10 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 		getConnection(ADMIN, PROPS_FILE);
 		cleanDeploy();
 
-		Util.writeToFile(UnitTestUtil.getTestScratchPath()+"/serverconfigexport.xml", getAdmin().exportConfiguration()); //$NON-NLS-1$
-	    File f = new File(UnitTestUtil.getTestScratchPath()+"/serverconfigexport.xml"); //$NON-NLS-1$
+		Util.writeToFile(UnitTestUtil.getTestScratchPath()+"/serverconfigexport.properties", getAdmin().exportConfiguration()); //$NON-NLS-1$
+	    File f = new File(UnitTestUtil.getTestScratchPath()+"/serverconfigexport.properties"); //$NON-NLS-1$
 	    assertTrue("Exported configuration must exist", f.exists()); //$NON-NLS-1$
-	    f.delete();
+	    //f.delete();
 	    closeConnection();
 	}
 	
@@ -1018,60 +1014,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    closeConnection();
 	}	
 	
-//    /**
-//     * SIP51, SIP52
-//     * @throws Exception
-//     */
-//    @Test public void testDeleteInvalidVdb() throws Exception {
-//		getConnection(ADMIN, PROPS_FILE);
-//		cleanDeploy();
-//		
-//		String VDB_NAME = "DeleteInvalid"; //$NON-NLS-1$
-//        try {
-//            // Try clean deployment twice
-//            try {
-//				addVDB(VDB_NAME, UnitTestUtil.getTestDataPath()+"/admin/TestORSInvalid.vdb"); //$NON-NLS-1$
-//				fail("Failed with exception "); //$NON-NLS-1$
-//			} catch (Exception e) {
-//				//pass
-//			}
-//        } catch (Exception x) {
-//        	fail("Failed with exception " + Util.getStackTraceAsString(x)); //$NON-NLS-1$
-//        } finally {
-//            closeConnection();
-//        }
-//    }	
-//    
-//    /**
-//     * Opens connection to the VDB and tries to deploy when conn is open.
-//     * The redeployment should not affect the current connection.
-//     * @throws Exception
-//     */
-//    @Test public void testKeepConnectionReplaceVdb () throws Exception {
-//		getConnection(ADMIN, PROPS_FILE);
-//		cleanDeploy();
-//		
-//        String VDB_NAME = "ReplaceActive"; //$NON-NLS-1$
-//        try {
-//            VDB vdb = addVDB(VDB_NAME, UnitTestUtil.getTestDataPath()+"/admin/TestORS.vdb"); //$NON-NLS-1$
-//            String currentVersion = vdb.getVDBVersion();
-//            assertEquals("1", currentVersion); //$NON-NLS-1$
-//            
-//            // Connect and run test query
-//            pushConnection();
-//            Connection c1 = getConnection( VDB_NAME, PROPS_FILE); 
-//            execute("SELECT * FROM C_REPOS_DB_RELEASE"); //$NON-NLS-1$
-//
-//            // Redeploy the VDB while the connection is open.  New VDB has A_CCOUNT table
-//            vdb = deployVdbClean(admin, VDB_NAME, UnitTestUtil.getTestDataPath()+"/admin/TestORS1.vdb"); //$NON-NLS-1$
-//
-//            testConnection(testConn, "select * from C_ACCOUNT", false, "Redeploy V2 Test"); //$NON-NLS-1$ //$NON-NLS-2$
-//        } catch (Exception x) {
-//            fail("Failed with exception " + Util.getStackTraceAsString(x)); //$NON-NLS-1$
-//        } finally {
-//            Util.closeQuietly(conn);
-//        }
-//    }    
+
 	
 	VDB addVDB(String name, String vdbFile) {
 	    try {

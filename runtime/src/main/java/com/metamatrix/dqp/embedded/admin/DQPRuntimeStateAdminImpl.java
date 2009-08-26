@@ -173,13 +173,13 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements RuntimeState
             if (matches(identifier, cacheTypes[i])) {
                 if(cacheTypes[i].equals(Cache.CODE_TABLE_CACHE)) {
                     processed = true;
-                    manager.getDQP().clearCodeTableCache();
+                    getManager().getDQP().clearCodeTableCache();
                 } else if(cacheTypes[i].equals(Cache.PREPARED_PLAN_CACHE)) {
                     processed = true;
-                    manager.getDQP().clearPlanCache();
+                    getManager().getDQP().clearPlanCache();
                 } else if(cacheTypes[i].equals( Cache.QUERY_SERVICE_RESULT_SET_CACHE)) {
                     processed = true;
-                    manager.getDQP().clearResultSetCache();
+                    getManager().getDQP().clearResultSetCache();
                 } else if (cacheTypes[i].equals(Cache.CONNECTOR_RESULT_SET_CACHE)) {
                     processed = true;
                     try {
@@ -243,7 +243,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements RuntimeState
         RequestID id = new RequestID(connId, requestId);    
         
         try {
-			this.manager.getDQP().cancelRequest(id);
+        	getManager().getDQP().cancelRequest(id);
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);
 		}
@@ -269,7 +269,7 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements RuntimeState
         AtomicRequestID id = new AtomicRequestID(new RequestID(connId, requestId), nodeId, executionId);
 
         try {
-            this.manager.getDQP().cancelAtomicRequest(id);
+        	getManager().getDQP().cancelAtomicRequest(id);
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);
 		}
