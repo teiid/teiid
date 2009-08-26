@@ -25,11 +25,7 @@ package com.metamatrix.dqp.embedded;
 /**
  */
 public interface DQPEmbeddedProperties {
-    public static final String DQP_LOGDIR = "dqp.logdir"; //$NON-NLS-1$
     public static final String DQP_EXTENSIONS = "dqp.extensions"; //$NON-NLS-1$
-    public static final String DQP_CONFIGFILE = "dqp.configFile"; //$NON-NLS-1$
-    public static final String DQP_METADATA_SYSTEMURL = "dqp.metadata.systemURL"; //$NON-NLS-1$    
-    public static final String VDB_DEFINITION = "vdb.definition"; //$NON-NLS-1$
     public static final String USER_DEFINED_FUNCTIONS = "dqp.userDefinedFunctionsFile"; //$NON-NLS-1$
     public static final String COMMON_EXTENSION_CLASPATH = "dqp.extension.CommonClasspath"; //$NON-NLS-1$
     public static final String DQP_WORKDIR = "dqp.workdir"; //$NON-NLS-1$
@@ -37,7 +33,28 @@ public interface DQPEmbeddedProperties {
     public static final String DQP_LIBDIR = "dqp.lib"; //$NON-NLS-1$
     public static final String PROCESSNAME = "processName"; //$NON-NLS-1$
     public static final String CLUSTERNAME = "clusterName"; //$NON-NLS-1$
+    
+    //legacy
+    public static final String VDB_DEFINITION = "vdb.definition"; //$NON-NLS-1$
+    public static final String DQP_CONFIGFILE = "dqp.configFile"; //$NON-NLS-1$
+    public static final String DQP_METADATA_SYSTEMURL = "dqp.metadata.systemURL"; //$NON-NLS-1$
 
+    // cache properties
+    public static final String USE_RESULTSET_CACHE = "ResultSetCache.enabled"; //$NON-NLS-1$
+    public static final String MAX_RESULTSET_CACHE_SIZE = "ResultSetCache.maxSizeInMB"; //$NON-NLS-1$
+	public static final String MAX_RESULTSET_CACHE_AGE = "ResultSetCache.maxAgeInSeconds"; //$NON-NLS-1$
+	public static final String RESULTSET_CACHE_SCOPE = "ResultSetCache.scope"; //$NON-NLS-1$
+	public static final String MAX_CODE_TABLE_RECORDS = "CodeTables.maxRows"; //$NON-NLS-1$
+	public static final String MAX_CODE_TABLES = "CodeTables.maxCount"; //$NON-NLS-1$
+	public static final String MAX_PLAN_CACHE_SIZE = "PreparedPlanCache.maxCount"; //$NON-NLS-1$
+	
+	// engine properties
+	public static final String STREAMING_BATCH_SIZE     = "process.lobChunkSizeInKB"; //$NON-NLS-1$
+	public static final String PROCESS_POOL_MAX_THREADS = "process.maxThreads"; //$NON-NLS-1$
+	public static final String PROCESS_TIMESLICE = "process.timeSliceInMilli"; //$NON-NLS-1$
+	public static final String PROCESSOR_DEBUG_ALLOWED = "process.optionDebugAllowed"; //$NON-NLS-1$	
+	public static final String MAX_FETCH_SIZE = "process.maxRowsFetchSize"; //$NON-NLS-1$
+	
     // socket specific
     public static final String BIND_ADDRESS = "server.bindAddress"; //$NON-NLS-1$
     public static final String SERVER_PORT = "server.portNumber"; //$NON-NLS-1$
@@ -45,55 +62,36 @@ public interface DQPEmbeddedProperties {
     public static final String INPUT_BUFFER_SIZE = "server.inputBufferSize"; //$NON-NLS-1$       
     public static final String OUTPUT_BUFFER_SIZE = "server.outputBufferSize"; //$NON-NLS-1$       
     
-    //derived properties
+    //derived properties (should make user avoid updating these)
     public static final String DQP_TMPDIR = "mm.io.tmpdir"; //$NON-NLS-1$
     public static final String BOOTURL = "bootURL"; //$NON-NLS-1$
     public static final String ENABLE_SOCKETS = "sockets.enabled"; //$NON-NLS-1$
     public static final String HOST_ADDRESS = "hostAddress"; //$NON-NLS-1$
     public static final String DQP_BOOTSTRAP_FILE = "bootstrapFile"; //$NON-NLS-1$
     public static final String TEIID_HOME = "teiid.home"; //$NON-NLS-1$
+	
     
-    public interface BufferService {
-        /**
-         * Property prefix for DQP Buffer Service properties.
-         */
-        public static final String BUFFER_PREFIX = "dqp.buffer"; //$NON-NLS-1$
+    /**
+     * Determines whether buffer management should be all-memory (if false)
+     * or mixed memory and disk access (if true).  Default value is false.
+     */
+    public static final String DQP_BUFFER_USEDISK = "dqp.buffer.usedisk"; //$NON-NLS-1$
+        
+    /**
+     * Determines amount of memory to use in-memory before buffering to 
+     * disk.  This property is not used if DQP_BUFFER_USEDISK = true.  The 
+     * value is in megabytes.  Default value is 64.   
+     */
+    public static final String DQP_BUFFER_MEMORY = "dqp.buffer.memory"; //$NON-NLS-1$
     
-        /**
-         * Determines whether buffer management should be all-memory (if false)
-         * or mixed memory and disk access (if true).  Default value is false.
-         */
-        public static final String DQP_BUFFER_USEDISK = BUFFER_PREFIX + ".usedisk"; //$NON-NLS-1$
-            
-        /**
-         * Determines amount of memory to use in-memory before buffering to 
-         * disk.  This property is not used if DQP_BUFFER_USEDISK = true.  The 
-         * value is in megabytes.  Default value is 64.   
-         */
-        public static final String DQP_BUFFER_MEMORY = BUFFER_PREFIX + ".memory"; //$NON-NLS-1$
-        
-        /**
-         * The maximum number of rows a processor batch should contain. Default is 2000.
-         */
-        public static final String DQP_PROCESSOR_BATCH_SIZE = BUFFER_PREFIX + ".processorBatchSize"; //$NON-NLS-1$
-        
-        /**
-         * The maximum number of rows a connector batch should contain. Default is 2000.
-         */
-        public static final String DQP_CONNECTOR_BATCH_SIZE = BUFFER_PREFIX + ".connectorBatchSize"; //$NON-NLS-1$
-    }
+    /**
+     * The maximum number of rows a processor batch should contain. Default is 2000.
+     */
+    public static final String DQP_PROCESSOR_BATCH_SIZE = "dqp.buffer.processorBatchSize"; //$NON-NLS-1$
+    
+    /**
+     * The maximum number of rows a connector batch should contain. Default is 2000.
+     */
+    public static final String DQP_CONNECTOR_BATCH_SIZE = "dqp.buffer.connectorBatchSize"; //$NON-NLS-1$
 
-    public interface DataService {
-        /**
-         * Property prefix for DQP Data Service properties.
-         */
-        public static final String DATA_PREFIX = "dqp.data"; //$NON-NLS-1$
-    }
-        
-    public interface MetadataService {
-        /**
-         * Property prefix for DQP Metadata Service properties.
-         */
-        public static final String METADATA_PREFIX = "dqp.metadata"; //$NON-NLS-1$
-    }
 }

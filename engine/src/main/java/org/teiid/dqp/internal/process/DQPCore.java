@@ -71,6 +71,7 @@ import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.client.ResultsFuture;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -121,6 +122,7 @@ public class DQPCore extends Application implements ClientSideDQP {
     //Constants
     private static final int DEFAULT_MAX_CODE_TABLE_RECORDS = 10000;
     private static final int DEFAULT_MAX_CODE_TABLES = 20;
+    private static final int DEFAULT_FETCH_SIZE = 2000;
     private static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     private static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
     private static final int DEFAULT_MAX_PROCESS_WORKERS = 15;
@@ -131,7 +133,7 @@ public class DQPCore extends Application implements ClientSideDQP {
     private int maxCodeTableRecords = DEFAULT_MAX_CODE_TABLE_RECORDS;
     private int maxCodeTables = DEFAULT_MAX_CODE_TABLES;
     
-    private int maxFetchSize = 20000;
+    private int maxFetchSize = DEFAULT_FETCH_SIZE;
     
     // Resources
     private ConnectorCapabilitiesCache connectorCapabilitiesCache = new ConnectorCapabilitiesCache();
@@ -626,20 +628,26 @@ public class DQPCore extends Application implements ClientSideDQP {
 		ApplicationEnvironment env = this.getEnvironment();
 		
 		PropertiesUtils.setBeanProperties(this, props, null);
+		
+        this.processorTimeslice = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_TIMESLICE, DEFAULT_PROCESSOR_TIMESLICE);
+        this.maxFetchSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_FETCH_SIZE, DEFAULT_FETCH_SIZE);
+        this.processorDebugAllowed = PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.PROCESSOR_DEBUG_ALLOWED, true);
+        this.maxCodeTableRecords = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS, DEFAULT_MAX_CODE_TABLE_RECORDS);
+        this.maxCodeTables = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLES, DEFAULT_MAX_CODE_TABLES);
         
-        this.chunkSize = PropertiesUtils.getIntProperty(props, DQPConfigSource.STREAMING_BATCH_SIZE, 10) * 1024;
+        this.chunkSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.STREAMING_BATCH_SIZE, 10) * 1024;
         
         //result set cache
-        if(PropertiesUtils.getBooleanProperty(props, DQPConfigSource.USE_RESULTSET_CACHE, false)){ 
+        if(PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.USE_RESULTSET_CACHE, false)){ 
         	Properties rsCacheProps = new Properties();
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(DQPConfigSource.MAX_RESULTSET_CACHE_SIZE, DEFAULT_MAX_RESULTSET_CACHE_SIZE));
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(DQPConfigSource.MAX_RESULTSET_CACHE_AGE, DEFAULT_MAX_RESULTSET_CACHE_AGE));
-        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(DQPConfigSource.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(DQPEmbeddedProperties.MAX_RESULTSET_CACHE_SIZE, DEFAULT_MAX_RESULTSET_CACHE_SIZE));
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(DQPEmbeddedProperties.MAX_RESULTSET_CACHE_AGE, DEFAULT_MAX_RESULTSET_CACHE_AGE));
+        	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(DQPEmbeddedProperties.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
 			this.rsCache = new ResultSetCache(rsCacheProps, ResourceFinder.getCacheFactory());
         }
 
         //prepared plan cache
-        int maxSizeTotal = PropertiesUtils.getIntProperty(props, DQPConfigSource.MAX_PLAN_CACHE_SIZE, PreparedPlanCache.DEFAULT_MAX_SIZE_TOTAL);
+        int maxSizeTotal = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_PLAN_CACHE_SIZE, PreparedPlanCache.DEFAULT_MAX_SIZE_TOTAL);
         prepPlanCache = new PreparedPlanCache(maxSizeTotal);
 		
         // Processor debug flag
@@ -654,7 +662,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         metadataService = (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE);
 
         // Create the worker pools to tie the queues together
-        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, PropertiesUtils.getIntProperty(props, DQPConfigSource.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)); 
+        processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)); 
  
         tempTableStoresHolder = new TempTableStoresHolder(bufferManager);
         
@@ -663,7 +671,7 @@ public class DQPCore extends Application implements ClientSideDQP {
                                             (VDBService) env.findService(DQPServiceNames.VDB_SERVICE),
                                             (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE),
                                             this.maxCodeTables,
-                                            this.maxCodeTableRecords);
+                                            this.maxCodeTableRecords);        
 	}
 	
 	public List getXmlSchemas(String docName) throws MetaMatrixComponentException,
@@ -760,25 +768,4 @@ public class DQPCore extends Application implements ClientSideDQP {
 		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, getEnvironment(), this.tempTableStoresHolder);
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);
 	}
-	
-	public void setMaxFetchSize(int maxFetchSize) {
-		this.maxFetchSize = maxFetchSize;
-	}
-	
-	public void setProcessorDebugAllowed(boolean processorDebugAllowed) {
-		this.processorDebugAllowed = processorDebugAllowed;
-	}
-	
-	public void setMaxCodeTableRecords(int maxCodeTableRecords) {
-		this.maxCodeTableRecords = maxCodeTableRecords;
-	}
-	
-	public void setMaxCodeTables(int maxCodeTables) {
-		this.maxCodeTables = maxCodeTables;
-	}
-	
-	public void setProcessorTimeslice(int processorTimeslice) {
-		this.processorTimeslice = processorTimeslice;
-	}
-
 }

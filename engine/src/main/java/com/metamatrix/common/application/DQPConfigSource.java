@@ -29,24 +29,6 @@ import java.util.Properties;
  */
 public interface DQPConfigSource {
 
-	public static final String MAX_FETCH_SIZE = "MaxFetchSize"; //$NON-NLS-1$
-	public static final String MAX_CODE_TABLE_RECORDS = "MaxCodeTableRecords"; //$NON-NLS-1$
-	public static final String MAX_CODE_TABLES = "MaxCodeTables"; //$NON-NLS-1$
-	public static final String MAX_RESULTSET_CACHE_SIZE = "ResultSetCacheMaxSize"; //$NON-NLS-1$
-	public static final String MAX_RESULTSET_CACHE_AGE = "ResultSetCacheMaxAge"; //$NON-NLS-1$
-	public static final String MAX_PLAN_CACHE_SIZE = "MaxPlanCacheSize"; //$NON-NLS-1$
-	public static final String PROCESSOR_TIMESLICE = "ProcessorTimeslice"; //$NON-NLS-1$
-	public static final String USE_RESULTSET_CACHE = "ResultSetCacheEnabled"; //$NON-NLS-1$
-	public static final String RESULTSET_CACHE_SCOPE = "ResultSetCacheScope"; //$NON-NLS-1$
-	public static final String STREAMING_BATCH_SIZE     = "metamatrix.server.streamingBatchSize"; //$NON-NLS-1$
-
-	public static final String PROCESS_POOL_MAX_THREADS = "ProcessPoolMaxThreads"; //$NON-NLS-1$
-	public static final String PROCESSOR_DEBUG_ALLOWED = "ProcessorDebugAllowed"; //$NON-NLS-1$
-
-	/**
-     * Get the DQP properties, as described in {@link DQPProperties}.
-     * @return Set of properties to configure DQP
-     */
     public Properties getProperties();
     
     public ApplicationService getServiceInstance(Class<? extends ApplicationService> type);
