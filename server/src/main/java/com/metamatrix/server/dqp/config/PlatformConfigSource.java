@@ -36,6 +36,7 @@ import com.metamatrix.common.application.DQPConfigSource;
 import com.metamatrix.common.config.api.Host;
 import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.metadata.IndexMetadataService;
 import com.metamatrix.metadata.runtime.RuntimeMetadataCatalog;
@@ -66,12 +67,12 @@ public class PlatformConfigSource implements DQPConfigSource {
         
         String procDebugStr = currentConfiguration.getProperty(PROC_DEBUG_ALLOWED);
         if(procDebugStr != null) {
-            dqpProps.setProperty(DQPConfigSource.PROCESSOR_DEBUG_ALLOWED, procDebugStr);
+            dqpProps.setProperty(DQPEmbeddedProperties.PROCESSOR_DEBUG_ALLOWED, procDebugStr);
         }
 
-        String streamingBatchSize = currentConfiguration.getProperty(DQPConfigSource.STREAMING_BATCH_SIZE);
+        String streamingBatchSize = currentConfiguration.getProperty(DQPEmbeddedProperties.STREAMING_BATCH_SIZE);
         if(streamingBatchSize != null) {
-            dqpProps.setProperty(DQPConfigSource.STREAMING_BATCH_SIZE, streamingBatchSize);
+            dqpProps.setProperty(DQPEmbeddedProperties.STREAMING_BATCH_SIZE, streamingBatchSize);
         }
         
         this.host = host;
