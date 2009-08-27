@@ -11,38 +11,15 @@
 
   <fileSets>
     <fileSet>
-      <includes>
-        <include>*.txt</include>
-        <include>pom.xml</include>
-      </includes>
+      <directory>${project.basedir}</directory>
       <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory>teiid</outputDirectory>
+      <excludes>
+          <exclude>**/target/**</exclude>
+          <exclude>**/.settings/**</exclude>
+          <exclude>**/*.log</exclude>        
+      </excludes>
     </fileSet>
   </fileSets>
-      
-  <moduleSets>
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>      
-        <sources>
-          <includeModuleDirectory>true</includeModuleDirectory>
-          <excludeSubModuleDirectories>false</excludeSubModuleDirectories>
-          <useDefaultExcludes>true</useDefaultExcludes>
-          <fileSets>
-            <fileSet>
-            <directory>.</directory>
-            <outputDirectory></outputDirectory>
-            <useDefaultExcludes>true</useDefaultExcludes>
-            <excludes>
-              <exclude>**/target/**</exclude>
-              <exclude>.classpath</exclude>
-              <exclude>.project</exclude>
-              <exclude>**/.settings/**</exclude>
-              <exclude>**/*.log</exclude>
-              
-            </excludes>
-            </fileSet>
-          </fileSets>      
-        </sources>
-    </moduleSet>
-  </moduleSets>
-
+     
 </assembly>
