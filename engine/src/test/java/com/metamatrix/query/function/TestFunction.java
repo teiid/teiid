@@ -1170,4 +1170,28 @@ public class TestFunction {
     	assertEquals(TimestampUtil.createTime(15, 0, 0), FunctionMethods.parseTime(" 15:00:00 ", "HH:mm:ss")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Test public void testMod() {
+        assertEquals(new BigDecimal("-1.1"), FunctionMethods.mod(new BigDecimal("-3.1"), new BigDecimal("2")));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    @Test public void testMod1() {
+        assertEquals(new BigDecimal("-1.1"), FunctionMethods.mod(new BigDecimal("-3.1"), new BigDecimal("-2")));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    @Test public void testMod2() {
+        assertEquals(-40, FunctionMethods.mod(-340, 60), 0);
+    }
+    
+    @Test public void testMod3() {
+        assertEquals(-40, FunctionMethods.mod(-340, -60), 0);
+    }
+    
+    @Test public void testMod4() {
+        assertEquals(new BigInteger("-1"), FunctionMethods.mod(new BigInteger("-3"), new BigInteger("2")));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
+    @Test public void testMod5() {
+        assertEquals(new BigInteger("-1"), FunctionMethods.mod(new BigInteger("-3"), new BigInteger("-2")));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }
+    
 }

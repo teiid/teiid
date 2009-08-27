@@ -154,22 +154,28 @@ public final class FunctionMethods {
 
 	// ================== Function = abs =====================
 
-	public static Object abs(Object x) throws FunctionExecutionException {
-		if(x instanceof Integer) {
-			return new Integer(Math.abs(((Integer)x).intValue()));
-		} else if(x instanceof Long) {
-			return new Long(Math.abs(((Long)x).longValue()));
-		} else if(x instanceof Float) {
-			return new Float(Math.abs(((Float)x).floatValue()));
-		} else if(x instanceof Double) {
-			return new Double(Math.abs(((Double)x).doubleValue()));
-		} else if(x instanceof BigInteger) {
-			return ((BigInteger)x).abs();
-		} else if(x instanceof BigDecimal) {
-			return ((BigDecimal)x).abs();
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0015, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0015, "abs", x.getClass().getName())); //$NON-NLS-1$
+	public static int abs(int x) {
+		return Math.abs(x);
+	}
+	
+	public static long abs(long x) {
+		return Math.abs(x);
+	}
+	
+	public static float abs(float x) {
+		return Math.abs(x);
+	}
+	
+	public static double abs(double x) {
+		return Math.abs(x);
+	}
+	
+	public static Object abs(BigInteger x) {
+		return x.abs();
+	}
+	
+	public static Object abs(BigDecimal x) {
+		return x.abs();
 	}
 
 	// ================== Function = ceiling =====================
@@ -226,38 +232,30 @@ public final class FunctionMethods {
     
 	// ================== Function = mod =====================
 
-	public static  Object mod(Object x, Object y) throws FunctionExecutionException {
-		if(x == null || y == null) {
-			return null;
-		} else if(x instanceof Integer) {
-			if(y instanceof Integer) {
-				return new Integer(((Integer)x).intValue() % ((Integer)y).intValue());
-			}
-		} else if(x instanceof Long) {
-			if(y instanceof Long) {
-				return new Long(((Long)x).longValue() % ((Long)y).longValue());
-			}
-		} else if(x instanceof Float) {
-			if(y instanceof Float) {
-				return new Float(((Float)x).floatValue() % ((Float)y).floatValue());
-			}
-		} else if(x instanceof Double) {
-			if(y instanceof Double) {
-				return new Double(((Double)x).doubleValue() % ((Double)y).doubleValue());
-			}
-		} else if(x instanceof BigInteger) {
-			if(y instanceof BigInteger) {
-				return ((BigInteger)x).mod((BigInteger) y);
-			}
-		} else if(x instanceof BigDecimal) {
-			if(y instanceof BigDecimal) {
-				return ((BigDecimal)x).remainder((BigDecimal) y);
-			}
-		}
-
-		throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0007, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0007, new Object[]{"mod", x.getClass().getName(), y.getClass().getName()})); //$NON-NLS-1$
+	public static int mod(int x, int y) {
+		return x % y;
 	}
-
+	
+	public static long mod(long x, long y) {
+		return x % y;
+	}
+	
+	public static float mod(float x, float y) {
+		return x % y;
+	}
+	
+	public static double mod(double x, double y) {
+		return x % y;
+	}
+	
+	public static Object mod(BigInteger x, BigInteger y) {
+		return x.remainder(y);
+	}
+	
+	public static Object mod(BigDecimal x, BigDecimal y) {
+		return x.remainder(y);
+	}
+    
 	// ================== Function = power =====================
 	
 	public static double power(double x, double y) {
