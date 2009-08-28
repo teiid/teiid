@@ -542,86 +542,17 @@ void exportConnectorArchive(String connectorTypeIdentifier, String fileName) {
 
 
 /**
- * Set a Property for an AdminObject
- * 
- * @param identifier
- *            The unique identifier for for an {@link AdminObject}.
- * @param className
- *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
- *            All of these sub-interfaces are in package <code>org.teiid.adminapi</code>.
- *            You may specify either the fully-qualified or unqualified classname. 
- *            For example "ConnectorBinding" or "org.teiid.adminapi.ConnectorBinding".
+ * Set/update the property for the Connector Binding identified by the given deployed name.
+ * @param deployedName
  * @param propertyName
- *            String Property key
  * @param propertyValue
- *            String value to update
  * @throws AdminException
- *             if there's a system error.
- * @since 4.3
  */
-void setProperty(String identifier, String className, String propertyName, String propertyValue) {
-    debug("Setting property for adminObject: "+identifier+" with property="+propertyName+" value="+propertyValue);
+void setConnectorBindingProperty(String deployedName, String propertyName, String propertyValue) {
+    debug("Setting property for Connector Binding: "+deployedName+" with property="+propertyName+" value="+propertyValue);
     checkAdmin();    
-    currentContext().internalAdmin.setProperty(identifier, className, propertyName, propertyValue);    
+    currentContext().internalAdmin.setConnectorBindingProperty(deployedName, propertyName, propertyValue);    
 }
-
-/**
- * Set several properties for an AdminObject. Any existing properties not specified will not be changed.
- * 
- * @param identifier
- *            The unique identifier for for an {@link AdminObject}.
- * @param className
- *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
- *            All of these sub-interfaces are in package <code>org.teiid.adminapi</code>.
- *            You may specify either the fully-qualified or unqualified classname. 
- *            For example "ConnectorBinding" or "org.teiid.adminapi.ConnectorBinding".
- * @param properties
- *            Properties to set.
- * @throws AdminException
- *             if there's a system error or if there's a user input error.
- * @since 4.3
- */
-void updateProperties(String identifier, String className, Properties properties) {
-    debug("Updating properties for adminObject: "+identifier+" with properties: "+properties);
-    checkAdmin();    
-    currentContext().internalAdmin.updateProperties(identifier, className, properties);    
-}
-
-
-/**
- * Set system-wide property.  This will be written to config_ns.xml
- *
- * @param propertyName
- *            Name of the System Property
- * @param propertyValue
- *            Value of the System Property
- * @throws AdminException
- *             if there's a system error or if there's a user input error.
- * @since 4.3
- */
-void setSystemProperty(String propertyName, String propertyValue) {
-    debug("Setting property for system = "+propertyName+" value="+propertyValue);
-    checkAdmin();    
-    currentContext().internalAdmin.setSystemProperty(propertyName, propertyValue);    
-}
-
-/**
- * Set several system-wide properties.  These will be written to config_ns.xml
- * Any existing properties not specified will not be changed.
- *
- * @param properties
- *            Properties to set.
- * @throws AdminException
- *             if there's a system error or if there's a user input error.
- * @since 4.3
- */
-void updateSystemProperties(Properties properties) {
-    debug("Setting properties for system: "+properties);
-    checkAdmin();    
-    currentContext().internalAdmin.updateSystemProperties(properties);    
-}
-
-
 
 /**
  * Export Configuration to character Array in XML format
@@ -702,20 +633,6 @@ void assignBindingsToModel(String[] connectorBindingNames, String vdbName, Strin
 //  Monitor Methods
 //
 // *********************************************************************************************
-
-/**
- * Retrieve the single System object.
- *
- * @return The single {@link SystemObject} object, for interacting with system-wide configuration
- * @throws AdminException if there's a system error.
- * @since 4.3
- */
-SystemObject getSystem() {
-    checkAdmin();
-    result = currentContext().internalAdmin.getSystem();
-    debug(result);
-    return result;
-}
 
 /**
  * Get the Connector Types that correspond to the specified identifer pattern.
@@ -930,27 +847,17 @@ Collection getSourceRequests(String identifier) {
     return result;
 }
 
-
 /**
  * Get all of the available Configuration Properties for the specified AdminObject, and details about them.
- * @param identifier
- *            The unique identifier for for an {@link AdminObject}.
- * @param className
- *            The class name of the sub-interface of {@link AdminObject} you are setting the property for. These are all the
- *            supported class names. {@link SystemObject}, {@link Host}, {@link ProcessObject}, {@link ConnectorBinding}, 
- *            {@link ConnectorType},{@link DQP}, {@link Resource}
- *            
- *            Note that in Embedded mode only supported classes are {@link ConnectorBinding}, {@link ConnectorType}, 
- *            {@link SystemObject}
- * @return Collection of PropertyDefinition objects.
- * @throws AdminException if there's a system error.     
- * @since 4.3
+ * @param connectorTypeIdentifier
+ * @return
+ * @throws AdminException
  */
-Collection getPropertyDefinitions(String identifier, String className) {
-    checkAdmin();
-    result = currentContext().internalAdmin.getPropertyDefinitions(identifier, className);
+Collection getConnectorTypePropertyDefinitions(String identifier){
+	checkAdmin();
+    result = currentContext().internalAdmin.getConnectorTypePropertyDefinitions(identifier);
     debug(result);
-    return result;
+    return result;	
 }
 
 /**
