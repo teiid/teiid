@@ -22,6 +22,7 @@
 
 package com.metamatrix.query.processor.relational;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -109,14 +110,13 @@ public class LimitNode extends RelationalNode {
         super.open();
     	limit = -1;
     	if (limitExpr != null) {
-            Integer limitVal = (Integer)Evaluator.evaluate(limitExpr);
+            Integer limitVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(limitExpr, Collections.emptyList());
             limit = limitVal.intValue();
     	}
         
         if (offsetExpr != null) {
-            Integer offsetVal = (Integer)Evaluator.evaluate(offsetExpr);
+            Integer offsetVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(offsetExpr, Collections.emptyList());
             offset = offsetVal.intValue();
-            Assertion.assertTrue(offset >= 0);
         } else {
             offset = 0;
         }

@@ -413,6 +413,19 @@ public class TestPreparedStatement {
 		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
     }
     
+    @Test public void testLimitParam() throws Exception {
+        String preparedSql = "select e1 from pm1.g1 order by e1 desc limit ?"; //$NON-NLS-1$
+        
+		List<?> values = Arrays.asList(1); 
+        List[] expected = new List[] { 
+                Arrays.asList("c"), //$NON-NLS-1$s
+            };    
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+		helpTestProcessing(preparedSql, values, expected, dataManager, FakeMetadataFactory.example1Cached(), false, false);
+    }
+    
     @Test public void testXQueryParam() throws Exception {
         String preparedSql = "exec m.xproc3(?)"; //$NON-NLS-1$
         
