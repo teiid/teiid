@@ -87,7 +87,9 @@ public class SOAPExecutor extends HTTPExecutor {
                     Source.class, 
                     Service.Mode.PAYLOAD);
             
-            StringReader reader = new StringReader(xmlOutputter.outputString(doc));
+            String requestDocument = xmlOutputter.outputString(doc);
+            attemptConditionalLog(requestDocument);
+            StringReader reader = new StringReader(requestDocument);
             Source input = new StreamSource(reader);
             // Invoke the operation.
             Source output = dispatch.invoke(input);
