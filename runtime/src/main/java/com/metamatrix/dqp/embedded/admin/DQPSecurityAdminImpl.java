@@ -38,7 +38,6 @@ import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Group;
-import org.teiid.adminapi.Principal;
 import org.teiid.adminapi.SecurityAdmin;
 import org.xml.sax.SAXException;
 
@@ -56,8 +55,8 @@ import com.metamatrix.platform.security.api.AuthorizationPolicy;
 import com.metamatrix.platform.security.api.AuthorizationPolicyFactory;
 import com.metamatrix.platform.security.api.AuthorizationRealm;
 import com.metamatrix.platform.security.api.Credentials;
+import com.metamatrix.platform.security.api.MetaMatrixPrincipal;
 import com.metamatrix.platform.security.api.MetaMatrixPrincipalName;
-import com.metamatrix.platform.security.api.SessionToken;
 
 
 /** 
@@ -167,7 +166,7 @@ public class DQPSecurityAdminImpl  extends BaseAdmin implements SecurityAdmin {
         }
         Collection roleNames = null;
         try {
-            roleNames = getAuthorizationService().getRoleNamesForPrincipal(new MetaMatrixPrincipalName(groupIdentifier, Principal.TYPE_GROUP));
+            roleNames = getAuthorizationService().getRoleNamesForPrincipal(new MetaMatrixPrincipalName(groupIdentifier, MetaMatrixPrincipal.TYPE_GROUP));
         } catch (InvalidSessionException e) {
         	throw new AdminComponentException(e);
         } catch (AuthorizationMgmtException e) {

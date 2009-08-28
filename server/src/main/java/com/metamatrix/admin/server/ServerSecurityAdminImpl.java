@@ -36,8 +36,8 @@ import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.AdminRoles;
 import org.teiid.adminapi.Group;
-import org.teiid.adminapi.Principal;
 
+import com.metamatrix.admin.api.Principal;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.admin.api.server.ServerSecurityAdmin;

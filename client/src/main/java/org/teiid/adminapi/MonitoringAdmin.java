@@ -27,13 +27,9 @@ import java.util.Collection;
 import com.metamatrix.admin.RolesAllowed;
 
 
-
 /**
- * Used to access the monitorable components of the MetaMatrix system.
+ * Used to access the monitorable components of the Teiid system.
  * 
- * <p>As a <i>core</i> interface,
- * this administration is common to both the MetaMatrix server and MM Query.</p>
- *
  * <p>See the particular admin object in question for an example of
  * allowed identifier patterns.</p>
  *
@@ -41,15 +37,6 @@ import com.metamatrix.admin.RolesAllowed;
  */
 @RolesAllowed(value=AdminRoles.RoleName.ADMIN_READONLY)
 public interface MonitoringAdmin {
-
-    /**
-     * Retrieve the single System object.
-     *
-     * @return The single {@link SystemObject} object, for interacting with system-wide configuration
-     * @throws AdminException if there's a system error.
-     * @since 4.3
-     */
-    SystemObject getSystem() throws AdminException;
 
     /**
      * Get the Connector Types that correspond to the specified identifier pattern.
@@ -64,7 +51,7 @@ public interface MonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection getConnectorTypes(String connectorTypeIdentifier) throws AdminException;
+    Collection<ConnectorType> getConnectorTypes(String connectorTypeIdentifier) throws AdminException;
 
     /**
      * Get the VDBs that correspond to the specified identifier pattern.
@@ -81,7 +68,7 @@ public interface MonitoringAdmin {
      * @since 4.3
      */
     @RolesAllowed(value=AdminRoles.RoleName.ANONYMOUS)
-    Collection getVDBs(String vdbIdentifier) throws AdminException;
+    Collection<VDB> getVDBs(String vdbIdentifier) throws AdminException;
 
     /**
      * Get the Connector Bindings that correspond to the specified identifier pattern.
@@ -96,7 +83,7 @@ public interface MonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection getConnectorBindings(String connectorBindingIdentifier) throws AdminException;
+    Collection<ConnectorBinding> getConnectorBindings(String connectorBindingIdentifier) throws AdminException;
 
     /**
      * Get all the Connector Bindings for the given VDB identifier pattern
@@ -110,7 +97,7 @@ public interface MonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection getConnectorBindingsInVDB(String identifier) throws AdminException;
+    Collection<ConnectorBinding> getConnectorBindingsInVDB(String identifier) throws AdminException;
 
     /**
      * Get the Extension Modules that correspond to the specified identifier pattern
@@ -141,7 +128,7 @@ public interface MonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection getQueueWorkerPools(String identifier) throws AdminException;
+    Collection<QueueWorkerPool> getQueueWorkerPools(String identifier) throws AdminException;
     
     
     /**
@@ -175,7 +162,7 @@ public interface MonitoringAdmin {
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection getCaches(String identifier) throws AdminException;
+    Collection<Cache> getCaches(String identifier) throws AdminException;
 
     /**
      * Get the Sessions that correspond to the specified identifier pattern
@@ -222,23 +209,14 @@ public interface MonitoringAdmin {
      */
     Collection<Request> getSourceRequests(String identifier) throws AdminException;
     
+
     /**
      * Get all of the available Configuration Properties for the specified AdminObject, and details about them.
-     * @param identifier
-     *            The unique identifier for for an {@link AdminObject}.
-     * @param className
-     *            The class name of the sub-interface of {@link AdminObject} you are setting the property for. These are all the
-     *            supported class names. {@link SystemObject}, {@link Host}, {@link ProcessObject}, {@link ConnectorBinding}, 
-     *            {@link ConnectorType},{@link DQP}, {@link Resource}
-     *            
-     *            Note that in Embedded mode only supported classes are {@link ConnectorBinding}, {@link ConnectorType}, 
-     *            {@link SystemObject}
-     * @return Collection of PropertyDefinition objects.
-     * @throws AdminException if there's a system error.     
-     * @since 4.3
+     * @param connectorTypeIdentifier
+     * @return
+     * @throws AdminException
      */
-    Collection getPropertyDefinitions(String identifier,
-                                      String className) throws AdminException;
+    Collection<PropertyDefinition> getConnectorTypePropertyDefinitions(String connectorTypeIdentifier) throws AdminException;
     
     
     /**

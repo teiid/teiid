@@ -331,7 +331,7 @@ public class TestEmbeddedAdmin {
                 binding = current;
             }
         }            
-        admin.setProperty(binding.getIdentifier(), ConnectorBinding.class.getName(), "RowCount", "10"); //$NON-NLS-1$ //$NON-NLS-2$
+        admin.setConnectorBindingProperty(binding.getIdentifier(), "RowCount", "10"); //$NON-NLS-1$ //$NON-NLS-2$
         admin.stopConnectorBinding(LOOPBACK, true);
         admin.startConnectorBinding(LOOPBACK);            
 

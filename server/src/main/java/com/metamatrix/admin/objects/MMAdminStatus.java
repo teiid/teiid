@@ -24,9 +24,9 @@ package com.metamatrix.admin.objects;
 
 import java.io.Serializable;
 
-import org.teiid.adminapi.AdminStatus;
 
 import com.metamatrix.admin.AdminPlugin;
+import com.metamatrix.admin.api.AdminStatus;
 
 
 /** 
@@ -80,7 +80,7 @@ public class MMAdminStatus implements AdminStatus, Serializable {
     
     
     /** 
-     * @see org.teiid.adminapi.AdminStatus#getCode()
+     * @see com.metamatrix.admin.api.AdminStatus#getCode()
      * @since 4.3
      */
     public int getCode() {
@@ -88,7 +88,7 @@ public class MMAdminStatus implements AdminStatus, Serializable {
     }
 
     /** 
-     * @see org.teiid.adminapi.AdminStatus#getMessage()
+     * @see com.metamatrix.admin.api.AdminStatus#getMessage()
      * @since 4.3
      */
     public String getMessage() {

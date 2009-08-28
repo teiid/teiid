@@ -20,10 +20,14 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.adminapi;
+package com.metamatrix.admin.api;
 
 import java.io.Serializable;
 import java.util.Collection;
+
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminOptions;
+import org.teiid.adminapi.AdminOptions.OnConflict;
 
 
 

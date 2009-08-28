@@ -45,14 +45,15 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.AdminStatus;
+import org.teiid.adminapi.EmbeddedLogger;
 import org.teiid.adminapi.LogConfiguration;
 import org.teiid.adminapi.ProcessObject;
-import org.teiid.adminapi.ScriptsContainer;
-import org.teiid.adminapi.SystemObject;
 import org.teiid.adminapi.VDB;
 
 import com.metamatrix.admin.AdminPlugin;
+import com.metamatrix.admin.api.AdminStatus;
+import com.metamatrix.admin.api.ScriptsContainer;
+import com.metamatrix.admin.api.SystemObject;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.server.ServerConfigAdmin;
 import com.metamatrix.admin.objects.MMAdminObject;
@@ -800,11 +801,11 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         String mmHost = null;
         String mmPort = null;
         Collection hosts = parent.getHosts(AdminObject.WILDCARD);
-        org.teiid.adminapi.Host aHost = (org.teiid.adminapi.Host) hosts.iterator().next();
+        com.metamatrix.admin.api.Host aHost = (com.metamatrix.admin.api.Host) hosts.iterator().next();
         mmHost = aHost.getName();
         Collection hostProcesses = parent.getProcesses(aHost.getIdentifier() + AdminObject.DELIMITER + AdminObject.WILDCARD);
         ProcessObject hostProcess = (ProcessObject) hostProcesses.iterator().next();
-        mmPort = hostProcess.getPropertyValue(ProcessObject.SERVER_PORT);
+        mmPort = hostProcess.getPropertyValue(VMComponentDefnType.SERVER_PORT);
         
         //boolean useSSL = SSLConfiguration.isSSLEnabled();
         boolean useSSL = false;
@@ -1469,7 +1470,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
 
     /**
-     * Supported classes are  {@link org.teiid.adminapi.Host}, {@link org.teiid.adminapi.ConnectorBinding}, 
+     * Supported classes are  {@link com.metamatrix.admin.api.Host}, {@link org.teiid.adminapi.ConnectorBinding}, 
      * {@link SystemObject}, {@link ProcessObject}
      * @see com.metamatrix.admin.api.server.ServerConfigAdmin#setProperty(java.lang.String, java.lang.String, java.lang.String)
      * @since 4.3
@@ -1488,7 +1489,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
     
     
     /** 
-     * Supported classes are {@link org.teiid.adminapi.ConnectorBinding}, {@link org.teiid.adminapi.Service}, 
+     * Supported classes are {@link org.teiid.adminapi.ConnectorBinding}, {@link com.metamatrix.admin.api.Service}, 
      * {@link SystemObject}, {@link ProcessObject}
      * @see org.teiid.adminapi.ConfigurationAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
      * @since 4.3
@@ -1498,7 +1499,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                                  Properties properties) throws AdminException {
     
     	int nodeCount = getNodeCount(identifier); 
-    	int type = MMAdminObject.getObjectType(className);
+    	int type = AbstractAdminImpl.getObjectType(className);
     	
     	AdminObject adminObject = null;
     	String hostName;
@@ -1506,15 +1507,15 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
         
         switch (type) {
             
-            case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-                this.updateSystemProperties(properties);
-                break;
+//            case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
+//                this.updateSystemProperties(properties);
+//                break;
                 
-            case MMAdminObject.OBJECT_TYPE_PROCESS_OBJECT:
+            case AbstractAdminImpl.OBJECT_TYPE_PROCESS_OBJECT:
             	adminObject = getAdminObject(identifier, className);
                 ProcessObject process = (ProcessObject)adminObject;
                 String processName = adminObject.getName();
-                hostName = process.getHostIdentifier();
+                hostName = process.getHostName();
                 try {
 					VMComponentDefn vmDefn = getVMByName(hostName, processName);
 					Properties processProperties = vmDefn.getProperties();
@@ -1536,7 +1537,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
                     
                 break;
                 
-            case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
+            case AbstractAdminImpl.OBJECT_TYPE_CONNECTOR_BINDING:
             	String connectorBindingName;
             	if (nodeCount > 1) {
             		adminObject = getAdminObject(identifier, className);
@@ -1576,7 +1577,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 					throw new AdminComponentException(e);
 				}
                 break;
-                
+            /*    
             case MMAdminObject.OBJECT_TYPE_SERVICE:
             	String serviceName;
             	if (nodeCount > 1) {
@@ -1628,7 +1629,7 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 					e.printStackTrace();
 				}
                 break;
-                
+                */
                 
             default:
                 throwProcessingException("ServerConfigAdminImpl.Unsupported_Admin_Object", new Object[] {className}); //$NON-NLS-1$
@@ -2378,6 +2379,22 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 
 	@Override
 	public void extensionModuleModified(String name) throws AdminException {
+		
+	}
+
+	@Override
+	public void deleteVDB(String vdbName, String version) throws AdminException {
+		
+	}
+
+	@Override
+	public void setConnectorBindingProperty(String deployedName,
+			String propertyName, String propertyValue) throws AdminException {
+		
+	}
+
+	@Override
+	public void setLogListener(EmbeddedLogger listener) throws AdminException {
 		
 	}
     

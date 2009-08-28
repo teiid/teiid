@@ -20,21 +20,21 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.adminapi;
+package com.metamatrix.admin.api;
 
 import java.util.Date;
 
+import org.teiid.adminapi.AdminObject;
+
 /**
- * Represents a service in the MetaMatrix system.
- * 
- * <p>The unique identifier pattern is [host]<{@link #DELIMITER}>[process]<{@link #DELIMITER}>[Service Name]
- * when running against a MetaMatrix server. The [Service Name] can itself have spaces in the name.
- * In the case of the MM Query, a Service does not apply as MM Query is not running within a MM Server VM.</p>
+ * The distributed query processor, which is the internal query engine component used by MetaMatrix products.
  * 
  * @since 4.3
  */
-public interface Service extends
-                                 AdminObject {
+public interface DQP extends
+                    AdminObject {
+
+    
     /**Registered by not initialized*/
     public static final int STATE_NOT_INITIALIZED = 0;
     /**Open and running*/
@@ -65,34 +65,26 @@ public interface Service extends
      * @return current connector state.
      */
     int getState();
-
+    
     /**
-     * Retrieve the current connector state as a printable <code>String</code>.
-     * @return current connector state in String form.
+     * Retrieve the current connector state.
+     * 
+     * @return current connector state.
      */
     String getStateAsString();
 
     /**
-     * Returns time of last state change.
-     * 
+     * Retrieve time of last state change.
+     *  
      * @return time of last state change.
      * @since 4.3
      */
     Date getStateChangedTime();
 
     /**
-     * Returns the description
+     * Returns the description.
      * 
      * @return description
      */
-    String getDescription();
-    
-    /**
-     * Get the component type identifier for this service {@link ComponentType}. 
-     * @return the Component Type identifier which can be used to
-     * find the ComponentType.
-     * @since 6.1
-     */
-    String getComponentTypeName();
-
+    public String getDescription();
 }

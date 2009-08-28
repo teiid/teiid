@@ -22,18 +22,14 @@
 
 package org.teiid.adminapi;
 
+
 /** 
- * A Group is a MetaMatrix principal that can contain other Principals
- * as members.  A Group can contain {@link User}s and other Groups.
- * 
- * <p>See {@link Principal} for identity pattern.</p>
- * @since 4.3
+ * This interface is used to represent a group of principals.
  */
-public interface Group extends Principal {
+public interface Group extends AdminObject {
     
     /** 
-     * Optional property for a group
+     * Optional property for a group; group description
      */
-    /** The group description */
     static final String DESCRIPTION = "description"; //$NON-NLS-1$
 }

@@ -57,7 +57,7 @@ public class TestSeverAdminFactory {
 		verify(sa, times(1)).restart();
 		
 		//here's the test we issue to see that the system is up after the bounce
-		verify(sa, times(1)).getSystem(); 
+		verify(sa, times(1)).getProcesses("*"); //$NON-NLS-1$ 
 	}
 
 }

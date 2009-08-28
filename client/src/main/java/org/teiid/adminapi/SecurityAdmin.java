@@ -40,9 +40,7 @@ public interface SecurityAdmin {
     /**
      * Get the Collection of administrative role names possessed by the given group, if any.
      *
-     * @param groupIdentifier
-     *            The unique identifier for the {@link Group}. This is group name. A user is a {@link Principal} and a
-     *            Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains.
+     * @param groupIdentifier The unique identifier for the {@link Group}. This is group name. 
      *             The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
      * @return The Collection of {@link Role}s.
      * @throws AdminException
@@ -55,8 +53,7 @@ public interface SecurityAdmin {
      * Get the group memberships for the given user. 
      *
      * @param userIdentifier
-     *            The unique identifier for the user. This is generally a user name. A user is a {@link Principal} and a
-     *            Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains.
+     *            The unique identifier for the user. This is generally a user name.
      *             The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
      * @return The collection of groups in which the given user has membership.
      * @throws AdminException
@@ -70,9 +67,8 @@ public interface SecurityAdmin {
      * Get the group denoted by the given <code>groupIdentifier</code>.
      *
      * @param groupIdentifier
-     *            The unique identifier for the {@link Group}. This is generally a group name. A group is a {@link Principal} and
-     *            a Principal name is considered to be unique throughout the MetaMatrix system across all Membership domains. <br>
-     *            Note that by supplying the {@link AdminObject#WILDCARD WILDCARD} identifier, all all users in the system will
+     *            The unique identifier for the {@link Group}. This is generally a group name. 
+     *            Note that by supplying the {@link AdminObject#WILDCARD WILDCARD} identifier, all all groups in the system will
      *            retrieved.</br>
      * @return The Collection of groups.
      * @throws AdminException
@@ -87,7 +83,7 @@ public interface SecurityAdmin {
      * @param roleIdentifier
      *            one of {@link AdminRoles}.
      * @param groupIdentifier
-     *            the unique identifier for the Principal. The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+     *            the unique identifier for the Group. The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
      * @throws AdminException
      *             if there's a system error.
      * @since 4.3
@@ -101,7 +97,7 @@ public interface SecurityAdmin {
      * @param roleIdentifier
      *            one of {@link AdminRoles}
      * @param groupIdentifier
-     *            the unique identifier for the Principal. The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
+     *            the unique identifier for the group. The {@link AdminObject#WILDCARD WILDCARD} cannot be used here.
      * @throws AdminException
      *             if there's a system error.
      * @since 4.3

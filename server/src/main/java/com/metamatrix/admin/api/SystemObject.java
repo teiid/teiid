@@ -20,9 +20,11 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.adminapi;
+package com.metamatrix.admin.api;
 
 import java.util.Date;
+
+import org.teiid.adminapi.AdminObject;
 
 
 /** 

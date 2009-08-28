@@ -28,43 +28,13 @@ import com.metamatrix.admin.RolesAllowed;
 
 
 /**
- * This interface describes the methods to configure MetaMatrix.
+ * This interface describes the methods to configure Teiid.
  *
- * <p>As a <i>core</i> interface,
- * this administration is common to both the MetaMatrix server and MM Query.</p>
  * @since 4.3
  */
 @RolesAllowed(value=AdminRoles.RoleName.ADMIN_SYSTEM)
 public interface ConfigurationAdmin {
-
-    /**
-     * Set system-wide property.  This will be written to config_ns.xml
-     *
-     * @param propertyName
-     *            Name of the System Property
-     * @param propertyValue
-     *            Value of the System Property
-     * @throws AdminException
-     *             if there's a system error or if there's a user input error.
-     * @since 4.3
-     */
-    void setSystemProperty(String propertyName,
-                           String propertyValue) throws AdminException;
     
-    
-    /**
-     * Set several system-wide properties.  These will be written to config_ns.xml
-     * Any existing properties not specified will not be changed.
-     *
-     * @param properties
-     *            Properties to set.
-     * @throws AdminException
-     *             if there's a system error or if there's a user input error.
-     * @since 4.3
-     */
-    void updateSystemProperties(Properties properties) throws AdminException;
-    
-
     /**
      * Assign a {@link ConnectorBinding} to a {@link VDB}'s Model
      *
@@ -91,50 +61,14 @@ public interface ConfigurationAdmin {
             String modelName) throws AdminException;    
 
     /**
-     * Set a Property for an AdminObject
-     * 
-     * @param identifier
-     *            The unique identifier for for an {@link AdminObject}.
-     * @param className
-     *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
-     *            All of these sub-interfaces are in package <code>com.metamatrix.admin.api.objects</code>.
-     *            You may specify either the fully-qualified or unqualified classname. 
-     *            For example "ConnectorBinding" or "com.metamatrix.admin.api.objects.ConnectorBinding".
+     * Set/update the property for the Connector Binding identified by the given deployed name.
+     * @param deployedName
      * @param propertyName
-     *            String Property key
      * @param propertyValue
-     *            String value to update
      * @throws AdminException
-     *             if there's a system error.
-     * @since 4.3
      */
-    void setProperty(String identifier,
-                     String className,
-                     String propertyName,
-                     String propertyValue) throws AdminException;
+    void setConnectorBindingProperty(String deployedName, String propertyName, String propertyValue) throws AdminException;
     
-    
-    /**
-     * Set several properties for an AdminObject. Any existing properties not specified will not be changed.
-     * 
-     * @param identifier
-     *            The unique identifier for for an {@link AdminObject}.
-     * @param className
-     *            The class name of the sub-interface of {@link AdminObject} you are setting the property for.
-     *            All of these sub-interfaces are in package <code>com.metamatrix.admin.api.objects</code>.
-     *            You may specify either the fully-qualified or unqualified classname. 
-     *            For example "ConnectorBinding" or "com.metamatrix.admin.api.objects.ConnectorBinding".
-     * @param properties
-     *            Properties to set.
-     * @throws AdminException
-     *             if there's a system error or if there's a user input error.
-     * @since 4.3
-     */
-    void updateProperties(String identifier,
-                          String className,
-                          Properties properties) throws AdminException;
-    
-
     /**
      * Add Connector Type, will import Connector Type from a file
      *
@@ -249,6 +183,15 @@ public interface ConfigurationAdmin {
      */
     VDB addVDB(String name,
                 byte[] vdbFile, AdminOptions options) throws AdminException;
+    
+    
+    /**
+     * Delete the VDB with the given name and version
+     * @param vdbName
+     * @param version
+     * @throws AdminException
+     */
+    void deleteVDB(String vdbName, String version) throws AdminException;
 
     /**
      * Get the {@link LogConfiguration}
@@ -271,6 +214,19 @@ public interface ConfigurationAdmin {
      */
     void setLogConfiguration(LogConfiguration config) throws AdminException;
 
+    
+    /**
+     * Set the log listener to install into MM Query.  This log listener will receive all log messages
+     * written by the MM Query at it's current log level and log contexts.
+     * 
+     * Note: Logging changes are not persistent. This will be fixed in future versions. 
+     * 
+     * @param listener The listener component
+     * @throws AdminException if there's a system error.
+     * @since 4.3
+     */
+    void setLogListener(EmbeddedLogger listener) throws AdminException;  
+    
     /**
      * Adds an {@link ExtensionModule} to the end of the list of modules.
      * <br><i>All caches (of Class objects) are cleared.</i></br>

@@ -38,11 +38,9 @@ import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Cache;
 import org.teiid.adminapi.ExtensionModule;
 import org.teiid.adminapi.Session;
-import org.teiid.adminapi.SystemObject;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.Util;
 
-import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMConnectorType;
 import com.metamatrix.admin.objects.MMExtensionModule;
@@ -51,10 +49,10 @@ import com.metamatrix.admin.objects.MMModel;
 import com.metamatrix.admin.objects.MMPropertyDefinition;
 import com.metamatrix.admin.objects.MMRequest;
 import com.metamatrix.admin.objects.MMSession;
-import com.metamatrix.admin.objects.MMSystem;
 import com.metamatrix.admin.objects.MMVDB;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.security.SessionServiceException;
+import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.config.api.ComponentType;
 import com.metamatrix.common.config.api.ComponentTypeDefn;
 import com.metamatrix.common.config.api.ConnectorBinding;
@@ -538,20 +536,6 @@ abstract class BaseAdmin {
         } 
     }
 
-    /**
-     * Get the system state. 
-     * @return
-     */
-    public SystemObject getSystem() {
-        MMSystem system = new MMSystem();
-        system.setStartTime(new Date(manager.getStartTime()));
-        system.setStarted(manager.isAlive());
-        system.setProperties(getConfigurationService().getSystemProperties());
-        return system;
-    }
-
-    
-    
     boolean isMaskedProperty(String  propName, ComponentType type) {
         if (type != null) {
             ComponentTypeDefn typeDef = type.getComponentTypeDefinition(propName);
@@ -643,38 +627,29 @@ abstract class BaseAdmin {
         return results;
     }
     
-    
-    
-    /**
-     * Get admin objects of the specified className that match the specified identifier. 
-     * @param identifier
-     * @param className
-     * @return
-     * @since 4.3
-     */
-    protected Collection getAdminObjects(String identifier, String className) throws AdminException {
-        
-        int code = MMAdminObject.getObjectType(className);
-        
-        ArrayList list = null;
-        switch(code) {
-            case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
-                return getConnectorBindings(identifier);
-            case MMAdminObject.OBJECT_TYPE_CONNECTOR_TYPE:
-                return getConnectorTypes(identifier);
-            case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-                list = new ArrayList();
-                list.add(getSystem());
-                return list;
-                
-            default:
-                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("AdminImpl.Unsupported_Admin_Object", className)); //$NON-NLS-1$
-                
-        }
-    }
-    
     protected SessionToken validateSession() {
         return DQPWorkContext.getWorkContext().getSessionToken();
     }
+    
+    protected void changeVDBStatus(String name, String version, int status)
+			throws AdminException {
+		try {
+
+			if (name == null || version == null || !name.matches(SINGLE_WORD_REGEX)) {
+				throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_vdb_name")); //$NON-NLS-1$
+			}
+
+			// Now change the VDB status it self
+			this.getVDBService().changeVDBStatus(name, version, status);
+
+			// If the VDB is modified and if its status changed to DELETED, then
+			// we can remove all the connector bindings associated with this VDB
+			// the above delete will also remove them
+		} catch (ApplicationLifecycleException e) {
+			throw new AdminComponentException(e);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
+	}    
     
 }

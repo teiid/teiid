@@ -33,12 +33,12 @@ import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.ConnectorBinding;
-import org.teiid.adminapi.Host;
 import org.teiid.adminapi.ProcessObject;
-import org.teiid.adminapi.Service;
 
 import junit.framework.TestCase;
 
+import com.metamatrix.admin.api.Host;
+import com.metamatrix.admin.api.Service;
 import com.metamatrix.admin.objects.MMConnectorBinding;
 import com.metamatrix.admin.objects.MMProcess;
 import com.metamatrix.common.application.DQPConfigSource;

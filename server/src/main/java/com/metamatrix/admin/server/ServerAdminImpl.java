@@ -36,11 +36,12 @@ import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.EmbeddedLogger;
 import org.teiid.adminapi.Group;
 import org.teiid.adminapi.LogConfiguration;
-import org.teiid.adminapi.ScriptsContainer;
-import org.teiid.adminapi.SystemObject;
+import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB;
 
+import com.metamatrix.admin.api.ScriptsContainer;
+import com.metamatrix.admin.api.SystemObject;
 import com.metamatrix.admin.api.server.ServerAdmin;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -1018,6 +1019,21 @@ public class ServerAdminImpl implements ServerAdmin {
 
 	@Override
 	public void shutdown(int millisToWait) throws AdminException {
+	}
+
+	@Override
+	public void deleteVDB(String vdbName, String version) throws AdminException {
+	}
+
+	@Override
+	public void setConnectorBindingProperty(String deployedName,
+			String propertyName, String propertyValue) throws AdminException {
+	}
+
+	@Override
+	public Collection<PropertyDefinition> getConnectorTypePropertyDefinitions(
+			String connectorTypeIdentifier) throws AdminException {
+		return null;
 	}
 
 }

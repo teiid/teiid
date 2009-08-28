@@ -58,24 +58,16 @@ public interface ConnectorBinding extends
     public static final String PASSWORD = "Password"; //$NON-NLS-1$
     
 
-    /** 
-     * Returns the String globally unique routing UUID for this
-     * Connector Binding 
-     * @return Returns the routingUUID.
-     * @since 4.3
-     */
-    String getRoutingUUID();
-    
     /**
      * Retrieve the current connector state.  This will be one of the constants: 
-     * {@link DQP#STATE_OPEN DQP.STATE_OPEN}.
-     * {@link DQP#STATE_NOT_INITIALIZED DQP.STATE_NOT_INITIALIZED}.
-     * {@link DQP#STATE_CLOSED DQP.STATE_CLOSED}.
-     * {@link DQP#STATE_FAILED DQP.STATE_FAILED}.
-     * {@link DQP#STATE_INIT_FAILED DQP.STATE_INIT_FAILED}.
-     * {@link DQP#STATE_NOT_REGISTERED DQP.STATE_NOT_REGISTERED}.
-     * {@link DQP#STATE_DATA_SOURCE_UNAVAILABLE DQP.STATE_DATA_SOURCE_UNAVAILABLE}.
-     * {@link DQP#STATE_NOT_DEPLOYED DQP.STATE_NOT_DEPLOYED}.
+     * {@link ConnectorBinding#STATE_OPEN DQP.STATE_OPEN}.
+     * {@link ConnectorBinding#STATE_NOT_INITIALIZED DQP.STATE_NOT_INITIALIZED}.
+     * {@link ConnectorBinding#STATE_CLOSED DQP.STATE_CLOSED}.
+     * {@link ConnectorBinding#STATE_FAILED DQP.STATE_FAILED}.
+     * {@link ConnectorBinding#STATE_INIT_FAILED DQP.STATE_INIT_FAILED}.
+     * {@link ConnectorBinding#STATE_NOT_REGISTERED DQP.STATE_NOT_REGISTERED}.
+     * {@link ConnectorBinding#STATE_DATA_SOURCE_UNAVAILABLE DQP.STATE_DATA_SOURCE_UNAVAILABLE}.
+     * {@link ConnectorBinding#STATE_NOT_DEPLOYED DQP.STATE_NOT_DEPLOYED}.
      * @return current connector state.
      */
     int getState();

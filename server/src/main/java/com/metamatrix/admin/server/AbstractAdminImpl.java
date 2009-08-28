@@ -41,10 +41,13 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.ConnectionPool;
+import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.xml.sax.SAXException;
 
+import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMConnectorBinding;
@@ -93,6 +96,68 @@ import com.metamatrix.server.query.service.QueryServiceInterface;
  * @since 4.3
  */
 public class AbstractAdminImpl {
+	
+    /**Package containing the sub-interfaces of AdminObjects*/
+    public static final String OBJECTS_PACKAGE = "com.metamatrix.admin.api.objects."; //$NON-NLS-1$
+    
+    
+    
+    /**Object type code for Cache*/
+    public static final int OBJECT_TYPE_CACHE = 0; 
+    /**Object type code for ConnectorBinding*/
+    public static final int OBJECT_TYPE_CONNECTOR_BINDING = 2;
+    /**Object type code for ConnectorType*/
+    public static final int OBJECT_TYPE_CONNECTOR_TYPE = 3;
+    /**Object type code for ExtensionModule*/
+    public static final int OBJECT_TYPE_EXTENSION_MODULE = 6;
+    /**Object type code for Group*/
+    public static final int OBJECT_TYPE_GROUP = 7;
+    /**Object type code for LogConfiguration*/
+    public static final int OBJECT_TYPE_LOG_CONFIGURATION = 9;
+    /**Object type code for Model*/
+    public static final int OBJECT_TYPE_MODEL = 10;
+    /**Object type code for ProcessObject*/
+    public static final int OBJECT_TYPE_PROCESS_OBJECT = 11;
+    /**Object type code for PropertyDefinition*/
+    public static final int OBJECT_TYPE_PROPERTY_DEFINITION = 12;
+    /**Object type code for QueueWorkerPool*/
+    public static final int OBJECT_TYPE_QUEUE_WORKER_POOL = 13;
+    /**Object type code for Request*/
+    public static final int OBJECT_TYPE_REQUEST = 14;
+    /**Object type code for Role*/
+    public static final int OBJECT_TYPE_ROLE = 16;
+    /**Object type code for Session*/
+    public static final int OBJECT_TYPE_SESSION = 17;
+    /**Object type code for VDB*/
+    public static final int OBJECT_TYPE_VDB = 21;
+    /**Object type code for TRANSACTION*/
+    public static final int OBJECT_TYPE_TRANSACTION = 22;
+    /**Object type code for CONNECTION_POOL*/
+    public static final int OBJECT_TYPE_CONNECTION_POOL = 23;
+    
+    
+    //map of String (class name) to Integer (object type code)
+    private static HashMap objectTypeMap = new HashMap();
+    
+    
+    static {
+        objectTypeMap.put(org.teiid.adminapi.Cache.class.getName(), new Integer(OBJECT_TYPE_CACHE)); 
+        objectTypeMap.put(org.teiid.adminapi.ConnectorBinding.class.getName(), new Integer(OBJECT_TYPE_CONNECTOR_BINDING));        
+        objectTypeMap.put(org.teiid.adminapi.ConnectorType.class.getName(), new Integer(OBJECT_TYPE_CONNECTOR_TYPE));        
+        objectTypeMap.put(org.teiid.adminapi.ExtensionModule.class.getName(), new Integer(OBJECT_TYPE_EXTENSION_MODULE));        
+        objectTypeMap.put(org.teiid.adminapi.Group.class.getName(), new Integer(OBJECT_TYPE_GROUP));        
+        objectTypeMap.put(org.teiid.adminapi.LogConfiguration.class.getName(), new Integer(OBJECT_TYPE_LOG_CONFIGURATION));        
+        objectTypeMap.put(org.teiid.adminapi.Model.class.getName(), new Integer(OBJECT_TYPE_MODEL));        
+        objectTypeMap.put(org.teiid.adminapi.ProcessObject.class.getName(), new Integer(OBJECT_TYPE_PROCESS_OBJECT));        
+        objectTypeMap.put(org.teiid.adminapi.PropertyDefinition.class.getName(), new Integer(OBJECT_TYPE_PROPERTY_DEFINITION));        
+        objectTypeMap.put(org.teiid.adminapi.QueueWorkerPool.class.getName(), new Integer(OBJECT_TYPE_QUEUE_WORKER_POOL));        
+        objectTypeMap.put(org.teiid.adminapi.Request.class.getName(), new Integer(OBJECT_TYPE_REQUEST));        
+        objectTypeMap.put(org.teiid.adminapi.Role.class.getName(), new Integer(OBJECT_TYPE_ROLE));        
+        objectTypeMap.put(org.teiid.adminapi.Session.class.getName(), new Integer(OBJECT_TYPE_SESSION));        
+        objectTypeMap.put(org.teiid.adminapi.VDB.class.getName(), new Integer(OBJECT_TYPE_VDB));        
+        objectTypeMap.put(Transaction.class.getName(), Integer.valueOf(OBJECT_TYPE_TRANSACTION));
+        objectTypeMap.put(ConnectionPool.class.getName(), Integer.valueOf(OBJECT_TYPE_CONNECTION_POOL));
+    }	
 
     private static final String DOUBLE_ESCAPED_DELIMITER = "\\" + AdminObject.ESCAPED_DELIMITER; //$NON-NLS-1$
 
@@ -501,54 +566,54 @@ public class AbstractAdminImpl {
      */
     protected Collection getAdminObjects(String identifier, String className) throws AdminException {
         
-        int code = MMAdminObject.getObjectType(className);
+        int code = AbstractAdminImpl.getObjectType(className);
         
         ArrayList list = null;
         switch(code) {
-            case MMAdminObject.OBJECT_TYPE_CACHE:
+            case AbstractAdminImpl.OBJECT_TYPE_CACHE:
                 return parent.getCaches(identifier);
-            case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
+            case AbstractAdminImpl.OBJECT_TYPE_CONNECTOR_BINDING:
                 return parent.getConnectorBindings(identifier);
-            case MMAdminObject.OBJECT_TYPE_CONNECTOR_TYPE:
+            case AbstractAdminImpl.OBJECT_TYPE_CONNECTOR_TYPE:
                 return parent.getConnectorTypes(identifier);
-            case MMAdminObject.OBJECT_TYPE_DQP:
-                return parent.getDQPs(identifier);
-            case MMAdminObject.OBJECT_TYPE_EXTENSION_MODULE:
+//            case MMAdminObject.OBJECT_TYPE_DQP:
+//                return parent.getDQPs(identifier);
+            case AbstractAdminImpl.OBJECT_TYPE_EXTENSION_MODULE:
                 return parent.getExtensionModules(identifier);
-            case MMAdminObject.OBJECT_TYPE_GROUP:
+            case AbstractAdminImpl.OBJECT_TYPE_GROUP:
                 return parent.getGroups(identifier);
-            case MMAdminObject.OBJECT_TYPE_HOST:
-                return parent.getHosts(identifier);
-            case MMAdminObject.OBJECT_TYPE_LOG_CONFIGURATION:
+//            case MMAdminObject.OBJECT_TYPE_HOST:
+//                return parent.getHosts(identifier);
+            case AbstractAdminImpl.OBJECT_TYPE_LOG_CONFIGURATION:
                 list = new ArrayList();
                 list.add(parent.getLogConfiguration());
                 return list;
-            case MMAdminObject.OBJECT_TYPE_PROCESS_OBJECT:
+            case AbstractAdminImpl.OBJECT_TYPE_PROCESS_OBJECT:
                 return parent.getProcesses(identifier);
-            case MMAdminObject.OBJECT_TYPE_QUEUE_WORKER_POOL:
+            case AbstractAdminImpl.OBJECT_TYPE_QUEUE_WORKER_POOL:
                 return parent.getQueueWorkerPools(identifier);
-            case MMAdminObject.OBJECT_TYPE_REQUEST:
+            case AbstractAdminImpl.OBJECT_TYPE_REQUEST:
                 return parent.getRequests(identifier);
-            case MMAdminObject.OBJECT_TYPE_SERVICE:
-                return parent.getServices(identifier);
-            case MMAdminObject.OBJECT_TYPE_RESOURCE:
-                return parent.getResources(identifier);
-            case MMAdminObject.OBJECT_TYPE_SESSION:
+//            case MMAdminObject.OBJECT_TYPE_SERVICE:
+//                return parent.getServices(identifier);
+//            case MMAdminObject.OBJECT_TYPE_RESOURCE:
+//                return parent.getResources(identifier);
+            case AbstractAdminImpl.OBJECT_TYPE_SESSION:
                 return parent.getSessions(identifier);
-            case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-                list = new ArrayList();
-                list.add(parent.getSystem());
-                return list;
-            case MMAdminObject.OBJECT_TYPE_VDB:
+//            case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
+//                list = new ArrayList();
+//                list.add(parent.getSystem());
+//                return list;
+            case AbstractAdminImpl.OBJECT_TYPE_VDB:
                 return parent.getVDBs(identifier);
-            case MMAdminObject.OBJECT_TYPE_TRANSACTION:
+            case AbstractAdminImpl.OBJECT_TYPE_TRANSACTION:
                 return parent.getTransactions();
-            case MMAdminObject.OBJECT_TYPE_CONNECTION_POOL:
+            case AbstractAdminImpl.OBJECT_TYPE_CONNECTION_POOL:
                 return parent.getConnectionPoolStats(identifier);
-            case MMAdminObject.OBJECT_TYPE_ENTITLEMENT:                
-            case MMAdminObject.OBJECT_TYPE_MODEL:
-            case MMAdminObject.OBJECT_TYPE_PROPERTY_DEFINITION:
-            case MMAdminObject.OBJECT_TYPE_ROLE:         
+           // case MMAdminObject.OBJECT_TYPE_ENTITLEMENT:                
+            case AbstractAdminImpl.OBJECT_TYPE_MODEL:
+            case AbstractAdminImpl.OBJECT_TYPE_PROPERTY_DEFINITION:
+            case AbstractAdminImpl.OBJECT_TYPE_ROLE:         
             default:
                 throwProcessingException("AbstractAdminImpl.Unsupported_Admin_Object", new Object[] {className}); //$NON-NLS-1$
                 
@@ -608,5 +673,28 @@ public class AbstractAdminImpl {
 		} catch (IOException e) {
 			throw new AdminComponentException(e);
 		}
+    }    
+    
+    /**
+     * Get the object type code for the specified classname. 
+     * @param className  This may be fully qualified or not, e.g.
+	 * "com.metamatrix.admin.api.objects.ConnectorBinding" or "ConnectorBinding".
+     * @return Object type code.  The will be one of the constants AdminObject.OBJECT_TYPE_xxx.
+     * @throws AdminException
+     * @since 4.3
+     */
+    public static int getObjectType(String className) throws AdminException {
+        //convert to the fully qualified className
+        if (className.indexOf(".") == -1) { //$NON-NLS-1$
+            className = OBJECTS_PACKAGE + className;
+        }
+        
+        Integer codeInteger = (Integer) objectTypeMap.get(className);
+        if (codeInteger == null) {
+            String message = AdminPlugin.Util.getString("MMAdminObject.Unsupported_Admin_Object", new Object[] {className});  //$NON-NLS-1$
+            throw new AdminProcessingException(message); 
+        }
+        
+        return codeInteger.intValue();
     }    
 }

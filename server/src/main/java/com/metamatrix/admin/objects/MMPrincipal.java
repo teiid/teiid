@@ -22,7 +22,8 @@
 
 package com.metamatrix.admin.objects;
 
-import org.teiid.adminapi.Principal;
+import com.metamatrix.admin.api.Principal;
+import com.metamatrix.admin.server.AbstractAdminImpl;
 
 
 /** 
@@ -62,7 +63,7 @@ public class MMPrincipal extends MMAdminObject implements Principal {
     }
 
     /** 
-     * @see org.teiid.adminapi.Principal#getType()
+     * @see com.metamatrix.admin.api.Principal#getType()
      * @since 4.3
      */
     public int getType() {
@@ -70,7 +71,7 @@ public class MMPrincipal extends MMAdminObject implements Principal {
     }
 
     /** 
-     * @see org.teiid.adminapi.Principal#getTypeLabel()
+     * @see com.metamatrix.admin.api.Principal#getTypeLabel()
      * @since 4.3
      */
     public String getTypeLabel() {
@@ -87,8 +88,8 @@ public class MMPrincipal extends MMAdminObject implements Principal {
      */
     public static boolean isUserOrGroup(String className) {
         try {
-            int type = MMAdminObject.getObjectType(className);
-            return (type == MMAdminObject.OBJECT_TYPE_USER || type == MMAdminObject.OBJECT_TYPE_GROUP);
+            int type = AbstractAdminImpl.getObjectType(className);
+            return (type == AbstractAdminImpl.OBJECT_TYPE_GROUP);
         } catch (Exception e) {
             return false;
         }

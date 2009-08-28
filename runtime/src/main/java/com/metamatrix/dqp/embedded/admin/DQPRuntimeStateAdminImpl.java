@@ -281,40 +281,10 @@ public class DQPRuntimeStateAdminImpl  extends BaseAdmin implements RuntimeState
      */
     public void changeVDBStatus(String name, String version, int status) 
         throws AdminException {
-        try {
-            
-            if (name == null || version == null || !name.matches(SINGLE_WORD_REGEX)) {
-                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_vdb_name")); //$NON-NLS-1$
-            }
-            
-            // Now change the VDB status it self
-            this.getVDBService().changeVDBStatus(name, version, status);
-            
-            // If the VDB is modified and if its status changed to DELETED, then
-            // we can remove all the connector bindings associated with this VDB
-            // the above delete will also remove them 
-        } catch (ApplicationLifecycleException e) {
-        	throw new AdminComponentException(e);
-        } catch (MetaMatrixComponentException e) {
-        	throw new AdminComponentException(e);
-        }
+    	super.changeVDBStatus(name, version, status);
     }
     
-    
-    /** 
-     * @see com.metamatrix.admin.api.embedded.EmbeddedRuntimeStateAdmin#setLogListener(java.lang.Object)
-     * @since 4.3
-     */
-    public void setLogListener(EmbeddedLogger listener) 
-        throws AdminException {
-        if(listener != null) {
-        	LogManager.setLogListener(new DQPLogListener(listener));
-        }
-        else {
-            throw new AdminProcessingException("Admin_invalid_log_listener"); //$NON-NLS-1$
-        }
-    }
-    
+        
     @Override
     public void terminateTransaction(String transactionId, String sessionId)
     		throws AdminException {

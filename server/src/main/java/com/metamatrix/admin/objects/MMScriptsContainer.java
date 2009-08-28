@@ -34,9 +34,9 @@ import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.ScriptsContainer;
 
 import com.metamatrix.admin.AdminPlugin;
+import com.metamatrix.admin.api.ScriptsContainer;
 import com.metamatrix.core.util.FileUtils;
 
 
@@ -60,7 +60,7 @@ public class MMScriptsContainer implements
     }
 
     /** 
-     * @see org.teiid.adminapi.ScriptsContainer#getFileNames()
+     * @see com.metamatrix.admin.api.ScriptsContainer#getFileNames()
      * @since 4.3
      */
     public Collection getFileNames() {
@@ -68,7 +68,7 @@ public class MMScriptsContainer implements
     }
 
     /** 
-     * @see org.teiid.adminapi.ScriptsContainer#saveAllToDirectory(java.lang.String, AdminOptions)
+     * @see com.metamatrix.admin.api.ScriptsContainer#saveAllToDirectory(java.lang.String, AdminOptions)
      * @since 4.3
      */
     public void saveAllToDirectory(String directoryLocation, AdminOptions options) throws AdminException {

@@ -46,12 +46,13 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.Service;
+import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.Session;
-import org.teiid.adminapi.SystemObject;
 import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.VDB;
 
+import com.metamatrix.admin.api.Service;
+import com.metamatrix.admin.api.SystemObject;
 import com.metamatrix.admin.api.server.ServerMonitoringAdmin;
 import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.admin.objects.MMConnectionPool;
@@ -1206,18 +1207,18 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			String objectIdentifier = adminObject.getIdentifier();
 			Configuration config;
 			
-			int type = MMAdminObject.getObjectType(className);
+			int type = AbstractAdminImpl.getObjectType(className);
 			switch (type) {
-			    case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-			        return convertPropertyDefinitions(getConfigurationServiceProxy().getCurrentConfiguration());
+//			    case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
+//			        return convertPropertyDefinitions(getConfigurationServiceProxy().getCurrentConfiguration());
 			    
-			    case MMAdminObject.OBJECT_TYPE_HOST:
-			        return convertPropertyDefinitions(getHostComponent(objectIdentifier));
+//			    case MMAdminObject.OBJECT_TYPE_HOST:
+//			        return convertPropertyDefinitions(getHostComponent(objectIdentifier));
 			    
-			    case MMAdminObject.OBJECT_TYPE_PROCESS_OBJECT:
+			    case AbstractAdminImpl.OBJECT_TYPE_PROCESS_OBJECT:
 			        return convertPropertyDefinitions(getProcessComponent(objectIdentifier));
 			        
-			    case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
+			    case AbstractAdminImpl.OBJECT_TYPE_CONNECTOR_BINDING:
 			        config = getConfigurationServiceProxy().getCurrentConfiguration();
 			        ConnectorBinding configBinding = config.getConnectorBinding(MMAdminObject.getNameFromIdentifier(objectIdentifier));
 			        
@@ -1225,27 +1226,27 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			        
 			        return convertPropertyDefinitions(component, configBinding.getProperties());
 			        
-			    case MMAdminObject.OBJECT_TYPE_SERVICE:
-			        config = getConfigurationServiceProxy().getCurrentConfiguration();
-			        ServiceComponentDefn svc = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));
-			        
-			        component = getDeployedComponent(objectIdentifier);
-			        
-			        return convertPropertyDefinitions(component, svc.getProperties());
+//			    case MMAdminObject.OBJECT_TYPE_SERVICE:
+//			        config = getConfigurationServiceProxy().getCurrentConfiguration();
+//			        ServiceComponentDefn svc = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));
+//			        
+//			        component = getDeployedComponent(objectIdentifier);
+//			        
+//			        return convertPropertyDefinitions(component, svc.getProperties());
 
 			        
-			    case MMAdminObject.OBJECT_TYPE_CONNECTOR_TYPE:
+			    case AbstractAdminImpl.OBJECT_TYPE_CONNECTOR_TYPE:
 			        ComponentType componentType = getConnectorTypeComponentType(objectIdentifier);
 			        return convertPropertyDefinitions(componentType, new Properties());                
 			        
-			    case MMAdminObject.OBJECT_TYPE_DQP:
-			        config = getConfigurationServiceProxy().getCurrentConfiguration();
-			        ServiceComponentDefn defn = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));  
+//			    case MMAdminObject.OBJECT_TYPE_DQP:
+//			        config = getConfigurationServiceProxy().getCurrentConfiguration();
+//			        ServiceComponentDefn defn = config.getServiceComponentDefn(MMAdminObject.getNameFromIdentifier(objectIdentifier));  
+//			        
+//			        return convertPropertyDefinitions(getDQPComponent(objectIdentifier), defn.getProperties());
 			        
-			        return convertPropertyDefinitions(getDQPComponent(objectIdentifier), defn.getProperties());
-			        
-			    case MMAdminObject.OBJECT_TYPE_RESOURCE:
-			        return convertPropertyDefinitions(getResourceComponent(objectIdentifier));
+//			    case MMAdminObject.OBJECT_TYPE_RESOURCE:
+//			        return convertPropertyDefinitions(getResourceComponent(objectIdentifier));
 			    
 			    default:
 			        throwProcessingException("ServerMonitoringAdminImpl.Unsupported_Admin_Object", new Object[] {className}); //$NON-NLS-1$
@@ -1405,5 +1406,11 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
     		throws AdminException {
     	return getQueryServiceProxy().getTransactions();
     }
+
+	@Override
+	public Collection<PropertyDefinition> getConnectorTypePropertyDefinitions(
+			String connectorTypeIdentifier) throws AdminException {
+		return null;
+	}
     
 }

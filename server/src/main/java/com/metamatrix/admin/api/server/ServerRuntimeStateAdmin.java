@@ -72,7 +72,7 @@ public interface ServerRuntimeStateAdmin extends RuntimeStateAdmin {
 
     /**
      * Start the Host for this cluster
-     * @param hostIdentifier the unique identifier for for a {@link org.teiid.adminapi.Host Host}
+     * @param hostIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.Host Host}
      * in the system.
      * @param waitUntilDone If true, this method waits until the operation is finished before returning.  
      * This may take a long time to complete.  If false, this method returns immediately, even though the operation 
@@ -84,7 +84,7 @@ public interface ServerRuntimeStateAdmin extends RuntimeStateAdmin {
 
     /**
      * Stop the Host for this cluster
-     * @param hostIdentifier the unique identifier for for a {@link org.teiid.adminapi.Host Host}
+     * @param hostIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.Host Host}
      * in the system.
      * @param stopNow  If true, stop the host forcefully.  If false, wait until any pending work is done.
      * @param waitUntilDone If true, this method waits until the operation is finished before returning.  

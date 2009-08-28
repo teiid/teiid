@@ -20,37 +20,49 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.admin.objects;
-
-import org.teiid.adminapi.User;
+package com.metamatrix.admin.api;
 
 
-/** 
+/**
+ * Base interface of admin status objects. 
+ * Status objects are returned by some admin methods to indicate warnings or additional information,
+ * that doesn't belong in an Exception.
+ * 
  * @since 4.3
  */
-public class MMUser extends MMPrincipal implements User {
-	private static final long serialVersionUID = -5201466263343170010L;
+public interface AdminStatus {
 
-	/** 
-     * @param identifierParts
-     * @since 4.3
-     */
-    public MMUser(String[] identifierParts) {
-        super(identifierParts, TYPE_USER);
-    }
     
     /**
-     * Determine if the given property name is legal for a User. 
-     * @param propName The name of a user property.
-     * @return <code>true</code> iff the given name is one of
-     * the allowed {@link User} properties.
+     * Status code indicating an unknown status
+     */
+    public final static int CODE_UNKNOWN = -1;
+    /**
+     * Status code indicating that the operation succeeded.
+     */
+    public final static int CODE_SUCCESS = 0;
+    
+    /**
+     * Warning status code indicating that an object could not be decrypted.
+     */
+    public final static int CODE_DECRYPTION_FAILED = -101;
+    
+    
+    
+    
+    /**
+     * Get the status code.
+     * This will be one of the status codes specified by the constants <code>AdminStatus.CODE_*</code>.
+     * @return String the unique Identifier
      * @since 4.3
      */
-    public static final boolean isUserProperty(String propName) {
-        return (propName.equals(COMMON_NAME) ||
-                        propName.equals(GIVEN_NAME) ||
-                        propName.equals(SURNAME) ||
-                        propName.equals(LOCATION) ||
-                        propName.equals(TELEPHONE_NUMBER));
-    }
+    int getCode();
+
+    /**
+     * Get the status message.
+     * @return String Name
+     * @since 4.3
+     */
+    String getMessage();
+
 }

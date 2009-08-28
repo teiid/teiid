@@ -28,10 +28,10 @@ import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminRoles;
 import org.teiid.adminapi.ConfigurationAdmin;
 import org.teiid.adminapi.ConnectorBinding;
-import org.teiid.adminapi.ScriptsContainer;
 import org.teiid.adminapi.VDB;
 
 import com.metamatrix.admin.RolesAllowed;
+import com.metamatrix.admin.api.ScriptsContainer;
 
 
 /**
@@ -72,7 +72,7 @@ public interface ServerConfigAdmin extends
      * Add a Host with Properties to MetaMatrix System
      *
      * @param hostIdentifier
-     *            Name of {@link org.teiid.adminapi.Host Host} to add
+     *            Name of {@link com.metamatrix.admin.api.Host Host} to add
      * @param properties
      *            name,value
      * @throws AdminException

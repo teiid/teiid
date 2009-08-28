@@ -31,6 +31,7 @@ import java.util.Properties;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminObject;
 
 import com.metamatrix.admin.AdminPlugin;
 import com.metamatrix.api.exception.security.LogonException;
@@ -130,7 +131,7 @@ public class ServerAdminFactory {
 			//we'll wait 30 seconds for the server to come back up
         	for (int i = 0; i < 15; i++) {
         		try {
-        			getTarget().getSystem();
+        			getTarget().getProcesses(AdminObject.WILDCARD);
         			return;
         		} catch (Exception e) {
                     //reestablish a connection and retry

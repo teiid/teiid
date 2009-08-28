@@ -28,11 +28,8 @@ import com.metamatrix.admin.RolesAllowed;
 
 
 /**
- * This interface defines the methods to interact with the MetaMatrix system
+ * This interface defines the methods to interact with the Teiid system
  * during runtime.
- *
- * <p>As a <i>core</i> interface,
- * this administration is common to both the MetaMatrix server and MM Query.</p>
  *
  * @since 4.3
  */
@@ -136,16 +133,7 @@ public interface RuntimeStateAdmin {
      * @throws AdminException
      */
     void terminateTransaction(String transactionId, String sessionId) throws AdminException;
-    
-    /**
-     * Set the log listener to install into MM Query.  This log listener will receive all log messages
-     * written by the MM Query at it's current log level and log contexts.
-     *
-     * @param listener The listener component
-     * @throws AdminException if there's a system error.
-     * @since 4.3
-     */
-    void setLogListener(EmbeddedLogger listener) throws AdminException;    
+      
     
     /**
      * Stop the MM Query.  If millisToWait is >0, then close to incoming queries, wait the time period

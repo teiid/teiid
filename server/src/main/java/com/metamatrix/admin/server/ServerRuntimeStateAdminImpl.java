@@ -362,7 +362,7 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
             if (waitUntilDone) {
                 boolean done = false;
                 while (! done) {
-                    done = isProcessStopped(process.getName(), process.getHostName());
+                    done = isProcessStopped(process.getName(), process.getProcessName());
                     try {
 						Thread.sleep(ServerAdminImpl.SERVICE_WAIT_INTERVAL);
 					} catch (InterruptedException e) {
@@ -744,10 +744,6 @@ public class ServerRuntimeStateAdminImpl extends AbstractAdminImpl implements Se
     public void terminateTransaction(Xid transactionId) throws AdminException {
     	this.getQueryServiceProxy().terminateTransaction(transactionId);
     }
-
-	@Override
-	public void setLogListener(EmbeddedLogger listener) throws AdminException {
-	}
 
 	@Override
 	public void bounceSystem(boolean waitUntilDone) throws AdminException {

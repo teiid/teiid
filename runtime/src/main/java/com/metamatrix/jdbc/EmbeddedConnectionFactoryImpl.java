@@ -389,6 +389,7 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 		process.setFreeMemory(rt.freeMemory());
 		process.setTotalMemory(rt.totalMemory());
 		process.setProperties(PropertiesUtils.clone(props));
+		process.setStartTime(new Date(this.starttime));
 		
 		if (this.socketTransport != null) {
 	        SocketListenerStats socketStats = this.socketTransport.getStats();

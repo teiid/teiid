@@ -45,6 +45,7 @@ import org.teiid.adminapi.EmbeddedLogger;
 import org.teiid.adminapi.ExtensionModule;
 import org.teiid.adminapi.LogConfiguration;
 import org.teiid.adminapi.ProcessObject;
+import org.teiid.adminapi.PropertyDefinition;
 import org.teiid.adminapi.VDB;
 import org.teiid.runtime.adminapi.Util;
 
@@ -433,7 +434,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    
 	    Collection<ConnectorBinding> bindings = getAdmin().getConnectorBindings("BQT_1.BQT1 Oracle 9i Simple Cap"); //$NON-NLS-1$
 	    for (ConnectorBinding binding:bindings) {
-	        getAdmin().setProperty(binding.getIdentifier(), ConnectorBinding.class.getName(), "RowCount", "10"); //$NON-NLS-1$ //$NON-NLS-2$
+	        getAdmin().setConnectorBindingProperty(binding.getIdentifier(), "RowCount", "10"); //$NON-NLS-1$ //$NON-NLS-2$
 	        getAdmin().stopConnectorBinding(binding.getIdentifier(), true);
 	        getAdmin().startConnectorBinding(binding.getIdentifier());
 	    }	  
@@ -1014,6 +1015,31 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    closeConnection();
 	}	
 	
+	@Test public void testPropertyDefinitions() throws Exception{
+		getConnection(ADMIN, PROPS_FILE);
+		cleanDeploy();
+
+		Collection<ConnectorType> c = getAdmin().getConnectorTypes("Oracle Connector"); //$NON-NLS-1$
+		Collection<PropertyDefinition> defs = getAdmin().getConnectorTypePropertyDefinitions(c.iterator().next().getIdentifier());
+		
+		for (PropertyDefinition d:defs) {
+			if (d.getName().equalsIgnoreCase("URL")) { //$NON-NLS-1$ 
+				assertTrue(d.isRequired());
+				assertTrue(d.getDefaultValue() != null);
+				assertEquals("JDBC URL", d.getDisplayName()); //$NON-NLS-1$
+				assertEquals("String", d.getPropertyType()); //$NON-NLS-1$
+				assertEquals("java.lang.String", d.getPropertyTypeClassName()); //$NON-NLS-1$
+				assertTrue(d.getAllowedValues().isEmpty());
+				assertTrue(!d.isMasked());
+			}			
+			
+			if (d.getName().equalsIgnoreCase("Password")) { //$NON-NLS-1$
+				assertTrue(d.isMasked());
+			}
+		}
+		
+	    closeConnection();
+	}
 
 	
 	VDB addVDB(String name, String vdbFile) {

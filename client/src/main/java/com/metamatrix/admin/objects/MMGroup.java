@@ -28,15 +28,24 @@ import org.teiid.adminapi.Group;
 /** 
  * @since 4.3
  */
-public class MMGroup extends MMPrincipal implements Group {
+public class MMGroup extends MMAdminObject implements Group {
 	private static final long serialVersionUID = 1102507655851078982L;
 
 	/** 
-     * @param principalName
+     * @param groupName
      * @since 4.3
      */
-    public MMGroup(String[] principalName) {
-        super(principalName, TYPE_GROUP);
+    public MMGroup(String[] groupName) {
+        super(groupName);
     }
+
+	@Override
+	public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("[Name=\""); //$NON-NLS-1$
+        sb.append(this.getName());
+        sb.append("\"]"); //$NON-NLS-1$
+        return sb.toString();
+	}
 
 }

@@ -323,11 +323,11 @@ public final class CurrentConfiguration {
     	BasicHost host = new BasicHost(new ConfigurationID(name), new HostID(name), Host.HOST_COMPONENT_TYPE_ID);
         
     	Properties props = new Properties();
-    	props.setProperty(org.teiid.adminapi.Host.INSTALL_DIR, getBootStrapProperties().getProperty(org.teiid.adminapi.Host.INSTALL_DIR, System.getProperty("user.dir"))); //$NON-NLS-1$
-    	props.setProperty(org.teiid.adminapi.Host.HOST_DIRECTORY, getBootStrapProperties().getProperty(org.teiid.adminapi.Host.HOST_DIRECTORY, System.getProperty("user.dir"))); //$NON-NLS-1$
-    	props.setProperty(org.teiid.adminapi.Host.LOG_DIRECTORY, getBootStrapProperties().getProperty(org.teiid.adminapi.Host.LOG_DIRECTORY, System.getProperty("user.dir"))); //$NON-NLS-1$
-    	props.setProperty(org.teiid.adminapi.Host.HOST_BIND_ADDRESS, getBootStrapProperties().getProperty(org.teiid.adminapi.Host.HOST_BIND_ADDRESS, "")); //$NON-NLS-1$
-    	props.setProperty(org.teiid.adminapi.Host.HOST_PHYSICAL_ADDRESS, getBootStrapProperties().getProperty(org.teiid.adminapi.Host.HOST_PHYSICAL_ADDRESS, "")); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.Host.INSTALL_DIR, getBootStrapProperties().getProperty(com.metamatrix.admin.api.Host.INSTALL_DIR, System.getProperty("user.dir"))); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.Host.HOST_DIRECTORY, getBootStrapProperties().getProperty(com.metamatrix.admin.api.Host.HOST_DIRECTORY, System.getProperty("user.dir"))); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.Host.LOG_DIRECTORY, getBootStrapProperties().getProperty(com.metamatrix.admin.api.Host.LOG_DIRECTORY, System.getProperty("user.dir"))); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.Host.HOST_BIND_ADDRESS, getBootStrapProperties().getProperty(com.metamatrix.admin.api.Host.HOST_BIND_ADDRESS, "")); //$NON-NLS-1$
+    	props.setProperty(com.metamatrix.admin.api.Host.HOST_PHYSICAL_ADDRESS, getBootStrapProperties().getProperty(com.metamatrix.admin.api.Host.HOST_PHYSICAL_ADDRESS, "")); //$NON-NLS-1$
     	
     	host.setProperties(props);
         return host;

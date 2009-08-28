@@ -23,63 +23,35 @@
 package org.teiid.adminapi;
 
 import java.net.InetAddress;
-
+import java.util.Date;
 
 
 /** 
- * A Process in the MetaMatrix system.
+ * A Process in the Teiid System
  * 
- * <p>The identifier pattern for a Process is <code>"hostName.processName"</code>.
- * This Process identifier is concidered to be unique across the system.</p>
+ * <p>The identifier pattern for a Process is <code>"processName"</code>.
+ * This Process identifier is considered to be unique across the system.</p>
  * @since 4.3
  */
 public interface ProcessObject extends
                         AdminObject {
     
+  
     /**
-     * Process Min Heap Size Property Name
-     */
-    public static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = "vm.starter.minHeapSize"; //$NON-NLS-1$  
-    /**
-     * Process Max Heap Size Property Name
-     */
-    public static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = "vm.starter.maxHeapSize"; //$NON-NLS-1$
-    /**
-     * Process Port Property Name
-     */
-    public static final String SERVER_PORT = "vm.socketPort"; //$NON-NLS-1$
-    /**
-     * Process Max Treads Property Name
-     */
-    public static final String MAX_THREADS = "vm.maxThreads"; //$NON-NLS-1$
-    /**
-     * Process Time To Live Property Name
-     */
-    public static final String TIMETOLIVE = "vm.timetolive"; //$NON-NLS-1$
-    /**
-     * Process Import Buffer Size Property Name
-     */
-    public static final String INPUT_BUFFER_SIZE = "vm.inputBufferSize";       //$NON-NLS-1$
-    /**
-     * Process Output Buffer Size Property Name
-     */
-    public static final String OUTPUT_BUFFER_SIZE = "vm.outputBufferSize";       //$NON-NLS-1$ 
-    /**
-     * Process Forced Shutdown Time Property Name
-     */
-    public static final String FORCED_SHUTDOWN_TIME = "vm.forced.shutdown.time"; //$NON-NLS-1$
-    /**
-     * Process Enabled Flag Property Name
-     */
-    public static final String ENABLED_FLAG = "vm.enabled"; //$NON-NLS-1$
-
-    /**
-     * Get the {@link Host} Identifier for this MetaMatrix Process
+     * Get the Host name 
      *  
-     * @return String A unique identifier for the Host of this Process.
+     * @return String host name where the process is running
      * @since 4.3
      */
-    public String getHostIdentifier();
+    public String getHostName();	
+	
+	/**
+     * Get the Process name 
+     *  
+     * @return String A unique identifier for this Process.
+     * @since 4.3
+     */
+    public String getProcessName();
 
 
     /**
@@ -127,37 +99,37 @@ public interface ProcessObject extends
      * @since 4.3
      */
     public boolean isRunning();
+      
+    /** 
+     * @return Returns the objectsRead.
+     * @since 4.3
+     */
+    public long getObjectsRead();
+ 
+    /** 
+     * @return Returns the objectsWritten.
+     * @since 4.3
+     */
+    public long getObjectsWritten();
+    
     
     /** 
      * @return Returns the maxSockets.
      * @since 4.3
      */
     public int getMaxSockets();
-    /** 
-     * @return Returns the maxVirtualSockets.
-     * @since 4.3
-     */
-    public int getMaxVirtualSockets();
-    /** 
-     * @return Returns the objectsRead.
-     * @since 4.3
-     */
-    public long getObjectsRead();
-    /** 
-     * @return Returns the objectsWritten.
-     * @since 4.3
-     */
-    public long getObjectsWritten();
+        
     /** 
      * @return Returns the sockets.
      * @since 4.3
      */
     public int getSockets();
+        
     /** 
-     * @return Returns the virtualSockets.
+     * @return Returns the startTime.
      * @since 4.3
      */
-    public int getVirtualSockets();
+    public Date getStartTime();
     
     
     /** 

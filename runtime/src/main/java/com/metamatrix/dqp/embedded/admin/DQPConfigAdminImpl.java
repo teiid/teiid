@@ -34,16 +34,13 @@ import java.util.StringTokenizer;
 
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.AdminStatus;
 import org.teiid.adminapi.ConfigurationAdmin;
+import org.teiid.adminapi.EmbeddedLogger;
 import org.teiid.adminapi.LogConfiguration;
 import org.teiid.adminapi.VDB;
 
-import com.metamatrix.admin.objects.MMAdminObject;
-import com.metamatrix.admin.objects.MMAdminStatus;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.config.api.ComponentType;
@@ -81,111 +78,37 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
     }
 
     /** 
-     * @see org.teiid.adminapi.ConfigurationAdmin#setSystemProperty(java.lang.String, java.lang.String)
-     * @since 4.3
-     */
-    public void setSystemProperty(String propertyName,String propertyValue) 
-        throws AdminException {
-        try {
-            // actually we should notify the DQP for this, then let DQP call the 
-            // the Configuration Service. Since we do not have dynamic properties on
-            // DQP this should be OK for now.
-            getConfigurationService().setSystemProperty(propertyName, propertyValue);            
-        } catch (MetaMatrixComponentException e) {
-        	throw new AdminComponentException(e);
-        }
-    }
-    
-   
-    /** 
-     * @see org.teiid.adminapi.ConfigurationAdmin#updateSystemProperties(java.util.Properties)
-     * @since 4.3
-     */
-    public void updateSystemProperties(Properties properties) throws AdminException {
-        try {
-            // actually we should notify the DQP for this, then let DQP call the 
-            // the Configuration Service. Since we do not have dynamic properties on
-            // DQP this should be OK for now.
-            getConfigurationService().updateSystemProperties(properties);            
-        }catch(MetaMatrixComponentException e) {
-        	throw new AdminComponentException(e);
-        }
-    }
-
-    /** 
      * @see org.teiid.adminapi.ConfigurationAdmin#setProperty(java.lang.String, java.lang.String, java.lang.String, java.lang.String)
      * @since 4.3
      */
-    public void setProperty(String identifier, String className, String propertyName, String propertyValue) 
+    public void setConnectorBindingProperty(String deployedName, String propertyName, String propertyValue)
         throws AdminException {
 
-        Properties properties = new Properties();
-        properties.setProperty(propertyName, propertyValue);
-        
-        updateProperties(identifier, className, properties);
-        
+        try {
+			ConnectorBinding binding = getConfigurationService().getConnectorBinding(deployedName);
+			if (binding == null) {
+				throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.cb_doesnot_exist", deployedName)); //$NON-NLS-1$
+			}
+			
+			ComponentTypeID id = binding.getComponentTypeID();
+			ConnectorBindingType type = getConfigurationService().getConnectorType(id.getName());
+			
+			boolean needsEncryption = isMaskedProperty(propertyName, type);
+			if (needsEncryption) {
+			    propertyValue = encryptString(propertyValue);
+			}
+			
+			Properties p = new Properties();
+			p.setProperty(propertyName, propertyValue);
+			
+			//update the configuration
+			binding = ConnectorConfigurationReader.addConnectorBindingProperties(binding, p);
+			getConfigurationService().updateConnectorBinding(binding);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
     }
     
-    /** 
-     * @see org.teiid.adminapi.ConfigurationAdmin#updateProperties(java.lang.String, java.lang.String, java.util.Properties)
-     * @since 4.3
-     */
-    public void updateProperties(String identifier, String className, Properties properties) throws AdminException {
-        
-        Collection adminObjects = getAdminObjects(identifier, className);        
-        if (adminObjects == null || adminObjects.size() == 0) {
-            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.No_Objects_Found", identifier, className)); //$NON-NLS-1$
-        }
-        if (adminObjects.size() > 1) {
-            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Multiple_Objects_Found", identifier, className)); //$NON-NLS-1$
-        }
-        AdminObject adminObject = (AdminObject) adminObjects.iterator().next();
-        
-        
-        int typeCode = MMAdminObject.getObjectType(className);
-        switch(typeCode) {
-        
-            case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-                updateSystemProperties(properties);
-                break;
-        
-            case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
-                try {
-                    // there is lot of engineering under here..
-                    String bindingName = adminObject.getName();
-                    ConnectorBinding binding = getConfigurationService().getConnectorBinding(bindingName);
-                    ComponentTypeID id = binding.getComponentTypeID();
-                    ConnectorBindingType type = getConfigurationService().getConnectorType(id.getName());
-                    
-                    
-                    //encrypt the properties
-                    Properties encryptedProperties = new Properties();
-                    encryptedProperties.putAll(properties);
-                    
-                    for (Iterator iter = properties.keySet().iterator(); iter.hasNext(); ) {
-                        String propertyName = (String) iter.next();
-                        boolean needsEncryption = isMaskedProperty(propertyName, type);
-                        if (needsEncryption) {
-                            String propertyValue = properties.getProperty(propertyName);
-                            propertyValue = encryptString(propertyValue);
-                            encryptedProperties.put(propertyName, propertyValue);
-                        }
-                    }
-                    
-                    //update the configuration
-                    binding = ConnectorConfigurationReader.addConnectorBindingProperties(binding, encryptedProperties);
-                    getConfigurationService().updateConnectorBinding(binding);
-                    
-                } catch (MetaMatrixComponentException e) {
-                	throw new AdminComponentException(e);
-                } 
-                break;
-       
-            default:
-                throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.can_not_set_property")); //$NON-NLS-1$
-            }
-        }
-
     /** 
      * @see org.teiid.adminapi.ConfigurationAdmin#addConnectorType(java.lang.String, char[])
      * @since 4.3
@@ -276,10 +199,12 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             binding = ConnectorConfigurationReader.loadConnectorBinding(deployName, properties, ctype);
             
             // Check that the connector binding passwords can be decrypted
-            AdminStatus status = checkDecryption(binding, ctype);
-            if ( status.getCode() == AdminStatus.CODE_DECRYPTION_FAILED && 
-                 ! options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
-                throw new AdminProcessingException(status.getCode(), status.getMessage());
+            try {
+            	checkDecryption(binding, ctype);
+            } catch(CryptoException e) {
+            	if (!options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
+            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
+            	}
             }
             
             // now that all of the input parameters validated, add the connector binding
@@ -351,10 +276,12 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             binding = ConnectorConfigurationReader.loadConnectorBinding(deployName, xmlFile);
             
             // Check that the connector binding passwords can be decrypted
-            AdminStatus status = checkDecryption(binding, type);
-            if ( status.getCode() == AdminStatus.CODE_DECRYPTION_FAILED && 
-                 ! options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
-                throw new AdminProcessingException(status.getCode(), status.getMessage());
+            try {
+            	checkDecryption(binding, type);
+            } catch(CryptoException e) {
+            	if (!options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
+            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
+            	}
             }
 
             // now that all of the input parameters validated, add the connector binding
@@ -526,11 +453,13 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             ConnectorBindingType type = (ConnectorBindingType)def.getConnectorType(binding.getComponentTypeID().getName());
             
             // Check that the connector binding passwords can be decrypted
-            AdminStatus status = checkDecryption(binding, type);
-            if ( status.getCode() == AdminStatus.CODE_DECRYPTION_FAILED && 
-                 ! options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
-                throw new AdminProcessingException(status.getCode(), status.getMessage());
-            }            
+            try {
+            	checkDecryption(binding, type);
+            } catch(CryptoException e) {
+            	if (!options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
+            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
+            	}
+            }
         }
     }
 
@@ -540,21 +469,15 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
      * @return
      * @since 4.3
      */
-    private AdminStatus checkDecryption(ConnectorBinding binding, ConnectorBindingType type) {
-        
-        try {
-            Properties props = binding.getProperties();
-            Iterator it = props.keySet().iterator();
-            while (it.hasNext()) {
-                String name = (String)it.next();
-                if (isMaskedProperty(name, type)) {
-                    decryptProperty(props.getProperty(name));
-                }
+    private void checkDecryption(ConnectorBinding binding, ConnectorBindingType type) throws CryptoException {
+        Properties props = binding.getProperties();
+        Iterator it = props.keySet().iterator();
+        while (it.hasNext()) {
+            String name = (String)it.next();
+            if (isMaskedProperty(name, type)) {
+                decryptProperty(props.getProperty(name));
             }
-        } catch (CryptoException e) {
-        	return new MMAdminStatus(AdminStatus.CODE_DECRYPTION_FAILED, "AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName()); //$NON-NLS-1$
         }
-        return new MMAdminStatus(AdminStatus.CODE_SUCCESS, "AdminStatus.CODE_SUCCESS"); //$NON-NLS-1$
     }
        
     /**
@@ -593,8 +516,12 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
         throws AdminException {
         return addVDB(deployName, vdbFile, null, options);
     }
-        
     
+    @Override
+    public void deleteVDB(String vdbName, String vdbVersion) throws AdminException {
+    	super.changeVDBStatus(vdbName, vdbVersion, VDB.DELETED);
+    }
+        
     /** 
      * @see org.teiid.adminapi.ConfigurationAdmin#addExtensionModule(java.lang.String, java.lang.String, byte[], java.lang.String)
      * @since 4.3
@@ -737,6 +664,20 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
         throws AdminException {
         LogManager.setLogConfiguration((com.metamatrix.common.log.LogConfiguration)convertToNativeObjects(config));
     }
+    
+    /** 
+     * @see com.metamatrix.admin.api.embedded.EmbeddedRuntimeStateAdmin#setLogListener(java.lang.Object)
+     * @since 4.3
+     */
+    public void setLogListener(EmbeddedLogger listener) 
+        throws AdminException {
+        if(listener != null) {
+        	LogManager.setLogListener(new DQPLogListener(listener));
+        }
+        else {
+            throw new AdminProcessingException("Admin_invalid_log_listener"); //$NON-NLS-1$
+        }
+    }    
 
     /** 
      * @see org.teiid.adminapi.ConfigurationAdmin#exportExtensionModule(java.lang.String)
@@ -1065,7 +1006,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
 	        		}
 	        	}
 	        }
-	        setSystemProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, sb.toString()+commonpath);
+	        getConfigurationService().setSystemProperty(DQPEmbeddedProperties.COMMON_EXTENSION_CLASPATH, sb.toString()+commonpath);
 			
 			
 			// then update the properties

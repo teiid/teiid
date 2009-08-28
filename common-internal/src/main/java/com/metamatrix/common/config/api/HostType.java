@@ -30,25 +30,25 @@ public interface HostType extends ServiceComponentType {
 
     public static final String COMPONENT_TYPE_NAME = "Host"; //$NON-NLS-1$
     
-    public static final String INSTALL_DIR = org.teiid.adminapi.Host.INSTALL_DIR;
+    public static final String INSTALL_DIR = "metamatrix.installationDir"; //$NON-NLS-1$ 
     
-    public static final String LOG_DIRECTORY = org.teiid.adminapi.Host.LOG_DIRECTORY;
+    public static final String LOG_DIRECTORY = "metamatrix.log.dir"; //$NON-NLS-1$ 
     
-    public static final String HOST_DIRECTORY = org.teiid.adminapi.Host.HOST_DIRECTORY;
+    public static final String HOST_DIRECTORY = "metamatrix.host.dir"; //$NON-NLS-1$ 
     
-    public static final String HOST_ENABLED = org.teiid.adminapi.Host.HOST_ENABLED;
+    public static final String HOST_ENABLED = "host.enabled"; //$NON-NLS-1$ 
 
     /**
      * When specified, indicates what address the host will be bound to.  If this
      * is not specified, then the host (logical) name will be used.
      */
-    public static final String HOST_BIND_ADDRESS = org.teiid.adminapi.Host.HOST_BIND_ADDRESS;
+    public static final String HOST_BIND_ADDRESS = "metamatrix.host.bind.address"; //$NON-NLS-1$ 
     
     /**
      * The physical address represents a resolvable address for which the host can
      * be found.  This may or may not be the same as the host name.
      */
-    public static final String HOST_PHYSICAL_ADDRESS = org.teiid.adminapi.Host.HOST_PHYSICAL_ADDRESS;
+    public static final String HOST_PHYSICAL_ADDRESS = "metamatrix.host.physical.address"; //$NON-NLS-1$ 
     
   
 } 

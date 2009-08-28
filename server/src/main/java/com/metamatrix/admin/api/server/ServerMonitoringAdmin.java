@@ -44,10 +44,10 @@ public interface ServerMonitoringAdmin extends MonitoringAdmin {
     /**
      * Get the hosts that correspond to the specified identifier pattern.
      *
-     * @param hostIdentifier the unique identifier for for a {@link org.teiid.adminapi.Host Host}
+     * @param hostIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.Host Host}
      * in the system or "{@link org.teiid.adminapi.AdminObject#WILDCARD WILDCARD}"
      * if all hosts are desired.
-     * @return Collection of {@link org.teiid.adminapi.Host Host}
+     * @return Collection of {@link com.metamatrix.admin.api.Host Host}
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
@@ -71,10 +71,10 @@ public interface ServerMonitoringAdmin extends MonitoringAdmin {
      * Get the Services that correspond to the specified identifer pattern.
      * These services represent what is defined for a given {@link Host} | {@link Process};
      *
-     * @param resourceIdentifier the unique identifier for for a {@link org.teiid.adminapi.Service Service}
+     * @param resourceIdentifier the unique identifier for for a {@link com.metamatrix.admin.api.Service Service}
      * in the system or "{@link org.teiid.adminapi.AdminObject#WILDCARD WILDCARD}"
      * if all Services are desired.
-     * @return Collection of {@link org.teiid.adminapi.Service Service}
+     * @return Collection of {@link com.metamatrix.admin.api.Service Service}
      * @throws AdminException if there's a system error.
      * @since 6.1
      */
@@ -85,22 +85,22 @@ public interface ServerMonitoringAdmin extends MonitoringAdmin {
     /**
      * Get the Resources that correspond to the specified identifer pattern.
      *
-     * @param resourceIdentifier the unique resourceIdentifier for for a {@link org.teiid.adminapi.Resource Resource}
+     * @param resourceIdentifier the unique resourceIdentifier for for a {@link com.metamatrix.admin.api.Resource Resource}
      * in the system or "{@link org.teiid.adminapi.AdminObject#WILDCARD WILDCARD}"
      * if all Resources are desired.
-     * @return Collection of {@link org.teiid.adminapi.Resource Resource}
+     * @return Collection of {@link com.metamatrix.admin.api.Resource Resource}
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
     Collection getResources(String resourceIdentifier) throws AdminException;
 
     /**
-     * Get the {@link org.teiid.adminapi.DQP DQP}s that correspond to the specified identifer pattern.
+     * Get the {@link com.metamatrix.admin.api.DQP DQP}s that correspond to the specified identifer pattern.
      *
-     * @param identifier the unique identifier for for a {@link org.teiid.adminapi.DQP DQP}
+     * @param identifier the unique identifier for for a {@link com.metamatrix.admin.api.DQP DQP}
      * in the system or "{@link org.teiid.adminapi.AdminObject#WILDCARD WILDCARD}"
      * if all Resources are desired.
-     * @return Collection of {@link org.teiid.adminapi.DQP DQP}
+     * @return Collection of {@link com.metamatrix.admin.api.DQP DQP}
      * @throws AdminException if there's a system error.
      * @since 4.3
      */

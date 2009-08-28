@@ -23,6 +23,7 @@
  package com.metamatrix.admin.objects;
 
 import java.net.InetAddress;
+import java.util.Date;
 
 import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.ProcessObject;
@@ -36,7 +37,8 @@ import com.metamatrix.admin.AdminPlugin;
 public final class MMProcess extends MMAdminObject implements ProcessObject {
 	private static final long serialVersionUID = 8454606907083408662L;
 	private long freeMemory = 0;
-    private String hostIdentifier = "";  //$NON-NLS-1$
+    private String processName = "";  //$NON-NLS-1$
+    private String hostName = ""; //$NON-NLS-1$
     private InetAddress inetAddress = null;
     private int port = 0;
 
@@ -44,26 +46,23 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
 	private int threadCount = 0;
 	private long totalMemory = 0;
     
-    private int sockets = 0;
-    private int maxSockets = 0;
-    private int virtualSockets = 0;
-    private int maxVirtualSockets = 0;
+	private int sockets = 0;
+	private int maxSockets = 0;
     private long objectsRead = 0;
     private long objectsWritten = 0;
+    private Date startTime;
     
     private QueueWorkerPool queueWorkerPool = null;
     
 
-	
-    
     /**
      * Contruct a new MMProcess.
      * @param identifierParts
      */
     public MMProcess(String[] identifierParts) {
         super(identifierParts);
-        
-        hostIdentifier = identifierParts[0];
+        hostName = identifierParts[0];
+        processName = identifierParts[1];
     }
     
 
@@ -94,12 +93,20 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
 		return freeMemory;
 	}
     
+
+    /**
+     * @return host name for this process.
+     */
+    public String getHostName() {
+        return hostName;
+    }
+
     
     /**
      * @return host name for this process.
      */
-    public String getHostIdentifier() {
-        return hostIdentifier;
+    public String getProcessName() {
+        return processName;
     }
     
     /**
@@ -210,13 +217,13 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
         result.append(AdminPlugin.Util.getString("MMProcess.TotalMemory")).append(totalMemory); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMProcess.FreeMemory")).append(freeMemory); //$NON-NLS-1$
 		result.append(AdminPlugin.Util.getString("MMProcess.ThreadCount")).append(threadCount); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMProcess.HostIdentifier")).append(hostIdentifier); //$NON-NLS-1$
+		result.append(AdminPlugin.Util.getString("MMProcess.HostName")).append(hostName); //$NON-NLS-1$
+		result.append(AdminPlugin.Util.getString("MMProcess.ProcessName")).append(processName); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMProcess.Port")).append(port); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMProcess.InetAddress")).append(inetAddress); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMProcess.Sockets")).append(sockets); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMProcess.MaxSockets")).append(maxSockets); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMProcess.VirtualSockets")).append(virtualSockets); //$NON-NLS-1$
-        result.append(AdminPlugin.Util.getString("MMProcess.MaxVirtualSockets")).append(maxVirtualSockets); //$NON-NLS-1$
+        result.append(AdminPlugin.Util.getString("MMProcess.MaxSockets")).append(maxSockets); //$NON-NLS-1$        
+        result.append(AdminPlugin.Util.getString("MMProcess.StartTime")).append(startTime); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMProcess.ObjectsRead")).append(objectsRead); //$NON-NLS-1$
         result.append(AdminPlugin.Util.getString("MMProcess.ObjectsWritten")).append(objectsWritten); //$NON-NLS-1$
         if (queueWorkerPool != null) {
@@ -240,20 +247,7 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
     public void setMaxSockets(int maxSockets) {
         this.maxSockets = maxSockets;
     }
-    /** 
-     * @return Returns the maxVirtualSockets.
-     * @since 4.3
-     */
-    public int getMaxVirtualSockets() {
-        return this.maxVirtualSockets;
-    }
-    /** 
-     * @param maxVirtualSockets The maxVirtualSockets to set.
-     * @since 4.3
-     */
-    public void setMaxVirtualSockets(int maxVirtualSockets) {
-        this.maxVirtualSockets = maxVirtualSockets;
-    }
+        
     /** 
      * @return Returns the objectsRead.
      * @since 4.3
@@ -282,6 +276,7 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
     public void setObjectsWritten(long objectsWritten) {
         this.objectsWritten = objectsWritten;
     }
+
     /** 
      * @return Returns the sockets.
      * @since 4.3
@@ -296,20 +291,7 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
     public void setSockets(int sockets) {
         this.sockets = sockets;
     }
-    /** 
-     * @return Returns the virtualSockets.
-     * @since 4.3
-     */
-    public int getVirtualSockets() {
-        return this.virtualSockets;
-    }
-    /** 
-     * @param virtualSockets The virtualSockets to set.
-     * @since 4.3
-     */
-    public void setVirtualSockets(int virtualSockets) {
-        this.virtualSockets = virtualSockets;
-    }
+    
     /** 
      * @return Returns the queueWorkerPool.
      * @since 4.3
@@ -324,21 +306,13 @@ public final class MMProcess extends MMAdminObject implements ProcessObject {
     public void setQueueWorkerPool(QueueWorkerPool queueWorkerPool) {
         this.queueWorkerPool = queueWorkerPool;
     }
-    
-    
-    /** 
-     * @return Returns the processID.
-     * @since 4.3
-     */
-    public String getProcessName() {
-        return identifierParts[1];
-    }
-    
-    /** 
-     * @return Returns the hostName.
-     * @since 4.3
-     */
-    public String getHostName() {
-        return identifierParts[0];
-    }
+
+	@Override
+	public Date getStartTime() {
+		return startTime;
+	}
+	
+	public void setStartTime(Date date) {
+		this.startTime = date;
+	}
 }

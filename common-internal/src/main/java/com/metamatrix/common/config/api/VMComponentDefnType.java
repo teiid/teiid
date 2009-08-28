@@ -29,22 +29,22 @@ public interface VMComponentDefnType extends ServiceComponentType {
 
     public static final String COMPONENT_TYPE_NAME = "VM"; //$NON-NLS-1$
     
-    public static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = org.teiid.adminapi.ProcessObject.VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME;
-    public static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = org.teiid.adminapi.ProcessObject.VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME;
+    public static final String VM_MINIMUM_HEAP_SIZE_PROPERTY_NAME = "vm.starter.minHeapSize"; //$NON-NLS-1$  
+    public static final String VM_MAXIMUM_HEAP_SIZE_PROPERTY_NAME = "vm.starter.maxHeapSize"; //$NON-NLS-1$
 
     // Socket VM related properties
     /**
      * @see SocketVMController
      */
     public static final String CLUSTER_PORT = "vm.unicast.port"; //$NON-NLS-1$
-    public static final String SERVER_PORT = org.teiid.adminapi.ProcessObject.SERVER_PORT;
-    public static final String MAX_THREADS = org.teiid.adminapi.ProcessObject.MAX_THREADS;
-    public static final String TIMETOLIVE = org.teiid.adminapi.ProcessObject.TIMETOLIVE;
+    public static final String SERVER_PORT ="vm.socketPort"; //$NON-NLS-1$
+    public static final String MAX_THREADS = "vm.maxThreads"; //$NON-NLS-1$
+    public static final String TIMETOLIVE = "vm.timetolive"; //$NON-NLS-1$
 
-    public static final String INPUT_BUFFER_SIZE = org.teiid.adminapi.ProcessObject.INPUT_BUFFER_SIZE;
-    public static final String OUTPUT_BUFFER_SIZE = org.teiid.adminapi.ProcessObject.OUTPUT_BUFFER_SIZE;
-    public static final String FORCED_SHUTDOWN_TIME = org.teiid.adminapi.ProcessObject.FORCED_SHUTDOWN_TIME;
-    public static final String ENABLED_FLAG = org.teiid.adminapi.ProcessObject.ENABLED_FLAG;
+    public static final String INPUT_BUFFER_SIZE = "vm.inputBufferSize";       //$NON-NLS-1$
+    public static final String OUTPUT_BUFFER_SIZE = "vm.outputBufferSize";       //$NON-NLS-1$ 
+    public static final String FORCED_SHUTDOWN_TIME = "vm.forced.shutdown.time"; //$NON-NLS-1$
+    public static final String ENABLED_FLAG = "vm.enabled"; //$NON-NLS-1$
     
     /**
      * When specified, indicates what address the vm will be bound to.  If this is not 

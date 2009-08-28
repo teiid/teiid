@@ -33,18 +33,23 @@ import java.util.Properties;
 
 import org.teiid.adminapi.AdminComponentException;
 import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminObject;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Cache;
 import org.teiid.adminapi.ConnectionPool;
 import org.teiid.adminapi.ConnectorBinding;
+import org.teiid.adminapi.ConnectorType;
+import org.teiid.adminapi.ExtensionModule;
 import org.teiid.adminapi.MonitoringAdmin;
 import org.teiid.adminapi.ProcessObject;
-import org.teiid.adminapi.SystemObject;
+import org.teiid.adminapi.PropertyDefinition;
+import org.teiid.adminapi.QueueWorkerPool;
+import org.teiid.adminapi.Request;
+import org.teiid.adminapi.Session;
 import org.teiid.adminapi.Transaction;
+import org.teiid.adminapi.VDB;
 
-import com.metamatrix.admin.objects.MMAdminObject;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.config.api.ComponentType;
+import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.TransactionService;
@@ -66,7 +71,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getConnectorTypes(java.lang.String)
      * @since 4.3
      */
-    public Collection getConnectorTypes(String identifier) 
+    public Collection<ConnectorType> getConnectorTypes(String identifier) 
         throws AdminException {
 
         if (identifier == null || !identifier.matches(MULTIPLE_WORD_WILDCARD_REGEX)) {
@@ -80,7 +85,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getVDBs(java.lang.String)
      * @since 4.3
      */
-    public Collection getVDBs(String identifier) 
+    public Collection<VDB> getVDBs(String identifier) 
         throws AdminException {
         
         if (identifier == null || !identifier.matches(VDB_REGEX)) {
@@ -111,7 +116,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getConnectorBindings(java.lang.String)
      * @since 4.3
      */
-    public Collection getConnectorBindings(String identifier) 
+    public Collection<ConnectorBinding> getConnectorBindings(String identifier) 
         throws AdminException {
         
         if (identifier == null) {
@@ -125,7 +130,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getConnectorBindingsInVDB(java.lang.String)
      * @since 4.3
      */
-    public Collection getConnectorBindingsInVDB(String identifier)  throws AdminException{
+    public Collection<ConnectorBinding> getConnectorBindingsInVDB(String identifier)  throws AdminException{
         Collection<VDBArchive> vdbs = null;
         HashMap bindings = new HashMap();
 
@@ -158,7 +163,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getExtensionModules(java.lang.String)
      * @since 4.3
      */
-    public Collection getExtensionModules(String identifier) 
+    public Collection<ExtensionModule> getExtensionModules(String identifier) 
         throws AdminException {
         
         if (identifier == null || !identifier.matches(WORD_AND_DOT_WILDCARD_REGEX)) {
@@ -178,7 +183,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getQueueWorkerPools(java.lang.String)
      * @since 4.3
      */
-    public Collection getQueueWorkerPools(String identifier) 
+    public Collection<QueueWorkerPool> getQueueWorkerPools(String identifier) 
         throws AdminException {
         
         if (identifier == null || !identifier.matches(MULTIPLE_WORD_WILDCARD_REGEX)) {
@@ -218,7 +223,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getCaches(java.lang.String)
      * @since 4.3
      */
-    public Collection getCaches(String identifier) 
+    public Collection<Cache> getCaches(String identifier) 
         throws AdminException {
         
         if (identifier == null || !identifier.matches(SINGLE_WORD_WILDCARD_REGEX)) {
@@ -238,7 +243,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getSessions(java.lang.String)
      * @since 4.3
      */
-    public Collection getSessions(String identifier) 
+    public Collection<Session> getSessions(String identifier) 
         throws AdminException {
         
         if (identifier == null || !identifier.matches(NUMBER_REGEX)) {
@@ -251,7 +256,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getRequests(java.lang.String)
      * @since 4.3
      */
-    public Collection getRequests(String identifier) 
+    public Collection<Request> getRequests(String identifier) 
         throws AdminException {
 
         if (identifier == null || !identifier.matches(NUMBER_DOT_REGEX)) {
@@ -273,7 +278,7 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
      * @see org.teiid.adminapi.MonitoringAdmin#getSourceRequests(java.lang.String)
      * @since 4.3
      */
-    public Collection getSourceRequests(String identifier) 
+    public Collection<Request> getSourceRequests(String identifier) 
         throws AdminException {
         
         if (identifier == null || !identifier.matches(NUMBER_DOT_REGEX)) {
@@ -289,64 +294,27 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
         }
         return matchedCollection(identifier, (List)convertToAdminObjects(atomicRequestList));
     }
-
-
-    /** 
-     * @see org.teiid.adminapi.MonitoringAdmin#getSystem()
-     * @since 4.3
-     */
-    public SystemObject getSystem(){
-        return super.getSystem();
-    }
     
     /** 
      * @see org.teiid.adminapi.MonitoringAdmin#getPropertyDefinitions(java.lang.String, java.lang.String)
      * @since 4.3
      */
-    public Collection getPropertyDefinitions(String identifier, String className) throws AdminException {
-        Collection adminObjects = getAdminObjects(identifier, className);        
-        if (adminObjects == null || adminObjects.size() == 0) {
-            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.No_Objects_Found", identifier, className)); //$NON-NLS-1$
+    public Collection<PropertyDefinition> getConnectorTypePropertyDefinitions(String typeName) throws AdminException {
+    	
+        if (typeName == null || !typeName.matches(MULTIPLE_WORDS_REGEX)) {
+        	throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_ct_name")); //$NON-NLS-1$                
         }
-        if (adminObjects.size() > 1) {
-            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Multiple_Objects_Found", identifier, className)); //$NON-NLS-1$
-        }
-        AdminObject adminObject = (AdminObject) adminObjects.iterator().next();
-        
-        
-        try {            
-            String objectIdentifier = adminObject.getIdentifier();
-            ComponentType ctype = null; 
-            
-            int type = MMAdminObject.getObjectType(className);
-            switch(type) {
-            
-                case MMAdminObject.OBJECT_TYPE_SYSTEM_OBJECT:
-                    Properties properties = getConfigurationService().getSystemProperties();
-                    return convertPropertyDefinitions(properties);
-                    
-                case MMAdminObject.OBJECT_TYPE_CONNECTOR_BINDING:
-                    String ctypeName = ((ConnectorBinding) adminObject).getConnectorTypeName();
-                    ctype = getConfigurationService().getSystemConfiguration().getComponentType(ctypeName);
-                    
-                    //reload the properties so they are not stale
-                    ConnectorBinding binding = (ConnectorBinding) getConnectorBindings(objectIdentifier).iterator().next();
-                    
-                    return convertPropertyDefinitions(ctype, binding.getProperties());
-    
-                case MMAdminObject.OBJECT_TYPE_CONNECTOR_TYPE:
-                    ctype = getConfigurationService().getSystemConfiguration().getComponentType(adminObject.getName());
-                
-                    return convertPropertyDefinitions(ctype, new Properties());
-                
-                default:
-                    throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Unsupported_Object_Class", className)); //$NON-NLS-1$
-                        
-            }
-            
-        } catch (MetaMatrixComponentException e) {
-        	throw new AdminComponentException(e);
-        }
+
+        try {
+			ConnectorBindingType type = getConfigurationService().getConnectorType(typeName);
+			if (type == null) {
+				throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.ct_doesnot_exist", typeName)); //$NON-NLS-1$
+			}
+   
+			return convertPropertyDefinitions(type, new Properties());
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
     }
 
     @Override

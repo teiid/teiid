@@ -20,33 +20,19 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.adminapi;
+package com.metamatrix.admin.api;
+
+import org.teiid.adminapi.AdminObject;
+
 
 /** 
- * A user of the MetaMatrix system may a participant or an
- * administrator of the MetaMatrix system.
- * <p>
- * A User is an actor in the MetaMatrix system.  A User
- * can log in (authenticate) and perform actions on the system.</p>
- * 
- * <p>See {@link Principal} for identity pattern and other 
- * abilities.</p>
  * @since 4.3
  */
-public interface User extends Principal {
+public interface Resource extends AdminObject {
     
     /**
-     * Optional properties for Users
+     * The environment property that indicates the name of the pool.
      */
-    /** User's common name */
-    static final String COMMON_NAME = "commonName"; //$NON-NLS-1$
-    /** User's given name */
-    static final String GIVEN_NAME = "givenName"; //$NON-NLS-1$
-    /** User's surname (last name) */
-    static final String SURNAME = "surName"; //$NON-NLS-1$
-    /** User's location */
-    static final String LOCATION = "location"; //$NON-NLS-1$
-    /** User's telephone number */
-    static final String TELEPHONE_NUMBER = "telephoneNumber"; //$NON-NLS-1$
+    public static final String RESOURCE_POOL = "metamatrix.common.pooling.resource.name"; //$NON-NLS-1$
 
 }
