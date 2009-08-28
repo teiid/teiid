@@ -59,8 +59,21 @@ public abstract class AbstractQueryTest {
     protected Connection internalConnection = null;
     protected ResultSet internalResultSet = null;
     protected Statement internalStatement = null;
+    private SQLException internalException = null;
     protected int updateCount = -1;
     protected String DELIMITER = "    "; //$NON-NLS-1$ 
+    
+    public AbstractQueryTest() {
+    	super();
+    }
+    
+    
+    public AbstractQueryTest(Connection conn) {
+    	super();
+        this.internalConnection = conn;
+        
+    }
+    
      
     @After public void tearDown() throws Exception {
     	closeConnection();
@@ -118,8 +131,12 @@ public abstract class AbstractQueryTest {
             }
             return result;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }        
+            this.internalException = e;
+            if (!exceptionExpected()) {
+            	throw new RuntimeException(e);
+            }            
+        } 
+        return false;
     }
             
     private void setParameters(PreparedStatement stmt, Object[] params) throws SQLException{
@@ -159,8 +176,13 @@ public abstract class AbstractQueryTest {
             return this.internalStatement.executeBatch();
              
         } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+            this.internalException = e;
+            if (!exceptionExpected()) {
+            	throw new RuntimeException(e);
+            }
+       }
+        
+        return null;
 
     }
     
@@ -181,7 +203,20 @@ public abstract class AbstractQueryTest {
     
     protected void assignExecutionProperties(Statement stmt) {
     }
-
+    
+    
+    public boolean exceptionOccurred() {
+        return this.internalException != null;
+    }
+    
+    public boolean exceptionExpected() {
+        return false;
+    }
+    
+    
+    public SQLException getLastException() {
+        return this.internalException;
+    }
     
     public void assertResultsSetEquals(File expected) {
     	assertResultsSetEquals(this.internalResultSet, expected);
@@ -436,6 +471,8 @@ public abstract class AbstractQueryTest {
     }
 
     public void closeResultSet() {
+        this.internalException = null;
+
         if (this.internalResultSet != null) {        
             try {
                 this.internalResultSet.close();                
@@ -461,6 +498,13 @@ public abstract class AbstractQueryTest {
             this.internalConnection = null;
         }
     }
+    
+    public void cancelQuery() throws SQLException {
+        assertNotNull(this.internalConnection);
+        assertTrue(!this.internalConnection.isClosed());
+        assertNotNull(this.internalStatement);
+        this.internalStatement.cancel();    
+    }  
     
     public void print(String msg) {
         System.out.println(msg);
