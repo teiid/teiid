@@ -38,6 +38,7 @@ public class LocateFunctionModifier extends org.teiid.connector.jdbc.translator.
 
 	@Override
 	public List<?> translate(IFunction function) {
+		modify(function);
 		List<Object> parts = new ArrayList<Object>();
 		List<IExpression> params = function.getParameters();
 		parts.add("position("); //$NON-NLS-1$

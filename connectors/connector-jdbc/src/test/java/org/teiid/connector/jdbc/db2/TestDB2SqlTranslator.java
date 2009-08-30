@@ -110,8 +110,8 @@ public class TestDB2SqlTranslator {
     
     @Test
     public void testSelectNullLiteral() throws Exception {
-        String input = "select null + 1 as x, null || 'a' from BQT1.Smalla"; //$NON-NLS-1$       
-        String output = "SELECT CAST(NULL AS INTEGER) AS x, CAST(NULL AS CHAR) FROM SmallA";  //$NON-NLS-1$
+        String input = "select null + 1 as x, null || 'a', char(null) from BQT1.Smalla"; //$NON-NLS-1$       
+        String output = "SELECT cast(NULL AS integer) AS x, cast(NULL AS char), cast(NULL AS char(1)) FROM SmallA";  //$NON-NLS-1$
         
         helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
                 input, 

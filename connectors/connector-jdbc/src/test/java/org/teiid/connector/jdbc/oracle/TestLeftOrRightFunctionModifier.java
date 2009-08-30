@@ -28,7 +28,6 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
-import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 import org.teiid.connector.language.ILiteral;
@@ -50,23 +49,17 @@ public class TestLeftOrRightFunctionModifier extends TestCase {
         super(name);
     }
 
-    public IExpression helpTestMod(ILiteral c, ILiteral d, String target, String expectedStr) throws Exception {
+    public void helpTestMod(ILiteral c, ILiteral d, String target, String expectedStr) throws Exception {
         IFunction func = LANG_FACTORY.createFunction(target,
             Arrays.asList( c, d ),
             String.class);
-        
-        LeftOrRightFunctionModifier mod = new LeftOrRightFunctionModifier (LANG_FACTORY);
-        IExpression expr = mod.modify(func);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
         trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);  
-        //System.out.println(" expected: " + expectedStr + " \t actual: " + sqlVisitor.toString());
+        sqlVisitor.append(func);  
         assertEquals(expectedStr, sqlVisitor.toString());
-        
-        return expr;
     }
 
     public void test1() throws Exception {

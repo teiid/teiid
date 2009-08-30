@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.connector.jdbc.oracle;
+package org.teiid.connector.jdbc.oracle;
 
 import static org.junit.Assert.*;
 
@@ -97,20 +97,6 @@ public class TestOracleSQLConversionVisitor {
         assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
     }
     
-    /**
-     * case 3905
-     * as of 5.6 this is handled by the rewriter, but it's possible
-     * that we may bring back source queries with expressions in the group by clause
-     */
-    public void defer_testFunctionsInGroupBy() throws Exception {
-        String input = "SELECT substring(PART_NAME, 2, 1) FROM PARTS Group By substring(PART_NAME, 2, 1)"; //$NON-NLS-1$
-        String output = "SELECT substr(PARTS.PART_NAME, 2, 1) FROM PARTS GROUP BY substr(PARTS.PART_NAME, 2, 1)"; //$NON-NLS-1$
-        
-        helpTestVisitor(getTestVDB(),
-                        input, 
-                        null, output);
-    }
-    
     /** defect 21775 */
     @Test public void testDateStuff() throws Exception {
         String input = "SELECT ((CASE WHEN month(datevalue) < 10 THEN ('0' || convert(month(datevalue), string)) ELSE convert(month(datevalue), string) END || CASE WHEN dayofmonth(datevalue) < 10 THEN ('0' || convert(dayofmonth(datevalue), string)) ELSE convert(dayofmonth(datevalue), string) END) || convert(year(datevalue), string)), SUM(intkey) FROM bqt1.SMALLA GROUP BY datevalue"; //$NON-NLS-1$
@@ -121,154 +107,6 @@ public class TestOracleSQLConversionVisitor {
                         EMPTY_CONTEXT, null, output);
     }
     
-    /**
-     * defect 21775
-     * as of 5.6 this is handled by the rewriter, but it's possible
-     * that we may bring back source queries with expressions in the group by clause
-     */
-
-    public void defer_testDateStuffGroupBy() throws Exception {
-        String input = "SELECT ((CASE WHEN month(datevalue) < 10 THEN ('0' || convert(month(datevalue), string)) ELSE convert(month(datevalue), string) END || CASE WHEN dayofmonth(datevalue) < 10 THEN ('0' || convert(dayofmonth(datevalue), string)) ELSE convert(dayofmonth(datevalue), string) END) || convert(year(datevalue), string)), SUM(intkey) FROM bqt1.SMALLA GROUP BY month(datevalue), dayofmonth(datevalue), year(datevalue)"; //$NON-NLS-1$
-        String output = "SELECT ((CASE WHEN EXTRACT(MONTH FROM SmallA.DateValue) < 10 THEN ('0' || to_char(EXTRACT(MONTH FROM SmallA.DateValue))) ELSE to_char(EXTRACT(MONTH FROM SmallA.DateValue)) END || CASE WHEN TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')) < 10 THEN ('0' || to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')))) ELSE to_char(TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD'))) END) || to_char(EXTRACT(YEAR FROM SmallA.DateValue))), SUM(SmallA.IntKey) FROM SmallA GROUP BY EXTRACT(MONTH FROM SmallA.DateValue), TO_NUMBER(TO_CHAR(SmallA.DateValue, 'DD')), EXTRACT(YEAR FROM SmallA.DateValue)"; //$NON-NLS-1$
-        
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
-                input, 
-                EMPTY_CONTEXT, null, output);
-    }
-    
-    @Test public void testCharFunction() throws Exception {
-        String input = "SELECT char(CONVERT(PART_ID, INTEGER)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT chr(to_number(PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
-        
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }    
-
-    @Test public void testLcaseFunction() throws Exception {
-        String input = "SELECT lcase(PART_NAME) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT lower(PARTS.PART_NAME) FROM PARTS"; //$NON-NLS-1$
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testUcaseFunction() throws Exception {
-        String input = "SELECT ucase(PART_NAME) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT upper(PARTS.PART_NAME) FROM PARTS"; //$NON-NLS-1$
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testIfnullFunction() throws Exception {
-        String input = "SELECT ifnull(PART_NAME, 'x') FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT nvl(PARTS.PART_NAME, 'x') FROM PARTS"; //$NON-NLS-1$
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testLogFunction() throws Exception {
-        String input = "SELECT log(CONVERT(PART_ID, INTEGER)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT ln(to_number(PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testLog10Function() throws Exception {
-        String input = "SELECT log10(CONVERT(PART_ID, INTEGER)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT log(10, to_number(PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testConvertFunctionInteger() throws Exception {
-        String input = "SELECT convert(PARTS.PART_ID, integer) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT to_number(PARTS.PART_ID) FROM PARTS"; //$NON-NLS-1$
-    
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testConvertFunctionChar() throws Exception {
-        String input = "SELECT convert(PARTS.PART_ID, char) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testConvertFunctionBoolean() throws Exception {
-        String input = "SELECT convert(PARTS.PART_ID, boolean) FROM PARTS"; //$NON-NLS-1$
-        //String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT decode(PARTS.PART_ID, 'true', 1, 'false', 0) FROM PARTS"; //$NON-NLS-1$
-        
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testConvertFunctionDate() throws Exception {
-        String input = "SELECT convert(PARTS.PART_ID, date) FROM PARTS"; //$NON-NLS-1$
-        //String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT to_date(PARTS.PART_ID, 'YYYY-MM-DD') FROM PARTS";  //$NON-NLS-1$
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testConvertFunctionTime() throws Exception {
-        String input = "SELECT convert(PARTS.PART_ID, time) FROM PARTS"; //$NON-NLS-1$
-        //String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT to_date(('1970-01-01 ' || to_char(PARTS.PART_ID, 'HH24:MI:SS')), 'YYYY-MM-DD HH24:MI:SS') FROM PARTS"; //$NON-NLS-1$ 
-    
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testConvertFunctionTimestamp() throws Exception {
-        String input = "SELECT convert(PARTS.PART_ID, timestamp) FROM PARTS"; //$NON-NLS-1$
-        //String output = "SELECT PARTS.PART_ID FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT to_timestamp(PARTS.PART_ID, 'YYYY-MM-DD HH24:MI:SS.FF') FROM PARTS"; //$NON-NLS-1$
-               
-        helpTestVisitor(getTestVDB(),
-            input, 
-            null,
-            output);
-    }
-    
-    @Test public void testExtractFunctionTimestamp() throws Exception {
-        String input = "SELECT month(TIMESTAMPVALUE) FROM BQT1.Smalla"; //$NON-NLS-1$
-        String output = "SELECT EXTRACT(MONTH FROM SmallA.TimestampValue) FROM SmallA"; //$NON-NLS-1$
-               
-        helpTestVisitor(FakeMetadataFactory.exampleBQTCached(),
-                input, 
-                EMPTY_CONTEXT, null, output);
-    }
-
     @Test public void testAliasedGroup() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select y.part_name from parts as y", //$NON-NLS-1$

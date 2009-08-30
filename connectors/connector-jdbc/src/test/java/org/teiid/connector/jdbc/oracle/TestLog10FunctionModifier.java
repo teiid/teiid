@@ -52,13 +52,10 @@ public class TestLog10FunctionModifier extends TestCase {
         IFunction func = CommandBuilder.getLanuageFactory().createFunction("log10", Arrays.asList(arg), Double.class); //$NON-NLS-1$
         
         Log10FunctionModifier modifier = new Log10FunctionModifier(CommandBuilder.getLanuageFactory());
-        IExpression outExpr = modifier.modify(func);
+        modifier.translate(func);
         
-        assertTrue(outExpr instanceof IFunction);
-        IFunction outFunc = (IFunction) outExpr;
-        
-        assertEquals("log", outFunc.getName()); //$NON-NLS-1$
-        assertEquals(func.getType(), outFunc.getType());
+        assertEquals("log", func.getName()); //$NON-NLS-1$
+        assertEquals(Double.class, func.getType());
         
         List<IExpression> outArgs = func.getParameters();
         assertEquals(2, outArgs.size());
@@ -69,6 +66,6 @@ public class TestLog10FunctionModifier extends TestCase {
         assertEquals(Integer.class, newArg.getType());
         assertEquals(new Integer(10), newArg.getValue());
         
-        assertEquals("log(10, 5.2)", SQLStringVisitor.getSQLString(outFunc));              //$NON-NLS-1$
+        assertEquals("log(10, 5.2)", SQLStringVisitor.getSQLString(func));              //$NON-NLS-1$
     }
 }

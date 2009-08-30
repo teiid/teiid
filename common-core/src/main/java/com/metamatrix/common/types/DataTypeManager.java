@@ -579,7 +579,7 @@ public class DataTypeManager {
 	static void loadBasicTransforms() {
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigDecimalToBigIntegerTransform());
-		DataTypeManager.addTransform(new NumberToBooleanTransform(BigDecimal.valueOf(1), BigDecimal.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToBooleanTransform(BigDecimal.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.BIG_DECIMAL));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
@@ -596,7 +596,7 @@ public class DataTypeManager {
 		
 		DataTypeManager
 				.addTransform(new com.metamatrix.common.types.basic.BigIntegerToBigDecimalTransform());
-		DataTypeManager.addTransform(new NumberToBooleanTransform(BigInteger.valueOf(1), BigInteger.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToBooleanTransform(BigInteger.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.BIG_INTEGER));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
@@ -631,7 +631,7 @@ public class DataTypeManager {
 
 		DataTypeManager.addTransform(new FixedNumberToBigDecimalTransform(DefaultDataClasses.BYTE));
 		DataTypeManager.addTransform(new FixedNumberToBigIntegerTransform(DefaultDataClasses.BYTE));
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Byte.valueOf((byte)1), Byte.valueOf((byte)0)));
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Byte.valueOf((byte)0)));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
 				DefaultDataClasses.BYTE, false));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
@@ -655,7 +655,7 @@ public class DataTypeManager {
 
 		DataTypeManager.addTransform(new FloatingNumberToBigDecimalTransform(DefaultDataClasses.DOUBLE));
 		DataTypeManager.addTransform(new FloatingNumberToBigIntegerTransform(DefaultDataClasses.DOUBLE));
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Double.valueOf(1), Double.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Double.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.DOUBLE));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
@@ -670,7 +670,7 @@ public class DataTypeManager {
 
 		DataTypeManager.addTransform(new FloatingNumberToBigDecimalTransform(DefaultDataClasses.FLOAT));
 		DataTypeManager.addTransform(new FloatingNumberToBigIntegerTransform(DefaultDataClasses.FLOAT));
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Float.valueOf(1), Float.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Float.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.FLOAT));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
@@ -685,7 +685,7 @@ public class DataTypeManager {
 
 		DataTypeManager.addTransform(new FixedNumberToBigDecimalTransform(DefaultDataClasses.INTEGER));
 		DataTypeManager.addTransform(new FixedNumberToBigIntegerTransform(DefaultDataClasses.INTEGER));
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Integer.valueOf(1), Integer.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Integer.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.INTEGER));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
@@ -700,7 +700,7 @@ public class DataTypeManager {
 
 		DataTypeManager.addTransform(new FixedNumberToBigDecimalTransform(DefaultDataClasses.LONG));
 		DataTypeManager.addTransform(new FixedNumberToBigIntegerTransform(DefaultDataClasses.LONG));
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Long.valueOf(1), Long.valueOf(0)));
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Long.valueOf(0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.LONG));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
@@ -715,7 +715,7 @@ public class DataTypeManager {
 				
 		DataTypeManager.addTransform(new FixedNumberToBigDecimalTransform(DefaultDataClasses.SHORT));
 		DataTypeManager.addTransform(new FixedNumberToBigIntegerTransform(DefaultDataClasses.SHORT));
-		DataTypeManager.addTransform(new NumberToBooleanTransform(Short.valueOf((short)1), Short.valueOf((short)0)));
+		DataTypeManager.addTransform(new NumberToBooleanTransform(Short.valueOf((short)0)));
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.SHORT));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(

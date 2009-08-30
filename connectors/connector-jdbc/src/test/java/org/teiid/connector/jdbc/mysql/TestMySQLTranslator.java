@@ -52,7 +52,7 @@ public class TestMySQLTranslator {
     
     @Test public void testConversion1() throws Exception {
         String input = "SELECT char(convert(PART_WEIGHT, integer) + 100) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT char((convert(PARTS.PART_WEIGHT, SIGNED INTEGER) + 100)) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT char((cast(PARTS.PART_WEIGHT AS signed) + 100)) FROM PARTS";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(getTestVDB(),
             input, 
@@ -61,7 +61,7 @@ public class TestMySQLTranslator {
           
     @Test public void testConversion2() throws Exception {
         String input = "SELECT convert(PART_WEIGHT, long) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT convert(PARTS.PART_WEIGHT, SIGNED) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(PARTS.PART_WEIGHT AS signed) FROM PARTS";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(getTestVDB(),
             input, 
@@ -70,7 +70,7 @@ public class TestMySQLTranslator {
           
     @Test public void testConversion3() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, long), string) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT convert(convert(PARTS.PART_WEIGHT, SIGNED), CHAR) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS signed) AS char) FROM PARTS";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(getTestVDB(),
             input, 
@@ -111,7 +111,7 @@ public class TestMySQLTranslator {
     }
     @Test public void testConversion7() throws Exception {
         String input = "SELECT convert(convert(PART_WEIGHT, integer), string) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT convert(convert(PARTS.PART_WEIGHT, SIGNED INTEGER), CHAR) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT cast(cast(PARTS.PART_WEIGHT AS signed) AS char) FROM PARTS";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(getTestVDB(),
             input, 
@@ -136,7 +136,7 @@ public class TestMySQLTranslator {
      */
     @Test public void testLocate() throws Exception {
         String input = "SELECT locate(INTNUM, 'chimp', 1) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT LOCATE(convert(SmallA.IntNum, CHAR), 'chimp', 1) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT LOCATE(cast(SmallA.IntNum AS char), 'chimp', 1) FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
@@ -170,7 +170,7 @@ public class TestMySQLTranslator {
      */
     @Test public void testLocate3() throws Exception {
         String input = "SELECT locate(INTNUM, '234567890', 1) FROM BQT1.SMALLA WHERE INTKEY = 26"; //$NON-NLS-1$
-        String output = "SELECT LOCATE(convert(SmallA.IntNum, CHAR), '234567890', 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
+        String output = "SELECT LOCATE(cast(SmallA.IntNum AS char), '234567890', 1) FROM SmallA WHERE SmallA.IntKey = 26";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
@@ -290,7 +290,7 @@ public class TestMySQLTranslator {
     
     @Test public void testBitAnd() throws Exception {
         String input = "select bitand(intkey, intnum) from bqt1.smalla"; //$NON-NLS-1$
-        String output = "SELECT convert((SmallA.IntKey & SmallA.IntNum), SIGNED INTEGER) FROM SmallA"; //$NON-NLS-1$
+        String output = "SELECT cast((SmallA.IntKey & SmallA.IntNum) AS signed) FROM SmallA"; //$NON-NLS-1$
                
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
             input, 

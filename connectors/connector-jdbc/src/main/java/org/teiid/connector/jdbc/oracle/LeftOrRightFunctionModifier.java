@@ -26,26 +26,25 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.*;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
 
 
 /**
  * Convert left(string, count) --> substr(string, 1, count)
  * or right(string, count) --> substr(string, -1 * count) - we lack a way to express a unary negation
  */
-public class LeftOrRightFunctionModifier extends BasicFunctionModifier implements FunctionModifier {
+public class LeftOrRightFunctionModifier extends FunctionModifier {
     private ILanguageFactory langFactory;
     
     public LeftOrRightFunctionModifier(ILanguageFactory langFactory) {
         this.langFactory = langFactory;
     }
     
-    /* 
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
-     */
-    public IExpression modify(IFunction function) {
+    @Override
+    public List<?> translate(IFunction function) {
         List<IExpression> args = function.getParameters();
         IFunction func = null;
         
@@ -68,6 +67,6 @@ public class LeftOrRightFunctionModifier extends BasicFunctionModifier implement
                     String.class);      
         }
 
-        return func;    
+        return Arrays.asList(func);    
     }
 }

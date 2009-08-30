@@ -25,13 +25,13 @@ package org.teiid.connector.jdbc.oracle;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
+import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILiteral;
 
 
-public class OracleSpatialFunctionModifier extends BasicFunctionModifier {
+public class OracleSpatialFunctionModifier extends FunctionModifier {
 
     /**
      * If either of the first two parameters are a Literal String, then we need to put the literal itself in the SQL

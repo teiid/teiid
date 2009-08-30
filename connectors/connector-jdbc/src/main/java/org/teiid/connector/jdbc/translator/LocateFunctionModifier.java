@@ -69,12 +69,11 @@ import org.teiid.connector.language.ICompareCriteria.Operator;
  * 
  * @since 6.2
  */
-public class LocateFunctionModifier extends BasicFunctionModifier {
+public class LocateFunctionModifier extends AliasModifier {
 
 	public static String LOCATE = "LOCATE"; //$NON-NLS-1$
 	
     private ILanguageFactory langFactory;
-    private String functionName = LOCATE;
     private boolean sourceStringFirst;
     
 	/**
@@ -98,8 +97,8 @@ public class LocateFunctionModifier extends BasicFunctionModifier {
 	 * @param sourceStringFirst
 	 */
     public LocateFunctionModifier(ILanguageFactory langFactory, final String functionName, boolean sourceStringFirst) {
+    	super(functionName);
     	this.langFactory = langFactory;
-    	this.functionName = functionName;
     	this.sourceStringFirst = sourceStringFirst;
     }
 
@@ -142,8 +141,8 @@ public class LocateFunctionModifier extends BasicFunctionModifier {
 	 * 
 	 * @param function the LOCATE function that may need to be modified
 	 */
-    public IExpression modify(IFunction function) {
-    	function.setName(this.functionName);
+    public void modify(IFunction function) {
+    	super.modify(function);
         List<IExpression> args = function.getParameters();
         IExpression searchStr = args.get(0);
         IExpression sourceStr = args.get(1);
@@ -156,7 +155,6 @@ public class LocateFunctionModifier extends BasicFunctionModifier {
 			args.set(0, sourceStr);
 			args.set(1, searchStr);
         }
-        return function;
     }
 
 	private IExpression ensurePositiveStartIndex(IExpression startIndex) {

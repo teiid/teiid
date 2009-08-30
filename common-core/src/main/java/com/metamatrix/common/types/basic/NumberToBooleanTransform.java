@@ -25,28 +25,24 @@ package com.metamatrix.common.types.basic;
 import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
-import com.metamatrix.core.CorePlugin;
-import com.metamatrix.core.ErrorMessageKeys;
 
 public class NumberToBooleanTransform extends AbstractTransform {
 	
-	private Object trueVal;
-	private Object falseVal;
+	private Comparable falseVal;
 	private Class<?> sourceType;
 	
-	public NumberToBooleanTransform(Object trueVal, Object falseVal) {
-		this.trueVal = trueVal;
+	public NumberToBooleanTransform(Comparable falseVal) {
 		this.falseVal = falseVal;
-		this.sourceType = trueVal.getClass();
+		this.sourceType = falseVal.getClass();
 	}
 
 	@Override
-	public Class getSourceType() {
+	public Class<?> getSourceType() {
 		return sourceType;
 	}
 	
 	@Override
-	public Class getTargetType() {
+	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.BOOLEAN;
 	}
 	
@@ -55,13 +51,15 @@ public class NumberToBooleanTransform extends AbstractTransform {
 		if (value == null) {
 			return null;
 		}
-		if (value.equals(trueVal)) {
-			return Boolean.TRUE;
-		}
-		if (value.equals(falseVal)) {
+		if (falseVal.compareTo(value) == 0) {
 			return Boolean.FALSE;
 		}
-		throw new TransformationException(ErrorMessageKeys.TYPES_ERR_0013, CorePlugin.Util.getString(ErrorMessageKeys.TYPES_ERR_0013, sourceType.getSimpleName(), value));
+		return Boolean.TRUE;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return true;
 	}
 
 }

@@ -55,22 +55,20 @@ public class TestExtractFunctionModifier extends TestCase {
         super(name);
     }
 
-    public IExpression helpTestMod(IExpression c, String expectedStr, String target) throws Exception {
+    public void helpTestMod(IExpression c, String expectedStr, String target) throws Exception {
         IFunction func = LANG_FACTORY.createFunction(target, 
             Arrays.asList(c),
             Integer.class);
         
         ExtractFunctionModifier mod = new ExtractFunctionModifier ();
-        IExpression expr = mod.modify(func);
         Translator trans = new Translator();
         trans.registerFunctionModifier(target, mod);
         trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
 
-        sqlVisitor.append(expr);  
+        sqlVisitor.append(func);  
         assertEquals(expectedStr, sqlVisitor.toString());
-        return expr;
     }
     public void test1() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);

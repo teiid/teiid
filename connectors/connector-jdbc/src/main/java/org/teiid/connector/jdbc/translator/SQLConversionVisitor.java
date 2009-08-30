@@ -32,31 +32,33 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.Translator.NullOrder;
 import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.ICompareCriteria;
 import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.IInCriteria;
+import org.teiid.connector.language.IInsertExpressionValueSource;
 import org.teiid.connector.language.ILanguageObject;
-import org.teiid.connector.language.ILimit;
+import org.teiid.connector.language.ILikeCriteria;
 import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.IOrderByItem;
 import org.teiid.connector.language.IParameter;
 import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.ISearchedCaseExpression;
+import org.teiid.connector.language.ISelectSymbol;
+import org.teiid.connector.language.ISetClause;
 import org.teiid.connector.language.IParameter.Direction;
 import org.teiid.connector.language.ISetQuery.Operation;
-import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.connector.visitor.util.SQLStringVisitor;
 
 
 /**
  * This visitor takes an ICommand and does DBMS-specific conversion on it
  * to produce a SQL String.  This class is expected to be subclassed.
- * Specialized instances of this class can be gotten from a SQL Translator
- * {@link Translator#getTranslationVisitor(RuntimeMetadata) using this method}.
  */
 public class SQLConversionVisitor extends SQLStringVisitor{
 
@@ -74,6 +76,8 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     
     private Set<ILanguageObject> recursionObjects = Collections.newSetFromMap(new IdentityHashMap<ILanguageObject, Boolean>());
     
+    private boolean replaceWithBinding = false;
+    
     public SQLConversionVisitor(Translator translator) {
         this.translator = translator;
         this.prepared = translator.usePreparedStatements();
@@ -81,47 +85,36 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     
     @Override
     public void append(ILanguageObject obj) {
-    	if ((obj instanceof IFunction || obj instanceof ICommand || obj instanceof ILimit) && !recursionObjects.contains(obj)) {
-	    	recursionObjects.add(obj);
-	    	try {
-	    		List<?> parts = null;
-    	    	if (obj instanceof IFunction) {
-    	    		IFunction function = (IFunction)obj;
-    	    		Map<String, FunctionModifier> functionModifiers = translator.getFunctionModifiers();
-    	    		if (functionModifiers != null) {
-    	    			FunctionModifier modifier = functionModifiers.get(function.getName().toLowerCase());
-    	    			if (modifier != null) {
-    	    				parts = modifier.translate(function);
-    	    			}
-    	    		}
-    	    	} else if (obj instanceof ICommand) {
-    	    		parts = translator.translateCommand((ICommand)obj, context);
-    	    	} else if (obj instanceof ILimit) {
-    	    		parts = translator.translateLimit((ILimit)obj, context);
-    	    	}
-	    		if (parts != null) {
-	    			this.appendParts(parts);
-	    			return;
-	    		}
-	    	} finally {
-	    		recursionObjects.remove(obj);
-	    	}
-    	} 
-    	super.append(obj);
+        boolean replacementMode = replaceWithBinding;
+        if (obj instanceof ICommand || obj instanceof IFunction) {
+    	    /*
+    	     * In general it is not appropriate to use bind values within a function
+    	     * unless the particulars of the function parameters are know.  
+    	     * As needed, other visitors or modifiers can set the literals used within
+    	     * a particular function as bind variables.  
+    	     */
+        	this.replaceWithBinding = false;
+        }
+    	List<?> parts = null;
+    	if (!recursionObjects.contains(obj)) {
+    		parts = translator.translate(obj, context);
+    	}
+		if (parts != null) {
+			recursionObjects.add(obj);
+			for (Object part : parts) {
+			    if(part instanceof ILanguageObject) {
+			        append((ILanguageObject)part);
+			    } else {
+			        buffer.append(part);
+			    }
+			}
+			recursionObjects.remove(obj);
+		} else {
+			super.append(obj);
+		}
+        this.replaceWithBinding = replacementMode;
     }
     
-	private void appendParts(List parts) {
-		Iterator iter = parts.iterator();
-		while(iter.hasNext()) {
-		    Object part = iter.next();
-		    if(part instanceof ILanguageObject) {
-		        append((ILanguageObject)part);
-		    } else {
-		        buffer.append(part);
-		    }
-		}
-	}
-	
 	@Override
 	public void visit(IOrderByItem obj) {
 		super.visit(obj);
@@ -203,12 +196,54 @@ public class SQLConversionVisitor extends SQLStringVisitor{
      * @see org.teiid.connector.visitor.util.SQLStringVisitor#visit(org.teiid.connector.language.ILiteral)
      */
     public void visit(ILiteral obj) {
-        if (this.prepared && obj.isBindValue()) {
+        if (this.prepared && (replaceWithBinding || TranslatedCommand.isBindEligible(obj) || obj.isBindValue())) {
             buffer.append(UNDEFINED_PARAM);
             preparedValues.add(obj);
         } else {
             translateSQLType(obj.getType(), obj.getValue(), buffer);
         }
+    }
+    
+    @Override
+    public void visit(IInCriteria obj) {
+        replaceWithBinding = true;
+        super.visit(obj);
+    }
+
+    @Override
+    public void visit(ILikeCriteria obj) {
+        replaceWithBinding = true;
+        super.visit(obj);
+    }
+
+    @Override
+    public void visit(ICompareCriteria obj) {
+        replaceWithBinding = true;
+        super.visit(obj);
+    }
+
+    @Override
+    public void visit(IInsertExpressionValueSource obj) {
+        replaceWithBinding = true;
+        super.visit(obj);
+    }
+    
+    @Override
+    public void visit(ISetClause obj) {
+        replaceWithBinding = true;
+        super.visit(obj);
+    }
+    
+    @Override
+    public void visit(ISelectSymbol obj) {
+    	replaceWithBinding = false;
+    	super.visit(obj);
+    }
+    
+    @Override
+    public void visit(ISearchedCaseExpression obj) {
+    	replaceWithBinding = false;
+    	super.visit(obj);
     }
 
     /**
@@ -323,4 +358,5 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     protected boolean useParensForJoins() {
     	return translator.useParensForJoins();
     }
+	
 }

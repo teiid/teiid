@@ -33,18 +33,14 @@ import org.teiid.connector.language.IFunction;
  * driver can then convert to the correct database syntax for us. 
  * @since 5.0
  */
-public class EscapeSyntaxModifier extends BasicFunctionModifier {
+public class EscapeSyntaxModifier extends FunctionModifier {
 
-    public EscapeSyntaxModifier() {
-        super();
-    }
-    
     /** 
      * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#translate(org.teiid.connector.language.IFunction)
      * @since 5.0
      */
-    public List translate(IFunction function) {
-    	List objs = new ArrayList();
+    public List<?> translate(IFunction function) {
+    	List<Object> objs = new ArrayList<Object>();
         objs.add("{fn "); //$NON-NLS-1$
         objs.add(function);
         objs.add("}"); //$NON-NLS-1$

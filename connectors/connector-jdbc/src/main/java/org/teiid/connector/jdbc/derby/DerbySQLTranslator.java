@@ -49,7 +49,6 @@ public class DerbySQLTranslator extends DB2SQLTranslator {
         
         //overrides of db2 functions
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new EscapeSyntaxModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new DerbyConvertModifier(getLanguageFactory())); 
     }  
  
     @Override

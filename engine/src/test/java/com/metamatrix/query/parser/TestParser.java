@@ -1846,12 +1846,7 @@ public class TestParser extends TestCase {
     	
         helpTestLiteral(expected, expectedType, sql, expectedSql);
     }
-    
-    /** SELECT {b 'xyz'} FROM m.g1 */
-    public void testBooleanLiteralFail() {
-        helpException("SELECT {b 'xyz'} FROM m.g1"); //$NON-NLS-1$
-    }    
-    
+        
 	/** SELECT DISTINCT a FROM g */
 	public void testSelectDistinct(){
 		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$

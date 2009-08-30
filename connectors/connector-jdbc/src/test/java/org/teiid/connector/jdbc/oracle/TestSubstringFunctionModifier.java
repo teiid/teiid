@@ -25,15 +25,13 @@ package org.teiid.connector.jdbc.oracle;
 import java.util.Arrays;
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
-import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
@@ -53,21 +51,17 @@ public class TestSubstringFunctionModifier extends TestCase {
         super(name);
     }
 
-    public IExpression helpTestMod(IExpression[] args, String expectedStr) throws Exception {
+    public void helpTestMod(IExpression[] args, String expectedStr) throws Exception {
         IFunction func = LANG_FACTORY.createFunction("substring",  //$NON-NLS-1$
             Arrays.asList(args), TypeFacility.RUNTIME_TYPES.STRING);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
         trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
 
-        IExpression expr = ((FunctionModifier)trans.getFunctionModifiers().get("substring")).modify(func); //$NON-NLS-1$
-        
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);  
+        sqlVisitor.append(func);  
         
         assertEquals(expectedStr, sqlVisitor.toString());
-        
-        return expr;
     }
 
     public void testTwoArgs() throws Exception {

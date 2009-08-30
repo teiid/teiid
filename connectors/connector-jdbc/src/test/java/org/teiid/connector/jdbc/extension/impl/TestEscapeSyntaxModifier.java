@@ -68,7 +68,6 @@ public class TestEscapeSyntaxModifier extends TestCase {
 	private void helpTest(IFunction func, String expected) {
         EscapeSyntaxModifier mod = new EscapeSyntaxModifier();
 
-		func = (IFunction) mod.modify(func);
         List parts = mod.translate(func);
         StringBuffer sb = new StringBuffer();
         for (Object object : parts) {

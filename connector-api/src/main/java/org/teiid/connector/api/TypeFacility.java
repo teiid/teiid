@@ -83,6 +83,13 @@ public abstract class TypeFacility {
     }
     
     /**
+     * Get the String constant for the given type class
+     */
+    public static String getDataTypeName(Class<?> type) {
+    	return DataTypeManager.getDataTypeName(type);    	
+    }
+    
+    /**
      * Get the SQL type for the given runtime type Class constant
      * @param type
      * @return

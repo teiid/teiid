@@ -49,6 +49,7 @@ import org.teiid.connector.jdbc.JDBCCapabilities;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.language.ILimit;
@@ -183,15 +184,30 @@ public class Translator {
     public final ILanguageFactory getLanguageFactory() {
     	return environment.getLanguageFactory();
     }
-    
+
     /**
-     * Modify the command.
+     * Return a List of translated parts ({@link ILanguageObject}s and Objects), or null
+     * if to rely on the default translation.  Override with care.
      * @param command
      * @param context
      * @return
      */
-    public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
-    	return command;
+    public List<?> translate(ILanguageObject obj, ExecutionContext context) {
+		List<?> parts = null;
+    	if (obj instanceof IFunction) {
+    		IFunction function = (IFunction)obj;
+    		if (functionModifiers != null) {
+    			FunctionModifier modifier = functionModifiers.get(function.getName().toLowerCase());
+    			if (modifier != null) {
+    				parts = modifier.translate(function);
+    			}
+    		}
+    	} else if (obj instanceof ICommand) {
+    		parts = translateCommand((ICommand)obj, context);
+    	} else if (obj instanceof ILimit) {
+    		parts = translateLimit((ILimit)obj, context);
+    	}
+    	return parts;
     }
     
     /**
@@ -270,7 +286,7 @@ public class Translator {
      */
     public String translateLiteralTime(Time timeValue) {
     	if (!hasTimeType()) {
-    		return "{ts'"+ getDefaultTimeYMD()+ " " + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    		return "{ts'1970-01-01 " + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     	}
         return "{t'" + formatDateValue(timeValue) + "'}"; //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -301,7 +317,7 @@ public class Translator {
         	Timestamp ts = (Timestamp)dateObject;
         	Timestamp newTs = new Timestamp(ts.getTime());
         	if (getTimestampNanoPrecision() > 0) {
-	        	int mask = 10^(9-getTimestampNanoPrecision());
+	        	int mask = (int)Math.pow(10, 9-getTimestampNanoPrecision());
 	        	newTs.setNanos(ts.getNanos()/mask*mask);
         	} else {
         		newTs.setNanos(0);
@@ -357,10 +373,6 @@ public class Translator {
      */
     public boolean hasTimeType() {
     	return true;
-    }
-    
-    public String getDefaultTimeYMD() {
-    	return "1970-01-01"; //$NON-NLS-1$
     }
     
     /**
@@ -487,7 +499,7 @@ public class Translator {
      * @param cal
      * @throws SQLException
      */
-    public void bindValue(PreparedStatement stmt, Object param, Class paramType, int i) throws SQLException {
+    public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
         int type = TypeFacility.getSQLTypeFromRuntimeType(paramType);
                 
         if (param == null) {

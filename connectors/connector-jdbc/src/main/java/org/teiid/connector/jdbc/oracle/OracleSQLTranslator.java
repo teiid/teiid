@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -41,7 +42,9 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.translator.AliasModifier;
+import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
+import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.LocateFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
@@ -84,7 +87,6 @@ public class OracleSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new OracleConvertModifier(getLanguageFactory(), getEnvironment().getLogger())); 
         registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier());
         registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier()); 
@@ -93,40 +95,76 @@ public class OracleSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Day"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "WW"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "Q"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "D"));//$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier(getLanguageFactory(), "DDD"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.WEEK, new DayWeekQuarterFunctionModifier("WW"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.QUARTER, new DayWeekQuarterFunctionModifier("Q"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new DayWeekQuarterFunctionModifier("D"));//$NON-NLS-1$ 
+        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new DayWeekQuarterFunctionModifier("DDD"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory(), "INSTR", true)); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr"));//$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); 
+        
+        //spatial functions
         registerFunctionModifier(RELATE, new OracleSpatialFunctionModifier());
         registerFunctionModifier(NEAREST_NEIGHBOR, new OracleSpatialFunctionModifier());
         registerFunctionModifier(FILTER, new OracleSpatialFunctionModifier());
         registerFunctionModifier(WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
+        
+        //add in type conversion
+        ConvertModifier convertModifier = new ConvertModifier();
+    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("date", FunctionModifier.DATE, FunctionModifier.TIME); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
+    		@Override
+    		public List<?> translate(IFunction function) {
+    			return Arrays.asList("to_date('1970-01-01 ' || to_char(",function.getParameters().get(0),", 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
+    		}
+    	});
+    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.DATE, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				return Arrays.asList("trunc(cast(",function.getParameters().get(0)," AS date))"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		});
+    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD HH24:MI:SS.FF")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.DATE, new ConvertModifier.FormatModifier("to_date", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIME, new ConvertModifier.FormatModifier("to_date", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.TIMESTAMP, new ConvertModifier.FormatModifier("to_timestamp", "YYYY-MM-DD HH24:MI:SS.FF")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_char"), FunctionModifier.STRING); //$NON-NLS-1$
+    	//NOTE: numeric handling in Oracle is split only between integral vs. floating/decimal types
+    	convertModifier.addTypeConversion(new ConvertModifier.FormatModifier("to_number"), //$NON-NLS-1$
+    			FunctionModifier.FLOAT, FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL);
+    	convertModifier.addTypeConversion(new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				if (Number.class.isAssignableFrom(function.getParameters().get(0).getType())) {
+					return Arrays.asList("trunc(", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				return Arrays.asList("trunc(to_number(", function.getParameters().get(0), "))"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		}, 
+		FunctionModifier.BYTE, FunctionModifier.SHORT, FunctionModifier.INTEGER, FunctionModifier.LONG,	FunctionModifier.BIGINTEGER);
+    	convertModifier.addNumericBooleanConversions();
+    	convertModifier.setWideningNumericImplicit(true);
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
     
-    @Override
-    public ICommand modifyCommand(ICommand command, ExecutionContext context) throws ConnectorException {
-    	if (!(command instanceof IInsert)) {
-    		return command;
-    	}
-    	
+    public void handleInsertSequences(IInsert insert) throws ConnectorException {
         /* 
          * If a missing auto_increment column is modeled with name in source indicating that an Oracle Sequence 
          * then pull the Sequence name out of the name in source of the column.
          */
-    	IInsert insert = (IInsert)command;
-    	
     	if (!(insert.getValueSource() instanceof IInsertExpressionValueSource)) {
-    		return command;
+    		return;
     	}
     	IInsertExpressionValueSource values = (IInsertExpressionValueSource)insert.getValueSource();
     	List<Element> allElements = insert.getGroup().getMetadataObject().getChildren();
     	if (allElements.size() == values.getValues().size()) {
-    		return command;
+    		return;
     	}
     	
     	int index = 0;
@@ -167,11 +205,18 @@ public class OracleSQLTranslator extends Translator {
             insert.getElements().add(index, this.getLanguageFactory().createElement(element.getName(), insert.getGroup(), element, element.getJavaType()));
             values.getValues().add(index, sequenceElement);
 		}
-        return command;
     }
     
     @Override
     public List<?> translateCommand(ICommand command, ExecutionContext context) {
+    	if (command instanceof IInsert) {
+    		try {
+				handleInsertSequences((IInsert)command);
+			} catch (ConnectorException e) {
+				throw new RuntimeException(e);
+			}
+    	}
+    	
     	if (!(command instanceof IQueryCommand)) {
     		return null;
     	}
@@ -309,7 +354,7 @@ public class OracleSQLTranslator extends Translator {
     }
     
     @Override
-    public void bindValue(PreparedStatement stmt, Object param, Class paramType, int i) throws SQLException {
+    public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
     	if(param == null && Object.class.equals(paramType)){
     		//Oracle drive does not support JAVA_OBJECT type
     		stmt.setNull(i, Types.LONGVARBINARY);

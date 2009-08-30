@@ -4430,7 +4430,7 @@ public class TestResolver extends TestCase {
     public void testInsertWithoutColumnsFails1() {
         String sql = "Insert into pm1.g1 values (1, 2, 3, 4)"; //$NON-NLS-1$
         
-        helpResolveException(sql, "Error Code:ERR.003.029.0013 Message:Exception converting value 3 of type class java.lang.Integer to expected type class java.lang.Boolean"); //$NON-NLS-1$
+        helpResolveException(sql, "Error Code:ERR.015.008.0041 Message:Expected value of type 'boolean' but '3' is of type 'integer' and no implicit conversion is available."); //$NON-NLS-1$
     }
     
     public void testInsertWithQueryFails() {

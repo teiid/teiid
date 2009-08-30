@@ -67,7 +67,7 @@ public class TestSqlServerConversionVisitor {
     @Test
     public void testModFunction() throws Exception {
         String input = "SELECT mod(CONVERT(PART_ID, INTEGER), 13) FROM parts"; //$NON-NLS-1$
-        String output = "SELECT (convert(int, PARTS.PART_ID) % 13) FROM PARTS";  //$NON-NLS-1$
+        String output = "SELECT (cast(PARTS.PART_ID AS int) % 13) FROM PARTS";  //$NON-NLS-1$
 
         helpTestVisitor(getTestVDB(),
             input, 
@@ -87,7 +87,7 @@ public class TestSqlServerConversionVisitor {
     @Test
     public void testDayOfMonthFunction() throws Exception {
         String input = "SELECT dayofmonth(convert(PARTS.PART_ID, date)) FROM PARTS"; //$NON-NLS-1$
-        String output = "SELECT day(convert(datetime, PARTS.PART_ID)) FROM PARTS"; //$NON-NLS-1$
+        String output = "SELECT {fn dayofmonth(cast(PARTS.PART_ID AS datetime))} FROM PARTS"; //$NON-NLS-1$
     
         helpTestVisitor(getTestVDB(),
             input, 
@@ -118,6 +118,15 @@ public class TestSqlServerConversionVisitor {
     public void testDateFunctions() throws Exception {
         String input = "select dayName(timestampValue), dayOfWeek(timestampValue), quarter(timestampValue) from bqt1.smalla"; //$NON-NLS-1$
         String output = "SELECT {fn dayName(SmallA.TimestampValue)}, {fn dayOfWeek(SmallA.TimestampValue)}, {fn quarter(SmallA.TimestampValue)} FROM SmallA"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);        
+    }
+    
+    @Test public void testConvert() throws Exception {
+        String input = "select convert(timestampvalue, date), convert(timestampvalue, string), convert(datevalue, string) from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT cast(replace(convert(varchar, SmallA.TimestampValue, 102), '.', '-') AS datetime), convert(varchar, SmallA.TimestampValue, 21), replace(convert(varchar, SmallA.DateValue, 102), '.', '-') FROM SmallA"; //$NON-NLS-1$
                
         helpTestVisitor(getBQTVDB(),
             input, 

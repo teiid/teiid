@@ -37,13 +37,17 @@ import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.oracle.LeftOrRightFunctionModifier;
 import org.teiid.connector.jdbc.oracle.MonthOrDayNameFunctionModifier;
 import org.teiid.connector.jdbc.translator.AliasModifier;
+import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
 import org.teiid.connector.jdbc.translator.ExtractFunctionModifier;
+import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.IAggregate;
-import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.language.ILimit;
-import org.teiid.connector.visitor.framework.HierarchyVisitor;
+import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.visitor.util.SQLReservedWords;
 
 
@@ -87,15 +91,58 @@ public class PostgreSQLTranslator extends Translator {
         registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.WEEK, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
-        
+        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
+        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
+
         //specific to 8.2 client or later
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
         registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
-        
-        registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new PostgreSQLConvertModifier(getLanguageFactory())); 
-        
-        registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
+                
+        //add in type conversion
+        ConvertModifier convertModifier = new ConvertModifier();
+        convertModifier.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("smallint", FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("integer", FunctionModifier.INTEGER); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("bigint", FunctionModifier.LONG); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("float8", FunctionModifier.DOUBLE); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("numeric(38)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("varchar(4000)", FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("time", FunctionModifier.TIME); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				return Arrays.asList(function.getParameters().get(0), " + TIMESTAMP '1970-01-01'"); //$NON-NLS-1$
+			}
+		});
+    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.TIME, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				return Arrays.asList("cast(date_trunc('second', ", function.getParameters().get(0), ") AS time)"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		});
+    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "HH24:MI:SS")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.TIMESTAMP, FunctionModifier.STRING, new ConvertModifier.FormatModifier("to_char", "YYYY-MM-DD HH24:MI:SS.UF")); //$NON-NLS-1$ //$NON-NLS-2$
+    	convertModifier.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				IExpression stringValue = function.getParameters().get(0);
+				return Arrays.asList("CASE WHEN ", stringValue, " THEN 'true' WHEN not(", stringValue, ") THEN 'false' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		});
+    	convertModifier.addSourceConversion(new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				((ILiteral)function.getParameters().get(1)).setValue("integer"); //$NON-NLS-1$
+				return null;
+			}
+		}, FunctionModifier.BOOLEAN);
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier); 
     }    
     
     @Override
@@ -118,7 +165,7 @@ public class PostgreSQLTranslator extends Translator {
     
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
-        return "to_timestamp('" + formatDateValue(timestampValue) + "', 'YYYY-MM-DD HH24:MI:SS.US')"; //$NON-NLS-1$//$NON-NLS-2$ 
+        return "TIMESTAMP '" + formatDateValue(timestampValue) + "'"; //$NON-NLS-1$//$NON-NLS-2$ 
     }
     
     @Override
@@ -142,23 +189,18 @@ public class PostgreSQLTranslator extends Translator {
      * @since 4.3
      */
     @Override
-    public ICommand modifyCommand(ICommand command, ExecutionContext context)
-    		throws ConnectorException {
-    	HierarchyVisitor visitor = new HierarchyVisitor() {
-    		@Override
-    		public void visit(IAggregate obj) {
-                if (TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(obj.getExpression().getType())) {
-                	if (obj.getName().equalsIgnoreCase(SQLReservedWords.MIN)) {
-                		obj.setName("bool_and"); //$NON-NLS-1$
-                	} else if (obj.getName().equalsIgnoreCase(SQLReservedWords.MAX)) {
-                		obj.setName("bool_or"); //$NON-NLS-1$
-                	}
-                }
-    		}
-   		};
-    	
-    	command.acceptVisitor(visitor);
-    	return command;
+    public List<?> translate(ILanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof IAggregate) {
+    		IAggregate agg = (IAggregate)obj;
+    		if (TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getExpression().getType())) {
+            	if (agg.getName().equalsIgnoreCase(SQLReservedWords.MIN)) {
+            		agg.setName("bool_and"); //$NON-NLS-1$
+            	} else if (agg.getName().equalsIgnoreCase(SQLReservedWords.MAX)) {
+            		agg.setName("bool_or"); //$NON-NLS-1$
+            	}
+            }
+    	}
+    	return super.translate(obj, context);
     }
     
     @Override

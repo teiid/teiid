@@ -25,7 +25,8 @@ package org.teiid.connector.jdbc.oracle;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
+import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
@@ -36,7 +37,7 @@ import org.teiid.connector.language.ILanguageFactory;
  * Convert the MONTHNAME etc. function into an equivalent Oracle function.  
  * Format: to_char(timestampvalue/dayvalue, 'Month'/'Day') 
  */
-public class MonthOrDayNameFunctionModifier extends BasicFunctionModifier implements FunctionModifier {
+public class MonthOrDayNameFunctionModifier extends FunctionModifier {
     private ILanguageFactory langFactory;
     private String format;
     
@@ -45,22 +46,20 @@ public class MonthOrDayNameFunctionModifier extends BasicFunctionModifier implem
         this.format = format;
     }
     
-    /* 
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
-     */
-    public IExpression modify(IFunction function) {
+    @Override
+    public List<?> translate(IFunction function) {
         List<IExpression> args = function.getParameters();
     
         IFunction func = langFactory.createFunction("TO_CHAR",  //$NON-NLS-1$
             Arrays.asList( 
                 args.get(0), 
-                langFactory.createLiteral(format, String.class)),  
-            String.class);
+                langFactory.createLiteral(format, TypeFacility.RUNTIME_TYPES.STRING)),  
+            TypeFacility.RUNTIME_TYPES.STRING);
         
         // For some reason, these values have trailing spaces
-        IFunction trimFunc = langFactory.createFunction("RTRIM",  //$NON-NLS-1$
-            Arrays.asList( func ), String.class);
+        IFunction trimFunc = langFactory.createFunction(SourceSystemFunctions.RTRIM,
+            Arrays.asList( func ), TypeFacility.RUNTIME_TYPES.STRING);
         
-        return trimFunc;    
+        return Arrays.asList(trimFunc);    
     }
 }

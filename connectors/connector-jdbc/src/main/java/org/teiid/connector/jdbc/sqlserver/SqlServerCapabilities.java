@@ -46,7 +46,7 @@ public class SqlServerCapabilities extends JDBCCapabilities {
         supportedFunctions.add("ACOS"); //$NON-NLS-1$
         supportedFunctions.add("ASIN"); //$NON-NLS-1$
         supportedFunctions.add("ATAN"); //$NON-NLS-1$
-        //supportedFunctons.add("ATAN2"); //$NON-NLS-1$
+        supportedFunctions.add("ATAN2"); //$NON-NLS-1$
         supportedFunctions.add("COS"); //$NON-NLS-1$
         supportedFunctions.add("COT"); //$NON-NLS-1$
         supportedFunctions.add("DEGREES"); //$NON-NLS-1$
@@ -126,4 +126,13 @@ public class SqlServerCapabilities extends JDBCCapabilities {
     public boolean supportsRowLimit() {
         return true;
     }
+    
+    @Override
+    public boolean supportsIntersect() {
+    	return true;
+    }
+    
+    public boolean supportsExcept() {
+    	return true;
+    };
 }

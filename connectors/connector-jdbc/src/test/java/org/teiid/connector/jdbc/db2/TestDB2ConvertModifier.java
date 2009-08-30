@@ -28,15 +28,13 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Properties;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.jdbc.db2.DB2ConvertModifier;
-import org.teiid.connector.jdbc.db2.DB2SQLTranslator;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
@@ -72,20 +70,17 @@ public class TestDB2ConvertModifier extends TestCase {
                 LANG_FACTORY.createLiteral(tgtType, String.class)),
             TypeFacility.getDataTypeClass(tgtType));
         
-        DB2ConvertModifier mod = new DB2ConvertModifier(LANG_FACTORY);
-        IExpression expr = mod.modify(func);
-        
         assertEquals("Error converting from " + srcExpression.getType() + " to " + tgtType, //$NON-NLS-1$ //$NON-NLS-2$ 
-            expectedExpression, helpGetString(expr)); 
+            expectedExpression, helpGetString(func)); 
     }
 
     // Source = STRING
     public void testStringToChar() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral("5", String.class), "char", "char('5', 1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral("5", String.class), "char", "cast('5' AS char(1))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testStringToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral("5", String.class), "boolean", "CASE WHEN '5' = 'true' THEN 1 ELSE 0 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral("5", String.class), "boolean", "CASE WHEN '5' IN ('false', '0') THEN 0 WHEN '5' IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testStringToByte() throws Exception {
@@ -105,11 +100,11 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testStringToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral("5", String.class), "biginteger", "bigint('5')");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral("5", String.class), "biginteger", "cast('5' AS numeric(31,0))");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testStringToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral("5", String.class), "float", "real('5')");//$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral("5", String.class), "float", "cast(double('5') as real)");//$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testStringToDouble() throws Exception {
@@ -129,7 +124,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testStringToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral("5", String.class), "bigdecimal", "decimal('5')"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral("5", String.class), "bigdecimal", "cast('5' AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     // Source = CHAR
@@ -141,7 +136,7 @@ public class TestDB2ConvertModifier extends TestCase {
     // Source = BOOLEAN
     
     public void testBooleanToString() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "string", "CASE WHEN 1 = 0 THEN 'false' ELSE 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "string", "CASE WHEN 1 = 0 THEN 'false' WHEN 1 IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testBooleanToByte() throws Exception {
@@ -153,27 +148,27 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testBooleanToInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "integer", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "integer", "integer(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testBooleanToLong() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "long", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "long", "bigint(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testBooleanToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "biginteger", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "biginteger", "cast(1 AS numeric(31,0))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testBooleanToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "float", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "float", "cast(1 AS real)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testBooleanToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "double", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "double", "double(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testBooleanToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), "bigdecimal", "cast(1 AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     // Source = BYTE
@@ -183,7 +178,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testByteToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "boolean", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "boolean", "CASE WHEN 1 = 0 THEN 0 WHEN 1 IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testByteToShort() throws Exception {
@@ -191,27 +186,27 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testByteToInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "integer", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "integer", "integer(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testByteToLong() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "long", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "long", "bigint(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testByteToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "biginteger", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "biginteger", "cast(1 AS numeric(31,0))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testByteToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "float", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "float", "cast(1 AS real)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testByteToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "double", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "double", "double(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testByteToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Byte((byte)1), Byte.class), "bigdecimal", "cast(1 AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = SHORT
@@ -221,7 +216,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testShortToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "boolean", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "boolean", "CASE WHEN 1 = 0 THEN 0 WHEN 1 IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testShortToByte() throws Exception {
@@ -229,27 +224,27 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testShortToInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "integer", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "integer", "integer(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testShortToLong() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "long", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "long", "bigint(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testShortToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "biginteger", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "biginteger", "cast(1 AS numeric(31,0))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testShortToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "float", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "float", "cast(1 AS real)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testShortToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "double", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "double", "double(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testShortToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Short((short)1), Short.class), "bigdecimal", "cast(1 AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = INTEGER
@@ -259,7 +254,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testIntegerToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "boolean", "smallint(1)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "boolean", "CASE WHEN 1 = 0 THEN 0 WHEN 1 IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testIntegerToByte() throws Exception {
@@ -271,23 +266,23 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testIntegerToLong() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "long", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "long", "bigint(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testIntegerToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "biginteger", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "biginteger", "cast(1 AS numeric(31,0))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testIntegerToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "float", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "float", "cast(1 AS real)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testIntegerToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "double", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "double", "double(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testIntegerToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Integer(1), Integer.class), "bigdecimal", "cast(1 AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = LONG
@@ -297,7 +292,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testLongToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "boolean", "smallint(1)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "boolean", "CASE WHEN 1 = 0 THEN 0 WHEN 1 IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testLongToByte() throws Exception {
@@ -313,19 +308,19 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testLongToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "biginteger", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "biginteger", "cast(1 AS numeric(31,0))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testLongToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "float", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "float", "cast(1 AS real)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testLongToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "double", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "double", "double(1)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testLongToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Long(1), Long.class), "bigdecimal", "cast(1 AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = BIGINTEGER
@@ -335,7 +330,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testBigIntegerToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "boolean", "smallint(1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "boolean", "CASE WHEN 1 = 0 THEN 0 WHEN 1 IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigIntegerToByte() throws Exception {
@@ -351,19 +346,19 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testBigIntegerToLong() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "long", "1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "long", "bigint(1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigIntegerToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "float", "1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "float", "cast(1 AS real)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigIntegerToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "double", "1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "double", "double(1)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigIntegerToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "bigdecimal", "1"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigInteger("1"), BigInteger.class), "bigdecimal", "cast(1 AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     // Source = FLOAT
@@ -373,7 +368,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testFloatToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "boolean", "smallint(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "boolean", "CASE WHEN 1.2 = 0 THEN 0 WHEN 1.2 IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testFloatToByte() throws Exception {
@@ -393,15 +388,15 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testFloatToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "biginteger", "bigint(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "biginteger", "cast(1.2 AS numeric(31,0))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testFloatToDouble() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "double", "1.2"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "double", "double(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testFloatToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "bigdecimal", "1.2"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Float(1.2f), Float.class), "bigdecimal", "cast(1.2 AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = DOUBLE
@@ -411,7 +406,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testDoubleToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "boolean", "smallint(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "boolean", "CASE WHEN 1.2 = 0 THEN 0 WHEN 1.2 IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDoubleToByte() throws Exception {
@@ -431,15 +426,15 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testDoubleToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "biginteger", "bigint(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "biginteger", "cast(1.2 AS numeric(31,0))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDoubleToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "float", "real(1.2)"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "float", "cast(1.2 AS real)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public void testDoubleToBigDecimal() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "bigdecimal", "1.2"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(new Double(1.2), Double.class), "bigdecimal", "cast(1.2 AS numeric(31,12))"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // Source = BIGDECIMAL
@@ -449,7 +444,7 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testBigDecimalToBoolean() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "boolean", "smallint(1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "boolean", "CASE WHEN 1.0 = 0 THEN 0 WHEN 1.0 IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigDecimalToByte() throws Exception {
@@ -469,15 +464,15 @@ public class TestDB2ConvertModifier extends TestCase {
     }
 
     public void testBigDecimalToBigInteger() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "biginteger", "bigint(1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "biginteger", "cast(1.0 AS numeric(31,0))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     public void testBigDecimalToFloat() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "float", "real(1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "float", "cast(1.0 AS real)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
-    public void testBigDecimalToDoublel() throws Exception {
-        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "double", "1.0"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    public void testBigDecimalToDouble() throws Exception {
+        helpTest(LANG_FACTORY.createLiteral(new BigDecimal("1.0"), BigDecimal.class), "double", "double(1.0)"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
 
     // Source = DATE

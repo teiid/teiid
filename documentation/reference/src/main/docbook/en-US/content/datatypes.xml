@@ -44,7 +44,7 @@
           </row>
           <row>
             <entry>boolean</entry>
-            <entry>a single bit, or Boolean, with two possible values
+            <entry>a single bit, or Boolean, that can true, false, or null (unknown)
             </entry>
             <entry>java.lang.Boolean</entry>
             <entry>BIT</entry>
@@ -373,37 +373,25 @@
           <tbody>
             <row>
               <entry morerows="2">String</entry>
-              <entry>'true'</entry>
-              <entry>true</entry>
-            </row>
-            <row>
               <entry>'false'</entry>
               <entry>false</entry>
             </row>
             <row>
               <entry>'unknown'</entry>
-              <entry>unknown</entry>
+              <entry>null</entry>
             </row>
             <row>
               <entry>other</entry>
-              <entry>
-              	<emphasis>error</emphasis>
-              </entry>
-            </row>
-            <row>
-              <entry morerows="2">Numeric</entry>
-              <entry>1</entry>
               <entry>true</entry>
             </row>
             <row>
+              <entry morerows="2">Numeric</entry>
               <entry>0</entry>
               <entry>false</entry>
             </row>
             <row>
               <entry>other</entry>
-              <entry>
-                <emphasis>error</emphasis>
-              </entry>
+              <entry>true</entry>
             </row>
           </tbody>
         </tgroup>

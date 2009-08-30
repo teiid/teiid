@@ -31,7 +31,6 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.visitor.framework.DelegatingHierarchyVisitor;
 import org.teiid.connector.visitor.util.CollectorVisitor;
 
 
@@ -47,8 +46,6 @@ public class TranslatedCommand {
     private List preparedValues;
     
     private SQLConversionVisitor sqlConversionVisitor;
-    private ReplacementVisitor functionVisitor;
-    private ExecutionContext context;
     private Translator sqlTranslator;
     
     /**
@@ -56,11 +53,9 @@ public class TranslatedCommand {
      * @param visitor a SQLConversionVisitor subclass 
      */
     public TranslatedCommand(ExecutionContext context, Translator sqlTranslator){
-    	this.context = context;
     	this.sqlTranslator = sqlTranslator;
         this.sqlConversionVisitor = sqlTranslator.getSQLConversionVisitor();
         this.sqlConversionVisitor.setExecutionContext(context);
-        this.functionVisitor = new ReplacementVisitor(context, sqlTranslator);
     }
     
     /**
@@ -76,14 +71,9 @@ public class TranslatedCommand {
         this.prepared = this.sqlConversionVisitor.isPrepared();
     }
 	
-	private String getSQL(ICommand command) throws ConnectorException {
-        command = sqlTranslator.modifyCommand(command, context);
-		command.acceptVisitor(new DelegatingHierarchyVisitor(null, this.functionVisitor));
-        
+	private String getSQL(ICommand command) {
         if (sqlTranslator.usePreparedStatements() || hasBindValue(command)) {
             this.sqlConversionVisitor.setPrepared(true);
-            
-            command.acceptVisitor(new BindValueVisitor());
         }
         
 		this.sqlConversionVisitor.append(command);

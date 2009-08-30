@@ -59,18 +59,15 @@ public class TestTransforms {
         try {                        
             Transform transform = DataTypeManager.getTransform(DataTypeManager.getDataTypeClass(src), expectedValue.getClass());
             Object result = transform.transform(value);
-            assertTrue(expectedValue.getClass().isAssignableFrom(result.getClass()));
+        	assertTrue(expectedValue.getClass().isAssignableFrom(result.getClass()));
         } catch (TransformationException e) {
             if (!isException(DataTypeManager.getDataTypeName(value.getClass()), target,value)) {
                 throw e;
-            }
+            } 
+            fail("Expected exception for " +src+ " to " + target); //$NON-NLS-1$ //$NON-NLS-2$            
         }
     }    
 
-    private static void helpTransformException(Object value, Class<?> target) {
-    	helpTransformException(value, target, null);
-    }
-    
     private static void helpTransformException(Object value, Class<?> target, String msg) {
         try {
             Transform transform = DataTypeManager.getTransform(value.getClass(), target);
@@ -92,37 +89,43 @@ public class TestTransforms {
         helpTestTransform(new String("0"), Boolean.FALSE); //$NON-NLS-1$
         helpTestTransform(new String("true"), Boolean.TRUE); //$NON-NLS-1$
         helpTestTransform(new String("false"), Boolean.FALSE); //$NON-NLS-1$
-        helpTransformException(new String("foo"), DataTypeManager.DefaultDataClasses.BOOLEAN); //$NON-NLS-1$
+        helpTestTransform(new String("foo"), Boolean.TRUE); //$NON-NLS-1$
     }
     
     @Test public void testByte2Boolean() throws TransformationException {
         helpTestTransform(new Byte((byte)1), Boolean.TRUE);
         helpTestTransform(new Byte((byte)0), Boolean.FALSE);
-        helpTransformException(new Byte((byte)12), DataTypeManager.DefaultDataClasses.BOOLEAN);
+        helpTestTransform(new Byte((byte)12), Boolean.TRUE);
     }
 
     @Test public void testShort2Boolean() throws TransformationException {
         helpTestTransform(new Short((short)1), Boolean.TRUE);
         helpTestTransform(new Short((short)0), Boolean.FALSE);
-        helpTransformException(new Short((short)12), DataTypeManager.DefaultDataClasses.BOOLEAN);
+        helpTestTransform(new Short((short)12), Boolean.TRUE);
     }
 
     @Test public void testInteger2Boolean() throws TransformationException {
         helpTestTransform(new Integer(1), Boolean.TRUE);
         helpTestTransform(new Integer(0), Boolean.FALSE);
-        helpTransformException(new Integer(12), DataTypeManager.DefaultDataClasses.BOOLEAN);
+        helpTestTransform(new Integer(12), Boolean.TRUE);
     }
 
     @Test public void testLong2Boolean() throws TransformationException {
         helpTestTransform(new Long(1), Boolean.TRUE);
         helpTestTransform(new Long(0), Boolean.FALSE);
-        helpTransformException(new Long(12), DataTypeManager.DefaultDataClasses.BOOLEAN);
+        helpTestTransform(new Long(12), Boolean.TRUE);
     }
     
     @Test public void testBigInteger2Boolean() throws TransformationException {
         helpTestTransform(new BigInteger("1"), Boolean.TRUE); //$NON-NLS-1$
         helpTestTransform(new BigInteger("0"), Boolean.FALSE); //$NON-NLS-1$
-        helpTransformException(new BigInteger("12"), DataTypeManager.DefaultDataClasses.BOOLEAN); //$NON-NLS-1$
+        helpTestTransform(new BigInteger("12"), Boolean.TRUE); //$NON-NLS-1$
+    }
+    
+    @Test public void testBigDecimal2Boolean() throws TransformationException {
+        helpTestTransform(new BigDecimal("1"), Boolean.TRUE); //$NON-NLS-1$
+        helpTestTransform(new BigDecimal("0"), Boolean.FALSE); //$NON-NLS-1$
+        helpTestTransform(new BigDecimal("0.00"), Boolean.FALSE); //$NON-NLS-1$
     }
     
     static Object[][] testData = {
@@ -149,20 +152,10 @@ public class TestTransforms {
     private String[] dataTypes = TestDataTypeManager.dataTypes;
     private char[][] conversions = TestDataTypeManager.conversions;
     private static boolean isException(String src, String tgt, Object source) {
-        return (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[0][2])
-            || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.XML))
-            || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.CHAR))  
+        return (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.XML))
             || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.TIME)) 
             || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.TIMESTAMP)) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.DATE)) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.BYTE) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[3][2]) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.SHORT) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[4][2]) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.INTEGER) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[5][2]) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.LONG) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[6][2]) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.BIG_INTEGER) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[7][2]) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.FLOAT) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[8][2])         
-            || (src.equals(DataTypeManager.DefaultDataTypes.DOUBLE) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[9][2]) 
-            || (src.equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL) && tgt.equals(DataTypeManager.DefaultDataTypes.BOOLEAN) && source == testData[10][2]);             
+            || (src.equals(DataTypeManager.DefaultDataTypes.STRING) && tgt.equals(DataTypeManager.DefaultDataTypes.DATE));             
     }
     
     @Test public void testAllConversions() throws TransformationException {

@@ -28,7 +28,7 @@ import java.util.List;
 
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
+import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.language.ICriteria;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
@@ -44,7 +44,7 @@ import org.teiid.connector.language.ICompoundCriteria.Operator;
  * CONCAT(a, b) ==> CASE WHEN (a is NULL OR b is NULL) THEN NULL ELSE CONCAT(a, b)
  * </code>   
  */
-public class ConcatFunctionModifier extends BasicFunctionModifier {
+public class ConcatFunctionModifier extends FunctionModifier {
     private ILanguageFactory langFactory;
     
     /** 
@@ -53,24 +53,22 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
     public ConcatFunctionModifier(ILanguageFactory langFactory) {
         this.langFactory = langFactory;
     }
-
-    /** 
-     * @see org.teiid.connector.jdbc.translator.BasicFunctionModifier#modify(org.teiid.connector.language.IFunction)
-     */
-    public IExpression modify(IFunction function) {
-        List when = new ArrayList();
+    
+    @Override
+    public List<?> translate(IFunction function) {
+    	List when = new ArrayList();
         IExpression a = function.getParameters().get(0);
         IExpression b = function.getParameters().get(1);
         List crits = new ArrayList();
         
         ILiteral nullValue = langFactory.createLiteral(null, TypeFacility.RUNTIME_TYPES.STRING);
         if (isNull(a)) {
-        	return nullValue;
+        	return Arrays.asList(nullValue);
         } else if (!isNotNull(a)) {
         	crits.add(langFactory.createIsNullCriteria(a, false));
         }
         if (isNull(b)) {
-        	return nullValue;
+        	return Arrays.asList(nullValue);
         } else if (!isNotNull(b)) {
         	crits.add(langFactory.createIsNullCriteria(b, false));
         }
@@ -78,7 +76,7 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
         ICriteria crit = null;
         
         if (crits.isEmpty()) {
-        	return function;
+        	return null;
         } else if (crits.size() == 1) {
         	crit = (ICriteria)crits.get(0);
         } else {
@@ -86,7 +84,7 @@ public class ConcatFunctionModifier extends BasicFunctionModifier {
         }
         when.add(crit);
         List then = Arrays.asList(new IExpression[] {nullValue}); 
-        return langFactory.createSearchedCaseExpression(when, then, function, TypeFacility.RUNTIME_TYPES.STRING);
+        return Arrays.asList(langFactory.createSearchedCaseExpression(when, then, function, TypeFacility.RUNTIME_TYPES.STRING));
     }
     
     private boolean isNotNull(IExpression expr) {

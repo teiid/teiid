@@ -22,7 +22,6 @@
 
 package org.teiid.connector.jdbc.db2;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -32,41 +31,89 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.api.TypeFacility.RUNTIME_TYPES;
 import org.teiid.connector.jdbc.translator.AliasModifier;
+import org.teiid.connector.jdbc.translator.ConvertModifier;
+import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.jdbc.translator.LocateFunctionModifier;
 import org.teiid.connector.jdbc.translator.ModFunctionModifier;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.IJoin;
+import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.language.ILimit;
 import org.teiid.connector.language.ILiteral;
-import org.teiid.connector.language.IQuery;
-import org.teiid.connector.language.ISelect;
 import org.teiid.connector.language.ISelectSymbol;
 import org.teiid.connector.language.ICompareCriteria.Operator;
 import org.teiid.connector.language.IJoin.JoinType;
-import org.teiid.connector.visitor.framework.HierarchyVisitor;
-
 
 public class DB2SQLTranslator extends Translator {
+
+	private final class NullHandlingFormatModifier extends
+			ConvertModifier.FormatModifier {
+		private NullHandlingFormatModifier(String alias) {
+			super(alias);
+		}
+
+		@Override
+		public List<?> translate(IFunction function) {
+			IExpression arg = function.getParameters().get(0);
+			if (arg instanceof ILiteral && ((ILiteral)arg).getValue() == null) {
+				((ILiteral)function.getParameters().get(1)).setValue(this.alias);
+				return null;
+			}
+			return super.translate(function);
+		}
+	}
 
 	@Override
 	public void initialize(ConnectorEnvironment env) throws ConnectorException {
 		super.initialize(env);
-        registerFunctionModifier(SourceSystemFunctions.CONVERT, new DB2ConvertModifier(getLanguageFactory())); 
         registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("chr")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOCATE, new LocateFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$ 
 
-        List<Class<?>> supportedModTypes = new ArrayList<Class<?>>(3);
-        supportedModTypes.add(RUNTIME_TYPES.SHORT);
-        supportedModTypes.add(RUNTIME_TYPES.INTEGER);
-        supportedModTypes.add(RUNTIME_TYPES.LONG);
-        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier(getLanguageFactory(), "MOD", supportedModTypes));  //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("MOD", getLanguageFactory()));  //$NON-NLS-1$
+        
+        //add in type conversion
+        ConvertModifier convertModifier = new ConvertModifier();
+    	convertModifier.addTypeMapping("real", FunctionModifier.FLOAT); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("numeric(31,0)", FunctionModifier.BIGINTEGER); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("numeric(31,12)", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("blob", FunctionModifier.BLOB, FunctionModifier.OBJECT); //$NON-NLS-1$
+    	convertModifier.addTypeMapping("clob", FunctionModifier.CLOB, FunctionModifier.XML); //$NON-NLS-1$
+    	convertModifier.addConvert(FunctionModifier.TIME, FunctionModifier.TIMESTAMP, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				return Arrays.asList("timestamp('1970-01-01', ", function.getParameters().get(0), ")"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		});
+    	convertModifier.addConvert(FunctionModifier.DATE, FunctionModifier.TIMESTAMP, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				return Arrays.asList("timestamp(",function.getParameters().get(0), ", '00:00:00')"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		});
+    	//the next convert is not strictly necessary for db2, but it also works for derby
+    	convertModifier.addConvert(FunctionModifier.STRING, FunctionModifier.FLOAT, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				return Arrays.asList("cast(double(", function.getParameters().get(0), ") as real)"); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+		});
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("char"), FunctionModifier.STRING); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("smallint"), FunctionModifier.BYTE, FunctionModifier.SHORT); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("integer"), FunctionModifier.INTEGER); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("bigint"), FunctionModifier.LONG); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("double"), FunctionModifier.DOUBLE); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("date"), FunctionModifier.DATE); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("time"), FunctionModifier.TIME); //$NON-NLS-1$
+    	convertModifier.addTypeConversion(new NullHandlingFormatModifier("timestamp"), FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+    	convertModifier.addNumericBooleanConversions();
+    	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
     }
 		
 	@SuppressWarnings("unchecked")
@@ -76,33 +123,27 @@ public class DB2SQLTranslator extends Translator {
 	}
 	
 	@Override
-	public ICommand modifyCommand(ICommand command, ExecutionContext context) {
-		if (command instanceof IQuery) {
-			HierarchyVisitor hierarchyVisitor = new HierarchyVisitor(false) {
-				@Override
-				public void visit(IJoin obj) {
-					if (obj.getJoinType() != JoinType.CROSS_JOIN) {
-						return;
-					}
-					ILiteral one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
-					obj.getCriteria().add(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one));
-					obj.setJoinType(JoinType.INNER_JOIN);
-				}
-			};
-			
-			command.acceptVisitor(hierarchyVisitor);
-			
-			ISelect select = ((IQuery)command).getSelect();
-			for (ISelectSymbol selectSymbol : select.getSelectSymbols()) {
-				if (selectSymbol.getExpression() instanceof ILiteral) {
-					ILiteral literal = (ILiteral)selectSymbol.getExpression();
-					if (literal.getValue() == null) {
-						selectSymbol.setExpression(createCastToExprType(literal));
-					}
+	public List<?> translate(ILanguageObject obj, ExecutionContext context) {
+		//DB2 doesn't support cross join
+		if (obj instanceof IJoin) {
+			IJoin join = (IJoin)obj;
+			if (join.getJoinType() == JoinType.CROSS_JOIN) {
+				ILiteral one = getLanguageFactory().createLiteral(1, TypeFacility.RUNTIME_TYPES.INTEGER);
+				join.getCriteria().add(getLanguageFactory().createCompareCriteria(Operator.EQ, one, one));
+				join.setJoinType(JoinType.INNER_JOIN);
+			}
+		}
+		//DB2 needs projected nulls wrapped in casts
+		if (obj instanceof ISelectSymbol) {
+			ISelectSymbol selectSymbol = (ISelectSymbol)obj;
+			if (selectSymbol.getExpression() instanceof ILiteral) {
+				ILiteral literal = (ILiteral)selectSymbol.getExpression();
+				if (literal.getValue() == null) {
+					selectSymbol.setExpression(ConvertModifier.createConvertFunction(getLanguageFactory(), literal, TypeFacility.getDataTypeName(literal.getType())));
 				}
 			}
 		}
-		return command;
+		return super.translate(obj, context);
 	}
 	
 	@Override
@@ -115,67 +156,6 @@ public class DB2SQLTranslator extends Translator {
 		return DB2Capabilities.class;
 	}
     
-	/**
-	 * Create and return an expression to cast <code>expr</code> to <code>expr</code>'s
-	 * type.
-	 * <p>  
-	 * If a compatible type is not found, <code>expr</code> is returned unmodified.
-	 * <p>
-	 * <em>WARNING</em>: This method currently returns the smallest type associated with 
-	 * the run-time type. So, all <code>String</code> expressions, regardless of
-	 * their value's length are returned as CHAR.
-	 * <p>
-	 * For example, if <code>expr</code> is "e1" of type <code>String</code> the 
-	 * returned expression would be "CAST(expr AS CHAR)".
-	 *  
-	 * @param expr
-	 * @return
-	 */
-	private IExpression createCastToExprType(IExpression expr) {
-		String typeName = null;
-		if ( RUNTIME_TYPES.STRING.equals(expr.getType()) ) {
-			typeName = "CHAR"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.BOOLEAN.equals(expr.getType()) ) {
-			typeName = "SMALLINT"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.BYTE.equals(expr.getType()) ) {
-			typeName = "SMALLINT"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.SHORT.equals(expr.getType()) ) {
-			typeName = "SMALLINT"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.CHAR.equals(expr.getType()) ) {
-			typeName = "CHAR"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.INTEGER.equals(expr.getType()) ) {
-			typeName = "INTEGER"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.LONG.equals(expr.getType()) ) {
-			typeName = "BIGINT"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.BIG_INTEGER.equals(expr.getType()) ) {
-			typeName = "BIGINT"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.FLOAT.equals(expr.getType()) ) {
-			typeName = "REAL"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.DOUBLE.equals(expr.getType()) ) {
-			typeName = "DOUBLE"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.BIG_DECIMAL.equals(expr.getType()) ) {
-			typeName = "DECIMAL"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.DATE.equals(expr.getType()) ) {
-			typeName = "DATE"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.TIME.equals(expr.getType()) ) {
-			typeName = "TIME"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.TIMESTAMP.equals(expr.getType()) ) {
-			typeName = "TIMESTAMP"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.OBJECT.equals(expr.getType()) ) {
-			typeName = "BLOB"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.BLOB.equals(expr.getType()) ) {
-			typeName = "BLOB"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.CLOB.equals(expr.getType()) ) {
-			typeName = "CLOB"; //$NON-NLS-1$
-		} else if ( RUNTIME_TYPES.XML.equals(expr.getType()) ) {
-			typeName = "CLOB"; //$NON-NLS-1$
-		}	
-		if ( typeName != null ) {
-			return getLanguageFactory().createFunction("CAST", Arrays.asList(expr, getLanguageFactory().createLiteral(typeName, String.class)), expr.getType()); //$NON-NLS-1$
-		}
-		return expr;
-	}
-
 	@Override
 	public NullOrder getDefaultNullOrder() {
 		return NullOrder.HIGH;

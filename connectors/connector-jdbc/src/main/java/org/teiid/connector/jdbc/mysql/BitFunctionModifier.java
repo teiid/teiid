@@ -22,10 +22,12 @@
 
 package org.teiid.connector.jdbc.mysql;
 
-import org.teiid.connector.api.SourceSystemFunctions;
+import java.util.Arrays;
+import java.util.List;
+
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.AliasModifier;
-import org.teiid.connector.language.IExpression;
+import org.teiid.connector.jdbc.translator.ConvertModifier;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 
@@ -41,9 +43,9 @@ public class BitFunctionModifier extends AliasModifier {
 	 * Wrap the renamed function in a convert back to integer
 	 */
 	@Override
-	public IExpression modify(IFunction function) {
-		return langFactory.createFunction(SourceSystemFunctions.CONVERT, 
-				new IExpression[] {super.modify(function), langFactory.createLiteral(MySQLConvertModifier.SIGNED_INTEGER, TypeFacility.RUNTIME_TYPES.STRING)}, TypeFacility.RUNTIME_TYPES.INTEGER);
-	}	
+	public List<?> translate(IFunction function) {
+		modify(function);
+		return Arrays.asList(ConvertModifier.createConvertFunction(langFactory, function, TypeFacility.RUNTIME_NAMES.INTEGER));
+	}
 
 }

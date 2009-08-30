@@ -408,7 +408,7 @@ public class TestFunction {
     }
 
     @Test public void testConvertStringBoolean3() throws Exception {
-        helpConvertFail("x", "boolean"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpConvert("x", "boolean", Boolean.TRUE); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testConvertStringBoolean4() throws Exception {

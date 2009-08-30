@@ -219,6 +219,9 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     }
     
     private void handleError(Throwable t) {
+    	if (t instanceof RuntimeException && t.getCause() != null) {
+    		t = t.getCause();
+    	}
         manager.logSRCCommand(this.requestMsg, this.securityContext, CommandLogMessage.CMD_STATUS_ERROR, -1);
         
         String msg = DQPPlugin.Util.getString("ConnectorWorker.process_failed", this.id); //$NON-NLS-1$

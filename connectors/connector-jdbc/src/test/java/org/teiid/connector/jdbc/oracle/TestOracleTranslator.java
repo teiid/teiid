@@ -117,7 +117,7 @@ public class TestOracleTranslator {
     
 	@Test public void testConversion1() throws Exception {
         String input = "SELECT char(convert(STRINGNUM, integer) + 100) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT chr((to_number(SmallA.StringNum) + 100)) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT chr((trunc(to_number(SmallA.StringNum)) + 100)) FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
             input, output, 
@@ -126,7 +126,7 @@ public class TestOracleTranslator {
           
     @Test public void testConversion2() throws Exception {
         String input = "SELECT convert(STRINGNUM, long) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT to_number(SmallA.StringNum) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT trunc(to_number(SmallA.StringNum)) FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
@@ -135,7 +135,7 @@ public class TestOracleTranslator {
           
     @Test public void testConversion3() throws Exception {
         String input = "SELECT convert(convert(STRINGNUM, long), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT to_char(to_number(SmallA.StringNum)) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT to_char(trunc(to_number(SmallA.StringNum))) FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
@@ -144,7 +144,7 @@ public class TestOracleTranslator {
           
     @Test public void testConversion4() throws Exception {
         String input = "SELECT convert(convert(TIMESTAMPVALUE, date), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT to_char(trunc(SmallA.TimestampValue), 'YYYY-MM-DD') FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT to_char(trunc(cast(SmallA.TimestampValue AS date)), 'YYYY-MM-DD') FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
@@ -152,7 +152,7 @@ public class TestOracleTranslator {
     }
     @Test public void testConversion5() throws Exception {
         String input = "SELECT convert(convert(TIMESTAMPVALUE, time), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT to_char(to_date(('1970-01-01 ' || to_char(SmallA.TimestampValue, 'HH24:MI:SS')), 'YYYY-MM-DD HH24:MI:SS'), 'HH24:MI:SS') FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT to_char(to_date('1970-01-01 ' || to_char(SmallA.TimestampValue, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS'), 'HH24:MI:SS') FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
@@ -176,7 +176,7 @@ public class TestOracleTranslator {
     }
     @Test public void testConversion7() throws Exception {
         String input = "SELECT convert(convert(STRINGNUM, integer), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT to_char(to_number(SmallA.StringNum)) FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT to_char(trunc(to_number(SmallA.StringNum))) FROM SmallA";  //$NON-NLS-1$
 
         MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
                 input, output, 
@@ -488,5 +488,32 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void testLogFunction() throws Exception {
+        String input = "SELECT log(CONVERT(stringkey, INTEGER)) FROM bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT ln(trunc(to_number(SmallA.StringKey))) FROM SmallA"; //$NON-NLS-1$
+    
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    @Test public void testLog10Function() throws Exception {
+        String input = "SELECT log10(CONVERT(stringkey, INTEGER)) FROM bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT log(10, trunc(to_number(SmallA.StringKey))) FROM SmallA"; //$NON-NLS-1$
+    
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    @Test public void testAliasedFunctions() throws Exception {
+        String input = "SELECT char(CONVERT(stringkey, INTEGER)), lcase(stringkey), ucase(stringkey), ifnull(stringkey, 'x') FROM bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT chr(trunc(to_number(SmallA.StringKey))), lower(SmallA.StringKey), upper(SmallA.StringKey), nvl(SmallA.StringKey, 'x') FROM SmallA"; //$NON-NLS-1$
+        
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }    
 
 }

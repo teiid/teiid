@@ -45,8 +45,8 @@ public class SybaseCapabilities extends JDBCCapabilities {
     /**
      * @see com.metamatrix.data.ConnectorCapabilities#getSupportedFunctions()
      */
-    public List getSupportedFunctions() {
-        List supportedFunctions = new ArrayList();
+    public List<String> getSupportedFunctions() {
+        List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
         supportedFunctions.add("ABS"); //$NON-NLS-1$
         supportedFunctions.add("ACOS"); //$NON-NLS-1$
@@ -74,12 +74,11 @@ public class SybaseCapabilities extends JDBCCapabilities {
         supportedFunctions.add("CONCAT"); //$NON-NLS-1$
         supportedFunctions.add("||"); //$NON-NLS-1$
         supportedFunctions.add("LCASE"); //$NON-NLS-1$
-//      Remove support for LEFT (Case 2486).  Left is not supported by Sybase, found error when comparing
-//      to 3.1 version of capabilities class.  Problem found at ML during migration to 4.1        
-//        supportedFunctions.add("LEFT"); //$NON-NLS-1$
+        supportedFunctions.add("LEFT"); //$NON-NLS-1$
         supportedFunctions.add("LENGTH"); //$NON-NLS-1$
         supportedFunctions.add("LOWER"); //$NON-NLS-1$
         supportedFunctions.add("LTRIM"); //$NON-NLS-1$
+        supportedFunctions.add("REPEAT"); //$NON-NLS-1$
         //supportedFunctions.add("RAND"); //$NON-NLS-1$
         supportedFunctions.add("RIGHT"); //$NON-NLS-1$
         supportedFunctions.add("RTRIM"); //$NON-NLS-1$
@@ -87,6 +86,23 @@ public class SybaseCapabilities extends JDBCCapabilities {
         supportedFunctions.add("SUBSTRING"); //$NON-NLS-1$
         supportedFunctions.add("UCASE"); //$NON-NLS-1$
         supportedFunctions.add("UPPER"); //$NON-NLS-1$
+        //supportedFunctons.add("CURDATE"); //$NON-NLS-1$
+        //supportedFunctons.add("CURTIME"); //$NON-NLS-1$
+        supportedFunctions.add("DAYNAME"); //$NON-NLS-1$
+        supportedFunctions.add("DAYOFMONTH"); //$NON-NLS-1$
+        supportedFunctions.add("DAYOFWEEK"); //$NON-NLS-1$
+        supportedFunctions.add("DAYOFYEAR"); //$NON-NLS-1$
+        supportedFunctions.add("HOUR"); //$NON-NLS-1$
+        supportedFunctions.add("MINUTE"); //$NON-NLS-1$
+        supportedFunctions.add("MONTH"); //$NON-NLS-1$
+        supportedFunctions.add("MONTHNAME"); //$NON-NLS-1$
+        //supportedFunctions.add("NOW"); //$NON-NLS-1$
+        supportedFunctions.add("QUARTER"); //$NON-NLS-1$
+        supportedFunctions.add("SECOND"); //$NON-NLS-1$
+        supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
+        supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
+        supportedFunctions.add("WEEK"); //$NON-NLS-1$
+        supportedFunctions.add("YEAR"); //$NON-NLS-1$
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
@@ -115,12 +131,4 @@ public class SybaseCapabilities extends JDBCCapabilities {
         return 50;
     }
     
-    /** 
-     * @see org.teiid.connector.basic.BasicConnectorCapabilities#supportsIntersect()
-     */
-    @Override
-    public boolean supportsIntersect() {
-        return true;
-    }
-
 }

@@ -1,0 +1,197 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
+package org.teiid.connector.jdbc.translator;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.language.IExpression;
+import org.teiid.connector.language.IFunction;
+import org.teiid.connector.language.ILanguageFactory;
+import org.teiid.connector.language.ILiteral;
+
+/**
+ * Base class for handling the convert function.
+ * <p>Convert is by far the most complicated pushdown function since it actually 
+ * represents a matrix of possible functions. Additionally not every source supports
+ * the same semantics as our conversions.</p>
+ * <p>Each instance of this class makes a best effort at handling converts for for a 
+ * given source - compensating for differing string representation, the lack a time type
+ * etc. 
+ * <p>The choice of conversion logic is as follows:
+ * <ul>
+ *  <li>Look for a specific conversion between the source and target - {@link #addConvert(int, int, FunctionModifier)}</li>
+ *  <li>Filter common implicit conversions</li>
+ *  <li>Look for a general source conversion - {@link #addSourceConversion(FunctionModifier, int...)}</li>
+ *  <li>Look for a general target conversion - {@link #addTypeConversion(FunctionModifier, int...)}</li>
+ *  <li>Look for a type mapping, which will replace the target type with the given native type - {@link #addTypeMapping(String, int...)}</li>
+ *  <li>Drop the conversion</li>
+ * </ul>
+ */
+public class ConvertModifier extends FunctionModifier {
+	
+	public static class FormatModifier extends AliasModifier {
+		
+		private String format;
+		
+		public FormatModifier(String alias) {
+			super(alias);
+		}
+		
+		public FormatModifier(String alias, String format) {
+			super(alias);
+			this.format = format;
+		}
+
+		@Override
+		public List<?> translate(IFunction function) {
+			modify(function);
+			if (format == null) {
+				function.getParameters().remove(1);
+			} else {
+				((ILiteral)function.getParameters().get(1)).setValue(format);
+			}
+			return null;
+		}
+		
+	}
+
+    private Map<Integer, String> typeMapping = new HashMap<Integer, String>();
+    private Map<Integer, FunctionModifier> typeModifier = new HashMap<Integer, FunctionModifier>();
+    private Map<Integer, FunctionModifier> sourceModifier = new HashMap<Integer, FunctionModifier>();
+    private Map<List<Integer>, FunctionModifier> specificConverts = new HashMap<List<Integer>, FunctionModifier>();
+    private boolean booleanNumeric;
+    private boolean wideningNumericImplicit;
+    
+    public void addTypeConversion(FunctionModifier convert, int ... targetType) {
+    	for (int i : targetType) {
+        	this.typeModifier.put(i, convert);
+		}
+    }
+    
+    public void addSourceConversion(FunctionModifier convert, int ... sourceType) {
+    	for (int i : sourceType) {
+        	this.sourceModifier.put(i, convert);
+		}
+    }
+    
+    public void addTypeMapping(String nativeType, int ... targetType) {
+    	for (int i : targetType) {
+    		typeMapping.put(i, nativeType);
+    	}
+    }
+    
+    public void setWideningNumericImplicit(boolean wideningNumericImplicit) {
+		this.wideningNumericImplicit = wideningNumericImplicit;
+	}
+        
+    public void addConvert(int sourceType, int targetType, FunctionModifier convert) {
+    	specificConverts.put(Arrays.asList(sourceType, targetType), convert);
+    }
+    
+    @Override
+    public List<?> translate(IFunction function) {
+    	function.setName("cast"); //$NON-NLS-1$
+    	int targetCode = getCode(function.getType());
+    	List<IExpression> args = function.getParameters();
+        Class<?> srcType = args.get(0).getType();
+        int sourceCode = getCode(srcType);
+        
+		List<Integer> convesionCode = Arrays.asList(sourceCode, targetCode);
+		FunctionModifier convert = specificConverts.get(convesionCode);
+		if (convert != null) {
+			return convert.translate(function);
+		}
+
+		boolean implicit = sourceCode == CHAR && targetCode == STRING;
+
+		if (targetCode >= BYTE && targetCode <= BIGDECIMAL) {
+			if (booleanNumeric && sourceCode == BOOLEAN) {
+				sourceCode = BYTE;
+				implicit = targetCode == BYTE;
+			}
+			implicit |= wideningNumericImplicit && sourceCode >= BYTE && sourceCode <= BIGDECIMAL && sourceCode < targetCode;
+		}
+		
+		if (!implicit) {
+			convert = this.sourceModifier.get(sourceCode);
+			if (convert != null
+					 && (!convert.equals(sourceModifier.get(targetCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts
+				return convert.translate(function);
+			}
+			
+			convert = this.typeModifier.get(targetCode);
+			if (convert != null
+					 && (!convert.equals(typeModifier.get(sourceCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts
+				return convert.translate(function);
+			}
+	    	
+	    	String type = typeMapping.get(targetCode);
+	    	
+	    	if (type != null 
+	    			&& (!type.equals(typeMapping.get(sourceCode)) || sourceCode == targetCode)) { //checks for implicit, but allows for dummy converts 
+	    		((ILiteral)function.getParameters().get(1)).setValue(type);
+	    		return null;
+	    	}
+		}
+    	
+    	return Arrays.asList(function.getParameters().get(0));
+	}
+
+	public static IFunction createConvertFunction(ILanguageFactory langFactory, IExpression expr, String typeName) {
+		Class<?> type = TypeFacility.getDataTypeClass(typeName);
+		return langFactory.createFunction(SourceSystemFunctions.CONVERT, 
+				new IExpression[] {expr, langFactory.createLiteral(typeName, type)}, type);
+	}
+	
+	public void addNumericBooleanConversions() {
+		this.booleanNumeric = true;
+		//number -> boolean
+		this.addTypeConversion(new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				IExpression stringValue = function.getParameters().get(0);
+				return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		}, FunctionModifier.BOOLEAN);
+		this.addConvert(FunctionModifier.BOOLEAN, FunctionModifier.STRING, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				IExpression stringValue = function.getParameters().get(0);
+				return Arrays.asList("CASE WHEN ", stringValue, " = 0 THEN 'false' WHEN ", stringValue, " IS NOT NULL THEN 'true' END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		});
+    	this.addConvert(FunctionModifier.STRING, FunctionModifier.BOOLEAN, new FunctionModifier() {
+			@Override
+			public List<?> translate(IFunction function) {
+				IExpression stringValue = function.getParameters().get(0);
+				return Arrays.asList("CASE WHEN ", stringValue, " IN ('false', '0') THEN 0 WHEN ", stringValue, " IS NOT NULL THEN 1 END"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+		});
+	}
+
+}

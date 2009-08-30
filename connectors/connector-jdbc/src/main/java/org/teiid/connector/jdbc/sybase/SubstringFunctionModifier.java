@@ -20,11 +20,14 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.connector.jdbc.translator;
+package org.teiid.connector.jdbc.sybase;
 
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.api.SourceSystemFunctions;
+import org.teiid.connector.api.TypeFacility;
+import org.teiid.connector.jdbc.translator.FunctionModifier;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
@@ -33,26 +36,22 @@ import org.teiid.connector.language.ILanguageFactory;
 /**
  * Common logic for Substring modifiers requiring 3 parameters
  */
-public class SubstringFunctionModifier extends BasicFunctionModifier {
+public class SubstringFunctionModifier extends FunctionModifier {
 
     private ILanguageFactory languageFactory;
-    private String length_function;
     
-    public SubstringFunctionModifier(ILanguageFactory languageFactory, String length_function) {
+    public SubstringFunctionModifier(ILanguageFactory languageFactory) {
     	this.languageFactory = languageFactory; 
-        this.length_function = length_function;
     }
 
-    /**
-     * @see org.teiid.connector.jdbc.translator.FunctionModifier#modify(com.metamatrix.query.sql.symbol.Function)
-     */
-    public IExpression modify(IFunction function) {
+    @Override
+    public List<?> translate(IFunction function) {
         List<IExpression> args = function.getParameters();
         
         if(args.size() == 2) {
-            args.add(languageFactory.createFunction(length_function, Arrays.asList(args.get(0)), Integer.class)); 
+            args.add(languageFactory.createFunction(SourceSystemFunctions.LENGTH, Arrays.asList(args.get(0)), TypeFacility.RUNTIME_TYPES.INTEGER)); 
         } 
-                        
-        return function;
+    	return null;
     }
+    
 }

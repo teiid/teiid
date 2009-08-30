@@ -42,7 +42,7 @@ import com.metamatrix.cdk.api.EnvironmentUtility;
  * Test <code>LOCATEFunctionModifier</code> by invoking its methods with varying 
  * parameters to validate it performs as designed and expected. 
  */
-public class TestLOCATEFunctionModifier {
+public class TestLocateFunctionModifier {
 
     private static final ILanguageFactory LANG_FACTORY = CommandBuilder.getLanuageFactory();
 
@@ -57,8 +57,8 @@ public class TestLOCATEFunctionModifier {
      * @return On success, the modified expression.
      * @throws Exception
      */
-    public IExpression helpTestLocate(IExpression[] args, String expectedStr) throws Exception {
-    	return this.helpTestLocate(LocateFunctionModifier.LOCATE, false, args, expectedStr);
+    public void helpTestLocate(IExpression[] args, String expectedStr) throws Exception {
+    	this.helpTestLocate(LocateFunctionModifier.LOCATE, false, args, expectedStr);
     }
 
     /**
@@ -80,7 +80,7 @@ public class TestLOCATEFunctionModifier {
      * @return On success, the modified expression.
      * @throws Exception
      */
-    public IExpression helpTestLocate(final String locateFunctionName, final boolean parameterOrder, IExpression[] args, String expectedStr) throws Exception {
+    public void helpTestLocate(final String locateFunctionName, final boolean parameterOrder, IExpression[] args, String expectedStr) throws Exception {
     	IExpression param1 = null;
     	IExpression param2 = null;
     	IExpression param3 = null;
@@ -110,14 +110,10 @@ public class TestLOCATEFunctionModifier {
     	
         trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
 
-        IExpression expr = trans.getFunctionModifiers().get(SourceSystemFunctions.LOCATE).modify(func);
-        
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);  
+        sqlVisitor.append(func);  
         
         assertEquals("Modified function does not match", expectedStr, sqlVisitor.toString()); //$NON-NLS-1$
-        
-        return expr;
     }
 
     /**

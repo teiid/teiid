@@ -37,7 +37,7 @@ import org.teiid.connector.visitor.util.SQLReservedWords;
  * Convert the YEAR/MONTH/DAY etc. function into an equivalent Extract function.  
  * Format: EXTRACT(YEAR from Element) or EXTRACT(YEAR from DATE '2004-03-03')
  */
-public class ExtractFunctionModifier extends BasicFunctionModifier {
+public class ExtractFunctionModifier extends FunctionModifier {
 	public static final String YEAR = "YEAR"; //$NON-NLS-1$
 	public static final String QUARTER = "QUARTER"; //$NON-NLS-1$
 	public static final String MONTH = "MONTH"; //$NON-NLS-1$

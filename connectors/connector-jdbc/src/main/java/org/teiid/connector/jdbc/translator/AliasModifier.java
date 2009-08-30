@@ -20,17 +20,15 @@
  * 02110-1301 USA.
  */
 
-/*
- */
 package org.teiid.connector.jdbc.translator;
+
+import java.util.List;
 
 import org.teiid.connector.language.*;
 
-/**
- */
-public class AliasModifier extends BasicFunctionModifier {
+public class AliasModifier extends FunctionModifier {
     // The alias to use
-    private String alias;
+    protected String alias;
         
     /**
      * Constructor that takes the alias to use for functions.
@@ -40,12 +38,14 @@ public class AliasModifier extends BasicFunctionModifier {
         this.alias = alias;    
     }
     
-    /**
-     * @see org.teiid.connector.jdbc.translator.FunctionModifier#modify(org.teiid.connector.language.IFunction)
-     */
-    public IExpression modify(IFunction function) {
-        function.setName(alias);
-        return function;
+    @Override
+    public List<?> translate(IFunction function) {
+    	modify(function);
+    	return null;
     }
 
+	protected void modify(IFunction function) {
+		function.setName(alias);
+	}
+    
 }

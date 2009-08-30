@@ -24,42 +24,30 @@
  */
 package org.teiid.connector.jdbc.sqlserver;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.teiid.connector.api.ConnectorCapabilities;
-import org.teiid.connector.api.ConnectorEnvironment;
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.jdbc.sybase.SybaseSQLTranslator;
-import org.teiid.connector.jdbc.translator.AliasModifier;
-import org.teiid.connector.jdbc.translator.EscapeSyntaxModifier;
+import org.teiid.connector.language.IFunction;
 
 /**
  * Updated to assume the use of the DataDirect, 2005 driver, or later.
  */
 public class SqlServerSQLTranslator extends SybaseSQLTranslator {
-
-    public void initialize(ConnectorEnvironment env) throws ConnectorException {
-        super.initialize(env);
-        //TEIID-31 remove mod modifier for SQL Server 2008
-        registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.REPEAT, new AliasModifier("replicate")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.DAYNAME, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.DAYOFWEEK, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.DAYOFYEAR, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.QUARTER, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.WEEK, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new EscapeSyntaxModifier());
-        registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new EscapeSyntaxModifier());
-    }
+	
+	//TEIID-31 remove mod modifier for SQL Server 2008
+	
+	@Override
+	protected List<Object> convertDateToString(IFunction function) {
+		return Arrays.asList("replace(convert(varchar, ", function.getParameters().get(0), ", 102), '.', '-')"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
     
-    @Override
-    public String getLengthFunctionName() {
-    	return "len"; //$NON-NLS-1$
-    }
-    
+	@Override
+	protected List<?> convertTimestampToString(IFunction function) {
+		return Arrays.asList("convert(varchar, ", function.getParameters().get(0), ", 21)"); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
     @Override
     public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
     	return SqlServerCapabilities.class;

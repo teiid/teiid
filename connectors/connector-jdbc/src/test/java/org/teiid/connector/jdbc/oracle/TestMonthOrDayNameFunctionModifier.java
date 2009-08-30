@@ -26,15 +26,12 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Properties;
 
-import org.teiid.connector.jdbc.oracle.MonthOrDayNameFunctionModifier;
-import org.teiid.connector.jdbc.oracle.OracleSQLTranslator;
+import junit.framework.TestCase;
+
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
-import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 import org.teiid.connector.language.ILiteral;
-
-import junit.framework.TestCase;
 
 import com.metamatrix.cdk.CommandBuilder;
 import com.metamatrix.cdk.api.EnvironmentUtility;
@@ -54,44 +51,40 @@ public class TestMonthOrDayNameFunctionModifier extends TestCase {
         super(name);
     }
 
-    public IExpression helpTestMod(ILiteral c, String format, String expectedStr) throws Exception {
+    public void helpTestMod(ILiteral c, String format, String expectedStr) throws Exception {
         IFunction func = LANG_FACTORY.createFunction(format.toLowerCase()+"name",  // "monthname" //$NON-NLS-1$ 
             Arrays.asList( c ),
             String.class);
-        
-        MonthOrDayNameFunctionModifier mod = new MonthOrDayNameFunctionModifier (LANG_FACTORY, format);
-        IExpression expr = mod.modify(func);
         
         OracleSQLTranslator trans = new OracleSQLTranslator();
         trans.initialize(EnvironmentUtility.createEnvironment(new Properties(), false));
         
         SQLConversionVisitor sqlVisitor = trans.getSQLConversionVisitor(); 
-        sqlVisitor.append(expr);  
+        sqlVisitor.append(func);  
         assertEquals(expectedStr, sqlVisitor.toString());
-        return expr;
     }
 
     public void test1() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, "Month", //$NON-NLS-1$
-            "RTRIM(TO_CHAR({ts'2004-01-21 10:05:00.0'}, 'Month'))"); //$NON-NLS-1$
+            "rtrim(TO_CHAR({ts'2004-01-21 10:05:00.0'}, 'Month'))"); //$NON-NLS-1$
     }
 
     public void test2() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, "Month", //$NON-NLS-1$
-            "RTRIM(TO_CHAR({d'2004-01-21'}, 'Month'))"); //$NON-NLS-1$
+            "rtrim(TO_CHAR({d'2004-01-21'}, 'Month'))"); //$NON-NLS-1$
     }
     
     public void test3() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createTimestamp(104, 0, 21, 10, 5, 0, 0), Timestamp.class);
         helpTestMod(arg1, "Day",  //$NON-NLS-1$
-            "RTRIM(TO_CHAR({ts'2004-01-21 10:05:00.0'}, 'Day'))"); //$NON-NLS-1$
+            "rtrim(TO_CHAR({ts'2004-01-21 10:05:00.0'}, 'Day'))"); //$NON-NLS-1$
     }
 
     public void test4() throws Exception {
         ILiteral arg1 = LANG_FACTORY.createLiteral(TimestampUtil.createDate(104, 0, 21), java.sql.Date.class);
         helpTestMod(arg1, "Day", //$NON-NLS-1$
-            "RTRIM(TO_CHAR({d'2004-01-21'}, 'Day'))"); //$NON-NLS-1$
+            "rtrim(TO_CHAR({d'2004-01-21'}, 'Day'))"); //$NON-NLS-1$
     }
 }

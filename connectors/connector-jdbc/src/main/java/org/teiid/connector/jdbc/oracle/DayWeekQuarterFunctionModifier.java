@@ -25,9 +25,8 @@ package org.teiid.connector.jdbc.oracle;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.connector.jdbc.translator.BasicFunctionModifier;
 import org.teiid.connector.jdbc.translator.FunctionModifier;
-import org.teiid.connector.language.*;
+import org.teiid.connector.language.IFunction;
 
 
 /**
@@ -38,32 +37,16 @@ import org.teiid.connector.language.*;
  * 4) week
  * 5) quarter
  */
-public class DayWeekQuarterFunctionModifier extends BasicFunctionModifier implements FunctionModifier {
-    private ILanguageFactory langFactory;
+public class DayWeekQuarterFunctionModifier extends FunctionModifier {
     private String format;
     
-    public DayWeekQuarterFunctionModifier(ILanguageFactory langFactory, String format) {
-        this.langFactory = langFactory;
+    public DayWeekQuarterFunctionModifier(String format) {
         this.format = format;
     }
     
-    /* 
-     * @see com.metamatrix.connector.jdbc.extension.FunctionModifier#modify(com.metamatrix.data.language.IFunction)
-     */
-    public IExpression modify(IFunction function) {
-        List<IExpression> args = function.getParameters();
-
-        IFunction inner = langFactory.createFunction("TO_CHAR",  //$NON-NLS-1$
-            Arrays.asList( 
-                args.get(0), 
-                langFactory.createLiteral(format, String.class)),  
-                String.class);
-            
-        IFunction outer = langFactory.createFunction("TO_NUMBER",  //$NON-NLS-1$
-            Arrays.asList(inner),  
-                Integer.class);
-                                
-        return outer;    
+    @Override
+    public List<?> translate(IFunction function) {
+        return Arrays.asList("to_number(TO_CHAR(",function.getParameters().get(0), ", '", format,"'))"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$    
     }
 }
 
