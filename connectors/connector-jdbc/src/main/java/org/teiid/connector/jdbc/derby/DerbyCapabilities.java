@@ -75,7 +75,9 @@ public class DerbyCapabilities extends JDBCCapabilities {
         	//supportedFunctions.add("POWER"); //$NON-NLS-1$
         	supportedFunctions.add("RADIANS"); //$NON-NLS-1$
         	//supportedFunctions.add("ROUND"); //$NON-NLS-1$
-        	supportedFunctions.add("SIGN"); //$NON-NLS-1$
+        	if (version.compareTo(TEN_4) >= 0) {
+        		supportedFunctions.add("SIGN"); //$NON-NLS-1$
+        	}
         	supportedFunctions.add("SIN"); //$NON-NLS-1$
         }
         supportedFunctions.add("SQRT"); //$NON-NLS-1$
