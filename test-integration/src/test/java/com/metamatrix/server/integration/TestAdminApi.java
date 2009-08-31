@@ -32,6 +32,8 @@ import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import org.junit.Before;
@@ -43,9 +45,11 @@ import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.ConnectorType;
 import org.teiid.adminapi.EmbeddedLogger;
 import org.teiid.adminapi.ExtensionModule;
+import org.teiid.adminapi.Group;
 import org.teiid.adminapi.LogConfiguration;
 import org.teiid.adminapi.ProcessObject;
 import org.teiid.adminapi.PropertyDefinition;
+import org.teiid.adminapi.Role;
 import org.teiid.adminapi.VDB;
 import org.teiid.runtime.adminapi.Util;
 
@@ -59,6 +63,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	
 	private static final String STAR = "*"; //$NON-NLS-1$
 	private static final String PROPS_FILE = UnitTestUtil.getTestDataPath()+"/admin/dqp.properties;user=admin;password=teiid"; //$NON-NLS-1$
+	private static final String MEMBERSHIP_PROPS_FILE = UnitTestUtil.getTestDataPath()+"/admin/dqp-membership.properties"; //$NON-NLS-1$
 	private static final String BQT = "BQT"; //$NON-NLS-1$
 	private static final String ADMIN = "admin"; //$NON-NLS-1$
 	private static final String VDB_NAME = "TestEmpty"; //$NON-NLS-1$
@@ -1040,7 +1045,83 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 		
 	    closeConnection();
 	}
+	
+	@Test public void testGetRolesForGroup() throws Exception {
+		getConnection(ADMIN, MEMBERSHIP_PROPS_FILE, ";user=admin;password=teiid"); //$NON-NLS-1$
+		cleanDeploy();
 
+		Collection<Role> r = getAdmin().getRolesForGroup("group1@file");//$NON-NLS-1$
+		assertTrue(!r.isEmpty());
+		assertEquals(Role.ADMIN_SYSTEM, r.iterator().next().getIdentifier());
+
+		try {
+			r = getAdmin().getRolesForGroup("unknown");//$NON-NLS-1$
+			fail("must have failed to fetch the group"); //$NON-NLS-1$
+		}catch(Exception e) {
+			
+		}
+		assertTrue(!r.isEmpty());
+		
+		closeConnection();	    		
+	}
+
+	@Test public void testGetGroupsForUser() throws Exception {
+		getConnection(ADMIN, MEMBERSHIP_PROPS_FILE, ";user=admin;password=teiid"); //$NON-NLS-1$
+		cleanDeploy();
+
+		Collection<Group> g = getAdmin().getGroupsForUser("paul@file"); //$NON-NLS-1$
+		assertEquals(2, g.size());
+		Iterator<Group> i = g.iterator();
+		assertEquals("group4@file", i.next().getIdentifier()); //$NON-NLS-1$
+		assertEquals("group1@file", i.next().getIdentifier()); //$NON-NLS-1$
+
+		// with out the @file 
+		g = getAdmin().getGroupsForUser("paul"); //$NON-NLS-1$
+		assertEquals(2, g.size());
+
+		try {
+			g = getAdmin().getGroupsForUser("unknown");//$NON-NLS-1$
+			fail("should failed to resolve the unknown user"); //$NON-NLS-1$
+		}catch(Exception e) {
+		}
+		
+		closeConnection();	    		
+	}	
+	
+	@Test public void testGetGroups() throws Exception {
+		getConnection(ADMIN, MEMBERSHIP_PROPS_FILE, ";user=admin;password=teiid"); //$NON-NLS-1$
+		cleanDeploy();
+
+		Collection<Group> g = getAdmin().getGroups("*"); //$NON-NLS-1$
+		assertEquals(4, g.size());
+		
+		closeConnection();	    		
+	}	
+	
+	@Test public void testGetDomainNames() throws Exception {
+		getConnection(ADMIN, MEMBERSHIP_PROPS_FILE, ";user=admin;password=teiid"); //$NON-NLS-1$
+		cleanDeploy();
+
+		List<String> g = getAdmin().getDomainNames();
+		assertEquals(1, g.size());
+		assertEquals("file", g.get(0)); //$NON-NLS-1$
+		closeConnection();	    		
+	}		
+
+	@Test public void testGetGroupsForDomain() throws Exception {
+		getConnection(ADMIN, MEMBERSHIP_PROPS_FILE, ";user=admin;password=teiid"); //$NON-NLS-1$
+		cleanDeploy();
+
+		Collection<Group> g = getAdmin().getGroupsForDomain("file"); //$NON-NLS-1$
+		assertEquals(4, g.size());
+
+		g = getAdmin().getGroupsForDomain("unknown"); //$NON-NLS-1$
+		assertEquals(0, g.size());
+		
+		closeConnection();	    		
+	}		
+
+	
 	
 	VDB addVDB(String name, String vdbFile) {
 	    try {

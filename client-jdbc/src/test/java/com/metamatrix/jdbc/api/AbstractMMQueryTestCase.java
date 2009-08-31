@@ -69,7 +69,7 @@ public class AbstractMMQueryTestCase extends AbstractQueryTest {
     }
     
     public static com.metamatrix.jdbc.api.Connection createConnection(String vdb, String propsFile, String addtionalStuff) throws SQLException {
-        String url = "jdbc:metamatrix:"+vdb+"@" + propsFile+addtionalStuff; //$NON-NLS-1$ //$NON-NLS-2$
+        String url = "jdbc:teiid:"+vdb+"@" + propsFile+addtionalStuff; //$NON-NLS-1$ //$NON-NLS-2$
         return (com.metamatrix.jdbc.api.Connection)DriverManager.getConnection(url); 
     }    
         
