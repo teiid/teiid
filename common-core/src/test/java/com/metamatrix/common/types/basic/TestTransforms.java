@@ -60,11 +60,12 @@ public class TestTransforms {
             Transform transform = DataTypeManager.getTransform(DataTypeManager.getDataTypeClass(src), expectedValue.getClass());
             Object result = transform.transform(value);
         	assertTrue(expectedValue.getClass().isAssignableFrom(result.getClass()));
+            assertFalse("Expected exception for " +src+ " to " + target, //$NON-NLS-1$ //$NON-NLS-2$            
+            		isException(DataTypeManager.getDataTypeName(value.getClass()), target,value));
         } catch (TransformationException e) {
             if (!isException(DataTypeManager.getDataTypeName(value.getClass()), target,value)) {
                 throw e;
             } 
-            fail("Expected exception for " +src+ " to " + target); //$NON-NLS-1$ //$NON-NLS-2$            
         }
     }    
 
