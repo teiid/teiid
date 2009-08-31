@@ -44,7 +44,7 @@
           </row>
           <row>
             <entry>boolean</entry>
-            <entry>a single bit, or Boolean, that can true, false, or null (unknown)
+            <entry>a single bit, or Boolean, that can be true, false, or null (unknown)
             </entry>
             <entry>java.lang.Boolean</entry>
             <entry>BIT</entry>
@@ -385,7 +385,7 @@
               <entry>true</entry>
             </row>
             <row>
-              <entry morerows="2">Numeric</entry>
+              <entry morerows="1">Numeric</entry>
               <entry>0</entry>
               <entry>false</entry>
             </row>
