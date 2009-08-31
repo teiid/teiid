@@ -505,8 +505,7 @@
         numeric string formats by visiting the Sun Java Web site at the
         following
         <ulink
-          url="http://java.sun.com/javase/6/docs/api/java/text/DecimalFormat.html">URL for Sun Java</ulink>
-        .  In addition to the Java conventions, parse strings have leading and trailing whitespace removed automatically and cannot contain characters after a valid parse prefix.
+          url="http://java.sun.com/javase/6/docs/api/java/text/DecimalFormat.html">URL for Sun Java</ulink>.
       </para>
       <para>For example, you could use these function calls, with the
         formatting string that adheres to the java.text.DecimalFormat
@@ -1045,8 +1044,7 @@
         defines formats by visiting the Sun Java Web site
         at the following
         <ulink
-          url="http://java.sun.com/javase/6/docs/api/java/text/SimpleDateFormat.html">URL for Sun Java</ulink>
-        .  In addition to the Java conventions, parse strings have leading and trailing whitespace removed automatically and cannot contain characters after a valid parse prefix.
+          url="http://java.sun.com/javase/6/docs/api/java/text/SimpleDateFormat.html">URL for Sun Java</ulink>.
     </para>
     <informaltable frame="all">
       <tgroup cols="3">

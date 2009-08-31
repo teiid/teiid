@@ -146,10 +146,10 @@ final class XMLValueTranslator {
                     valueStr = bigIntegerTogMonth((BigInteger)value);
                     break;
                 case GMONTHDAY_CODE:
-                    valueStr = (String)FunctionMethods.formatTimestamp(value, GMONTHDAY_FORMAT);
+                    valueStr = FunctionMethods.format((Timestamp)value, GMONTHDAY_FORMAT);
                     break;
                 case GYEAR_CODE:
-                    valueStr = (String)FunctionMethods.formatBigInteger(value, GYEAR_FORMAT);
+                    valueStr = FunctionMethods.format((BigInteger)value, GYEAR_FORMAT);
                     break;
                 case GYEARMONTH_CODE:
                     valueStr = timestampTogYearMonth(value);
@@ -178,7 +178,7 @@ final class XMLValueTranslator {
     private static String timestampTogYearMonth(Object value) throws FunctionExecutionException {
         String valueStr;
         Timestamp time = (Timestamp)value;
-        valueStr = (String)FunctionMethods.formatTimestamp(value, GYEARMONTH_FORMAT);
+        valueStr = (String)FunctionMethods.format(time, GYEARMONTH_FORMAT);
         if (time.getTime() < YEAR_ZERO) {
             valueStr = "-" + valueStr; //$NON-NLS-1$
         }
@@ -190,7 +190,7 @@ final class XMLValueTranslator {
      * with a trailing string for nanoseconds (without right zeros). 
      */
     static String timestampToDateTime(Timestamp time) throws FunctionExecutionException {
-        String result = (String)FunctionMethods.formatTimestamp(time, DATETIME_FORMAT);
+        String result = (String)FunctionMethods.format(time, DATETIME_FORMAT);
         int nanos = time.getNanos();
         if (nanos == 0) {
             return result;

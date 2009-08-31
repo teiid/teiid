@@ -26,7 +26,12 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
+//## JDBC4.0-begin ##
 import java.sql.SQLXML;
+//## JDBC4.0-end ##
+/*## JDBC3.0-JDK1.5-begin ##
+import com.metamatrix.core.jdbc.SQLXML; 
+## JDBC3.0-JDK1.5-end ##*/
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collections;
@@ -322,104 +327,6 @@ public class DataTypeManager {
 	}
 
 	/**
-	 * Get the preferred data value transformation between the firstType and the
-	 * secondType. The transform returned may be either from the firstType to
-	 * secondType or from secondType to firstType.
-	 * 
-	 * @param firstType
-	 * 		First value type
-	 * @param secondType
-	 * 		Second value type
-	 * @return The preferred transform if one exists, null otherwise
-	 */
-	public static Transform getPreferredTransform(Class firstType,
-			Class secondType) {
-		if (firstType == null || secondType == null) {
-			throw new IllegalArgumentException(CorePlugin.Util.getString(
-					ErrorMessageKeys.TYPES_ERR_0002, firstType, secondType));
-		}
-
-		// Get transforms
-		String firstName = DataTypeManager.getDataTypeName(firstType);
-		String secondName = DataTypeManager.getDataTypeName(secondType);
-
-		return DataTypeManager.getPreferredTransformHelper(firstName,
-				secondName);
-	}
-
-	/**
-	 * Get the preferred data value transformation between the firstType and the
-	 * secondType. The transform returned may be either from the firstType to
-	 * secondType or from secondType to firstType.
-	 * 
-	 * @param firstTypeName
-	 * 		First value type
-	 * @param secondTypeName
-	 * 		Second value type
-	 * @return The preferred transform if one exists, null otherwise
-	 */
-	public static Transform getPreferredTransform(String firstTypeName,
-			String secondTypeName) {
-		if (firstTypeName == null || secondTypeName == null) {
-			throw new IllegalArgumentException(CorePlugin.Util.getString(
-					ErrorMessageKeys.TYPES_ERR_0003, firstTypeName,
-					secondTypeName));
-		}
-
-		return DataTypeManager.getPreferredTransformHelper(firstTypeName,
-				secondTypeName);
-	}
-
-	/**
-	 * Get the preferred data value transformation between the firstType and the
-	 * secondType. The transform returned may be either from the firstType to
-	 * secondType or from secondType to firstType.
-	 * 
-	 * @param firstName
-	 * 		First value type name
-	 * @param secondName
-	 * 		Second value type name
-	 * @return The preferred transform if one exists, null otherwise
-	 */
-	private static Transform getPreferredTransformHelper(String firstTypeName,
-			String secondTypeName) {
-		// Return null for identity transform
-		if (firstTypeName.equals(secondTypeName)) {
-			return null;
-		}
-
-		Transform t1 = getTransformFromMaps(firstTypeName, secondTypeName);
-		Transform t2 = getTransformFromMaps(secondTypeName, firstTypeName);
-
-		// Check for null transforms
-		if (t1 == null) {
-			// Can't choose t1 so return t2, which may be null, which is correct
-			return t2;
-		} else if (t2 == null) {
-			// Both transforms are null
-			return null;
-		}
-
-		// We know both transforms are non-null now
-		// Rules for choosing:
-		// 1) Cast away from a string (string to float instead of float to
-		// string)
-		// 2) Choose a non-narrowing over narrowing
-		// 3) Choose t1 arbitrarily
-		if (firstTypeName.equals(DataTypeManager.DefaultDataClasses.STRING.getName())) {
-			return t1;
-		} else if (secondTypeName.equals(DataTypeManager.DefaultDataClasses.STRING.getName())) {
-			return t2;
-		} else if (!t1.isNarrowing() && t2.isNarrowing()) {
-			return t1;
-		} else if (t1.isNarrowing() && !t2.isNarrowing()) {
-			return t2;
-		} else {
-			return t1;
-		}
-	}
-
-	/**
 	 * Does a transformation exist between the source and target type?
 	 * 
 	 * @param sourceType
@@ -663,7 +570,7 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.DOUBLE, true));
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.DOUBLE, true));
+				DefaultDataClasses.DOUBLE, false)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToShortTransform(
 				DefaultDataClasses.DOUBLE, true));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.DOUBLE));
@@ -678,7 +585,7 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.FLOAT, true));
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.FLOAT, true));
+				DefaultDataClasses.FLOAT, false)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToShortTransform(
 				DefaultDataClasses.FLOAT, true));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.FLOAT));
@@ -691,7 +598,7 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
 				DefaultDataClasses.INTEGER, false));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.INTEGER, false));
+				DefaultDataClasses.INTEGER, false)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToLongTransform(
 				DefaultDataClasses.INTEGER, false));
 		DataTypeManager.addTransform(new NumberToShortTransform(
@@ -704,9 +611,9 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.LONG));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
-				DefaultDataClasses.LONG, true));
+				DefaultDataClasses.LONG, false)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.LONG, true));
+				DefaultDataClasses.LONG, false)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.LONG, true));
 		DataTypeManager.addTransform(new NumberToShortTransform(

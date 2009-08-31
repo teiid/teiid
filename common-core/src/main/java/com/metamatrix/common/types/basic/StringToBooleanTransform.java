@@ -26,11 +26,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.DataTypeManager.DefaultDataClasses;
 
-public class StringToBooleanTransform extends AbstractTransform {
+public class StringToBooleanTransform extends Transform {
 
     private static final Set<String> FALSE = new HashSet<String>(Arrays.asList("0", "false")); //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -42,10 +42,7 @@ public class StringToBooleanTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
+	public Object transformDirect(Object value) throws TransformationException {
 		String str = ((String)value).trim().toLowerCase();
         if (FALSE.contains(str)) {
             return Boolean.FALSE;

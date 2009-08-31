@@ -22,13 +22,13 @@
 
 package com.metamatrix.common.types.basic;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
-import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 
-public class FloatingNumberToBigIntegerTransform extends AbstractTransform {
+public class FloatingNumberToBigIntegerTransform extends Transform {
 
 	private Class<?> sourceType;
 	
@@ -44,17 +44,8 @@ public class FloatingNumberToBigIntegerTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
-        String doubleString = String.valueOf(value);
-        int index = doubleString.lastIndexOf("."); //$NON-NLS-1$
-        if(index >= 0) { 
-            return new BigInteger(doubleString.substring(0, index));
-        }
-        return new BigInteger(doubleString);
+	public Object transformDirect(Object value) throws TransformationException {
+        return BigDecimal.valueOf(((Number)value).doubleValue()).toBigInteger();
 	}
 
 	/**
@@ -73,11 +64,7 @@ public class FloatingNumberToBigIntegerTransform extends AbstractTransform {
 		return DataTypeManager.DefaultDataClasses.BIG_INTEGER;
 	}
 
-	/**
-	 * Flag if the transformation from source to target is 
-	 * a narrowing transformation that may lose information.
-	 * @return True - this transformation is narrowing
-	 */
+	@Override
 	public boolean isNarrowing() {
 		return true;
 	}

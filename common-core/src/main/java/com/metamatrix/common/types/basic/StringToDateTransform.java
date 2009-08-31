@@ -24,12 +24,12 @@ package com.metamatrix.common.types.basic;
 
 import java.sql.Date;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 
-public class StringToDateTransform extends AbstractTransform {
+public class StringToDateTransform extends Transform {
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -39,10 +39,7 @@ public class StringToDateTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
+	public Object transformDirect(Object value) throws TransformationException {
 		value = ((String) value).trim();
 		Date result = null;
 		try {
@@ -70,6 +67,11 @@ public class StringToDateTransform extends AbstractTransform {
 	 */
 	public Class getTargetType() {
 		return Date.class;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return true;
 	}
 
 }

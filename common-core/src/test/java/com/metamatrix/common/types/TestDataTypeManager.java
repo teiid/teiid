@@ -161,11 +161,11 @@ public class TestDataTypeManager extends TestCase {
     }
     
     public void testTimeConversions() {
-        Transform t = DataTypeManager.getPreferredTransform(DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.DATE);
+        Transform t = DataTypeManager.getTransform(DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.DATE);
         
-        assertEquals(DataTypeManager.DefaultDataClasses.TIMESTAMP, t.getTargetType());
+        assertEquals(DataTypeManager.DefaultDataClasses.DATE, t.getTargetType());
         
-        t = DataTypeManager.getPreferredTransform(DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP);
+        t = DataTypeManager.getTransform(DataTypeManager.DefaultDataTypes.TIME, DataTypeManager.DefaultDataTypes.TIMESTAMP);
         
         assertEquals(DataTypeManager.DefaultDataClasses.TIMESTAMP, t.getTargetType());
     }

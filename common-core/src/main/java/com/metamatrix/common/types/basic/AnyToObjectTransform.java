@@ -22,11 +22,11 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 
-public class AnyToObjectTransform extends AbstractTransform {
+public class AnyToObjectTransform extends Transform {
 	
 	private Class<?> sourceType;
 	
@@ -47,7 +47,7 @@ public class AnyToObjectTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
+	public Object transformDirect(Object value) throws TransformationException {
 		return value;
 	}
 

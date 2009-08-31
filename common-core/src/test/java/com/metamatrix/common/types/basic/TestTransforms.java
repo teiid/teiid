@@ -219,7 +219,7 @@ public class TestTransforms {
         String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"; //$NON-NLS-1$
         expected += xml.substring(0, DataTypeManager.MAX_STRING_LENGTH - expected.length());
                 
-        helpTestTransform(new StringToSQLXMLTransform().transform(xml.toString()), expected);
+        helpTestTransform(new StringToSQLXMLTransform().transformDirect(xml.toString()), expected);
     }
     
     @Test public void testStringToTimestampOutOfRange() throws Exception {
@@ -233,5 +233,19 @@ public class TestTransforms {
     @Test public void testStringToLongWithWS() throws Exception {
     	helpTestTransform(" 1 ", Long.valueOf(1)); //$NON-NLS-1$ 
     }
+    
+    @Test public void testEngineeringNotationFloatToBigInteger() throws Exception {
+    	helpTestTransform(Float.MIN_VALUE, new BigDecimal(Float.MIN_VALUE).toBigInteger());
+    }
+    
+    @Test public void testRangeCheck() throws Exception {
+    	helpTransformException(300, DataTypeManager.DefaultDataClasses.BYTE, "The Integer value '300' is outside the of range for Byte"); //$NON-NLS-1$
+    }
+    
+    @Test public void testRangeCheck1() throws Exception {
+    	helpTransformException(new Double("1E11"), DataTypeManager.DefaultDataClasses.INTEGER, "The Double value '100,000,000,000' is outside the of range for Integer"); //$NON-NLS-1$ //$NON-NLS-2$  
+    }
+
+
     
 }

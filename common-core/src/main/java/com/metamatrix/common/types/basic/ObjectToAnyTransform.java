@@ -22,13 +22,12 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
-import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Transform;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.CorePlugin;
 
-public class ObjectToAnyTransform extends AbstractTransform {
+public class ObjectToAnyTransform extends Transform {
 
     private Class targetClass;
     
@@ -48,8 +47,8 @@ public class ObjectToAnyTransform extends AbstractTransform {
         return targetClass;
     }
 
-    public Object transform(Object value) throws TransformationException {
-        if(value == null || targetClass.isAssignableFrom(value.getClass())) {
+    public Object transformDirect(Object value) throws TransformationException {
+        if(targetClass.isAssignableFrom(value.getClass())) {
             return value;
         }
         
@@ -69,7 +68,7 @@ public class ObjectToAnyTransform extends AbstractTransform {
     }
     
     /** 
-     * @see com.metamatrix.common.types.AbstractTransform#isNarrowing()
+     * @see com.metamatrix.common.types.Transform#isNarrowing()
      */
     public boolean isNarrowing() {
         return true;

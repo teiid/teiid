@@ -31,13 +31,13 @@ import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.CorePlugin;
 
-public class StringToSQLXMLTransform extends AbstractTransform {
+public class StringToSQLXMLTransform extends Transform {
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -47,11 +47,7 @@ public class StringToSQLXMLTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-        if (value == null) {
-            return value;
-        }
-        
+	public Object transformDirect(Object value) throws TransformationException {
         String xml = (String)value;        
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();        
         try{        
@@ -79,5 +75,5 @@ public class StringToSQLXMLTransform extends AbstractTransform {
 	public Class getTargetType() {
 		return XMLType.class;
 	}
-
+	
 }

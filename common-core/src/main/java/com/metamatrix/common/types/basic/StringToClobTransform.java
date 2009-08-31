@@ -22,11 +22,11 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.ClobType;
 import com.metamatrix.common.types.TransformationException;
 
-public class StringToClobTransform extends AbstractTransform {
+public class StringToClobTransform extends Transform {
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -36,11 +36,7 @@ public class StringToClobTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-        if (value == null) {
-            return value;
-        }
-        
+	public Object transformDirect(Object value) throws TransformationException {
         String contents = (String)value;                
 		return new ClobType(ClobType.createClob(contents.toCharArray()));
 	}
@@ -60,5 +56,5 @@ public class StringToClobTransform extends AbstractTransform {
 	public Class getTargetType() {
 		return ClobType.class;
 	}
-
+	
 }

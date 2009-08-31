@@ -22,11 +22,11 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 
-public class BooleanToNumberTransform extends AbstractTransform {
+public class BooleanToNumberTransform extends Transform {
 
 	private Object trueVal;
 	private Object falseVal;
@@ -49,10 +49,7 @@ public class BooleanToNumberTransform extends AbstractTransform {
 	}
 	
 	@Override
-	public Object transform(Object value) throws TransformationException {
-		if (value == null) {
-			return null;
-		}
+	public Object transformDirect(Object value) throws TransformationException {
 		return value.equals(Boolean.TRUE)?trueVal:falseVal;
 	}
 	

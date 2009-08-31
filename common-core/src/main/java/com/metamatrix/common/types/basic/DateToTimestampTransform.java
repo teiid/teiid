@@ -24,10 +24,10 @@ package com.metamatrix.common.types.basic;
 
 import java.sql.Timestamp;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 
-public class DateToTimestampTransform extends AbstractTransform {
+public class DateToTimestampTransform extends Transform {
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -37,11 +37,7 @@ public class DateToTimestampTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
+	public Object transformDirect(Object value) throws TransformationException {
 		return new Timestamp( ((java.sql.Date) value).getTime() );
 	}
 

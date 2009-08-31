@@ -22,11 +22,11 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public class NumberToLongTransform extends AbstractTransform {
+public class NumberToLongTransform extends Transform {
 	
 	private Class<?> sourceType;
 	private boolean isNarrowing;
@@ -49,9 +49,9 @@ public class NumberToLongTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if (value == null) {
-			return null;
+	public Object transformDirect(Object value) throws TransformationException {
+		if (isNarrowing) {
+			checkValueRange(value, Long.MIN_VALUE, Long.MAX_VALUE);
 		}
 		return Long.valueOf(((Number)value).longValue());
 	}
@@ -64,9 +64,4 @@ public class NumberToLongTransform extends AbstractTransform {
 		return DataTypeManager.DefaultDataClasses.LONG;
 	}
 	
-	@Override
-	public boolean isNarrowing() {
-		return isNarrowing;
-	}
-
 }

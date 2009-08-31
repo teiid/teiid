@@ -24,11 +24,11 @@ package com.metamatrix.common.types.basic;
 
 import java.sql.Timestamp;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.common.util.TimestampWithTimezone;
 
-public class TimestampToTimeTransform extends AbstractTransform {
+public class TimestampToTimeTransform extends Transform {
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -38,11 +38,7 @@ public class TimestampToTimeTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
+	public Object transformDirect(Object value) throws TransformationException {
 		return TimestampWithTimezone.createTime((Timestamp)value);
 	}
 
@@ -63,7 +59,7 @@ public class TimestampToTimeTransform extends AbstractTransform {
 	}
     
     /** 
-     * @see com.metamatrix.common.types.AbstractTransform#isNarrowing()
+     * @see com.metamatrix.common.types.Transform#isNarrowing()
      */
     public boolean isNarrowing() {
         return true;

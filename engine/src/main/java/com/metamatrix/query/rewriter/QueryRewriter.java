@@ -54,6 +54,7 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
@@ -163,10 +164,6 @@ public class QueryRewriter {
     public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(new Integer(1), DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(new Integer(1), DataTypeManager.DefaultDataClasses.INTEGER));
     public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(new Integer(1), DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(new Integer(0), DataTypeManager.DefaultDataClasses.INTEGER));
     public static final CompareCriteria UNKNOWN_CRITERIA = new CompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING));
-    
-    private final static Timestamp EXAMPLE_TIMESTAMP = Timestamp.valueOf("2001-02-03 13:04:05.01"); //$NON-NLS-1$
-    private final static Time EXAMPLE_TIME = Time.valueOf("13:04:05"); //$NON-NLS-1$
-    private final static Date EXAMPLE_DATE = Date.valueOf("2001-02-03"); //$NON-NLS-1$
     
     private static final Map<String, String> ALIASED_FUNCTIONS = new HashMap<String, String>();
     
@@ -1312,15 +1309,10 @@ public class QueryRewriter {
         if(isSimpleMathematicalFunction(leftFunction)) {
             return simplifyMathematicalCriteria(criteria);
         }   
-        if(criteria.getOperator() == CompareCriteria.EQ || criteria.getOperator() == CompareCriteria.NE) {
-            if(criteria.getRightExpression() instanceof Constant && (FunctionLibrary.isConvert(leftFunction))) { 
-
-                return simplifyConvertFunction(criteria); 
-                
-            } 
-            return simplifyParseFormatFunction(criteria);
+        if (FunctionLibrary.isConvert(leftFunction)) {
+        	return simplifyConvertFunction(criteria);
         }
-        return criteria;
+        return simplifyParseFormatFunction(criteria);
     }
     
     private boolean isSimpleMathematicalFunction(Function function) {
@@ -1489,22 +1481,38 @@ public class QueryRewriter {
      */
     private Criteria simplifyConvertFunction(CompareCriteria crit) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getLeftExpression();
-        Constant rightConstant = (Constant) crit.getRightExpression();
         Expression leftExpr = leftFunction.getArgs()[0];
+        if (leftExpr.getType() == crit.getRightExpression().getType()) {
+        	crit.setLeftExpression(leftExpr);
+        	return crit;
+        }
+        if(!(crit.getRightExpression() instanceof Constant) 
+        		//TODO: this can be relaxed for order preserving operations
+        		|| !(crit.getOperator() == CompareCriteria.EQ || crit.getOperator() == CompareCriteria.NE)) { 
+        	return crit;
+        } 
+
+        Constant rightConstant = (Constant) crit.getRightExpression();
         
         String leftExprTypeName = DataTypeManager.getDataTypeName(leftExpr.getType());
-        
+
         Constant result = null;
         try {
             result = ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(rightConstant.getType()), leftExprTypeName, rightConstant);
+            Constant other = ResolverUtil.convertConstant(leftExprTypeName, DataTypeManager.getDataTypeName(rightConstant.getType()), result);
+            if (((Comparable)rightConstant.getValue()).compareTo(other.getValue()) != 0) {
+            	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
+            }
         } catch(QueryResolverException e) {
-            
-        }
-        
-        if (result == null) {
         	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
         }
         
+        Transform transform = DataTypeManager.getTransform(leftExpr.getType(), crit.getRightExpression().getType());
+        
+        if (transform.isNarrowing()) {
+        	return crit;
+        }
+                
     	crit.setRightExpression(result);
         crit.setLeftExpression(leftExpr);
 
@@ -1586,7 +1594,12 @@ public class QueryRewriter {
     }
         
     private Criteria simplifyParseFormatFunction(CompareCriteria crit) throws QueryValidatorException {
-        Function leftFunction = (Function) crit.getLeftExpression();
+    	//TODO: this can be relaxed for order preserving operations
+        if(!(crit.getOperator() == CompareCriteria.EQ || crit.getOperator() == CompareCriteria.NE)) {
+        	return crit;
+        }
+    	boolean isFormat = false;
+    	Function leftFunction = (Function) crit.getLeftExpression();
         String funcName = leftFunction.getName().toLowerCase();
         String inverseFunction = null;
         if(funcName.startsWith("parse")) { //$NON-NLS-1$
@@ -1595,97 +1608,44 @@ public class QueryRewriter {
         } else if(funcName.startsWith("format")) { //$NON-NLS-1$
             String type = funcName.substring(6);
             inverseFunction = "parse" + type; //$NON-NLS-1$
+            isFormat = true;
         } else {
             return crit;
         }
         Expression rightExpr = crit.getRightExpression();
+        if (!(rightExpr instanceof Constant)) {
+        	return crit;
+        }
         Expression leftExpr = leftFunction.getArgs()[0];
         Expression formatExpr = leftFunction.getArgs()[1];
         if(!(formatExpr instanceof Constant)) {
             return crit;
         }
+        String format = (String)((Constant)formatExpr).getValue();
         FunctionLibrary funcLib = FunctionLibraryManager.getFunctionLibrary();
         FunctionDescriptor descriptor = funcLib.findFunction(inverseFunction, new Class[] { rightExpr.getType(), formatExpr.getType() });
         if(descriptor == null){
             return crit;
         }
-        String format = (String)((Constant)formatExpr).getValue();
-        try {
-            /*
-             * The following is a hack at fixing defect 23792.  Our strategy of always inverting parse and format functions was wrong in 
-             * many cases, so this code will catch many circumstances that were missed before.
-             */
-            Expression dateExpression = null;
-            FunctionDescriptor forwardFunction = null;
-            FunctionDescriptor reverseFunction = null;
-            boolean parseFunction = false;
-            boolean checkExpression = true;
-            
-            if (java.util.Date.class.isAssignableFrom(leftExpr.getType())) {
-                dateExpression = leftExpr;
-                forwardFunction = leftFunction.getFunctionDescriptor();
-                reverseFunction = descriptor;
-            } else if (java.util.Date.class.isAssignableFrom(rightExpr.getType())) {
-                dateExpression = rightExpr;
-                forwardFunction = descriptor;
-                reverseFunction = leftFunction.getFunctionDescriptor();
-                parseFunction = true;
-            }
-            
-            if (dateExpression != null) {
-                Object example = EXAMPLE_TIMESTAMP;
-                if (DataTypeManager.DefaultDataClasses.DATE.equals(dateExpression.getType())) {
-                    example = EXAMPLE_DATE;
-                } else if (DataTypeManager.DefaultDataClasses.TIME.equals(dateExpression.getType())) {
-                    example = EXAMPLE_TIME;
-                }
-                if (parseFunction) {
-                    if (rightExpr instanceof Constant) {
-                        example = ((Constant)rightExpr).getValue(); 
-                    } else {
-                        checkExpression = false;
-                    }
-                }
-                if (checkExpression) {
-                    Object result = funcLib.invokeFunction(forwardFunction, new Object[] {example, format});
-                    result = funcLib.invokeFunction(reverseFunction, new Object[] { result, format } );
-                    if (!example.equals(result)) {
-                        if (parseFunction) {
-                        	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
-                        }
-                        //the format is loosing information, so it must not be invertable
-                        return crit;
-                    }
-                }
-            }
-        } catch(InvalidFunctionException e) {
+    	Object value = ((Constant)rightExpr).getValue();
+    	try {
+    		Object result = funcLib.invokeFunction(descriptor, new Object[] {((Constant)rightExpr).getValue(), format});
+    		result = funcLib.invokeFunction(leftFunction.getFunctionDescriptor(), new Object[] { result, format } );
+    		if (((Comparable)value).compareTo(result) != 0) {
+    			return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
+    		}
+    	} catch(InvalidFunctionException e) {
             String errorMsg = QueryExecPlugin.Util.getString("QueryRewriter.criteriaError", crit); //$NON-NLS-1$
             throw new QueryValidatorException(e, errorMsg);
-        } catch(FunctionExecutionException e) {
-            String errorMsg = QueryExecPlugin.Util.getString("QueryRewriter.criteriaError", crit); //$NON-NLS-1$
-            throw new QueryValidatorException(e, errorMsg);
-        }
-        try {   
-            if (rightExpr instanceof Constant) {
-                Object result = funcLib.invokeFunction(
-                                                       descriptor, new Object[] { ((Constant)rightExpr).getValue(), format } );
-                crit.setRightExpression(new Constant(result, descriptor.getReturnType()));
-                crit.setLeftExpression(leftExpr);
-            } else {
-                Function conversion = new Function(descriptor.getName(), new Expression[] { rightExpr, formatExpr });
-                conversion.setType(leftExpr.getType());
-                conversion.setFunctionDescriptor(descriptor);
-                
-                crit.setRightExpression(conversion);
-                crit.setLeftExpression(leftExpr);
-            }
-        } catch(InvalidFunctionException e) {
-            String errorMsg = QueryExecPlugin.Util.getString("QueryRewriter.criteriaError", crit); //$NON-NLS-1$
-            throw new QueryValidatorException(e, errorMsg);
-        } catch(FunctionExecutionException e) {
+    	} catch(FunctionExecutionException e) {
             //Not all numeric formats are invertable, so just return the criteria as it may still be valid
             return crit;
         }
+        //parseFunctions are all potentially narrowing
+        if (!isFormat) {
+        	return crit;
+        }
+        //TODO: if format is not lossy, then invert the function
         return crit;
     }
       
@@ -1720,16 +1680,12 @@ public class QueryRewriter {
         if(leftExpr instanceof Function && rightExpr instanceof Constant) {
             tsCreateFunction = (Function) leftExpr;
             timestampConstant = (Constant) rightExpr;            
-        } else if(leftExpr instanceof Constant && rightExpr instanceof Function) {
-            tsCreateFunction = (Function) rightExpr;
-            timestampConstant = (Constant) leftExpr;
         } else {
             return criteria;
         }
 
         // Verify data type of constant and that constant has a value
-        if(! timestampConstant.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP) || 
-           timestampConstant.getValue() == null) {
+        if(! timestampConstant.getType().equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
             return criteria;        
         }
         
@@ -1754,12 +1710,12 @@ public class QueryRewriter {
         return compCrit;                     
     }
 
-   /*
+   /**
     * This method also applies the same simplification for Case 1829.  This is conceptually 
     * the same thing but done  using the timestampCreate system function.  
     *     
-    * TIMESTAMPCREATE(rpcolli_physical.RPCOLLI.Table_B.date_field, rpcolli_physical.RPCOLLI.Table_B.time_field)
-    *    = {ts'1969-09-20 18:30:45.0'}
+    * formatDate(rpcolli_physical.RPCOLLI.Table_B.date_field, 'yyyy-MM-dd') 
+    *    || formatTime(rpcolli_physical.RPCOLLI.Table_B.time_field, ' HH:mm:ss') = '1969-09-20 18:30:45'
     *  
     *  -------------
     *  
@@ -1786,16 +1742,12 @@ public class QueryRewriter {
        if(leftExpr instanceof Function && rightExpr instanceof Constant) {
            concatFunction = (Function) leftExpr;
            timestampConstant = (Constant) rightExpr;            
-       } else if(leftExpr instanceof Constant && rightExpr instanceof Function) {
-           concatFunction = (Function) rightExpr;
-           timestampConstant = (Constant) leftExpr;
        } else {
            return criteria;
        }
 
        // Verify data type of string constant and that constant has a value
-       if(! timestampConstant.getType().equals(DataTypeManager.DefaultDataClasses.STRING) || 
-          timestampConstant.getValue() == null) {
+       if(! timestampConstant.getType().equals(DataTypeManager.DefaultDataClasses.STRING)) {
            return criteria;        
        }
        
@@ -1823,13 +1775,7 @@ public class QueryRewriter {
        // Verify length of combined date/time constants == timestamp constant
        String dateFormat = (String) ((Constant)formatDateFunction.getArgs()[1]).getValue();        
        String timeFormat = (String) ((Constant)formatTimeFunction.getArgs()[1]).getValue();        
-       if(dateFormat == null || timeFormat == null) {
-           return criteria;
-       }
        String timestampValue = (String) timestampConstant.getValue();
-       if(timestampValue.length() != dateFormat.length() + timeFormat.length()) {
-           return criteria;
-       }
        
        // Passed all the checks, so build the optimized version
        try {

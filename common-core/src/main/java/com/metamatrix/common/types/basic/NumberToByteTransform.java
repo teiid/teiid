@@ -22,11 +22,11 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 
-public class NumberToByteTransform extends AbstractTransform {
+public class NumberToByteTransform extends Transform {
 	
 	private Class<?> sourceType;
 	
@@ -47,10 +47,8 @@ public class NumberToByteTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if (value == null) {
-			return null;
-		}
+	public Object transformDirect(Object value) throws TransformationException {
+		checkValueRange(value, Byte.MIN_VALUE, Byte.MAX_VALUE);
 		return Byte.valueOf(((Number)value).byteValue());
 	}
 
@@ -61,10 +59,5 @@ public class NumberToByteTransform extends AbstractTransform {
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.BYTE;
 	}
-	
-	@Override
-	public boolean isNarrowing() {
-		return true;
-	}
-
+		
 }

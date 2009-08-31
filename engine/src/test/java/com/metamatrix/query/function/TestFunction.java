@@ -1158,12 +1158,12 @@ public class TestFunction {
         assertEquals(systemProperty+"_lowercase", FunctionMethods.env(context, systemProperty.toUpperCase())); //$NON-NLS-1$
     }
     
-    @Test(expected=FunctionExecutionException.class) public void testParseIntStrictness() throws Exception {
-    	FunctionMethods.parseInteger("1 a", "#"); //$NON-NLS-1$ //$NON-NLS-2$
+    public void testParseIntStrictness() throws Exception {
+    	assertEquals(Integer.valueOf(1), FunctionMethods.parseInteger("a 1 a", "#")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test(expected=FunctionExecutionException.class) public void testParseDateStrictness() throws Exception {
-    	FunctionMethods.parseDate("2007-13-01", "yyyy-MM-dd"); //$NON-NLS-1$ //$NON-NLS-2$
+    public void testParseDateStrictness() throws Exception {
+    	assertEquals(TimestampUtil.createDate(2007, 1, 1), FunctionMethods.parseDate(" 2007-13-01", "yyyy-MM")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testParseTimeWhitespace() throws Exception {

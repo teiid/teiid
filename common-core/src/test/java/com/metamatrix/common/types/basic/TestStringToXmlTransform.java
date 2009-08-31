@@ -45,7 +45,7 @@ public class TestStringToXmlTransform extends TestCase {
         
        StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
        
-       SQLXML xmlValue = (SQLXML)transform.transform(xml);
+       SQLXML xmlValue = (SQLXML)transform.transformDirect(xml);
        assertEquals(xml, xmlValue.getString());
     }
     
@@ -58,7 +58,7 @@ public class TestStringToXmlTransform extends TestCase {
        StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
        
        try {
-           transform.transform(xml);
+           transform.transformDirect(xml);
            fail("exception expected"); //$NON-NLS-1$           
         } catch (TransformationException e) {        
         }        

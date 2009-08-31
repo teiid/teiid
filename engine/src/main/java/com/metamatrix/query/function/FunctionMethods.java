@@ -29,7 +29,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.ParsePosition;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -1032,33 +1032,11 @@ public final class FunctionMethods {
     }
 
 	// ================== Format date/time/timestamp TO String ==================
-	public static Object formatDate(Object date, Object format)
+	public static String format(Date date, String format)
 		throws FunctionExecutionException {
 		try {
-            SimpleDateFormat sdf = new SimpleDateFormat((String)format);
-            return sdf.format((Date)date);
-		} catch (IllegalArgumentException iae) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0042, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0042 ,
-				iae.getMessage()));
-		}
-	}
-
-	public static Object formatTime(Object time, Object format)
-		throws FunctionExecutionException {
-		try {
-            SimpleDateFormat sdf = new SimpleDateFormat((String)format);
-            return sdf.format((Time)time);
-		} catch (IllegalArgumentException iae) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0042, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0042 ,
-				iae.getMessage()));
-		}
-	}
-
-	public static Object formatTimestamp(Object timestamp, Object format)
-		throws FunctionExecutionException {
-		try {
-            SimpleDateFormat sdf = new SimpleDateFormat((String)format);
-            return sdf.format((Timestamp) timestamp);
+            SimpleDateFormat sdf = new SimpleDateFormat(format);
+            return sdf.format(date);
 		} catch (IllegalArgumentException iae) {
 			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0042, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0042 ,
 				iae.getMessage()));
@@ -1068,15 +1046,13 @@ public final class FunctionMethods {
 	//	================== Parse String TO date/time/timestamp  ==================
 	private static Date parseDateHelper(String date, String format)
 			throws FunctionExecutionException {
-		date = date.trim();
 		DateFormat df = new SimpleDateFormat(format);
-		df.setLenient(false);
-		ParsePosition pp = new ParsePosition(0);
-		Date parsedDate = df.parse(date, pp);
-		if (parsedDate == null || pp.getIndex() < date.length()) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043, date, format));
+		try {
+			return df.parse(date);
+		} catch (ParseException e) {
+			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
+					date, format));
 		}
-		return parsedDate;
 	}
 	
 	public static Date parseDate(String date, String format)
@@ -1095,33 +1071,15 @@ public final class FunctionMethods {
 	}
 
 	//	================== Format number TO String ==================
-	public static Object formatInteger(Object integerNum, Object format)
-		throws FunctionExecutionException {
-		return formatNumberHelper(integerNum, format);
-	}
-
-	public static Object formatLong(Object longNum, Object format)
-		throws FunctionExecutionException {
-		return formatNumberHelper(longNum, format);
-	}
-
-	public static Object formatDouble(Object doubleNum, Object format)
-		throws FunctionExecutionException {
-		return formatNumberHelper(doubleNum, format);
-	}
-
-	public static Object formatFloat(Object floatNum, Object format)
-		throws FunctionExecutionException {
-		return formatNumberHelper(floatNum, format);
-	}
-	public static Object formatBigInteger(Object bigIntegerNum, Object format)
-		throws FunctionExecutionException {
-		return formatNumberHelper(bigIntegerNum, format);
-	}
-
-	public static Object formatBigDecimal(Object bigDecimalNum, Object format)
-		throws FunctionExecutionException {
-		return formatNumberHelper(bigDecimalNum, format);
+	public static String format(Number number, String format)
+	throws FunctionExecutionException {
+		try {
+	        DecimalFormat df = new DecimalFormat(format);
+	        return df.format(number);
+		} catch (IllegalArgumentException iae) {
+			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0042, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0042 ,
+			iae.getMessage()));
+		}
 	}
 
 	//	================== Parse String TO numbers ==================
@@ -1162,32 +1120,16 @@ public final class FunctionMethods {
 	}
 
 	// ============== Helper Function for format/parse numbers ==================
-	public static String formatNumberHelper(Object number, Object format)
-		throws FunctionExecutionException {
-		if (number == null || format == null) {
-			return null;
-		}
-
-		try {
-            DecimalFormat df = new DecimalFormat((String)format);
-            return df.format(number);
-		} catch (IllegalArgumentException iae) {
-			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0042, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0042 ,
-			iae.getMessage()));
-		}
-	}
 
 	private static Number parseNumberHelper(String number, String format)
 		throws FunctionExecutionException {
-		number = number.trim();
 		DecimalFormat df= new DecimalFormat(format);
-		ParsePosition pp = new ParsePosition(0);
-		Number num = df.parse(number, pp);
-		if (num == null || pp.getIndex() < number.length()) {
+		try {
+			return df.parse(number);
+		} catch (ParseException e) {
 			throw new FunctionExecutionException(ErrorMessageKeys.FUNCTION_0043, QueryPlugin.Util.getString(ErrorMessageKeys.FUNCTION_0043 ,
 					number,format));
 		}
-		return num;
 	}
 
 	// ================== Function - ACOS =====================

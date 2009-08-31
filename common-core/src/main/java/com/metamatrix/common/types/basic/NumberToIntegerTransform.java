@@ -22,11 +22,11 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.TransformationException;
 
-public class NumberToIntegerTransform extends AbstractTransform {
+public class NumberToIntegerTransform extends Transform {
 	
 	private Class<?> sourceType;
 	private boolean isNarrowing;
@@ -49,9 +49,9 @@ public class NumberToIntegerTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if (value == null) {
-			return null;
+	public Object transformDirect(Object value) throws TransformationException {
+		if (isNarrowing) {
+			checkValueRange(value, Integer.MIN_VALUE, Integer.MAX_VALUE);
 		}
 		return Integer.valueOf(((Number)value).intValue());
 	}
@@ -64,9 +64,4 @@ public class NumberToIntegerTransform extends AbstractTransform {
 		return DataTypeManager.DefaultDataClasses.INTEGER;
 	}
 	
-	@Override
-	public boolean isNarrowing() {
-		return isNarrowing;
-	}
-
 }

@@ -24,12 +24,12 @@ package com.metamatrix.common.types.basic;
 
 import java.math.BigDecimal;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 
-public class StringToBigDecimalTransform extends AbstractTransform {
+public class StringToBigDecimalTransform extends Transform {
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -39,11 +39,7 @@ public class StringToBigDecimalTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
+	public Object transformDirect(Object value) throws TransformationException {
 		try {
 			return new BigDecimal(((String)value).trim());
 		} catch(NumberFormatException e) {
@@ -66,5 +62,10 @@ public class StringToBigDecimalTransform extends AbstractTransform {
 	public Class getTargetType() {
 		return BigDecimal.class;
 	}
-
+	
+	@Override
+	public boolean isNarrowing() {
+		return true;
+	}
+	
 }

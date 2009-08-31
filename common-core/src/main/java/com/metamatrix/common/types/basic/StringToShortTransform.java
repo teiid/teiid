@@ -22,12 +22,12 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 
-public class StringToShortTransform extends AbstractTransform {
+public class StringToShortTransform extends Transform {
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -37,11 +37,7 @@ public class StringToShortTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
+	public Object transformDirect(Object value) throws TransformationException {
 		try {
 			return Short.valueOf(((String)value).trim());
 		} catch(NumberFormatException e) {
@@ -63,6 +59,11 @@ public class StringToShortTransform extends AbstractTransform {
 	 */
 	public Class getTargetType() {
 		return Short.class;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return true;
 	}
 
 }

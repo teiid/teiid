@@ -45,11 +45,7 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
      * @throws TransformationException if value is an incorrect input type or
      * the transformation fails
      */
-    public Object transform(Object value) throws TransformationException {
-        if(value == null) {
-            return value;
-        }
-
+    public Object transformDirect(Object value) throws TransformationException {
         XMLType source = (XMLType)value;
         
         try {       
@@ -64,7 +60,7 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
     }
 
     /** 
-     * @see com.metamatrix.common.types.AbstractTransform#isNarrowing()
+     * @see com.metamatrix.common.types.Transform#isNarrowing()
      */
     public boolean isNarrowing() {
         return true;

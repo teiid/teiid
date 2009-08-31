@@ -24,11 +24,11 @@ package com.metamatrix.common.types.basic;
 
 import java.math.BigInteger;
 
-import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 
-public class FixedNumberToBigIntegerTransform extends AbstractTransform {
+public class FixedNumberToBigIntegerTransform extends Transform {
 
 	private Class<?> sourceType;
 	
@@ -44,11 +44,7 @@ public class FixedNumberToBigIntegerTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
+	public Object transformDirect(Object value) throws TransformationException {
 		return BigInteger.valueOf(((Number)value).longValue());
 	}
 

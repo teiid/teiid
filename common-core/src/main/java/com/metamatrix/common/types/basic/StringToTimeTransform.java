@@ -24,12 +24,12 @@ package com.metamatrix.common.types.basic;
 
 import java.sql.Time;
 
-import com.metamatrix.common.types.AbstractTransform;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 import com.metamatrix.core.CorePlugin;
 import com.metamatrix.core.ErrorMessageKeys;
 
-public class StringToTimeTransform extends AbstractTransform {
+public class StringToTimeTransform extends Transform {
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -39,10 +39,7 @@ public class StringToTimeTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
+	public Object transformDirect(Object value) throws TransformationException {
 		value = ((String) value).trim();
 		Time result = null;
 		try {
@@ -70,6 +67,11 @@ public class StringToTimeTransform extends AbstractTransform {
 	 */
 	public Class getTargetType() {
 		return Time.class;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return true;
 	}
 
 }

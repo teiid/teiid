@@ -24,11 +24,11 @@ package com.metamatrix.common.types.basic;
 
 import java.math.BigDecimal;
 
-import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.DataTypeManager;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
 
-public class FloatingNumberToBigDecimalTransform extends AbstractTransform {
+public class FloatingNumberToBigDecimalTransform extends Transform {
 
 	private Class<?> sourceType;
 	
@@ -44,11 +44,7 @@ public class FloatingNumberToBigDecimalTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return value;
-		}
-
+	public Object transformDirect(Object value) throws TransformationException {
         return BigDecimal.valueOf(((Number)value).doubleValue());
 	}
 

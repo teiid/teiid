@@ -22,14 +22,17 @@
 
 package com.metamatrix.common.types;
 
+import com.metamatrix.core.CorePlugin;
+import com.metamatrix.core.util.HashCodeUtil;
+
 /**
  * This interface represents the transformation from one data type to
  * another.  For instance, from java.lang.String to java.lang.Integer
  * where java.lang.String is the the source type, "java.lang.String"
  * is the source name, etc.
  */
-public interface Transform {
-
+public abstract class Transform {
+	
 	/**
 	 * This method transforms a value of the source type into a value
 	 * of the target type.
@@ -38,49 +41,111 @@ public interface Transform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException;
+	public Object transform(Object value) throws TransformationException {
+		if (value == null) {
+			return null;
+		}
+		return transformDirect(value);
+	}
+	
+	
+	protected abstract Object transformDirect(Object value) throws TransformationException;
 
 	/**
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType();
+	public abstract Class getSourceType();
 
 	/**
 	 * Name of the source type.
 	 * @return Name of source type
 	 */
-	public String getSourceTypeName();
+	public String getSourceTypeName() {
+		return DataTypeManager.getDataTypeName(getSourceType());
+	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType();
+	public abstract Class getTargetType();
 
 	/**
 	 * Name of the target type.
 	 * @return Name of target type
 	 */
-	public String getTargetTypeName();
+	public String getTargetTypeName() {
+        return DataTypeManager.getDataTypeName(getTargetType());
+	}
 
 	/**
 	 * Get nice display name for GUIs.
 	 * @return Display name
 	 */
-	public String getDisplayName();
+	public String getDisplayName() {
+		return getSourceTypeName() + " to " + getTargetTypeName(); //$NON-NLS-1$
+	}
 
 	/**
 	 * Get description.
 	 * @return Description of transform
 	 */
-	public String getDescription();
+	public String getDescription() {
+		return getDisplayName();
+	}
 
 	/**
-	 * Flag if the transformation from source to target is 
+	 * Flag if the transformation from source to target is
 	 * a narrowing transformation that may lose information.
-	 * @return True if transformation is narrowing
+	 * This class returns false by default.  This method should
+	 * be overridden if the transform is a narrowing transform.
+	 * @return False unless overridden.
 	 */
-	public boolean isNarrowing();
+	public boolean isNarrowing() {
+		return false;
+	}
+
+	/**
+	 * Override Object.toString() to do getDisplayName() version.
+	 * @return String representation of object
+	 */
+	public String toString() {
+		return getDisplayName();
+	}
+
+	/**
+	 * Override Object.hashCode() to build a hash based on types.
+	 * @return Hash code
+	 */
+	public int hashCode() {
+		return HashCodeUtil.hashCode( getSourceTypeName().hashCode(), getTargetTypeName().hashCode() );
+	}
+
+	/**
+	 * Override Object.equals() to build an equals based on src and tgt types.
+	 * @param obj Other object
+	 * @return True if obj==this
+	 */
+	public boolean equals(Object obj) {
+		if(this == obj) {
+			return true;
+		}
+
+		if(! this.getClass().isInstance(obj)) {
+			return false;
+		}
+
+		Transform other = (Transform) obj;
+		return other.getSourceType() == this.getSourceType() &&
+			   other.getTargetType() == this.getTargetType();
+	}
+	
+	protected void checkValueRange(Object value, Number min, Number max)
+			throws TransformationException {
+		if (((Comparable)value).compareTo(DataTypeManager.transformValue(min, getSourceType())) < 0 || ((Comparable)value).compareTo(DataTypeManager.transformValue(max, getSourceType())) > 0) {
+			throw new TransformationException(CorePlugin.Util.getString("transform.value_out_of_range", value, getSourceType().getSimpleName(), getTargetType().getSimpleName())); //$NON-NLS-1$
+		}
+	}
 
 }

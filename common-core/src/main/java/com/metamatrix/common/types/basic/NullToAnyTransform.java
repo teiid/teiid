@@ -22,17 +22,17 @@
 
 package com.metamatrix.common.types.basic;
 
-import com.metamatrix.common.types.AbstractTransform;
 import com.metamatrix.common.types.NullType;
+import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.types.TransformationException;
-import com.metamatrix.core.CorePlugin;
+import com.metamatrix.core.util.Assertion;
 
 /**
  * This class can do a simple null-->anything.  
  * Incoming value must be null and outgoing value is the same.  
  * This is purely for type purposes.
  */
-public class NullToAnyTransform extends AbstractTransform {
+public class NullToAnyTransform extends Transform {
 
 	private Class<?> targetType;
 	
@@ -64,12 +64,9 @@ public class NullToAnyTransform extends AbstractTransform {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public Object transform(Object value) throws TransformationException {
-		if(value == null) {
-			return null;
-		}
-        Object[] params = new Object[] { getSourceType(), value, value.getClass().getName()};
-        throw new TransformationException(CorePlugin.Util.getString("NullToAnyTransform.Invalid_value", params)); //$NON-NLS-1$
+	public Object transformDirect(Object value) throws TransformationException {
+		Assertion.isNull(value);
+		return null;
 	}
 	
 }

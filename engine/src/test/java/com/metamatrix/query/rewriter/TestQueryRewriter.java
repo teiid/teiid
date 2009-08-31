@@ -26,12 +26,12 @@ import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -266,6 +266,7 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("pm1.g1.e1 in ('a')", "pm1.g1.e1 = 'a'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit6() {
         helpTestRewriteCriteria("1 = convert(pm1.g1.e1,integer) + 10", "pm1.g1.e1 = '-9'"); //$NON-NLS-1$ //$NON-NLS-2$
     } 
@@ -390,11 +391,13 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("5 - pm1.g1.e2 <= 10", "5 - pm1.g1.e2 <= 10"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseDate() {
         helpTestRewriteCriteria("PARSEDATE(pm3.g1.e1, 'yyyyMMdd') = {d'2003-05-01'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '20030501'" );         //$NON-NLS-1$
     }
     
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseDate1() {
         helpTestRewriteCriteria("PARSEDATE(pm3.g1.e1, 'yyyyMM') = {d'2003-05-01'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '200305'" );         //$NON-NLS-1$
@@ -405,6 +408,7 @@ public class TestQueryRewriter {
                                 "1 = 0" );         //$NON-NLS-1$
     }
     
+    @Ignore(value="Should be moved to the validator")
     @Test public void testRewriteCrit_invalidParseDate() {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         Criteria origCrit = parseCriteria("PARSEDATE(pm3.g1.e1, '''') = {d'2003-05-01'}", metadata); //$NON-NLS-1$
@@ -417,6 +421,7 @@ public class TestQueryRewriter {
         }
     }
     
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseTime() {
         helpTestRewriteCriteria("PARSETIME(pm3.g1.e1, 'HH mm ss') = {t'13:25:04'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '13 25 04'" );         //$NON-NLS-1$
@@ -427,6 +432,7 @@ public class TestQueryRewriter {
                                 "1 = 0" );         //$NON-NLS-1$
     }
     
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseTimestamp1() {
         helpTestRewriteCriteria("PARSETimestamp(pm3.g1.e1, 'yyyy dd mm') = {ts'2003-01-01 00:25:00.0'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '2003 01 25'" );         //$NON-NLS-1$
@@ -442,6 +448,7 @@ public class TestQueryRewriter {
                                 "pm3.g1.e1 is not null" );         //$NON-NLS-1$
     }
     
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseTimestamp4() {
         helpTestRewriteCriteria("PARSETimestamp(CONVERT(pm3.g1.e2, string), 'yyyy-MM-dd') = {ts'2003-05-01 00:00:00.0'}", //$NON-NLS-1$
                                 "pm3.g1.e2 = {d'2003-05-01'}" );         //$NON-NLS-1$
@@ -452,6 +459,7 @@ public class TestQueryRewriter {
                                 "PARSETimestamp(pm3.g1.e1, 'yyyy dd mm') > {ts'2003-05-01 13:25:04.5'}" );         //$NON-NLS-1$
     }
     
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseTimestamp_decompose() {
         helpTestRewriteCriteria("PARSETIMESTAMP(CONCAT(FORMATDATE(pm3.g1.e2, 'yyyyMMdd'), FORMATTIME(pm3.g1.e3, 'HHmmss')), 'yyyyMMddHHmmss') = PARSETIMESTAMP('19690920183045', 'yyyyMMddHHmmss')", //$NON-NLS-1$
         "(pm3.g1.e2 = {d'1969-09-20'}) AND (pm3.g1.e3 = {t'18:30:45'})" );         //$NON-NLS-1$
@@ -462,41 +470,49 @@ public class TestQueryRewriter {
         "(pm3.g1.e2 = {d'1969-09-20'}) AND (pm3.g1.e3 = {t'18:30:45'})" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseInteger() {
         helpTestRewriteCriteria("parseInteger(pm1.g1.e1, '#,##0') = 1234", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234'" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseLong() {
         helpTestRewriteCriteria("parseLong(pm1.g1.e1, '#,##0') = convert(1234, long)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234'" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseBigInteger() {
         helpTestRewriteCriteria("parseBigInteger(pm1.g1.e1, '#,##0') = convert(1234, biginteger)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234'" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseFloat() {
-        helpTestRewriteCriteria("parseFloat(pm1.g1.e1, '#,##0.###') = convert(1234.1234, float)", //$NON-NLS-1$
+        helpTestRewriteCriteria("parseFloat(pm1.g1.e1, '#,##0.###') = convert(1234.123, float)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234.123'" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseDouble() {
         helpTestRewriteCriteria("parseDouble(pm1.g1.e1, '$#,##0.00') = convert(1234.5, double)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '$1,234.50'" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCrit_parseBigDecimal() {
         helpTestRewriteCriteria("parseBigDecimal(pm1.g1.e1, '#,##0.###') = convert(1234.1234, bigdecimal)", //$NON-NLS-1$
                                 "pm1.g1.e1 = '1,234.123'" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatDate() {
         helpTestRewriteCriteria("formatDate(pm3.g1.e2, 'yyyyMMdd') = '20030501'", //$NON-NLS-1$
                                 "pm3.g1.e2 = {d'2003-05-01'}" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatTime() {
         helpTestRewriteCriteria("formatTime(pm3.g1.e3, 'HH mm ss') = '13 25 04'", //$NON-NLS-1$
                                 "pm3.g1.e3 = {t'13:25:04'}" );         //$NON-NLS-1$
@@ -507,11 +523,13 @@ public class TestQueryRewriter {
                                 "formatTimestamp(pm3.g1.e4, 'MM dd, yyyy - HH:mm:ss') = '05 01, 1974 - 07:00:00'" );         //$NON-NLS-1$
     }
     
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatTimestamp1() {
         helpTestRewriteCriteria("formatTimestamp(pm3.g1.e4, 'MM dd, yyyy - HH:mm:ss.S') = '05 01, 1974 - 07:00:00.0'", //$NON-NLS-1$
                                 "pm3.g1.e4 = {ts'1974-05-01 07:00:00.0'}" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatInteger() {
         helpTestRewriteCriteria("formatInteger(pm1.g1.e2, '#,##0') = '1,234'", //$NON-NLS-1$
                                 "pm1.g1.e2 = 1234" );         //$NON-NLS-1$
@@ -522,16 +540,19 @@ public class TestQueryRewriter {
                                 "formatInteger(pm1.g1.e2, '#5') = '105'" );         //$NON-NLS-1$
     }
 
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatLong() {
         helpTestRewriteCriteria("formatLong(convert(pm1.g1.e2, long), '#,##0') = '1,234,567,890,123'", //$NON-NLS-1$
                                 "1 = 0" );         //$NON-NLS-1$
     }
     
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatLong1() {
         helpTestRewriteCriteria("formatLong(convert(pm1.g1.e2, long), '#,##0') = '1,234,567,890'", //$NON-NLS-1$
                                 "pm1.g1.e2 = 1234567890" );         //$NON-NLS-1$
     }
     
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatTimestampInvert() { 
         String original = "formatTimestamp(pm3.g1.e4, 'MM dd, yyyy - HH:mm:ss.S') = ?"; //$NON-NLS-1$ 
         String expected = "pm3.g1.e4 = parseTimestamp(?, 'MM dd, yyyy - HH:mm:ss.S')"; //$NON-NLS-1$ 
@@ -546,6 +567,7 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria(original, expected);
     } 
 
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatBigInteger() throws Exception {
         String original = "formatBigInteger(convert(pm1.g1.e2, biginteger), '#,##0') = '1,234,567,890'"; //$NON-NLS-1$
         String expected = "pm1.g1.e2 = 1234567890"; //$NON-NLS-1$
@@ -559,6 +581,7 @@ public class TestQueryRewriter {
         assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
     }
 
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatFloat() throws Exception {
         String original = "formatFloat(convert(pm1.g1.e4, float), '#,##0.###') = '1,234.123'"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = 1234.123046875"; //$NON-NLS-1$
@@ -571,6 +594,7 @@ public class TestQueryRewriter {
         assertEquals("Did not rewrite correctly: ", expected, actual.toString()); //$NON-NLS-1$
     }
 
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatDouble() throws Exception {
         String original = "formatDouble(convert(pm1.g1.e4, double), '$#,##0.00') = '$1,234.50'"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = '1234.5'"; //$NON-NLS-1$
@@ -585,8 +609,9 @@ public class TestQueryRewriter {
         assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
     }
 
+    @Ignore(value="Cannot deterime if the format is narrowing")
     @Test public void testRewriteCrit_formatBigDecimal() throws Exception {
-        String original = "formatBigDecimal(convert(pm1.g1.e4, bigdecimal), '#,##0.###') = convert(1234.5, bigdecimal)"; //$NON-NLS-1$
+        String original = "formatBigDecimal(convert(pm1.g1.e4, bigdecimal), '#,##0.###') = '1,234.5'"; //$NON-NLS-1$
         String expected = "pm1.g1.e4 = 1234.5"; //$NON-NLS-1$
         
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
@@ -1101,7 +1126,7 @@ public class TestQueryRewriter {
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n";		 //$NON-NLS-1$
 		rewritProc = rewritProc + "DECLARE integer var1;\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT pm1.g1.e2 FROM pm1.g1 WHERE (CONCAT(e1, 'z') = CONCAT(CONCAT(e1, 'z'), 'y')) AND (CONCAT(e1, 'k') = '1');\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "SELECT pm1.g1.e2 FROM pm1.g1 WHERE (CONCAT(e1, 'z') = CONCAT(CONCAT(e1, 'z'), 'y')) AND (convert(CONCAT(e1, 'k'), integer) = 1);\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 
 		String procReturned = this.getReWrittenProcedure(procedure, userQuery, 
@@ -1490,11 +1515,9 @@ public class TestQueryRewriter {
         // rewrite
         Command rewriteCommand = QueryRewriter.rewrite(command, null, null, null);
         
-        List parameters = ((StoredProcedure)rewriteCommand).getParameters();
-        
-        Iterator iter = parameters.iterator();
-        while(iter.hasNext()){
-            SPParameter param = (SPParameter)iter.next();
+        List<SPParameter> parameters = ((StoredProcedure)rewriteCommand).getParameters();
+
+        for (SPParameter param : parameters) {
             if(param.getParameterType() == ParameterInfo.IN || param.getParameterType() == ParameterInfo.INOUT){
                 assertTrue(param.getExpression() instanceof Constant);
             }
@@ -1569,8 +1592,6 @@ public class TestQueryRewriter {
     @Test public void testRewriteCase1954b() throws Exception{
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached(); 
 
-        // Have to hand-build the criteria, because 3.0 gets parsed as a Float by default
-        // pm1.g1.e4 = 3.0
         CompareCriteria expected = new CompareCriteria();
         ElementSymbol leftElement = new ElementSymbol("pm1.g1.e4"); //$NON-NLS-1$
         Constant constant = new Constant(new Double(3.0), DataTypeManager.DefaultDataClasses.DOUBLE);
@@ -1579,13 +1600,14 @@ public class TestQueryRewriter {
         // resolve against metadata
         QueryResolver.resolveCriteria(expected, metadata);
         
-        helpTestRewriteCriteria("convert(pm1.g1.e4, string) = '3'", expected, metadata); //$NON-NLS-1$ 
+        helpTestRewriteCriteria("convert(pm1.g1.e4, string) = '3.0'", expected, metadata); //$NON-NLS-1$ 
     }    
 
     @Test public void testRewriteCase1954c() {
         helpTestRewriteCriteria("convert(pm1.g1.e1, string) = 'x'", "pm1.g1.e1 = 'x'"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteCase1954d() {
         helpTestRewriteCriteria("convert(pm1.g1.e1, timestamp) = {ts '2005-01-03 00:00:00.0'}", "pm1.g1.e1 = '2005-01-03 00:00:00.0'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -1744,10 +1766,12 @@ public class TestQueryRewriter {
         assertEquals("SELECT e1, e2 FROM pm1.g1 WHERE e1 = '1'", rewriteCommand.toString()); //$NON-NLS-1$
     }
 
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteNestedFunctions() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 where convert(parsedate(e1, 'yyyy-MM-dd'), string) = '2006-07-01'", "SELECT e1 FROM pm1.g1 WHERE e1 = '2006-07-01'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
+    @Ignore(value="It's not generally possible to invert a narrowing conversion")
     @Test public void testRewriteWithReference() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 where parsetimestamp(e1, 'yyyy-MM-dd') != ?", "SELECT e1 FROM pm1.g1 WHERE e1 <> formattimestamp(?, 'yyyy-MM-dd')"); //$NON-NLS-1$ //$NON-NLS-2$
     }

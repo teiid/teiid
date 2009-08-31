@@ -160,9 +160,9 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 		addIfNullFunctions();
         
 		// format 
-		addFormatTimeFunction(SourceSystemFunctions.FORMATTIME, QueryPlugin.Util.getString("SystemSource.Formattime_desc"), "formatTime", QueryPlugin.Util.getString("SystemSource.Formattime_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		addFormatDateFunction(SourceSystemFunctions.FORMATDATE, QueryPlugin.Util.getString("SystemSource.Formatdate_desc"), "formatDate", QueryPlugin.Util.getString("SystemSource.Formatdate_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		addFormatTimestampFunction(SourceSystemFunctions.FORMATTIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"), "formatTimestamp", QueryPlugin.Util.getString("SystemSource.Formattimestamp_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		addFormatTimeFunction(SourceSystemFunctions.FORMATTIME, QueryPlugin.Util.getString("SystemSource.Formattime_desc"), "format", QueryPlugin.Util.getString("SystemSource.Formattime_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		addFormatDateFunction(SourceSystemFunctions.FORMATDATE, QueryPlugin.Util.getString("SystemSource.Formatdate_desc"), "format", QueryPlugin.Util.getString("SystemSource.Formatdate_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+		addFormatTimestampFunction(SourceSystemFunctions.FORMATTIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"), "format", QueryPlugin.Util.getString("SystemSource.Formattimestamp_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
 		addFormatNumberFunctions();
 		
@@ -195,12 +195,12 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     }
 
     private void addFormatNumberFunctions() {
-		addFormatNumberFunction(SourceSystemFunctions.FORMATINTEGER, QueryPlugin.Util.getString("SystemSource.Formatinteger_desc"), "formatInteger", "integer", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Formatinteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
-		addFormatNumberFunction(SourceSystemFunctions.FORMATLONG, QueryPlugin.Util.getString("SystemSource.Formatlong_desc"), "formatLong", "long", DataTypeManager.DefaultDataTypes.LONG, QueryPlugin.Util.getString("SystemSource.Formatlong_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
-		addFormatNumberFunction(SourceSystemFunctions.FORMATDOUBLE, QueryPlugin.Util.getString("SystemSource.Formatdouble_desc"), "formatDouble", "double", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Formatdouble_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
-		addFormatNumberFunction(SourceSystemFunctions.FORMATFLOAT, QueryPlugin.Util.getString("SystemSource.Formatfloat_desc"), "formatFloat", "float", DataTypeManager.DefaultDataTypes.FLOAT, QueryPlugin.Util.getString("SystemSource.Formatfloat_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
-		addFormatNumberFunction(SourceSystemFunctions.FORMATBIGINTEGER, QueryPlugin.Util.getString("SystemSource.Formatbiginteger_desc"), "formatBigInteger", "biginteger", DataTypeManager.DefaultDataTypes.BIG_INTEGER, QueryPlugin.Util.getString("SystemSource.Formatbiginteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
-		addFormatNumberFunction(SourceSystemFunctions.FORMATBIGDECIMAL, QueryPlugin.Util.getString("SystemSource.Formatbigdecimal_desc"), "formatBigDecimal", "bigdecimal", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Formatbigdecimal_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+		addFormatNumberFunction(SourceSystemFunctions.FORMATINTEGER, QueryPlugin.Util.getString("SystemSource.Formatinteger_desc"), "format", "integer", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Formatinteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+		addFormatNumberFunction(SourceSystemFunctions.FORMATLONG, QueryPlugin.Util.getString("SystemSource.Formatlong_desc"), "format", "long", DataTypeManager.DefaultDataTypes.LONG, QueryPlugin.Util.getString("SystemSource.Formatlong_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+		addFormatNumberFunction(SourceSystemFunctions.FORMATDOUBLE, QueryPlugin.Util.getString("SystemSource.Formatdouble_desc"), "format", "double", DataTypeManager.DefaultDataTypes.DOUBLE, QueryPlugin.Util.getString("SystemSource.Formatdouble_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+		addFormatNumberFunction(SourceSystemFunctions.FORMATFLOAT, QueryPlugin.Util.getString("SystemSource.Formatfloat_desc"), "format", "float", DataTypeManager.DefaultDataTypes.FLOAT, QueryPlugin.Util.getString("SystemSource.Formatfloat_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+		addFormatNumberFunction(SourceSystemFunctions.FORMATBIGINTEGER, QueryPlugin.Util.getString("SystemSource.Formatbiginteger_desc"), "format", "biginteger", DataTypeManager.DefaultDataTypes.BIG_INTEGER, QueryPlugin.Util.getString("SystemSource.Formatbiginteger_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
+		addFormatNumberFunction(SourceSystemFunctions.FORMATBIGDECIMAL, QueryPlugin.Util.getString("SystemSource.Formatbigdecimal_desc"), "format", "bigdecimal", DataTypeManager.DefaultDataTypes.BIG_DECIMAL, QueryPlugin.Util.getString("SystemSource.Formatbigdecimal_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
 	}
 	
 	private void addParseNumberFunctions() {
