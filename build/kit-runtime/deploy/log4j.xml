@@ -7,7 +7,7 @@
    </appender>
 
    <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
-     <param name="File" value="log/teiid.log"/>
+     <param name="File" value="${teiid.home}/log/teiid.log"/>
      <param name="MaxFileSize" value="1000KB"/>
      <param name="MaxBackupIndex" value="25"/>
 

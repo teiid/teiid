@@ -119,6 +119,10 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         	bootstrapURL = URLHelper.buildURL(props.getProperty(DQPEmbeddedProperties.BOOTURL));
 	        // Create a temporary workspace directory
 			String teiidHome = props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
+			if (System.getProperty(DQPEmbeddedProperties.TEIID_HOME) == null) {
+				System.setProperty(DQPEmbeddedProperties.TEIID_HOME, teiidHome);
+			}
+			
 	        this.workspaceDirectory = createWorkspace(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR, "work"), processName); //$NON-NLS-1$
 	        props.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, this.workspaceDirectory);
 	        
