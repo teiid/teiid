@@ -31,6 +31,8 @@ import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
 
@@ -61,6 +63,8 @@ import com.metamatrix.core.util.ReflectionHelper;
  */
 @ConnectionPooling
 public class JDBCConnector extends BasicConnector implements XAConnector, MetadataProvider {
+	
+	private static final String JNDI = "JNDI:"; //$NON-NLS-1$
 	
 	static final int NO_ISOLATION_LEVEL_SET = Integer.MIN_VALUE;
 
@@ -227,59 +231,68 @@ public class JDBCConnector extends BasicConnector implements XAConnector, Metada
 	
     protected void createDataSources(String dataSourceClassName, final Properties connectionProps) throws ConnectorException {
         // create data source
-        Object temp = null;
-        try {
-        	temp = ReflectionHelper.create(dataSourceClassName, null, Thread.currentThread().getContextClassLoader());
-        } catch (MetaMatrixCoreException e) {
-    		throw new ConnectorException(e,JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Unable_to_load_the_JDBC_driver_class_6", dataSourceClassName)); //$NON-NLS-1$
-    	}
-
-        final String url = connectionProps.getProperty(JDBCPropertyNames.URL);
-
-        if (temp instanceof Driver) {
-    		final Driver driver = (Driver)temp;
-    		// check URL if there is one
-            if (url == null || url.trim().length() == 0) {
-                throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Missing_JDBC_database_name_3")); //$NON-NLS-1$
-            }
-            validateURL(driver, url);
-    		this.ds = (DataSource)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {DataSource.class}, new InvocationHandler() {
-    			@Override
-    			public Object invoke(Object proxy, Method method,
-    					Object[] args) throws Throwable {
-    				if (method.getName().equals("getConnection")) { //$NON-NLS-1$
-    					Properties p = new Properties();
-    					String user = null;
-    					String password = null;
-    					if (args != null && args.length == 2) {
-    						user = (String)args[0];
-    						password = (String)args[1];
-    					} else {
-    						user = connectionProps.getProperty(JDBCPropertyNames.USERNAME);
-    						password = connectionProps.getProperty(JDBCPropertyNames.PASSWORD);
-    					}
-    					if (user != null) {
-    						p.put("user", user); //$NON-NLS-1$
-    					}
-    					if (password != null) {
-    						p.put("password", password); //$NON-NLS-1$
-    					}
-    					return driver.connect(url, p);
-    				} 
-    				throw new UnsupportedOperationException("Driver DataSource proxy only provides Connections"); //$NON-NLS-1$
-    			}
-    		});
-    	} else {
-    		if (temp instanceof DataSource) {
-	    		this.ds = (DataSource)temp;
-	            PropertiesUtils.setBeanProperties(this.ds, connectionProps, null);
-    		} else if (temp instanceof XADataSource) {
-    			this.xaDs = (XADataSource)temp;
-    	        PropertiesUtils.setBeanProperties(this.xaDs, connectionProps, null);
-    		} else {
-    			throw new ConnectorException(JDBCPlugin.Util.getString("JDBCConnector.invalid_source", dataSourceClassName)); //$NON-NLS-1$
-    		}
-    	} 
+        if (dataSourceClassName.startsWith(JNDI)) {
+        	try {
+				InitialContext ic = new InitialContext();
+				this.ds = (DataSource) ic.lookup(dataSourceClassName.substring(JNDI.length()));
+			} catch (NamingException e) {
+				throw new ConnectorException(e,JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Unable_to_find_jndi_ds", dataSourceClassName.substring(JNDI.length()))); //$NON-NLS-1$
+			}
+        } else {
+	    	Object temp = null;
+	        try {
+	        	temp = ReflectionHelper.create(dataSourceClassName, null, Thread.currentThread().getContextClassLoader());
+	        } catch (MetaMatrixCoreException e) {
+	    		throw new ConnectorException(e,JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Unable_to_load_the_JDBC_driver_class_6", dataSourceClassName)); //$NON-NLS-1$
+	    	}
+	
+	        final String url = connectionProps.getProperty(JDBCPropertyNames.URL);
+	
+	        if (temp instanceof Driver) {
+	    		final Driver driver = (Driver)temp;
+	    		// check URL if there is one
+	            if (url == null || url.trim().length() == 0) {
+	                throw new ConnectorException(JDBCPlugin.Util.getString("JDBCSourceConnectionFactory.Missing_JDBC_database_name_3")); //$NON-NLS-1$
+	            }
+	            validateURL(driver, url);
+	    		this.ds = (DataSource)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {DataSource.class}, new InvocationHandler() {
+	    			@Override
+	    			public Object invoke(Object proxy, Method method,
+	    					Object[] args) throws Throwable {
+	    				if (method.getName().equals("getConnection")) { //$NON-NLS-1$
+	    					Properties p = new Properties();
+	    					String user = null;
+	    					String password = null;
+	    					if (args != null && args.length == 2) {
+	    						user = (String)args[0];
+	    						password = (String)args[1];
+	    					} else {
+	    						user = connectionProps.getProperty(JDBCPropertyNames.USERNAME);
+	    						password = connectionProps.getProperty(JDBCPropertyNames.PASSWORD);
+	    					}
+	    					if (user != null) {
+	    						p.put("user", user); //$NON-NLS-1$
+	    					}
+	    					if (password != null) {
+	    						p.put("password", password); //$NON-NLS-1$
+	    					}
+	    					return driver.connect(url, p);
+	    				} 
+	    				throw new UnsupportedOperationException("Driver DataSource proxy only provides Connections"); //$NON-NLS-1$
+	    			}
+	    		});
+	    	} else {
+	    		if (temp instanceof DataSource) {
+		    		this.ds = (DataSource)temp;
+		            PropertiesUtils.setBeanProperties(this.ds, connectionProps, null);
+	    		} else if (temp instanceof XADataSource) {
+	    			this.xaDs = (XADataSource)temp;
+	    	        PropertiesUtils.setBeanProperties(this.xaDs, connectionProps, null);
+	    		} else {
+	    			throw new ConnectorException(JDBCPlugin.Util.getString("JDBCConnector.invalid_source", dataSourceClassName)); //$NON-NLS-1$
+	    		}
+	    	} 
+        }
     	if (this.ds instanceof XADataSource) {
     		this.xaDs = (XADataSource)this.ds;
     	}
