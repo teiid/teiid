@@ -490,13 +490,13 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.BIG_DECIMAL));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
-				DefaultDataClasses.BIG_DECIMAL, true));
+				DefaultDataClasses.BIG_DECIMAL, true, false));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.BIG_DECIMAL, true));
+				DefaultDataClasses.BIG_DECIMAL, true, false));
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.BIG_DECIMAL, true));
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.BIG_DECIMAL, true));
+				DefaultDataClasses.BIG_DECIMAL, true, false));
 		DataTypeManager.addTransform(new NumberToShortTransform(
 				DefaultDataClasses.BIG_DECIMAL, true));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BIG_DECIMAL));
@@ -507,13 +507,13 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.BIG_INTEGER));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
-				DefaultDataClasses.BIG_INTEGER, true));
+				DefaultDataClasses.BIG_INTEGER, true, false));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.BIG_INTEGER, true));
+				DefaultDataClasses.BIG_INTEGER, true, false));
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.BIG_INTEGER, true));
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.BIG_INTEGER, true));
+				DefaultDataClasses.BIG_INTEGER, true, false));
 		DataTypeManager.addTransform(new NumberToShortTransform(
 				DefaultDataClasses.BIG_INTEGER, true));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BIG_INTEGER));
@@ -540,13 +540,13 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new FixedNumberToBigIntegerTransform(DefaultDataClasses.BYTE));
 		DataTypeManager.addTransform(new NumberToBooleanTransform(Byte.valueOf((byte)0)));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
-				DefaultDataClasses.BYTE, false));
+				DefaultDataClasses.BYTE, false, false));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.BYTE, false));
+				DefaultDataClasses.BYTE, false, false));
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.BYTE, false));
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.BYTE, false));
+				DefaultDataClasses.BYTE, false, false));
 		DataTypeManager.addTransform(new NumberToShortTransform(
 				DefaultDataClasses.BYTE, false));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.BYTE));
@@ -566,11 +566,11 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.DOUBLE));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.DOUBLE, true));
+				DefaultDataClasses.DOUBLE, true, false));
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.DOUBLE, true));
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.DOUBLE, false)); //lossy, but not narrowing
+				DefaultDataClasses.DOUBLE, false, true)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToShortTransform(
 				DefaultDataClasses.DOUBLE, true));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.DOUBLE));
@@ -581,11 +581,11 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.FLOAT));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
-				DefaultDataClasses.FLOAT, false));
+				DefaultDataClasses.FLOAT, false, false));
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.FLOAT, true));
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.FLOAT, false)); //lossy, but not narrowing
+				DefaultDataClasses.FLOAT, false, true)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToShortTransform(
 				DefaultDataClasses.FLOAT, true));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.FLOAT));
@@ -596,11 +596,11 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.INTEGER));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
-				DefaultDataClasses.INTEGER, false));
+				DefaultDataClasses.INTEGER, false, false));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.INTEGER, false)); //lossy, but not narrowing
+				DefaultDataClasses.INTEGER, false, true)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.INTEGER, false));
+				DefaultDataClasses.INTEGER, false, false));
 		DataTypeManager.addTransform(new NumberToShortTransform(
 				DefaultDataClasses.INTEGER, true));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.INTEGER));
@@ -611,9 +611,9 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.LONG));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
-				DefaultDataClasses.LONG, false)); //lossy, but not narrowing
+				DefaultDataClasses.LONG, false, true)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.LONG, false)); //lossy, but not narrowing
+				DefaultDataClasses.LONG, false, true)); //lossy, but not narrowing
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.LONG, true));
 		DataTypeManager.addTransform(new NumberToShortTransform(
@@ -626,13 +626,13 @@ public class DataTypeManager {
 		DataTypeManager.addTransform(new NumberToByteTransform(
 				DefaultDataClasses.SHORT));
 		DataTypeManager.addTransform(new NumberToDoubleTransform(
-				DefaultDataClasses.SHORT, false));
+				DefaultDataClasses.SHORT, false, false));
 		DataTypeManager.addTransform(new NumberToFloatTransform(
-				DefaultDataClasses.SHORT, false));
+				DefaultDataClasses.SHORT, false, false));
 		DataTypeManager.addTransform(new NumberToIntegerTransform(
 				DefaultDataClasses.SHORT, false));
 		DataTypeManager.addTransform(new NumberToLongTransform(
-				DefaultDataClasses.SHORT, false));
+				DefaultDataClasses.SHORT, false, false));
 		DataTypeManager.addTransform(new AnyToStringTransform(DefaultDataClasses.SHORT));
 
 		DataTypeManager

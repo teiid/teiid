@@ -1008,7 +1008,7 @@ public class TestQueryRewriter {
 		
 		String rewritProc = "CREATE PROCEDURE\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "BEGIN\n"; //$NON-NLS-1$
-		rewritProc = rewritProc + "SELECT e2 FROM pm1.g1 WHERE sqrt(pm1.g1.e2) = 10.0;\n"; //$NON-NLS-1$
+		rewritProc = rewritProc + "SELECT e2 FROM pm1.g1 WHERE convert(sqrt(pm1.g1.e2), integer) = 10;\n"; //$NON-NLS-1$
 		rewritProc = rewritProc + "END"; //$NON-NLS-1$
 		
 		String procReturned = this.getReWrittenProcedure(procedure, userQuery, 
@@ -1613,7 +1613,7 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteCase1954e() {
-        helpTestRewriteCriteria("convert(pm1.g1.e4, integer) = 2", "pm1.g1.e4 = 2.0"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("convert(pm1.g1.e4, integer) = 2", "convert(pm1.g1.e4, integer) = 2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /** Check that this fails, x is not convertable to an int */

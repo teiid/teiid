@@ -64,4 +64,9 @@ public class NumberToShortTransform extends Transform {
 		return DataTypeManager.DefaultDataClasses.SHORT;
 	}
 	
+	@Override
+	public boolean isNarrowing() {
+		return isNarrowing;
+	}
+	
 }

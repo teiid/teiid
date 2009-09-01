@@ -30,10 +30,12 @@ public class NumberToDoubleTransform extends Transform {
 	
 	private Class<?> sourceType;
 	private boolean isNarrowing;
+	private boolean isLossy;
 	
-	public NumberToDoubleTransform(Class<?> sourceType, boolean isNarrowing) {
+	public NumberToDoubleTransform(Class<?> sourceType, boolean isNarrowing, boolean isLossy) {
 		this.sourceType = sourceType;
 		this.isNarrowing = isNarrowing;
+		this.isLossy = isLossy;
 	}
 	
 	@Override
@@ -62,6 +64,16 @@ public class NumberToDoubleTransform extends Transform {
 	 */
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.DOUBLE;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return isNarrowing;
+	}
+	
+	@Override
+	public boolean isLossy() {
+		return isLossy;
 	}
 	
 }

@@ -64,4 +64,9 @@ public class NumberToIntegerTransform extends Transform {
 		return DataTypeManager.DefaultDataClasses.INTEGER;
 	}
 	
+	@Override
+	public boolean isNarrowing() {
+		return isNarrowing;
+	}
+	
 }

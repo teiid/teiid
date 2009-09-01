@@ -105,6 +105,10 @@ public abstract class Transform {
 	public boolean isNarrowing() {
 		return false;
 	}
+	
+	public boolean isLossy() {
+		return isNarrowing();
+	}
 
 	/**
 	 * Override Object.toString() to do getDisplayName() version.

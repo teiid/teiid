@@ -1509,7 +1509,7 @@ public class QueryRewriter {
         
         Transform transform = DataTypeManager.getTransform(leftExpr.getType(), crit.getRightExpression().getType());
         
-        if (transform.isNarrowing()) {
+        if (transform.isLossy()) {
         	return crit;
         }
                 
@@ -1567,6 +1567,10 @@ public class QueryRewriter {
             Constant result = null;
             try {
                 result = ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(rightConstant.getType()), leftExprTypeName, rightConstant);
+                Constant other = ResolverUtil.convertConstant(leftExprTypeName, DataTypeManager.getDataTypeName(rightConstant.getType()), result);
+                if (((Comparable)rightConstant.getValue()).compareTo(other.getValue()) != 0) {
+                	result = null;
+                }   
             } catch(QueryResolverException e) {
                 
             }

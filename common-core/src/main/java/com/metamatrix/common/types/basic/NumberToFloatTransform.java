@@ -30,10 +30,12 @@ public class NumberToFloatTransform extends Transform {
 	
 	private Class<?> sourceType;
 	private boolean isNarrowing;
+	private boolean isLossy;
 	
-	public NumberToFloatTransform(Class<?> sourceType, boolean isNarrowing) {
+	public NumberToFloatTransform(Class<?> sourceType, boolean isNarrowing, boolean isLossy) {
 		this.sourceType = sourceType;
 		this.isNarrowing = isNarrowing;
+		this.isLossy = isLossy;
 	}
 	
 	@Override
@@ -62,6 +64,16 @@ public class NumberToFloatTransform extends Transform {
 	 */
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.FLOAT;
+	}
+	
+	@Override
+	public boolean isNarrowing() {
+		return isNarrowing;
+	}
+	
+	@Override
+	public boolean isLossy() {
+		return isLossy;
 	}
 	
 }
