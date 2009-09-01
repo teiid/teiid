@@ -59,5 +59,10 @@ public class NumberToByteTransform extends Transform {
 	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.BYTE;
 	}
-		
+	
+	@Override
+	public boolean isExplicit() {
+		return true;
+	}
+	
 }

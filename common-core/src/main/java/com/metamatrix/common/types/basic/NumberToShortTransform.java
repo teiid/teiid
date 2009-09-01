@@ -65,7 +65,7 @@ public class NumberToShortTransform extends Transform {
 	}
 	
 	@Override
-	public boolean isNarrowing() {
+	public boolean isExplicit() {
 		return isNarrowing;
 	}
 	

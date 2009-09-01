@@ -368,14 +368,14 @@ public class TestFunctionLibrary {
 			"+", new Class[] { T_INTEGER, T_FLOAT }, //$NON-NLS-1$
 			new FunctionDescriptor[] { 
                 helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_INTEGER, T_STRING }), 
-				null } );
+                helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_FLOAT, T_STRING }) } );
 	}
 
 	@Test public void testFind2ArgConversion3() { 	
 		helpFindConversions(
 			"+", new Class[] { T_FLOAT, T_INTEGER }, //$NON-NLS-1$
 			new FunctionDescriptor[] { 
-			    null, 
+				helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_FLOAT, T_STRING }), 
                 helpCreateDescriptor(FunctionLibrary.CONVERT, new Class[] { T_INTEGER, T_STRING }) } );
 	}
 

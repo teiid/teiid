@@ -76,4 +76,9 @@ public class StringToSQLXMLTransform extends Transform {
 		return XMLType.class;
 	}
 	
+	@Override
+	public boolean isExplicit() {
+		return true;
+	}
+	
 }

@@ -70,7 +70,7 @@ public class StringToBooleanTransform extends Transform {
 	}
 	
 	@Override
-	public boolean isNarrowing() {
+	public boolean isExplicit() {
 		return true;
 	}
 	

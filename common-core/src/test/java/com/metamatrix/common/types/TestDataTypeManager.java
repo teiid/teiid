@@ -70,7 +70,7 @@ public class TestDataTypeManager extends TestCase {
         /*bool*/        {   'I','N','O','I','I','I','I','I','I','I','I','N','N','N','I','N','N','N'     },
         /*byte*/        {   'I','N','C','O','I','I','I','I','I','I','I','N','N','N','I','N','N','N'     },
         /*short*/       {   'I','N','C','C','O','I','I','I','I','I','I','N','N','N','I','N','N','N'     },
-        /*int*/         {   'I','N','C','C','C','O','I','I','I','I','I','N','N','N','I','N','N','N'     },
+        /*int*/         {   'I','N','C','C','C','O','I','I','C','I','I','N','N','N','I','N','N','N'     },
         /*long*/        {   'I','N','C','C','C','C','O','I','C','C','I','N','N','N','I','N','N','N'     },
         /*bigint*/      {   'I','N','C','C','C','C','C','O','C','C','I','N','N','N','I','N','N','N'     },
         /*float*/       {   'I','N','C','C','C','C','C','C','O','I','I','N','N','N','I','N','N','N'     },

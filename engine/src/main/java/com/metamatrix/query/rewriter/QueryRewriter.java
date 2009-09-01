@@ -54,7 +54,6 @@ import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.types.DataTypeManager;
-import com.metamatrix.common.types.Transform;
 import com.metamatrix.common.util.TimestampWithTimezone;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.Assertion;
@@ -1482,10 +1481,7 @@ public class QueryRewriter {
     private Criteria simplifyConvertFunction(CompareCriteria crit) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getLeftExpression();
         Expression leftExpr = leftFunction.getArgs()[0];
-        if (leftExpr.getType() == crit.getRightExpression().getType()) {
-        	crit.setLeftExpression(leftExpr);
-        	return crit;
-        }
+        
         if(!(crit.getRightExpression() instanceof Constant) 
         		//TODO: this can be relaxed for order preserving operations
         		|| !(crit.getOperator() == CompareCriteria.EQ || crit.getOperator() == CompareCriteria.NE)) { 
@@ -1507,9 +1503,7 @@ public class QueryRewriter {
         	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
         }
         
-        Transform transform = DataTypeManager.getTransform(leftExpr.getType(), crit.getRightExpression().getType());
-        
-        if (transform.isLossy()) {
+        if (!DataTypeManager.isImplicitConversion(leftExprTypeName, DataTypeManager.getDataTypeName(rightConstant.getType()))) {
         	return crit;
         }
                 

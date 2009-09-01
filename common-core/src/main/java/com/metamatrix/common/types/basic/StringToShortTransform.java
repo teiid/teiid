@@ -62,7 +62,7 @@ public class StringToShortTransform extends Transform {
 	}
 	
 	@Override
-	public boolean isNarrowing() {
+	public boolean isExplicit() {
 		return true;
 	}
 

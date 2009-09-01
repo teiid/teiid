@@ -65,7 +65,7 @@ public class FloatingNumberToBigIntegerTransform extends Transform {
 	}
 
 	@Override
-	public boolean isNarrowing() {
+	public boolean isExplicit() {
 		return true;
 	}
 

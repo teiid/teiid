@@ -67,13 +67,8 @@ public class NumberToFloatTransform extends Transform {
 	}
 	
 	@Override
-	public boolean isNarrowing() {
-		return isNarrowing;
-	}
-	
-	@Override
-	public boolean isLossy() {
-		return isLossy;
+	public boolean isExplicit() {
+		return isNarrowing || isLossy;
 	}
 	
 }

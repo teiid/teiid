@@ -58,12 +58,7 @@ public class BigDecimalToBigIntegerTransform extends Transform {
 		return BigInteger.class;
 	}
 
-	/**
-	 * Flag if the transformation from source to target is 
-	 * a narrowing transformation that may lose information.
-	 * @return True - this transformation is narrowing
-	 */
-	public boolean isNarrowing() {
+	public boolean isExplicit() {
 		return true;
 	}
 

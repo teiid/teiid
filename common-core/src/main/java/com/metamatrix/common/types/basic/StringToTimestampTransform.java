@@ -71,7 +71,7 @@ public class StringToTimestampTransform extends Transform {
 	}
 	
 	@Override
-	public boolean isNarrowing() {
+	public boolean isExplicit() {
 		return true;
 	}
 

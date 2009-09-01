@@ -62,7 +62,7 @@ public class StringToDoubleTransform extends Transform {
 	}
 
 	@Override
-	public boolean isNarrowing() {
+	public boolean isExplicit() {
 		return true;
 	}
 	

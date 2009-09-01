@@ -59,9 +59,9 @@ public class TimestampToTimeTransform extends Transform {
 	}
     
     /** 
-     * @see com.metamatrix.common.types.Transform#isNarrowing()
+     * @see com.metamatrix.common.types.Transform#isExplicit()
      */
-    public boolean isNarrowing() {
+    public boolean isExplicit() {
         return true;
     }
 

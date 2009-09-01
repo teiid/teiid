@@ -49,7 +49,7 @@ public class TestInsertProcessing {
         dataManager.addData("BatchedUpdate{I}",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) })}); 
         
-        String sql = "SELECT 1, 1, 1 INTO pm1.g1"; //$NON-NLS-1$
+        String sql = "SELECT 1, convert(1, float), convert(1, float) INTO pm1.g1"; //$NON-NLS-1$
         
         Command command = helpParse(sql); 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
@@ -173,7 +173,7 @@ public class TestInsertProcessing {
         dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (?, ?)",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) })}); 
         
-        String sql = "SELECT 1, 1 INTO pm1.g1"; //$NON-NLS-1$
+        String sql = "SELECT 1, convert(1, float) INTO pm1.g1"; //$NON-NLS-1$
         
         Command command = helpParse(sql); 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
@@ -213,7 +213,7 @@ public class TestInsertProcessing {
         dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (1, 1.0)",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) })}); 
         
-        String sql = "SELECT 1, 1 INTO pm1.g1"; //$NON-NLS-1$
+        String sql = "SELECT 1, convert(1, float) INTO pm1.g1"; //$NON-NLS-1$
         
         Command command = helpParse(sql); 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 

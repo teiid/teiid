@@ -293,9 +293,9 @@
           </row>
           <row>
             <entry>integer</entry>
-            <entry>string, long, biginteger, float, double,
+            <entry>string, long, biginteger, double,
               bigdecimal</entry>
-            <entry>boolean, byte, short</entry>
+            <entry>boolean, byte, short, float</entry>
           </row>
           <row>
             <entry>long</entry>

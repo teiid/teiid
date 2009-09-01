@@ -95,21 +95,10 @@ public abstract class Transform {
 		return getDisplayName();
 	}
 
-	/**
-	 * Flag if the transformation from source to target is
-	 * a narrowing transformation that may lose information.
-	 * This class returns false by default.  This method should
-	 * be overridden if the transform is a narrowing transform.
-	 * @return False unless overridden.
-	 */
-	public boolean isNarrowing() {
+	public boolean isExplicit() {
 		return false;
 	}
 	
-	public boolean isLossy() {
-		return isNarrowing();
-	}
-
 	/**
 	 * Override Object.toString() to do getDisplayName() version.
 	 * @return String representation of object
