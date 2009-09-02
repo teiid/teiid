@@ -72,8 +72,8 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	
     @Before
 	public void setUp() throws Exception {
-		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/admin/Admin.vdb", UnitTestUtil.getTestScratchPath()+"/Admin.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
-		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/ServerConfig.xml", UnitTestUtil.getTestScratchPath()+"/configuration.xml"); //$NON-NLS-1$ //$NON-NLS-2$
+		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/admin/Admin.vdb", UnitTestUtil.getTestScratchPath()+"/adminapi/deploy/Admin.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/ServerConfig.xml", UnitTestUtil.getTestScratchPath()+"/adminapi/deploy/configuration.xml"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     private void cleanDeploy() throws Exception {
@@ -705,7 +705,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 		addVDB(BQT, UnitTestUtil.getTestDataPath()+"/admin/QT_Ora9DSwDEF.vdb"); //$NON-NLS-1$
 		
 	    // make susre it exists as file
-	    File vdb = new File(UnitTestUtil.getTestScratchPath()+"/BQT_1.vdb"); //$NON-NLS-1$
+	    File vdb = new File(UnitTestUtil.getTestScratchPath()+"/adminapi/deploy/BQT_1.vdb"); //$NON-NLS-1$
 	    assertTrue("Persisted VDB file does not exists", vdb.exists()); //$NON-NLS-1$
 	    
 	    // Check when it last modified
@@ -807,7 +807,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    // testcase (1) (here the file should still exist; but report as non existent from API)
 	    deleteVDB(BQT, "1"); //$NON-NLS-1$
 	    assertFalse("VDB should exist because we still have an active user", hasVDB(BQT, "1")); //$NON-NLS-1$ //$NON-NLS-2$
-	    File f = new File(UnitTestUtil.getTestScratchPath()+"/BQT_1.vdb"); //$NON-NLS-1$
+	    File f = new File(UnitTestUtil.getTestScratchPath()+"/adminapi/deploy/BQT_1.vdb"); //$NON-NLS-1$
 	    assertTrue("since the connection is still open this file should exist", f.exists()); //$NON-NLS-1$
 	        
 	    // testcase (2)
@@ -875,7 +875,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    // here it should be gone we call delete
 	    deleteVDB(BQT, "2"); //$NON-NLS-1$
 	    assertFalse("VDB should exist because we still have an active user", hasVDB(BQT, "2")); //$NON-NLS-1$ //$NON-NLS-2$
-	    f = new File(UnitTestUtil.getTestScratchPath()+"/BQT_2.vdb"); //$NON-NLS-1$
+	    f = new File(UnitTestUtil.getTestScratchPath()+"/adminapi/deploy/BQT_2.vdb"); //$NON-NLS-1$
 	    assertFalse("since the connection is still open this file should exist", f.exists()); //$NON-NLS-1$
 	    
 	    // close the 1st connection
@@ -916,7 +916,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 		helpConnectorBindingAddTest(AdminOptions.OnConflict.OVERWRITE, 1);
 	}
 	
-	@Test public void testAddConnectorBindingWithProeprties() throws Exception {
+	@Test public void testAddConnectorBindingWithProperties() throws Exception {
 		getConnection(ADMIN, PROPS_FILE);
 		cleanDeploy();
 	              

@@ -25,8 +25,8 @@ public class TestDqpReDeployment {
     
 	@Before
 	public void setUp() throws Exception {
-		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/admin/Admin.vdb", UnitTestUtil.getTestScratchPath()+"/Admin.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
-		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/ServerConfig.xml", UnitTestUtil.getTestScratchPath()+"/configuration.xml"); //$NON-NLS-1$ //$NON-NLS-2$	
+		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/admin/Admin.vdb", UnitTestUtil.getTestScratchPath()+"/adminapi/deploy/Admin.vdb"); //$NON-NLS-1$ //$NON-NLS-2$
+		FileUtils.copy(UnitTestUtil.getTestDataPath()+"/ServerConfig.xml", UnitTestUtil.getTestScratchPath()+"/adminapi/deploy/configuration.xml"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
     
 	@After

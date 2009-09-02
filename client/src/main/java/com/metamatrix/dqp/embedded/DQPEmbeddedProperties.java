@@ -30,6 +30,7 @@ public interface DQPEmbeddedProperties {
     public static final String COMMON_EXTENSION_CLASPATH = "dqp.extension.CommonClasspath"; //$NON-NLS-1$
     public static final String DQP_WORKDIR = "dqp.workdir"; //$NON-NLS-1$
     public static final String DQP_DEPLOYDIR = "dqp.deploydir"; //$NON-NLS-1$
+    public static final String DQP_LOGDIR = "dqp.logdir"; //$NON-NLS-1$
     public static final String DQP_LIBDIR = "dqp.lib"; //$NON-NLS-1$
     public static final String PROCESSNAME = "processName"; //$NON-NLS-1$
     public static final String CLUSTERNAME = "clusterName"; //$NON-NLS-1$
@@ -69,6 +70,7 @@ public interface DQPEmbeddedProperties {
     public static final String HOST_ADDRESS = "hostAddress"; //$NON-NLS-1$
     public static final String DQP_BOOTSTRAP_FILE = "bootstrapFile"; //$NON-NLS-1$
     public static final String TEIID_HOME = "teiid.home"; //$NON-NLS-1$
+    public static final String TEIID_LOGDIR = "teiid.logdir"; //$NON-NLS-1$
 	
     
     /**

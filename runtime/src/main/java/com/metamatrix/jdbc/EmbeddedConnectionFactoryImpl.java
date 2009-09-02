@@ -119,9 +119,6 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         	bootstrapURL = URLHelper.buildURL(props.getProperty(DQPEmbeddedProperties.BOOTURL));
 	        // Create a temporary workspace directory
 			String teiidHome = props.getProperty(DQPEmbeddedProperties.TEIID_HOME);
-			if (System.getProperty(DQPEmbeddedProperties.TEIID_HOME) == null) {
-				System.setProperty(DQPEmbeddedProperties.TEIID_HOME, teiidHome);
-			}
 			
 	        this.workspaceDirectory = createWorkspace(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_WORKDIR, "work"), processName); //$NON-NLS-1$
 	        props.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, this.workspaceDirectory);
@@ -138,6 +135,14 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 	        if (vdbDefinitions == null) {
 	        	props.setProperty(DQPEmbeddedProperties.VDB_DEFINITION, deployDirectory.getCanonicalPath());
 	        }
+	        
+	        // set the log directory
+	        File logDir = new File(teiidHome, props.getProperty(DQPEmbeddedProperties.DQP_LOGDIR, "log")); //$NON-NLS-1$
+	        if (!logDir.exists()) {
+	        	logDir.mkdirs();
+	        }
+	        System.setProperty(DQPEmbeddedProperties.TEIID_LOGDIR, logDir.getCanonicalPath());
+	        
 		} catch (IOException e) {
 			throw new ApplicationInitializationException(e);
 		}
