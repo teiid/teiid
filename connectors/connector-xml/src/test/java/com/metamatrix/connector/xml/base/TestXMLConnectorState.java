@@ -54,12 +54,7 @@ public class TestXMLConnectorState extends TestCase {
   @Override
 public void setUp() {
         m_testFileProps = new Properties();
-        m_testFileProps.setProperty(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("5000"));
-        m_testFileProps.setProperty(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("50"));
-        m_testFileProps.setProperty(XMLConnectorStateImpl.MAX_IN_MEMORY_STRING_SIZE, new String("1280"));
-        m_testFileProps.setProperty(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("50"));
         m_testFileProps.setProperty(XMLConnectorStateImpl.CACHE_ENABLED, new String("true"));
-        m_testFileProps.setProperty(XMLConnectorStateImpl.FILE_CACHE_LOCATION, new String("./test/cache"));
         m_testFileProps.setProperty(XMLConnectorStateImpl.SAX_FILTER_PROVIDER_CLASS, "com.metamatrix.connector.xml.base.NoExtendedFilters");
         m_testFileProps.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");
         m_testFileProps.put(XMLConnectorStateImpl.CONNECTOR_CAPABILITES, "com.metamatrix.connector.xml.base.XMLCapabilities");
@@ -81,14 +76,6 @@ public void setUp() {
          fail(ce.getMessage());
         }
     	assertNotNull(state.getState());
-    	assertEquals(m_testFileProps.getProperty(XMLConnectorStateImpl.CACHE_TIMEOUT), 
-    			state.getState().getProperty(XMLConnectorStateImpl.CACHE_TIMEOUT));    	
-    	assertEquals(m_testFileProps.getProperty(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE), 
-    			state.getState().getProperty(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE));
-    	assertEquals(m_testFileProps.getProperty(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE), 
-    			state.getState().getProperty(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE));
-    	assertEquals(m_testFileProps.getProperty(XMLConnectorStateImpl.FILE_CACHE_LOCATION), 
-    			state.getState().getProperty(XMLConnectorStateImpl.FILE_CACHE_LOCATION));
     }
     
     private class TestXMLConnectorStateImpl extends XMLConnectorStateImpl {

@@ -33,28 +33,9 @@ public interface XMLConnectorState extends BaseXMLConnectorState {
 
 	public static final String STATE_CLASS_PROP = "ConnectorStateClass"; //$NON-NLS-1$
 
-	/**
-	 * @return Returns the m_cacheTimeout.
-	 */
-	public abstract int getCacheTimeoutSeconds();
-
-	public abstract int getCacheTimeoutMillis();
-
 	public abstract boolean isPreprocess();
 
 	public abstract ConnectorCapabilities getConnectorCapabilities();
-
-	public abstract int getMaxMemoryCacheSizeByte();
-
-	public abstract int getMaxMemoryCacheSizeKB();
-
-	public abstract int getMaxInMemoryStringSize();
-
-	public abstract int getMaxFileCacheSizeKB();
-
-	public abstract int getMaxFileCacheSizeByte();
-
-	public abstract String getCacheLocation();
 
 	public abstract boolean isLogRequestResponse();
 

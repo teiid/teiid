@@ -37,17 +37,7 @@ import com.metamatrix.connector.xml.XMLConnectorState;
 public abstract class XMLConnectorStateImpl implements Cloneable,
         XMLConnectorState {
 
-    private int m_cacheTimeout;
-
-    private int m_maxMemoryCacheSize;
-
-    private int m_maxInMemoryStringSize;
-
-    private int m_maxFileCacheSize;
-
     private boolean m_preprocess;
-
-    private String m_cacheLocation;
 
     private String m_saxProviderClass;
 
@@ -57,21 +47,7 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
     
     private String m_pluggableInputStreamFilterClass;
 
-    private static final int SECONDS_TO_MILLIS = 1000;
-
-    private static final int KB_TO_BYTES = 1000;
-
-    public static final String CACHE_TIMEOUT = "CacheTimeout"; //$NON-NLS-1$
-
     public static final String CACHE_ENABLED = "CacheEnabled"; //$NON-NLS-1$
-
-    public static final String MAX_IN_MEMORY_STRING_SIZE = "MaxInMemoryStringSize"; //$NON-NLS-1$
-
-    public static final String MAX_MEMORY_CACHE_SIZE = "MaxMemoryCacheSize"; //$NON-NLS-1$
-
-    public static final String MAX_FILE_CACHE_SIZE = "MaxFileCacheSize"; //$NON-NLS-1$
-
-    public static final String FILE_CACHE_LOCATION = "FileCacheLocation"; //$NON-NLS-1$
 
     public static final String LOG_REQUEST_RESPONSE_DOCS = "LogRequestResponseDocs"; //$NON-NLS-1$
 
@@ -99,16 +75,9 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
     private String capabilitiesClass;
 
-	private Boolean caching;
+	private boolean caching = false;
 
     public XMLConnectorStateImpl() {
-        final int defaultCacheTimeoutMillis = 60000;
-        final int defaultMemoryCacheSize = 512;
-        final int defaultFileCacheSize = -1; // unbounded
-        setCacheTimeoutMillis(defaultCacheTimeoutMillis);
-        setMaxMemoryCacheSizeKB(defaultMemoryCacheSize);
-        setMaxInMemoryStringSize(128 * 1024);
-        setMaxFileCacheSizeKB(defaultFileCacheSize);
         setPreprocess(true);
         setLogRequestResponse(false);
         setSaxProviderClass(SAX_FILTER_PROVIDER_CLASS_DEFAULT);
@@ -125,33 +94,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
         if (cachingString != null) {
         	Boolean caching = Boolean.parseBoolean(cachingString);
         	setCaching(caching);
-        }
-        
-        String cache = props.getProperty(CACHE_TIMEOUT);
-        if (cache != null) {
-            setCacheTimeoutSeconds(Integer.parseInt(cache));
-        }
-        String maxMCache = props.getProperty(MAX_MEMORY_CACHE_SIZE);
-        if (maxMCache != null) {
-            setMaxMemoryCacheSizeKB(Integer.parseInt(maxMCache));
-        }
-
-        String maxStringSize = props.getProperty(MAX_IN_MEMORY_STRING_SIZE);
-        if (maxStringSize != null) {
-            setMaxInMemoryStringSize(Integer.parseInt(maxStringSize) * 1024);
-        }
-
-        String maxFCache = props.getProperty(MAX_FILE_CACHE_SIZE);
-        if (maxFCache != null) {
-            setMaxFileCacheSizeKB(Integer.parseInt(maxFCache));
-        }
-
-        String cacheLoc = props.getProperty(FILE_CACHE_LOCATION);
-        if (cacheLoc != null) {
-            setCacheLocation(cacheLoc);
-        } else {
-            String temp = System.getProperty("java.io.tmpdir");
-            setCacheLocation(temp);
         }
         
         String logReqRes = props.getProperty(LOG_REQUEST_RESPONSE_DOCS);
@@ -241,21 +183,8 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
     public java.util.Properties getState() {
         Properties props = new Properties();
-        props.setProperty(CACHE_TIMEOUT, Integer
-                .toString(getCacheTimeoutSeconds()));
-        props.setProperty(MAX_MEMORY_CACHE_SIZE, Integer
-                .toString(getMaxMemoryCacheSizeKB()));
-        props.setProperty(MAX_IN_MEMORY_STRING_SIZE, Integer
-                .toString(getMaxInMemoryStringSize()));
-        props.setProperty(MAX_FILE_CACHE_SIZE, Integer
-                .toString(getMaxFileCacheSizeKB()));
         props.setProperty(LOG_REQUEST_RESPONSE_DOCS, Boolean
                 .toString(isLogRequestResponse()));
-        String location = getCacheLocation();
-        if (location == null) {
-            location = "";//$NON-NLS-1$
-        }
-        props.setProperty(FILE_CACHE_LOCATION, location);
         props.setProperty(SAX_FILTER_PROVIDER_CLASS, getSaxProviderClass());
         props.setProperty(QUERY_PREPROCESS_CLASS, getQueryPreprocessorClass());
         return props;
@@ -263,39 +192,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
 
     protected boolean isNotNullOrEmpty(String value) {
         return (value != null && !value.equals(""));
-    }
-
-    /**
-     * @param m_cacheTimeout
-     *            The m_cacheTimeout to set.
-     */
-    private final void setCacheTimeoutSeconds(int cacheTimeoutseconds) {
-
-        m_cacheTimeout = cacheTimeoutseconds * SECONDS_TO_MILLIS;
-    }
-
-    private final void setCacheTimeoutMillis(int cacheTimeoutmillis) {
-
-        m_cacheTimeout = cacheTimeoutmillis;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getCacheTimeoutSeconds()
-     */
-    public final int getCacheTimeoutSeconds() {
-        return m_cacheTimeout / SECONDS_TO_MILLIS;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getCacheTimeoutMillis()
-     */
-    public final int getCacheTimeoutMillis() {
-        return m_cacheTimeout;
     }
 
     private void setPreprocess(boolean preprocess) {
@@ -324,83 +220,6 @@ public abstract class XMLConnectorStateImpl implements Cloneable,
         this.capabilites = capabilities;
     }
 
-    private void setMaxMemoryCacheSizeKB(int maxMemoryCacheSizeKB) {
-        m_maxMemoryCacheSize = maxMemoryCacheSizeKB * KB_TO_BYTES;
-    }
-
-    private void setMaxMemoryCacheSizeBytes(int maxMemoryCacheSizeByte) {
-        m_maxMemoryCacheSize = maxMemoryCacheSizeByte;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getMaxMemoryCacheSizeByte()
-     */
-    public int getMaxMemoryCacheSizeByte() {
-        return m_maxMemoryCacheSize;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getMaxMemoryCacheSizeKB()
-     */
-    public int getMaxMemoryCacheSizeKB() {
-        return m_maxMemoryCacheSize / KB_TO_BYTES;
-    }
-
-    private void setMaxInMemoryStringSize(int maxInMemoryStringSize) {
-        m_maxInMemoryStringSize = maxInMemoryStringSize;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getMaxInMemoryStringSize()
-     */
-    public int getMaxInMemoryStringSize() {
-        return m_maxInMemoryStringSize;
-    }
-
-    private void setMaxFileCacheSizeByte(int maxFileCacheSize) {
-        m_maxFileCacheSize = maxFileCacheSize;
-    }
-
-    private void setMaxFileCacheSizeKB(int maxFileCacheSize) {
-        m_maxFileCacheSize = maxFileCacheSize * KB_TO_BYTES;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getMaxFileCacheSizeKB()
-     */
-    public int getMaxFileCacheSizeKB() {
-        return m_maxFileCacheSize / KB_TO_BYTES;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getMaxFileCacheSizeByte()
-     */
-    public int getMaxFileCacheSizeByte() {
-        return m_maxFileCacheSize;
-    }
-
-    private void setCacheLocation(String cacheLocation) {
-        m_cacheLocation = cacheLocation;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see com.metamatrix.connector.xml.base.XMLConnectorState#getCacheLocation()
-     */
-    public String getCacheLocation() {
-        return m_cacheLocation;
-    }
 
     private void setLogRequestResponse(boolean logRequestResponse) {
         m_logRequestResponse = logRequestResponse;

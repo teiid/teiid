@@ -88,11 +88,7 @@ public class ProxyObjectFactory {
     
     public static Properties getDefaultFileProps() {
        Properties testFileProps = new Properties();
-        testFileProps.put(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("500000"));
-        testFileProps.put(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("5000"));
-        testFileProps.put(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("5000"));
         testFileProps.setProperty(XMLConnectorStateImpl.CACHE_ENABLED, "false");
-        testFileProps.put(XMLConnectorStateImpl.FILE_CACHE_LOCATION, UnitTestUtil.getTestScratchPath()+"/test/cache");
         testFileProps.setProperty(XMLConnectorState.STATE_CLASS_PROP, "com.metamatrix.connector.xml.file.FileConnectorState");
         testFileProps.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");
         testFileProps.setProperty(XMLConnectorStateImpl.SAX_FILTER_PROVIDER_CLASS, "com.metamatrix.connector.xml.base.NoExtendedFilters"); 
@@ -111,12 +107,7 @@ public class ProxyObjectFactory {
     
     public static Properties getDefaultHTTPProps() {
         Properties testHTTPProps = new Properties();
-        testHTTPProps.setProperty(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("5000")); //$NON-NLS-1$
-        testHTTPProps.setProperty(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("50")); //$NON-NLS-1$
-        testHTTPProps.setProperty(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("50")); //$NON-NLS-1$
         testHTTPProps.setProperty(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE.toString());
-        testHTTPProps.setProperty(XMLConnectorStateImpl.FILE_CACHE_LOCATION, UnitTestUtil.getTestScratchPath()+"/test/cache");//$NON-NLS-1$
-        testHTTPProps.setProperty(XMLConnectorStateImpl.MAX_IN_MEMORY_STRING_SIZE, "10"); //$NON-NSL-1$
         testHTTPProps.setProperty(HTTPConnectorState.URI, "http://localhost:8673"); //$NON-NLS-1$
         testHTTPProps.setProperty(HTTPConnectorState.REQUEST_TIMEOUT, "60");	 //$NON-NLS-1$
         testHTTPProps.setProperty(XMLConnectorState.STATE_CLASS_PROP, "com.metamatrix.connector.xml.http.HTTPConnectorState"); //$NON-NLS-1$
@@ -142,11 +133,7 @@ public class ProxyObjectFactory {
     
     public static Properties getDefaultHttpProps() {
         Properties testHTTPProps = new Properties();
-         testHTTPProps.put(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("5000"));
-         testHTTPProps.put(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("5000"));
-         testHTTPProps.put(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("5000"));
          testHTTPProps.put(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE);
-         testHTTPProps.put(XMLConnectorStateImpl.FILE_CACHE_LOCATION, UnitTestUtil.getTestScratchPath()+"/test/cache");
          testHTTPProps.put(XMLConnectorStateImpl.CONNECTOR_CAPABILITES, "com.metamatrix.connector.xml.base.XMLCapabilities");
          testHTTPProps.setProperty(XMLConnectorState.STATE_CLASS_PROP, "com.metamatrix.connector.xml.http.HTTPConnectorState");
          testHTTPProps.setProperty(XMLConnectorStateImpl.QUERY_PREPROCESS_CLASS, "com.metamatrix.connector.xml.base.NoQueryPreprocessing");

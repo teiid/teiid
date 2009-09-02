@@ -60,20 +60,10 @@ public class TestXMLConnector extends TestCase {
     }
         
     public void testInitMethod() {
-        //init test environment
         XMLConnector connector = new XMLConnector();          
         try {        
         	connector.start(m_env);
             assertNotNull("state is null", connector.getState());
-            XMLConnectorState state = connector.getState();
-            Properties testFileProps = ProxyObjectFactory.getDefaultFileProps();
-            assertEquals(state.getMaxMemoryCacheSizeKB(), 
-                    Integer.parseInt((String) testFileProps.get(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE)));
-            assertEquals(state.getMaxFileCacheSizeKB(), 
-                    Integer.parseInt((String) testFileProps.get(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE)));
-            assertEquals(state.getCacheLocation(), (String) testFileProps.get(XMLConnectorStateImpl.FILE_CACHE_LOCATION));
-            int expectedTimeout = Integer.parseInt((String) testFileProps.get(XMLConnectorStateImpl.CACHE_TIMEOUT));
-            assertEquals(state.getCacheTimeoutSeconds(), expectedTimeout);
             assertNotNull("Logger is null", connector.getLogger());
         } catch (ConnectorException ex) {
         	ex.printStackTrace();
@@ -138,11 +128,7 @@ public class TestXMLConnector extends TestCase {
     	XMLConnector connector = new XMLConnector();
     	try {
     		Properties testFileProps = new Properties(); 
-    		testFileProps.put(XMLConnectorStateImpl.CACHE_TIMEOUT, new String("5000"));
-            testFileProps.put(XMLConnectorStateImpl.MAX_MEMORY_CACHE_SIZE, new String("50"));
-            testFileProps.put(XMLConnectorStateImpl.MAX_FILE_CACHE_SIZE, new String("50"));
             testFileProps.put(XMLConnectorStateImpl.CACHE_ENABLED, Boolean.TRUE);
-            testFileProps.put(XMLConnectorStateImpl.FILE_CACHE_LOCATION, new String("./test/cache"));
             testFileProps.setProperty(XMLConnectorState.STATE_CLASS_PROP, "sure.to.Fail");
             
             testFileProps.put(FileConnectorState.FILE_NAME, "state_college.xml");
