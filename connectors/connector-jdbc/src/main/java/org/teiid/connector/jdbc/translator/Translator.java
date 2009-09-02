@@ -815,6 +815,6 @@ public class Translator {
     }
     
     public boolean supportsExplicitNullOrdering() {
-    	return true;
+    	return false;
     }
 }

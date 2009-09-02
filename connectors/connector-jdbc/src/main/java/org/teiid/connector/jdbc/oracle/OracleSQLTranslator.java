@@ -407,4 +407,8 @@ public class OracleSQLTranslator extends Translator {
     public Class<? extends ConnectorCapabilities> getDefaultCapabilities() {
     	return OracleCapabilities.class;
     }
+    
+    public boolean supportsExplicitNullOrdering() {
+    	return true;
+    }    
 }
