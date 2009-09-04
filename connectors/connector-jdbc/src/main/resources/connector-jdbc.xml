@@ -109,6 +109,14 @@
             <PropertyDefinition Name="ExtensionTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.derby.DerbySQLTranslator"  PropertyType="String"   IsExpert="true"  IsMasked="false"   />
             <PropertyDefinition Name="DatabaseVersion" DisplayName="Database Version" ShortDescription="Derby Version i.e. 10.3" DefaultValue="10.1" PropertyType="String" />
         </ComponentType>
+        <ComponentType Name="Apache Derby XA Network Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="org.apache.derby.jdbc.ClientXADataSource" IsRequired="true"   />        
+            <PropertyDefinition Name="PortNumber" DisplayName="Port Number" DefaultValue="1527" ShortDescription="" IsRequired="true" PropertyType="Integer"    IsMasked="false"   />
+			<PropertyDefinition Name="ServerName" DisplayName="Server Name" ShortDescription="" IsRequired="true" PropertyType="String"    IsMasked="false"   />
+            <PropertyDefinition Name="DatabaseName" DisplayName="Database Name" ShortDescription="" IsRequired="true" PropertyType="String"    IsMasked="false"   />
+			<PropertyDefinition Name="ExtensionTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.derby.DerbySQLTranslator"  PropertyType="String"   IsExpert="true"  IsMasked="false"   />            
+            <PropertyDefinition Name="IsXA" DisplayName="Is XA" ShortDescription="Is XA" DefaultValue="true" IsRequired="true" PropertyType="Boolean"   />
+        </ComponentType>        
         <ComponentType Name="Teiid 6 JDBC Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="com.metamatrix.jdbc.MMDriver" IsRequired="true"   />
             <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:metamatrix:&lt;vdbName&gt;@mm://&lt;host&gt;:&lt;port&gt;" IsRequired="true"   />            
