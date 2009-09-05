@@ -225,5 +225,15 @@ public class TestSybaseSQLConversionVisitor {
             input, 
             output);
     }
+    
+    @Test public void testOrderByDesc() throws Exception {
+    	String input = "select intnum + 1 x from bqt1.smalla order by x desc"; //$NON-NLS-1$
+        String output = "SELECT (SmallA.IntNum + 1) AS x FROM SmallA ORDER BY x DESC"; //$NON-NLS-1$
+               
+        helpTestVisitor(getBQTVDB(),
+            input, 
+            output);
+    }
+
 
 }

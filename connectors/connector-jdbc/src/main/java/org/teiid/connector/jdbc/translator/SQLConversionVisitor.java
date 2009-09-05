@@ -118,15 +118,15 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	@Override
 	public void visit(IOrderByItem obj) {
 		super.visit(obj);
-		if (!this.translator.supportsExplicitNullOrdering()) {
+		NullOrder nullOrder = this.translator.getDefaultNullOrder();
+		if (!this.translator.supportsExplicitNullOrdering() || nullOrder == NullOrder.LOW) {
 			return;
 		}
-		NullOrder nullOrder = this.translator.getDefaultNullOrder();
 		if (obj.getDirection() == IOrderByItem.ASC) {
-			if (nullOrder != NullOrder.LOW && nullOrder != NullOrder.FIRST) {
+			if (nullOrder != NullOrder.FIRST) {
 				buffer.append(" NULLS FIRST"); //$NON-NLS-1$
 			}
-		} else if (nullOrder != NullOrder.HIGH && nullOrder != NullOrder.LAST) {
+		} else if (nullOrder == NullOrder.FIRST) {
 			buffer.append(" NULLS LAST"); //$NON-NLS-1$
 		}
 	}
