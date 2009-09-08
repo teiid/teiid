@@ -131,7 +131,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 */
 	@Override
 	public Cache<K, V> addChild(String name) {
-		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
+		Node<K, V> node = getRootNode();
 		Node<K, V> childNode = node.addChild(Fqn.fromString(name));
 		return new JBossCache<K, V>(this.cacheStore, childNode.getFqn());
 	}
@@ -141,12 +141,20 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 */
 	@Override
 	public Cache<K, V> getChild(String name) {
-		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
+		Node<K, V> node = getRootNode();
 		Node<K, V> child = node.getChild(Fqn.fromString(name));
 		if (child != null) {
 			return new JBossCache<K, V>(this.cacheStore, child.getFqn());
 		}
 		return null;
+	}
+
+	private Node<K, V> getRootNode() {
+		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
+		if (node == null) {
+			throw new IllegalStateException("Cache Node "+ this.rootFqn +" not found."); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return node;
 	}
 	
 	/**
@@ -154,7 +162,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 */
 	@Override
 	public List<Cache> getChildren() {
-		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
+		Node<K, V> node = getRootNode();
 		Set<Node<K,V>> nodes = node.getChildren();
 		if (nodes.isEmpty()) {
 			return Collections.emptyList();
@@ -171,7 +179,7 @@ public class JBossCache<K, V> implements Cache<K, V> {
 	 */
 	@Override
 	public boolean removeChild(String name) {
-		Node<K, V> node = this.cacheStore.getNode(this.rootFqn);
+		Node<K, V> node = getRootNode();
 		return node.removeChild(Fqn.fromString(name));
 	}
 

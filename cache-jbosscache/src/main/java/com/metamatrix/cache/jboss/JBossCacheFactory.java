@@ -88,7 +88,7 @@ public class JBossCacheFactory implements CacheFactory {
 			LRUAlgorithmConfig lru = new LRUAlgorithmConfig();
 			lru.setMaxNodes(config.getMaxNodes());
 			lru.setMaxAge(config.getMaxAgeInSeconds()*1000);
-			lru.setTimeToLive(0);
+			lru.setTimeToLive(-1); // -1 no limit
 			evictionConfig = lru;
 		}
 		else if (config.getPolicy() == Policy.MRU) {

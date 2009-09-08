@@ -30,7 +30,9 @@ import com.metamatrix.cache.Cache;
 import com.metamatrix.cache.CacheConfiguration;
 import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.cache.CacheConfiguration.Policy;
+import com.metamatrix.common.log.LogManager;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
+import com.metamatrix.dqp.util.LogConstants;
 
 @Singleton
 public class DQPContextCache {
@@ -50,7 +52,11 @@ public class DQPContextCache {
 	}
 
 	public void shutdown() {
-		this.cache.removeChild(this.processIdentifier);
+		try {
+			this.cache.removeChild(this.processIdentifier);
+		} catch(IllegalStateException e) {
+			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
+		}
 	}
 	
 	public Cache getRequestScopedCache(String request) {
@@ -60,12 +66,16 @@ public class DQPContextCache {
 	}
 
 	public void removeRequestScopedCache(String request) {
-		Cache processCache = this.cache.getChild(this.processIdentifier);
-		if (processCache != null) {
-			Cache scopeNode = processCache.getChild(Scope.REQUEST.name());
-			if (scopeNode != null) {
-				scopeNode.removeChild(request.toString());
+		try {
+			Cache processCache = this.cache.getChild(this.processIdentifier);
+			if (processCache != null) {
+				Cache scopeNode = processCache.getChild(Scope.REQUEST.name());
+				if (scopeNode != null) {
+					scopeNode.removeChild(request.toString());
+				}
 			}
+		} catch(IllegalStateException e) {
+			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 	
@@ -76,12 +86,16 @@ public class DQPContextCache {
 	}
 	
 	public void removeServiceScopedCache(String serviceId) {
-		Cache processCache = this.cache.getChild(this.processIdentifier);
-		if (processCache != null) {
-			Cache scopeNode = processCache.addChild(Scope.SERVICE.name());
-			if (scopeNode != null) {
-				scopeNode.removeChild(serviceId);
+		try {
+			Cache processCache = this.cache.getChild(this.processIdentifier);
+			if (processCache != null) {
+				Cache scopeNode = processCache.addChild(Scope.SERVICE.name());
+				if (scopeNode != null) {
+					scopeNode.removeChild(serviceId);
+				}
 			}
+		} catch(IllegalStateException e) {
+			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 
@@ -91,9 +105,13 @@ public class DQPContextCache {
 	}
 
 	public void removeSessionScopedCache(String session) {
-		Cache scopeNode = this.cache.addChild(Scope.SESSION.name());
-		if (scopeNode != null) {
-			scopeNode.removeChild(session);
+		try {
+			Cache scopeNode = this.cache.addChild(Scope.SESSION.name());
+			if (scopeNode != null) {
+				scopeNode.removeChild(session);
+			}
+		} catch(IllegalStateException e) {
+			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 
@@ -104,10 +122,14 @@ public class DQPContextCache {
 	}
 
 	public void removeVDBScopedCache(String vdbName, String vdbVersion) {
-		Cache scopeNode = this.cache.addChild(Scope.VDB.name());
-		if (scopeNode != null) {
-			String id = vdbName+"-"+vdbVersion; //$NON-NLS-1$
-			scopeNode.removeChild(id.toUpperCase());
+		try {
+			Cache scopeNode = this.cache.addChild(Scope.VDB.name());
+			if (scopeNode != null) {
+				String id = vdbName+"-"+vdbVersion; //$NON-NLS-1$
+				scopeNode.removeChild(id.toUpperCase());
+			}
+		} catch(IllegalStateException e) {
+			LogManager.logWarning(LogConstants.CTX_DQP, e, e.getMessage());
 		}
 	}
 }
