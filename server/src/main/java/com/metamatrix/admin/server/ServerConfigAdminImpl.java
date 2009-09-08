@@ -2397,5 +2397,10 @@ public class ServerConfigAdminImpl extends AbstractAdminImpl implements
 	public void setLogListener(EmbeddedLogger listener) throws AdminException {
 		
 	}
+
+	@Override
+	public void setProcessProperty(String processIdentifier,
+			String propertyName, String propertyValue) throws AdminException {
+	}
     
 }

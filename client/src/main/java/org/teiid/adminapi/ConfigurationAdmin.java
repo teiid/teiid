@@ -347,5 +347,14 @@ public interface ConfigurationAdmin {
      * @throws AdminException
      * @since 6.1.0
      */
-    void extensionModuleModified(String name) throws AdminException;    
+    void extensionModuleModified(String name) throws AdminException;   
+    
+    
+    /**
+     * Set a process level property. 
+     * @param processIdentifier - identifier for the process where the property needs to be set
+     * @param propertyName - name of the property
+     * @param propertyValue - value of the property
+     */
+    void setProcessProperty(String processIdentifier, String propertyName, String propertyValue) throws AdminException;
 }

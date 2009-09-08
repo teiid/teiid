@@ -1038,5 +1038,14 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
 		} catch (MetaMatrixComponentException e) {
 			throw new AdminComponentException(e);
 		}		
-	}    
+	}
+
+	@Override
+	public void setProcessProperty(String processIdentifier, String propertyName, String propertyValue) throws AdminException{
+		try {
+			getConfigurationService().setSystemProperty(propertyName, propertyValue);
+		} catch (MetaMatrixComponentException e) {
+			throw new AdminComponentException(e);
+		}
+	}
 }

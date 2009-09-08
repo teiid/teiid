@@ -1036,4 +1036,9 @@ public class ServerAdminImpl implements ServerAdmin {
 		return null;
 	}
 
+	@Override
+	public void setProcessProperty(String processIdentifier,
+			String propertyName, String propertyValue) throws AdminException {
+	}
+
 }
