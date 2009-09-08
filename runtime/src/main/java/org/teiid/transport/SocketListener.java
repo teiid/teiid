@@ -43,6 +43,7 @@ import com.metamatrix.common.queue.WorkerPoolStats;
 import com.metamatrix.common.util.ApplicationInfo;
 import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
+import com.metamatrix.core.util.NamedThreadFactory;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
 import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
@@ -78,7 +79,7 @@ public class SocketListener implements ChannelListenerFactory {
 
        	this.server = server;
         this.workerPool = WorkerPoolFactory.newWorkerPool("SocketWorker", maxWorkers); //$NON-NLS-1$
-        this.nettyPool = Executors.newCachedThreadPool();
+        this.nettyPool = Executors.newCachedThreadPool(new NamedThreadFactory("NIO")); //$NON-NLS-1$
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_SERVER, MessageLevel.DETAIL)) { 
             LogManager.logDetail(LogConstants.CTX_SERVER, "server = " + bindAddress + "binding to port:" + port); //$NON-NLS-1$ //$NON-NLS-2$
 		}
