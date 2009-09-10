@@ -243,7 +243,7 @@ public final class LogManager {
      * not logged if this parameter is null
      * @param message the log message (may be null)
      */
-    public static void logDetail(String context, Throwable e, String message) {
+    public static void logDetail(String context, Throwable e, Object ... message) {
     	log(MessageLevel.DETAIL,context,e,message);
     }
 
