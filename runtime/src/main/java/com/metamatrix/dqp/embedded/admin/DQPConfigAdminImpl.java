@@ -203,7 +203,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             	checkDecryption(binding, ctype);
             } catch(CryptoException e) {
             	if (!options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
-            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
+            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
             	}
             }
             
@@ -280,7 +280,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             	checkDecryption(binding, type);
             } catch(CryptoException e) {
             	if (!options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
-            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
+            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
             	}
             }
 
@@ -457,7 +457,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             	checkDecryption(binding, type);
             } catch(CryptoException e) {
             	if (!options.containsOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR)) {
-            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("AdminStatus.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
+            		throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.CODE_DECRYPTION_FAILED", binding.getFullName())); //$NON-NLS-1$		
             	}
             }
         }
@@ -502,7 +502,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
      * @return decrypted property.
      */
     String decryptProperty(String value) throws CryptoException{
-        if (value != null && value.length() > 0) {
+        if (value != null && value.length() > 0 && CryptoUtil.isValueEncrypted(value)) {
            return CryptoUtil.stringDecrypt(value);
         }
         return value;
