@@ -59,9 +59,10 @@
    </appender>   
    -->
 
-   <!-- ================ -->
-   <!-- categories       -->
-   <!-- ================ -->
+   <!-- ======================================================== -->
+   <!-- Loggers                                                  -->
+   <!-- Supported logging levels DEBUG, INFO, WARN, ERROR, FATAL -->
+   <!-- ======================================================== -->
 
    <logger name="org.jgroups">
       <level value="WARN"/>
