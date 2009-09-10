@@ -1,0 +1,3 @@
+ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
+TABLE_SCHEM	12	string	java.lang.String	0	System.VirtualDatabases	PartsSupplier	null
+TABLE_CATALOG	12	string	java.lang.String	1	null	PartsSupplier	null

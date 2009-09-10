@@ -1,0 +1,10 @@
+ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
+PROCEDURE_CAT	12	string	java.lang.String	1	null	PartsSupplier	null
+PROCEDURE_SCHEM	12	string	java.lang.String	0	System.VirtualDatabases	PartsSupplier	null
+PROCEDURE_NAME	12	string	java.lang.String	0	System.Procedures	PartsSupplier	null
+RESERVED_1	12	string	java.lang.String	1	null	PartsSupplier	null
+RESERVED_2	12	string	java.lang.String	1	null	PartsSupplier	null
+RESERVED_3	12	string	java.lang.String	1	null	PartsSupplier	null
+REMARKS	12	string	java.lang.String	1	System.Procedures	PartsSupplier	null
+PROCEDURE_TYPE	5	short	java.lang.Short	1	null	PartsSupplier	null
+SPECIFIC_NAME	12	string	java.lang.String	0	System.Procedures	PartsSupplier	null

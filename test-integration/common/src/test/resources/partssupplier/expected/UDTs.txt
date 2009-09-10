@@ -1,0 +1,1 @@
+TYPE_CAT[string]	TYPE_SCHEM[string]	TYPE_NAME[string]	CLASS_NAME[string]	DATA_TYPE[string]	REMARKS[string]	BASE_TYPE[short]	

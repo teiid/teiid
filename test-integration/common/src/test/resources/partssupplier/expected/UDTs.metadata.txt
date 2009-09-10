@@ -1,0 +1,8 @@
+ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
+TYPE_CAT	12	string	java.lang.String	2	null	PartsSupplier	null
+TYPE_SCHEM	12	string	java.lang.String	2	null	PartsSupplier	null
+TYPE_NAME	12	string	java.lang.String	2	null	PartsSupplier	null
+CLASS_NAME	12	string	java.lang.String	2	null	PartsSupplier	null
+DATA_TYPE	12	string	java.lang.String	2	null	PartsSupplier	null
+REMARKS	12	string	java.lang.String	2	null	PartsSupplier	null
+BASE_TYPE	5	short	java.lang.Short	2	null	PartsSupplier	null

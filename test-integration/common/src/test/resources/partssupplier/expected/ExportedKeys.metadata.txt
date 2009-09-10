@@ -1,0 +1,15 @@
+ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
+PKTABLE_CAT	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+PKTABLE_SCHEM	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+PKTABLE_NAME	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+PKCOLUMN_NAME	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+FKTABLE_CAT	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+FKTABLE_SCHEM	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+FKTABLE_NAME	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+FKCOLUMN_NAME	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+KEY_SEQ	5	short	java.lang.Short	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+UPDATE_RULE	4	integer	java.lang.Integer	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+DELETE_RULE	4	integer	java.lang.Integer	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+FK_NAME	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+PK_NAME	12	string	java.lang.String	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null
+DEFERRABILITY	4	integer	java.lang.Integer	1	System.JDBC.ReferenceKeyColumns	PartsSupplier	null

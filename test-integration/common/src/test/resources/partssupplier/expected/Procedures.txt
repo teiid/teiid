@@ -1,0 +1,6 @@
+PROCEDURE_CAT[string]	PROCEDURE_SCHEM[string]	PROCEDURE_NAME[string]	RESERVED_1[string]	RESERVED_2[string]	RESERVED_3[string]	REMARKS[string]	PROCEDURE_TYPE[short]	SPECIFIC_NAME[string]
+null	PartsSupplier	System.describe	null	null	null	null	2	System.describe
+null	PartsSupplier	System.getBinaryVDBResource	null	null	null	null	2	System.getBinaryVDBResource
+null	PartsSupplier	System.getCharacterVDBResource	null	null	null	null	2	System.getCharacterVDBResource
+null	PartsSupplier	System.getUpdatedCharacterVDBResource	null	null	null	null	2	System.getUpdatedCharacterVDBResource
+null	PartsSupplier	System.getVDBResourcePaths	null	null	null	null	2	System.getVDBResourcePaths

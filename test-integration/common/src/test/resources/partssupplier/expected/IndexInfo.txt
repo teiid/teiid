@@ -1,0 +1,1 @@
+TABLE_CAT[string]	TABLE_SCHEM[string]	TABLE_NAME[string]	NON_UNIQUE[boolean]	INDEX_QUALIFIER[string]	INDEX_NAME[string]	TYPE[integer]	ORDINAL_POSITION[short]	COLUMN_NAME[string]	ASC_OR_DESC[string]	CARDINALITY[integer]	PAGES[integer]	FILTER_CONDITION[string]	
