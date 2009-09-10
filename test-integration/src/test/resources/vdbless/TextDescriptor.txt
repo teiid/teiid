@@ -1,4 +1,0 @@
-SummitData.Example.location = src/test/resources/vdbless/TextData.txt
-SummitData.Example.delimiter = ,
-SummitData.Example.columns = TRADEID,NOTIONAL
-SummitData.Example.types = STRING, INTEGER 

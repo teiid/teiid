@@ -1,2 +1,0 @@
-ColumnName	ColumnType	ColumnTypeName	ColumnClassName	isNullable	TableName	SchemaName	CatalogName	
-TABLE_CAT	12	string	java.lang.String	1	null	PartsSupplier	null

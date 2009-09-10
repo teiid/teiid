@@ -8,9 +8,20 @@
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>teiid-test-integration</artifactId>
+  	<packaging>pom</packaging>
 	<name>Integration Tests</name>
 	<description>Integration tests spanning
 		server/embedded/connectors.</description>
+
+	<properties>
+ 		<apache.ant.version>1.7.0</apache.ant.version>
+
+    <!-- Database Driver Versions  -->
+		<mysql.connector.version>5.1.5</mysql.connector.version>
+		<postgresql.version>8.3-603.jdbc3</postgresql.version>
+		<derby.version>10.2.1.6</derby.version>
+	</properties>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -52,6 +63,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-connector-metadata</artifactId>
+			<type>test-jar</type>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client-jdbc</artifactId>
 			<type>test-jar</type>
 		</dependency>
@@ -77,42 +94,46 @@
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-loopback</artifactId>
 			<version>${project.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-text</artifactId>
 			<version>${project.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-text</artifactId>
 			<type>test-jar</type>
 			<version>${project.version}</version>
+			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.teiid</groupId>
-			<artifactId>teiid-connector-metadata</artifactId>
-			<type>test-jar</type>
-			<version>${project.version}</version>
-		</dependency>
+
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-jdbc</artifactId>
 			<version>${project.version}</version>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-jdbc</artifactId>
 			<type>test-jar</type>
 			<version>${project.version}</version>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- external dependencies -->
 		<dependency>
 			<groupId>org.apache.derby</groupId>
 			<artifactId>derby</artifactId>
-			<version>10.2.1.6</version>
+			<version>${derby.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+  <modules>
+    <module>common</module>
+  </modules>
 </project>
