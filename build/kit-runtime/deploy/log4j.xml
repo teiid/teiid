@@ -59,10 +59,12 @@
    </appender>   
    -->
 
-   <!-- ======================================================== -->
-   <!-- Loggers                                                  -->
-   <!-- Supported logging levels DEBUG, INFO, WARN, ERROR, FATAL -->
-   <!-- ======================================================== -->
+   <!-- =============================================================================== -->
+   <!-- Loggers                                                                         -->
+   <!-- Supported logging levels DEBUG, INFO, WARN, ERROR, FATAL                        -->
+   <!-- setting log level to DEBUG will increase the volume of messages that are logged -->
+   <!-- Consider increasing "MaxFileSize" in the "appender" to hold more data per file  -->
+   <!-- =============================================================================== -->
 
    <logger name="org.jgroups">
       <level value="WARN"/>
