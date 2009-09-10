@@ -51,10 +51,9 @@ public class ExecutionInfo {
 	
     private List m_columns;
     private int m_columnCount;
-    private List m_params;
-    private List m_criteria;
+    private List<CriteriaDesc> m_params;
+    private List<CriteriaDesc> m_criteria;
     private Properties m_otherProps;
-    private Properties m_schemaProps;
     private String m_tablePath;
     private String m_location;
 	private Map<String, String> m_prefixToNamespace;
@@ -63,10 +62,9 @@ public class ExecutionInfo {
     public ExecutionInfo() { 
         m_columnCount = 0;
         m_columns = new ArrayList();
-        m_params = new ArrayList();
-        m_criteria = new ArrayList();
+        m_params = new ArrayList<CriteriaDesc>();
+        m_criteria = new ArrayList<CriteriaDesc>();
         m_otherProps = new Properties();
-        m_schemaProps = new Properties();
         m_tablePath = ""; //$NON-NLS-1$
     }
     
@@ -90,12 +88,12 @@ public class ExecutionInfo {
     }
     
     
-    public List getParameters() {
+    public List<CriteriaDesc> getParameters() {
         return m_params;
     }
     
     
-    public List getCriteria() {
+    public List<CriteriaDesc> getCriteria() {
         return m_criteria;
     }
     
@@ -127,12 +125,12 @@ public class ExecutionInfo {
     }
     
     
-    public void setParameters(List params) {
+    public void setParameters(List<CriteriaDesc> params) {
         m_params = params;
     }
     
     
-    public void setCriteria(List criteria) {
+    public void setCriteria(List<CriteriaDesc> criteria) {
         m_criteria = criteria;
     }
     
@@ -213,12 +211,4 @@ public class ExecutionInfo {
 			return m_prefixToNamespace;
 		}
 	}
-
-	public void setSchemaProperties(Properties schemaProperties) {
-		m_schemaProps = schemaProperties;
-	}
-	
-	public Properties getSchemaProperties() {
-		return m_schemaProps;
-	}    
 }

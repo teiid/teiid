@@ -129,20 +129,20 @@ public class ServiceOperation {
             
             // If query timeout is set use it
             if (getQueryTimeout() != -1) {
-                this.stub.setTimeout(new Integer(getQueryTimeout()));
+                this.stub.setTimeout(Integer.valueOf(getQueryTimeout()));
             }
                         
             // check the param count of the submitted operation, in doc-literal
             // there should always be only one input
             if (isDocLiteral()) {
                 if (args.length != 1) {
-                    throw new ExcutionFailedException(XMLSourcePlugin.Util.getString("wrong_number_params", new Object[] {new Integer(1), new Integer(args.length)})); //$NON-NLS-1$
+                    throw new ExcutionFailedException(XMLSourcePlugin.Util.getString("wrong_number_params", new Object[] {Integer.valueOf(1), Integer.valueOf(args.length)})); //$NON-NLS-1$
                 }
             }
             else {
                 int requiredParamCount = this.stub.getOperation().getNumInParams();
                 if (requiredParamCount != args.length) {
-                    throw new ExcutionFailedException(XMLSourcePlugin.Util.getString("wrong_number_params", new Object[] {new Integer(requiredParamCount), new Integer(args.length)})); //$NON-NLS-1$
+                    throw new ExcutionFailedException(XMLSourcePlugin.Util.getString("wrong_number_params", new Object[] {Integer.valueOf(requiredParamCount), Integer.valueOf(args.length)})); //$NON-NLS-1$
                 }
             }
 

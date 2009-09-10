@@ -23,10 +23,6 @@
 
 package com.metamatrix.connector.xml.http;
 
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
@@ -35,7 +31,6 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
 import com.metamatrix.connector.xml.ResultProducer;
 import com.metamatrix.connector.xml.XMLConnectorState;
-import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.QueryAnalyzer;
 import com.metamatrix.connector.xml.base.XMLConnectionImpl;
 import com.metamatrix.connector.xml.streaming.BaseStreamingExecution;
@@ -45,13 +40,15 @@ import com.metamatrix.connector.xml.streaming.XPathSplitter;
 
 public class HTTPExecution extends BaseStreamingExecution {
 
-    public HTTPExecution(IQuery query, XMLConnectionImpl conn, RuntimeMetadata metadata,
+    protected QueryAnalyzer analyzer;
+
+	public HTTPExecution(IQuery query, XMLConnectionImpl conn, RuntimeMetadata metadata,
             ExecutionContext exeContext, ConnectorEnvironment connectorEnv) {
     	super(query, conn, metadata, exeContext, connectorEnv);
     }
     
     /**
-     * HTTP execution can have multiple permutations from a single SQL
+     * HTTP execution can produce multiple requests from a single SQL
      * query, but each will have only one response.
      */
     public void execute()
@@ -59,12 +56,22 @@ public class HTTPExecution extends BaseStreamingExecution {
 
     	XMLConnectorState state = connection.getState();
         
-        QueryAnalyzer analyzer = new QueryAnalyzer(query, metadata, state.getPreprocessor(), logger, exeContext, connEnv);
+        analyzer = new QueryAnalyzer(query, metadata, state.getPreprocessor(), logger, exeContext, connEnv);
         exeInfo = analyzer.getExecutionInfo();
-        List requestPerms = analyzer.getRequestPerms();
+        rowProducer = new StreamingResultsProducer(exeInfo, state);
+        resultProducers.add(getStreamProducer());
         
-        for (Iterator iter = requestPerms.iterator(); iter.hasNext(); ) {
-        	List<CriteriaDesc> criteriaList = Arrays.asList((CriteriaDesc[]) iter.next());
+        XPathSplitter splitter = new XPathSplitter();
+    	try {
+    		xpaths = splitter.split(exeInfo.getTableXPath());
+    	} catch (InvalidPathException e) {
+    		e.printStackTrace();
+    	}
+/*        
+        List<CriteriaDesc[]> requestPerms = analyzer.getRequestPerms();
+        
+        for (CriteriaDesc[] criteria : requestPerms) {
+        	List<CriteriaDesc> criteriaList = Arrays.asList(criteria);
         	exeInfo.setParameters(criteriaList);
         
         	XPathSplitter splitter = new XPathSplitter();
@@ -77,10 +84,11 @@ public class HTTPExecution extends BaseStreamingExecution {
         	rowProducer = new StreamingResultsProducer(exeInfo, state);
         	resultProducers.add(getStreamProducer());
         }
+*/
     }
     
 	@Override
 	public ResultProducer getStreamProducer() throws ConnectorException {
-		return new HTTPExecutor(connection.getState(), this, exeInfo);
+		return new HTTPExecutor((HTTPConnectorState) connection.getState(), this, exeInfo, analyzer);
 	}
 }

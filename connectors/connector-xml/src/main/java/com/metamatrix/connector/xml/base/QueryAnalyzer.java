@@ -26,7 +26,6 @@ package com.metamatrix.connector.xml.base;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
@@ -35,6 +34,7 @@ import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.language.IElement;
 import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFrom;
+import org.teiid.connector.language.IFromItem;
 import org.teiid.connector.language.IGroup;
 import org.teiid.connector.language.ILiteral;
 import org.teiid.connector.language.IQuery;
@@ -64,9 +64,6 @@ public class QueryAnalyzer {
 
 	private ExecutionContext exeContext;
 
-	private Properties schemaProperties;
-
-    
     public QueryAnalyzer(IQuery query, RuntimeMetadata metadata, IQueryPreprocessor preprocessor, 
     		ConnectorLogger logger, ExecutionContext exeContext, ConnectorEnvironment connectorEnv) throws ConnectorException {
         setMetaData(metadata);
@@ -119,49 +116,27 @@ public class QueryAnalyzer {
 
     private void setGroupInfo() throws ConnectorException {
         IFrom from = m_query.getFrom();
-        List fromItems = from.getItems();
-        //better be only one
+        List<IFromItem> fromItems = from.getItems();
+        //Can only be one because we do not support joins
         IGroup group = (IGroup) fromItems.get(0);
         m_table = group.getMetadataObject();
         m_info.setTableXPath(m_table.getNameInSource());
-        
-        String fqTableName = m_table.getFullName();
-        String fqSchemaName = extractSchemaName(fqTableName);
-        
-        if(null != fqSchemaName) {
-        	try{
-        	Group schema = m_metadata.getGroup(fqSchemaName);
-        	schemaProperties = schema.getProperties();
-        	} catch(ConnectorException ex) {
-        		
-        	}
-        }
     }
-
-    private String extractSchemaName(String fqTableName) {
-		int schemaEnd = fqTableName.lastIndexOf('.');
-		int schemaStart = fqTableName.lastIndexOf('.', schemaEnd -1);
-		if(-1 == schemaStart || -1 == schemaEnd) {
-			return null;
-		}
-		return fqTableName.substring(schemaStart +1, schemaEnd);
-	}
 
 	private void setRequestedColumns() throws ConnectorException {
 
-        ArrayList columns = new ArrayList();
+        List<OutputXPathDesc> columns = new ArrayList<OutputXPathDesc>();
         //get the request items
         ISelect select = m_query.getSelect();
-        List selectSymbols = select.getSelectSymbols();
-        Iterator symbolsIterator = selectSymbols.iterator();
-
+        List<ISelectSymbol> selectSymbols = select.getSelectSymbols();
+        
         //setup column numbers
         int projectedColumnCount = 0;
 
         //add projected fields into XPath array and element array for later
         // lookup
-        while (symbolsIterator.hasNext()) {
-            ISelectSymbol selectSymbol = (ISelectSymbol) symbolsIterator.next();
+        
+       for(ISelectSymbol selectSymbol : selectSymbols) {
             IExpression expr = selectSymbol.getExpression();
             OutputXPathDesc xpath = null;
 
@@ -193,10 +168,10 @@ public class QueryAnalyzer {
         //  containing names, element (metadata), and equivilence value, or all
         // set values
 
-        ArrayList params = new ArrayList();
-        ArrayList crits = new ArrayList();
-        ArrayList responses = new ArrayList();
-        ArrayList locations = new ArrayList();
+        ArrayList<CriteriaDesc> params = new ArrayList<CriteriaDesc>();
+        ArrayList<CriteriaDesc> crits = new ArrayList<CriteriaDesc>();
+        ArrayList<CriteriaDesc> responses = new ArrayList<CriteriaDesc>();
+        ArrayList<CriteriaDesc> locations = new ArrayList<CriteriaDesc>();
 
         //Iterate through each field in the table
         for (Element element : m_table.getChildren()) {
@@ -210,10 +185,10 @@ public class QueryAnalyzer {
         m_info.setCriteria(crits);
         
         String location = null;
-        for (Iterator iter = locations.iterator(); iter.hasNext(); ) {
+        for (Iterator<CriteriaDesc> iter = locations.iterator(); iter.hasNext(); ) {
             Object o = iter.next();
             CriteriaDesc crtierion = (CriteriaDesc)o;
-            ArrayList values = crtierion.getValues();
+            List values = crtierion.getValues();
             for (Iterator valuesIter = values.iterator(); valuesIter.hasNext(); ) {
                 Object oValue = valuesIter.next();
                 String value = (String)oValue;
@@ -229,8 +204,8 @@ public class QueryAnalyzer {
         m_info.setLocation(location);
     }
 
-    private void mapCriteriaToColumn(CriteriaDesc criteria, ArrayList params,
-            ArrayList crits, ArrayList responses, ArrayList locations) throws ConnectorException {
+    private void mapCriteriaToColumn(CriteriaDesc criteria, ArrayList<CriteriaDesc> params,
+            ArrayList<CriteriaDesc> crits, ArrayList<CriteriaDesc> responses, ArrayList<CriteriaDesc> locations) throws ConnectorException {
         int totalColumnCount = m_info.getColumnCount();
         //check each criteria to see which projected column it maps to
         String criteriaColName = criteria.getColumnName();
@@ -278,11 +253,10 @@ public class QueryAnalyzer {
 
     private void setProperties() throws ConnectorException {
         m_info.setOtherProperties(m_table.getProperties());
-        m_info.setSchemaProperties(schemaProperties);
     }
 
-	public List getRequestPerms() {
-		return RequestGenerator.getRequestPerms(m_info.getParameters());
+	public List<CriteriaDesc[]> getRequestPerms() {
+		return RequestGenerator.getRequests(m_info.getParameters());
 	}
 
 }

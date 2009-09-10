@@ -25,23 +25,19 @@
 package com.metamatrix.connector.xml.base;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class RequestGenerator {
 
 	// This method is misnamed. It generates cartesian products, not permutations.
-	public static ArrayList getRequestPerms(List params)
+	public static List<CriteriaDesc[]> getRequests(List<CriteriaDesc> params)
 	{
-	    ArrayList soFar = new ArrayList();
+	    List<CriteriaDesc[]> soFar = new ArrayList<CriteriaDesc[]>();
 	    
 	    // Start off with a single "row" (with zero parameters)
 		soFar.add(new CriteriaDesc[]{});
-	    for (Iterator iter = params.iterator(); iter.hasNext(); ) {
-	    	Object o = iter.next();
-	        CriteriaDesc desc = (CriteriaDesc)o;
-	        ArrayList nextGeneration = RequestGenerator.createCartesionProduct(soFar, desc);
-	        soFar = nextGeneration;
+	    for (CriteriaDesc desc: params){
+	    	soFar = RequestGenerator.createCartesionProduct(soFar, desc);
 	    }
 	    
 		return soFar;
@@ -49,17 +45,15 @@ public class RequestGenerator {
 
 	// Create the cartesian product of a list of CriteriaDescs, and single CriteriaDesc
 	// with (potentially) multiple values
-	static ArrayList createCartesionProduct(List permsSoFar, CriteriaDesc desc)
+	static List<CriteriaDesc[]> createCartesionProduct(List<CriteriaDesc[]> permsSoFar, CriteriaDesc desc)
 	{
-		ArrayList retval = new ArrayList();
+		List<CriteriaDesc[]> retval = new ArrayList<CriteriaDesc[]>();
 	
 		// Get the 'simple' cartesian product
-		List rows = createCartesionProduct(permsSoFar, desc.getValues(), desc.isUnlimited());
+		List<List> rows = createCartesionProduct(permsSoFar, desc.getValues(), desc.isUnlimited());
 		
 		// Merge the existing list of CriteriaDescs with the new value turned into a CriteriaDesc)
-		for (Iterator iter = rows.iterator(); iter.hasNext(); ) {
-			Object oRow = iter.next();
-			ArrayList row = (ArrayList)oRow;
+		for (List row : rows) {
 			Object oOperand1 = row.get(0);
 			CriteriaDesc[] previousCriteriaDescs = (CriteriaDesc[])oOperand1;
 			
@@ -77,10 +71,10 @@ public class RequestGenerator {
 	}
 
 	// Create the cartesian product of any two lists
-	private static List createCartesionProduct(List operand1, List operand2, boolean multiElem)
+	private static List<List> createCartesionProduct(List<CriteriaDesc[]> operand1, List operand2, boolean multiElem)
 	{
 	    if (operand1.size() == 0) {
-	    	operand1 = new ArrayList();
+	    	operand1 = new ArrayList<CriteriaDesc[]>();
 	    	operand1.add(null);
 	    }
 	
@@ -90,25 +84,19 @@ public class RequestGenerator {
 	    }
 	
 		
-		ArrayList cartesianProduct = new ArrayList();
-	    for (Iterator operand1iter = operand1.iterator(); operand1iter.hasNext(); ) {
-	    	Object operand1item = operand1iter.next();
-	
+	    List<List> cartesianProduct = new ArrayList<List>();
+	    for (CriteriaDesc[] operand1item : operand1) {
+	    	List newRow = new ArrayList();
 	    	if (! multiElem) {
-	        	for (Iterator operand2iter = operand2.iterator(); operand2iter.hasNext(); ) {
-		    		Object operand2item = operand2iter.next();
-	
-	     	    		ArrayList newRow = new ArrayList();
-	                	newRow.add(operand1item);
-	                    newRow.add(operand2item);
-	                    cartesianProduct.add(newRow);            		
+	        	for (Object operand2item : operand2 ) {
+		    		newRow.add(operand1item);
+	                newRow.add(operand2item);
+	                cartesianProduct.add(newRow);            		
 	            }
 	        } else {
-	        	ArrayList newRow = new ArrayList();
 	        	newRow.add(operand1item);
-	        	for (Iterator operand2iter = operand2.iterator(); operand2iter.hasNext(); ) {
-		    		Object operand2item = operand2iter.next();
-	                newRow.add(operand2item);
+	        	for (Object operand2item : operand2 ) {
+		    		newRow.add(operand2item);
 	        	}
 	        	cartesianProduct.add(newRow);
 	        }

@@ -53,7 +53,6 @@ public class IDGeneratingXmlFilter extends XMLFilterImpl
     public IDGeneratingXmlFilter(String documentId, ConnectorLogger logger)
     {
         this.documentId = documentId;
-        this.logger = logger;
     }
 
     public static final String MM_ID_ATTR_NAME_BY_PATH = "com.metamatrix.xml.xpathpart";
@@ -61,7 +60,6 @@ public class IDGeneratingXmlFilter extends XMLFilterImpl
     public static final String MM_ID_ATTR_NAME = MM_ID_ATTR_NAME_BY_PATH;
     public static final String MM_ID_ATTR_VALUE_PREFIX = "";
 
-    ConnectorLogger logger;
     String documentId;
 
     // This way of doing things seems like cheating, but it will produce the desired results.

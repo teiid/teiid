@@ -333,7 +333,7 @@ class UsernameTokenProfile extends WSSecurityToken {
         try {
           MessageDigest md = MessageDigest.getInstance("SHA1"); //$NON-NLS-1$
           byte[] digest = md.digest(clearText.getBytes());
-          sha1Hash = new String(Base64.encode(digest));
+          sha1Hash = Base64.encode(digest);
         } catch (Exception e) {
           e.printStackTrace();
         }

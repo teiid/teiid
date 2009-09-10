@@ -15,14 +15,18 @@ import nu.xom.Text;
 import org.teiid.connector.api.ConnectorException;
 
 import com.metamatrix.connector.xml.Document;
+import com.metamatrix.connector.xml.base.CriteriaDesc;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 import com.metamatrix.connector.xml.base.OutputXPathDesc;
 import com.metamatrix.connector.xml.http.Messages;
 
 /**
- * The ElementProcessor extracts data from a Node based upon paths defined in
- * an ExecutionInfo (aka columns in a query request).  The processor is also 
- * responsible putting the cacheKey in the response row.
+ * The ElementProcessor extracts data from a Node based upon XPaths defined in
+ * an ExecutionInfo (aka columns in a query request) ro build a single result row.
+ * In this context Node is equivalent to a table in the model.  
+ * 
+ * The processor is also responsible putting the cacheKey in the response row,
+ * inserting projected parameters, and applying = criteria.
  *
  */
 public class ElementProcessor {
@@ -32,25 +36,31 @@ public class ElementProcessor {
 	private Map<String, OutputXPathDesc> resultPaths;
 	private OutputXPathDesc cacheKeyColumn;
 	private Map<String, String> namespacesToPrefixMap;
+	private boolean rowExcluded = false;
     
 	public ElementProcessor(ExecutionInfo info) throws ConnectorException {
 		this.info = info;
-		resultPaths = generateXPaths();
+		resultPaths = generateXPaths(info.getRequestedColumns());
 		namespacesToPrefixMap = info.getNamespaceToPrefixMap();
 	}
 	
 	/**
 	 * Iterate down the element getting column data from the matching paths.
-	 * @param element
-	 * @param xml
+	 * @param element the Node representing the Table in the model.
 	 * @return a single result row
 	 */
 	public Object[] process(Node element) {
+		setRowExcluded(false);
 		row = new Object[resultPaths.size()];
 		listChildren(element, "");
 		return row;
 	}
 	
+	/**
+	 * Iterate over the result and insert the ResponseId in the correct column
+	 * @param xml the XML Document
+	 * @param result the result batch for the query
+	 */
 	public void insertResponseId(Document xml, List<Object[]> result) {
 		if (null != cacheKeyColumn) {
 			Object[] aRow;
@@ -89,8 +99,11 @@ public class ElementProcessor {
 	          Attribute attribute = temp.getAttribute(i);
 	          String attrPath = path + "/@" + getLocalQName(attribute);
 	          if(resultPaths.containsKey(attrPath)) {
-	        	  getColumn(attribute, attrPath);
-	          }
+		          handleNode(attribute, attrPath);
+		          if(isRowExcluded()) {
+		        	  return;
+		          }
+		      }
 	        }
 	    }
 	    else if (current instanceof ProcessingInstruction) {
@@ -101,14 +114,20 @@ public class ElementProcessor {
 	        DocType temp = (DocType) current;
 	        path = path + '/' + temp.getRootElementName();   
 	    }
-	    else if (current instanceof Text /*|| current instanceof Comment*/) {
+	    else if (current instanceof Text) {
 	    	String textPath = path + "/text()";
 	    	if(resultPaths.containsKey(textPath)) {
-	        	  getColumn(current, textPath);
+	        	  handleNode(current, textPath);
+	        	  if(isRowExcluded()) {
+		        	  return;
+		          }
 	          }
 	    }
 	    
 	    for (int i = 0; i < current.getChildCount(); i++) {
+	    	if(isRowExcluded()) {
+	        	  return;
+	        }
 	    	Node next = current.getChild(i);
 	    	String childPath = path;
 	    	if (next instanceof Element) {
@@ -154,19 +173,56 @@ public class ElementProcessor {
 		return result;
 	}
 	
-    private void getColumn(Node node, String path) {
-		OutputXPathDesc columnMetadata = resultPaths.get(path);
-    	int columnNum = columnMetadata.getColumnNumber();
-    	//TODO: type conversion
-		row[columnNum] = node.getValue();
-		
-	}
+	private void handleNode(Node node, String parentPath) {
+		OutputXPathDesc columnMetadata = resultPaths.get(parentPath);
+		int columnNum = columnMetadata.getColumnNumber();
 
-	private Map<String, OutputXPathDesc> generateXPaths() throws ConnectorException {
+		if(!passesCriteriaCheck(info.getCriteria(), node.getValue(), columnNum)) {
+			setRowExcluded(true);
+			return;
+		} else {
+			//TODO: type conversion
+			row[columnNum] = node.getValue();
+		}
+	}
+	
+    /**
+     * Tests the value against the criteria to determine if the value should be
+     * included in the result set.
+     * 
+     * @param criteriaPairs
+     * @param value
+     * @param colNum
+     * @return
+     * @throws ConnectorException
+     */
+    private static boolean passesCriteriaCheck(List<CriteriaDesc> criteriaPairs,
+            String value, int colNum) {
+        // Need to test this code
+        for (CriteriaDesc criteria: criteriaPairs) {
+            if (colNum == criteria.getColumnNumber()) {
+                return evaluate(value, criteria);
+            }
+        }
+        return true;
+    }
+    
+    public static boolean evaluate(String currentValue,
+            CriteriaDesc criteria) {
+        // this is the criteriaq for the col
+        List values = criteria.getValues();
+        for (Object criterion: values) {
+            if (criterion.equals(currentValue)) {
+                return true;
+            }
+        }
+        return false; // no matching value
+
+    }
+
+	private Map<String, OutputXPathDesc> generateXPaths(List<OutputXPathDesc> columns) throws ConnectorException {
 		Map<String, OutputXPathDesc> xpaths = new HashMap<String, OutputXPathDesc>();
-		OutputXPathDesc xPathDesc = null;
-		for (Iterator<OutputXPathDesc> iter = info.getRequestedColumns().iterator(); iter.hasNext(); ) {
-			xPathDesc = iter.next();
+		for (OutputXPathDesc xPathDesc: columns) {
 			String xpathString = null;
 			if (!xPathDesc.isResponseId()) {
 				xpathString = xPathDesc.getXPath();
@@ -206,5 +262,13 @@ public class ElementProcessor {
 		return retval;
 	}
 
+	private void setRowExcluded(boolean excluded) {
+		rowExcluded = excluded;
+		row = null;
+	}
+	
+	private boolean isRowExcluded() {
+		return rowExcluded;
+	}
 
 }

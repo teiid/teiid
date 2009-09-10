@@ -54,7 +54,7 @@ public class FileExecution extends BaseStreamingExecution implements ResultProdu
 			exeInfo = analyzer.getExecutionInfo();
 			init(); // depends upon the creation of m_info
 			validateParams();
-			List requestPerms = analyzer.getRequestPerms();
+			List<CriteriaDesc[]> requestPerms = analyzer.getRequestPerms();
 
 			if (requestPerms.size() > 1) {
 				throw new AssertionError(
@@ -177,13 +177,31 @@ public class FileExecution extends BaseStreamingExecution implements ResultProdu
         if (path.endsWith(File.separator)) {
             return path;            
         } else {
-            return new String(path + File.separator);
+            return path + File.separator;
         }
     }
 	/////////////////////////
 	// End Initialization
 	/////////////////////////
 	
+	public ExecutionInfo getInfo() {
+		return exeInfo;
+	}
+
+	@Override
+	public ResultProducer getStreamProducer() throws ConnectorException {
+		return this;
+	}
+
+	public Iterator<Document> getXMLDocuments() throws ConnectorException {
+		return new XMLFileIterator(state.getDirectoryPath());
+	}
+
+	@Override
+	public void closeStreams() {
+		// Nothing to do
+	}
+
 	private class XMLFileIterator implements Iterator<Document> {
 
 		private String queryID;
@@ -224,7 +242,7 @@ public class FileExecution extends BaseStreamingExecution implements ResultProdu
 		
 		private Document getDocument() throws ConnectorException {
 			Document doc;
-			String cacheKey = queryID + new Integer(docNumber).toString();
+			String cacheKey = queryID + Integer.valueOf(docNumber).toString();
 			if(state.isCaching()) {
 				if(null != exeContext.get(queryID)) {
 					InputStream stream = new CachedXMLStream(exeContext, queryID);
@@ -258,23 +276,5 @@ public class FileExecution extends BaseStreamingExecution implements ResultProdu
 			}
 		}
 
-	}
-
-	public ExecutionInfo getInfo() {
-		return exeInfo;
-	}
-
-	@Override
-	public ResultProducer getStreamProducer() throws ConnectorException {
-		return this;
-	}
-
-	public Iterator<Document> getXMLDocuments() throws ConnectorException {
-		return new XMLFileIterator(state.getDirectoryPath());
-	}
-
-	@Override
-	public void closeStreams() {
-		// Nothing to do
 	}
 }

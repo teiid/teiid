@@ -55,7 +55,7 @@ public class CriteriaDesc extends ParameterDescriptor {
     // structure,
     // and to make the code more manageable
 
-    private ArrayList m_values;
+    private List m_values;
 
     private int m_currentIndexInValuesList = 0;
 
@@ -108,7 +108,7 @@ public class CriteriaDesc extends ParameterDescriptor {
             IQuery query) throws ConnectorException {
     	
     	CriteriaDesc retVal = null;
-        ArrayList values = parseCriteriaToValues(element, query);
+        List values = parseCriteriaToValues(element, query);
 
         if (values.size() == 0) {
             if (testForParam(element)) {
@@ -126,7 +126,7 @@ public class CriteriaDesc extends ParameterDescriptor {
         return retVal;
     }
     
-    private static void handleDefaultValue(Element element, ArrayList values) throws ConnectorException {
+    private static void handleDefaultValue(Element element, List values) throws ConnectorException {
         Object defaultVal = element.getDefaultValue();
         if (defaultVal != null) {
             values.add(defaultVal);
@@ -154,7 +154,7 @@ public class CriteriaDesc extends ParameterDescriptor {
     /**
      * @see com.metamatrix.server.datatier.SynchConnectorConnection#submitRequest(java.lang.Object)
      */
-    public CriteriaDesc(Element myElement, ArrayList myValues)
+    public CriteriaDesc(Element myElement, List myValues)
             throws ConnectorException {
 
         super(myElement);
@@ -305,7 +305,7 @@ public class CriteriaDesc extends ParameterDescriptor {
         }
     }
 
-    public ArrayList getValues() {
+    public List getValues() {
         return m_values;
     }
 
@@ -352,10 +352,6 @@ public class CriteriaDesc extends ParameterDescriptor {
         m_currentIndexInValuesList = 0;
     }
 
-    //complete rewrite of criteria parsing code.
-    //Replaces String parsing with an evaluation of the atomic query structure
-    // provided by the server
-    //Thsi should be much more bulletproof and more easily supported
     private static ArrayList parseCriteriaToValues(Element element, IQuery query) throws ConnectorException {
 
         String fullName = element.getFullName().trim().toUpperCase();
@@ -364,10 +360,8 @@ public class CriteriaDesc extends ParameterDescriptor {
                 || element.getSearchability() == TypeModel.SEARCHABLE_COMPARE) {
             // Check and set criteria for the IData input
             ICriteria criteria = query.getWhere();
-            List criteriaList = LanguageUtil.separateCriteriaByAnd(criteria);
-            Iterator criteriaIter = criteriaList.iterator();
-            while (criteriaIter.hasNext()) {
-                ICriteria criteriaSeg = (ICriteria) criteriaIter.next();
+            List<ICriteria> criteriaList = LanguageUtil.separateCriteriaByAnd(criteria);
+            for(ICriteria criteriaSeg: criteriaList) {
                 if (criteriaSeg instanceof ICompareCriteria) {
                     ICompareCriteria compCriteria = (ICompareCriteria) criteriaSeg; 
                     if (compCriteria.getOperator() == Operator.EQ) {                    	
@@ -402,15 +396,7 @@ public class CriteriaDesc extends ParameterDescriptor {
         }
     }
     
-    private static boolean disableJoins = false;
-//    private static boolean disableJoins = true;
     private static void handleCompareCriteria(IExpression lExpr, IExpression rExpr, String fullName, ArrayList parmPair) {         
-        //not supporting joins inside this connector
-        if (disableJoins) {
-        	if ((lExpr instanceof IElement) && (rExpr instanceof IElement)) {
-        		return;
-        	}
-        }
         checkElement(lExpr, rExpr, fullName, parmPair);
         checkElement(rExpr, lExpr, fullName, parmPair);                                                        
     }
@@ -442,7 +428,7 @@ public class CriteriaDesc extends ParameterDescriptor {
 
     public static String stringifyCriteria(String startCriteria) {
         int indx = 0;
-        String cStr = new String(startCriteria);
+        String cStr = startCriteria;
         indx = cStr.indexOf("'"); //$NON-NLS-1$
         if (indx == 0) {
             int indx2 = cStr.substring(1).indexOf("'"); //$NON-NLS-1$

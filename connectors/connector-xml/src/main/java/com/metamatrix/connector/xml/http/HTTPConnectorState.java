@@ -131,8 +131,8 @@ public class HTTPConnectorState extends SecureConnectorStateImpl {
         m_connMgrParams = null;
         m_client = null;
         setUseHttpBasicAuth(false);
-        setHttpBasicAuthUser(new String());
-        setHttpBasicAuthPwd(new String());
+        setHttpBasicAuthUser("");
+        setHttpBasicAuthPwd("");
     }
 
     @Override

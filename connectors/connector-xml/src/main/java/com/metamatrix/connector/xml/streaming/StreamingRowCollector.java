@@ -73,7 +73,7 @@ public class StreamingRowCollector {
 	 */
 	private void parseRow(Element item) {
 		Object[] row = elemProcessor.process(item);
-		if(!Arrays.asList(row).isEmpty()) {
+		if(null != row && !Arrays.asList(row).isEmpty()) {
 			this.result.add(row);
 		}
 	}	

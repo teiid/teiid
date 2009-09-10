@@ -507,7 +507,7 @@ public class TestCriteriaDesc extends TestCase {
     public void testGetValues() {
         try {
             CriteriaDesc desc = createCriteriaDesc(QUERY);
-            ArrayList values = desc.getValues();
+            List values = desc.getValues();
             assertNotNull("Values list is null", values);
             assertEquals(values.get(0), VALUE);
         } catch (ConnectorException ce) {

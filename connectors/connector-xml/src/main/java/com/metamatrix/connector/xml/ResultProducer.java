@@ -4,6 +4,13 @@ import java.util.Iterator;
 
 import org.teiid.connector.api.ConnectorException;
 
+
+/**
+ * 
+ * Abstracts the source of XML Documents.  Also provides an interface
+ * to handle multiple documents resulting from a single query.
+ *
+ */
 public interface ResultProducer {
 
 	/**

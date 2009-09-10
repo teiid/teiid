@@ -22,6 +22,6 @@ public class SOAPExecution extends HTTPExecution {
 	@Override
 	public ResultProducer getStreamProducer() throws ConnectorException {
 		return new SOAPExecutor((SOAPConnectorState) connection.getState(),
-				this, exeInfo);
+				this, exeInfo, analyzer);
 	}
 }

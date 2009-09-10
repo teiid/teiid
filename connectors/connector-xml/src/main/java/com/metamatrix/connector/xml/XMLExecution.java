@@ -23,19 +23,39 @@
 package com.metamatrix.connector.xml;
 
 import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.api.Execution;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ResultSetExecution;
 
-public interface XMLExecution extends Execution, ResultSetExecution {
+/**
+ * An XMLExecution is responsible for responding to a Query.  Depending upon
+ * the query and the source of the XML, this can sometimes require multiple
+ * trips to the source system.  
+ * 
+ * For example, as SOAP service that converts temperature:
+ * 
+ * int convertToFahrenheit(int degreesCelsius)
+ * 
+ * might be modeled as a Table called TempConversion with a column for celsius
+ * of type int and a column for fahreneheit also of type int.
+ * 
+ * when queried like this:
+ * 
+ * 
+ * SELECT fahrenheit FROM TempConversion WHERE celsius IN (40, 20)
+ * 
+ * The XMLExecution has to make two calls to the service to create the correct
+ * result set.  The multiple calls are abstracted within the ResultProducer.
+ * 
+ */
+public interface XMLExecution extends ResultSetExecution {
 	
 	public XMLConnection getConnection();
 	
 	public ExecutionContext getExeContext();
 
 	/**
-	 * Gets all the InputStreams for a single ExecutionInfo instance.
-	 * This could be any number or streams and is implementation dependent.
+	 * Gets all the ResultProducers for a single query.
+	 * This could be any number or results and is implementation dependent.
 	 * @return
 	 * @throws ConnectorException 
 	 */

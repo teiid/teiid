@@ -1,6 +1,5 @@
 package com.metamatrix.connector.xml.streaming;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -24,12 +23,19 @@ import com.metamatrix.connector.xml.base.XMLConnectionImpl;
 public abstract class BaseStreamingExecution implements XMLExecution {
 
 	protected List<String> xpaths;
+	
 	protected StreamingResultsProducer rowProducer;
+	
 	protected List<Object[]> results;
 	private int resultIndex;
 	private Iterator<Document> streamIter;
+	
+	// A single query can result in multiple requests to an XML source.
+	// Each request is abstracted by a result producer.
+	// TODO: Do I really need more than one of theses?
 	protected List<ResultProducer> resultProducers;
 	private Iterator<ResultProducer> producerIter;
+	
 	protected ExecutionInfo exeInfo;
 	protected IQuery query;
 	protected RuntimeMetadata metadata;
@@ -72,8 +78,7 @@ public abstract class BaseStreamingExecution implements XMLExecution {
 			result = Arrays.asList(results.get(resultIndex));
 			++resultIndex;
 		} else  {
-			List rows;
-			File xmlFile;
+			List<Object[]> rows;
 			Document xml;
 			if(null == streamIter) {
 				if(null == producerIter) {
@@ -90,7 +95,7 @@ public abstract class BaseStreamingExecution implements XMLExecution {
 				if (rows.isEmpty()) {
 					continue;
 				}
-				results = rows;
+				results.addAll(rows);
 				resultIndex = 0;
 			}
 			if(resultIndex < results.size()) {

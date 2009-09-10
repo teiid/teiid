@@ -118,7 +118,7 @@ public abstract class ParameterDescriptor {
         m_element = elem;
     }
 
-    protected Element getElement() {
+    public Element getElement() {
         return m_element;
     }
 

@@ -35,18 +35,16 @@ import com.metamatrix.connector.xml.Document;
 import com.metamatrix.connector.xml.XMLConnectorState;
 import com.metamatrix.connector.xml.base.ExecutionInfo;
 /**
- * Converts a XML InputStream into an List containing results based upon the metadata
- * from the ExecutionInfo. Elements of the List are Lists that represent rows in the table.
+ * Converts a XML InputStream into an List containing results based upon data
+ * from ExecutionInfo. Elements of the List are Lists that represent rows in the table.
  * 
  */
 public class StreamingResultsProducer {
 
-    ExecutionInfo info;
 	private StreamingRowCollector collector;
 	private ElementProcessor elementProcessor;
 
     public StreamingResultsProducer(ExecutionInfo info, XMLConnectorState state) throws ConnectorException {
-        this.info = info;
     	
 		Map<String, String> namespace = info.getPrefixToNamespacesMap();
 		XMLReader reader;
