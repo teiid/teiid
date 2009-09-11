@@ -1,0 +1,57 @@
+sa	
+-- DB2 parms
+ (databasename)
+ (username)
+ -	On DB2, remember an OS user must be created first with the same name as the db2user
+ 
+ 
+-- oracle parms
+(username)
+(password)
+
+-- mysql
+(username)
+(password)
+
+-- postgres
+(username)
+(password)
+
+-- sqlserver
+(username)
+(password)
+-- On sql server, CHECK AND CHANGE THE PATH OF THE DATAFILES TO WHAT YOUR DB IS SETUP WITH
+
+
+SQLSERVER				
+slntdb02	2000 (8.00.859)	Repositories	sa	mmsa
+slntds05	2000 (8.00.859)	Data Source	sa	mmsa
+slntdb07	2005 (9.00.1399.06)	Repositories	sa	metamatrix
+ENGNTDBS14	2008		sa	metamatrix
+
+ORACLE				
+slntdb03, SID=DB03	9i (9.2.0.4.0)	Repositories	system	mmsystem
+slntdb08, SID=DB08	10g (10.1.0.2.0)	Repositories	system	mmsystem
+slntds04, SID=DS04	9i (9.2.0.1.0)	Data Source	system	mmsystem
+slntds08, SID=DS08	10g (10.1.0.2.0)	Data Source	system	mmsystem
+dbo3 machine			administrator	quad
+ds04			administrator	jboss42
+englxdbs11	11		sys 	mm			system mm
+				
+DB2				
+slntds05, DATABASE=DS05	8.1.11.973(Previously 8.1.8.762)	Data Source	db2admin	mm
+ENGNTDBS12			db2admin	mm
+				
+SYBASE				
+slntds17	12.5.1	Data Source	sa	metamatrix
+				
+MYSQL				
+slntds03	4.1.14	Data Source	root	mmroot
+slwxp174	5		root	mmroot
+
+POSTGRESQL				
+slntds04	8.3	both		metamatrix
+slntds11	8.1.2	Data Source	postgres	metamatrix
+				
+				
+* For Oracle system will do to create users, but for admin work I use sys/mmsys as SYSDBA login				

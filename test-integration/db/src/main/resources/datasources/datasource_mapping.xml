@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     Aug 26, 2009 9:05:03 AM                                                        
+
+     description:  This datasource configuration file is used to define the
+     	different datasources that "may be" used during test execution.
+     	I say may be used, because these are all the types that are supported
+     	by Teiid, but only if the defined "dir" exist under the "datasources"
+     	directory that contains a connection.properties file will it actually be used.
+     	
+     	The organization of the datasources splits them between groups XA and Non-XA
+     	related transactional types so that when a test is run the process will obtain
+     	a connection from a datasoure defined for that group.
+     	
+     	To use a datasource(s) in a test, map the model(s) to a datasource indicated here.
+     	The mapping is done in the configuration properties file (see default-config.properties).
+     	
+     	This configuration specifies the following information:
+     	-	It indicates the location ("dir") to find the datasource connection
+     		information that is used to populate the connector bindings and create
+     		direct connections to the source
+     	-	It provides a mapping to the Connector Type that needs
+     		to be specified when deploying the ConnectorBinding and assigning it to
+     		the mapped model (see default.config.properties)
+      	
+     	NOTE:  the name of datasource must be unique across all datasources in the file 
+                   
+     vanhalbert                                                                
+     ====================================================================== -->
+
+<datasourceconfig>
+	<datasourcetype name="nonxa">
+		<datasource  name="ds_mysql">
+			<property name="dir">mysql</property>
+			<property name="connectortype">MySQL JDBC Connector</property>		
+		</datasource>
+		<datasource  name="ds_oracle">
+			<property name="dir">oracle</property>
+			<property name="connectortype">Oracle Connector</property>		
+		</datasource>
+		<datasource  name="ds_db2">
+			<property name="dir">db2</property>
+			<property name="connectortype">DB2 Connector</property>		
+		</datasource>
+		<datasource  name="ds_postgres">
+			<property name="dir">postgres</property>
+			<property name="connectortype">PostgreSQL JDBC Connector</property>		
+		</datasource>
+
+		<datasource  name="ds_derby">
+			<property name="dir">derby</property>
+			<property name="connectortype">Apache Derby Network Connector</property>		
+		</datasource>
+
+	</datasourcetype>
+
+	<datasourcetype name="xa">
+		<datasource  name="ds_mysql_xa">
+			<property name="dir">mysql</property>
+			<property name="connectortype">MySQL JDBC XA Connector</property>		
+		</datasource>
+		<datasource  name="ds_oracle_xa">
+			<property name="dir">oracle</property>
+			<property name="connectortype">Oracle XA Connector</property>		
+		</datasource>	
+		<datasource  name="ds_db2_xa">
+			<property name="dir">db2</property>
+			<property name="connectortype">DB2 XA Connector</property>		
+		</datasource>
+		<datasource  name="ds_postgres_xa">
+			<property name="dir">postgres</property>
+			<property name="connectortype">PostgreSQL XA JDBC Connector</property>		
+		</datasource>
+
+	</datasourcetype>
+	
+</datasourceconfig>
