@@ -14,12 +14,11 @@
 		server/embedded/connectors.</description>
 
 	<properties>
- 		<apache.ant.version>1.7.0</apache.ant.version>
-
-    <!-- Database Driver Versions  -->
+		<derby.version>10.2.1.6</derby.version>
 		<mysql.connector.version>5.1.5</mysql.connector.version>
 		<postgresql.version>8.3-603.jdbc3</postgresql.version>
-		<derby.version>10.2.1.6</derby.version>
+
+		<apache.ant.version>1.7.0</apache.ant.version>
 	</properties>
 
 	<dependencies>
@@ -114,7 +113,6 @@
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-jdbc</artifactId>
 			<version>${project.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
@@ -129,7 +127,7 @@
 			<groupId>org.apache.derby</groupId>
 			<artifactId>derby</artifactId>
 			<version>${derby.version}</version>
-			<scope>test</scope>
+
 		</dependency>
 	</dependencies>
 
