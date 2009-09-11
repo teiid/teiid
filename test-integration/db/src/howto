@@ -1,0 +1,47 @@
+This is a howto of the following:
+
+1.	Creating unit tests that use 1 or more datasources
+2.	Setting up a datasource to be used during testing
+3.	Executing the db integration tests
+
+
+==========================================
+Creating Unit Tests
+==========================================
+
+-	Unit test should be created under db/src/test/java 
+-	See LocalTransactionTests.java as an example 
+-	Test should extend org.teiid.transaction.test.AbstractTransactionTestCase
+
+
+-	NOTE:  the following is used in a post test phase of validating the data in the datasource 
+-	when calling: this.getSource("modelname")			--- the "modelname" represents the model for which
+													you want the connection for
+													
+			INFO: to know which source this model is mapped to, find the config properties file being
+					loaded for this test (default is the default-config.properties) and look for
+					the model-to-datasource mapping(s)
+					
+					The default Transaction.vdb has 2 models:  pm1 and pm2
+
+
+==========================================
+Setting up a Datasource to be used during Testing
+==========================================
+
+-	see the readme.txt in src/main/resources/datasources regarding defining a datasource
+-	run the maven profile to create the required tables:
+		a.  to setup all sources at one time, run:   mvn -P setupdatasources 
+		b.	to setup a specific source, run: mvn -P singledatasource -Ddatasource=derby
+		
+
+==========================================
+Executing the db integration tests
+==========================================
+
+The default profile in the pom.xml is to compile and run the test.   
+It does not run and setup a datasource.   See above "Setting up a Datasource to be used during Testing".
+
+
+
+ 
