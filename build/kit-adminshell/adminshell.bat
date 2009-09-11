@@ -34,7 +34,7 @@ if "%OS%" == "Windows_NT" (
   set DIRNAME=.\
 )
 
-pushd %DIRNAME%..
+pushd %DIRNAME%
 if "x%TEIID_HOME%" == "x" (
   set "TEIID_HOME=%CD%"
 )
