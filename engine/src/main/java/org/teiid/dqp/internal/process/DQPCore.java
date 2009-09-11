@@ -364,7 +364,7 @@ public class DQPCore extends Application implements ClientSideDQP {
     RequestWorkItem getRequestWorkItem(RequestID reqID) throws MetaMatrixProcessingException {
     	RequestWorkItem result = this.requests.get(reqID);
     	if (result == null) {
-    		throw new MetaMatrixProcessingException(DQPPlugin.Util.getString("DQPCore.The_request_has_been_cancelled.", reqID));//$NON-NLS-1$
+    		throw new MetaMatrixProcessingException(DQPPlugin.Util.getString("DQPCore.The_request_has_been_closed.", reqID));//$NON-NLS-1$
     	}
     	return result;
     }
