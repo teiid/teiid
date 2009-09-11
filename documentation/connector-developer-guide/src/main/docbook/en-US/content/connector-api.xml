@@ -1,398 +1,423 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/en-US/custom.dtd">
+%CustomDTD;
+]>
 <chapter id="connector_api">
-  <title>Connector API</title>
-  <sect1>
-    <title>Overview</title>
-    <para>A component called the Connector Manager is controlling access to your connector. This chapter reviews
-      the basics of how the Connector Manager interacts with your connector while leaving reference details and
-      advanced topics to be covered in later chapters.</para>
-    <para>
-      A custom connector must implement the following interfaces to connect and query an enterprise Data Source.
-      These interfaces are in package called
-      <emphasis>com.metamatrix.data.api:</emphasis>    
-    </para>
-    <itemizedlist>
-      <listitem>
-        <para>
-          <emphasis>Connector</emphasis>
-          - This interface is the starting point for all interaction with your connector. It allows the Connector
-          Manager to obtain a connection and perform lifecycle events.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>Connection</emphasis>
-          - This interface represents a connection to your data source. It is used as a starting point for actual
-          command executions.  Connections provided to the Connector Manager will be obtained and released for each
-          command execution. Teiid provides for extensible automatic connection pooling, as discussed in the <link linkend="connection_pooling">Connection Pooling</link>
-          chapter.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>ConnectorCapabilities</emphasis>
-          - This interface allows a connector to describe the execution capabilities of the connector. Teiid
-          provides a base implementation of this class called BasicConnectorCapabilities.  You can either extend
-          this basic implementation or implement your own implementation.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>Execution (and sub-interfaces)</emphasis>
-          - These interfaces represent a command execution with your Connector.  There is a sub-interface for
-          executing each kinds of command:  query, update, and procedure.  Your connector can specify via the
-          ConnectorCapabilities which of these command types it can handle.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>Batch</emphasis>
-          - This interface represents a batch of results being sent to the Teiid Server from the custom
-          connector. Teiid provides a default implementation of this class called BasicBatch.
-        </para>
-      </listitem>
-    </itemizedlist>
-    <para>The most important interfaces provided by Teiid to the connector are the following:</para>
-    <itemizedlist>
-      <listitem>
-        <para>
-          <emphasis>ConnectorEnvironment</emphasis>
-          – an interface describing access to external resources for your connector.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>ConnectorLogger</emphasis>
-          – an interface for writing logging information to Teiid logs.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          <emphasis>SecurityContext / ExecutionContext</emphasis>
-          – interfaces defining the security information and execution context available to the connector when
-          executing a command.
-        </para>
-      </listitem>
-    </itemizedlist>
-  </sect1>
-  <sect1>
-    <title>Connector Lifecycle</title>
-    <sect2>
-      <title>Initialization</title>
-      <para>
-        A Connector will be initialized one time via the initialize() method, which passes in a
-        <emphasis>ConnectorEnvironment</emphasis>
-        object provided by the
-        <emphasis>Connector Manager</emphasis>
-        . The
-        <emphasis>ConnectorEnvironment provides</emphasis>
-        the following resources to the connector:
-      </para>
-      <itemizedlist>
-        <listitem>
-          <para>Configuration properties – name / value pairs as provided by the connector binding in
-            the Teiid Console</para>
-        </listitem>
-        <listitem>
-          <para>Logging – ConnectorLogger interface allows a Connector to log messages and errors to
-            Teiid’s log files.</para>
-        </listitem>
-        <listitem>
-          <para>Runtime metadata – access to the runtime metadata of the model deployed in the Teiid
-            Server for your physical source</para>
-        </listitem>
-        <listitem>
-          <para>Large object replacement – ability to stream the results of large values (such as blobs and
-            clobs) through the Teiid system</para>
-        </listitem>
-        <listitem>
-          <para>Type facility – an interface defining runtime datatypes and type conversion facility.</para>
-        </listitem>
-      </itemizedlist>
-    </sect2>
-    <sect2>
-      <title>Starting and Stopping</title>
-      <para>Other methods on the connector allow the Connector Manager to start() or stop() the connector.
-        Typically the connector is started or stopped in response to system startup, system shutdown, or an
-        administrator changing these states on connector bindings in the Teiid Console or through Admin API. A
-        connector should perform whatever actions are necessary in these methods to create or destroy all connector
-        states, including connections to the actual physical source.</para>
-    </sect2>
-  </sect1>
-  <sect1>
-    <title>Connections to Source</title>
-    <sect2>
-      <title>Obtaining connections</title>
-      <para>The connector must implement the getConnection() method to allow the Connector Manager to obtain a
-        connection. The getConnection() method is passed a SecurityContext, which contains information about the
-        context in which this query is being executed.</para>
-      <para>The SecurityContext contains the following information:</para>
-      <itemizedlist>
-        <listitem>
-          <para>User name</para>
-        </listitem>
-        <listitem>
-          <para>Virtual database name</para>
-        </listitem>
-        <listitem>
-          <para>Virtual database version</para>
-        </listitem>
-        <listitem>
-          <para>Trusted token</para>
-        </listitem>
-      </itemizedlist>
-      <para>The trusted token is used to pass security information specific to your application through the
-        Teiid Server. The client can pass the trusted token when they connect via JDBC. This token is then
-        passed to the Membership Service and may be created, replaced, or modified at that time. In some cases, you
-        may wish to provide a customer Membership Service implementation to handle security needs specific to your
-        organization. For more information on implementing a custom Membership Service, contact Teiid
-        technical support.</para>
-    </sect2>
-    <sect2>
-      <title>Releasing Connections</title>
-      <para>Once the Connector Manager has obtained a connection, it will use that connection only for the
-        lifetime of the request.  When the request has completed, the release() method will be called on the
-        connection.</para>
-      <para>
-        In cases (such as when a connection is stateful and expensive to create), connections should be pooled.  Teiid
-        provides an extensible connection pool for this purpose, as described in chapter
-        <link linkend="connection_pooling">Connection Pooling</link>.
-      </para>
-    </sect2>
-  </sect1>
-  <sect1>
-    <title>Executing Commands</title>
-    <sect2>
-      <title>Execution Modes</title>
-      <para>The Connector API uses a connection to obtain an execution interface for the command it is
-        executing. Connectors may support any subset of the available execution modes. The execution modes are
-        defined by constants in the ConnectorCapabilities.EXECUTION_MODE class. The following execution modes are
-        available:</para>
-      <para />
-      <table frame='all'>
-        <title>Types of Execution Modes</title>
-        <tgroup cols='4' align='left' colsep='1' rowsep='1'>
-          <colspec colname='c1' colwidth="1*" />
-          <colspec colname='c2' colwidth="1*" />
-          <colspec colname='c3' colwidth="1*" />
-          <colspec colname='c4' colwidth="2*" />
-          <thead>
-            <row>
-              <entry>Execution Mode</entry>
-              <entry>Execution Interface</entry>
-              <entry>Command interface(s)</entry>
-              <entry>Description</entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>
-                <emphasis>Synchronous Query</emphasis>
-              </entry>
-              <entry>
-                <code>SynchQueryExecution</code>
-              </entry>
-              <entry>
-                <code>IQuery</code>
-              </entry>
-              <entry>A query, corresponding to a SQL SELECT statement</entry>
-            </row>
-            <row>
-              <entry>
-                <emphasis>Update</emphasis>
-              </entry>
-              <entry>
-                <code>UpdateExecution</code>
-              </entry>
-              <entry>
-                <code>IInsert, IUpdate, IDelete</code>
-              </entry>
-              <entry>An insert, update, or delete, corresponding to a SQL INSERT, UPDATE, or DELETE command
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <emphasis>Procedure Execution</emphasis>
-              </entry>
-              <entry>
-                <code>ProcedureExecution</code>
-              </entry>
-              <entry>
-                <code>IProcedure</code>
-              </entry>
-              <entry>A procedure execution that may return a result set and/or output values.</entry>
-            </row>
-            <row>
-              <entry>
-                <emphasis>Asynchronous Query</emphasis>
-              </entry>
-              <entry>
-                <code>AsynchQueryExecution</code>
-              </entry>
-              <entry>
-                <code>IQuery</code>
-              </entry>
-              <entry>Polled asynchronous execution of a SQL SELECT statement</entry>
-            </row>
-            <row>
-              <entry>
-                <emphasis>Batched Update</emphasis>
-              </entry>
-              <entry>
-                <code>BatchedUpdatesExecution</code>
-              </entry>
-              <entry>
-                <code>ICommand[]</code>
-              </entry>
-              <entry>Execute multiple commands in a batch</entry>
-            </row>
-            <row>
-              <entry>
-                <emphasis>Bulk Insert</emphasis>
-              </entry>
-              <entry>
-                <code>BatchedUpdatesExecution</code>
-              </entry>
-              <entry>
-                <code>IInsert</code>
-              </entry>
-              <entry>Insert a large set of data using the same INSERT command</entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-      <para />
-      <para>Following is a class diagram further defining the relationships between the execution
-        interfaces:</para>
-      <figure id="execution-interface-hierarchy">
-        <title>Execution Interfaces Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/execution-interface-hierarchy.png" />
-      </figure>
-      <para />
-      <para>All of the execution interfaces extend the base execution interface that defines how executions are
-        cancelled and closed. SynchQueryExecution, AsynchQueryExecution, and ProcedureExecution all extend the
-        BatchedExecution interface, which defines how batched results are returned from an execution.</para>
-    </sect2>
-    <sect2>
-      <title>Synchronous Query Execution</title>
-      <para>
-        Most commands executed against connectors are queries. Queries correspond to the SELECT statement in SQL.
-        The actual queries themselves are sent to connectors in the form of a set of objects, which are further
-        described in Chapter <link linkend="command_language">Command Language</link>.
-      </para>
-      
-      <para>The following diagram represents the typical sequence of events when executing a query:</para>
-      
-      <figure id="query-execution-sequence">
-        <title>Query Execution Sequence Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/query-execution-sequence.png" />
-      </figure>
-      
-      <para>While the command is being executed, the connector retrieves results in batches via the
-        BatchedExecution interface. Each time nextBatch() is called, the SynchQueryExecution implementation should
-        return a batch of no more than maxBatchSize records. The final batch of records should set the isLast flag
-        to true.</para>
-        
-      <para>The maxBatchSize parameter passed to the nextBatch method corresponds to the Connector Batch Size
-        that can be set on a system-wide bases in the Teiid Console (under System Properties in the buffer
-        section..)  The Connector Batch Size should typically be set in conjunction with the Processor Batch Size
-        from the same category.  For more information on these parameters, see the Teiid Console User Guide.
-      </para>
-    </sect2>
-    <sect2>
-      <title>Asynchronous Query Execution</title>
-      <para>In some scenarios, a connector needs to execute queries asynchronously and poll for results.  In this
-        case, your connector should use the asynchronous query execution mode instead of the synchronous query
-        execution mode.  The connector capabilities specify which will be used (only one can be supported at the
-        same time).  </para>
-        
-      <para>The following diagram represents the typical sequence of events when executing a query
-        asynchronously:</para>
-        
-      <figure id="async-query-execution-sequence">
-        <title>Async Query Execution Sequence Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/async-query-execution-sequence.png" />
-      </figure>
-      
-      <para>While the command is being executed, the connector retrieves results in batches via the
-        BatchedExecution interface. The AsynchQueryExecution interface works similarly to the SynchQueryExecution
-        interface with one important difference.  If the nextBatch method returns an empty batch with the isLast
-        flag set to false, then the Connector Manager interprets this as no data being available.  In this case,
-        the Connector Manager will wait for the poll interval before asking again for a batch.</para>
-        
-      <para>The nextBatch() is not expected to sleep or otherwise block for results as this would tie up a
-        Connector Manager thread which could be doing other work.  Instead, the Connector Manager is designed to
-        avoid tying up worker threads while waiting for the poll interval, so the connector is expected to return
-        from the nextBatch() method as quickly as possible.</para>
-      <para />
-    </sect2>
-    <sect2>
-      <title>Update Execution</title>
-      <para>Insert, update, and delete commands correspond to the INSERT, UPDATE, and DELETE commands in
-        SQL. They are used to insert a single row into a data source, update one or more rows in a data source, or
-        delete one or more rows in a data source. Each of these commands returns a count specifying the number of
-        rows updated in the physical source in response to the command.</para>
-      <para>The following diagram represents the typical sequence of events when executing an insert, update, or
-        delete:</para>
-      <figure id="update-query-execution-sequence">
-        <title>Update Query Execution Sequence Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/update-query-execution-sequence.png" />
-      </figure>
-      <para>With an update execution, the execute method is the only call in the execution.  No subsequent
-        interaction will take place.  </para>
-    </sect2>
-    <sect2>
-      <title>Batched Update / Bulk Insert Execution</title>
-      <para>Batched update and bulk insert execution are very similar to update execution except multiple
-        commands are passed to the connector in a single method call.  In the case of a bulk insert, a single
-        template INSERT command is passed with a set of data rows that need to be inserted with the command.  In
-        the case of batched update, a series of arbitrary commands is sent and the batch must be executed together
-        for efficiency.  </para>
-    </sect2>
-    <sect2>
-      <title>Procedure Execution</title>
-      <para>Procedure commands correspond to the execution of a stored procedure or some other functional
-        construct. A procedure takes zero or more input values and can return a result set and zero or more output
-        values.  Examples of procedure execution would be a stored procedure in a relational database or a call to
-        a web service.</para>
-      <para>The following diagram represents the typical sequence of events when executing a procedure:</para>
-      <figure id="procedure-query-execution-sequence">
-        <title>Procedure Query Execution Sequence Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/procedure-query-execution-sequence.png" />
-      </figure>
-      <para>If a result set is expected when a procedure is executed, all rows from it will be retrieved via the
-        BatchedExecution interface first. Then, if any output values are expected, they will be retrieved via the
-        getOutputValue() method, which will be called once for each expected output value.</para>
-    </sect2>
-    <sect2>
-      <title>Command Completion</title>
-      <para>All normal command executions end with the calling of close() on the Execution object.  Your
-        implementation of this method should do the appropriate clean-up work for all state in the Execution
-        object.</para>
-    </sect2>
-    <sect2>
-      <title>Command Cancellation</title>
-      <para>Commands submitted to Teiid may be aborted in several scenarios:</para>
-      <itemizedlist>
-        <listitem>
-          <para>Client cancellation via the JDBC API (or other client APIs)</para>
-        </listitem>
-        <listitem>
-          <para>Administrative cancellation via the Teiid Console or Admin API</para>
-        </listitem>
-        <listitem>
-          <para>Clean-up during session termination</para>
-        </listitem>
-        <listitem>
-          <para>Clean-up if a query fails during processing</para>
-        </listitem>
-      </itemizedlist>
-      <para>In these cases, if the command being executed on the connector has not yet finished, Teiid will
-        call the cancel() method on the execution interface in a separate thread from the thread that may be
-        blocked calling the execute() method.</para>
-      <para>Your connector implementation may choose to do nothing in response to this cancellation message. In
-        this instance, Teiid will call close() on the execution object after current synchronous processing
-        has completed. Implementing the cancel() method allows for faster termination of queries being processed
-        and may allow the underlying data source to terminate its operations faster as well.</para>
-    </sect2>
-  </sect1>
+	<title>Connector API</title>
+	<sect1>
+		<title>Overview</title>
+		<para>A component called the Connector Manager is controlling access
+			to your connector. This chapter reviews
+			the basics of how the Connector Manager interacts with your connector
+			while leaving reference details and
+			advanced topics to be covered in later chapters.</para>
+		<para>
+			A custom connector must implement the following interfaces to connect
+			and query an enterprise Data Source.
+			These interfaces are in package called
+			<emphasis>org.teiid.connector.api:</emphasis>
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					<emphasis>Connector</emphasis>
+					- This interface is the starting point for all interaction with
+					your connector. It allows the Connector
+					Manager to obtain a connection and perform lifecycle events.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Connection</emphasis>
+					- This interface represents a connection to your data source. It is
+					used as a starting point for actual
+					command executions.  Connections provided to the Connector Manager will be
+					obtained and released for each
+					command execution. Teiid provides for extensible automatic connection
+					pooling, as discussed in the
+					<link linkend="connection_pooling">Connection Pooling</link>
+					chapter.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>ConnectorCapabilities</emphasis>
+					- This interface allows a connector to describe the execution
+					capabilities of the connector.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>Execution (and sub-interfaces)</emphasis>
+					- These interfaces represent a command execution with your
+					Connector.  There is a sub-interface for
+					executing each kinds of command:  ResultSetExecution, UpdateExecution, and ProcedureExecution.
+				</para>
+			</listitem>
+		</itemizedlist>
+		<para>
+			Note that many of the interfaces above have base implementations in the
+			<emphasis>org.teiid.connector.basic</emphasis>
+			package. Consider extending the corresponding BasicXXX class rather
+			than fully implementing the interface.
+		</para>
+		<para>The most important interfaces provided by Teiid to the connector
+			are the following:</para>
+		<itemizedlist>
+			<listitem>
+				<para>
+					<emphasis>ConnectorEnvironment</emphasis>
+					– an interface describing access to external resources for your
+					connector.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>ConnectorLogger</emphasis>
+					– an interface for writing logging information to Teiid logs.
+				</para>
+			</listitem>
+			<listitem>
+				<para>
+					<emphasis>ExecutionContext</emphasis>
+					– interface defining the execution context available to the connector when
+					executing a command.
+				</para>
+			</listitem>
+		</itemizedlist>
+	</sect1>
+	<sect1>
+		<title>Connector Lifecycle</title>
+		<sect2>
+			<title>Starting</title>
+			<para>
+				A Connector instance will be initialized one time via the start
+				method, which passes in a
+				<emphasis>ConnectorEnvironment</emphasis>
+				object provided by the
+				<emphasis>Connector Manager</emphasis>
+				. The
+				<emphasis>ConnectorEnvironment provides</emphasis>
+				the following resources to the connector:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>Configuration properties – name / value pairs as provided by
+						the connector binding in
+						the Teiid Console</para>
+				</listitem>
+				<listitem>
+					<para>Logging – ConnectorLogger interface allows a Connector to log
+						messages and errors to
+						Teiid’s log files.</para>
+				</listitem>
+				<listitem>
+					<para>Type facility – an interface defining runtime datatypes and
+						type conversion facility.</para>
+				</listitem>
+				<listitem>
+					<para>Scheduling facility – repeating tasks can be scheduled and managed by Teiid.</para>
+				</listitem>
+				<listitem>
+					<para>Caching facility – easy methods for caching based upon relevant contexts, such as session or query scope.</para>
+				</listitem>
+			</itemizedlist>
+		</sect2>
+		<sect2>
+			<title>Running</title>
+			<para>
+				While the connector is running it is expected to return provide
+				connections and capabilities information in response to system
+				requests. If the source system is not available ConnectorExceptions or
+				RuntimeExceptions may be thrown at any time to indicate failure. The
+				connector should handle failure internally in a graceful manner, since
+				the system will not automatically perform a stop/start.  
+			</para>
+		</sect2>
+		<sect2>
+			<title>Stopping</title>
+			<para>The stop method will be called on system shutdown or on an
+				administrative call that to stop the connector. Once a connector has
+				been stopped the instance is removed from the system. A new Connector
+				instance will be created prior to the start call.</para>
+		</sect2>
+	</sect1>
+	<sect1>
+		<title>Connections to Source</title>
+		<sect2>
+			<title>Obtaining connections</title>
+			<para>The connector must implement the getConnection() method to
+				allow the Connector Manager to obtain a
+				connection. The getConnection() method is passed a ExecutionContext, which
+				contains information about the
+				context in which this query is being executed.</para>
+			<para>The ExecutionContext provides the following:</para>
+			<itemizedlist>
+				<listitem>
+					<para>User name</para>
+				</listitem>
+				<listitem>
+					<para>Virtual database name</para>
+				</listitem>
+				<listitem>
+					<para>Virtual database version</para>
+				</listitem>
+				<listitem>
+					<para>The ability to add execution warnings.</para>
+				</listitem>
+				<listitem>
+					<para>Trusted token</para>
+				</listitem>
+			</itemizedlist>
+			<para>The trusted token is used to pass security information specific
+				to your application through the
+				Teiid. The client can pass the trusted token when they connect via
+				JDBC. This token is then
+				passed to the Membership Service and may be created, replaced, or modified
+				at that time. In some cases, you
+				may wish to provide a customer Membership Service implementation to
+				handle security needs specific to your
+				organization. For more information on implementing see the <ulink url='&docUrl;'>Server Extension Guide</ulink></para>
+		</sect2>
+		<sect2>
+			<title>Releasing Connections</title>
+			<para>Once the Connector Manager has obtained a connection, it will
+				use that connection only for the
+				lifetime of the request.  When the request has completed, the close()
+				method will be called on the
+				connection.</para>
+			<para>
+				In cases (such as when a connection is stateful and expensive to
+				create), connections should be pooled.  Teiid
+				provides an extensible connection pool for this purpose, as described in
+				chapter
+				<link linkend="connection_pooling">Connection Pooling</link>.
+			</para>
+		</sect2>
+	</sect1>
+	<sect1>
+		<title>Executing Commands</title>
+		<sect2>
+			<title>Execution Modes</title>
+			<para>
+				The Connector API uses a Connection to obtain an execution
+				interface for the command it is
+				executing. The actual queries themselves are sent to connectors in the form of a
+				set of objects, which are further
+				described in Chapter
+				<link linkend="command_language">Command Language</link>.  Connectors are allowed to support any subset of the available
+				execution modes.
+			</para>
+			<table frame='all'>
+				<title>Types of Execution Modes</title>
+				<tgroup cols='3' align='left' colsep='1' rowsep='1'>
+					<colspec colname='c1' colwidth="1*" />
+					<colspec colname='c2' colwidth="1*" />
+					<colspec colname='c3' colwidth="2*" />
+					<thead>
+						<row>
+							<entry>Execution Interface</entry>
+							<entry>Command interface(s)</entry>
+							<entry>Description</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>
+								<code>ResultSetExecution</code>
+							</entry>
+							<entry>
+								<code>IQueryCommand</code>
+							</entry>
+							<entry>A query corresponding to a SQL SELECT or set query statement.</entry>
+						</row>
+						<row>
+							<entry>
+								<code>UpdateExecution</code>
+							</entry>
+							<entry>
+								<code>IInsert, IUpdate, IDelete, IBatchedUpdates</code>
+							</entry>
+							<entry>An insert, update, or delete, corresponding to a SQL
+								INSERT, UPDATE, or DELETE command
+              				</entry>
+						</row>
+						<row>
+							<entry>
+								<code>ProcedureExecution</code>
+							</entry>
+							<entry>
+								<code>IProcedure</code>
+							</entry>
+							<entry>A procedure execution that may return a result set and/or
+								output values.</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			<para>All of the execution interfaces extend the base <code>Execution</code>
+				interface that defines how executions are
+				cancelled and closed.  ProcedureExecution also extends ResultSetExecution, since procedures may also return resultsets.</para>
+		</sect2>
+		<sect2>
+			<title>ResultSetExecution</title>
+			<para>
+				Typically most commands executed against connectors are IQueryCommands.
+				While the command is being executed, the connector provides
+				results via the
+				ResultSetExecution next method. The next method should return null to indicate the end
+				of results. Note: the expected batch size can be obtained from the
+				ExecutionContext and used as a hint in fetching results from the EIS.
+			</para>
+		</sect2>
+		<sect2>
+			<title>Update Execution</title>
+			<para>Each execution returns the update count(s) expected by the update command. 
+		          If possible IBatchedUpdates should be executed atomically.  
+		          The ExecutionContext can be used to determine if the execution is already under a transaction.</para>
+		</sect2>
+		<sect2>
+			<title>Procedure Execution</title>
+			<para>Procedure commands correspond to the execution of a stored
+				procedure or some other functional
+				construct. A procedure takes zero or more input values and can return a result
+				set and zero or more output
+				values.  Examples of procedure execution would be a stored procedure in a
+				relational database or a call to
+				a web service.</para>
+			<para>If a result set is expected when a procedure is executed, all
+				rows from it will be retrieved via the
+				ResultSetExecution interface first. Then, if any output values are expected, they will
+				be retrieved via the
+				getOutputParameterValues() method.
+			</para>
+		</sect2>
+		<sect2>
+			<title>Asynchronous Executions</title>
+			<para>In some scenarios, a connector needs to execute
+				asynchronously and allow the executing thread to perform other work.  To allow this, you should:
+			</para>
+			<itemizedlist>
+				<listitem>
+					<para>Set either the SynchronousWorkers annotation or the connector
+						binding property SynchWorkers to false - this overrides the default
+						behavior in which connector threads stay associated with their
+						Execution until the Execution is closed.</para>
+					<para>Throw a DataNotAvailableExecption during a retrival method, rather than explicitly waiting or sleeping for the results. The
+						DataNotAvailableException may take a delay parameter in its
+						constructor to indicate how long the system should wait befor polling
+						for results.  Any non-negative value is allowed. 
+					</para>
+					<para>Be aware that a connector with asynchronous workers cannot be transactional.</para>
+				</listitem>
+			</itemizedlist>
+		</sect2>
+		<sect2>
+			<title>Bulk Execution</title>
+			<para>
+				Non batched
+				<code>IInsert, IUpdate, IDelete</code>
+				commands may have Iliteral values marked as multiValued if the
+				ConnectorCapabilities shows support for BulkUpdate. Commands with
+				multiValued Iliterals represent multiple executions of the same
+				command with different values.  As with IBatchedUpdates, bulk operations should be executed atomically if possible.
+			</para>
+		</sect2>
+		<sect2>
+			<title>Command Completion</title>
+			<para>All normal command executions end with the calling of close()
+				on the Execution object.  Your
+				implementation of this method should do the appropriate clean-up work for all
+				state in the Execution
+				object.</para>
+		</sect2>
+		<sect2>
+			<title>Command Cancellation</title>
+			<para>Commands submitted to Teiid may be aborted in several
+				scenarios:</para>
+			<itemizedlist>
+				<listitem>
+					<para>Client cancellation via the JDBC API (or other client APIs)
+					</para>
+				</listitem>
+				<listitem>
+					<para>Administrative cancellation</para>
+				</listitem>
+				<listitem>
+					<para>Clean-up during session termination</para>
+				</listitem>
+				<listitem>
+					<para>Clean-up if a query fails during processing</para>
+				</listitem>
+			</itemizedlist>
+			<para>Unlike the other execution methods, which are handled in a single-threaded manner, calls to cancel happen asynchronously with respect to the execution thread.</para>
+			<para>Your connector implementation may choose to do nothing in
+				response to this cancellation message. In
+				this instance, Teiid will call close() on the execution object after
+				current processing
+				has completed. Implementing the cancel() method allows for faster
+				termination of queries being processed
+				and may allow the underlying data source to terminate its operations
+				faster as well.</para>
+		</sect2>
+	</sect1>
+		<sect1>
+		<title>Monitored Connectors</title>
+		<para>Teiid can automatically monitor connectors, which will update a
+			status flag on the connector. This status can be checked via the
+			AdminApi and is exposed in the console. To use connector
+			monitoring
+			effectively:
+		</para>
+		<itemizedlist>
+			<listitem>
+				<para>Set a positive test interval value on
+					on the connector binding
+					(default is 600) indicating the number of
+					seconds between status
+					checks. These checks are useful in idle
+					periods.
+		    </para>
+			</listitem>
+			<listitem>
+				<para>Implement a meaningful isAlive method on your Connector
+					Connections.
+		    </para>
+			</listitem>
+			<listitem>
+				<para>Use either a pooled Connector or a Connector that supports
+					single identity.
+		    </para>
+			</listitem>
+		</itemizedlist>
+		<para>Possible status results include:</para>
+		<itemizedlist>
+			<listitem>
+				<para>Not initialized - to indicate not yet started.
+		    </para>
+			</listitem>
+			<listitem>
+				<para>Init failed - to indicate start failed.
+		    </para>
+			</listitem>
+			<listitem>
+				<para>Open - to indicate the running state and that connections can
+					be obtained form the source.
+		    </para>
+			</listitem>
+			<listitem>
+				<para>Unable to check - to indicate the running state but
+					connections cannot be obtained administratively.
+		    </para>
+			</listitem>
+			<listitem>
+				<para>Data Source Unavailable - to indicate the running state.
+				</para>
+			</listitem>
+			<listitem>
+				<para>Closed - to indicate that the Connector has been stopped.
+				</para>
+			</listitem>
+		</itemizedlist>
+	</sect1>	
 </chapter>

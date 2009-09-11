@@ -3,157 +3,188 @@
   
   <sect1>
     <title>Language Interfaces</title>
-    <para>Teiid sends commands to your connector in object form. The interfaces for these objects are all defined in the com.metamatrix.data.language package. These interfaces can be combined to represent any possible command that Teiid may send to the connector. However, it is possible to notify the Teiid Server that your connector can only accept certain kinds of commands via the ConnectorCapabilities class. See the section on using <link linkend="connector_capabilities">Connector Capabilities</link> for more information.</para>
-    <para>The language interfaces all extend from the main interface, ILanguageObject. They are composed in a tree where each node is a language object that has zero or more child language objects of types that are dependent on the current node.</para>
-    <para>All commands sent to your connector are in the form of these language trees, where the root of the tree is a subclass of ICommand. ICommand has several sub-interfaces, namely: IQuery, IInsert, IUpdate, IDelete, and IProcedure.  These represent the query in SQL form. Important components of these commands are expressions, criteria, and joins, which are examined in closer detail below.</para>
-    
+	<para>
+		Teiid sends commands to your connector in object form. The interfaces
+		for these objects are all defined in the org.teiid.connector.language
+		package. These interfaces can be combined to represent any possible
+		command that Teiid may send to the connector. However, it is possible
+		to notify Teiid that your connector can only accept certain kinds of
+		commands via the ConnectorCapabilities class. See the section on using
+		<link linkend="connector_capabilities">Connector Capabilities</link>
+		for more information.
+	</para>
+	<para>The language interfaces all extend from the main interface,
+		ILanguageObject. They should be thought of as a tree where each node is a
+		language object that has zero or more child language objects of types
+		that are dependent on the current node.</para>
+	<para>All commands sent to your connector are in the form of these
+		language trees, where the root of the tree is a subclass of ICommand.
+		ICommand has several sub-interfaces, namely: IQueryCommand, IInsert, IUpdate,
+		IDelete, IBatchedUpdate, and IProcedure.  
+		Important components of these commands are expressions, criteria, and
+		joins, which are examined in closer detail below.</para>
     <sect2>
       <title>Expressions</title>
-      <para>An expression represents a single value in context, although in some cases that value may change as the query is evaluated.  For example, a literal value, such as “5” represents an integer value.  An element such as “EmployeeName” represents a column in a data source and may take on many scalar values while the command is being evaluated.  </para>
-      <para>The following diagram shows the IExpression interface and all sub-interfaces in the language objects.  </para>
-
-      <figure id="expression-interface-hierarchy">
-        <title>Execution Interfaces Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/expression-interface-hierarchy.png"/>
-      </figure>
-      
-      <para/>
-      <para>These interfaces are explained in greater detail here:</para>
+		<para>An expression represents a single value in context, although in
+			some cases that value may change as the query is evaluated.  For
+			example, a literal value, such as 5 represents an integer value.  An
+			element reference such as "table.EmployeeName" represents a column in a data source
+			and may logically take on many values while the command is being
+			evaluated.</para>
       <itemizedlist>
-        <listitem><para><emphasis>IExpression</emphasis> – base expression interface</para></listitem>
-        <listitem><para><emphasis>IElement</emphasis> – represents an element in the data source</para></listitem>
-        <listitem><para><emphasis>ILiteral</emphasis> – represents a literal scalar value</para></listitem>
-        <listitem><para><emphasis>IFunction</emphasis> – represents a scalar function with parameters that are also IExpressions</para></listitem>
-        <listitem><para><emphasis>IAggregate</emphasis> – represents an aggregate function which holds a single expression</para></listitem>
-        <listitem><para><emphasis>IScalarSubquery</emphasis> – represents a subquery that returns a single value</para></listitem>
-        <listitem><para><emphasis>ICaseExpression</emphasis> – represents a CASE expression.  The CASE expression evaluates an expression, then compares with the values in the WHEN clauses to determine the THEN clause to evaluate.</para></listitem>
-        <listitem><para><emphasis>ISearchedCaseExpression</emphasis> – represents a searched CASE expression.  The searched CASE expression evaluates the criteria in WHEN clauses till one evaluates to TRUE, then evaluates the associated THEN clause.</para></listitem>
+	<listitem>
+		<para>
+			<code>IExpression</code>
+			– base expression interface
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			<code>IElement</code>
+			– represents an element in the data source
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			<code>ILiteral</code>
+			– represents a literal scalar value, but may also be multi-valued in
+			the case of bulk updates.
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			<code>IFunction</code>
+			– represents a scalar function with parameters that are also
+			IExpressions
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			<code>IAggregate</code>
+			– represents an aggregate function which holds a single expression
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			<code>IScalarSubquery</code>
+			– represents a subquery that returns a single value
+		</para>
+	</listitem>
+	<listitem>
+		<para>
+			<code>ISearchedCaseExpression</code>
+			– represents a searched CASE expression.  The searched CASE
+			expression evaluates the criteria in WHEN clauses till one evaluates
+			to TRUE, then evaluates the associated THEN clause.
+		</para>
+	</listitem>
       </itemizedlist>
     </sect2>
     <sect2>
       <title>Criteria</title>
-      <para>A criteria is a combination of expressions and operators that evaluates to true or false.  Criteria are most commonly used in the FROM or HAVING clauses.  The following diagram shows the criteria interfaces present in the language objects.</para>
-      
-      <figure id="criteria-interface-hierarchy">
-        <title>Criteria Interfaces Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/criteria-interface-hierarchy.png"/>
-      </figure>
-
-      <para>These interfaces are described in greater detail here:</para>
+		<para>A criteria is a combination of expressions and operators that
+			evaluates to true, false, or unknown.  Criteria are most commonly used in the
+			WHERE or HAVING clauses.</para>
       
       <itemizedlist>
-        <listitem><para><emphasis>ICriteria</emphasis> – the base criteria interface</para></listitem>
-        <listitem><para><emphasis>ILogicalCriteria</emphasis> – used to logically combine other criteria</para></listitem>
-        <listitem><para><emphasis>INotCriteria</emphasis> – used to NOT another criteria</para></listitem>
-        <listitem><para><emphasis>ICompoundCriteria</emphasis> – used to combine other criteria via AND or OR</para></listitem>
-        <listitem><para><emphasis>IPredicateCriteria</emphasis> – a predicate that evaluates to true or false</para></listitem>
-        <listitem><para><emphasis>ISubuqeryCompareCriteria</emphasis> – represents a comparison criteria with a subquery including a quantifier such as <emphasis>SOME</emphasis> or <emphasis>ALL</emphasis></para></listitem>
-        <listitem><para><emphasis>ICompareCriteria</emphasis> – represents a comparison criteria with =, &gt;, &lt;, etc</para></listitem>
-        <listitem><para><emphasis>IBaseInCriteria</emphasis> – base class for an <emphasis>IN</emphasis> criteria</para></listitem>
-        <listitem><para><emphasis>IInCriteria</emphasis> – represents an <emphasis>IN</emphasis> criteria that has a set of expressions for values</para></listitem>
-        <listitem><para><emphasis>ISubqueryInCriteria</emphasis> – represents an <emphasis>IN</emphasis> criteria that uses a subquery to produce the value set</para></listitem>
-        <listitem><para><emphasis>IIsNullCriteria</emphasis> – represents an <emphasis>IS NULL</emphasis> criteria</para></listitem>
-        <listitem><para><emphasis>IExistsCriteria</emphasis> – represents an <emphasis>EXISTS</emphasis> criteria that determines whether a subquery will return any values</para></listitem>
-        <listitem><para><emphasis>ILikeCriteria</emphasis> – represents a <emphasis>LIKE</emphasis> criteria that compares string values</para></listitem>
+        <listitem><para><code>ICriteria</code> – the base criteria interface</para></listitem>
+        <listitem><para><code>ILogicalCriteria</code> – used to logically combine other criteria</para></listitem>
+        <listitem><para><code>INotCriteria</code> – used to NOT another criteria</para></listitem>
+        <listitem><para><code>ICompoundCriteria</code> – used to combine other criteria via AND or OR</para></listitem>
+        <listitem><para><code>IPredicateCriteria</code> – a predicate that evaluates to true, false, or unknown</para></listitem>
+        <listitem><para><code>ISubuqeryCompareCriteria</code> – represents a comparison criteria with a subquery including a quantifier such as SOME or ALL</para></listitem>
+        <listitem><para><code>ICompareCriteria</code> – represents a comparison criteria with =, &gt;, &lt;, etc.</para></listitem>
+        <listitem><para><code>IBaseInCriteria</code> – base class for an IN criteria</para></listitem>
+        <listitem><para><code>IInCriteria</code> – represents an IN criteria that has a set of expressions for values</para></listitem>
+        <listitem><para><code>ISubqueryInCriteria</code> – represents an IN criteria that uses a subquery to produce the value set</para></listitem>
+        <listitem><para><code>IIsNullCriteria</code> – represents an IS NULL criteria</para></listitem>
+        <listitem><para><code>IExistsCriteria</code> – represents an EXISTS criteria that determines whether a subquery will return any values</para></listitem>
+        <listitem><para><code>ILikeCriteria</code> – represents a LIKE criteria that compares string values</para></listitem>
       </itemizedlist>                  
     </sect2>
     
     <sect2>
-      <title>Joins</title>
-      <para>The FROM clause contains a list of IFromItems.  Each IFomItem can either represent a group or a join between two other IFromItems.  This allows joins to be composed into a join tree.  </para>
+      <title>The FROM Clause</title>
+		<para>The FROM clause contains a list of IFromItems.  Each IFomItem can
+			either represent a group or a join between two other IFromItems.  This
+			allows joins to be composed into a join tree.</para>
       
-      <figure id="join-tree-hierarchy">
-        <title>IJoin Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/join-tree-hierarchy.png"/>
-      </figure>
-      <para>The <code>IGroup</code> represents a single group, which must be a leaf of the join tree.  The <code>IJoin</code> has a left and right <code>IFromItem</code> and information on the join between the items.  </para>            
+      <itemizedlist>
+        <listitem><para><code>IGroup</code> – represents a single group</para></listitem>
+        <listitem><para><code>IJoin</code> – has a left and right <code>IFromItem</code> and information on the join between the items</para></listitem>
+        <listitem><para><code>IInlineView</code> – represents a group defined by an inline <code>IQueryCommand</code></para></listitem>
+      </itemizedlist>
+		<para>A list of IFromItems is used by default in the pushdown query
+			when no outer joins are used. If an outer join is used anywhere in the
+			join tree there will be only one IFromItem, an IJoin. This latter form
+			is the ANSI perfered style. If you wish all pushdown queries
+			containing joins to be in ANSI style have the
+			ConnectorCapability.useAnsiJoin return true.</para>
     </sect2>
-
+	<sect2>
+		<title>IQueryCommand Structure</title>
+		<para>IQueryCommand (refered to in SQL as a Query Expression) is the base for both queries and set queries.  It may optionally take an IOrderBy (representing a SQL ORDER BY clause) and a ILimit (represent a SQL LIMIT clause)</para>
+	</sect2>
     <sect2>
       <title>IQuery Structure</title>
-      <para>The following diagram shows the structure of an <code>IQuery</code> command.</para>
-      
-      <figure id="iquery-interface-hierarchy">
-        <title>IQuery Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/iquery-interface-hierarchy.png"/>
-      </figure>
 
-      <para>Each IQuery will have an ISelect describing the expressions (typically elements) being selected and an IFrom specifying the group or groups being selected from, along with any join information.  The IQuery may optionally also supply an ICriteria (representing a SQL WHERE clause), an IGroupBy (representing a SQL GROUP BY clause), and an ICriteria (representing a SQL HAVING clause). </para>            
+		<para>Each IQuery will have an ISelect describing the expressions
+			(typically elements) being selected and an IFrom specifying the group
+			or groups being selected from, along with any join information.  The
+			IQuery may optionally also supply an ICriteria (representing a SQL
+			WHERE clause), an IGroupBy (representing a SQL GROUP BY clause), an
+			an ICriteria (representing a SQL HAVING clause).</para>            
     </sect2>      
 
     <sect2>
-      <title>IUnion Structure</title>
-      <para>The following diagram shows the structure of an IUnion command.</para>
+      <title>ISetQuery Structure</title>
 
-      <figure id="iunion-interface-hierarchy">
-        <title>IUnion Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/iunion-interface-hierarchy.png"/>
-      </figure>
-      
-      <para>IUnion extends from IQuery and allows for one or more additional IQuery objects to be attached as a UNION query.  For each additional IQuery, there is a Boolean “ALL” flag that must be set.  The ORDER BY clause for the UNION as a whole can also be set on the IUnion object.</para>
+		<para>An ISetQuery represents on of the SQL set operations (UNION,
+			INTERSECT, EXCEPT) on two IQueryCommands. The all flag may be set to
+			indicate UNION ALL (currently INTERSECT and EXCEPT ALL are not allowed
+			in Teiid)</para>
     </sect2>
         
     <sect2>    
-      <title>IInsert Structure </title>
-      <para>The following diagram shows the structure of an IInsert command.</para>
+      <title>IInsert Structure</title>
 
-      <figure id="iinsert-interface-hierarchy">
-        <title>IInsert Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/iinsert-interface-hierarchy.png"/>
-      </figure>
-      <para>Each IInsert will have a single IGroup specifying the group being inserted into.  It will also have two matched lists – one a list of IElement specifying the columns of the IGroup that are being inserted into and one a list of ILiteral specifying the values that will be inserted into each matching IElement.</para>
+		<para>Each IInsert will have a single IGroup specifying the group being
+			inserted into.  It will also a list of
+			IElements specifying the columns of the IGroup that are being inserted
+			into and an IInsertValueSource, which will either be a list of IExpression (IInsertExpressionValueSource) or an IQueryCommand.</para>
     </sect2>
 
     <sect2>
       <title>IUpdate Structure</title>
-      <para>The following diagram shows the structure of an IUpdate command.</para>
 
-      <figure id="iupdate-interface-hierarchy">
-        <title>IUpdate Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/iupdate-interface-hierarchy.png"/>
-      </figure>
-
-      <para>Each IUpdate will have a single IGroup specifying the group being updated.  The list of ICompareCriteria are used to specify each element that is being modified. Each compare criteria will be of the form “element = literal”. The IUpdate may optionally provide a criterion specifying which rows should be updated.</para>
+		<para>Each IUpdate will have a single IGroup specifying the group being
+			updated.  The ISetClauseList contains ISetClause entries that specify
+			IElement and IExpression pairs for the update.
+			The IUpdate may optionally provide a
+			criteria specifying which rows should be updated.</para>
     </sect2>
 
     <sect2>
       <title>IDelete Structure</title>
-      <para>The following diagram shows the structure of an IDelete command.</para>
-      <figure id="idelete-interface-hierarchy">
-        <title>IDelete Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/idelete-interface-hierarchy.png"/>
-      </figure>
-      <para>Each IDelete will have a single IGroup specifying the group being deleted from. It may also optionally have a criteria specifying which rows should be deleted.  </para>
+
+		<para>Each IDelete will have a single IGroup specifying the group being
+			deleted from. It may also optionally have a criteria specifying which
+			rows should be deleted.  </para>
     </sect2>
 
     <sect2>
       <title>IProcedure Structure</title>
-      <para>The following diagram shows the structure of an IProcedure command.</para>
-      <figure id="iprocedure-interface-hierarchy">
-        <title>IProcedure Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/iprocedure-interface-hierarchy.png"/>
-      </figure>
-      <para>Each IProcedure has zero or more IParameter objects. The IParameter objects describe the input parameters, the output result set, and the output parameters.  </para>
-    </sect2>
-    
-    <sect2>
-      <title>IBulkInsert Structure </title>
-      <para>The following diagram shows the structure of an IBulkInsert command.</para>
-      <figure id="ibulkinsert-interface-hierarchy">
-        <title>IBulkInsert Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/ibulkinsert-interface-hierarchy.png"/>
-      </figure>      
-      <para>Each IBulkInsert extends an IInsert but provides a List of Lists of values that need to be placed into the VALUES list of the INSERT. </para>
+
+		<para>Each IProcedure has zero or more IParameter objects. The
+			IParameter objects describe the input parameters, the output result
+			set, and the output parameters.  </para>
     </sect2>
     
     <sect2>
       <title>IBatchedUpdate Structure </title>
-      <para>The following diagram shows the structure of an IBatchedUpdate command.</para>
-      <figure id="ibatchedupdate-interface-hierarchy">
-        <title>IBatchedUpdate Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/ibatchedupdate-interface-hierarchy.png"/>
-      </figure>      
-      <para>Each IBatchedUpdate has a list of ICommand objects that compose the batch. </para>    
+
+		<para>Each IBatchedUpdate has a list of ICommand objects (which must be
+			an IInsert, IUpdate, or IDelete) that compose the batch. </para>    
     </sect2>
   </sect1>
 
@@ -164,64 +195,52 @@
     <sect2>
       <title>Data Types</title>
       <para>The Connector API contains an interface TypeFacility that defines data types and provides value translation facilities.  </para>
-      <figure id="datatypes-classes">
-        <title>IBatchedUpdate Interface Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/datatypes-classes.png"/>
-      </figure> 
-      
-      <para>The table below lists the role of each class in the framework.</para>
-      
-      <table frame='all'>
-        <title>Types Facility Classes</title>
-        <tgroup cols='3' align='left' colsep='1' rowsep='1'>
-          <colspec colname='c1' colwidth="1*"/>
-          <colspec colname='c2' colwidth=".5*"/>
-          <colspec colname='c3' colwidth="2*"/>
-          <thead>      
-            <row>
-              <entry><para>Class</para></entry>
-              <entry><para>Type</para></entry>
-              <entry><para>Description</para></entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry><para>ConnectorEnvironment</para></entry>
-              <entry><para>Interface</para></entry>
-              <entry><para>This interface (provided by Teiid) is a factory to obtain the TypeFacility instance for the connector using the getTypeFacility() method.</para></entry>
-            </row>
-            <row>
-              <entry><para>TypeFacility</para></entry>
-              <entry><para>Interface</para></entry>
-              <entry><para>This interface has two methods that support data type transformation.  Generally,transformations exist for all valid implicit and explicit data type transformations in the Teiid query engine.  </para></entry>
-            </row>
-            <row>
-              <entry><para>TypeFacility.RUNTIME_TYPES</para></entry>
-              <entry><para>Interface</para></entry>
-              <entry><para>This is an inner interface of TypeFacility that defines constants for all Teiid runtime data types.  All IExpression instances define a data type based on this set of types.  These constants are often needed in understanding or creating language interfaces.</para></entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </table>
-    </sect2>
 
+	<para>This ConnectorEnvironment (provided by Teiid on connector start)
+		is a factory to obtain a TypeFacility instance for the connector using
+		the getTypeFacility() method.
+		The TypeFacitlity interface has methods that support data type
+		transformation and detection of appropriate runtime or JDBC types.
+		 The TypeFacility.RUNTIME_TYPES and TypeFacility.RUNTIME_NAMES
+		interfaces defines constants for all Teiid runtime data types.  All
+		IExpression instances define a data type based on this set of types.
+		 These constants are often needed in understanding or creating
+		language interfaces.</para>
+    </sect2>
 
     <sect2>
       <title>Language Manipulation</title>
-      <para>In connectors that support a fuller set of capabilities (those that generally are translating to a language of comparable to SQL), there is often a need to manipulate or create language interfaces to move closer to the syntax of choice.  Some utilities are provided for this purpose:</para>
-      <para>Similar to the TypeFacility, you can use the ConnectorEnvironment to get a reference to the ILanguageFactory instance for your connector.  This interface is a factory that can be used to create new instances of all the concrete language interface objects.  </para>
-      <para>Some helpful utilities for working with ICriteria objects are provided in the LanguageUtil class.  This class has methods to combine ICriteria with AND or to break an ICriteria apart based on AND operators.  These utilities are helpful for breaking apart a criteria into individual filters that your connector can implement.</para>
+		<para>In connectors that support a fuller set of capabilities (those
+			that generally are translating to a language of comparable to SQL),
+			there is often a need to manipulate or create language interfaces to
+			move closer to the syntax of choice.  Some utilities are provided for
+			this purpose:</para>
+		<para>Similar to the TypeFacility, you can use the ConnectorEnvironment
+			to get a reference to the ILanguageFactory instance for your
+			connector.  This interface is a factory that can be used to create new
+			instances of all the concrete language interface objects.  </para>
+		<para>Some helpful utilities for working with ICriteria objects are
+			provided in the LanguageUtil class.  This class has methods to combine
+			ICriteria with AND or to break an ICriteria apart based on AND
+			operators.  These utilities are helpful for breaking apart a criteria
+			into individual filters that your connector can implement.</para>
     </sect2>      
   </sect1>  
     
   <sect1>
     <title>Runtime Metadata</title>
-    <para>Teiid uses a library of metadata, known as “runtime metadata” for each virtual database that is deployed in the Teiid Server. The runtime metadata is a subset of metadata as defined by models in the Teiid models that compose the virtual database.  </para>
-    <para>Connectors can access runtime metadata by using the interfaces defined in com.metamatrix.data.metadata.runtime.  This class defines interfaces representing a MetadataID, a MetadataObject, and ways to navigate those IDs and objects.</para>
+		<para>Teiid uses a library of metadata, known as “runtime metadata” for
+			each virtual database that is deployed in Teiid. The runtime metadata
+			is a subset of metadata as defined by models in the Teiid models that
+			compose the virtual database.  </para>
+		<para>Connectors can access runtime metadata by using the interfaces
+			defined in org.teiid.connector.metadata.runtime.  This package defines
+			interfaces representing a MetadataID, a MetadataObject, and ways to
+			navigate those IDs and objects.</para>
 
     <sect2>
       <title>Language Objects</title>
-      <para>One language interface, IMetadataReference describes whether a language object has a reference to a MetadataID.  The following interfaces extend IMetadataReference:</para>
+      <para>One language interface, IMetadataReference describes whether a language object has a reference to a MetadataObject.  The following interfaces extend IMetadataReference:</para>
       <itemizedlist>
         <listitem><para>IElement</para></listitem>
         <listitem><para>IGroup</para></listitem>
@@ -229,27 +248,35 @@
         <listitem><para>IParameter</para></listitem>
       </itemizedlist>
 
-      <para>Once a MetadataID has been obtained, it is possible to use the RuntimeMetadata interface to discover metadata about that ID or to find other related IDs or objects.</para>
+      <para>Once a MetadataObject has been obtained, it is possible to use it metadata about that object or to find other related or objects.</para>
     </sect2>
     <sect2>
       <title>Access to Runtime Metadata</title>
-      <para>The following interfaces are defined in the runtime metadata package:</para>
-      <figure id="runtime-metadata-classes">
-        <title>Runtime MetaData Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/runtime-metadata-classes.png"/>
-      </figure> 
-      <para>As mentioned in the previous section, a MetadataID is obtained from one of the language objects. That MetadataID can then be used directly to obtain information about the ID, such as the full name or short name.  </para>
-      <para>The RuntimeMetadata interface can be obtained from the ConnectorEnvironment. It provides the ability to look up MetadataObjects based on MetadataIDs. There are several kinds of MetadataObjects and they can be used to find more information about the object in runtime metadata.  </para>
-      <para>Currently, only a subset of the most commonly used runtime metadata is available through these interfaces. In the future, more complete information will be available.</para>
+
+		<para>As mentioned in the previous section, a MetadataID is obtained
+			from one of the language objects. That MetadataID can then be used
+			directly to obtain information about the ID, such as the full name or
+			short name.  </para>
+		<para>The RuntimeMetadata interface is passed in for the creation of an Execution. It provides the ability to look up
+			MetadataObjects based on their fully qualified names in the VDB. There are several kinds of
+			MetadataObjects and they can be used to find more information about
+			the object in runtime metadata.  </para>
+		<para>Currently, only a subset of the most commonly used runtime
+			metadata is available through these interfaces. In the future, more
+			complete information will be available.</para>
 
       <para><emphasis>Obtaining MetadataObject Properties Example</emphasis></para>
 
-      <para>The process of getting an element's properties is needed for most connector development  For example to get the NameInSource property or all extension properties:</para>
+      <para>The process of getting an element's properties is sometimes needed for connector development.  For example to get the NameInSource property or all extension properties:</para>
       <programlisting><![CDATA[
-IMetaDataReference ref = ... //An IGroup in this example
-RuntimeMetadata rm = ... //Obtained from the ConnectorEnvironemnt
+//getting the Group metadata from an IGroup is straight-forward
+IGroup igroup = ... //some group on a command
+Group group = igroup.getMetadataObject();
 
-MetaDataObject group = rm.getObject(ref.getMetadataID()); 
+//we could also use the runtime metadata
+RuntimeMetadata rm = ... //Obtained from the creation of the Execution
+
+group = rm.getGroup("fully.qualified.name"); 
 String contextName = group.getNameInSource();
 
 //The props will contain extension properties
@@ -264,11 +291,7 @@ Properties props = group.getProperties();
     
     <sect2>
       <title>Framework</title>
-      <para>The Connector API provides a language visitor framework in the com.metamatrix.data.visitor.framework package.   The framework provides utilities useful in navigating and extracting information from trees of language objects.  This diagram describes the relationships of the various classes in the framework:</para>
-      <figure id="language-visitor-classes">
-        <title>LanguageObjectVisitor Class Diagram</title>
-        <graphic align="center" scale="100" fileref="../images/language-visitor-classes.png"/>
-      </figure>
+      <para>The Connector API provides a language visitor framework in the com.metamatrix.data.visitor.framework package.   The framework provides utilities useful in navigating and extracting information from trees of language objects.</para>
 
       <para>The visitor framework is a variant of the Visitor design pattern, which is documented in several popular design pattern references.  The visitor pattern encompasses two primary operations: traversing the nodes of a graph (also known as iteration) and performing some action at each node of the graph.  In this case, the nodes are language interface objects and the graph is really a tree rooted at some node.  The provided framework allows for customization of both aspects of visiting.</para>
       <para>The base LanguageObjectVisitor class defines the visit methods for all leaf language interfaces that can exist in the tree.  The LanguageObject interface defines an acceptVisitor() method – this method will call back on the visit method of the visitor to complete the contract.  A base class with empty visit methods is provided as AbstractLanguageVisitor.  The AbstractLanguageVisitor is just a visitor shell – it performs no actions when visiting nodes and does not provide any iteration.</para>

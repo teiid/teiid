@@ -1,9 +1,8 @@
 <chapter id="introduction">
-  <title>Connectors in the Teiid System</title>
-  <para>In the Teiid System, a connector handles all request-and-response related communications between the
-    data tier of the Teiid Server and the individual enterprise information sources, which can include
-    databases, data feeds, flat files, or any other entity you have modeled</para>
-  <para>In the Teiid Server, a connector is used to:</para>
+  <title>Connectors in Teiid</title>
+  <para>In Teiid a connector handles all communications with individual enterprise information sources, which can include
+    databases, data feeds, flat files, or any other entity you have modeled.</para>
+  <para>In Teiid, a connector is used to:</para>
   <itemizedlist>
     <listitem>
       <para>Translate a Teiid-specific command into a native command.</para>
@@ -12,10 +11,10 @@
       <para>Execute the command.</para>
     </listitem>
     <listitem>
-      <para>Return batches of results to the Teiid Server.</para>
+      <para>Return batches of results to Teiid.</para>
     </listitem>
   </itemizedlist>
-  <para>The Teiid Server is responsible for reassembling the results from one or more connectors into an
+  <para>Teiid is responsible for reassembling the results from one or more connectors into an
     answer for the user’s command.</para>
   <para>
     For a more detailed workflow, see the chapter
@@ -26,8 +25,7 @@
   <sect1>
     <title>Do You Need a New Connector?</title>
     <para>Teiid can provide several connectors for common enterprise information system types. If
-      you can use one of these enterprise information systems, you do not need to develop a custom one. Instead,
-      you can contact your Teiid Technical Account Manager and ask about purchasing the connector you need.
+      you can use one of these enterprise information systems, you do not need to develop a custom one.
     </para>
     <para>Teiid offers the following connectors:</para>
     <itemizedlist>
@@ -35,7 +33,7 @@
         <para>
           <emphasis>JDBC:</emphasis>
           Connects to many relational databases. The JDBC Connector is validated against the following database
-          systems: Oracle, Microsoft SQL Server, IBM DB2, MySQL and Sybase. In addition, the JDBC Connector can
+          systems: Oracle, Microsoft SQL Server, IBM DB2, MySQL, Postgres, Derby, and Sybase. In addition, the JDBC Connector can
           often be used with other 3rd-party drivers and provides a wide range of extensibility options to
           specialize behavior against those drivers.
         </para>
@@ -43,7 +41,7 @@
       <listitem>
         <para>
           <emphasis>Text:</emphasis>
-          Connects to ASCII text files.
+          Connects to text files.
         </para>
       </listitem>
       <listitem>
@@ -52,9 +50,19 @@
           Connects to XML files on disk or by invoking Web services on other enterprise systems.
         </para>
       </listitem>
+      <listitem>
+        <para>
+          <emphasis>LDAP</emphasis>
+          Connects to LDAP directory services.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          <emphasis>Salesforce</emphasis>
+          Connects to Salesforce.
+        </para>
+      </listitem>
     </itemizedlist>
-    <para>If your enterprise information system can use one of these connectors, you do not need to develop your
-      own. Instead, you can contact Teiid about acquiring the connector you need.</para>
   </sect1>
   <sect1>
     <title>Required Items to Write a Custom Connector</title>
@@ -71,7 +79,10 @@
             <para>Configuration and connection information for the system</para>
           </listitem>
           <listitem>
-            <para>Metadata</para>
+            <para>Expectation for incoming queries/metadata</para>
+          </listitem>
+          <listitem>
+            <para>The SQL and processing constructs supported by information system.</para>
           </listitem>
           <listitem>
             <para>Required properties for the connector, such as URL, user name, etc.</para>
@@ -103,11 +114,10 @@
         <para>Test your connector with Connector Development Kit (CDK) test utilities.</para>
       </listitem>
       <listitem>
-        <para>Deploy your connector type into a Teiid Server using the Teiid Console.</para>
+        <para>Deploy your connector type into Teiid.</para>
         <itemizedlist>
           <listitem>
-            <para>Create your connector type definition file. Import the connector type definition file
-            </para>
+            <para>Create and import your connector type definition file.</para>
           </listitem>
           <listitem>
             <para>Create a connector binding using the connector type</para>
@@ -118,13 +128,13 @@
         </itemizedlist>
       </listitem>
       <listitem>
-        <para>Execute queries via the Teiid JDBC API or QueryBuilder</para>
+        <para>Execute queries via Teiid.</para>
       </listitem>
     </orderedlist>
     <para>
       This guide covers how to do each of these steps in detail. It also provides additional information for
       advanced topics, such as connection pooling, streaming large objects, and transactions. For a sample
-      connector code, please check the wiki pages at <ulink url="http://teiid.org">Teiid community</ulink>
+      connector code, please check the <ulink url="http://teiid.org">Teiid community</ulink>
     </para>
   </sect1>
 </chapter>

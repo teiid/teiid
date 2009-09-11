@@ -116,7 +116,7 @@
             </row>
             <row>
               <entry>
-                <para>setSecurityContext</para>
+                <para>setExecutionContext</para>
               </entry>
               <entry>
                 <para>Sets the security context values currently being used to execute commands.
@@ -212,10 +212,10 @@ List results = host.executeCommand(“SELECT col FROM group WHERE col = 5”);
         <tbody>
           <row>
             <entry>
-              <para>createSecurityContext</para>
+              <para>createExecutionContext</para>
             </entry>
             <entry>
-              <para>Creates a securityContext instance.</para>
+              <para>Creates a ExecutionContext instance.</para>
             </entry>
           </row>
           <row>
@@ -458,7 +458,7 @@ List results = host.executeCommand(“SELECT col FROM group WHERE col = 5”);
             </row>
             <row>
               <entry>
-                <para>SetSecurityContext</para>
+                <para>SetExecutionContext</para>
               </entry>
               <entry>
                 <para>VDBName VDBVersion UserName</para>

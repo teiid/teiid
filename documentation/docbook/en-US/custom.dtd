@@ -1,0 +1,6 @@
+<!ENTITY versionNumber "6.2.0">
+<!ENTITY copyrightYear "2009">
+<!ENTITY copyrightHolder "Red Hat, Inc.">
+<!ENTITY url "http://www.jboss.org/teiid/">
+<!ENTITY docUrl "http://www.jboss.org/teiid/docs.html">
+<!ENTITY docLink "<ulink url='&docLink;'>Teiid Documentation</ulink>">

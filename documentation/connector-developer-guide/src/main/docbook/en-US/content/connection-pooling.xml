@@ -2,12 +2,12 @@
 	<title>Connection Pooling</title>
 	<sect1>
 		<title>Overview</title>
-		<para>The Query Engine logically obtains and releases a connection
-			for each command that is executed.</para>
-		<para>However many enterprise sources maintain persistent
-			connections that are expensive to create. For these situaions,
-			Teiid provides a transparent connection pool to reuse rather than
-			constantly release connections.  The connection pool is highly
+		<para>The Query Engine logically obtains and closes a connection
+			for each command.</para>
+		<para>However many enterprise sources connections can be persistent
+			and expensive to create. For these situaions,
+			Teiid provides a transparent connection pool to reuse, rather than
+			constantly close, connections.  The connection pool is highly
 			configurable through configuration properties and extension APIs for
 			Connections and Connectors</para>
 		<para>Many built-in connector types take advantage of pooling,
@@ -40,30 +40,13 @@
 				<tbody>
 					<row>
 						<entry>
-							<para>PoolAwareConnection</para>
+							<para>Connection</para>
 						</entry>
 						<entry>
 							<para>Interface</para>
 						</entry>
 						<entry>
-							<para>This interface is an extension of the Connection
-								interface and provides hooks to better interact with Connection
-								pooling.</para>
-						</entry>
-					</row>
-					<row>
-						<entry>
-							<para>ConnectorIdentityFactory</para>
-						</entry>
-						<entry>
-							<para>Interface</para>
-						</entry>
-						<entry>
-							<para>Defines a factory for creating ConnectorIdentities.
-								This can optionally be implemented by the concrete Connector
-								class to properly segregate Connections in the pool. If this
-								class is not implemented by the Connector, then SingleIdentity
-								support will be assumed.</para>
+							<para>The isAlive and closeCalled methods are used for pool interaction.</para>
 						</entry>
 					</row>
 					<row>
@@ -89,21 +72,21 @@
 							<para>Class</para>
 						</entry>
 						<entry>
-							<para>This implementation of the identity class makes all
-								connections equivalent, thus creating a single pool.</para>
+							<para>This implementation of ConnectorIdentity makes all
+								connections equivalent, thus user scoping of connection is ignored.</para>
 						</entry>
 					</row>
 					<row>
 						<entry>
-							<para>UserIdentity</para>
+							<para>MappedUserIdentity</para>
 						</entry>
 						<entry>
 							<para>Class</para>
 						</entry>
 						<entry>
-							<para>This implementation of the identity class makes all
-								connections equivalent for a particular user, thus creating a
-								set of per-user connection pools.  </para>
+							<para>This implementation of ConnectorIdentity makes all
+								connections equivalent for a particular user allowing for per-user connection pools.  
+							</para>
 						</entry>
 					</row>
 					<row>
@@ -133,17 +116,19 @@
 			adding the ConnectionPooling annotation, which defaults to
 			enabled=true, to the Connector implementation class. Automatic
 			Connection pooling can be disabled if either setting is false.</para>
-		<para>Connector developers can optionally utilize the
-			PoolAwareConnection and ConnectorIdentityFactory interfaces to refine
-			the Connector's interactions with Connection pooling. It is important
+		<para>
+			It is important
 			to consider providing an implementation for
-			PoolAwareConnection.isAlive to indicate that a Connection is no
+			Connection.isAlive to indicate that a Connection is no
 			longer viable and should be purged from the pool. Connection testing
 			is performed upon leases from the pool and optionally at a regular
 			interval that will purge idle Connections. It is also important to
 			consider having the concrete Connector class implement
-			ConnectorIdentity factory if Connections are made under more than
-			just a single identity.</para>
+			ConnectorIdentity factory if Connections are made for multiple
+			identities. Note that setting connector binding property
+			UseCredentialMap to true will allow connectors extending BasicConnector
+			to have their ConnectorIdentity automatically set based upon the user
+			CredentialMap.</para>
 	</sect1>
 	<sect1>
 		<title>The Connection Lifecycle</title>
@@ -151,10 +136,10 @@
 		</para>
 		<orderedlist>
 			<listitem>
-				<para>If the Connector implements ConnectorIdentityFactory, the
+				<para>The
 					ConnectorManager asks the Connector to generate a ConnectorIdentity
-					for the given SecurityContext, else SingleIdentity is assumed. The
-					ConnectorIdentity is then stored on the SecurityContext.</para>
+					for the given ExecutionContext. The
+					ConnectorIdentity is then stored on the ExecutionContext.</para>
 			</listitem>
 			<listitem>
 				<para>The ConnectorManager asks for a Connection from the pool
@@ -169,14 +154,13 @@
 				<para>After the ConnectorManager has used the Connection to
 					execute a command, it releases the Connection. This call is
 					intercepted by the pool and the method
-					PoolAwareConnection.releaseCalled is invoked on the Connection
-					instead. If the Connection does not implement PoolAwareConnection,
-					it is assumed no action is needed.</para>
+					Connection.closeCalled is invoked on the Connection
+					instead.  Note that for many sources no action is necessary on closeCalled.</para>
 			</listitem>
 			<listitem>
 				<para>When the Connection fails an isAlive check or becomes too
 					old with pool shrinking enabled, it is purged from the pool and
-					Connection.release is called.</para>
+					Connection.close is called.</para>
 			</listitem>
 		</orderedlist>
 		<sect2>

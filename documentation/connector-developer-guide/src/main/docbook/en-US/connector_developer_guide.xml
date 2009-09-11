@@ -24,7 +24,7 @@
 
 -->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % CustomDTD SYSTEM "../../../../../custom.dtd">
+<!ENTITY % CustomDTD SYSTEM "../../../../../docbook/en-US/custom.dtd">
 %CustomDTD;
 ]>
 
@@ -36,31 +36,21 @@
         <releaseinfo>&versionNumber;</releaseinfo>
         <productnumber>&versionNumber;</productnumber>
         <issuenum>1</issuenum>
-        <mediaobject>
-            <imageobject role="fo">
-                <imagedata fileref="images/logo.png" align="center"/>
-            </imageobject>
-            <imageobject role="html">
-                <imagedata fileref="images/logo.png" depth="3cm" />
-            </imageobject>
-        </mediaobject>
         <copyright>
             <year>&copyrightYear;</year>
             <holder>&copyrightHolder;</holder>
         </copyright>
-        <xi:include href="legal_notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" /> 
+        <xi:include href="../../../../../docbook/en-US/legal_notice.xml" xmlns:xi="http://www.w3.org/2001/XInclude" /> 
     </bookinfo>
     
     <toc/>
         
-    <xi:include href="content/federate-info.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/introduction.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/connector-api.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/command-language.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/connector-development-kit.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />    
     <xi:include href="content/connector-deployment.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/connection-pooling.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
-    <xi:include href="content/monitored-connector.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/lob-support.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     <xi:include href="content/appendix-a.xml" xmlns:xi="http://www.w3.org/2001/XInclude" />
     
