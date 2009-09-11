@@ -10,8 +10,12 @@ Creating Unit Tests
 ==========================================
 
 -	Unit test should be created under db/src/test/java 
--	See LocalTransactionTests.java as an example 
--	Test should extend org.teiid.transaction.test.AbstractTransactionTestCase
+-	See SingleSourceTransactionTest.java as an example 
+
+	NOTE:  the current tests are currently  organized by the number of datasources they require in order
+			to give some organization to the test for tracking purposes.
+			
+-	Test should extend org.teiid.transaction.test.BaseAbstractTransactionTestCase
 
 
 -	NOTE:  the following is used in a post test phase of validating the data in the datasource 
@@ -30,16 +34,17 @@ Setting up a Datasource to be used during Testing
 ==========================================
 
 -	see the readme.txt in src/main/resources/datasources regarding defining a datasource
--	run the maven profile to create the required tables:
-		a.  to setup all sources at one time, run:   mvn -P setupdatasources 
-		b.	to setup a specific source, run: mvn -P singledatasource -Ddatasource=derby
+-	run the maven profile to execute the process to create the required tables:
+		a.  to setup all sources at one time, run:   mvn install -P setupdatasources 
+		b.	to setup a specific source, run: mvn install -P singledatasource -Ddatasource=derby
 		
 
 ==========================================
 Executing the db integration tests
 ==========================================
 
-The default profile in the pom.xml is to compile and run the test.   
+The default profile in the pom.xml is set to compile and run the test.   So running:  mvn clean install
+will compile and run the test.  
 It does not run and setup a datasource.   See above "Setting up a Datasource to be used during Testing".
 
 
