@@ -327,11 +327,11 @@ public class DQPCore extends Application implements ClientSideDQP {
             LogManager.logDetail(LogConstants.CTX_DQP, "Request to close the Lob stream with Stream id="+streamId+" instance id="+lobRequestId);  //$NON-NLS-1$//$NON-NLS-2$
         }   
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-        RequestWorkItem workItem = getRequestWorkItem(workContext.getRequestID(requestId));
-        workItem.removeLobStream(lobRequestId);
-        ResultsFuture<Void> resultsFuture = new ResultsFuture<Void>();
-        resultsFuture.getResultsReceiver().receiveResults(null);
-        return resultsFuture;
+        RequestWorkItem workItem = safeGetWorkItem(workContext.getRequestID(requestId));
+        if (workItem != null) {
+	        workItem.removeLobStream(lobRequestId);
+        }
+        return null;
     }
 	    
 	public ResultsFuture<LobChunk> requestNextLobChunk(int lobRequestId,
