@@ -285,19 +285,9 @@ public class MMStatement extends WrapperImpl implements Statement {
         }
 
         // close the the server's statement object (if necessary)
-        if(currentRequestID > -1) {
-            if(resultSet == null) {
-            	try {
-					this.getDQP().closeRequest(currentRequestID);
-				} catch (MetaMatrixProcessingException e) {
-					throw MMSQLException.create(e);
-				} catch (MetaMatrixComponentException e) {
-					throw MMSQLException.create(e);
-				}
-            } else {
-                resultSet.close();
-                resultSet = null;
-            }
+        if(resultSet != null) {
+            resultSet.close();
+            resultSet = null;
         }
 
         isClosed = true;
