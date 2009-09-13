@@ -5,7 +5,7 @@
 		<para>The Query Engine logically obtains and closes a connection
 			for each command.</para>
 		<para>However many enterprise sources connections can be persistent
-			and expensive to create. For these situaions,
+			and expensive to create. For these situations,
 			Teiid provides a transparent connection pool to reuse, rather than
 			constantly close, connections.  The connection pool is highly
 			configurable through configuration properties and extension APIs for
@@ -198,14 +198,14 @@
 	<sect1>
 		<title>Configuring the Connection Pool</title>
 		<para>The ConnectionPool has a number of properties that can be
-			configured via the connector binding expert properties.</para>
+			configured via the connector binding expert properties. Note *. indicates that the property prefix is com.metamatrix.data.pool.</para>
 		<table frame="all">
 			<title>Connection Pool Properties</title>
-			<tgroup cols='3' align='left' colsep='1' rowsep='1'>
+			<tgroup cols='4' align='left' colsep='1' rowsep='1'>
 				<colspec colname='c1' colwidth=".5*" />
-				<colspec colname='c1' colwidth="1*" />
-				<colspec colname='c2' colwidth=".25*" />
-				<colspec colname='c3' colwidth="2*" />
+				<colspec colname='c2' colwidth="1*" />
+				<colspec colname='c3' colwidth=".25*" />
+				<colspec colname='c4' colwidth="1*" />
 				<thead>
 					<row>
 						<entry>
@@ -259,8 +259,7 @@
 							<para>Pool Maximum Connections</para>
 						</entry>
 						<entry>
-							<para>com.metamatrix.data.
-							~pool.max_connections
+							<para>*.max_connections
 							</para>
 						</entry>
 						<entry>
@@ -276,8 +275,7 @@
 							<para>Pool Maximum Connections for Each ID</para>
 						</entry>
 						<entry>
-							<para>com.metamatrix.data.
-							~pool.max_connections_for_each_id
+							<para>*.max_connections_for_each_id
 							</para>
 						</entry>
 						<entry>
@@ -293,8 +291,7 @@
 							<para>Pool Connection Idle Time (seconds)</para>
 						</entry>
 						<entry>
-							<para>com.metamatrix.data.
-							~pool.live_and_unused_time
+							<para>*.live_and_unused_time
 							</para>
 						</entry>
 						<entry>
@@ -310,8 +307,7 @@
 							<para>Pool Connection Waiting Time (milliseconds)</para>
 						</entry>
 						<entry>
-							<para>com.metamatrix.data.
-							~pool.wait_for_source_time
+							<para>*.wait_for_source_time
 							</para>
 						</entry>
 						<entry>
@@ -327,8 +323,7 @@
 							<para>Pool cleaning Interval (seconds)</para>
 						</entry>
 						<entry>
-							<para>com.metamatrix.data.
-							~pool.cleaning_interval
+							<para>*.cleaning_interval
 							</para>
 						</entry>
 						<entry>
@@ -344,8 +339,7 @@
 							<para>Enable Pool Shrinking</para>
 						</entry>
 						<entry>
-							<para>com.metamatrix.data.
-							~pool.enable_shrinking
+							<para>*.enable_shrinking
 							</para>
 						</entry>
 						<entry>

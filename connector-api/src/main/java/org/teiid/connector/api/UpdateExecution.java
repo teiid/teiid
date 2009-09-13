@@ -22,13 +22,24 @@
 
 package org.teiid.connector.api;
 
+import org.teiid.connector.language.IBatchedUpdates;
+import org.teiid.connector.language.IDelete;
+import org.teiid.connector.language.IInsert;
+import org.teiid.connector.language.IUpdate;
+
 
 /**
  * The update execution represents the case where a connector can 
- * execute an INSERT, UPDATE, or DELETE command.
+ * execute an {@link IInsert}, {@link IUpdate}, {@link IDelete}, or {@link IBatchedUpdates} command.
  */
 public interface UpdateExecution extends Execution {
 
+	/**
+	 * Returns the update counts for the execution.
+	 * @return the update counts corresponding to the command executed
+	 * @throws DataNotAvailableException
+	 * @throws ConnectorException
+	 */
     int[] getUpdateCounts() throws DataNotAvailableException, ConnectorException;
     
 }

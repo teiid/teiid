@@ -24,12 +24,22 @@ package org.teiid.connector.api;
 
 import java.util.List;
 
-
+import org.teiid.connector.language.IProcedure;
+import org.teiid.connector.language.IQueryCommand;
 
 /**
+ * Defines an execution for {@link IQueryCommand}s and {@link IProcedure}s that
+ * returns a resultset, which is represented through the iterator method
+ * {@link #next()}.
  */
 public interface ResultSetExecution extends Execution {
 
+	/**
+	 * Retrieves the next row of the resultset.  
+	 * @return the next row or null indicating that there are no more results
+	 * @throws ConnectorException
+	 * @throws DataNotAvailableException
+	 */
 	List<?> next() throws ConnectorException, DataNotAvailableException;
 
 }

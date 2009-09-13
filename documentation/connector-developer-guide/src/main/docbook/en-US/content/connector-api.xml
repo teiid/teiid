@@ -1,5 +1,5 @@
 <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
-<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/en-US/custom.dtd">
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
 %CustomDTD;
 ]>
 <chapter id="connector_api">
@@ -303,11 +303,15 @@
 						binding property SynchWorkers to false - this overrides the default
 						behavior in which connector threads stay associated with their
 						Execution until the Execution is closed.</para>
+				</listitem>
+				<listitem>
 					<para>Throw a DataNotAvailableExecption during a retrival method, rather than explicitly waiting or sleeping for the results. The
 						DataNotAvailableException may take a delay parameter in its
 						constructor to indicate how long the system should wait befor polling
 						for results.  Any non-negative value is allowed. 
 					</para>
+				</listitem>
+				<listitem>
 					<para>Be aware that a connector with asynchronous workers cannot be transactional.</para>
 				</listitem>
 			</itemizedlist>

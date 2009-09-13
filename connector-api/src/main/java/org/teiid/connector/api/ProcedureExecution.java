@@ -24,12 +24,12 @@ package org.teiid.connector.api;
 
 import java.util.List;
 
+import org.teiid.connector.language.IProcedure;
+
 /**
- * The procedure execution represents the case where a connector can 
- * execute a procedural call (such as a stored procedure).  This command
- * takes a procedure with input values and executes the procedure.  The 
- * output may include 0 or more output parameters and optionally a result 
- * set.   
+ * The procedure execution represents the case where a connector can execute a
+ * {@link IProcedure}. The output may include 0 or more output parameters and
+ * optionally a result set.
  */
 public interface ProcedureExecution extends ResultSetExecution {
 

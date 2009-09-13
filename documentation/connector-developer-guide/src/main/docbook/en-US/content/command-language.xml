@@ -1,3 +1,7 @@
+<!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY % CustomDTD SYSTEM "../../../../../../docbook/custom.dtd">
+%CustomDTD;
+]>
 <chapter id="command_language">
   <title>Command Language</title>
   
@@ -13,16 +17,21 @@
 		<link linkend="connector_capabilities">Connector Capabilities</link>
 		for more information.
 	</para>
-	<para>The language interfaces all extend from the main interface,
-		ILanguageObject. They should be thought of as a tree where each node is a
+	<para>The language interfaces all extend from the ILanguageObject interface.
+		Language objects should be thought of as a tree where each node is a
 		language object that has zero or more child language objects of types
 		that are dependent on the current node.</para>
 	<para>All commands sent to your connector are in the form of these
 		language trees, where the root of the tree is a subclass of ICommand.
 		ICommand has several sub-interfaces, namely: IQueryCommand, IInsert, IUpdate,
 		IDelete, IBatchedUpdate, and IProcedure.  
-		Important components of these commands are expressions, criteria, and
-		joins, which are examined in closer detail below.</para>
+		Important components of
+		these commands are expressions, criteria, and
+		joins, which are examined
+		in closer detail below. Also see the
+		<ulink url="&javaDocUrl;">Teiid JavaDocs</ulink>
+		for more on the classes and interfaces described here.
+	</para>
     <sect2>
       <title>Expressions</title>
 		<para>An expression represents a single value in context, although in
@@ -116,10 +125,10 @@
       </itemizedlist>
 		<para>A list of IFromItems is used by default in the pushdown query
 			when no outer joins are used. If an outer join is used anywhere in the
-			join tree there will be only one IFromItem, an IJoin. This latter form
+			join tree, there will be a tree of IJoins with a single root. This latter form
 			is the ANSI perfered style. If you wish all pushdown queries
 			containing joins to be in ANSI style have the
-			ConnectorCapability.useAnsiJoin return true.</para>
+			ConnectorCapability.useAnsiJoin return true.  See <link linkend="command_form_capabilities">Command Form Capabilities</link> for more.</para>
     </sect2>
 	<sect2>
 		<title>IQueryCommand Structure</title>
@@ -229,7 +238,7 @@
     
   <sect1>
     <title>Runtime Metadata</title>
-		<para>Teiid uses a library of metadata, known as “runtime metadata” for
+		<para>Teiid uses a library of metadata, known as "runtime metadata” for
 			each virtual database that is deployed in Teiid. The runtime metadata
 			is a subset of metadata as defined by models in the Teiid models that
 			compose the virtual database.  </para>
@@ -242,10 +251,10 @@
       <title>Language Objects</title>
       <para>One language interface, IMetadataReference describes whether a language object has a reference to a MetadataObject.  The following interfaces extend IMetadataReference:</para>
       <itemizedlist>
-        <listitem><para>IElement</para></listitem>
-        <listitem><para>IGroup</para></listitem>
-        <listitem><para>IProcedure</para></listitem>
-        <listitem><para>IParameter</para></listitem>
+        <listitem><para>IElement</para> - returns an Element MetadataObject</listitem>
+        <listitem><para>IGroup</para> - returns a Group MetadataObject</listitem>
+        <listitem><para>IProcedure</para> - returns a Procedure MetadataObject</listitem>
+        <listitem><para>IParameter</para> - returns a Parameter MetadataObject</listitem>
       </itemizedlist>
 
       <para>Once a MetadataObject has been obtained, it is possible to use it metadata about that object or to find other related or objects.</para>
@@ -291,27 +300,74 @@ Properties props = group.getProperties();
     
     <sect2>
       <title>Framework</title>
-      <para>The Connector API provides a language visitor framework in the com.metamatrix.data.visitor.framework package.   The framework provides utilities useful in navigating and extracting information from trees of language objects.</para>
-
-      <para>The visitor framework is a variant of the Visitor design pattern, which is documented in several popular design pattern references.  The visitor pattern encompasses two primary operations: traversing the nodes of a graph (also known as iteration) and performing some action at each node of the graph.  In this case, the nodes are language interface objects and the graph is really a tree rooted at some node.  The provided framework allows for customization of both aspects of visiting.</para>
-      <para>The base LanguageObjectVisitor class defines the visit methods for all leaf language interfaces that can exist in the tree.  The LanguageObject interface defines an acceptVisitor() method – this method will call back on the visit method of the visitor to complete the contract.  A base class with empty visit methods is provided as AbstractLanguageVisitor.  The AbstractLanguageVisitor is just a visitor shell – it performs no actions when visiting nodes and does not provide any iteration.</para>
-      <para>The HierarchyVisitor provides the basic code for walking a language object tree.  The HierarchyVisitor performs no action as it walks the tree – it just encapsulates the knowledge of how to walk it.  If your connector wants to provide a custom iteration that walks the objects in a special order (to exclude nodes, include nodes multiple times, conditionally include nodes, etc) then you must either extend HierarchyVisitor or build your own iteration visitor.  In general, that is not necessary.</para>
-      <para>The DelegatingHierarchyVisitor is a special subclass of the HierarchyVisitor that provides the ability to perform a different visitor’s processing before and after iteration.  This allows users of this class to implement either pre- or post-order processing based on the HierarchyVisitor.  Two helper methods are provided on DelegatingHierarchyVisitor to aid in executing pre- and post-order visitors.   </para>
+		<para>The Connector API provides a language visitor framework in the
+			org.teiid.connector.visitor.framework package.   The framework
+			provides utilities useful in navigating and extracting information
+			from trees of language objects.</para>
+	
+		<para>The visitor framework is a variant of the Visitor design pattern,
+			which is documented in several popular design pattern references.  The
+			visitor pattern encompasses two primary operations: traversing the
+			nodes of a graph (also known as iteration) and performing some action
+			at each node of the graph.  In this case, the nodes are language
+			interface objects and the graph is really a tree rooted at some node.
+			 The provided framework allows for customization of both aspects of
+			visiting.</para>
+		<para>The base LanguageObjectVisitor class defines the visit methods
+			for all leaf language interfaces that can exist in the tree.  The
+			LanguageObject interface defines an acceptVisitor() method – this
+			method will call back on the visit method of the visitor to complete
+			the contract.  A base class with empty visit methods is provided as
+			AbstractLanguageVisitor.  The AbstractLanguageVisitor is just a
+			visitor shell – it performs no actions when visiting nodes and does
+			not provide any iteration.</para>
+		<para>The HierarchyVisitor provides the basic code for walking a
+			language object tree.  The HierarchyVisitor performs no action as it
+			walks the tree – it just encapsulates the knowledge of how to walk it.
+			 If your connector wants to provide a custom iteration that walks the
+			objects in a special order (to exclude nodes, include nodes multiple
+			times, conditionally include nodes, etc) then you must either extend
+			HierarchyVisitor or build your own iteration visitor.  In general,
+			that is not necessary.</para>
+		<para>The DelegatingHierarchyVisitor is a special subclass of the
+			HierarchyVisitor that provides the ability to perform a different
+			visitor’s processing before and after iteration.  This allows users of
+			this class to implement either pre- or post-order processing based on
+			the HierarchyVisitor.  Two helper methods are provided on
+			DelegatingHierarchyVisitor to aid in executing pre- and post-order
+			visitors.   </para>
     </sect2>
     <sect2>
       <title>Provided Visitors</title>
-      <para>The SQLStringVisitor is a special visitor that can traverse a tree of language interfaces and output the equivalent Teiid SQL.  This visitor can be used to print language objects for debugging and logging.  The SQLStringVisitor does not use the HierarchyVisitor described in the last section; it provides both iteration and processing type functionality in a single custom visitor.    </para>
-      <para>The CollectorVisitor is a handy utility to collect all language objects of a certain type in a tree. Some additional helper methods exist to do common tasks such as retrieving all elements in a tree, retrieving all groups in a tree, and so on.  </para>
+		<para>The SQLStringVisitor is a special visitor that can traverse a
+			tree of language interfaces and output the equivalent Teiid SQL.  This
+			visitor can be used to print language objects for debugging and
+			logging.  The SQLStringVisitor does not use the HierarchyVisitor
+			described in the last section; it provides both iteration and
+			processing type functionality in a single custom visitor.    </para>
+		<para>The CollectorVisitor is a handy utility to collect all language
+			objects of a certain type in a tree. Some additional helper methods
+			exist to do common tasks such as retrieving all elements in a tree,
+			retrieving all groups in a tree, and so on.  </para>
     </sect2>
     <sect2>
       <title>Writing a Visitor</title>
-      <para>Writing your own visitor can be quite easy if you use the provided facilities.  If the normal method of iterating the language tree is sufficient, then just follow these steps:</para>
-      <para>Create a subclass of AbstractLanguageVisitor.  Override any visit methods needed for your processing.  For instance, if you wanted to count the number of elements in the tree, you need only override the visit(IElement) method.  Collect any state in local variables and provide accessor methods for that state.</para>
-      <para>Decide whether to use pre-order or post-order iteration.  In many cases, it doesn’t matter, so if you’re not sure, use pre-order processing.</para>
-      <para>Write code to execute your visitor using the utility methods on DelegatingHierarchyVisitor:</para>
+		<para>Writing your own visitor can be quite easy if you use the
+			provided facilities.  If the normal method of iterating the language
+			tree is sufficient, then just follow these steps:</para>
+		<para>Create a subclass of AbstractLanguageVisitor.  Override any visit
+			methods needed for your processing.  For instance, if you wanted to
+			count the number of elements in the tree, you need only override the
+			visit(IElement) method.  Collect any state in local variables and
+			provide accessor methods for that state.</para>
+		<para>Decide whether to use pre-order or post-order iteration. Note
+			that visitation order is based upon syntax ordering of SQL clauses -
+			not processing order.</para>
+		<para>Write code to execute your visitor using the utility methods on
+			DelegatingHierarchyVisitor:</para>
       <programlisting><![CDATA[
 // Get object tree 
-LanguageObject objectTree = …
+ILanguageObject objectTree = …
 
 // Create your visitor initialize as necessary
 MyVisitor visitor = new MyVisitor();
@@ -322,22 +378,28 @@ DelegatingHierarchyVisitor.preOrderVisit(visitor, objectTree);
 // Retrieve state collected while visiting
 int count = visitor.getCount();       
       ]]></programlisting>      
-      <para>Often it’s useful to create a static method implementing this sequence of calls within your visitor.</para>
     </sect2>
   </sect1>
   <sect1 id="connector_capabilities">
     <title>Connector Capabilities</title>
-    <para>All connectors must return a ConnectorCapabilities class from the Connection.getCapabilities() method. This class is used by the Connector Manager to determine what kinds of commands the connector is capable of executing. A basic implementation of the ConnectorCapabilities interface is supplied at com.metamatrix.data.basic.BasicConnectorCapabilities. This capabilities class specifies that the connector only executes queries and does not support any capability. Teiid recommends that you extend this class and override the necessary methods to specify which capabilities your connector supports.  </para>
-    
+	<para>All connectors must return a ConnectorCapabilities class from the
+		<code>Connection.getCapabilities()</code> or <code>Connector.getCapabilities()</code> method. This class is used by the
+		Connector Manager to determine what kinds of commands the connector is
+		capable of executing. A basic implementation of the
+		ConnectorCapabilities interface is supplied at
+		BasicConnectorCapabilities. This
+		capabilities class specifies that the connector does not support any capability. You should extend
+		this class and override the necessary methods to specify which
+		capabilities your connector supports.  </para>
     <sect2>
       <title>Capability Scope</title>
-      <para>The method ConnectorCapabilities.getScope() specifies the scope of a capabilities set. Currently, two scope modes are defined in ConnectorCapabilities.SCOPE: global and per user. Specifying the scope as global means that the capabilities are the same for all connections to this source. Specifying the scope as per user means that the capabilities are potentially different for each user, so capabilities cannot be cached between users.</para>
-      <para>The per user mode is significantly slower and usually not necessary, therefore Teiid recommends using the global mode if capabilities of a source are the same across all connections. The BasicConnectorCapabilities implementation specifies global scope.</para>
-    </sect2>
-    <sect2>
-      <title>Execution Modes</title>
-      <para>The method ConnectorCapabilities.supportsExecutionMode() is used by the Connector Manager to discover what kinds of commands the connector can support. Constants defining the available execution modes are specified in ConnectorCapabilities.EXECUTION_MODE. Your implementation of ConnectorCapabilities should return true from this method for each execution mode your connector supports.</para>
-      <para>The BasicConnectorCapabilities implementation specifies only that it supports the SYNCH_QUERY execution mode.</para>
+		<para>
+			Note that if your capabilities will remain unchanged for the lifetime
+			of the connector, you should return them via
+			<code>Connector.getCapabilities()</code>
+			since the engine will cache them for reuse by all connections to the
+			connector.  Capabilities returned by the connection will only be cached for the duration of the user request.
+		</para>
     </sect2>
     <sect2>
       <title>Capabilities</title>
@@ -345,7 +407,7 @@ int count = visitor.getCount();
         <table frame='all'>
           <title>Available Connector Capabilities</title>
           <tgroup cols='3' align='left' colsep='1' rowsep='1'>
-            <colspec colname='c1' colwidth="1*" />
+            <colspec colname='c1' colwidth="1.5*" />
             <colspec colname='c2' colwidth="1*" />
             <colspec colname='c3' colwidth="2*" />
             <thead>
@@ -375,35 +437,13 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
-                  <para>Joins</para>
+                  <para>SelectExpression</para>
                 </entry>
                 <entry>
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support joins.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>OuterJoins</para>
-                </entry>
-                <entry>
-                  <para>Joins</para>
-                </entry>
-                <entry>
-                  <para>Connector can support LEFT and RIGHT OUTER JOIN.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>FullOuterJoins</para>
-                </entry>
-                <entry>
-                  <para>Joins, OuterJoins</para>
-                </entry>
-                <entry>
-                  <para>Connector can support FULL OUTER JOIN.</para>
+                  <para>Connector can support SELECT of more than just element references.</para>
                 </entry>
               </row>
               <row>
@@ -420,14 +460,61 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
+                  <para>SupportedJoinCriteria</para>
+                </entry>
+                <entry>
+                  <para>At least one of the join type supports.</para>
+                </entry>
+                <entry>
+					<para>Returns one of the SupportedJoinCriteria enum types: ANY, THETA,
+						EQUI, KEY. KEY is the most restrictive, indicating that the source
+						only supports equi-join criteria specified on the primary key of at
+						least one of the tables in join.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>InnerJoins</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Connector can support inner and cross joins</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
                   <para>SelfJoins</para>
                 </entry>
                 <entry>
-                  <para>Joins, AliasedGroups</para>
+                  <para>AliasedGroups and at least on of the join type supports.</para>
                 </entry>
                 <entry>
                   <para>Connector can support a self join between two aliased versions of the
                     same group.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>OuterJoins</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Connector can support LEFT and RIGHT OUTER JOIN.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>FullOuterJoins</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Connector can support FULL OUTER JOIN.</para>
                 </entry>
               </row>
               <row>
@@ -443,91 +530,13 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
-                  <para>Criteria</para>
+                  <para>BetweenCriteria</para>
                 </entry>
                 <entry>
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support WHERE and HAVING clauses.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>RowLimit</para>
-                </entry>
-                <entry>
-                  <para> </para>
-                </entry>
-                <entry>
-                  <para>Connector can support the limit portion of the limit clause</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>RowOffset</para>
-                </entry>
-                <entry>
-                  <para> </para>
-                </entry>
-                <entry>
-                  <para>Connector can support the offset portion of the limit clause</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>AndCriteria</para>
-                </entry>
-                <entry>
-                  <para>Criteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support AND criteria in join conditions of the FROM clause,
-                    the WHERE clause, and the HAVING clause.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>OrCriteria</para>
-                </entry>
-                <entry>
-                  <para>Criteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support the OR logical criteria.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>NotCriteria</para>
-                </entry>
-                <entry>
-                  <para>Criteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support the NOT logical criteria.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>BetweenCriteria</para>
-                </entry>
-                <entry>
-                  <para>Criteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support the BETWEEN predicate criteria.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>CompareCriteria</para>
-                </entry>
-                <entry>
-                  <para>Criteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support comparison criteria such as “age &gt; 10”.  </para>
+                  <para>Not currently used - between criteria is rewriten as compound comparisions.</para>
                 </entry>
               </row>
               <row>
@@ -535,76 +544,43 @@ int count = visitor.getCount();
                   <para>CompareCriteriaEquals</para>
                 </entry>
                 <entry>
-                  <para>Criteria, CompareCriteria</para>
+                  <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support comparison criteria with the operator “=”.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>CompareCriteriaGreaterThan</para>
-                </entry>
-                <entry>
-                  <para>Criteria, CompareCriteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support comparison criteria with the operator “&gt;”.</para>
+                  <para>Connector can support comparison criteria with the operator "=”.</para>
                 </entry>
               </row>
               <row>
                 <entry>
-                  <para>CompareCriteriaGreaterThanOrEqual</para>
+                  <para>CompareCriteriaOrdered</para>
                 </entry>
                 <entry>
-                  <para>Criteria, CompareCriteria</para>
+                  <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support comparison criteria with the operator “&gt;=”.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>CompareCriteriaLessThan</para>
-                </entry>
-                <entry>
-                  <para>Criteria, CompareCriteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support comparison criteria with the operator “&lt;”.</para>
+                  <para>Connector can support comparison criteria with the operator "&gt;” or "&lt;".</para>
                 </entry>
               </row>
               <row>
                 <entry>
-                  <para>CompareCriteriaLessThanOrEqual</para>
+                  <para>LikeCriteria</para>
                 </entry>
                 <entry>
-                  <para>Criteria, CompareCriteria</para>
+                  <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support comparison criteria with the operator “&lt;=”.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>CompareCriteriaNotEquals</para>
-                </entry>
-                <entry>
-                  <para>Criteria, CompareCriteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support comparison criteria with the operator “&lt;&gt;”.</para>
+                  <para>Connector can support LIKE criteria.</para>
                 </entry>
               </row>
               <row>
                 <entry>
-                  <para>ExistsCriteria</para>
+                  <para>LikeCriteriaEscapeCharacter</para>
                 </entry>
                 <entry>
-                  <para>Criteria</para>
+                  <para>LikeCriteria</para>
                 </entry>
                 <entry>
-                  <para>Connector can support EXISTS predicate criteria.</para>
+                  <para>Connector can support LIKE criteria with an ESCAPE character clause.</para>
                 </entry>
               </row>
               <row>
@@ -612,7 +588,7 @@ int count = visitor.getCount();
                   <para>InCriteria</para>
                 </entry>
                 <entry>
-                  <para>Criteria</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support IN predicate criteria.</para>
@@ -623,7 +599,7 @@ int count = visitor.getCount();
                   <para>InCriteriaSubquery</para>
                 </entry>
                 <entry>
-                  <para>Criteria, InCriteria</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support IN predicate criteria where values are supplied by a
@@ -635,7 +611,7 @@ int count = visitor.getCount();
                   <para>IsNullCriteria</para>
                 </entry>
                 <entry>
-                  <para>Criteria</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support IS NULL predicate criteria.</para>
@@ -643,36 +619,37 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
-                  <para>LikeCriteria</para>
+                  <para>OrCriteria</para>
                 </entry>
                 <entry>
-                  <para>Criteria</para>
+                  <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support LIKE criteria.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>LikeCriteriaEscapeCharacter</para>
-                </entry>
-                <entry>
-                  <para>Criteria, LikeCriteria</para>
-                </entry>
-                <entry>
-                  <para>Connector can support LIKE criteria with an ESCAPE character clause.</para>
+                  <para>Connector can support the OR logical criteria.</para>
                 </entry>
               </row>
               <row>
                 <entry>
-                  <para>QuantifiedCompareCriteria</para>
+                  <para>NotCriteria</para>
                 </entry>
                 <entry>
-                  <para>Criteria, CompareCriteria</para>
+                  <para/>
                 </entry>
                 <entry>
-                  <para>Connector can support a quantified comparison criteria with a subquery on the
-                    right side.</para>
+					<para>Connector can support the NOT logical criteria. IMPORTANT: This
+						capability also applies to negation of predicates, such as specifying
+						IS NOT NULL, "&lt;=" (not "&gt;"), "&gt;=" (not "&lt;"), etc.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>ExistsCriteria</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Connector can support EXISTS predicate criteria.</para>
                 </entry>
               </row>
               <row>
@@ -680,7 +657,7 @@ int count = visitor.getCount();
                   <para>QuantifiedCompareCriteriaAll</para>
                 </entry>
                 <entry>
-                  <para>Criteria, CompareCriteria, QuantifiedCompareCriteria</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support a quantified comparison criteria using the ALL
@@ -692,7 +669,7 @@ int count = visitor.getCount();
                   <para>QuantifiedCompareCriteriaSome</para>
                 </entry>
                 <entry>
-                  <para>Criteria, CompareCriteria, QuantifiedCompareCriteria</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support a quantified comparison criteria using the SOME or ANY
@@ -712,13 +689,35 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
-                  <para>Aggregates</para>
+                  <para>OrderByUnrelated</para>
+                </entry>
+                <entry>
+                  <para>OrderBy</para>
+                </entry>
+                <entry>
+                  <para>Connector can support the ORDER BY items that are not directly specified in the select clause.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>GroupBy</para>
                 </entry>
                 <entry>
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support GROUP BY and HAVING clauses in queries.</para>
+                  <para>Connector can support an explict GROUP BY clause.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>Having</para>
+                </entry>
+                <entry>
+                  <para>GroupBy</para>
+                </entry>
+                <entry>
+                  <para>Connector can support the HAVING clause.</para>
                 </entry>
               </row>
               <row>
@@ -726,7 +725,7 @@ int count = visitor.getCount();
                   <para>AggregatesAvg</para>
                 </entry>
                 <entry>
-                  <para>Aggregates</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support the AVG aggregate function.</para>
@@ -737,7 +736,7 @@ int count = visitor.getCount();
                   <para>AggregatesCount</para>
                 </entry>
                 <entry>
-                  <para>Aggregates</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support the COUNT aggregate function.</para>
@@ -748,7 +747,7 @@ int count = visitor.getCount();
                   <para>AggregatesCountStar</para>
                 </entry>
                 <entry>
-                  <para>Aggregates, AggregatesCount</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support the COUNT(*) aggregate function.</para>
@@ -759,7 +758,7 @@ int count = visitor.getCount();
                   <para>AggregatesDistinct</para>
                 </entry>
                 <entry>
-                  <para>Aggregates</para>
+                  <para>At least one of the aggregate functions.</para>
                 </entry>
                 <entry>
                   <para>Connector can support the keyword DISTINCT inside an aggregate function.  This
@@ -771,7 +770,7 @@ int count = visitor.getCount();
                   <para>AggregatesMax</para>
                 </entry>
                 <entry>
-                  <para>Aggregates</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support the MAX aggregate function.</para>
@@ -782,7 +781,7 @@ int count = visitor.getCount();
                   <para>AggregatesMin</para>
                 </entry>
                 <entry>
-                  <para>Aggregates</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support the MIN aggregate function.</para>
@@ -793,46 +792,10 @@ int count = visitor.getCount();
                   <para>AggregatesSum</para>
                 </entry>
                 <entry>
-                  <para>Aggregates</para>
+                  <para/>
                 </entry>
                 <entry>
                   <para>Connector can support the SUM aggregate function.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>ScalarFunctions</para>
-                </entry>
-                <entry>
-                  <para />
-                </entry>
-                <entry>
-                  <para>Connector can support scalar functions wherever expressions are accepted.
-                  </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>CaseExpressions</para>
-                </entry>
-                <entry>
-                  <para />
-                </entry>
-                <entry>
-                  <para>Connector can support “unsearched” CASE expressions anywhere that expressions
-                    are accepted.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>SearchedCaseExpressions</para>
-                </entry>
-                <entry>
-                  <para />
-                </entry>
-                <entry>
-                  <para>Connector can support “searched” CASE expressions anywhere that expressions are
-                    accepted.</para>
                 </entry>
               </row>
               <row>
@@ -852,23 +815,34 @@ int count = visitor.getCount();
                   <para>CorrelatedSubqueries</para>
                 </entry>
                 <entry>
-                  <para>ScalarSubqueries or QuantifiedCompareCriteria or ExistsCriteria or
-                    InCriteriaSubquery</para>
+                  <para>At least one of the subquery pushdown capabilities.</para>
                 </entry>
                 <entry>
-                  <para>Connector can support a correlated subquery that refers back to an element in
+                  <para>Connector can support a correlated subquery that refers to an element in
                     the outer query.</para>
                 </entry>
               </row>
               <row>
                 <entry>
-                  <para>SelectLiterals</para>
+                  <para>CaseExpressions</para>
                 </entry>
                 <entry>
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector can support literals in the SELECT clause</para>
+                  <para>Not currently used - simple case is rewriten as searched case.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>SearchedCaseExpressions</para>
+                </entry>
+                <entry>
+                  <para />
+                </entry>
+                <entry>
+                  <para>Connector can support "searched” CASE expressions anywhere that expressions are
+                    accepted.</para>
                 </entry>
               </row>
               <row>
@@ -879,7 +853,7 @@ int count = visitor.getCount();
                   <para />
                 </entry>
                 <entry>
-                  <para>Connector support UNIONs</para>
+                  <para>Connector support UNION and UNION ALL</para>
                 </entry>
               </row>
               <row>
@@ -917,13 +891,24 @@ int count = visitor.getCount();
               </row>
               <row>
                 <entry>
-                  <para>FunctionsInGroupBy</para>
+                  <para>RowLimit</para>
                 </entry>
                 <entry>
-                  <para>ScalarFunctions, Aggregates</para>
+                  <para/>
                 </entry>
                 <entry>
-                  <para>Connector supports functions in the GROUP BY list</para>
+                  <para>Connector can support the limit portion of the limit clause</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>RowOffset</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Connector can support the offset portion of the limit clause</para>
                 </entry>
               </row>
               <row>
@@ -931,34 +916,84 @@ int count = visitor.getCount();
                   <para>FunctionsInGroupBy</para>
                 </entry>
                 <entry>
-                  <para>ScalarFunctions, Aggregates</para>
+                  <para>GroupBy</para>
                 </entry>
                 <entry>
-                  <para>Connector supports functions in the GROUP BY list</para>
+                  <para>Not currently used - non-element expressions in the group by create an inline view.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>InsertWithQueryExpression</para>
+                </entry>
+                <entry>
+                  <para/>
+                </entry>
+                <entry>
+                  <para>Connector supports INSERT statements with values specified by an IQueryCommand.</para>
                 </entry>
               </row>
             </tbody>
           </tgroup>
         </table>
+		<para>Note that any pushdown subquery must itself be compliant with the
+			connector capabilities.</para>
       </sect2>
       
-      <sect2>
+      <sect2 id="command_form_capabilities">
         <title>Command Form</title>
-        <para>The method ConnectorCapabilities.useAnsiJoin() should return true if the Connector prefers the use of ANSI style join structure for INNER and CROSS joins that are pushed down.</para>
-        <para>The method ConnectorCapabilities.requiresCriteria() should return true if the Connector requires criteria for any Query, Update, or Delete.  This is a replacement for the model support property "Where All".</para>
+		<para>The method ConnectorCapabilities.useAnsiJoin() should return true
+			if the Connector prefers the use of ANSI style join structure for
+			join trees that contain only INNER and CROSS joins.</para>
+		<para>The method ConnectorCapabilities.requiresCriteria() should return
+			true if the Connector requires criteria for any Query, Update, or
+			Delete. This is a replacement for the model support property "Where
+			All".</para>
       </sect2>
       
       <sect2>
         <title>Scalar Functions</title>
-        <para>The method ConnectorCapabilities.getSupportedFunctions() can be used to specify which scalar functions the connector supports.  The set of possible functions is based on the set of functions supported by Teiid.  This set can be found in the Query Support Booklet documentation.  If the connector states that it supports a function, it must support all type combinations and overloaded forms of that function.</para>
-        <para>There are five operators that can also be specified in the supported function list: +, -, *, /, and ||.</para>
+		<para>The method ConnectorCapabilities.getSupportedFunctions() can be
+			used to specify which scalar functions the connector supports.  The
+			set of possible functions is based on the set of functions supported
+			by Teiid.  This set can be found in the <ulink url="&docUrl;">Reference</ulink>
+			documentation.  If the connector states that it supports a function,
+			it must support all type combinations and overloaded forms of that
+			function.</para>
+		<para>There are also five standard operators that can also be specified in the
+			supported function list: +, -, *, /, and ||.</para>
+		<para>The constants interface SourceSystemFunctions contains the string
+			names of all possible built-in pushdown functions. Note that not all
+			system functions appear in this list. This is because some system
+			functions will always be evaluted in Teiid, are simple aliases to
+			other functions, or are rewriten to a more standard expression.</para>
       </sect2>
 
       <sect2>
         <title>Physical Limits</title>
-        <para>The method ConnectorCapabilities.getMaxInCriteriaSize() can be used to specify the maximum number of values that can be passed in an IN criteria.  This is an important constraint as an IN criteria is frequently used to pass criteria between one source and another using a dependent join.</para>
-        <para>The method ConnectorCapabilities.getMaxFromGroups() can be used to specify the maximum number of FROM Clause groups that can used in a join. -1 indicates there is no limit.</para>
+		<para>The method ConnectorCapabilities.getMaxInCriteriaSize() can be
+			used to specify the maximum number of values that can be passed in an
+			IN criteria.  This is an important constraint as an IN criteria is
+			frequently used to pass criteria between one source and another using
+			a dependent join.</para>
+		<para>The method ConnectorCapabilities.getMaxFromGroups() can be used
+			to specify the maximum number of FROM Clause groups that can used in a
+			join. -1 indicates there is no limit.</para>
       </sect2>
+      
+      <sect2>
+        <title>Update Execution Modes</title>
+		<para>The method ConnectorCapabilities.supportsBatchedUpdates() can be
+			used to indicate that the connector supports executing the
+			IBatchedUpdates command.
+			</para>
+		<para>The method ConnectorCapabilities.supportsBulkUpdate() can be used
+			to indicate that the connector accepts update commands containg multi valued ILiterals.</para>
+		<para>Note that if the connector does not support either of these
+			update modes, the query engine will compensate by issuing the updates
+			individually.</para>
+      </sect2>
+      
    </sect1>
 
 </chapter>
