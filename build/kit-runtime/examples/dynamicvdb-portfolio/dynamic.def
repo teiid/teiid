@@ -5,7 +5,7 @@
   Name and version will determine the deploy location, which is of the form
   <Teiid Home>/deploy/<vdb name>/<vdb version>
 -->
-        <Property Name="Name" Value="VDBLessPortfolio" />
+        <Property Name="Name" Value="DynamicPortfolio" />
         <Property Name="Version" Value="1" />        
 <!-- 
   Setting to use connector supplied metadata. Can be "true" or "cached".  
