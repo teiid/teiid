@@ -44,6 +44,9 @@
 		<listitem><para>
 				CompareCriteriaOrdered
 			</para></listitem>
+		<listitem><para>
+				OuterJoins with join criteria KEY
+			</para></listitem>
 		</itemizedlist>
 	</sect1>
 

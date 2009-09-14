@@ -17,6 +17,7 @@
     <module>connector-developer-guide</module>
     <module>server-extensions-guide</module>
     <module>quick-start-example</module>
+    <module>salesforce-connector-guide</module>
   </modules>
   <repositories>
     <repository>

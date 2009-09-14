@@ -221,5 +221,49 @@
         </para>
 
     </sect1>
+    <sect1>
+        <title>Relationship Queries</title>
+        <para>Salesforce does not support joins like a relational database, 
+        but it does have support for queries that include parent-to-child
+        or child-to-parent relationships between objects.  These are termed 
+        Relationship Queries.  The SalesForce connector supports Relationship 
+        Queries through Outer Join syntax.
+        </para>
+        <programlisting><![CDATA[
+			SELECT Account.name, Contact.Name from Contact LEFT OUTER JOIN Account 
+			on Contact.Accountid = Account.id
+         ]]>
+        </programlisting>
+        <para>This query shows the correct syntax to query a SalesForce model with 
+        to produce a relationship query from child to parent.  It resolves to the 
+        following query to SalesForce.
+        </para>
+        <programlisting><![CDATA[
+			SELECT Contact.Account.Name, Contact.Name FROM Contact
+         ]]>
+        </programlisting>
+        <programlisting><![CDATA[
+			select Contact.Name, Account.Name from Account Left outer Join Contact 
+			on Contact.Accountid = Account.id
+         ]]>
+        </programlisting>
+        <para>This query shows the correct syntax to query a SalesForce model with 
+        to produce a relationship query from parent to child.  It resolves to the 
+        following query to SalesForce.
+        </para>
+        <programlisting><![CDATA[
+			SELECT Account.Name, (SELECT Contact.Name FROM 
+			Account.Contacts) FROM Account
+         ]]>
+        </programlisting>
+        <para>
+			See the description of the
+            <ulink
+				url="http://www.salesforce.com/us/developer/docs/api/index_Left.htm#StartTopic=Content/sforce_api_calls_soql_relationships.htm">Relationship Queries
+            </ulink>
+			operation in the SalesForce documentation for limitations.
+        </para>
+
+    </sect1>
 </chapter>
 	
