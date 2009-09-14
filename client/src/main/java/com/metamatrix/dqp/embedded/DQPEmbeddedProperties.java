@@ -45,6 +45,7 @@ public interface DQPEmbeddedProperties {
     public static final String MAX_RESULTSET_CACHE_SIZE = "ResultSetCache.maxSizeInMB"; //$NON-NLS-1$
 	public static final String MAX_RESULTSET_CACHE_AGE = "ResultSetCache.maxAgeInSeconds"; //$NON-NLS-1$
 	public static final String RESULTSET_CACHE_SCOPE = "ResultSetCache.scope"; //$NON-NLS-1$
+	public static final String MAX_CODE_TABLE_RECORDS_PER_TABLE = "CodeTables.maxRowsPerTable"; //$NON-NLS-1$
 	public static final String MAX_CODE_TABLE_RECORDS = "CodeTables.maxRows"; //$NON-NLS-1$
 	public static final String MAX_CODE_TABLES = "CodeTables.maxCount"; //$NON-NLS-1$
 	public static final String MAX_PLAN_CACHE_SIZE = "PreparedPlanCache.maxCount"; //$NON-NLS-1$

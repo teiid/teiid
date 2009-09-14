@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
+
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.buffer.BlockedException;
@@ -35,6 +37,7 @@ import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -59,23 +62,19 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     private VDBService vdbService;
     private BufferService bufferService;
 
-    // Code table limits
-    private int maxCodeTableRecords;
-
 	// Processor state
     private CodeTableCache codeTableCache;
     
     public DataTierManagerImpl(DQPCore requestMgr,
         DataService dataService, VDBService vdbService, BufferService bufferService, 
-        int maxCodeTables, int maxCodeTableRecords) {
+        int maxCodeTables, int maxCodeRecords, int maxCodeTableRecords) {
 
 		this.requestMgr = requestMgr;
         this.dataService = dataService;
         this.vdbService = vdbService;
-        this.maxCodeTableRecords = maxCodeTableRecords;
         this.bufferService = bufferService;
 
-        this.codeTableCache = new CodeTableCache(maxCodeTables);
+        this.codeTableCache = new CodeTableCache(maxCodeTables, maxCodeRecords, maxCodeTableRecords);
 	}
 
 	public TupleSource registerRequest(Object processorId, Command command,
@@ -181,7 +180,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	case CACHE_EXISTS:
 	        	return this.codeTableCache.lookupValue(codeTableName, returnElementName, keyElementName, keyValue, context);
 	        case CACHE_OVERLOAD:
-	        	throw new MetaMatrixProcessingException("ERR.018.005.0099", DQPPlugin.Util.getString("ERR.018.005.0099")); //$NON-NLS-1$ //$NON-NLS-2$
+	        	throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", DQPEmbeddedProperties.MAX_CODE_TABLES)); //$NON-NLS-1$ //$NON-NLS-2$
 	        default:
 	            throw BlockedException.INSTANCE;
         }
@@ -196,7 +195,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 
         String query = ReservedWords.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + ReservedWords.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
         
-        final Integer codeRequestId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, context);
+        final CacheKey codeRequestId = this.codeTableCache.createCacheRequest(codeTableName, returnElementName, keyElementName, context);
 
         boolean success = false;
         QueryProcessor processor = null;
@@ -206,12 +205,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
             processor.setBatchHandler(new QueryProcessor.BatchHandler() {
             	@Override
             	public void batchProduced(TupleBatch batch) throws MetaMatrixProcessingException {
-    				// Determine whether the results should be added to code table cache
-                	// Depends on size of results and available memory and system parameters
-
-                	if (batch.getEndRow() > maxCodeTableRecords) {
-                        throw new MetaMatrixProcessingException("ERR.018.005.0100", DQPPlugin.Util.getString("ERR.018.005.0100", context.getProcessorID(), codeRequestId)); //$NON-NLS-1$ //$NON-NLS-2$                    
-                	}
                		codeTableCache.loadTable(codeRequestId, batch.getAllTuples());
             	}
             });

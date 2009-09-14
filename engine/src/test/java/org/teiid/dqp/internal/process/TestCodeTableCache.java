@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.dqp.internal.process.CodeTableCache;
+import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheState;
 
 import junit.framework.TestCase;
@@ -57,10 +58,10 @@ public class TestCodeTableCache extends TestCase {
 	}
 
 	private CodeTableCache setUpSampleCodeTable(boolean setDone) {
-		CodeTableCache ctc = new CodeTableCache(10);
-		
+		CodeTableCache ctc = new CodeTableCache(10, 10, 10);
+		assertEquals(CacheState.CACHE_NOT_EXIST, ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		// must set the requestToCacheKeyMap first 
-		int nodeId = ctc.createCacheRequest("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		CacheKey nodeId = ctc.createCacheRequest("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		List[] results = exampleResultObject();
 		
 		//  table/countrycode (keyElem/country, returnElem/code);
@@ -74,16 +75,18 @@ public class TestCodeTableCache extends TestCase {
 		}
 		if(setDone) {
 			ctc.markCacheLoaded(nodeId);
+		} else {
+			ctc.errorLoadingCache(nodeId);
 		}
 		return ctc;	
 	}
 
 	// Max = 1 and 1 table is set up
 	private CodeTableCache setUpSampleCodeTable2() {
-		CodeTableCache ctc = new CodeTableCache(1);
-		
+		CodeTableCache ctc = new CodeTableCache(1, 10, 10);
+		assertEquals(CacheState.CACHE_NOT_EXIST, ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		// must set the requestToCacheKeyMap first 
-		int nodeId = ctc.createCacheRequest("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		CacheKey nodeId = ctc.createCacheRequest("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         List[] results = exampleResultObject();
 		
 		//  table/countrycode (keyElem/country, returnElem/code);
@@ -100,7 +103,7 @@ public class TestCodeTableCache extends TestCase {
 	}
 
     public void testLookupValue() throws Exception {
-		CodeTableCache ctc = setUpSampleCodeTable(false);
+		CodeTableCache ctc = setUpSampleCodeTable(true);
 		String code = (String) ctc.lookupValue("countrycode", "code", "country", "Germany", TEST_CONTEXT);	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		assertEquals("Actual lookup value doesn't match with expected: ", code, "GM"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
@@ -116,7 +119,7 @@ public class TestCodeTableCache extends TestCase {
 
 	/** state = 1; loading state */
 	public void testCacheExists2() {
-		CodeTableCache ctc = new CodeTableCache(10);
+		CodeTableCache ctc = new CodeTableCache(10, 10, 10);
 		
 		ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		CacheState actualState = ctc.cacheExists("countrycode", "code", "country", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -190,10 +193,10 @@ public class TestCodeTableCache extends TestCase {
     }
     
     public void testDuplicateKeyException() {
-    	CodeTableCache ctc = new CodeTableCache(1);
-		
+    	CodeTableCache ctc = new CodeTableCache(1, 10, 10);
+    	assertEquals(CacheState.CACHE_NOT_EXIST, ctc.cacheExists("table", "key", "value", TEST_CONTEXT)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		// must set the requestToCacheKeyMap first 
-		int nodeId = ctc.createCacheRequest("table", "key", "value", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    	CacheKey nodeId = ctc.createCacheRequest("table", "key", "value", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         List[] results = new List[] {
         		Arrays.asList(1, 2),
         		Arrays.asList(1, 3),
@@ -204,6 +207,42 @@ public class TestCodeTableCache extends TestCase {
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (MetaMatrixProcessingException e) {
 			assertEquals("Duplicate code table 'table' key 'value' value '1'", e.getMessage()); //$NON-NLS-1$
+		}
+    }
+    
+    public void testMaxRecords() {
+    	CodeTableCache ctc = new CodeTableCache(1, 1, 10);
+    	assertEquals(CacheState.CACHE_NOT_EXIST, ctc.cacheExists("table", "key", "value", TEST_CONTEXT)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		// must set the requestToCacheKeyMap first 
+    	CacheKey nodeId = ctc.createCacheRequest("table", "key", "value", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        List[] results = new List[] {
+        		Arrays.asList(1, 2),
+        		Arrays.asList(2, 3),
+        }; 
+		
+		try {
+			ctc.loadTable(nodeId, results);
+			fail("expected exception"); //$NON-NLS-1$
+		} catch (MetaMatrixProcessingException e) {
+			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - CodeTables.maxRows.", e.getMessage()); //$NON-NLS-1$
+		}
+    }
+    
+    public void testMaxRecordsPerTable() {
+    	CodeTableCache ctc = new CodeTableCache(10, 10, 1);
+    	assertEquals(CacheState.CACHE_NOT_EXIST, ctc.cacheExists("table", "key", "value", TEST_CONTEXT)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		// must set the requestToCacheKeyMap first 
+    	CacheKey nodeId = ctc.createCacheRequest("table", "key", "value", TEST_CONTEXT); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        List[] results = new List[] {
+        		Arrays.asList(1, 2),
+        		Arrays.asList(2, 3),
+        }; 
+		
+		try {
+			ctc.loadTable(nodeId, results);
+			fail("expected exception"); //$NON-NLS-1$
+		} catch (MetaMatrixProcessingException e) {
+			assertEquals("Error Code:ERR.018.005.0100 Message:Unable to load code table for because result sizes exceeds the allowed parameter - CodeTables.maxRowsPerTable.", e.getMessage()); //$NON-NLS-1$
 		}
     }
 

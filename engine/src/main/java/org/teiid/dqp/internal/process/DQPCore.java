@@ -121,7 +121,8 @@ public class DQPCore extends Application implements ClientSideDQP {
 	
     //Constants
     private static final int DEFAULT_MAX_CODE_TABLE_RECORDS = 10000;
-    private static final int DEFAULT_MAX_CODE_TABLES = 20;
+    private static final int DEFAULT_MAX_CODE_TABLES = 200;
+    private static final int DEFAULT_MAX_CODE_RECORDS = 200000;
     private static final int DEFAULT_FETCH_SIZE = 2000;
     private static final int DEFAULT_PROCESSOR_TIMESLICE = 2000;
     private static final String PROCESS_PLAN_QUEUE_NAME = "QueryProcessorQueue"; //$NON-NLS-1$
@@ -132,6 +133,7 @@ public class DQPCore extends Application implements ClientSideDQP {
     // System properties for Code Table
     private int maxCodeTableRecords = DEFAULT_MAX_CODE_TABLE_RECORDS;
     private int maxCodeTables = DEFAULT_MAX_CODE_TABLES;
+    private int maxCodeRecords = DEFAULT_MAX_CODE_RECORDS;
     
     private int maxFetchSize = DEFAULT_FETCH_SIZE;
     
@@ -632,8 +634,9 @@ public class DQPCore extends Application implements ClientSideDQP {
         this.processorTimeslice = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_TIMESLICE, DEFAULT_PROCESSOR_TIMESLICE);
         this.maxFetchSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_FETCH_SIZE, DEFAULT_FETCH_SIZE);
         this.processorDebugAllowed = PropertiesUtils.getBooleanProperty(props, DQPEmbeddedProperties.PROCESSOR_DEBUG_ALLOWED, true);
-        this.maxCodeTableRecords = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS, DEFAULT_MAX_CODE_TABLE_RECORDS);
+        this.maxCodeTableRecords = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS_PER_TABLE, DEFAULT_MAX_CODE_TABLE_RECORDS);
         this.maxCodeTables = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLES, DEFAULT_MAX_CODE_TABLES);
+        this.maxCodeRecords = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.MAX_CODE_TABLE_RECORDS, DEFAULT_MAX_CODE_RECORDS);
         
         this.chunkSize = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.STREAMING_BATCH_SIZE, 10) * 1024;
         
@@ -671,6 +674,7 @@ public class DQPCore extends Application implements ClientSideDQP {
                                             (VDBService) env.findService(DQPServiceNames.VDB_SERVICE),
                                             (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE),
                                             this.maxCodeTables,
+                                            this.maxCodeRecords,
                                             this.maxCodeTableRecords);        
 	}
 	

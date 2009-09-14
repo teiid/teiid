@@ -111,6 +111,7 @@ public class TestDataTierManager extends TestCase {
                                   dataService,
                                   vdbService,
                                   bs,
+                                  20,
                                   1000,
                                   1000);
         command = helpGetCommand(sql, metadata);
