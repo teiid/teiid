@@ -31,7 +31,6 @@ import java.sql.ResultSetMetaData;
 import java.sql.RowIdLifetime;
 //## JDBC4.0-end ##
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -2548,51 +2547,16 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
      * @throws SQLException, should never occur.
      */
     public boolean supportsConvert(int fromType, int toType) throws SQLException {
-
-        if(fromType == Types.CHAR || fromType == Types.VARCHAR || fromType == Types.LONGVARCHAR) {
-            if(toType == Types.CHAR || toType == Types.VARCHAR || toType == Types.LONGVARCHAR || toType == Types.BIT
-                || toType == Types.SMALLINT || toType == Types.TINYINT|| toType == Types.INTEGER || toType == Types.BIGINT
-                || toType == Types.FLOAT  || toType == Types.REAL || toType == Types.DOUBLE || toType == Types.NUMERIC
-                || toType == Types.DECIMAL  || toType == Types.DATE || toType == Types.TIME || toType == Types.TIMESTAMP) {
-                return true;
-            }
-            return false;
-        } else if(fromType == Types.INTEGER || fromType == Types.TINYINT || fromType == Types.SMALLINT
-                 || fromType == Types.BIT || fromType == Types.BIGINT || fromType == Types.FLOAT || fromType == Types.REAL
-                 || fromType == Types.DOUBLE || fromType == Types.NUMERIC || fromType == Types.DECIMAL) {
-            if(toType == Types.CHAR || toType == Types.VARCHAR || toType == Types.LONGVARCHAR || toType == Types.BIT
-                || toType == Types.SMALLINT || toType == Types.TINYINT || toType == Types.INTEGER || toType == Types.BIGINT
-                || toType == Types.FLOAT || toType == Types.REAL || toType == Types.DOUBLE || toType == Types.NUMERIC
-                || toType == Types.DECIMAL) {
-                return true;
-            }
-            return false;
-        } else if(fromType == Types.DATE) {
-            if(toType == Types.DATE || toType == Types.TIMESTAMP || toType == Types.CHAR
-                || toType == Types.VARCHAR || toType == Types.LONGVARCHAR) {
-                return true;
-            }
-            return false;
-        } else if(fromType == Types.TIME) {
-            if(toType == Types.TIME || toType == Types.TIMESTAMP || toType == Types.CHAR
-                || toType == Types.VARCHAR || toType == Types.LONGVARCHAR) {
-                return true;
-            }
-            return false;
-        } else if(fromType == Types.TIMESTAMP) {
-            if(toType == Types.DATE || toType == Types.TIME || toType == Types.TIMESTAMP
-                || toType == Types.CHAR || toType == Types.VARCHAR || toType == Types.LONGVARCHAR) {
-                return true;
-            }
-            return false;
-        } else if(fromType == Types.JAVA_OBJECT) {
-            if(toType == Types.JAVA_OBJECT) {
-                return true;
-            }
-            return false;
-        } else {
-            return false;
-        }
+    	String fromName = MMJDBCSQLTypeInfo.getTypeName(fromType);
+    	String toName = MMJDBCSQLTypeInfo.getTypeName(toType);
+    
+    	if (fromName.equals(toName)) {
+    		if (fromName.equals(DataTypeManager.DefaultDataTypes.OBJECT) && fromName != toName) {
+    			return false;
+    		}
+    		return true;
+    	}
+    	return DataTypeManager.isTransformable(fromName, toName);
     }
 
     /**
