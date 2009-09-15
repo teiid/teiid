@@ -9,7 +9,7 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
-import org.teiid.test.framework.datasource.DatasourceMgr;
+import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.framework.connection.ConnectionStrategy;
@@ -19,7 +19,7 @@ import org.teiid.test.framework.connection.ConnectionStrategy;
 
 public abstract class TransactionContainer {
 	
-		private boolean debug = false;
+		private boolean debug = true;
 		
 	   protected Properties props;
 	   protected ConnectionStrategy connStrategy;
@@ -29,6 +29,7 @@ public abstract class TransactionContainer {
 	        this.props = new Properties();
 	        this.props.putAll(this.connStrategy.getEnvironment());
 	        
+
 	    }
 	    
 	    
@@ -38,9 +39,9 @@ public abstract class TransactionContainer {
 	     *
 	     */
 	    protected boolean turnOffTest (int numberofDataSources) {
-	    	boolean rtn =  (numberofDataSources > DatasourceMgr.getInstance().numberOfAvailDataSources());
+	    	boolean rtn =  (numberofDataSources > DataSourceMgr.getInstance().numberOfAvailDataSources());
 	    	if (rtn) {
-	    		System.out.println("Required Number of DataSources is " + numberofDataSources + " but availables sources is " + DatasourceMgr.getInstance().numberOfAvailDataSources());
+	    		System.out.println("Required Number of DataSources is " + numberofDataSources + " but availables sources is " + DataSourceMgr.getInstance().numberOfAvailDataSources());
 	    	}
 	    	return rtn;
 	    } 

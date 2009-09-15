@@ -21,11 +21,11 @@ public class LocalTransaction extends TransactionContainer {
     public LocalTransaction(ConnectionStrategy strategy) {
         super(strategy);
         
-//        this.props.setProperty(ConnectionStrategy.TXN_AUTO_WRAP, ConnectionStrategy.AUTO_WRAP_OFF);
     }
     
     protected void before(TransactionQueryTest test) {
         try {
+        	debug("Autocommit: " + this.connStrategy.getAutocommit());
             test.getConnection().setAutoCommit(this.connStrategy.getAutocommit());
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -33,6 +33,7 @@ public class LocalTransaction extends TransactionContainer {
     }
     
     protected void after(TransactionQueryTest test) {
+    	boolean exception = false;
         try {            
             if (test.rollbackAllways()|| test.exceptionOccurred()) {
                 test.getConnection().rollback();
@@ -41,14 +42,27 @@ public class LocalTransaction extends TransactionContainer {
             else {
                 test.getConnection().commit();
             }
-        } catch (SQLException e) {
-            throw new TransactionRuntimeException(e);
+        } catch (SQLException se) {
+        	exception =  true;
+        	// if exception, try to trigger the rollback
+        	try {
+        		test.getConnection().rollback();
+        	} catch (Exception e) {
+        		// do nothing
+        	}
+            throw new TransactionRuntimeException(se);
+            
+            
         } finally {
-            try {
-                test.getConnection().setAutoCommit(true);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+        	// if an exceptio occurs and the autocommit is set to true - while doing a transaction
+        	// will generate a new exception overriding the first exception
+        	if (!exception) {
+	            try {
+	                test.getConnection().setAutoCommit(true);
+	            } catch (SQLException e) {
+	                throw new RuntimeException(e);
+	            }
+        	}
         }
     }   
 }

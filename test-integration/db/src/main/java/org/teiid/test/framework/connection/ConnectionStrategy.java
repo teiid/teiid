@@ -14,14 +14,12 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
-import org.teiid.test.framework.datasource.DataSource;
-import org.teiid.test.framework.datasource.DatasourceMgr;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminOptions;
-import org.teiid.adminapi.ConnectorBinding;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -215,8 +213,7 @@ public abstract class ConnectionStrategy {
 	        		useName = mappedName;
 	        	}
 
-	        	org.teiid.test.framework.datasource.DataSource ds = DatasourceMgr.getInstance().getDatasource(useName);
-//	        	Properties sourceProps = DatasourceMgr.getInstance().getDatasourceProperties(useName);
+	        	org.teiid.test.framework.datasource.DataSource ds = DataSourceMgr.getInstance().getDatasource(useName, m.getName());
 	        	
 	        	if (ds != null) {
 
@@ -233,34 +230,6 @@ public abstract class ConnectionStrategy {
 
     		}
     		
-//	        Collection<ConnectorBinding> bindings = api.getConnectorBindingsInVDB("*");
-//	        
-//	        for (Iterator<ConnectorBinding> it=bindings.iterator(); it.hasNext();) {
-//	        	ConnectorBinding cb = it.next();
-//	        	
-//	        	cb.
-//	        	
-//	        	String mappedName = this.env.getProperty(cb.getName());
-//	        	
-//	        	String useName = cb.getName();
-//	        	if(mappedName != null) {
-//	        		useName = mappedName;
-//	        	}
-//	        	
-//	        	Properties sourceProps = DatasourceMgr.getInstance().getDatasourceProperties(useName);
-//	        	
-//	        	if (sourceProps != null) {
-//		        	Properties newprops = new Properties(cb.getProperties());
-//		        	newprops.putAll(sourceProps);
-//		        	api.updateProperties(cb.getName(), "org.teiid.adminapi.ConnectorBinding", newprops);
-//
-//	        	} else {
-//	        		System.err.println("WARNING: ConnectorBinding : " + cb.getName() + " was not updated, the mapped name " + useName + " had no datasource properties defined");
-//	        	}
-//	        	
-//	        	
-//	        	
-//	        }
     	} catch (QueryTestFailedException qt) {
     		throw qt;
     	} catch (Exception t) {

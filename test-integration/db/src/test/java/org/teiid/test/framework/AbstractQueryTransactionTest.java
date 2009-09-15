@@ -52,11 +52,13 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
     }
     
     @Override protected void assignExecutionProperties(Statement stmt) {
-        if (this.executionProperties != null) {           
-            if (stmt instanceof com.metamatrix.jdbc.api.Statement) {
+        if (this.executionProperties != null) {  
+             if (stmt instanceof com.metamatrix.jdbc.api.Statement) {
                 com.metamatrix.jdbc.api.Statement statement = (com.metamatrix.jdbc.api.Statement)stmt;
-                if (this.executionProperties.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP) != null) {
-                    statement.setExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, this.executionProperties.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP));
+                String txnautowrap = this.executionProperties.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
+                if (txnautowrap != null) {
+                	System.out.println("txnAutoWrap: " + txnautowrap);
+                    statement.setExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, txnautowrap);
                 }
                 
                 if (this.executionProperties.getProperty(ExecutionProperties.PROP_FETCH_SIZE) != null) {

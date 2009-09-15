@@ -59,8 +59,7 @@ public class SingleDataSourceSetup implements DataSourceSetup {
         test1.assertRowCount(100);
         test1.execute("select * from g2 ");
         test1.assertRowCount(100);        
-
-         
+        
         System.out.println("SingleDataSourceSetup Completed");
 
         

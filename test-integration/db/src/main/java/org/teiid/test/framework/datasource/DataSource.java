@@ -22,6 +22,10 @@ public class DataSource {
 		return name;
 	}
 	
+	public String getGroup() {
+		return group;
+	}
+	
 	public String getType() {
 		return props.getProperty(CONNECTOR_TYPE);
 	}

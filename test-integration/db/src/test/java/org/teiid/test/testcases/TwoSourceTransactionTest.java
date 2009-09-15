@@ -15,7 +15,7 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
 
 
 /** 
- * A common SingleSource test case among many different transaction stuff. 
+ * Test cases that require 2 datasources 
  */
 public class TwoSourceTransactionTest extends BaseAbstractTransactionTestCase {
     
@@ -39,6 +39,10 @@ public class TwoSourceTransactionTest extends BaseAbstractTransactionTestCase {
             public void testCase() throws Exception {
                 execute("select * from pm1.g1 join pm2.g1 on pm1.g1.e1 = pm2.g1.e1 where pm1.g1.e1 < 100");
                 assertRowCount(100);
+            }
+            
+            public int getNumberRequiredDataSources(){
+            	return 2;
             }
             
           	public void validateTestCase() throws Exception {
@@ -289,7 +293,7 @@ public class TwoSourceTransactionTest extends BaseAbstractTransactionTestCase {
                 test.execute("select * from g2 where e1 >= 100 and e1 < 115");
                 test.assertRowCount(15);
                 test.execute("select distinct e2 from g1 where e1 > 100");
-                test.assertResultsSetEquals(new String[] {"e2[varchar]", "blah"});
+                test.assertResultsSetEquals(new String[] {"e2[VARCHAR]", "blah"});
                 test.closeConnection();  
          	}
  

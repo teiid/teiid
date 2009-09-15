@@ -6,20 +6,17 @@ package org.teiid.test.framework.datasource;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-import javax.sql.XAConnection;
+import java.util.Set;
 
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.teiid.test.framework.ConfigPropertyLoader;
-import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -27,7 +24,7 @@ import com.metamatrix.common.xml.XMLReaderWriter;
 import com.metamatrix.common.xml.XMLReaderWriterImpl;
 
 /**
- * The DatasourceMgr is responsible for loading and managing the datasource
+ * The DataSourceMgr is responsible for loading and managing the datasource
  * mapping properties file {@see #DATASOURCE_MAPPING_FILE} and the mapped
  * datasource properties files. The {@link #getDatasourceProperties(String)}
  * returns the properties defined for that datasourceid, which is mapped in the
@@ -36,23 +33,28 @@ import com.metamatrix.common.xml.XMLReaderWriterImpl;
  * @author vanhalbert
  * 
  */
-public class DatasourceMgr {
+public class DataSourceMgr {
 
 	static final String DIRECTORY = "datasources/";
 	static final String DATASOURCE_MAPPING_FILE = "datasource_mapping.xml";
 
-	private static DatasourceMgr _instance = null;
+	private static DataSourceMgr _instance = null;
 	
-	private Map<String, Map<String, DataSource>>dstypeMap = new HashMap<String, Map<String, DataSource>>();
+	private Map<String, Map<String, DataSource>>dstypeMap = new HashMap<String, Map<String, DataSource>>();  //key=datasourcetype
 
-	private Map<String, DataSource> allDatasourcesMap = new HashMap<String, DataSource>();
+	private Map<String, DataSource> allDatasourcesMap = new HashMap<String, DataSource>();  // key=datasource name
+	
+	private Map<String, DataSource> modelToDatasourceMap = new HashMap<String, DataSource>();  // key=modelname
+	
+	private Set<String> usedDataSources = new HashSet<String>();
 
-	private DatasourceMgr() {
+
+	private DataSourceMgr() {
 	}
 
-	public static synchronized DatasourceMgr getInstance() {
+	public static synchronized DataSourceMgr getInstance() {
 		if (_instance == null) {
-			_instance = new DatasourceMgr();
+			_instance = new DataSourceMgr();
 			try {
 				_instance.loadDataSourceMappings();
 			} catch (QueryTestFailedException e) {
@@ -71,13 +73,31 @@ public class DatasourceMgr {
 		return allDatasourcesMap.size();
 	}
 	
-	public org.teiid.test.framework.datasource.DataSource getDatasource(String datasourceid)
+	public DataSource getDatasource(String datasourceid, String modelName)
 			throws QueryTestFailedException {
 		DataSource ds = null;
+		
+		// map the datasource to the model and datasourceid
+		// this is so the next time this combination is requested,
+		// the same datasource is returned to ensure when consecutive calls during the process
+		// corresponds to the same datasource
+		String key = modelName + "_"+datasourceid;
+		
+		if (modelToDatasourceMap.containsKey(key)) {
+			return modelToDatasourceMap.get(key);
+		} 
 		if (dstypeMap.containsKey(datasourceid)) {
 
 			Map datasources = dstypeMap.get(datasourceid);
-			ds = (DataSource) datasources.values().iterator().next();
+			Iterator<DataSource> it= datasources.values().iterator();
+			while(it.hasNext()) {
+				DataSource checkit = it.next();
+				if (!usedDataSources.contains(checkit.getName())) {
+					usedDataSources.add(checkit.getName());
+					ds = checkit;
+					break;
+				}
+			}
 
 		} else {
 			ds = allDatasourcesMap.get(datasourceid);
@@ -87,26 +107,16 @@ public class DatasourceMgr {
 					+ " is not a defined datasource in the mappings file ");
 
 		}
+		
+		modelToDatasourceMap.put(key, ds);
 		return ds;
 
 	}
 
-	public Properties getDatasourceProperties(String datasourceid)
+	public Properties getDatasourceProperties(String datasourceid, String modelname)
 			throws QueryTestFailedException {
-		DataSource ds = null;
-		if (dstypeMap.containsKey(datasourceid)) {
-			
-			Map datasources = dstypeMap.get(datasourceid);
-			ds = (DataSource)datasources.values().iterator().next();
-			
-		} else {
-			ds = allDatasourcesMap.get(datasourceid);
-		}
-		if (ds == null) {
-			throw new QueryTestFailedException("DatasourceID " + datasourceid
-					+ " is not a defined datasource in the mappings file ");
+		DataSource ds = getDatasource(datasourceid, modelname);
 
-		}
 		return ds.getProperties();
 		
 	}
@@ -183,9 +193,6 @@ public class DatasourceMgr {
 				System.out.println("Loaded datasource " + ds.getName());
 
 			} 
-//			else {
-//				System.out.println("Did not load datasource " + name);
-//			}
 
 	}
 
@@ -194,7 +201,7 @@ public class DatasourceMgr {
 			Properties props = null;
 	
 			try {
-				InputStream in = DatasourceMgr.class.getResourceAsStream("/"
+				InputStream in = DataSourceMgr.class.getResourceAsStream("/"
 						+ filename);
 				if (in != null) {
 					props = new Properties();
@@ -228,7 +235,7 @@ public class DatasourceMgr {
 
 	private static InputStream getInputStream() {
 
-		InputStream in = DatasourceMgr.class.getResourceAsStream("/"
+		InputStream in = DataSourceMgr.class.getResourceAsStream("/"
 				+ DIRECTORY + DATASOURCE_MAPPING_FILE);
 		if (in != null) {
 
@@ -244,16 +251,6 @@ public class DatasourceMgr {
 	static final String DSCONFIG = "datasourceconfig";
 	static final String DATASOURCETYPE = "datasourcetype";
 	static final String DATASOURCE = "datasource";
-	
-//	static class DS_TYPE {
-//
-//		/**
-//		 * This is the name of the Property Element.
-//		 */
-//		public static final String XA_ELEMENT = "xa"; //$NON-NLS-1$
-//		public static final String NONXA_ELEMENT = "nonxa"; //$NON-NLS-1$
-//	
-//	}
 
 	static class Property {
 
@@ -273,11 +270,17 @@ public class DatasourceMgr {
 	}
 
 	public static void main(String[] args) {
-		DatasourceMgr mgr = DatasourceMgr.getInstance();
+		DataSourceMgr mgr = DataSourceMgr.getInstance();
 
 		try {
+			DataSource ds1 = mgr.getDatasource("ds_mysql5", "model1");
+			
+			DataSource ds2 = mgr.getDatasource("ds_mysql5", "model1");
+			if (ds1 != ds2) {
+				throw new RuntimeException("Datasources are not the same");
+			}
 			System.out.println("Value for ds_mysql5: "
-					+ mgr.getDatasourceProperties("ds_mysql5"));
+					+ mgr.getDatasourceProperties("ds_mysql5", "model1"));
 		} catch (QueryTestFailedException e) {
 			e.printStackTrace();
 		}

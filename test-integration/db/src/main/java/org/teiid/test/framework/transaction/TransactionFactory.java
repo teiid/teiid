@@ -52,9 +52,9 @@ public class TransactionFactory {
         	transacton = new JNDITransaction(connstrategy);
 
         } else {
-        	new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
+        	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
         }
-        
+
         return transacton;
     }
     

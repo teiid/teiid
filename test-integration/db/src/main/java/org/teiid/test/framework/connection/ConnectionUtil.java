@@ -6,10 +6,11 @@ import java.util.Properties;
 import javax.sql.XAConnection;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
-import org.teiid.test.framework.datasource.DatasourceMgr;
+import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
+// identifier should be the model name that is identfied in the config properties
 public class ConnectionUtil {
 	public static final Connection getSource(String identifier)
 			throws QueryTestFailedException {
@@ -26,8 +27,8 @@ public class ConnectionUtil {
 
 			Properties sourceProps;
 			try {
-				sourceProps = DatasourceMgr.getInstance()
-						.getDatasourceProperties(mappedName);
+				sourceProps = DataSourceMgr.getInstance()
+						.getDatasourceProperties(mappedName, identifier);
 			} catch (QueryTestFailedException e) {
 				throw new TransactionRuntimeException(e);
 			}
@@ -60,8 +61,8 @@ public class ConnectionUtil {
 
 			Properties sourceProps;
 			try {
-				sourceProps = DatasourceMgr.getInstance()
-						.getDatasourceProperties(mappedName);
+				sourceProps = DataSourceMgr.getInstance()
+						.getDatasourceProperties(mappedName, identifier);
 			} catch (QueryTestFailedException e) {
 				throw new TransactionRuntimeException(e);
 			}
