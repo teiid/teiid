@@ -214,26 +214,37 @@ public class ResolverUtil {
 
     public static Constant convertConstant(String sourceTypeName,
                                            String targetTypeName,
-                                           Constant constant) throws QueryResolverException {
+                                           Constant constant) {
         if (!DataTypeManager.isTransformable(sourceTypeName, targetTypeName)) {
         	return null;
         }
-            
-        //try to get the converted constant, if this fails then it is not in a valid format
-        Constant result = getProperlyTypedConstant(constant.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
+
+        try {
+	        //try to get the converted constant, if this fails then it is not in a valid format
+	        Constant result = getProperlyTypedConstant(constant.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
+	        
+	        if (DataTypeManager.DefaultDataTypes.STRING.equals(sourceTypeName)) {
+	        	if (DataTypeManager.DefaultDataTypes.CHAR.equals(targetTypeName)) {
+	        		String value = (String)constant.getValue();
+	        		if (value != null && value.length() != 1) {
+	        			return null;
+	        		}
+	        	}
+	        	return result;
+	        }
+	        
+	        //for non-strings, ensure that the conversion is consistent
+	        if (!DataTypeManager.isTransformable(targetTypeName, sourceTypeName)) {
+	        	return null;
+	        }
         
-        if (DataTypeManager.DefaultDataTypes.STRING.equals(sourceTypeName)) {
-            return result;
-        }
-        
-        //for non-strings, ensure that the conversion is consistent
-        if (!DataTypeManager.isTransformable(targetTypeName, sourceTypeName)) {
-        	return null;
-        }
-        Constant reverse = getProperlyTypedConstant(result.getValue(), constant.getType());
-        
-        if (constant.equals(reverse)) {
-            return result;
+	        Constant reverse = getProperlyTypedConstant(result.getValue(), constant.getType());
+	        
+	        if (constant.equals(reverse)) {
+	            return result;
+	        }
+        } catch (QueryResolverException e) {
+        	
         }
             
         return null;

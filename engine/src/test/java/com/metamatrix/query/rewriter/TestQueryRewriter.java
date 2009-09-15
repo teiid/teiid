@@ -2269,4 +2269,11 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria(original, expected);
     }
     
+    @Test public void testRewriteChar() {
+    	String original = "convert(pm1.g1.e1, char) = '100'"; //$NON-NLS-1$
+    	String expected = "1 = 0"; //$NON-NLS-1$
+    	
+    	helpTestRewriteCriteria(original, expected);
+    }
+    
 }

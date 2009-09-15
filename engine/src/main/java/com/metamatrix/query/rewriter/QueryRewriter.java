@@ -1492,14 +1492,12 @@ public class QueryRewriter {
         
         String leftExprTypeName = DataTypeManager.getDataTypeName(leftExpr.getType());
 
-        Constant result = null;
-        try {
-            result = ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(rightConstant.getType()), leftExprTypeName, rightConstant);
-            Constant other = ResolverUtil.convertConstant(leftExprTypeName, DataTypeManager.getDataTypeName(rightConstant.getType()), result);
-            if (((Comparable)rightConstant.getValue()).compareTo(other.getValue()) != 0) {
-            	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
-            }
-        } catch(QueryResolverException e) {
+        Constant result = ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(rightConstant.getType()), leftExprTypeName, rightConstant);
+        if (result == null) {
+        	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
+        }
+        Constant other = ResolverUtil.convertConstant(leftExprTypeName, DataTypeManager.getDataTypeName(rightConstant.getType()), result);
+        if (other == null || ((Comparable)rightConstant.getValue()).compareTo(other.getValue()) != 0) {
         	return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
         }
         
@@ -1558,15 +1556,12 @@ public class QueryRewriter {
 
             Constant rightConstant = (Constant) next;
             
-            Constant result = null;
-            try {
-                result = ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(rightConstant.getType()), leftExprTypeName, rightConstant);
+            Constant result = ResolverUtil.convertConstant(DataTypeManager.getDataTypeName(rightConstant.getType()), leftExprTypeName, rightConstant);
+            if (result != null) {
                 Constant other = ResolverUtil.convertConstant(leftExprTypeName, DataTypeManager.getDataTypeName(rightConstant.getType()), result);
-                if (((Comparable)rightConstant.getValue()).compareTo(other.getValue()) != 0) {
+                if (other == null || ((Comparable)rightConstant.getValue()).compareTo(other.getValue()) != 0) {
                 	result = null;
                 }   
-            } catch(QueryResolverException e) {
-                
             }
             
             if (result != null) {
