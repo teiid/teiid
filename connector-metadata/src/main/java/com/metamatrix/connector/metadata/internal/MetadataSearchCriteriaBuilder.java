@@ -44,6 +44,7 @@ import com.metamatrix.connector.metadata.MetadataConnectorPlugin;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
+import com.metamatrix.query.sql.lang.MatchCriteria;
 import com.metamatrix.query.sql.lang.MatchCriteria.PatternTranslator;
 
 
@@ -58,14 +59,6 @@ public class MetadataSearchCriteriaBuilder {
     // Map of fieldNames to MetadataSearchCriteria objects used to search
     private final Map criteriaMap = new HashMap();
     private ObjectQuery query;
-    /** The default wildcard character - '%' */
-    public static final char WILDCARD_CHAR = '%';
-
-    /** The default single match character - '_' */
-    public static final char MATCH_CHAR = '_';
-
-    /** The internal null escape character */
-    public static final char NULL_ESCAPE_CHAR = 0;
 
     private final static PatternTranslator LIKE_TO_INDEX = new PatternTranslator("*", "?", new char[0], '\\');  //$NON-NLS-1$ //$NON-NLS-2$
 
@@ -200,7 +193,7 @@ public class MetadataSearchCriteriaBuilder {
         String literalValue = (String) this.query.getExpressionValue(rtExpression);
         StringBuffer rePattern = null;
 
-        char escapeChar = NULL_ESCAPE_CHAR;
+        char escapeChar = MatchCriteria.NULL_ESCAPE_CHAR;
         if ( escape != null ) {
             escapeChar = escape.charValue();            
         }

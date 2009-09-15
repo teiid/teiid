@@ -152,7 +152,7 @@ public class RecordFactory {
     public static Collection getMetadataRecord(final IEntryResult[] queryResult) {
         final Collection records = new ArrayList(queryResult.length);
         for (int i = 0; i < queryResult.length; i++) {
-            final AbstractMetadataRecord record = getMetadataRecord(queryResult[i]);
+            final AbstractMetadataRecord record = getMetadataRecord(queryResult[i].getWord());
             if (record != null) {
                 records.add(record);
             }
@@ -197,17 +197,6 @@ public class RecordFactory {
         }
     }
     
-    /**
-     * Return the {@link com.metamatrix.modeler.core.metadata.runtime.MetadataRecord}
-     * instances for specified IEntryResult.
-     * @param entryResult
-     * @param container Container reference to be set on the record
-     */
-    public static AbstractMetadataRecord getMetadataRecord(final IEntryResult queryResult) {
-        AbstractMetadataRecord record = getMetadataRecord(queryResult.getWord());
-        return record;
-    }
-
     /**
      * Append the specified IEntryResult[] to the IEntryResult
      * to create a single result representing an index entry that
@@ -328,9 +317,6 @@ public class RecordFactory {
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
         final ModelRecordImpl model = new ModelRecordImpl();
-
-        // Extract the index version information from the record 
-        int indexVersion = getIndexVersion(record);
 
         // The tokens are the standard header values
         int tokenIndex = 0;
@@ -766,9 +752,6 @@ public class RecordFactory {
         final String str = new String(record);
         final List tokens = StringUtil.split(str,String.valueOf(IndexConstants.RECORD_STRING.RECORD_DELIMITER));
         final ProcedureParameterRecordImpl paramRd = new ProcedureParameterRecordImpl();
-
-        // Extract the index version information from the record 
-        int indexVersion = getIndexVersion(record);
 
         // The tokens are the standard header values
         int tokenIndex = 0;

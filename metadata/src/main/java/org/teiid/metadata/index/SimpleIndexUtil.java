@@ -25,17 +25,12 @@ package org.teiid.metadata.index;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.connector.metadata.runtime.MetadataConstants;
 import org.teiid.core.index.IEntryResult;
-import org.teiid.internal.core.index.BlocksIndexInput;
 import org.teiid.internal.core.index.Index;
 
-import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.util.ArgCheck;
 import com.metamatrix.core.util.FileUtils;
@@ -77,123 +72,6 @@ public class SimpleIndexUtil {
     //# Methods to query indexes                                                                                                 #
     //############################################################################################################################
 
-    /**
-     * Return all index file records that match the specified record pattern.
-     * The pattern can be constructed from any combination of characters
-     * including the multiple character wildcard '*' and single character
-     * wildcard '?'.  The field delimiter is used to tokenize both the pattern
-     * and the index record so that individual fields can be matched.  The method
-     * assumes that the first occurrence of the delimiter in the record alligns 
-     * with the first occurrence in the pattern. Any wildcard characters in the 
-     * pattern cannot represent a delimiter character.
-     * @param indexes the array of MtkIndex instances to query
-     * @param pattern
-     * @param fieldDelimiter
-     * @return results
-     * @throws QueryMetadataException
-     */
-    public static IEntryResult[] queryIndex(final Index[] indexes, final char[] pattern, final char fieldDelimiter) throws MetaMatrixCoreException {
-        final boolean isCaseSensitive  = false;
-        final List<IEntryResult> queryResult = new ArrayList<IEntryResult>();
-
-        try {
-            for (int i = 0; i < indexes.length; i++) {
-                // Search for index records matching the specified pattern  
-                IEntryResult[] partialResults = indexes[i].queryEntriesMatching(pattern,isCaseSensitive);
-                
-                // If any of these IEntryResults represent an index record that is continued
-                // across multiple entries within the index file then we must query for those
-                // records and build the complete IEntryResult
-                if (partialResults != null) {
-                    partialResults = addContinuationRecords(indexes[i], partialResults);
-                }
-                
-                if (partialResults != null) {
-                    queryResult.addAll(Arrays.asList(partialResults));
-                }
-            }
-        } catch(IOException e) {
-            throw new MetaMatrixCoreException(e); 
-        }
-        
-        // Remove any results that do not match after tokenizing the record
-        for (int i = 0, n = queryResult.size(); i < n; i++) {
-            IEntryResult record = queryResult.get(i);
-            if ( record == null || !entryMatches(record.getWord(),pattern,fieldDelimiter) ) {
-            	queryResult.remove(record);
-            }
-        }
-                
-        return queryResult.toArray(new IEntryResult[queryResult.size()]);
-    }
-    
-    /**
-     * Return true if the record matches the pattern after being tokenized using
-     * the specified delimiter.  The method assumes that the first occurrence of 
-     * the delimiter in the record alligns with the first occurrence in the pattern.
-     * Any wildcard characters in the pattern cannot represent a delimiter character.
-     * @param record
-     * @param pattern
-     * @param fieldDelimiter
-     * @return
-     */
-    private static boolean entryMatches(final char[] record, final char[] pattern, final char fieldDelimiter) {
-        final boolean isCaseSensitive  = false;
-        if (record == null)
-            return false; // null record cannot match
-        if (pattern == null)
-            return true; // null pattern is equivalent to '*'
-            
-        String delimiter = String.valueOf(fieldDelimiter);
-        List recordTokens  = StringUtil.split(new String(record),delimiter);
-        List patternTokens = StringUtil.split(new String(pattern),delimiter);
-        if (patternTokens.size() > recordTokens.size()) {
-            return false;
-        }
-        
-        for (int i = 0, n = patternTokens.size(); i < n; i++) {
-            char[] patternToken = ((String)patternTokens.get(i)).toCharArray();
-            char[] recordToken  = ((String)recordTokens.get(i)).toCharArray();
-            if (!CharOperation.match(patternToken,recordToken,isCaseSensitive)) {
-                return false;
-            }
-        }        
-        return true;
-    }
-
-    /**
-     * Return all index file records that match the specified record prefix
-     * or pattern. The pattern can be constructed from any combination of characters
-     * including the multiple character wildcard '*' and single character
-     * wildcard '?'.  The prefix may be constructed from any combination of 
-     * characters excluding the wildcard characters.  The prefix specifies a fixed
-     * number of characters that the index record must start with.
-     * @param indexes the array of MtkIndex instances to query
-     * @param pattern
-     * @return results
-     * @throws MetamatrixCoreException
-     */
-    public static IEntryResult[] queryIndex(final Index[] indexes, final char[] pattern, final boolean isPrefix, final boolean returnFirstMatch) throws MetaMatrixCoreException {
-        return queryIndex(null, indexes, pattern, isPrefix, true, returnFirstMatch);
-    }
-    
-    /**
-     * Return all index file records that match the specified record prefix
-     * or pattern. The pattern can be constructed from any combination of characters
-     * including the multiple character wildcard '*' and single character
-     * wildcard '?'.  The prefix may be constructed from any combination of 
-     * characters excluding the wildcard characters.  The prefix specifies a fixed
-     * number of characters that the index record must start with.
-     * @param monitor an optional ProgressMonitor
-     * @param indexes the array of MtkIndex instances to query
-     * @param pattern
-     * @return results
-     * @throws MetamatrixCoreException
-     */
-    public static IEntryResult[] queryIndex(ProgressMonitor monitor, final Index[] indexes, final char[] pattern, final boolean isPrefix, final boolean returnFirstMatch) throws MetaMatrixCoreException {
-        return queryIndex(monitor, indexes, pattern, isPrefix, true, returnFirstMatch);        
-    }
-    
     /**
      * Return all index file records that match the specified record prefix
      * or pattern. The pattern can be constructed from any combination of characters
@@ -264,104 +142,6 @@ public class SimpleIndexUtil {
         return queryResult.toArray(new IEntryResult[queryResult.size()]);
     }
     
-    /**
-     * Return all index file records that match the specified record prefix
-     * or pattern. The pattern can be constructed from any combination of characters
-     * including the multiple character wildcard '*' and single character
-     * wildcard '?'.  The prefix may be constructed from any combination of 
-     * characters excluding the wildcard characters.  The prefix specifies a fixed
-     * number of characters that the index record must start with.
-     * @param monitor an optional ProgressMonitor
-     * @param indexes the array of MtkIndex instances to query
-     * @param pattern
-     * @return results
-     * @throws MetamatrixCoreException
-     */
-    public static IEntryResult[] queryIndex(ProgressMonitor monitor, final Index[] indexes, final Collection patterns, final boolean isPrefix, final boolean isCaseSensitive, final boolean returnFirstMatch) throws MetaMatrixCoreException {
-        final List<IEntryResult> queryResult = new ArrayList<IEntryResult>();
-        if ( monitor != null ) {
-            monitor.beginTask( null, indexes.length );        
-        }
-        
-        // index file input
-        BlocksIndexInput input = null;
-        
-        try {
-            for (int i = 0; i < indexes.length; i++) {
-                
-                if ( monitor != null ) {
-                    monitor.worked( 1 );
-                }
-                // initialize input for the index file
-                input = new BlocksIndexInput(indexes[i].getIndexFile());
-
-                IEntryResult[] partialResults = null;
-                for(final Iterator patternIter = patterns.iterator(); patternIter.hasNext();) {
-                    char[] pattern = ((String) patternIter.next()).toCharArray();
-                    if(isPrefix) {
-                        // Query based on prefix. This uses a fast binary search
-                        // based on matching the first n characters in the index record.  
-                        // The index files contain records that are sorted alphabetically
-                        // by fullname such that the search algorithm can quickly determine
-                        // which index block(s) contain the matching prefixes.
-                        partialResults = input.queryEntriesPrefixedBy(pattern, isCaseSensitive);
-                    } else {
-                        // Search for index records matching the specified pattern
-                        partialResults = input.queryEntriesMatching(pattern, isCaseSensitive);
-                    }
-                    
-                    // If any of these IEntryResults represent an index record that is continued
-                    // across multiple entries within the index file then we must query for those
-                    // records and build the complete IEntryResult
-                    if (partialResults != null) {
-                        partialResults = addContinuationRecords(indexes[i], partialResults);
-                    }
-    
-                    // Process these results against the specified pattern and return
-                    // only the subset entries that match both criteria  
-                    if (partialResults != null) {
-                        for (int j = 0; j < partialResults.length; j++) {
-                            IEntryResult record = partialResults[j];
-                            if(record != null) {
-                                char[] recordWord = partialResults[j].getWord();
-                                // filter out any continuation records, they should already appended
-                                // to index record thet is continued
-                                if(recordWord[0] != MetadataConstants.RECORD_TYPE.RECORD_CONTINUATION) {                            
-                                    if (!isPrefix) {
-                                        // filter results that do not match after tokenizing the record
-                                        if(entryMatches(recordWord,pattern,IndexConstants.RECORD_STRING.RECORD_DELIMITER) ) {
-                                            queryResult.add(partialResults[j]);
-                                        }
-                                    } else {
-                                        queryResult.add(partialResults[j]);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (returnFirstMatch && queryResult.size() > 0) {
-                        break;
-                    }
-                    
-                    // close file input
-                    input.close();
-                }
-            }
-        } catch(IOException e) {
-            throw new MetaMatrixCoreException(e);
-        } finally {
-            // close file input
-            try {
-                if(input != null) {
-                    input.close();
-                }
-            } catch(IOException io) {}
-        }
-
-        return queryResult.toArray(new IEntryResult[queryResult.size()]);       
-    }
-    
-
     private static IEntryResult[] addContinuationRecords(final Index index, final IEntryResult[] partialResults) throws IOException {
                                                       
         final int blockSize = RecordFactory.INDEX_RECORD_BLOCK_SIZE;
@@ -563,28 +343,5 @@ public class SimpleIndexUtil {
         }
         return StringUtil.Constants.EMPTY_STRING + recordType;
     }    
-    
-
-	/**
-	 * Return the prefix match string that could be used to exactly match a fully 
-	 * qualified entity name in an index record. All index records 
-	 * contain a header portion of the form:  
-	 * recordType|name|
-	 * @param name The fully qualified name for which the prefix match 
-	 * string is to be constructed.
-	 * @return The pattern match string of the form: recordType|name|
-	 */
-	public static String getPrefixPattern(final char recordType, final String uuid) {
-
-		// construct the pattern string
-		String patternStr = "" //$NON-NLS-1$
-						  + recordType
-						  + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
-		if(uuid != null && !uuid.equals(StringUtil.Constants.EMPTY_STRING)) {                          
-			patternStr = patternStr + uuid.trim() + IndexConstants.RECORD_STRING.RECORD_DELIMITER;
-		}                    
-
-		return patternStr;
-	}
     
 }

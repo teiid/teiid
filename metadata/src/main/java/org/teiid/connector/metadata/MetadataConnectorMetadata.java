@@ -203,11 +203,7 @@ public class MetadataConnectorMetadata {
             	AbstractMetadataRecord record = (AbstractMetadataRecord)j.next();
                 if (!StringUtil.isEmpty(record.getName())) {
                     String recordName = record.getName();
-                    if (hasCaseFunctions) {
-                        nameCriteria = nameCriteria.toUpperCase();
-                        recordName   = recordName.toUpperCase();
-                    }
-                    if (!CharOperation.match(nameCriteria.toCharArray(), recordName.toCharArray(), true)) {
+                    if (!CharOperation.match(nameCriteria.toCharArray(), recordName.toCharArray(), !hasCaseFunctions)) {
                         j.remove();
                     }
                 }
