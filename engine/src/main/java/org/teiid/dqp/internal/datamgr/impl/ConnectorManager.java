@@ -30,15 +30,12 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-
-import javax.transaction.xa.XAResource;
 
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.Connector;
@@ -51,14 +48,12 @@ import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
 import org.teiid.connector.api.ConnectorAnnotations.SynchronousWorkers;
 import org.teiid.connector.metadata.runtime.ConnectorMetadata;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
-import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.datamgr.CapabilitiesConverter;
 import org.teiid.dqp.internal.pooling.connector.PooledConnector;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.transaction.TransactionProvider;
 
 import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -189,7 +184,7 @@ public class ConnectorManager implements ApplicationService {
             	
             	context.setContextCache(getContextCache());
 
-            	conn = connector.getConnection(context);
+            	conn = connector.getConnection(context, null);
             	caps = conn.getCapabilities();
             	global = false;
             }
@@ -436,61 +431,18 @@ public class ConnectorManager implements ApplicationService {
 			} catch (MetaMatrixCoreException e) {
 	            throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_find_Connector_class", connectorClassName)); //$NON-NLS-1$
 			}
-			if (this.isXa) {
-	            if(!(c instanceof XAConnector)){
-	            	throw new ApplicationLifecycleException(DQPPlugin.Util.getString("non_xa_connector", connectorName)); //$NON-NLS-1$
-	            }
-                if (this.getTransactionService() == null) {                    
-                    throw new ApplicationLifecycleException(DQPPlugin.Util.getString("no_txn_manager", connectorName)); //$NON-NLS-1$
-                }
-			}
             if (this.synchWorkers) {
                 SynchronousWorkers synchWorkerAnnotation = c.getClass().getAnnotation(SynchronousWorkers.class);
             	if (synchWorkerAnnotation != null) {
             		this.synchWorkers = synchWorkerAnnotation.enabled();
             	}
+            	if (!this.synchWorkers) {
+            		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Changing asynch connector", getName(), "to non-XA.  Consider changing you're connector binding to be non-XA."); //$NON-NLS-1$ //$NON-NLS-2$
+            		this.isXa = false;
+            	}
             }
-        	c = wrapPooledConnector(c, env);
-            if (c instanceof ConnectorWrapper) {
-            	this.connector = (ConnectorWrapper)c;
-            } else {
-            	this.connector = new ConnectorWrapper(c);
-            }
+        	this.connector = wrapConnector(c, env);
             this.connector.start(env);
-            if (this.isXa) {
-                if (this.connector.supportsSingleIdentity()) {
-                	// add this connector as the recovery source
-	                TransactionService ts = this.getTransactionService(); 
-	                ts.registerRecoverySource(connectorName, new TransactionProvider.XAConnectionSource() {
-	                	XAConnection conn = null;
-	                	
-	                	@Override
-	                	public XAResource getXAResource() throws SQLException {
-	                		if (conn == null) {
-	                			try {
-									conn = ((XAConnector)connector).getXAConnection(null, null);
-								} catch (ConnectorException e) {
-									throw new SQLException(e);
-								}
-	                		}
-	                		try {
-								return conn.getXAResource();
-							} catch (ConnectorException e) {
-								throw new SQLException(e);
-							}
-	                	}
-	                	
-	                	@Override
-	                	public void close() {
-	                		if (conn != null) {
-	                			conn.close();
-	                		}
-	                	}
-	                });
-                } else {
-                	LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.cannot_add_to_recovery", this.getName())); //$NON-NLS-1$	                
-                }
-            }
         } catch (ConnectorException e) {
             throw new ApplicationLifecycleException(e, DQPPlugin.Util.getString("failed_start_Connector", new Object[] {this.getConnectorID(), e.getMessage()})); //$NON-NLS-1$
         } finally {
@@ -498,7 +450,7 @@ public class ConnectorManager implements ApplicationService {
         }
     }
     
-    private Connector wrapPooledConnector(Connector c, ConnectorEnvironment connectorEnv) {
+    private ConnectorWrapper wrapConnector(Connector c, ConnectorEnvironment connectorEnv) throws ApplicationLifecycleException {
     	//the pooling annotation overrides the connector binding
         ConnectionPooling connectionPooling = c.getClass().getAnnotation(ConnectionPooling.class);
     	boolean connectionPoolPropertyEnabled = PropertiesUtils.getBooleanProperty(connectorEnv.getProperties(), ConnectorPropertyNames.CONNECTION_POOL_ENABLED, true);
@@ -509,14 +461,22 @@ public class ConnectorManager implements ApplicationService {
         } else {
         	poolingEnabled = connectionPooling != null && connectionPooling.enabled();
         }
+		if (this.isXa) {
+            if(poolingEnabled && !(c instanceof XAConnector)){
+            	throw new ApplicationLifecycleException(DQPPlugin.Util.getString("non_xa_connector", connectorName)); //$NON-NLS-1$
+            }
+            if (this.getTransactionService() == null) {                    
+                throw new ApplicationLifecycleException(DQPPlugin.Util.getString("no_txn_manager", connectorName)); //$NON-NLS-1$
+            }
+		}
         if (poolingEnabled) {
            	LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Automatic connection pooling was enabled for connector " + getName()); //$NON-NLS-1$
         	if (!this.synchWorkers) {
             	LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.asynch_worker_warning", ConnectorPropertyNames.SYNCH_WORKERS)); //$NON-NLS-1$	                
         	}
-        	return new PooledConnector(c);
+        	return new PooledConnector(this.connectorName, c, isXa?this.getTransactionService():null);
         }         
-        return c;
+        return new ConnectorWrapper(c);
     }
     
     protected ResultSetCache createResultSetCache(Properties rsCacheProps) {

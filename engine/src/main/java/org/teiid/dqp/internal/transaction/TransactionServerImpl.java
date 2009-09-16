@@ -249,7 +249,9 @@ public class TransactionServerImpl implements TransactionService {
                     tx = this.provider.importTransaction(xid, timeout);
                 } catch (XAException err) {
                     throw new XATransactionException(err);
-                } 
+                } catch (SystemException err) {
+                	throw new XATransactionException(err);
+                }
                 
                 try {
                     tx.registerSynchronization(new Synchronization() {
@@ -444,7 +446,7 @@ public class TransactionServerImpl implements TransactionService {
         }
     }
 
-    private TransactionManager getTransactionManager() {
+    public TransactionManager getTransactionManager() {
         return provider.getTransactionManager();
     }
 
@@ -520,53 +522,20 @@ public class TransactionServerImpl implements TransactionService {
         return context;
     }
 
-    public TransactionContext delist(TransactionContext context,
-                                     XAResource resource,
-                                     int flags) throws XATransactionException {
-        TransactionManager tm = getTransactionManager();
-        TransactionContextImpl tc = (TransactionContextImpl)context;
-        
-        try {
-            Transaction tx = tm.getTransaction();
-            if (!tx.equals(context.getTransaction())) {
-                throw new XATransactionException(context.getTransaction() + " != " + tx); //$NON-NLS-1$
-            }
-    
-            // intermediate suspend/success is not necessary because we hold the connector connection
-            // for the duration of the transaction. However, we want to suspend because 
-            // ConnectorWorker thread needs to be disassociated.
-        } catch (SystemException err) {
-            throw new XATransactionException(err);
-        } catch (IllegalStateException err) {
-            throw new XATransactionException(err);
-        } finally {
-            try {
-                tm.suspend();
-            } catch (SystemException err) {
-                throw new XATransactionException(err);
-            }
-        }
-        return tc;
-    }
-
     public TransactionContext enlist(TransactionContext context,
                                      XAResource resource) throws XATransactionException {
         TransactionManager tm = getTransactionManager();
         TransactionContextImpl tc = (TransactionContextImpl)context;
         
         try {
-            if (tc.getTransactionTimeout() > 0) {
-                if (tc.getTransactionTimeout() != resource.getTransactionTimeout()) {
-                    resource.setTransactionTimeout(tc.getTransactionTimeout());
-                }
+            if (tc.getTransactionTimeout() > 0 && tc.getTransactionTimeout() != resource.getTransactionTimeout()) {
+                resource.setTransactionTimeout(tc.getTransactionTimeout());
             }
             Transaction tx = tm.getTransaction();
             if (tx == null) {
                 tm.resume(context.getTransaction());
-            } else {
-                if (!tx.equals(context.getTransaction())) {
-                    throw new XATransactionException(context.getTransaction() + " != " + tx); //$NON-NLS-1$
-                }
+            } else if (!tx.equals(context.getTransaction())) {
+                throw new XATransactionException(context.getTransaction() + " != " + tx); //$NON-NLS-1$
             }
 
             if (!context.getTransaction().enlistResource(resource)) {

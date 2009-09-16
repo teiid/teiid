@@ -31,28 +31,29 @@ import javax.transaction.Transaction;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.xa.api.TransactionContext;
-import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorEnvironmentImpl;
 
 import com.metamatrix.admin.objects.MMConnectionPool;
 import com.metamatrix.common.application.ApplicationEnvironment;
+import com.metamatrix.dqp.service.TransactionService;
 
 public class TestPooledConnector {
 	
 	@Test public void testGetXAConnection() throws Exception {
 		XAConnector connector = Mockito.mock(XAConnector.class);
-		PooledConnector pc = new PooledConnector(connector);
+		PooledConnector pc = new PooledConnector("foo", connector, Mockito.mock(TransactionService.class)); //$NON-NLS-1$
 		pc.start(new ConnectorEnvironmentImpl(new Properties(), Mockito.mock(ConnectorLogger.class), new ApplicationEnvironment()));
 		TransactionContext tc = Mockito.mock(TransactionContext.class);
 		Mockito.stub(tc.getTransaction()).toReturn(Mockito.mock(Transaction.class));
 		Mockito.stub(tc.getTxnID()).toReturn("1"); //$NON-NLS-1$
-		XAConnection conn = pc.getXAConnection(Mockito.mock(ExecutionContext.class), tc);
+		Connection conn = pc.getConnection(Mockito.mock(ExecutionContext.class), tc);
 		conn.close();
-		XAConnection conn1 = pc.getXAConnection(Mockito.mock(ExecutionContext.class), tc);
+		Connection conn1 = pc.getConnection(Mockito.mock(ExecutionContext.class), tc);
 		assertSame(conn, conn1);
 		
 		List<MMConnectionPool> stats = pc.getConnectionPoolStats();

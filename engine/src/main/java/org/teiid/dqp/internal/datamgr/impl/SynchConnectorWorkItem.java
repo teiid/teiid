@@ -26,19 +26,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 
-import javax.transaction.xa.XAResource;
-
-import org.teiid.connector.api.ConnectorException;
-import org.teiid.connector.xa.api.XAConnection;
-
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
-import com.metamatrix.common.xa.XATransactionException;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
 import com.metamatrix.dqp.message.AtomicResultsMessage;
-import com.metamatrix.dqp.service.TransactionService;
 import com.metamatrix.dqp.util.LogConstants;
 
 public class SynchConnectorWorkItem extends ConnectorWorkItem {
@@ -94,45 +85,6 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 		this.notify();
 	}
 	
-	@Override
-	protected void createExecution() throws MetaMatrixComponentException,
-			ConnectorException, MetaMatrixProcessingException {
-		super.createExecution();
-		enlistResource();
-	}
-	
-	@Override
-	protected void sendClose() {
-		delistResource();
-		super.sendClose();
-	}
-
-	private void enlistResource() throws ConnectorException,
-			XATransactionException {
-		if (!this.isTransactional || this.connection == null) {
-			return;
-		}
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {
-								"AtomicRequest", id, "enlist(" + requestMsg.getTransactionContext() + ")" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		XAResource xaRes = ((XAConnection) connection).getXAResource();
-		getTransactionServer().enlist(requestMsg.getTransactionContext(), xaRes);
-	}
-
-	private void delistResource() {
-		if (!this.isTransactional || this.connection == null) {
-			return;
-		}
-		try {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {
-									"AtomicRequest", id, "delist(" + requestMsg.getTransactionContext() + ")" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-			XAResource xaRes = ((XAConnection) connection).getXAResource();
-			getTransactionServer().delist(requestMsg.getTransactionContext(),
-					xaRes, XAResource.TMSUCCESS);
-		} catch (Throwable e) {
-			LogManager.logWarning(LogConstants.CTX_CONNECTOR, e.getMessage());
-		}
-	}
-
 	private void acquireTransactionLock() throws InterruptedException {
 		if (!this.isTransactional) {
 			return;
@@ -167,10 +119,6 @@ public class SynchConnectorWorkItem extends ConnectorWorkItem {
 		this.lock = null;
 	}
 	
-    private TransactionService getTransactionServer() {
-        return manager.getTransactionService();
-    }
-    
     @Override
     protected boolean dataNotAvailable(long delay) {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {

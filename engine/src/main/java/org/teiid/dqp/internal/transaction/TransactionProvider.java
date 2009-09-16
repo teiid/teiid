@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import javax.resource.spi.XATerminator;
+import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAException;
@@ -51,7 +52,7 @@ public interface TransactionProvider {
 
     TransactionManager getTransactionManager();
 
-    Transaction importTransaction(MMXid xid, int timeout) throws XAException;
+    Transaction importTransaction(MMXid xid, int timeout) throws XAException, SystemException;
     
     String getTransactionID(Transaction tx);
     

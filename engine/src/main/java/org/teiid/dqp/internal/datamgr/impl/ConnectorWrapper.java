@@ -44,10 +44,9 @@ import com.metamatrix.dqp.service.ConnectorStatus;
 /**
  * ConnectorWrapper adds default behavior to the wrapped connector.
  */
-public class ConnectorWrapper implements XAConnector, MetadataProvider {
+public class ConnectorWrapper implements MetadataProvider {
 	
 	private Connector actualConnector;
-	private String name;
 	private volatile ConnectorStatus status = ConnectorStatus.UNABLE_TO_CHECK;
 	
 	public ConnectorWrapper(Connector actualConnector){
@@ -55,7 +54,6 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 	}
 
 	public void start(ConnectorEnvironment environment) throws ConnectorException {
-		name = environment.getConnectorName();
 		actualConnector.start(environment);
 		int interval = PropertiesUtils.getIntProperty(environment.getProperties(), ConnectionPool.SOURCE_CONNECTION_TEST_INTERVAL, ConnectionPool.DEFAULT_SOURCE_CONNECTION_TEST_INTERVAL);
 		if (interval > 0 && isConnectionTestable()) {
@@ -76,24 +74,22 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 		actualConnector.stop();
 	}
 	
-	@Override
-	public final Connection getConnection(ExecutionContext context)
-			throws ConnectorException {
-    	setIdentity(context);
-		return getConnectionDirect(context);
+	public final Connection getConnection(ExecutionContext context, TransactionContext transactionContext)
+	throws ConnectorException {
+		if (context instanceof ExecutionContextImpl && context.getConnectorIdentity() == null) {
+    		((ExecutionContextImpl)context).setConnectorIdentity(createIdentity(context));
+    	}
+		if (transactionContext == null) {
+			return getConnectionDirect(context);
+		}
+		return getXAConnectionDirect(context, transactionContext);
 	}
-
+	
 	protected Connection getConnectionDirect(ExecutionContext context)
 			throws ConnectorException {
 		return actualConnector.getConnection(context);
 	}
 	
-	@Override
-    public final XAConnection getXAConnection( ExecutionContext executionContext, TransactionContext transactionContext) throws ConnectorException {
-    	setIdentity(executionContext);
-		return getXAConnectionDirect(executionContext, transactionContext);
-    }
-
 	protected XAConnection getXAConnectionDirect(ExecutionContext executionContext,
 			TransactionContext transactionContext) throws ConnectorException {
 		if (actualConnector instanceof XAConnector) {
@@ -102,13 +98,6 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
     	return null;
 	}
 
-	private void setIdentity(ExecutionContext executionContext)
-			throws ConnectorException {
-		if (executionContext instanceof ExecutionContextImpl && executionContext.getConnectorIdentity() == null) {
-    		((ExecutionContextImpl)executionContext).setConnectorIdentity(createIdentity(executionContext));
-    	}
-	}
-	
 	public ConnectorCapabilities getCapabilities() {
 	    return actualConnector.getCapabilities();
 	}
@@ -125,7 +114,7 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 		if (supportsSingleIdentity()) {
 			Connection conn = null;
 			try {
-				conn = this.getConnection(null);
+				conn = this.getConnectionDirect(null);
 				return conn.isAlive()?ConnectorStatus.OPEN:ConnectorStatus.DATA_SOURCE_UNAVAILABLE;
 			} catch (ConnectorException e) {
 				return ConnectorStatus.DATA_SOURCE_UNAVAILABLE;
@@ -142,7 +131,6 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 		return actualConnector;
 	}
 	
-	@Override
 	public ConnectorIdentity createIdentity(ExecutionContext context)
 			throws ConnectorException {
 		return actualConnector.createIdentity(context);
@@ -154,10 +142,6 @@ public class ConnectorWrapper implements XAConnector, MetadataProvider {
 		} catch (ConnectorException e) {
 			return false;
 		}
-	}
-	
-	public String getConnectorBindingName() {
-		return this.name;
 	}
 	
 	@Override

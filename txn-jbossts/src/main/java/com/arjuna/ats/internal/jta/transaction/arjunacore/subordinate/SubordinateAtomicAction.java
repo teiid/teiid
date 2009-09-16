@@ -42,7 +42,7 @@ import com.arjuna.ats.arjuna.coordinator.TwoPhaseOutcome;
  */
 
 /*
- * see JBTM-457
+ * To be removed after 4.5 see JBTM-457
  */
 public class SubordinateAtomicAction extends
         com.arjuna.ats.internal.jta.transaction.arjunacore.AtomicAction

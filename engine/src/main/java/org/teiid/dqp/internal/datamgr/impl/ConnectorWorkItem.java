@@ -26,8 +26,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.transaction.InvalidTransactionException;
+import javax.transaction.SystemException;
+
 import org.teiid.connector.api.Connection;
-import org.teiid.connector.api.Connector;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.Execution;
@@ -38,7 +40,6 @@ import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.IProcedure;
 import org.teiid.connector.language.IQueryCommand;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
-import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.metadata.RuntimeMetadataImpl;
 import org.teiid.dqp.internal.process.AbstractWorkItem;
@@ -123,23 +124,28 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         this.securityContext.setContextCache(manager.getContextCache());
     }
 
-    protected void createConnection(Connector connector, QueryMetadataInterface queryMetadata) throws ConnectorException, MetaMatrixComponentException {
+    protected void createConnection(ConnectorWrapper connector, QueryMetadataInterface queryMetadata) throws ConnectorException, MetaMatrixComponentException {
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, new Object[] {id, "creating connection for atomic-request"});  //$NON-NLS-1$
          
         if (requestMsg.isTransactional()){
         	if (manager.isXa()) {
-	    		connection = ((XAConnector)connector).getXAConnection(this.securityContext, requestMsg.getTransactionContext());
 	    		this.securityContext.setTransactional(true);
 	    		this.isTransactional = true;
-	    		return;
-        	} 
-    	    if (!manager.isImmutable() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {
+	    		try {
+					manager.getTransactionService().getTransactionManager().resume(requestMsg.getTransactionContext().getTransaction());
+				} catch (InvalidTransactionException e) {
+					throw new ConnectorException(e);
+				} catch (SystemException e) {
+					throw new ConnectorException(e);
+				}
+        	} else if (!manager.isImmutable() && requestMsg.getCommand().updatingModelCount(queryMetadata) > 0) {
     	        throw new ConnectorException(DQPPlugin.Util.getString("ConnectorWorker.transactionNotSupported")); //$NON-NLS-1$
     	    }
     	}
-    	connection = connector.getConnection(this.securityContext);
+        
+    	connection = connector.getConnection(this.securityContext, this.isTransactional?requestMsg.getTransactionContext():null);
     }
-            
+    
     protected void process() {
     	DQPWorkContext.setWorkContext(this.requestMsg.getWorkContext());
         ClassLoader contextloader = Thread.currentThread().getContextClassLoader();
@@ -269,7 +275,14 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
         }        
     }
 
-	protected void sendClose() {
+	private void sendClose() {
+		if (this.isTransactional) {
+			try {
+				manager.getTransactionService().getTransactionManager().suspend();
+			} catch (SystemException e) {
+				LogManager.logWarning(LogConstants.CTX_CONNECTOR, e, e.getMessage());
+			}
+		}
 		AtomicResultsMessage response = new AtomicResultsMessage(this.requestMsg);
 		response.setRequestClosed(true);
 		this.resultsReceiver.receiveResults(response);
@@ -284,7 +297,7 @@ public abstract class ConnectorWorkItem extends AbstractWorkItem {
     }
 
 	protected void createExecution() throws MetaMatrixComponentException,
-			ConnectorException, MetaMatrixProcessingException {
+			ConnectorException {
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
 
 		QueryMetadataInterface queryMetadata = new TempMetadataAdapter(manager.getMetadataService().lookupMetadata(this.requestMsg.getWorkContext().getVdbName(), this.requestMsg.getWorkContext().getVdbVersion()), new TempMetadataStore());

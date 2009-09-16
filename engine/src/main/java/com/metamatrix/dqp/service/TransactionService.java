@@ -28,6 +28,7 @@ import java.util.Collection;
 
 import javax.transaction.InvalidTransactionException;
 import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
@@ -50,12 +51,13 @@ public interface TransactionService extends ApplicationService {
     public static final String TXN_STATUS_PORT = "xa.txnstatus_port"; //$NON-NLS-1$
     public static final String TXN_ENABLE_RECOVERY = "xa.enable_recovery"; //$NON-NLS-1$
     
-    
     public static final String PROCESSNAME = DQPEmbeddedProperties.PROCESSNAME;
     
     public static final String DEFAULT_TXN_MGR_LOG_DIR = "txnlog"; //$NON-NLS-1$
     public static final String DEFAULT_TXN_TIMEOUT = "120"; //$NON-NLS-1$ //2 mins
     public static final String DEFAULT_TXN_STATUS_PORT = "0"; //$NON-NLS-1$
+    
+    TransactionManager getTransactionManager();
 
     // processor level methods
     TransactionContext start(TransactionContext context) throws XATransactionException, SystemException;
@@ -66,29 +68,16 @@ public interface TransactionService extends ApplicationService {
 
     TransactionContext getOrCreateTransactionContext(String threadId);
 
-    // local transaction
+    // local transaction methods
     TransactionContext begin(String threadId) throws XATransactionException, SystemException;
 
     void commit(String threadId) throws XATransactionException, SystemException;
 
     void rollback(String threadId) throws XATransactionException, SystemException;
 
-    // connector worker
-    TransactionContext delist(TransactionContext context,
-                              XAResource resource,
-                              int flags) throws XATransactionException;
-
-    TransactionContext enlist(TransactionContext context,
-                              XAResource resource) throws XATransactionException;
-    
     void cancelTransactions(String threadId, boolean requestOnly) throws InvalidTransactionException, SystemException;
 
-    
-    // recovery
-    void registerRecoverySource(String name, XAConnectionSource resource);
-    
-    void removeRecoverySource(String name);  
-    
+    // global transaction methods
     int prepare(final String threadId,
             MMXid xid) throws XATransactionException;
 
@@ -113,9 +102,19 @@ public interface TransactionService extends ApplicationService {
 	         MMXid xid,
 	         int flags) throws XATransactionException;
         
+	// management methods
     Collection<Transaction> getTransactions();
     
     void terminateTransaction(Xid transactionId) throws AdminException;
     
     void terminateTransaction(String transactionId, String sessionId) throws AdminException;
+    
+    // Teiid managed XA
+    TransactionContext enlist(TransactionContext context,
+                              XAResource resource) throws XATransactionException;
+    
+    void registerRecoverySource(String name, XAConnectionSource resource);
+    
+    void removeRecoverySource(String name);  
+
 }

@@ -58,7 +58,7 @@ import com.arjuna.ats.internal.jta.transaction.arjunacore.subordinate.jca.Subord
  */
 
 /*
- * See JBTM-456
+ * To be removed after 4.5 See JBTM-456
  */
 public class XATerminatorImple implements javax.resource.spi.XATerminator
 {

@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.pooling.connector;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,6 +32,7 @@ import java.util.Map;
 import javax.transaction.RollbackException;
 import javax.transaction.Synchronization;
 import javax.transaction.SystemException;
+import javax.transaction.xa.XAResource;
 
 import org.teiid.connector.api.Connection;
 import org.teiid.connector.api.Connector;
@@ -41,9 +43,15 @@ import org.teiid.connector.xa.api.TransactionContext;
 import org.teiid.connector.xa.api.XAConnection;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorWrapper;
+import org.teiid.dqp.internal.transaction.TransactionProvider;
 
 import com.metamatrix.admin.objects.MMConnectionPool;
+import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.xa.XATransactionException;
+import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.service.ConnectorStatus;
+import com.metamatrix.dqp.service.TransactionService;
+import com.metamatrix.dqp.util.LogConstants;
 
 
 /**
@@ -93,14 +101,17 @@ public class PooledConnector extends ConnectorWrapper {
 	
 	private Map<String, ConnectionWrapper> idToConnections = Collections.synchronizedMap(new HashMap<String, ConnectionWrapper>());
 	private ConnectorEnvironment environment;
+	private TransactionService transactionService;
+	private String name;
 	
-	public PooledConnector(Connector actualConnector) {
+	public PooledConnector(String name, Connector actualConnector, TransactionService transactionService) {
 		super(actualConnector);
 		pool = new ConnectionPool(this);
-		
+		this.transactionService = transactionService;
 		if (actualConnector instanceof XAConnector) {
 			xaPool = new ConnectionPool(this);
 		}
+		this.name = name;
 	}
 
 	@Override
@@ -112,6 +123,39 @@ public class PooledConnector extends ConnectorWrapper {
 			xaPool.initialize(environment);
 		}
 		super.start(environment);
+		if (this.transactionService != null) {
+            if (this.supportsSingleIdentity()) {
+            	// add this connector as the recovery source
+                transactionService.registerRecoverySource(this.name, new TransactionProvider.XAConnectionSource() {
+                	XAConnection conn = null;
+                	
+                	@Override
+                	public XAResource getXAResource() throws SQLException {
+                		if (conn == null) {
+                			try {
+								conn = getXAConnectionDirect(null, null);
+							} catch (ConnectorException e) {
+								throw new SQLException(e);
+							}
+                		}
+                		try {
+							return conn.getXAResource();
+						} catch (ConnectorException e) {
+							throw new SQLException(e);
+						}
+                	}
+                	
+                	@Override
+                	public void close() {
+                		if (conn != null) {
+                			conn.close();
+                		}
+                	}
+                });
+            } else {
+            	LogManager.logWarning(LogConstants.CTX_CONNECTOR, DQPPlugin.Util.getString("ConnectorManager.cannot_add_to_recovery", this.name)); //$NON-NLS-1$	                
+            }
+        }
 	}
 	
 	@Override
@@ -153,6 +197,13 @@ public class PooledConnector extends ConnectorWrapper {
         	if (environment.getLogger().isTraceEnabled()) {
         		environment.getLogger().logTrace("Obtained new connection for transaction " + transactionContext.getTxnID()); //$NON-NLS-1$
         	}
+    		XAResource xaRes = conn.getXAResource();
+    		try {
+				transactionService.enlist(transactionContext, xaRes);
+			} catch (XATransactionException e) {
+				conn.close();
+                throw new ConnectorException(e);
+			}
             
             try { //add a synchronization to remove the map entry
                 transactionContext.getTransaction().registerSynchronization(new RemovalCallback(transactionContext, conn));
