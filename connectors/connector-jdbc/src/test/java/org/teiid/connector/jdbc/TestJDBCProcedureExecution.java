@@ -58,5 +58,21 @@ public class TestJDBCProcedureExecution {
 		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
 		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(1, Types.INTEGER);
 	}
+	
+	@Test public void testProcedureExecution1() throws Exception {
+		ICommand command = MetadataFactory.helpTranslate(MetadataFactory.BQT_VDB, "exec pm2.spTest8(1)"); //$NON-NLS-1$
+		Connection connection = Mockito.mock(Connection.class);
+		CallableStatement cs = Mockito.mock(CallableStatement.class);
+		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+		Mockito.stub(cs.getInt(2)).toReturn(5);
+		Mockito.stub(connection.prepareCall("{  call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+		Translator sqlTranslator = new Translator();
+		ExecutionContext context = EnvironmentUtility.createSecurityContext("user"); //$NON-NLS-1$
+		RuntimeMetadataImpl runtimeMetadata = new RuntimeMetadataImpl(FakeMetadataFactory.exampleBQTCached());
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, sqlTranslator, Mockito.mock(ConnectorLogger.class), new Properties(), runtimeMetadata, context, EnvironmentUtility.createEnvironment(new Properties()) );
+		procedureExecution.execute();
+		assertEquals(Arrays.asList(5), procedureExecution.getOutputParameterValues());
+		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, Types.INTEGER);
+	}
 
 }
