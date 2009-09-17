@@ -126,37 +126,18 @@ public class DQPMonitoringAdminImpl extends BaseAdmin implements MonitoringAdmin
     }
     
 
-    /** 
-     * @see org.teiid.adminapi.MonitoringAdmin#getConnectorBindingsInVDB(java.lang.String)
-     * @since 4.3
-     */
-    public Collection<ConnectorBinding> getConnectorBindingsInVDB(String identifier)  throws AdminException{
-        Collection<VDBArchive> vdbs = null;
-        HashMap bindings = new HashMap();
-
-        if (identifier == null || !identifier.matches(VDB_REGEX)) {
-            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.Invalid_identifier")); //$NON-NLS-1$                
-        }
-        
-        // if . and * not specified, add a STAR at the end to compensate for the
-        // version number matching.
-        if (identifier.indexOf(DOT) == -1 && identifier.indexOf(STAR) == -1) {
-            identifier = identifier + STAR;
-        }
-                
+    @Override
+    public Collection<ConnectorBinding> getConnectorBindingsInVDB(String vdbName, String vdbVersion)  throws AdminException{
         try {
-            // first get all the VDBS in the system and loop though each of them
-            vdbs = getVDBService().getAvailableVDBs();                    
-            for (VDBArchive vdb:vdbs) {
-                if (matches(identifier, vdb.getName()+"."+vdb.getVersion())) { //$NON-NLS-1$
-                    Map connectorBindings = vdb.getConfigurationDef().getConnectorBindings();
-                    bindings.putAll(connectorBindings);
-                }
+            VDBArchive vdb = getConfigurationService().getVDB(vdbName, vdbVersion); 
+            if (vdb != null) {
+            	return (List)convertToAdminObjects(vdb.getConfigurationDef().getConnectorBindings().values());
             }
+            throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.vdb_does_not_exists", vdbVersion, vdbVersion)); //$NON-NLS-1$
+            
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
         }      
-        return (List)convertToAdminObjects(bindings.values());
     }    
     
     /** 

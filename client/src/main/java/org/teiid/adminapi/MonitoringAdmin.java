@@ -87,17 +87,13 @@ public interface MonitoringAdmin {
 
     /**
      * Get all the Connector Bindings for the given VDB identifier pattern
-     * @param identifier - the unique identifier for a {@link VDB}
-     * <ul>
-     *      <li> <code>"*"</code> - for all Connector Bindings in the system
-     *      <li> <code>"name or name*"</code> - for all the bindings in the VDBs that begin with given name
-     *      <li><code>"name<{@link AdminObject#DELIMITER_CHAR}>version"</code> - for all the bindings in a given single VDB
-     * </ul>
+	 * @param vdbName - Name of the VDB
+	 * @param vdbVersion - version of the VDB
      * @return Collection of {@link ConnectorBinding}
      * @throws AdminException if there's a system error.
      * @since 4.3
      */
-    Collection<ConnectorBinding> getConnectorBindingsInVDB(String identifier) throws AdminException;
+    Collection<ConnectorBinding> getConnectorBindingsInVDB(String vdbName, String vdbVersion) throws AdminException;
 
     /**
      * Get the Extension Modules that correspond to the specified identifier pattern
