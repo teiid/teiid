@@ -798,7 +798,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    
 	    // make another context and create a 2nd connection
 	    pushConnection();
-	    	MMConnection vdbConn = (MMConnection)getConnection(BQT, PROPS_FILE);
+	    	MMConnection vdbConn = (MMConnection)getConnection("bqt", PROPS_FILE);
 	        execute("SELECT * FROM BQT1.SmallA"); //$NON-NLS-1$
 	        assertRowCount(50);        
 	        // we have not closed the connection here, kept active connection
