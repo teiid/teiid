@@ -1412,5 +1412,11 @@ public class ServerMonitoringAdminImpl extends AbstractAdminImpl implements Serv
 			String connectorTypeIdentifier) throws AdminException {
 		return null;
 	}
+
+	@Override
+	public Collection<org.teiid.adminapi.ConnectorBinding> getConnectorBindingsInVDB(
+			String vdbName, String vdbVersion) throws AdminException {
+		return null;
+	}
     
 }

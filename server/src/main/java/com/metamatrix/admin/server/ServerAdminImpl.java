@@ -1041,4 +1041,10 @@ public class ServerAdminImpl implements ServerAdmin {
 			String propertyName, String propertyValue) throws AdminException {
 	}
 
+	@Override
+	public Collection<ConnectorBinding> getConnectorBindingsInVDB(
+			String vdbName, String vdbVersion) throws AdminException {
+		return null;
+	}
+
 }

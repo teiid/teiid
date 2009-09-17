@@ -677,19 +677,15 @@ Collection getVDBs(String vdbIdentifier) {
 
 /**
  * Get all the Connector Bindings for the given VDB identifier pattern
- * @param identifier - the unique identifier for a {@link VDB}
- * <ul>
- *      <li> <code>"*"</code> - for all Connector Bindings in the system
- *      <li> <code>"name or name*"</code> - for all the bindings in the VDBs that begin with given name
- *      <li><code>"name<{@link AdminObject#DELIMITER_CHAR}>version"</code> - for all the bindings in a given single VDB
- * </ul>
+ * @param vdbName - Name of the VDB
+ * @param vdbVersion - version of the VDB
  * @return Collection of {@link ConnectorBinding}
  * @throws AdminException if there's a system error.
  * @since 4.3
  */
-Collection getConnectorBindingsInVDB(String identifier) {
+Collection getConnectorBindingsInVDB(String vdbName, String vdbVersion) {
     checkAdmin();
-    result = currentContext().internalAdmin.getConnectorBindingsInVDB(identifier);
+    result = currentContext().internalAdmin.getConnectorBindingsInVDB(vdbName, vdbVersion);
     debug(result);
     return result;
 }
@@ -1014,7 +1010,7 @@ void deleteVDB(String name, String version) {
 void deleteVDBAndConnectorBindings(String name, String version) {
     checkAdmin();
     
-    Collection connectorBindings = currentContext().internalAdmin.getConnectorBindingsInVDB(name + AdminObject.DELIMITER + version);
+    Collection connectorBindings = currentContext().internalAdmin.getConnectorBindingsInVDB(name, version);
     
     currentContext().internalAdmin.changeVDBStatus(name, version, VDB.DELETED);
     for ( Iterator itr = connectorBindings.iterator(); itr.hasNext();) {

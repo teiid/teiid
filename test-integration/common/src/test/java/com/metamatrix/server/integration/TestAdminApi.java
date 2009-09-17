@@ -172,7 +172,7 @@ public class TestAdminApi extends AbstractMMQueryTestCase {
 	    bindings = getAdmin().getConnectorBindings(STAR);
 	    assertEquals("Two bindings should exist", 2+size, bindings.size()); //$NON-NLS-1$
 	    
-	    bindings = getAdmin().getConnectorBindingsInVDB("BQT*"); //$NON-NLS-1$
+	    bindings = getAdmin().getConnectorBindingsInVDB("BQT", "1"); //$NON-NLS-1$
 	    assertEquals("Two bindings should exist", 2+size, bindings.size()); //$NON-NLS-1$
 	    
 	    assertTrue("Binding must be available", hasBinding("BQT_1.BQT1 Oracle 9i Simple Cap"));  //$NON-NLS-1$ //$NON-NLS-2$
