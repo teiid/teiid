@@ -253,7 +253,7 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		}
 		ArrayList<MetaMatrixSessionInfo> results = new ArrayList<MetaMatrixSessionInfo>();
 		for (MetaMatrixSessionInfo info : this.sessionCache.values()) {
-			if (VDBName.equals(info.getProductInfo(ProductInfoConstants.VIRTUAL_DB)) && VDBVersion.equals(info.getProductInfo(ProductInfoConstants.VDB_VERSION))) {
+			if (VDBName.equalsIgnoreCase(info.getProductInfo(ProductInfoConstants.VIRTUAL_DB)) && VDBVersion.equalsIgnoreCase(info.getProductInfo(ProductInfoConstants.VDB_VERSION))) {
 				results.add(info);
 			}
 		}
