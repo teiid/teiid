@@ -18,7 +18,8 @@
      	This configuration specifies the following information:
      	-	It indicates the location ("dir") to find the datasource connection
      		information that is used to populate the connector bindings and create
-     		direct connections to the source
+     		direct connections to the source.
+     		
      	-	It provides a mapping to the Connector Type that needs
      		to be specified when deploying the ConnectorBinding and assigning it to
      		the mapped model (see default.config.properties)
@@ -37,6 +38,10 @@
 		<datasource  name="ds_oracle">
 			<property name="dir">oracle</property>
 			<property name="connectortype">Oracle Connector</property>		
+		</datasource>
+		<datasource  name="ds_sqlserver">
+			<property name="dir">sqlserver</property>
+			<property name="connectortype">SQL Server Connector</property>		
 		</datasource>
 		<datasource  name="ds_db2">
 			<property name="dir">db2</property>
@@ -63,6 +68,10 @@
 			<property name="dir">oracle</property>
 			<property name="connectortype">Oracle XA Connector</property>		
 		</datasource>	
+		<datasource  name="ds_sqlserver">
+			<property name="dir">sqlserver</property>
+			<property name="connectortype">SQL Server XA Connector</property>		
+		</datasource>
 		<datasource  name="ds_db2_xa">
 			<property name="dir">db2</property>
 			<property name="connectortype">DB2 XA Connector</property>		
