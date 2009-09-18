@@ -4,8 +4,12 @@
  */
 package org.teiid.test.framework;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -50,6 +54,10 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
        	assertNotNull(props);
         this.executionProperties = props;        
     }
+    @Override
+    protected void compareResults(BufferedReader resultReader, BufferedReader expectedReader) throws IOException {
+    	assertEquals(read(expectedReader, compareResultsCaseSensitive()) , read(resultReader, compareResultsCaseSensitive()));
+    }
     
     @Override protected void assignExecutionProperties(Statement stmt) {
         if (this.executionProperties != null) {  
@@ -57,8 +65,7 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
                 com.metamatrix.jdbc.api.Statement statement = (com.metamatrix.jdbc.api.Statement)stmt;
                 String txnautowrap = this.executionProperties.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
                 if (txnautowrap != null) {
-                	System.out.println("txnAutoWrap: " + txnautowrap);
-                    statement.setExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, txnautowrap);
+                     statement.setExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, txnautowrap);
                 }
                 
                 if (this.executionProperties.getProperty(ExecutionProperties.PROP_FETCH_SIZE) != null) {
@@ -73,6 +80,9 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
     	return 1;
     }
     
+    public boolean compareResultsCaseSensitive() {
+    	return true;
+    }
 
 	@Override
 	public void setupDataSource() {

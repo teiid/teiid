@@ -4,11 +4,13 @@
  */
 package org.teiid.test.testcases;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 import org.teiid.test.framework.AbstractQueryTransactionTest;
 import org.teiid.test.framework.QueryExecution;
+import org.teiid.test.framework.datasource.DataSource;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -187,7 +189,9 @@ public class TwoSourceTransactionTest extends BaseAbstractTransactionTestCase {
           	public void validateTestCase() throws Exception {
                 
                 // now verify the results
-                AbstractQueryTest test = new QueryExecution(getSource("pm1"));
+          		Connection ds = getSource("pm1");
+          		System.out.println("Datasource: " + ds.getMetaData().getDatabaseProductName());
+                AbstractQueryTest test = new QueryExecution(ds);
                 test.execute("select * from g1 where e1 >= 100 and e1 < 112");
                 test.assertRowCount(12);
                 test.closeConnection();
@@ -283,6 +287,12 @@ public class TwoSourceTransactionTest extends BaseAbstractTransactionTestCase {
             public int getNumberRequiredDataSources(){
             	return 2;
             }
+            
+            // because different databases return "varchar" in all caps "VARCHAR"
+            // the comparison is being done in a noncasesensitive manner
+            public boolean compareResultsCaseSensitive() {
+            	return false;
+            }
              
          	public void validateTestCase() throws Exception {
 
@@ -293,7 +303,10 @@ public class TwoSourceTransactionTest extends BaseAbstractTransactionTestCase {
                 test.execute("select * from g2 where e1 >= 100 and e1 < 115");
                 test.assertRowCount(15);
                 test.execute("select distinct e2 from g1 where e1 > 100");
-                test.assertResultsSetEquals(new String[] {"e2[VARCHAR]", "blah"});
+                
+ //               assertResultsSetEquals(this.internalResultSet., new String[] {"e2[varchar]", "blah"});
+                
+                test.assertResultsSetEquals(new String[] {"e2[varchar]", "blah"});
                 test.closeConnection();  
          	}
  
