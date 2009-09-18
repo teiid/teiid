@@ -31,36 +31,24 @@
 
 <datasourceconfig>
 	<datasourcetype name="nonxa">
-		<datasource  name="ds_mysql_5">
-			<property name="dir">mysql_5</property>
+		<datasource  name="ds_mysql">
+			<property name="dir">mysql</property>
 			<property name="connectortype">MySQL JDBC Connector</property>		
 		</datasource>
-		<datasource  name="ds_oracle_9">
-			<property name="dir">oracle_9</property>
+		<datasource  name="ds_oracle">
+			<property name="dir">oracle</property>
 			<property name="connectortype">Oracle Connector</property>		
 		</datasource>
-		<datasource  name="ds_oracle_10">
-			<property name="dir">oracle_10</property>
-			<property name="connectortype">Oracle Connector</property>		
-		</datasource>
-		<datasource  name="ds_oracle_11">
-			<property name="dir">oracle_11</property>
-			<property name="connectortype">Oracle Connector</property>		
-		</datasource>
-		<datasource  name="ds_sqlserver_2005">
-			<property name="dir">sqlserver_2005</property>
+		<datasource  name="ds_sqlserver">
+			<property name="dir">sqlserver</property>
 			<property name="connectortype">SQL Server Connector</property>		
 		</datasource>
-		<datasource  name="ds_sqlserver_2008">
-			<property name="dir">sqlserver_2008</property>
-			<property name="connectortype">SQL Server Connector</property>		
-		</datasource>
-		<datasource  name="ds_db2_9">
-			<property name="dir">db2_9</property>
+		<datasource  name="ds_db2">
+			<property name="dir">db2</property>
 			<property name="connectortype">DB2 Connector</property>		
 		</datasource>
-		<datasource  name="ds_postgres_81">
-			<property name="dir">postgres_81</property>
+		<datasource  name="ds_postgres">
+			<property name="dir">postgres</property>
 			<property name="connectortype">PostgreSQL JDBC Connector</property>		
 		</datasource>
 
@@ -72,36 +60,24 @@
 	</datasourcetype>
 
 	<datasourcetype name="xa">
-		<datasource  name="ds_mysql_5_xa">
-			<property name="dir">mysql_5</property>
+		<datasource  name="ds_mysql_xa">
+			<property name="dir">mysql</property>
 			<property name="connectortype">MySQL JDBC XA Connector</property>		
 		</datasource>
-		<datasource  name="ds_oracle_11_xa">
-			<property name="dir">oracle_11</property>
-			<property name="connectortype">Oracle XA Connector</property>		
-		</datasource>
-		<datasource  name="ds_oracle_10_xa">
-			<property name="dir">oracle_10</property>
-			<property name="connectortype">Oracle XA Connector</property>		
-		</datasource>
-		<datasource  name="ds_oracle_9_xa">
-			<property name="dir">oracle_9</property>
+		<datasource  name="ds_oracle_xa">
+			<property name="dir">oracle</property>
 			<property name="connectortype">Oracle XA Connector</property>		
 		</datasource>	
-		<datasource  name="ds_sqlserver_2005">
-			<property name="dir">sqlserver_2005</property>
+		<datasource  name="ds_sqlserver">
+			<property name="dir">sqlserver</property>
 			<property name="connectortype">SQL Server XA Connector</property>		
 		</datasource>
-		<datasource  name="ds_sqlserver_2008">
-			<property name="dir">sqlserver_2008</property>
-			<property name="connectortype">SQL Server XA Connector</property>		
-		</datasource>
-		<datasource  name="ds_db2_9_xa">
-			<property name="dir">db2_9</property>
+		<datasource  name="ds_db2_xa">
+			<property name="dir">db2</property>
 			<property name="connectortype">DB2 XA Connector</property>		
 		</datasource>
-		<datasource  name="ds_postgres_81_xa">
-			<property name="dir">postgres_81</property>
+		<datasource  name="ds_postgres_xa">
+			<property name="dir">postgres</property>
 			<property name="connectortype">PostgreSQL XA JDBC Connector</property>		
 		</datasource>
 
