@@ -208,7 +208,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             }
             
             // now that all of the input parameters validated, add the connector binding
-            binding = addConnectorBinding(deployName, binding, ctype, true);
+            binding = addConnectorBinding(deployName, binding, ctype, false);
             
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
@@ -266,10 +266,14 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             ConnectorBindingType type = ConnectorConfigurationReader.loadConnectorType(xmlFile);
             
             // Check if the binding type exists already, if does take action based on user
-            // preferences in the admin options, same rules apply as binding.            
+            // preferences in the admin options, same rules apply as binding. 
+            boolean addType = true;
             if (bindingTypeExists(type.getName())) {
                 if (options.containsOption(AdminOptions.OnConflict.EXCEPTION)) {
                     throw new AdminProcessingException(DQPEmbeddedPlugin.Util.getString("Admin.addBinding_type_exists", deployName, type.getName())); //$NON-NLS-1$
+                }
+                else if (options.containsOption(AdminOptions.OnConflict.IGNORE)) {
+                	addType = false;
                 }                
             }
             
@@ -285,7 +289,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
             }
 
             // now that all of the input parameters validated, add the connector binding
-            binding = addConnectorBinding(deployName, binding, type, true);
+            binding = addConnectorBinding(deployName, binding, type, addType);
                                 
         } catch (MetaMatrixComponentException e) {
         	throw new AdminComponentException(e);
@@ -302,7 +306,7 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
      * @param options
      * @throws AdminException
      */
-    ConnectorBinding addConnectorBinding(String deployName, ConnectorBinding binding, ConnectorBindingType type, boolean replace) 
+    ConnectorBinding addConnectorBinding(String deployName, ConnectorBinding binding, ConnectorBindingType type, boolean addType) 
         throws AdminException {
         // Make sure we have both correctly configured
         if (type != null && binding != null) {
@@ -310,11 +314,11 @@ public class DQPConfigAdminImpl extends BaseAdmin implements ConfigurationAdmin 
                 try {
                     
                     // First add the connector type if one is not already in here.
-                    if (getConfigurationService().getConnectorType(type.getName()) == null || replace) {
+                    if (getConfigurationService().getConnectorType(type.getName()) == null || addType) {
                         saveConnectorType(type);
                     }
                     // Now add the connector binding.
-                    binding = getConfigurationService().addConnectorBinding(deployName, binding, replace);
+                    binding = getConfigurationService().addConnectorBinding(deployName, binding, true);
                     return binding;
                 } catch (MetaMatrixComponentException e) {
                 	throw new AdminComponentException(e);
