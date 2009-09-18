@@ -98,7 +98,7 @@
 					<forkMode>always</forkMode>
 					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
 					<includes>
-						<include>**/*TestCase.java</include>
+			<!--			<include>**/*TestCase.java</include> -->
 						<include>**/*Test.java</include>
 						<include>**/*Tests.java</include>
 						<include>**/Test*.java</include>
@@ -137,7 +137,7 @@
 	            </configuration>
 					<executions>
 						<execution>
-							<id>singleschema</id>
+							<id>setupalldatasources</id>
 							<phase>pre-integration-test</phase>
 							<configuration>
 								<tasks>
@@ -182,7 +182,7 @@
 	            </configuration>
 					<executions>
 						<execution>
-							<id>singleschema</id>
+							<id>setupsingledatasource</id>
 							<phase>pre-integration-test</phase>
 							<configuration>
 								<tasks>

@@ -33,19 +33,25 @@ Creating Unit Tests
 Setting up a Datasource to be used during Testing
 ==========================================
 
--	see the readme.txt in src/main/resources/datasources regarding defining a datasource
--	run the maven profile to execute the process to create the required tables:
-		a.  to setup all sources at one time, run:   mvn install -P setupdatasources 
-		b.	to setup a specific source, run: mvn install -P singledatasource -Ddatasource=derby
+1.	DEFINE DATASOURCE:
+	To define a datasource, see the readme.txt in src/main/resources/datasources regarding defining a datasource
+
+2.	CREATE TABLES
+	To create the tables on the defined datasource, run the maven profile to execute the process to create the required tables:
+		a.  to setup all sources at one time, run:   mvn pre-integration-test -P setupdatasources -Dmaven.test.skip=true
+		b.	to setup a specific source, run: mvn pre-integration-test -Ddatasource=<datasourcedir> -Psingleschema -Dmaven.test.skip=true 
+				where <datasourcedir> is the name of the directory for the datasource
+
+
 		
 
 ==========================================
 Executing the db integration tests
 ==========================================
 
-The default profile in the pom.xml is set to compile and run the test.   So running:  mvn clean install
-will compile and run the test.  
-It does not run and setup a datasource.   See above "Setting up a Datasource to be used during Testing".
+The default profile in the pom.xml is set to compile and run the test.   So running:  mvn install
+will run the test.  
+It will not setup a datasource.   See above "Setting up a Datasource to be used during Testing".
 
 
 
