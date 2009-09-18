@@ -1214,11 +1214,12 @@ public class EmbeddedConfigurationService extends EmbeddedBaseDQPService impleme
              * A Client Connection to DQP has been removed  
              */
             public void sessionClosed(MetaMatrixSessionInfo session) {
-                
             	String vdbName = session.getProductInfo(ProductInfoConstants.VIRTUAL_DB);
             	String vdbVersion = session.getProductInfo(ProductInfoConstants.VDB_VERSION);
-            	if (canDeleteVDB(vdbName, vdbVersion)) {
-            		runVDBCleanUp(vdbName, vdbVersion);
+            	if (vdbName != null && vdbVersion != null) {
+	            	if (canDeleteVDB(vdbName, vdbVersion)) {
+	            		runVDBCleanUp(vdbName, vdbVersion);
+	            	}
             	}
             }
         };

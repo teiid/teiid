@@ -96,9 +96,14 @@ public class ServerAdminFactory {
 				try {
 					return method.invoke(getTarget(), args);
 				} catch (InvocationTargetException e) {
-					if (method.getName().endsWith("restart") && ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) { //$NON-NLS-1$
-						bounceSystem(true);
-						return null;
+					if (ExceptionUtil.getExceptionOfType(e, CommunicationException.class) != null) {
+						// communication exception occurred, lose the old connection and try again.
+						this.target = null;
+						if (method.getName().endsWith("restart")) { //$NON-NLS-1$
+							bounceSystem(true);
+							return null;
+						}
+						continue;
 					}
 					throw e.getTargetException();
 				} catch (CommunicationException e) {
@@ -128,6 +133,7 @@ public class ServerAdminFactory {
 			} catch (InterruptedException e) {
 				throw new MetaMatrixRuntimeException(e);
 			}
+			
 			//we'll wait 30 seconds for the server to come back up
         	for (int i = 0; i < 15; i++) {
         		try {
