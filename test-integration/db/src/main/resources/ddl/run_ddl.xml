@@ -212,7 +212,7 @@
 		<echo>Admin account:  ${adminuser} url: ${adminurl}</echo>
 
 	   	<available file="${script.file}" property="script.file.exist"/>
-
+	   	
 		<fail unless="script.file.exist" message="${script.file} does not exist" />
 
 			 <sql     driver="${driver}"
@@ -224,11 +224,16 @@
 			    delimiter="${delim}"
 			    delimitertype="${delimtype}"
 			    autocommit="${autocommit}"
-			    onerror="${onerror}"  
-			 	classpath="${maven.runtime.classpath}"
-			 /> 
-	    	
-		
+			    onerror="${onerror}" >
+			 	<classpath>
+			   		<fileset dir="${lib.dir}">
+			   			<include name="*.jar" />
+			   			<include name="jbedsp-datadirect-0.0.1-SNAPSHOT.jar" />
+			   		</fileset>
+			   		<pathelement path="${maven.runtime.classpath}"/>
+			 	</classpath>
+			 
+			</sql>
 	    </target>
 	
 	<!--
@@ -238,12 +243,10 @@
 	   <target name="execute.tables.sql"  > 
 	   	<echo>Executing table script file ${script.file}</echo>
 		<echo>User account:  ${User} url: ${URL}</echo>
-		<echo>Classpath: ${maven.runtime.classpath}</echo>
 
 		<available file="${script.file}" property="script.file.exist"/>
 
 		<fail unless="script.file.exist" message="DDL ${script.file} does not exist" />
-
 
 			 <sql     driver="${driver}"
 		                    url="${URL}"
@@ -254,9 +257,16 @@
 			    delimiter="${delim}"
 			    delimitertype="${delimtype}"
 			    autocommit="${autocommit}"
-			    onerror="${onerror}"  
-			 	classpath="${maven.runtime.classpath}"
-			 /> 
+			    onerror="${onerror}" >
+			 	<classpath>
+			   		<fileset dir="${lib.dir}">
+			   			<include name="*.jar" />
+			   		</fileset>
+			   		<pathelement path="${maven.runtime.classpath}"/>
+			 	</classpath>
+			 
+
+			 </sql> 
 	    	
 	    </target>
 	
@@ -278,9 +288,17 @@
 				    delimiter="${delim}"
 				    delimitertype="${delimtype}"
 				    autocommit="${autocommit}"
-				    onerror="${onerror}"  
-				 	classpath="${maven.runtime.classpath}"
-				 /> 
+				    onerror="${onerror}"  >
+				 	<classpath>
+				   		<fileset dir="${lib.dir}">
+				   			<include name="*.jar" />
+				   		</fileset>
+				   		<pathelement path="${maven.runtime.classpath}"/>
+				 	</classpath>
+				 
+
+				 </sql> 
+		    	
 		    				
 		    </target>
 		

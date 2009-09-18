@@ -16,7 +16,7 @@
 	
 	
 	<target name="check">
-		<echo>Running for USERNAME = ${User}</echo>
+		
 		<echo>Perform check</echo>
 		<condition property="all">
 				<not>
@@ -41,6 +41,7 @@
  		<subant genericantfile="${resources.dir}/ddl/run_ddl.xml" inheritall="true"  >
  			<dirset dir="${resources.dir}/datasources/" />
  			<property name="sql.ddl.dir" value="${resources.dir}/ddl"/>
+			<property name="lib.dir" value="${basedir}/lib"/>
 
 		</subant>
 		
@@ -58,6 +59,8 @@
 		<ant inheritAll="true" antfile="${resources.dir}/ddl/run_ddl.xml">
 			<property name="basedir" value="${resources.dir}/datasources/${single}"/>
 			<property name="sql.ddl.dir" value="${resources.dir}/ddl"/>
+			<property name="lib.dir" value="${basedir}/lib"/>
+
 
 		</ant>
 
