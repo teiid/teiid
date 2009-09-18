@@ -382,7 +382,7 @@ void exportExtensionModule(String sourceName, String fileName) {
 
     contents = currentContext().internalAdmin.exportExtensionModule(sourceName);
 
-    if (contents) {
+    if (contents != null) {
     	ObjectConverterUtil.write(contents, fileName);	
     }
     else {
