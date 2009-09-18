@@ -108,7 +108,7 @@ public class SocketServerConnection implements ServerConnection {
     						return;
     					} 
     				} catch (InvalidSessionException e) {
-    					shutdown();
+    					shutdown(false);
     				} catch (MetaMatrixComponentException e) {
     					shutdown();
     				} 
@@ -143,17 +143,17 @@ public class SocketServerConnection implements ServerConnection {
 			Exception ex = null;
 			try {
 				SocketServerInstance instance = connectionFactory.getServerInstance(hostInfo, secure);
+				this.serverInstance = instance;
 				if (this.logonResult != null) {
 					ILogon newLogon = instance.getService(ILogon.class);
 					newLogon.assertIdentity(logonResult.getSessionToken());
 				}
 				this.serverDiscovery.connectionSuccessful(hostInfo);
-				this.serverInstance = instance;
 				return this.serverInstance;
 			} catch (IOException e) {
 				ex = e;
 			} catch (InvalidSessionException e) {
-				shutdown();
+				shutdown(false);
 				throw new CommunicationException(e,CommPlatformPlugin.Util.getString("SocketServerInstance.Connection_Error.Connect_Failed", hostInfo.getHostName(), String.valueOf(hostInfo.getPortNumber()), e.getMessage())); //$NON-NLS-1$
 			} catch (SingleInstanceCommunicationException e) { 
 				ex = e;
@@ -244,23 +244,28 @@ public class SocketServerConnection implements ServerConnection {
 	public <T> T getService(Class<T> iface) {
 		return (T)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new ServerConnectionInvocationHandler(iface));
 	}
-
 	public synchronized void shutdown() {
+		shutdown(true);
+	}
+	private synchronized void shutdown(boolean logoff) {
 		if (this.closed) {
 			return;
 		}
-		try {
-			//make a best effort to send the logoff
-			Future<?> writeFuture = this.logon.logoff();
-			writeFuture.get(5000, TimeUnit.MILLISECONDS);
-		} catch (InvalidSessionException e) {
-			//ignore
-		} catch (InterruptedException e) {
-			//ignore
-		} catch (ExecutionException e) {
-			//ignore
-		} catch (TimeoutException e) {
-			//ignore
+		
+		if (logoff) {
+			try {
+				//make a best effort to send the logoff
+				Future<?> writeFuture = this.logon.logoff();
+				writeFuture.get(5000, TimeUnit.MILLISECONDS);
+			} catch (InvalidSessionException e) {
+				//ignore
+			} catch (InterruptedException e) {
+				//ignore
+			} catch (ExecutionException e) {
+				//ignore
+			} catch (TimeoutException e) {
+				//ignore
+			}
 		}
 		
 		closeServerInstance();

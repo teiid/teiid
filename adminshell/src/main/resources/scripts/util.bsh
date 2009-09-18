@@ -2,6 +2,7 @@ import java.io.*;
 import org.teiid.adminapi.*;
 import com.metamatrix.core.util.*;
 import java.lang.reflect.*;
+import com.metamatrix.common.comm.exception.*;
 
 debug=false;
 
@@ -194,9 +195,22 @@ class ExceptionHandler implements InvocationHandler{
 				throw ex;
 			}
 		} catch(Throwable t) {
-			msg = t.getMessage();
-			if (msg != null) {
-				print(msg);
+			if (interactive()) {
+				msg = t.getMessage();
+				if (msg != null) {
+					print(msg);
+				}
+				t = t.getCause();
+				if (t instanceof SingleInstanceCommunicationException) {
+					print("Lost Connection; disconnecting..");
+					disconnect();				
+				}
+				debug(t);
+			}
+			else {
+				print("Lost Connection; disconnecting..");
+				disconnect();								
+				throw t;
 			}
 		}
 		return null;
