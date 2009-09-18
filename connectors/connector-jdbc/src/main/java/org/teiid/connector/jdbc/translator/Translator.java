@@ -566,7 +566,7 @@ public class Translator {
                     if(results.wasNull()) {
                         return null;
                     } 
-                    return new Double(value);
+                    return Double.valueOf(value);
                 }                
                 case BIGDECIMAL_CODE:  {
                     return results.getBigDecimal(columnIndex); 
@@ -583,7 +583,7 @@ public class Translator {
                     if(results.wasNull()) {
                         return null;
                     } 
-                    return new Float(value);
+                    return Float.valueOf(value);
                 }
                 case TIME_CODE: {
             		return results.getTime(columnIndex, getDatabaseCalendar());
