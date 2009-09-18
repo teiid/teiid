@@ -4,13 +4,12 @@
  */
 package org.teiid.test.framework.connection;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -28,7 +27,6 @@ public class ConnectionStrategyFactory {
 	
 	    private static ConnectionStrategyFactory _instance = null;
 	    private ConnectionStrategy strategy = null;
-	    private Properties config = null;
 	    private static Map<String, ConnectionStrategy> sources = null;
 
     
@@ -39,9 +37,8 @@ public class ConnectionStrategyFactory {
 	    public static synchronized ConnectionStrategyFactory getInstance()   {
 	        if (_instance == null) {
 	            _instance = new ConnectionStrategyFactory();
-	            Properties p = _instance.loadConfiguration();
 	            try {
-					_instance.initialize(p);
+					_instance.initialize();
 				} catch (QueryTestFailedException e) {
 					// TODO Auto-generated catch block
 					throw new TransactionRuntimeException(e);
@@ -87,34 +84,16 @@ public class ConnectionStrategyFactory {
         	
         	strategy.shutdown();
         	strategy = null;
-        	config = null;
-
-	    }
-	    
-	    public Properties getConfiguration() {
-	        return this.config;
+ 
 	    }
 	    
 	    public ConnectionStrategy getConnectionStrategy() {
 	    	return this.strategy;
 	    }
 	    
-	    private Properties loadConfiguration() {
-	    	init();
-	    	
-	        String filename = System.getProperty(CONFIG_FILE);
-	        if (filename == null) {
-	            filename = DEFAULT_CONFIG_FILE_NAME;
-	        }       
-	        
-	        return loadProperties(filename);
-
-	    } 
-	    
-	    private void initialize(Properties props) throws QueryTestFailedException  {
-	        this.config = props;
-	        
-	        this.strategy = create(props);	                     
+	    private void initialize() throws QueryTestFailedException  {
+	        init();
+	        this.strategy = create(ConfigPropertyLoader.getProperties());	                     
 
 	    }
 	        
@@ -203,22 +182,22 @@ public class ConnectionStrategyFactory {
 	    
 	    }
 	    
-		private final Properties loadProperties(String filename) {
-			Properties props = null;
-		    try {
-		        InputStream in = ConnectionStrategyFactory.class.getResourceAsStream("/"+filename);
-		        if (in != null) {
-		        	props = new Properties();
-		        	props.load(in);
-		        	return props;
-		        }
-		        else {
-		        	throw new RuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
-		        }
-		    } catch (IOException e) {
-		        throw new RuntimeException("Error loading properties from file '"+filename+ "'" + e.getMessage());
-		    }
-		}
+//		private final Properties loadProperties(String filename) {
+//			Properties props = null;
+//		    try {
+//		        InputStream in = ConnectionStrategyFactory.class.getResourceAsStream("/"+filename);
+//		        if (in != null) {
+//		        	props = new Properties();
+//		        	props.load(in);
+//		        	return props;
+//		        }
+//		        else {
+//		        	throw new RuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
+//		        }
+//		    } catch (IOException e) {
+//		        throw new RuntimeException("Error loading properties from file '"+filename+ "'" + e.getMessage());
+//		    }
+//		}
 		
 		public static void main(String[] args) {
 			ConnectionStrategyFactory cf = ConnectionStrategyFactory.getInstance();

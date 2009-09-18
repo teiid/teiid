@@ -220,7 +220,7 @@ public abstract class ConnectionStrategy {
 		        	AdminOptions ao = new AdminOptions(AdminOptions.OnConflict.OVERWRITE);
 		        	ao.addOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR);
 		        	
-		        	api.addConnectorBinding(ds.getName(), ds.getType(), ds.getProperties(), ao);
+		        	api.addConnectorBinding(ds.getName(), ds.getConnectorType(), ds.getProperties(), ao);
 		        	
 		        	api.assignBindingToModel(ds.getName(), vdb.getName(), vdb.getVDBVersion(), m.getName());
 		        	

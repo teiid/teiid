@@ -16,29 +16,32 @@ public class ConfigPropertyLoader {
 		 * The default config file to use when #CONFIG_FILE system property isn't set
 		 */
 		private static final String DEFAULT_CONFIG_FILE_NAME="default-config.properties";
-
-		public static Properties loadConfigurationProperties() {
-			return loadConfiguration();
-		}
 		
-	    private static Properties loadConfiguration() {
+		private static Properties props = null;
+
+		public synchronized static void loadConfigurationProperties() {
 	        String filename = System.getProperty(CONFIG_FILE);
 	        if (filename == null) {
 	            filename = DEFAULT_CONFIG_FILE_NAME;
 	        }       
 	        
-	        return loadProperties(filename);
-
-	    } 
+	        loadProperties(filename);		}
+		
+		public static String getProperty(String key) {
+			return getProperties().getProperty(key);
+		}
+		
+		public synchronized static Properties getProperties() {
+			return props;
+		}
 	    
-		private static Properties loadProperties(String filename) {
-			Properties props = null;
+		private static void loadProperties(String filename) {
+			props = null;
 		    try {
-		        InputStream in = ConnectionStrategyFactory.class.getResourceAsStream("/"+ filename);
+		        InputStream in = ConfigPropertyLoader.class.getResourceAsStream("/"+ filename);
 		        if (in != null) {
 		        	props = new Properties();
 		        	props.load(in);
-		        	return props;
 		        }
 		        else {
 		        	throw new RuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
@@ -49,12 +52,13 @@ public class ConfigPropertyLoader {
 		}
 		
 		public static void main(String[] args) {
-			Properties props = ConfigPropertyLoader.loadConfigurationProperties();
-			if (props == null || props.isEmpty()) {
+			ConfigPropertyLoader.loadConfigurationProperties();
+			Properties p = ConfigPropertyLoader.getProperties();
+			if (p == null || p.isEmpty()) {
 	        	throw new RuntimeException("Failed to load config properties file");
 		
 			}
-			System.out.println("Loaded Config Properties " + props.toString());
+			System.out.println("Loaded Config Properties " + p.toString());
 
 		}
 	

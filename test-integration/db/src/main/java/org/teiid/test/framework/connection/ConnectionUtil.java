@@ -15,9 +15,7 @@ public class ConnectionUtil {
 	public static final Connection getSource(String identifier)
 			throws QueryTestFailedException {
 		if (identifier != null) {
-			Properties props = ConfigPropertyLoader
-					.loadConfigurationProperties();
-			String mappedName = props.getProperty(identifier);
+			String mappedName = ConfigPropertyLoader.getProperty(identifier);
 
 			if (mappedName == null) {
 				throw new TransactionRuntimeException("Identifier mapping "
@@ -49,9 +47,7 @@ public class ConnectionUtil {
 	public static final XAConnection getXASource(String identifier)
 			throws QueryTestFailedException {
 		if (identifier != null) {
-			Properties props = ConfigPropertyLoader
-					.loadConfigurationProperties();
-			String mappedName = props.getProperty(identifier);
+			String mappedName = ConfigPropertyLoader.getProperty(identifier);
 
 			if (mappedName == null) {
 				throw new TransactionRuntimeException("Identifier mapping "

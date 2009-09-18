@@ -19,7 +19,7 @@ import org.teiid.test.framework.connection.ConnectionStrategy;
 
 public abstract class TransactionContainer {
 	
-		private boolean debug = true;
+		private boolean debug = false;
 		
 	   protected Properties props;
 	   protected ConnectionStrategy connStrategy;
@@ -45,6 +45,24 @@ public abstract class TransactionContainer {
 	    	}
 	    	return rtn;
 	    } 
+	    
+	    
+	    /**
+	     * Returns true when what the test says it needs, in regards to types of data sources (i.e., mysql, oracle,etc), 
+	     * is found in the list of defined datatypes
+	     * An example of returning false would be the following:
+	     * <li>The defined datasources consist of oracle and sqlserver</li>
+	     * <li>The test says it only supports mysql and oracle</li>
+	     * Then the required datasources for the test are not available and therefore, the
+	     * test cannot run.
+	     * 
+	     * @return true if the required datasources are available
+	     *
+	     * @since
+	     */
+	    protected boolean hasRequiredSources() {
+	    	return true;
+	    }
 	    	    
 	    protected void before(TransactionQueryTest test){}
 	    
@@ -53,9 +71,13 @@ public abstract class TransactionContainer {
 	    public void runTransaction(TransactionQueryTest test) {
 	    	
 	    	if (turnOffTest(test.getNumberRequiredDataSources())) {
-	    		detail("Transaction test: " + test.getTestName() + " will not be run");
+	    		detail("Turn Off Transaction test: " + test.getTestName() + ", doesn't have the number of required datasources");
 		        return;
 
+	    	} else if (!hasRequiredSources()) {
+	    		detail("Turn Off Transaction test: " + test.getTestName() + ",  required datasource types are not available");
+		        return;
+	    		
 	    	}
 	    	
 	    	detail("Start transaction test: " + test.getTestName());

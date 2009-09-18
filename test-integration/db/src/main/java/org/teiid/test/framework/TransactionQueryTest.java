@@ -59,6 +59,9 @@ public interface TransactionQueryTest {
 
      int getNumberRequiredDataSources();
      
+     
+     
+     
      /**
       * Called by the {@link TransactionContainer} prior to testcase processing so that
       * the datasource data can be setup for the specific testcase.

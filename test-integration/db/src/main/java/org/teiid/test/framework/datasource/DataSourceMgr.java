@@ -34,8 +34,10 @@ import com.metamatrix.common.xml.XMLReaderWriterImpl;
  * 
  */
 public class DataSourceMgr {
+	
 
-	static final String DIRECTORY = "datasources/";
+
+	static final String RELATIVE_DIRECTORY = "datasources/";
 	static final String DATASOURCE_MAPPING_FILE = "datasource_mapping.xml";
 
 	private static DataSourceMgr _instance = null;
@@ -44,9 +46,11 @@ public class DataSourceMgr {
 
 	private Map<String, DataSource> allDatasourcesMap = new HashMap<String, DataSource>();  // key=datasource name
 	
-	private Map<String, DataSource> modelToDatasourceMap = new HashMap<String, DataSource>();  // key=modelname
+	private Map<String, DataSource> modelToDatasourceMap = new HashMap<String, DataSource>();  // key=modelname + "_" + datasourcename
+																								// key=modelname + "_" + groupname
 	
-	private Set<String> usedDataSources = new HashSet<String>();
+	// this set is use to track datasources that have already been assigned
+	private Set<String> assignedDataSources = new HashSet<String>();
 
 
 	private DataSourceMgr() {
@@ -73,6 +77,55 @@ public class DataSourceMgr {
 		return allDatasourcesMap.size();
 	}
 	
+	/**
+	 * 
+	 * 
+	 * @param dsidentifier is the DataSource identifier that is defined in the config properties
+	 * @param excludeDSBitMask is a bit mask that indicates with DataSources to be excluded
+	 * @param numDSRequired indicates the number of datasources that are required for the test
+	 * @return
+	 *
+	 * @since
+	 */
+	public boolean hasAvailableDataSource(String dsidentifier, int excludeDSBitMask) {
+		
+		// no datasources are excluded
+		if (excludeDSBitMask == DataSource.ExclusionTypeBitMask.NONE_EXCLUDED) {			
+			return true;
+		}
+		
+		if (dstypeMap.containsKey(dsidentifier)) {
+			Map datasources = dstypeMap.get(dsidentifier);
+			Iterator<DataSource> it= datasources.values().iterator();
+			while(it.hasNext()) {
+				DataSource ds = it.next();
+				int dsbitmask = ds.getBitMask();
+				
+				if ((excludeDSBitMask & dsbitmask) == dsbitmask) {
+					
+				} else {
+					return true;
+				}
+				
+			}
+			return false;
+		} else {
+			DataSource ds = allDatasourcesMap.get(dsidentifier);
+			if (ds == null) {
+				return false;
+			}
+			
+			int dsbitmask = ds.getBitMask();
+			if ((excludeDSBitMask & dsbitmask) == dsbitmask) {
+				return false;
+			} 
+			
+			return true;
+			
+		}
+
+	}
+	
 	public DataSource getDatasource(String datasourceid, String modelName)
 			throws QueryTestFailedException {
 		DataSource ds = null;
@@ -81,33 +134,57 @@ public class DataSourceMgr {
 		// this is so the next time this combination is requested,
 		// the same datasource is returned to ensure when consecutive calls during the process
 		// corresponds to the same datasource
-		String key = modelName + "_"+datasourceid;
+		String key = null;
 		
+		key = modelName + "_"+datasourceid;
+		
+		// if the datasourceid represents a group name, then use the group name
+		// so that all future request using that group name for a specified model
+		// will use the same datasource
 		if (modelToDatasourceMap.containsKey(key)) {
 			return modelToDatasourceMap.get(key);
 		} 
+
+		
 		if (dstypeMap.containsKey(datasourceid)) {
 
 			Map datasources = dstypeMap.get(datasourceid);
 			Iterator<DataSource> it= datasources.values().iterator();
+			
+			// need to go thru all the datasources to know if any has already been assigned
+			// because the datasourceid passed in was a group name
 			while(it.hasNext()) {
 				DataSource checkit = it.next();
-				if (!usedDataSources.contains(checkit.getName())) {
-					usedDataSources.add(checkit.getName());
-					ds = checkit;
-					break;
+				String dskey = modelName + "_"+checkit.getName();
+				if (modelToDatasourceMap.containsKey(dskey)) {
+					return modelToDatasourceMap.get(dskey);
+				} else if (ds == null) {
+					if (!assignedDataSources.contains(checkit.getName())) {
+						ds = checkit;
+						key = dskey;
+					}
+
 				}
 			}
+			
+			if (ds != null) {
+				assignedDataSources.add(ds.getName());
+				
+				modelToDatasourceMap.put(key, ds);
+				
+			}
+
 
 		} else {
 			ds = allDatasourcesMap.get(datasourceid);
+
 		}
 		if (ds == null) {
 			throw new QueryTestFailedException("DatasourceID " + datasourceid
 					+ " is not a defined datasource in the mappings file ");
 
 		}
-		
+
 		modelToDatasourceMap.put(key, ds);
 		return ds;
 
@@ -145,7 +222,6 @@ public class DataSourceMgr {
 		
 		for (Iterator<Element> it = rootElements.iterator(); it.hasNext();) {
 			Element type = it.next();
-//			System.out.println("Loading ds transactional type  " + type.getName());
 			String typename = type.getAttributeValue(Property.Attributes.NAME);
 
 			List<Element> typeElements = type.getChildren();
@@ -154,7 +230,6 @@ public class DataSourceMgr {
 
 				for (Iterator<Element> typeit = typeElements.iterator(); typeit.hasNext();) {
 					Element e = typeit.next();
-//					System.out.println("Loading ds type  " + e.getName());
 					addDataSource(e, typename, datasources);				
 				}	
 				dstypeMap.put(typename, datasources);
@@ -170,7 +245,7 @@ public class DataSourceMgr {
 					"No Datasources were found in the mappings file");
 		}
 		
-		System.out.println("Number of datasource types loaded " + dstypeMap.size());
+		System.out.println("Number of datasource groups loaded " + dstypeMap.size());
 		System.out.println("Number of total datasource mappings loaded " + allDatasourcesMap.size());
 
 
@@ -182,7 +257,7 @@ public class DataSourceMgr {
 			Properties props = getProperties(element);
 			
 			String dir = props.getProperty(DataSource.DIRECTORY);
-			String dsfile = DIRECTORY + dir + "/connection.properties";
+			String dsfile = RELATIVE_DIRECTORY + dir + "/connection.properties";
 			Properties dsprops = loadProperties(dsfile);
 			if (dsprops != null) {
 				props.putAll(dsprops);
@@ -236,13 +311,13 @@ public class DataSourceMgr {
 	private static InputStream getInputStream() {
 
 		InputStream in = DataSourceMgr.class.getResourceAsStream("/"
-				+ DIRECTORY + DATASOURCE_MAPPING_FILE);
+				+ RELATIVE_DIRECTORY + DATASOURCE_MAPPING_FILE);
 		if (in != null) {
 
 			return in;
 		} else {
 			throw new RuntimeException(
-					"Failed to load datasource mapping file '" + DIRECTORY
+					"Failed to load datasource mapping file '" + RELATIVE_DIRECTORY
 							+ DATASOURCE_MAPPING_FILE + "'");
 		}
 
@@ -270,17 +345,35 @@ public class DataSourceMgr {
 	}
 
 	public static void main(String[] args) {
+		
+		
 		DataSourceMgr mgr = DataSourceMgr.getInstance();
 
 		try {
-			DataSource ds1 = mgr.getDatasource("ds_mysql5", "model1");
+			DataSource ds1 = mgr.getDatasource("ds_mysql", "model1");
 			
-			DataSource ds2 = mgr.getDatasource("ds_mysql5", "model1");
+			DataSource ds2 = mgr.getDatasource("nonxa", "model1");
 			if (ds1 != ds2) {
 				throw new RuntimeException("Datasources are not the same");
 			}
-			System.out.println("Value for ds_mysql5: "
-					+ mgr.getDatasourceProperties("ds_mysql5", "model1"));
+			System.out.println("Value for ds_mysql: "
+					+ mgr.getDatasourceProperties("ds_mysql", "model1"));
+			
+			boolean shouldbeavail = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE);
+			if (!shouldbeavail) {
+				throw new RuntimeException("Should have found one available");
+			}
+			
+			shouldbeavail = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE | DataSource.ExclusionTypeBitMask.MYSQL);
+			if (!shouldbeavail) {
+				throw new RuntimeException("Should have found one available");
+			}
+
+			
+			boolean shouldnot = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE | DataSource.ExclusionTypeBitMask.MYSQL | DataSource.ExclusionTypeBitMask.SQLSERVER);
+			if (shouldnot) {
+				throw new RuntimeException("Should NOT have found one available");
+			}
 		} catch (QueryTestFailedException e) {
 			e.printStackTrace();
 		}
