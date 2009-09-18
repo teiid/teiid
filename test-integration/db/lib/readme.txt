@@ -1,0 +1,1 @@
+# This directory is where 3rd party jdbc drivers should be placed.  
