@@ -109,7 +109,7 @@ public abstract class AbstractQueryTest {
             assertNotNull(this.internalConnection);
             assertTrue(!this.internalConnection.isClosed());
             boolean result = false;
-            if (params != null) {
+            if (params != null && params.length > 0) {
             	if (sql.startsWith("exec ")) { //$NON-NLS-1$
                     sql = sql.substring(5);
 	                this.internalStatement = this.internalConnection.prepareCall("{?=call "+sql+"}"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -359,12 +359,12 @@ public abstract class AbstractQueryTest {
         }    	
     }
     
-    static String read(BufferedReader r) throws IOException {
+   protected static String read(BufferedReader r, boolean casesensitive) throws IOException {
     	StringBuffer result = new StringBuffer();
     	String s = null;
     	try {
 	    	while ((s = r.readLine()) != null) {
-	    		result.append(s.trim());
+	    		result.append(  (casesensitive ? s.trim() : s.trim().toLowerCase()) );
 	    		result.append("\n"); //$NON-NLS-1$
 	    	}
     	} finally {
@@ -373,8 +373,8 @@ public abstract class AbstractQueryTest {
     	return result.toString();
     }
 
-    void compareResults(BufferedReader resultReader, BufferedReader expectedReader) throws IOException {
-    	assertEquals(read(expectedReader), read(resultReader));
+    protected void compareResults(BufferedReader resultReader, BufferedReader expectedReader) throws IOException {
+    	assertEquals(read(expectedReader, true) , read(resultReader, true));
     }
     
     public void printResults() {
