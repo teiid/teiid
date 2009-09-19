@@ -19,6 +19,7 @@ import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
+import org.teiid.test.util.StringUtil;
 
 import com.metamatrix.common.xml.XMLReaderWriter;
 import com.metamatrix.common.xml.XMLReaderWriterImpl;
@@ -35,7 +36,13 @@ import com.metamatrix.common.xml.XMLReaderWriterImpl;
  */
 public class DataSourceMgr {
 	
-
+	/**
+	 * The USE_DATASOURCES_PROP is a comma delimited system property that can be used to limit the
+	 * datasources that are in use for the tests.   Use the name defined in the datasource_mapping.xml.
+	 * This enables one to test between certain datasources without having to remove 
+	 * connection.properties files.
+	 */
+	static final String USE_DATASOURCES_PROP = "usedataources";
 
 	static final String RELATIVE_DIRECTORY = "datasources/";
 	static final String DATASOURCE_MAPPING_FILE = "datasource_mapping.xml";
@@ -71,6 +78,17 @@ public class DataSourceMgr {
 
 		}
 		return _instance;
+	}
+	
+	public static synchronized void reset() {
+		
+		_instance.dstypeMap.clear();
+		_instance.allDatasourcesMap.clear();
+		_instance.modelToDatasourceMap.clear();
+		_instance.assignedDataSources.clear();
+		
+		_instance = null;
+		
 	}
 	
 	public int numberOfAvailDataSources() {
@@ -172,7 +190,7 @@ public class DataSourceMgr {
 				
 				modelToDatasourceMap.put(key, ds);
 				
-			}
+			} 
 
 
 		} else {
@@ -200,6 +218,14 @@ public class DataSourceMgr {
 
 	private void loadDataSourceMappings()
 			throws QueryTestFailedException {
+		
+		Set<String> limitds = new HashSet<String>();
+        String limitdsprop = System.getProperty(USE_DATASOURCES_PROP);
+        if (limitdsprop != null && limitdsprop.length() > 0) { 
+        	List<String> dss = StringUtil.split(limitdsprop, ",");
+        	limitds.addAll(dss);
+        }
+
 
 		Document doc = null;
 		XMLReaderWriter readerWriter = new XMLReaderWriterImpl();
@@ -230,7 +256,7 @@ public class DataSourceMgr {
 
 				for (Iterator<Element> typeit = typeElements.iterator(); typeit.hasNext();) {
 					Element e = typeit.next();
-					addDataSource(e, typename, datasources);				
+					addDataSource(e, typename, datasources, limitds);				
 				}	
 				dstypeMap.put(typename, datasources);
 				allDatasourcesMap.putAll(datasources);
@@ -252,8 +278,14 @@ public class DataSourceMgr {
 
 	}
 	
-	private static void addDataSource(Element element, String type, Map<String, DataSource> datasources) {
+	private static void addDataSource(Element element, String group, Map<String, DataSource> datasources, Set<String> include) {
 			String name = element.getAttributeValue(Property.Attributes.NAME);
+			
+			if (include.size() > 0) {
+				if (!include.contains(name)) {
+					return;
+				}
+			}
 			Properties props = getProperties(element);
 			
 			String dir = props.getProperty(DataSource.DIRECTORY);
@@ -262,7 +294,7 @@ public class DataSourceMgr {
 			if (dsprops != null) {
 				props.putAll(dsprops);
 				DataSource ds = new DataSource(name,
-						type,
+						group,
 						props);
 				datasources.put(ds.getName(), ds);
 				System.out.println("Loaded datasource " + ds.getName());
@@ -350,14 +382,14 @@ public class DataSourceMgr {
 		DataSourceMgr mgr = DataSourceMgr.getInstance();
 
 		try {
-			DataSource ds1 = mgr.getDatasource("ds_mysql", "model1");
+			DataSource ds1 = mgr.getDatasource("ds_oracle", "model1");
 			
 			DataSource ds2 = mgr.getDatasource("nonxa", "model1");
 			if (ds1 != ds2) {
 				throw new RuntimeException("Datasources are not the same");
 			}
 			System.out.println("Value for ds_mysql: "
-					+ mgr.getDatasourceProperties("ds_mysql", "model1"));
+					+ mgr.getDatasourceProperties("ds_oracle", "model1"));
 			
 			boolean shouldbeavail = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE);
 			if (!shouldbeavail) {
@@ -377,7 +409,36 @@ public class DataSourceMgr {
 		} catch (QueryTestFailedException e) {
 			e.printStackTrace();
 		}
+		
+		DataSourceMgr.reset();
+		
+		System.setProperty(DataSourceMgr.USE_DATASOURCES_PROP, "ds_sqlserver");
+		
+		mgr = DataSourceMgr.getInstance();
 
+		try {
+			
+			DataSource dsfind = mgr.getDatasource("ds_sqlserver", "model1");
+			if (dsfind == null) {
+				throw new RuntimeException("The special included datasource was not found");
+				
+			}
+			System.out.println("Datasource :" + dsfind.getName() + " was found");
+			
+			try {
+				DataSource dsnotfound = mgr.getDatasource("ds_oracle", "model1");
+				if (dsnotfound != null) {
+					throw new RuntimeException("The special excluded datasource was found");
+					
+				}
+			} catch (QueryTestFailedException qtf) {
+			
+				System.out.println("Datasource:  ds_oracle: was not found and should not have");
+			}
+
+		} catch (QueryTestFailedException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

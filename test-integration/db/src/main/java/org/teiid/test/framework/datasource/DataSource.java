@@ -48,10 +48,10 @@ public class DataSource {
 		return this.props;
 	}
 	
-	public boolean isOfDBType(String type) {
-		return (this.dbtype.equalsIgnoreCase(type));
+	public String getDBType() {
+		return this.dbtype;
 	}
-	
+
 	public int getBitMask() {
 		return this.bitMask;
 	}
