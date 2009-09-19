@@ -101,6 +101,13 @@
 		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
 
 		          </additionalClasspathElements>
+		          <systemProperties>
+		            <property>
+		              <name>usedatasources</name>
+		              <value>${usedatasources}</value>
+		            </property>
+		          </systemProperties>
+
 <!--
 					<forkMode>always</forkMode>
 					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>

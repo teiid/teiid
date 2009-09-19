@@ -42,7 +42,7 @@ public class DataSourceMgr {
 	 * This enables one to test between certain datasources without having to remove 
 	 * connection.properties files.
 	 */
-	static final String USE_DATASOURCES_PROP = "usedataources";
+	static final String USE_DATASOURCES_PROP = "usedatasources";
 
 	static final String RELATIVE_DIRECTORY = "datasources/";
 	static final String DATASOURCE_MAPPING_FILE = "datasource_mapping.xml";
@@ -222,6 +222,7 @@ public class DataSourceMgr {
 		Set<String> limitds = new HashSet<String>();
         String limitdsprop = System.getProperty(USE_DATASOURCES_PROP);
         if (limitdsprop != null && limitdsprop.length() > 0) { 
+        	System.out.println("Limit datasources to: " + limitdsprop);
         	List<String> dss = StringUtil.split(limitdsprop, ",");
         	limitds.addAll(dss);
         }
@@ -283,6 +284,7 @@ public class DataSourceMgr {
 			
 			if (include.size() > 0) {
 				if (!include.contains(name)) {
+					System.out.println("Excluded datasource: " + name);
 					return;
 				}
 			}
