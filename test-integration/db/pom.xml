@@ -95,8 +95,16 @@
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
+		          <additionalClasspathElements>
+		                <additionalClasspathElement>${basedir}/lib/classes12_g.jar</additionalClasspathElement>
+		                <additionalClasspathElement>${basedir}/lib/sqljdbc4.jar</additionalClasspathElement>
+		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
+
+		          </additionalClasspathElements>
+<!--
 					<forkMode>always</forkMode>
 					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+					-->
 					<includes>
 			<!--			<include>**/*TestCase.java</include> -->
 						<include>**/*Test.java</include>

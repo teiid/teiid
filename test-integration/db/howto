@@ -39,7 +39,7 @@ Setting up a Datasource to be used during Testing
 2.	CREATE TABLES
 	To create the tables on the defined datasource, run the maven profile to execute the process to create the required tables:
 		a.  to setup all sources at one time, run:   mvn pre-integration-test -P setupdatasources -Dmaven.test.skip=true
-		b.	to setup a specific source, run: mvn pre-integration-test -Ddatasource=<datasourcedir> -Psingleschema -Dmaven.test.skip=true 
+		b.	to setup a specific source, run: mvn pre-integration-test -Ddatasource=<datasourcedir> -Psingledatasource -Dmaven.test.skip=true 
 				where <datasourcedir> is the name of the directory for the datasource
 
 
