@@ -14,9 +14,9 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
 /** 
  * A common SingleSource test case among many different transaction stuff. 
  */
-public class SingleSourceTransactionTest extends BaseAbstractTransactionTestCase {
+public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
     
-    public SingleSourceTransactionTest(String name) {
+    public SingleSourceTransaction(String name) {
         super(name);
     }
     
@@ -51,9 +51,9 @@ public class SingleSourceTransactionTest extends BaseAbstractTransactionTestCase
         System.out.println("Complete CommonTransactionTest.testSingleSourceSelect");
 
     }
-    
-    
-    /**
+
+
+	/**
      * Sources = 1
      * Commands = 1, Update
      * Batching = Full Processing, Single Connector Batch

@@ -15,6 +15,7 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
+import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 import org.teiid.test.framework.datasource.DataSourceSetupFactory;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
@@ -63,13 +64,13 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
         if (this.executionProperties != null) {  
              if (stmt instanceof com.metamatrix.jdbc.api.Statement) {
                 com.metamatrix.jdbc.api.Statement statement = (com.metamatrix.jdbc.api.Statement)stmt;
-                String txnautowrap = this.executionProperties.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
+                String txnautowrap = this.executionProperties.getProperty(ConnectionStrategy.TXN_AUTO_WRAP);
                 if (txnautowrap != null) {
-                     statement.setExecutionProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, txnautowrap);
+                     statement.setExecutionProperty(ConnectionStrategy.TXN_AUTO_WRAP, txnautowrap);
                 }
                 
-                if (this.executionProperties.getProperty(ExecutionProperties.PROP_FETCH_SIZE) != null) {
-                    statement.setExecutionProperty(ExecutionProperties.PROP_FETCH_SIZE, this.executionProperties.getProperty(ExecutionProperties.PROP_FETCH_SIZE));
+                if (this.executionProperties.getProperty(ConnectionStrategy.FETCH_SIZE) != null) {
+                    statement.setExecutionProperty(ConnectionStrategy.FETCH_SIZE, this.executionProperties.getProperty(ConnectionStrategy.FETCH_SIZE));
                 }
             }
         }

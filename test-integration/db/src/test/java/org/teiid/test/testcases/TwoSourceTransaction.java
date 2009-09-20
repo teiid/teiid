@@ -10,7 +10,6 @@ import java.util.ArrayList;
 
 import org.teiid.test.framework.AbstractQueryTransactionTest;
 import org.teiid.test.framework.QueryExecution;
-import org.teiid.test.framework.datasource.DataSource;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -19,9 +18,9 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
 /** 
  * Test cases that require 2 datasources 
  */
-public class TwoSourceTransactionTest extends BaseAbstractTransactionTestCase {
+public class TwoSourceTransaction extends SingleSourceTransaction {
     
-    public TwoSourceTransactionTest(String name) {
+    public TwoSourceTransaction(String name) {
         super(name);
     }
         
