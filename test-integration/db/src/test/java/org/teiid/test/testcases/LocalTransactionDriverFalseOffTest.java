@@ -14,12 +14,12 @@ import org.teiid.test.framework.connection.ConnectionStrategy;
  * Settings:
  * 
  * -	Using Driver
- * -	Autocommit = True
+ * -	Autocommit = False
  * -	TxnAutoWrap = Off
  */
-public class LocalTransactionDriverTrueOffTest extends TwoSourceTransactionScenarios {
+public class LocalTransactionDriverFalseOffTest extends TwoSourceTransactionScenarios {
           
-    public LocalTransactionDriverTrueOffTest(String name) {
+    public LocalTransactionDriverFalseOffTest(String name) {
 		super(name);
 	}
 
@@ -27,11 +27,18 @@ public class LocalTransactionDriverTrueOffTest extends TwoSourceTransactionScena
 	protected void setUp() throws Exception {
     	
     	System.setProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);
-    	System.setProperty(ConnectionStrategy.AUTOCOMMIT, "true");
+    	System.setProperty(ConnectionStrategy.AUTOCOMMIT, "false");
     	System.setProperty(ConnectionStrategy.TXN_AUTO_WRAP, "off");
- //   	System.setProperty(ConnectionStrategy.FETCH_SIZE, "true");
+ //   	System.setProperty(ConnectionStrategy.FETCH_SIZE, "20");
     	
 		
-	}      
-      
+	}
+	
+    
+ 
+	
+
+
+ 
+     
 }

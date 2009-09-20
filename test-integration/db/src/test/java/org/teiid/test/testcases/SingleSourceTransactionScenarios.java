@@ -6,6 +6,7 @@ package org.teiid.test.testcases;
 
 import org.teiid.test.framework.AbstractQueryTransactionTest;
 import org.teiid.test.framework.QueryExecution;
+import org.teiid.test.framework.TransactionQueryTest;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -14,9 +15,9 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
 /** 
  * A common SingleSource test case among many different transaction stuff. 
  */
-public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
+public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTestCase {
     
-    public SingleSourceTransaction(String name) {
+    public SingleSourceTransactionScenarios(String name) {
         super(name);
     }
     
@@ -48,7 +49,7 @@ public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
         
         // there is nothing to verify here..
         
-        System.out.println("Complete CommonTransactionTest.testSingleSourceSelect");
+        System.out.println("Complete testSingleSourceSelect");
 
     }
 
@@ -78,7 +79,7 @@ public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
         getTransactionContainter().runTransaction(userTxn);       
         
         
-        System.out.println("Complete CommonTransactionTest.testSingleSourceUpdate");
+        System.out.println("Complete testSingleSourceUpdate");
 
     }
     
@@ -107,7 +108,7 @@ public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
         getTransactionContainter().runTransaction(userTxn);
         
          
-        System.out.println("Complete CommonTransactionTest.testSingleSourcePreparedUpdate");
+        System.out.println("Complete testSingleSourcePreparedUpdate");
 
     }    
     
@@ -148,7 +149,7 @@ public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
         getTransactionContainter().runTransaction(userTxn);      
 
         
-        System.out.println("Complete CommonTransactionTest.testSingleSourceMultipleCommands");
+        System.out.println("Complete testSingleSourceMultipleCommands");
 
     }
         
@@ -172,20 +173,20 @@ public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
         // run test
         getTransactionContainter().runTransaction(userTxn);      
         
-        System.out.println("Complete CommonTransactionTest.testSingleSourcePartialProcessing");
+        System.out.println("Complete testSingleSourcePartialProcessing");
 
     }   
     
-    /**
+	   /**
      * Sources = 1
      * Commands = multiple - Success
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */
     
-    public void xtestSingleSourceMultipleCommandsExplicitRollback() throws Exception {
+    public void testSingleSourceMultipleCommandsExplicitRollback() throws Exception {
         // now it's empty
-        AbstractQueryTest test = new QueryExecution(this.getSource("pm1"));
+        AbstractQueryTest test = new QueryExecution(getSource("pm1"));
         		//getSource("pm1"));
         test.execute("select * from g1 where e1 >= 200 and e1 < 220");
         test.assertRowCount(0);
@@ -220,20 +221,21 @@ public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
 
         };        
         
+        
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-
         
         System.out.println("Complete testSingleSourceMultipleCommandsExplicitRollback");
+
     } 
-    
+
     /**
      * Sources = 1
      * Commands = multiple - Success
      * Batching = Full Processing, Single Connector Batch
      * result = rollback
      */
-    public void xtestSingleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
+    public void testSingleSourceMultipleCommandsReferentialIntegrityRollback() throws Exception {
     	
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsReferentialIntegrityRollback") {
             public void testCase() throws Exception {
@@ -260,11 +262,15 @@ public class SingleSourceTransaction extends BaseAbstractTransactionTestCase {
           	}
         };        
         
+        
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-
+        
         System.out.println("Complete testSingleSourceMultipleCommandsReferentialIntegrityRollback");
 
     }    
 
+  
+    
+ 
 }

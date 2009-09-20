@@ -18,9 +18,9 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
 /** 
  * Test cases that require 2 datasources 
  */
-public class TwoSourceTransaction extends SingleSourceTransaction {
+public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenarios {
     
-    public TwoSourceTransaction(String name) {
+    public TwoSourceTransactionScenarios(String name) {
         super(name);
     }
         
@@ -53,7 +53,7 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         // run test
         getTransactionContainter().runTransaction(userTxn);
         
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceSelect");
+        System.out.println("Complete testMultipleSourceSelect");
 
     }
 
@@ -63,7 +63,7 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */    
-    public void testMultipleSourceVirtualSelect() throws Exception {
+    public void testMultipleSourceViewSelect() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceVirtualSelect") {
             public void testCase() throws Exception {
                 execute("select * from vm.g1 where vm.g1.pm1e1 < 100");
@@ -81,7 +81,7 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         // run test
         getTransactionContainter().runTransaction(userTxn);
         
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceVirtualSelect");
+        System.out.println("Complete testMultipleSourceVirtualSelect");
 
     }    
     
@@ -91,7 +91,7 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
-    public void testMultipleSourceUpdate() throws Exception {
+    public void testMultipleSourceViewUpdate() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceUpdate") {
             public void testCase() throws Exception {
                 execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(500, '500', 500, '500')");
@@ -121,7 +121,7 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         // run test
         getTransactionContainter().runTransaction(userTxn);             
        
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceUpdate");
+        System.out.println("Complete testMultipleSourceUpdate");
 
     }
     
@@ -131,8 +131,8 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
-    public void testMultipleSourceSelectInto() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceSelectInto") {
+    public void testMultipleSourceViewSelectInto() throws Exception {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewSelectInto") {
             public void testCase() throws Exception {
                 execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(501, '501', 501, '501')");
                 execute("select pm1.g1.e1, pm1.g1.e2 into pm2.g2 from pm1.g1 where pm1.g1.e1 = 501");
@@ -162,7 +162,7 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         // run test
         getTransactionContainter().runTransaction(userTxn);    
         
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceSelectInto");
+        System.out.println("Complete testMultipleSourceViewSelectInto");
 
     }    
     
@@ -172,8 +172,8 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
-    public void testMultipleSourceBulkRowInsert() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsert") {
+    public void testMultipleSourceViewBulkRowInsert() throws Exception {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewBulkRowInsert") {
             public void testCase() throws Exception {
                 for (int i = 100; i < 112; i++) {
                     Integer val = new Integer(i);
@@ -210,9 +210,63 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         // run test
         getTransactionContainter().runTransaction(userTxn);       
          
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceBulkRowInsert");
+        System.out.println("Complete testMultipleSourceViewBulkRowInsert");
 
-    }    
+    }   
+    
+    /**
+     * Sources = 2
+     * Commands = 1, Update
+     * Batching = Full Processing, Single Connector Batch
+     * result = commit 
+     */
+    public void testMultipleSourceViewBulkRowInsertRollback() throws Exception {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewBulkRowInsertRollback") {
+            public void testCase() throws Exception {
+                for (int i = 100; i < 120; i++) {
+                    Integer val = new Integer(i);
+                    execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(?,?,?,?)", new Object[] {val, val.toString(), val, val.toString()});
+                }
+                execute("select pm1.g1.e1, pm1.g1.e2 into pm2.g2 from pm1.g1 where pm1.g1.e1 >= 100");
+                
+                // force the rollback by trying to insert an invalid row.
+                execute("insert into pm1.g2 (e1, e2) values(?,?)", new Object[] {new Integer(9999), "9999"});                
+            }
+            
+            public boolean exceptionExpected() {
+                return true;
+            }
+            
+            public int getNumberRequiredDataSources(){
+            	return 2;
+            }
+ 
+            
+         	public void validateTestCase() throws Exception {
+                // now verify the results
+                AbstractQueryTest test = new QueryExecution(getSource("pm1"));
+                test.execute("select * from g1 where e1 >= 100 and e1 < 120");
+                test.assertRowCount(0);
+                test.closeConnection();
+                
+                test = new QueryExecution(getSource("pm2"));
+                test.execute("select * from g1 where e1 >= 100 and e1 < 120");
+                test.assertRowCount(0);
+                test.execute("select * from g2 where e1 >= 100 and e1 < 120");
+                test.assertRowCount(0);        
+                test.closeConnection();
+         	}
+ 
+        };        
+        
+        // run test
+        getTransactionContainter().runTransaction(userTxn);       
+        
+        
+        System.out.println("Complete testMultipleSourceViewBulkRowInsertRollback");
+
+    } 
+
 
     /**
      * Sources = 2
@@ -220,8 +274,8 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
      * Batching = Full Processing, Single Connector Batch
      * result = commit 
      */
-    public void testMultipleSourcePreparedUpdate() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePreparedUpdate") {
+    public void testMultipleSourceViewPreparedUpdate() throws Exception {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewPreparedUpdate") {
             public void testCase() throws Exception {
                 Integer value = new Integer(500);
                 execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(?,?,?,?)", new Object[] {value, value.toString(), value, value.toString()});
@@ -250,7 +304,7 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         // run test
         getTransactionContainter().runTransaction(userTxn);       
          
-        System.out.println("Complete CommonTransactionTest.testMultipleSourcePreparedUpdate");
+        System.out.println("Complete testMultipleSourceViewPreparedUpdate");
 
     }    
     
@@ -315,7 +369,7 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         // run test
         getTransactionContainter().runTransaction(userTxn);      
         
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceMultipleCommands");
+        System.out.println("Complete testMultipleSourceMultipleCommands");
 
 
     }
@@ -326,8 +380,8 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
      * Batching = Full Processing, Single Connector Batch
      * result = commit
      */
-    public void testMultipleSourceMultipleVirtualCommands() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleVirtualCommands") {
+    public void testMultipleSourceViewMultipleCommands() throws Exception {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewMultipleCommands") {
             public void testCase() throws Exception {
 
                 for (int i = 200; i < 207; i++) {
@@ -367,10 +421,74 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         // run test
         getTransactionContainter().runTransaction(userTxn);      
 
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceMultipleVirtualCommands");
+        System.out.println("Complete testMultipleSourceViewMultipleCommands");
 
+
+    }   
+    
+    /**
+     * Sources = 2
+     * Commands = multiple - Success
+     * Batching = Full Processing, Single Connector Batch
+     * result = commit
+     */
+    public void testMultipleSourceViewMultipleCommandsRollback() throws Exception {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewMultipleCommandsRollback") {
+            public void testCase() throws Exception {
+
+                for (int i = 600; i < 615; i++) {
+                    Integer val = new Integer(i);
+                    execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(?,?,?,?)", new Object[] {val, val.toString(), val, val.toString()});
+                    execute("insert into vm.g2 (pm1e1, pm1e2, pm2e1, pm2e2) values(?,?,?,?)", new Object[] {val, val.toString(), val, val.toString()});                    
+                }
+                
+                execute("select * from vm.g1 where pm1e1 >= 600 and pm1e1 < 615");
+                assertRowCount(15);
+
+                
+                execute("update vm.g1 set pm1e2='blah' where pm1e1 >= 605");
+                
+                execute("delete from vm.g2 where vm.g2.pm1e1 >= 610");
+                execute("delete from vm.g1 where vm.g1.pm1e1 >= 610");
+                
+                execute("select * from vm.g1 where pm1e1 >= 600 and pm1e1 < 615");
+                assertRowCount(10);
+                
+                // force the rollback by trying to insert an invalid row.
+                execute("insert into pm1.g2 (e1, e2) values(?,?)", new Object[] {new Integer(9999), "9999"});                                
+            }
+            
+            public boolean exceptionExpected() {
+                return true;
+            }
+            
+            public int getNumberRequiredDataSources(){
+            	return 2;
+            }
+ 
+            
+         	public void validateTestCase() throws Exception {
+                // now verify the results
+                AbstractQueryTest test = new QueryExecution(getSource("pm1"));
+                test.execute("select * from g1 where e1 >= 600 and e1 < 615");
+                test.assertRowCount(0);
+                test.execute("select * from g2 where e1 >= 600 and e1 < 615");
+                test.assertRowCount(0);
+                test.execute("select distinct e2 from g1 where e1 >= 600 and e1 < 615");
+                test.assertRowCount(0);
+                test.closeConnection();   
+         	}
+ 
+        };        
+        
+        // run test
+        getTransactionContainter().runTransaction(userTxn);      
+
+        
+        System.out.println("Complete testMultipleSourceViewMultipleCommandsRollback");
 
     }    
+
         
     /**
      * Sources = 2
@@ -427,146 +545,10 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         };
         getTransactionContainter().runTransaction(userTxn);
                 
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceMultipleCommandsCancel");
+        System.out.println("Complete testMultipleSourceMultipleCommandsCancel");
 
     }
-
-    /**
-     * Sources = 2
-     * Commands = multiple - Success
-     * Batching = Full Processing, Single Connector Batch
-     * result = rollback
-     */    
-    public void testMultipleSourceTimeout() throws Exception{
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceTimeout") {
-            public void testCase() throws Exception {
-                executeBatch(getMultipleSourceBatch(), 1); // time out after 1 sec
-            }
-            
-            public boolean exceptionExpected() {
-                return true;
-            }            
-            
-            public void after() {
-                if (!exceptionOccurred()) {
-                    fail("should have failed with time out exception");
-                }
-                else {
-                    assertTrue(getLastException().getMessage().indexOf("Operation timed out before completion") != -1);
-                }
-            } 
-            
-            public int getNumberRequiredDataSources(){
-            	return 2;
-            }
- 
-            
-         	public void validateTestCase() throws Exception {
-                // now verify the results (this may finish under one second, then this test is not valid)
-                AbstractQueryTest test = new QueryExecution(getSource("pm1"));
-                test.execute("select * from g1 where e1 >= 600 and e1 < 750");
-                test.assertRowCount(0);
-                test.execute("select * from g2 where e1 >= 600 and e1 < 750");
-                test.assertRowCount(0);
-                test.execute("select distinct e2 from g1 where e1 >= 600 and e1 < 750");
-                test.assertRowCount(0);
-                test.closeConnection();   
-         	}
- 
-        };
-        getTransactionContainter().runTransaction(userTxn);
-        
-        
-        System.out.println("Complete CommonTransactionTest.testMultipleSourceTimeout");
-
-    }    
     
-        
-    static String[] getMultipleSourceBatch() {
-        ArrayList<String> list = new ArrayList<String>();
-        
-        for (int i = 600; i < 750; i++) {
-            list.add("insert into pm1.g1 (e1, e2) values("+i+",'"+i+"')");
-            list.add("insert into pm1.g2 (e1, e2) values ("+i+",'"+i+"')");
-            list.add("insert into pm2.g1 (e1, e2) values("+i+",'"+i+"')");
-            list.add("insert into pm2.g2 (e1, e2) values ("+i+",'"+i+"')");                                
-        }
-        
-        list.add("update pm1.g1 set e2='blah' where pm1.g1.e1 >= 600");
-        list.add("update pm2.g1 set e2='blah' where pm2.g1.e1 >= 600");
-        
-        list.add("delete from pm1.g2 where pm1.g2.e1 >= 610");
-        list.add("delete from pm1.g1 where pm1.g1.e1 >= 610");
-        list.add("delete from pm2.g2 where pm2.g2.e1 >= 610");
-        list.add("delete from pm2.g1 where pm2.g1.e1 >= 610");
-        
-        return(String[])list.toArray(new String[list.size()]);
-    }
-    
-    
-    /**
-     * Sources = 2
-     * Commands = 1, Select
-     * Batching = Partial Processing, Single Connector Batch
-     * result = commit 
-     * Note: This is producing the below error some times; however this is SQL Server issue.
-     * http://support.microsoft.com/?kbid=834849
-     */
-    public void testMultipleSourcePartialProcessingUsingLimit() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingLimit") {
-            public void testCase() throws Exception {
-                execute("select * from vm.g1 where pm1e1 < 100 limit 10");
-                assertRowCount(10);
-            }
-            
-            public int getNumberRequiredDataSources(){
-            	return 2;
-            }
- 
-            
-         	public void validateTestCase() throws Exception {
-          	}
- 
-        };        
-        
-        // run test
-        getTransactionContainter().runTransaction(userTxn);      
-        
-        System.out.println("Complete CommonTransactionTest.testMultipleSourcePartialProcessingUsingLimit");
-
-    }  
-
-    /**
-     * Sources = 2
-     * Commands = 1, Select
-     * Batching = Partial Processing, Single Connector Batch
-     * result = commit
-     * Note: This is producing the below error some times; however this is SQL Server issue.
-     * http://support.microsoft.com/?kbid=834849
-     */
-    public void testMultipleSourcePartialProcessingUsingMakedep() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingMakedep") {
-            public void testCase() throws Exception {
-                execute("select pm1.g1.e1, pm1.g1.e2 from pm1.g1 LEFT OUTER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e2 = pm2.g1.e2 where pm2.g1.e1 >= 50 and pm2.g1.e1 < 100");
-                assertRowCount(50);
-            }
-            
-            public int getNumberRequiredDataSources(){
-            	return 2;
-            }
- 
-            
-         	public void validateTestCase() throws Exception {
-          	}
- 
-        };        
-        
-        // run test
-        getTransactionContainter().runTransaction(userTxn);  
-        
-        System.out.println("Complete CommonTransactionTest.testMultipleSourcePartialProcessingUsingMakedep");
-
-    }        
     
     /**
      * Sources = 2
@@ -680,94 +662,95 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
         System.out.println("Complete testMultipleSourceMultipleCommandsReferentialIntegrityRollback");
 
     }
-    
-    /**
-     * Sources = 2
-     * Commands = 1, Update
-     * Batching = Full Processing, Single Connector Batch
-     * result = commit 
-     */
-    public void testMultipleSourceBulkRowInsertRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceBulkRowInsertRollback") {
-            public void testCase() throws Exception {
-                for (int i = 100; i < 120; i++) {
-                    Integer val = new Integer(i);
-                    execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(?,?,?,?)", new Object[] {val, val.toString(), val, val.toString()});
-                }
-                execute("select pm1.g1.e1, pm1.g1.e2 into pm2.g2 from pm1.g1 where pm1.g1.e1 >= 100");
-                
-                // force the rollback by trying to insert an invalid row.
-                execute("insert into pm1.g2 (e1, e2) values(?,?)", new Object[] {new Integer(9999), "9999"});                
-            }
-            
-            public boolean exceptionExpected() {
-                return true;
-            }
-            
-            public int getNumberRequiredDataSources(){
-            	return 2;
-            }
- 
-            
-         	public void validateTestCase() throws Exception {
-                // now verify the results
-                AbstractQueryTest test = new QueryExecution(getSource("pm1"));
-                test.execute("select * from g1 where e1 >= 100 and e1 < 120");
-                test.assertRowCount(0);
-                test.closeConnection();
-                
-                test = new QueryExecution(getSource("pm2"));
-                test.execute("select * from g1 where e1 >= 100 and e1 < 120");
-                test.assertRowCount(0);
-                test.execute("select * from g2 where e1 >= 100 and e1 < 120");
-                test.assertRowCount(0);        
-                test.closeConnection();
-         	}
- 
-        };        
-        
-        // run test
-        getTransactionContainter().runTransaction(userTxn);       
-        
-        
-        System.out.println("Complete testMultipleSourceBulkRowInsertRollback");
 
-    } 
-    
+
+
     /**
      * Sources = 2
      * Commands = multiple - Success
      * Batching = Full Processing, Single Connector Batch
-     * result = commit
-     */
-    public void testMultipleSourceMultipleVirtualCommandsRollback() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleVirtualCommandsRollback") {
+     * result = rollback
+     */    
+    public void testMultipleSourceTimeout() throws Exception{
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceTimeout") {
             public void testCase() throws Exception {
-
-                for (int i = 600; i < 615; i++) {
-                    Integer val = new Integer(i);
-                    execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(?,?,?,?)", new Object[] {val, val.toString(), val, val.toString()});
-                    execute("insert into vm.g2 (pm1e1, pm1e2, pm2e1, pm2e2) values(?,?,?,?)", new Object[] {val, val.toString(), val, val.toString()});                    
-                }
-                
-                execute("select * from vm.g1 where pm1e1 >= 600 and pm1e1 < 615");
-                assertRowCount(15);
-
-                
-                execute("update vm.g1 set pm1e2='blah' where pm1e1 >= 605");
-                
-                execute("delete from vm.g2 where vm.g2.pm1e1 >= 610");
-                execute("delete from vm.g1 where vm.g1.pm1e1 >= 610");
-                
-                execute("select * from vm.g1 where pm1e1 >= 600 and pm1e1 < 615");
-                assertRowCount(10);
-                
-                // force the rollback by trying to insert an invalid row.
-                execute("insert into pm1.g2 (e1, e2) values(?,?)", new Object[] {new Integer(9999), "9999"});                                
+                executeBatch(getMultipleSourceBatch(), 1); // time out after 1 sec
             }
             
             public boolean exceptionExpected() {
                 return true;
+            }            
+            
+            public void after() {
+                if (!exceptionOccurred()) {
+                    fail("should have failed with time out exception");
+                }
+                else {
+                    assertTrue(getLastException().getMessage().indexOf("Operation timed out before completion") != -1);
+                }
+            } 
+            
+            public int getNumberRequiredDataSources(){
+            	return 2;
+            }
+ 
+            
+         	public void validateTestCase() throws Exception {
+                // now verify the results (this may finish under one second, then this test is not valid)
+                AbstractQueryTest test = new QueryExecution(getSource("pm1"));
+                test.execute("select * from g1 where e1 >= 600 and e1 < 750");
+                test.assertRowCount(0);
+                test.execute("select * from g2 where e1 >= 600 and e1 < 750");
+                test.assertRowCount(0);
+                test.execute("select distinct e2 from g1 where e1 >= 600 and e1 < 750");
+                test.assertRowCount(0);
+                test.closeConnection();   
+         	}
+ 
+        };
+        getTransactionContainter().runTransaction(userTxn);
+        
+        
+        System.out.println("Complete testMultipleSourceTimeout");
+
+    }    
+    
+        
+    static String[] getMultipleSourceBatch() {
+        ArrayList<String> list = new ArrayList<String>();
+        
+        for (int i = 600; i < 750; i++) {
+            list.add("insert into pm1.g1 (e1, e2) values("+i+",'"+i+"')");
+            list.add("insert into pm1.g2 (e1, e2) values ("+i+",'"+i+"')");
+            list.add("insert into pm2.g1 (e1, e2) values("+i+",'"+i+"')");
+            list.add("insert into pm2.g2 (e1, e2) values ("+i+",'"+i+"')");                                
+        }
+        
+        list.add("update pm1.g1 set e2='blah' where pm1.g1.e1 >= 600");
+        list.add("update pm2.g1 set e2='blah' where pm2.g1.e1 >= 600");
+        
+        list.add("delete from pm1.g2 where pm1.g2.e1 >= 610");
+        list.add("delete from pm1.g1 where pm1.g1.e1 >= 610");
+        list.add("delete from pm2.g2 where pm2.g2.e1 >= 610");
+        list.add("delete from pm2.g1 where pm2.g1.e1 >= 610");
+        
+        return(String[])list.toArray(new String[list.size()]);
+    }
+    
+    
+    /**
+     * Sources = 2
+     * Commands = 1, Select
+     * Batching = Partial Processing, Single Connector Batch
+     * result = commit 
+     * Note: This is producing the below error some times; however this is SQL Server issue.
+     * http://support.microsoft.com/?kbid=834849
+     */
+    public void testMultipleSourceViewPartialProcessingUsingLimit() throws Exception {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewPartialProcessingUsingLimit") {
+            public void testCase() throws Exception {
+                execute("select * from vm.g1 where pm1e1 < 100 limit 10");
+                assertRowCount(10);
             }
             
             public int getNumberRequiredDataSources(){
@@ -776,26 +759,53 @@ public class TwoSourceTransaction extends SingleSourceTransaction {
  
             
          	public void validateTestCase() throws Exception {
-                // now verify the results
-                AbstractQueryTest test = new QueryExecution(getSource("pm1"));
-                test.execute("select * from g1 where e1 >= 600 and e1 < 615");
-                test.assertRowCount(0);
-                test.execute("select * from g2 where e1 >= 600 and e1 < 615");
-                test.assertRowCount(0);
-                test.execute("select distinct e2 from g1 where e1 >= 600 and e1 < 615");
-                test.assertRowCount(0);
-                test.closeConnection();   
-         	}
+          	}
  
         };        
         
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-
         
-        System.out.println("Complete testMultipleSourceMultipleVirtualCommandsRollback");
+        System.out.println("Complete testMultipleSourceViewPartialProcessingUsingLimit");
 
-    }    
+    }  
+
+    /**
+     * Sources = 2
+     * Commands = 1, Select
+     * Batching = Partial Processing, Single Connector Batch
+     * result = commit
+     * Note: This is producing the below error some times; however this is SQL Server issue.
+     * http://support.microsoft.com/?kbid=834849
+     */
+    public void testMultipleSourcePartialProcessingUsingMakedep() throws Exception {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourcePartialProcessingUsingMakedep") {
+            public void testCase() throws Exception {
+                execute("select pm1.g1.e1, pm1.g1.e2 from pm1.g1 LEFT OUTER JOIN pm2.g1 MAKENOTDEP ON pm1.g1.e2 = pm2.g1.e2 where pm2.g1.e1 >= 50 and pm2.g1.e1 < 100");
+                assertRowCount(50);
+            }
+            
+            public int getNumberRequiredDataSources(){
+            	return 2;
+            }
+ 
+            
+         	public void validateTestCase() throws Exception {
+          	}
+ 
+        };        
+        
+        // run test
+        getTransactionContainter().runTransaction(userTxn);  
+        
+        System.out.println("Complete testMultipleSourcePartialProcessingUsingMakedep");
+
+    }        
+    
+     
+     
+
+    
     
 
 }
