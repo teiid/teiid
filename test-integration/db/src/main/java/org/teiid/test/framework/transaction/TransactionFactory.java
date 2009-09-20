@@ -5,6 +5,7 @@
 package org.teiid.test.framework.transaction;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.framework.connection.ConnectionStrategy;
@@ -14,14 +15,6 @@ import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 
 public class TransactionFactory {
 	
-	public static final String LOCAL_TRANSACTION = "local";     //$NON-NLS-1$
-	public static final String XATRANSACTION = "xa"; //$NON-NLS-1$
-	public static final String JNDI_TRANSACTION = "jndi"; //$NON-NLS-1$
-	
-	/**
-	 * Transaction Type indicates the type of transaction container to use
-	 */
-    public static final String TRANSACTION_TYPE = "transaction-type"; //$NON-NLS-1$
 
         
     private TransactionFactory(){}
@@ -37,22 +30,22 @@ public class TransactionFactory {
     	ConnectionStrategy connstrategy = ConnectionStrategyFactory.getInstance().getConnectionStrategy();
              
     	
-        String type = connstrategy.getEnvironment().getProperty(TRANSACTION_TYPE, LOCAL_TRANSACTION);
+        String type = connstrategy.getEnvironment().getProperty(ConfigPropertyNames.TRANSACTION_TYPE, ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION);
         if (type == null) {
-        	throw new RuntimeException("Property " + TRANSACTION_TYPE + " was specified");
+        	throw new RuntimeException("Property " + ConfigPropertyNames.TRANSACTION_TYPE + " was specified");
         }
         
-        if (type.equalsIgnoreCase(LOCAL_TRANSACTION)) {
+        if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
         	transacton = new LocalTransaction(connstrategy);
         }
-        else if (type.equalsIgnoreCase(XATRANSACTION)) {
+        else if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.XATRANSACTION)) {
         	transacton = new XATransaction(connstrategy);
         }
-        else if (type.equalsIgnoreCase(JNDI_TRANSACTION)) {
+        else if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.JNDI_TRANSACTION)) {
         	transacton = new JNDITransaction(connstrategy);
 
         } else {
-        	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + TRANSACTION_TYPE );
+        	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + ConfigPropertyNames.TRANSACTION_TYPE );
         }
 
         return transacton;

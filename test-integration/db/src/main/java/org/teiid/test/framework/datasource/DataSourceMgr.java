@@ -17,6 +17,8 @@ import java.util.Set;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
+import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.util.StringUtil;
@@ -25,7 +27,7 @@ import com.metamatrix.common.xml.XMLReaderWriter;
 import com.metamatrix.common.xml.XMLReaderWriterImpl;
 
 /**
- * The DataSourceMgr is responsible for loading and managing the datasource
+ * The DataSourceMgr is responsible for loading and managing datasources defined by the datasource
  * mapping properties file {@see #DATASOURCE_MAPPING_FILE} and the mapped
  * datasource properties files. The {@link #getDatasourceProperties(String)}
  * returns the properties defined for that datasourceid, which is mapped in the
@@ -36,13 +38,6 @@ import com.metamatrix.common.xml.XMLReaderWriterImpl;
  */
 public class DataSourceMgr {
 	
-	/**
-	 * The USE_DATASOURCES_PROP is a comma delimited system property that can be used to limit the
-	 * datasources that are in use for the tests.   Use the name defined in the datasource_mapping.xml.
-	 * This enables one to test between certain datasources without having to remove 
-	 * connection.properties files.
-	 */
-	static final String USE_DATASOURCES_PROP = "usedatasources";
 
 	static final String RELATIVE_DIRECTORY = "datasources/";
 	static final String DATASOURCE_MAPPING_FILE = "datasource_mapping.xml";
@@ -220,7 +215,7 @@ public class DataSourceMgr {
 			throws QueryTestFailedException {
 		
 		Set<String> limitds = new HashSet<String>();
-        String limitdsprop = System.getProperty(USE_DATASOURCES_PROP);
+        String limitdsprop = ConfigPropertyLoader.getProperty(ConfigPropertyNames.USE_DATASOURCES_PROP);
         if (limitdsprop != null && limitdsprop.length() > 0) { 
         	System.out.println("Limit datasources to: " + limitdsprop);
         	List<String> dss = StringUtil.split(limitdsprop, ",");
@@ -414,7 +409,7 @@ public class DataSourceMgr {
 		
 		DataSourceMgr.reset();
 		
-		System.setProperty(DataSourceMgr.USE_DATASOURCES_PROP, "ds_sqlserver");
+		System.setProperty(ConfigPropertyNames.USE_DATASOURCES_PROP, "ds_sqlserver");
 		
 		mgr = DataSourceMgr.getInstance();
 

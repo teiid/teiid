@@ -7,20 +7,16 @@ import java.util.Properties;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 
 public class ConfigPropertyLoader {
-	/**
-	 * Specify this property to set a specific configuration to use
-	 */
-		public static final String CONFIG_FILE="config";
 		
 		/**
 		 * The default config file to use when #CONFIG_FILE system property isn't set
 		 */
-		private static final String DEFAULT_CONFIG_FILE_NAME="default-config.properties";
+		protected static final String DEFAULT_CONFIG_FILE_NAME="default-config.properties";
 		
 		private static Properties props = null;
 
 		public synchronized static void loadConfigurationProperties() {
-	        String filename = System.getProperty(CONFIG_FILE);
+	        String filename = System.getProperty(ConfigPropertyNames.CONFIG_FILE);
 	        if (filename == null) {
 	            filename = DEFAULT_CONFIG_FILE_NAME;
 	        }       
@@ -36,12 +32,14 @@ public class ConfigPropertyLoader {
 		}
 	    
 		private static void loadProperties(String filename) {
-			props = null;
+			props = System.getProperties();
 		    try {
 		        InputStream in = ConfigPropertyLoader.class.getResourceAsStream("/"+ filename);
 		        if (in != null) {
-		        	props = new Properties();
-		        	props.load(in);
+		        	Properties lprops = new Properties();
+		        	lprops.load(in);
+		        	props.putAll(lprops);
+		        	
 		        }
 		        else {
 		        	throw new RuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
@@ -52,11 +50,16 @@ public class ConfigPropertyLoader {
 		}
 		
 		public static void main(String[] args) {
+			System.setProperty("test", "value");
+			
 			ConfigPropertyLoader.loadConfigurationProperties();
 			Properties p = ConfigPropertyLoader.getProperties();
 			if (p == null || p.isEmpty()) {
 	        	throw new RuntimeException("Failed to load config properties file");
 		
+			}
+			if (p.getProperty("test") == null) {
+				throw new RuntimeException("Failed to pickup system property");
 			}
 			System.out.println("Loaded Config Properties " + p.toString());
 

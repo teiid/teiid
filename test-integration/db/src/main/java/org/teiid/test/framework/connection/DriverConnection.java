@@ -30,6 +30,7 @@ public class DriverConnection extends ConnectionStrategy{
         
     public DriverConnection(Properties props) throws QueryTestFailedException {
     	   super(props);
+    	   validate();
     }
     
 	public void validate()  {
@@ -81,8 +82,6 @@ public class DriverConnection extends ConnectionStrategy{
 			}
         	
         }
-        
-    	validate();
 		
         this.connection = getJDBCConnection(this.driver, this.url, this.username, this.pwd); 
         return this.connection;

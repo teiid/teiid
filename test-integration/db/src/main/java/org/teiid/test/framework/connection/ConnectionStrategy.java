@@ -23,28 +23,13 @@ import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
+import com.metamatrix.jdbc.api.ExecutionProperties;
+
 
 
 public abstract class ConnectionStrategy {
-	/**
-	 * Connection Type indicates the type of connection (strategy) to use
-	 */
-    public static final String CONNECTION_TYPE = "connection-type"; //$NON-NLS-1$
     
-    /**
-     * The connection types that map to connection strategies
-     * ****************************************************************
-     */
-    // used to create the jdb driver
-    public static final String DRIVER_CONNECTION = "driver"; //$NON-NLS-1$
-    // used to create a datasource 
-    public static final String DATASOURCE_CONNECTION = "datasource"; //$NON-NLS-1$
-    // used for when embedded is running in an appserver
-    public static final String JNDI_CONNECTION = "jndi"; //$NON-NLS-1$
-    /*
-     * ******************************************************************
-     */
-    
+     
     public static final String DS_USER = "user"; //$NON-NLS-1$
     
     // need both user variables because Teiid uses 'user' and connectors use 'username'
@@ -68,6 +53,10 @@ public abstract class ConnectionStrategy {
     
     
     public static final String AUTOCOMMIT = "autocommit"; //$NON-NLS-1$
+    
+    public static final String TXN_AUTO_WRAP = ExecutionProperties.PROP_TXN_AUTO_WRAP;
+    
+    public static final String FETCH_SIZE = ExecutionProperties.PROP_FETCH_SIZE;
     
     public static final String EXEC_IN_BATCH = "execute.in.batch"; //$NON-NLS-1$
 

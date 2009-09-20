@@ -10,27 +10,17 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.test.framework.ConfigPropertyLoader;
+import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 public class ConnectionStrategyFactory {
 	
-	/**
-	 * Specify this property to set a specific configuration to use
-	 */
-		public static final String CONFIG_FILE="config";
-		
-		/**
-		 * The default config file to use when #CONFIG_FILE system property isn't set
-		 */
-		private static final String DEFAULT_CONFIG_FILE_NAME="default-config.properties";
-	
 	    private static ConnectionStrategyFactory _instance = null;
 	    private ConnectionStrategy strategy = null;
 	    private static Map<String, ConnectionStrategy> sources = null;
 
-    
-	    
+   	    
 	    private ConnectionStrategyFactory(){
 	    }
 	    
@@ -59,14 +49,12 @@ public class ConnectionStrategyFactory {
 	        	_instance.shutdown();
 	        	
 	            _instance = null;
-	            
-
 	        }
 	    }    
 	    
 	    private void shutdown() {
             Properties p = System.getProperties();
-            p.remove(CONFIG_FILE);
+            p.remove(ConfigPropertyNames.CONFIG_FILE);
 
             
         	for (Iterator it=sources.keySet().iterator(); it.hasNext();  ){
@@ -101,26 +89,26 @@ public class ConnectionStrategyFactory {
 	    	
 	     	ConnectionStrategy strategy = null;
 	                
-	        String type = props.getProperty(ConnectionStrategy.CONNECTION_TYPE, ConnectionStrategy.DRIVER_CONNECTION);
+	        String type = props.getProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);
 	        if (type == null) {
-	        	throw new RuntimeException("Property " + ConnectionStrategy.CONNECTION_TYPE + " was specified");
+	        	throw new RuntimeException("Property " + ConfigPropertyNames.CONNECTION_TYPE + " was specified");
 	        }
 	        
-	        if (type.equalsIgnoreCase(ConnectionStrategy.DRIVER_CONNECTION)) {
+	        if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION)) {
 	                strategy = createDriverStrategy(null, props);
 	                System.out.println("Created Driver Strategy");
 	        }
-	        else if (type.equalsIgnoreCase(ConnectionStrategy.DATASOURCE_CONNECTION)) {
+	        else if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DATASOURCE_CONNECTION)) {
 	            strategy = createDataSourceStrategy(null, props);
 	            System.out.println("Created DataSource Strategy");
 	        }
-	        else if (type.equalsIgnoreCase(ConnectionStrategy.JNDI_CONNECTION)) {
+	        else if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.JNDI_CONNECTION)) {
 	            strategy = createJEEStrategy(null, props);
 	            System.out.println("Created JEE Strategy");
 	        }   
 	        
 	        if (strategy == null) {
-	        	new TransactionRuntimeException("Invalid property value for " + ConnectionStrategy.CONNECTION_TYPE + " is " + type );
+	        	new TransactionRuntimeException("Invalid property value for " + ConfigPropertyNames.CONNECTION_TYPE + " is " + type );
 	        }
 	        // call configure here because this is creating the connection to Teiid
 	        // direct connections to the datasource use the static call directly to create strategy and don't need to configure
