@@ -30,28 +30,29 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
 public abstract class ConnectionStrategy {
     
      
-    public static final String DS_USER = "user"; //$NON-NLS-1$
-    
-    // need both user variables because Teiid uses 'user' and connectors use 'username'
-    public static final String DS_USERNAME = JDBCPropertyNames.USERNAME; //$NON-NLS-1$
-    public static final String DS_PASSWORD = JDBCPropertyNames.PASSWORD;     //$NON-NLS-1$
-    
-    // the driver is only used for making direct connections to the source, the 
-    // connector type will provide the JDBCPropertyNames.CONNECTION_SOURCE driver class
-    public static final String DS_DRIVER = "driver"; //$NON-NLS-1$
- 
-    public static final String DS_URL = JDBCPropertyNames.URL;     //$NON-NLS-1$
-    public static final String DS_SERVERNAME = "servername"; //$NON-NLS-1$
-    public static final String DS_SERVERPORT = "portnumber"; //$NON-NLS-1$
-    public static final String DS_JNDINAME = "ds-jndiname"; //$NON-NLS-1$
-    public static final String DS_DATABASENAME = "databasename"; //$NON-NLS-1$
-    public static final String DS_APPLICATION_NAME = "application-name"; //$NON-NLS-1$
-    
-    public static final String PROCESS_BATCH = "process-batch"; //$NON-NLS-1$
-    public static final String CONNECTOR_BATCH = "connector-batch"; //$NON-NLS-1$
-    public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$
-    
-    
+//    public static final String DS_USER = "user"; //$NON-NLS-1$
+//    
+//    // need both user variables because Teiid uses 'user' and connectors use 'username'
+//    public static final String DS_USERNAME = JDBCPropertyNames.USERNAME; //$NON-NLS-1$
+//    public static final String DS_PASSWORD = JDBCPropertyNames.PASSWORD;     //$NON-NLS-1$
+//    
+//    // the driver is only used for making direct connections to the source, the 
+//    // connector type will provide the JDBCPropertyNames.CONNECTION_SOURCE driver class
+//    public static final String DS_DRIVER = "driver"; //$NON-NLS-1$
+//    public static final String DS_DATASOURCE = "datasource"; //$NON-NLS-1$
+// 
+//    public static final String DS_URL = JDBCPropertyNames.URL;     //$NON-NLS-1$
+//    public static final String DS_SERVERNAME = "servername"; //$NON-NLS-1$
+//    public static final String DS_SERVERPORT = "portnumber"; //$NON-NLS-1$
+//   
+//    public static final String DS_DATABASENAME = "databasename"; //$NON-NLS-1$
+//    public static final String DS_APPLICATION_NAME = "application-name"; //$NON-NLS-1$
+//    
+    public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$  
+	
+	public static final String PROCESS_BATCH = "process-batch"; //$NON-NLS-1$
+	public static final String CONNECTOR_BATCH = "connector-batch"; //$NON-NLS-1$
+
     public static final String AUTOCOMMIT = "autocommit"; //$NON-NLS-1$
     
     public static final String TXN_AUTO_WRAP = ExecutionProperties.PROP_TXN_AUTO_WRAP;
@@ -205,6 +206,7 @@ public abstract class ConnectionStrategy {
 	        	org.teiid.test.framework.datasource.DataSource ds = DataSourceMgr.getInstance().getDatasource(useName, m.getName());
 	        	
 	        	if (ds != null) {
+	                System.out.println("Setting up Connector Binding of Type: " + ds.getConnectorType()); //$NON-NLS-1$
 
 		        	AdminOptions ao = new AdminOptions(AdminOptions.OnConflict.OVERWRITE);
 		        	ao.addOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR);
@@ -222,6 +224,7 @@ public abstract class ConnectionStrategy {
     	} catch (QueryTestFailedException qt) {
     		throw qt;
     	} catch (Exception t) {
+    		t.printStackTrace();
     		throw new QueryTestFailedException(t);
     	}
 

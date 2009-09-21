@@ -21,6 +21,8 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  */
 public class JEEConnection extends ConnectionStrategy{
 	
+	 public static final String DS_JNDINAME = "ds-jndiname"; //$NON-NLS-1$
+	
 	private String jndi_name = null;
 	
 	
@@ -57,7 +59,7 @@ public class JEEConnection extends ConnectionStrategy{
 	public void validate()  {
 		// TODO Auto-generated method stub
 		
-		jndi_name = getEnvironment().getProperty(ConnectionStrategy.DS_JNDINAME);
+		jndi_name = getEnvironment().getProperty(DS_JNDINAME);
     	if (jndi_name == null || jndi_name.length() == 0) {
     		throw new TransactionRuntimeException("Property " + DS_JNDINAME + " was not specified");
     	}

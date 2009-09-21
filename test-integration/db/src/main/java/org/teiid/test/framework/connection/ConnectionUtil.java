@@ -37,7 +37,7 @@ public class ConnectionUtil {
 						+ " has no datasource properties");
 			}
 
-			return ConnectionStrategyFactory.createDriverStrategy(identifier,
+			return ConnectionStrategyFactory.getInstance().createDriverStrategy(identifier,
 					sourceProps).getConnection();
 
 		}
@@ -69,7 +69,7 @@ public class ConnectionUtil {
 						+ " has no datasource properties");
 			}
 
-			return ConnectionStrategyFactory.createDataSourceStrategy(
+			return ConnectionStrategyFactory.getInstance().createDataSourceStrategy(
 					identifier, sourceProps).getXAConnection();
 		}
 		throw new RuntimeException("No Connection by name :" + identifier); //$NON-NLS-1$

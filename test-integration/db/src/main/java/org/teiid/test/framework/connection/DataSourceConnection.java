@@ -11,17 +11,40 @@ import java.util.Properties;
 import javax.sql.XAConnection;
 import javax.sql.XADataSource;
 
+import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.jdbc.TeiidDataSource;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.EmbeddedDataSource;
 import com.metamatrix.jdbc.MMDataSource;
+import com.metamatrix.jdbc.api.ExecutionProperties;
 
 /**
 * 
 */
 public class DataSourceConnection extends ConnectionStrategy {
+	
+	   public static final String DS_USER = "user"; //$NON-NLS-1$
+	    
+	    // need both user variables because Teiid uses 'user' and connectors use 'username'
+	    public static final String DS_USERNAME = JDBCPropertyNames.USERNAME; //$NON-NLS-1$
+	    public static final String DS_PASSWORD = JDBCPropertyNames.PASSWORD;     //$NON-NLS-1$
+	    
+	    // the driver is only used for making direct connections to the source, the 
+	    // connector type will provide the JDBCPropertyNames.CONNECTION_SOURCE driver class
+	    public static final String DS_DATASOURCE = "datasource"; //$NON-NLS-1$
+	 
+	    public static final String DS_SERVERNAME = "servername"; //$NON-NLS-1$
+	    public static final String DS_SERVERPORT = "portnumber"; //$NON-NLS-1$
+	    public static final String DS_JNDINAME = "ds-jndiname"; //$NON-NLS-1$
+	    public static final String DS_DATABASENAME = "databasename"; //$NON-NLS-1$
+	    public static final String DS_APPLICATION_NAME = "application-name"; //$NON-NLS-1$
+	    
+//	    public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$
+	    
+
 
 	private String driver = null;
 	private String username = null;
@@ -56,9 +79,9 @@ public class DataSourceConnection extends ConnectionStrategy {
        
        this.applName = this.getEnvironment().getProperty(DS_APPLICATION_NAME);
        
-       driver = this.getEnvironment().getProperty(DS_DRIVER);
+       driver = this.getEnvironment().getProperty(DS_DATASOURCE);
    	if (driver == null || driver.length() == 0) {
-   		throw new TransactionRuntimeException("Property " + DS_DRIVER + " was not specified");
+   		throw new TransactionRuntimeException("Property " + DS_DATASOURCE + " was not specified");
    	}
    	
    	this.username = this.getEnvironment().getProperty(DS_USER);
@@ -103,7 +126,10 @@ public class DataSourceConnection extends ConnectionStrategy {
    }    
 
    private XAConnection createConnection() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-       BaseDataSource dataSource = (BaseDataSource)Class.forName(this.driver).newInstance();
+       System.out.println("Creating Datasource Connection: \"" + this.serverName + " - " + this.databaseName + "\""); //$NON-NLS-1$ //$NON-NLS-2$
+
+	   
+	   BaseDataSource dataSource = (BaseDataSource)Class.forName(this.driver).newInstance();
 
        dataSource.setDatabaseName(this.databaseName);
        if (this.applName != null) {
@@ -113,8 +139,8 @@ public class DataSourceConnection extends ConnectionStrategy {
        if (dataSource instanceof EmbeddedDataSource) {
            ((EmbeddedDataSource)dataSource).setBootstrapFile(this.serverName);
        } else {
-           ((MMDataSource)dataSource).setServerName(this.serverName);
-           ((MMDataSource)dataSource).setPortNumber(Integer.parseInt(this.portNumber));            
+           ((TeiidDataSource)dataSource).setServerName(this.serverName);
+           ((TeiidDataSource)dataSource).setPortNumber(Integer.parseInt(this.portNumber));            
        }
        
        if (this.username != null) {

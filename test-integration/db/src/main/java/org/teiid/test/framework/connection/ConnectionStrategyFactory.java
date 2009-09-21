@@ -18,7 +18,7 @@ public class ConnectionStrategyFactory {
 	
 	    private static ConnectionStrategyFactory _instance = null;
 	    private ConnectionStrategy strategy = null;
-	    private static Map<String, ConnectionStrategy> sources = null;
+	    private Map<String, ConnectionStrategy> sources = null;
 
    	    
 	    private ConnectionStrategyFactory(){
@@ -27,17 +27,17 @@ public class ConnectionStrategyFactory {
 	    public static synchronized ConnectionStrategyFactory getInstance()   {
 	        if (_instance == null) {
 	            _instance = new ConnectionStrategyFactory();
-	            try {
-					_instance.initialize();
-				} catch (QueryTestFailedException e) {
+
+					_instance. init();
 					// TODO Auto-generated catch block
-					throw new TransactionRuntimeException(e);
-				}
+//					_instance = null;
+//					throw new TransactionRuntimeException(e);
+//				}
 	        }
 	        return _instance;
 	    }
 	    
-	    private static void init() {
+	    private void init() {
 	    	if (sources == null) {
 	    		sources = new HashMap<String, ConnectionStrategy>();
 	    	}
@@ -75,15 +75,13 @@ public class ConnectionStrategyFactory {
  
 	    }
 	    
-	    public ConnectionStrategy getConnectionStrategy() {
+	    public synchronized ConnectionStrategy getConnectionStrategy() throws QueryTestFailedException {
+	    	if (strategy == null) {
+	    		this.strategy = create(ConfigPropertyLoader.getProperties());
+	    	}
 	    	return this.strategy;
 	    }
 	    
-	    private void initialize() throws QueryTestFailedException  {
-	        init();
-	        this.strategy = create(ConfigPropertyLoader.getProperties());	                     
-
-	    }
 	        
 	    private ConnectionStrategy create(Properties props) throws QueryTestFailedException  {
 	    	
@@ -116,11 +114,10 @@ public class ConnectionStrategyFactory {
 	        return strategy;
 	    }
 	    
-	    public synchronized static ConnectionStrategy createDriverStrategy(String identifier, Properties props) throws QueryTestFailedException  {
+	    public synchronized ConnectionStrategy createDriverStrategy(String identifier, Properties props) throws QueryTestFailedException  {
 	     	if (identifier == null) {
 	    		return new DriverConnection(props);
 	     	}
-	     	init();
 	     	
 	     	ConnectionStrategy strategy = null;
 	     	if (sources.containsKey(identifier)) {
@@ -134,11 +131,10 @@ public class ConnectionStrategyFactory {
 	    
 	    }
 	    
-	    public synchronized static ConnectionStrategy createDataSourceStrategy(String identifier, Properties props) throws QueryTestFailedException  {	     	
+	    public synchronized ConnectionStrategy createDataSourceStrategy(String identifier, Properties props) throws QueryTestFailedException  {	     	
 	     	if (identifier == null) {
 	    		return new DataSourceConnection(props);
 	     	}
-	     	init();
 	     	
 	     	ConnectionStrategy strategy = null;
 	     	if (sources.containsKey(identifier)) {
@@ -152,12 +148,11 @@ public class ConnectionStrategyFactory {
 	    
 	    }
 	    
-	    public synchronized static ConnectionStrategy createJEEStrategy(String identifier, Properties props) throws QueryTestFailedException  {
+	    public synchronized ConnectionStrategy createJEEStrategy(String identifier, Properties props) throws QueryTestFailedException  {
 	     	if (identifier == null) {
 	    		return new JEEConnection(props);
 	     	}
 	     	
-	     	init();
 	     	ConnectionStrategy strategy = null;
 	     	if (sources.containsKey(identifier)) {
 	     		strategy = sources.get(identifier);
