@@ -68,7 +68,7 @@
 			<property name="dir">oracle</property>
 			<property name="connectortype">Oracle XA Connector</property>		
 		</datasource>	
-		<datasource  name="ds_sqlserver">
+		<datasource  name="ds_sqlserve_xa">
 			<property name="dir">sqlserver</property>
 			<property name="connectortype">SQL Server XA Connector</property>		
 		</datasource>
