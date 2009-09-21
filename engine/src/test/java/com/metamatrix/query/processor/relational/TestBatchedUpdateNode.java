@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -57,7 +58,7 @@ public class TestBatchedUpdateNode {
     	for (Command command : commands) {
 			shouldEvaluate.add(EvaluatableVisitor.needsProcessingEvaluation(command));
 		}
-        BatchedUpdateNode node = new BatchedUpdateNode(1, commands, null, shouldEvaluate, "myModelName"); //$NON-NLS-1$
+        BatchedUpdateNode node = new BatchedUpdateNode(1, commands, Collections.EMPTY_LIST, shouldEvaluate, "myModelName"); //$NON-NLS-1$
         CommandContext context = new CommandContext();
         context.setProcessorID("myProcessorID"); //$NON-NLS-1$
         node.initialize(context, Mockito.mock(BufferManager.class), pdm); 

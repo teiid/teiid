@@ -90,7 +90,7 @@ public class BatchedUpdateNode extends RelationalNode {
         for (int i = 0; i < updateCommands.size(); i++) {
             Command updateCommand = (Command)updateCommands.get(i).clone();
             CommandContext context = this.getContext();
-            if (this.contexts != null) {
+            if (this.contexts != null && !this.contexts.isEmpty()) {
             	context = (CommandContext)context.clone();
             	context.setVariableContext(this.contexts.get(i));
             }
