@@ -34,7 +34,7 @@ public class DataSourceConnection extends ConnectionStrategy {
 	    
 	    // the driver is only used for making direct connections to the source, the 
 	    // connector type will provide the JDBCPropertyNames.CONNECTION_SOURCE driver class
-	    public static final String DS_DATASOURCE = "datasource"; //$NON-NLS-1$
+	    public static final String DS_DRIVER = "driver"; //$NON-NLS-1$
 	 
 	    public static final String DS_SERVERNAME = "servername"; //$NON-NLS-1$
 	    public static final String DS_SERVERPORT = "portnumber"; //$NON-NLS-1$
@@ -79,28 +79,15 @@ public class DataSourceConnection extends ConnectionStrategy {
        
        this.applName = this.getEnvironment().getProperty(DS_APPLICATION_NAME);
        
-       driver = this.getEnvironment().getProperty(DS_DATASOURCE);
+       driver = this.getEnvironment().getProperty(DS_DRIVER);
    	if (driver == null || driver.length() == 0) {
-   		throw new TransactionRuntimeException("Property " + DS_DATASOURCE + " was not specified");
+   		throw new TransactionRuntimeException("Property " + DS_DRIVER + " was not specified");
    	}
    	
    	this.username = this.getEnvironment().getProperty(DS_USER);
    	this.pwd = this.getEnvironment().getProperty(DS_PASSWORD);
       	
 	}
-
-//	
-//	   public synchronized XAConnection getXAAdminConnection() throws QueryTestFailedException {
-//	       if (xaConnection == null) {
-//	           try {
-//	               xaConnection = createAdminConnection();
-//	           } catch (Exception e) {
-//	               throw new QueryTestFailedException(e);
-//	           }
-//	       }
-//	       return xaConnection;
-//	   } 
-
 
 	public Connection getConnection() throws QueryTestFailedException {
        try {
@@ -150,41 +137,7 @@ public class DataSourceConnection extends ConnectionStrategy {
 	    	   
        
        return ((XADataSource)dataSource).getXAConnection();
-   }
-   
-//   private XAConnection createAdminConnection() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-//       BaseDataSource dataSource = (BaseDataSource)Class.forName(this.driver).newInstance();
-//
-//       dataSource.setDatabaseName("Admin");
-//       if (this.applName != null) {
-//       	dataSource.setApplicationName(this.applName);
-//       }
-//       
-//       if (dataSource instanceof EmbeddedDataSource) {
-//           ((EmbeddedDataSource)dataSource).setBootstrapFile(this.serverName);
-//       } else {
-//           ((MMDataSource)dataSource).setServerName(this.serverName);
-//           ((MMDataSource)dataSource).setPortNumber(Integer.parseInt(this.portNumber));            
-//       }
-//       
-//       if (this.username != null) {
-//       	dataSource.setUser(this.username);
-//       	dataSource.setPassword(this.pwd);
-//       }
-//	    	   
-//       
-//       return ((XADataSource)dataSource).getXAConnection();
-//   }
-
-//   private static XAConnection getDataSource(String prefix, Properties props) throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException {
-//       // depending upon the DataDirect class hirarchy..
-//   	DataSource dataSource = (DataSource)Class.forName(props.getProperty(DS_DRIVER)).newInstance();
-//   	PropertiesUtils.setBeanProperties(dataSource, props, prefix);
-//   	
-//       return ((XADataSource)dataSource).getXAConnection();
-//   }
-   
-  
+   }  
 
    public void shutdown() {
        try {
