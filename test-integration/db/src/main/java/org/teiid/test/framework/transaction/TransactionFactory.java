@@ -7,6 +7,7 @@ package org.teiid.test.framework.transaction;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.TransactionContainer;
+import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
@@ -20,7 +21,7 @@ public class TransactionFactory {
     private TransactionFactory(){}
         
     
-    public static TransactionContainer create()  {
+    public static TransactionContainer create() throws QueryTestFailedException {
     	TransactionContainer transacton = null;
     	
     	// load the configuration properties defined at this time for the test

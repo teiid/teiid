@@ -29,6 +29,8 @@ public class XATransaction extends TransactionContainer {
         	XAResource xaResource = getXAConnection().getXAResource();
         	xaResource.setTransactionTimeout(120);
         	xaResource.start(xid, XAResource.TMNOFLAGS);
+        	debug("Start transaction using XID: " + xid.toString());
+
         } catch (Exception e) {
             throw new TransactionRuntimeException(e);
         }        
@@ -45,8 +47,11 @@ public class XATransaction extends TransactionContainer {
     protected void after(TransactionQueryTest test) {
         boolean delistSuccessful = false;
         boolean commit = false;
+        
+        XAResource xaResource = null;
+        boolean exception = false;
         try {
-            XAResource xaResource = getXAConnection().getXAResource();
+        	xaResource = getXAConnection().getXAResource();
             
 			xaResource.end(xid, XAResource.TMSUCCESS);
             
@@ -55,17 +60,20 @@ public class XATransaction extends TransactionContainer {
             }
             delistSuccessful = true;
         } catch (Exception e) {
+        	exception = true;
             throw new TransactionRuntimeException(e);            
         } finally {
             try {
                 if (!delistSuccessful || test.rollbackAllways()|| test.exceptionOccurred()) {
-                	getXAConnection().getXAResource().rollback(xid);
+                	xaResource.rollback(xid);
                 }
                 else if (commit) {
-                	getXAConnection().getXAResource().commit(xid, true);
+                	xaResource.commit(xid, true);
                 }            
             } catch (Exception e) {
-                throw new TransactionRuntimeException(e);            
+            	if (!exception) {
+            		throw new TransactionRuntimeException(e); 
+            	}
             } 
         }
     }    
