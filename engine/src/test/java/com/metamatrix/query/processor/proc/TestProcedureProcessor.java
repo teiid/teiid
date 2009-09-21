@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -38,9 +37,6 @@ import org.junit.Test;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.api.exception.query.QueryParserException;
-import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
 import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
@@ -53,7 +49,6 @@ import com.metamatrix.core.util.StringUtilities;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.mapping.relational.QueryNode;
-import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
@@ -822,9 +817,7 @@ public class TestProcedureProcessor {
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
         // Create expected results
         List[] expected = new List[] {
@@ -840,9 +833,7 @@ public class TestProcedureProcessor {
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                 
         FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
         List elementIDs = metadata.getElementIDsInGroupID(groupID);
@@ -872,9 +863,7 @@ public class TestProcedureProcessor {
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                 
         FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
         List elementIDs = metadata.getElementIDsInGroupID(groupID);
@@ -902,9 +891,7 @@ public class TestProcedureProcessor {
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
         // Create expected results
         List[] expected = new List[] {
@@ -912,47 +899,6 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr);
     }
 
-    private ProcessorPlan helpTestTempTable(String userUpdateStr,
-                                            FakeMetadataFacade metadata,
-                                            FakeDataManager dataMgr, List[] tempdata) throws QueryParserException,
-                                                                    QueryResolverException,
-                                                                    MetaMatrixComponentException,
-                                                                    QueryValidatorException,
-                                                                    QueryPlannerException,
-                                                                    QueryMetadataException {
-        QueryParser parser = new QueryParser();
-        Command userCommand = parser.parseCommand(userUpdateStr);
-        QueryResolver.resolveCommand(userCommand, metadata);
-        ValidatorReport report = Validator.validate(userCommand, metadata);
-        // Get invalid objects from report
-        Collection actualObjs = new ArrayList();
-        report.collectInvalidObjects(actualObjs);
-        if(actualObjs.size() > 0) {
-            fail("Expected no failures but got some: " + report.getFailureMessage());                //$NON-NLS-1$
-        }
-        QueryRewriter.rewrite(userCommand, null, metadata, null);
-
-        ProcessorPlan plan = null;        
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
-        try {
-            plan = QueryOptimizer.optimizePlan(userCommand, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
-        } finally {
-            if(DEBUG) {
-                System.out.println(analysisRecord.getDebugLog());     
-            }
-        }       
-        
-        Object tempGroup = new TempMetadataID("#temptable", Collections.EMPTY_LIST); //$NON-NLS-1$
-        List tempSymbols = new ArrayList(1);
-        ElementSymbol element = new ElementSymbol("Count"); //$NON-NLS-1$
-        tempSymbols.add(element);            
-                    
-        dataMgr.registerTuples(
-            tempGroup,
-            tempSymbols, tempdata);
-        return plan;
-    }
-    
     @Test public void testVirtualProcedure15() throws Exception {
         String userUpdateStr = "EXEC pm1.vsp19()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
@@ -960,9 +906,7 @@ public class TestProcedureProcessor {
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );   
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);  
         
         // Create expected results
         List[] expected = new List[] {
@@ -981,9 +925,7 @@ public class TestProcedureProcessor {
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );  
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata); 
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "First"}),  //$NON-NLS-1$
@@ -999,9 +941,7 @@ public class TestProcedureProcessor {
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
   
         // Create expected results
         List[] expected = new List[] {
@@ -1018,9 +958,7 @@ public class TestProcedureProcessor {
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );   
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);  
   
         // Create expected results
         List[] expected = new List[] {
@@ -1035,9 +973,7 @@ public class TestProcedureProcessor {
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );   
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);  
   
         // Create expected results
         List[] expected = new List[] {
@@ -1051,9 +987,7 @@ public class TestProcedureProcessor {
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );  
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata); 
         // Create expected results
         List[] expected = new List[] {
             Arrays.asList(new Object[] { "Second", new Integer(15)})}; //$NON-NLS-1$
@@ -1067,9 +1001,7 @@ public class TestProcedureProcessor {
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );   
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);  
         
         // Create expected results
         List[] expected = new List[] {};           
@@ -1269,9 +1201,7 @@ public class TestProcedureProcessor {
         //Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
 
-        ProcessorPlan plan = helpTestTempTable(userUpdateStr, metadata, dataMgr, new List[] {
-            Arrays.asList( new Object[] { new Integer(1) } ) 
-        } );
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
                     
         FakeMetadataObject groupID = (FakeMetadataObject) metadata.getGroupID("pm1.g2"); //$NON-NLS-1$
         List elementIDs = metadata.getElementIDsInGroupID(groupID);
@@ -1298,21 +1228,7 @@ public class TestProcedureProcessor {
         String userUpdateStr = "EXEC pm1.vsp46()";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
 
-        Command userCommand = null;       
-        QueryParser parser = new QueryParser();
-        userCommand = parser.parseCommand(userUpdateStr);
-        QueryResolver.resolveCommand(userCommand, metadata);
-        QueryRewriter.rewrite(userCommand, null, metadata, null);
-
-        ProcessorPlan plan = null;        
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
-        try {
-            plan = QueryOptimizer.optimizePlan(userCommand, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
-        } finally {
-            if(DEBUG) {
-                System.out.println(analysisRecord.getDebugLog());     
-            }
-        }       
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);       
 
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
@@ -2573,21 +2489,7 @@ public class TestProcedureProcessor {
         String userUpdateStr = "select a.e1 from (EXEC pm1.vsp46()) as a, pm1.g1 where a.e1=pm1.g1.e1";     //$NON-NLS-1$
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
 
-        Command userCommand = null;       
-        QueryParser parser = new QueryParser();
-        userCommand = parser.parseCommand(userUpdateStr);
-        QueryResolver.resolveCommand(userCommand, metadata);
-        QueryRewriter.rewrite(userCommand, null, metadata, null);
-
-        ProcessorPlan plan = null;        
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
-        try {
-            plan = QueryOptimizer.optimizePlan(userCommand, metadata, null, new DefaultCapabilitiesFinder(), analysisRecord, null);
-        } finally {
-            if(DEBUG) {
-                System.out.println(analysisRecord.getDebugLog());     
-            }
-        }       
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);   
 
         // Set up data
         FakeDataManager dataMgr = exampleDataManager(metadata);
@@ -2782,6 +2684,26 @@ public class TestProcedureProcessor {
                 Arrays.asList( new Object[] { "First", "First", new Integer(5), new Integer(5)} ), //$NON-NLS-1$ //$NON-NLS-2$
                 Arrays.asList( new Object[] { "Second", null, new Integer(15), null} ), //$NON-NLS-1$
                 Arrays.asList( new Object[] { "Third", null, new Integer(51), null} ) //$NON-NLS-1$
+        };
+        helpTestProcess(plan, expected, dataMgr);
+    }
+    
+    @Test public void testTempSubqueryInput() throws Exception {
+        String proc = "CREATE VIRTUAL PROCEDURE " + //$NON-NLS-1$
+        		"BEGIN " + //$NON-NLS-1$
+                " select e1, e2, e3, e4 into #t1 from pm1.g1;\n" + //$NON-NLS-1$
+                " update #t1 set e1 = 1 where e4 < 2;\n" + //$NON-NLS-1$
+                " delete from #t1 where e4 > 2;\n" + //$NON-NLS-1$
+                " select e1 from #t1;\n" + //$NON-NLS-1$
+        		"END"; //$NON-NLS-1$
+
+        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
+        FakeDataManager dataMgr = exampleDataManager2(metadata);
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
+
+        List[] expected = new List[] {
+                Arrays.asList( new Object[] { String.valueOf(1) } ), 
         };
         helpTestProcess(plan, expected, dataMgr);
     }

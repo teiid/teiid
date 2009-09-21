@@ -648,10 +648,6 @@
         <para>temp tables are non-transactional.
         </para>    
       </listitem>    
-      <listitem>
-        <para>Temp tables do not support update or delete operations.
-        </para>    
-      </listitem>    
     </itemizedlist>
     <para>The following example is a series of statements that loads a temporary table with data from 2 sources, and with a manually inserted record, and then uses that temp table in a subsequent query.</para>
     <programlisting>... 

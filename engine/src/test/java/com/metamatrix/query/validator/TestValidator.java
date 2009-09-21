@@ -1928,23 +1928,6 @@ public class TestValidator extends TestCase {
         helpValidate("SELECT * FROM vm1.doc1 where context(1, a2)='x'", new String[] {"context(1, a2)"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testValidTempUpdateDelete() {
-        FakeMetadataFacade fakeMetadata = exampleMetadata();
-        
-        TempMetadataStore store = new TempMetadataStore(new HashMap());
-        
-        ElementSymbol e1 = new ElementSymbol("#temp.e1");//$NON-NLS-1$
-        e1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        
-        store.addTempGroup("#temp", Arrays.asList(e1), false, true); //$NON-NLS-1$ 
-        
-        QueryMetadataInterface metadata = new TempMetadataAdapter(fakeMetadata, store);
-        
-        helpValidate("delete from #temp", new String[] {"#temp"}, metadata); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        helpValidate("update #temp set e1 = 1", new String[] {"#temp"}, metadata); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
     public void testInsertIntoVirtualWithQuery() throws Exception {
         QueryMetadataInterface metadata = FakeMetadataFactory.example1Cached();
         Command command = helpResolve("insert into vm1.g1 select 1, 2, true, 3", metadata); //$NON-NLS-1$

@@ -151,7 +151,7 @@ public class GroupSymbol extends Symbol implements Comparable {
 	}
     
     /**
-     * Returns true if this is a symbol for a temporary group (i.e. if it starts with a '#') 
+     * Returns true if this is a symbol for a temporary (implicit or explicit) group
      * @return
      * @since 5.5
      */

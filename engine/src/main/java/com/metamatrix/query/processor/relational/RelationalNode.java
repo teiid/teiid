@@ -357,7 +357,7 @@ public abstract class RelationalNode implements Cloneable, Describable{
      * @param elements List of elements
      * @return Map of element to Integer, which is the index
      */
-    protected Map createLookupMap(List elements) {
+    public static Map createLookupMap(List elements) {
         Map lookupMap = new HashMap();
         for(int i=0; i<elements.size(); i++) {
             Object element = elements.get(i);

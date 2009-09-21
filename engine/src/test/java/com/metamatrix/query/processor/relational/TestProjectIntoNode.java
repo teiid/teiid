@@ -29,6 +29,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.TupleBatch;
@@ -146,7 +147,7 @@ public class TestProjectIntoNode extends TestCase {
             this.exceptionOnClose = exceptionOnClose;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,MetaMatrixComponentException {return null;}
-        public TupleSource registerRequest(Object processorID,Command command,String modelName,String connectorBindingId, int nodeID) throws MetaMatrixComponentException {
+        public TupleSource registerRequest(Object processorID,Command command,String modelName,String connectorBindingId, int nodeID) throws MetaMatrixComponentException, ExpressionEvaluationException {
             callCount++;
             
             int batchSize = 1;
@@ -155,7 +156,7 @@ public class TestProjectIntoNode extends TestCase {
             if (command instanceof Insert) {
             	Insert insert = (Insert)command;
             	if (insert.isBulk()) {
-                    List batch = TempTableStoreImpl.getBulkRows(insert);
+                    List batch = TempTableStoreImpl.getBulkRows(insert, insert.getVariables());
                     batchSize = batch.size();
                     assertEquals("Unexpected batch on call " + callCount, expectedBatchSize, batchSize); //$NON-NLS-1$
                     

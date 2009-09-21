@@ -107,7 +107,7 @@ public abstract class Command implements LanguageObject {
     
     public static final int TYPE_DROP = 12;
 
-    private static List updateCommandSymbol;
+    private static List<SingleElementSymbol> updateCommandSymbol;
     
     /**
      * All temporary group IDs discovered while resolving this 
@@ -305,11 +305,11 @@ public abstract class Command implements LanguageObject {
 	 */
 	public abstract boolean areResultsCachable();
     
-    public static List getUpdateCommandSymbol() {
+    public static List<SingleElementSymbol> getUpdateCommandSymbol() {
         if (updateCommandSymbol == null ) {
             ElementSymbol symbol = new ElementSymbol("Count"); //$NON-NLS-1$
             symbol.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-            updateCommandSymbol = Arrays.asList(new ElementSymbol[] {symbol});
+            updateCommandSymbol = Arrays.asList((SingleElementSymbol)symbol);
         }
         return updateCommandSymbol;
     }

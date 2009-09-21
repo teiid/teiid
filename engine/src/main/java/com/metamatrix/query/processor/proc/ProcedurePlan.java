@@ -404,11 +404,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
     	if(rowCount == null) {
 			rowCount = new Integer(NO_ROWS_UPDATED);
     	}
-
-        final List updateResult = new ArrayList(1);
-        updateResult.add(rowCount);
-
-        return new UpdateCountTupleSource(updateResult);
+        return new UpdateCountTupleSource((Integer)rowCount);
     }
 
     /**

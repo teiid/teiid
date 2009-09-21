@@ -163,9 +163,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	validateNoXMLUpdates(obj);
         validateHasProjectedSymbols(obj);
         validateGroupSupportsUpdate(obj.getGroup());
-        if (obj.getGroup().isTempTable()) {
-            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.update_temp", obj.getGroup()), obj.getGroup()); //$NON-NLS-1$
-        }
     }
 
     public void visit(GroupBy obj) {
@@ -834,10 +831,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         }
         
         validateSetClauseList(update.getChangeList());
-        
-        if (update.getGroup().isTempTable()) {
-            handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.update_temp", update.getGroup()), update.getGroup()); //$NON-NLS-1$
-        }
     }
     
     /**

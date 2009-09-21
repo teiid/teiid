@@ -59,6 +59,7 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.message.ParameterInfo;
 import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.mapping.relational.QueryNode;
+import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.FakeFunctionMetadataSource;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.TestOptimizer;
@@ -105,11 +106,11 @@ public class TestProcessor {
         }
     }
 
-	public static ProcessorPlan helpGetPlan(String sql, FakeMetadataFacade metadata) { 
+	public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata) { 
         return helpGetPlan(sql, metadata, null);
     }
     
-    public static ProcessorPlan helpGetPlan(String sql, FakeMetadataFacade metadata, String[] bindings) { 
+    public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata, String[] bindings) { 
         if(DEBUG) System.out.println("\n####################################\n" + sql);  //$NON-NLS-1$
 
         Command command = helpParse(sql);   
@@ -128,18 +129,18 @@ public class TestProcessor {
         return process;
     }
 
-    static ProcessorPlan helpGetPlan(Command command, FakeMetadataFacade metadata) {
+    static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata) {
         return helpGetPlan(command, metadata, new DefaultCapabilitiesFinder());
     }
 
-	static ProcessorPlan helpGetPlan(Command command, FakeMetadataFacade metadata, CapabilitiesFinder capFinder) {
+	static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {
         CommandContext context = new CommandContext();
         context.setProcessorBatchSize(2000);
         context.setConnectorBatchSize(2000);
 	    return helpGetPlan(command, metadata, capFinder, context);
     }
     
-    static ProcessorPlan helpGetPlan(Command command, FakeMetadataFacade metadata, CapabilitiesFinder capFinder, CommandContext context) {
+    static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) {
 		if(DEBUG) System.out.println("\n####################################\n" + command); //$NON-NLS-1$
 
 		// resolve

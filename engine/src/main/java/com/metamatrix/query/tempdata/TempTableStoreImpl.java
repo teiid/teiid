@@ -23,14 +23,15 @@
 package com.metamatrix.query.tempdata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.ExpressionEvaluationException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryProcessingException;
@@ -48,25 +49,107 @@ import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.processor.proc.UpdateCountTupleSource;
+import com.metamatrix.query.processor.relational.RelationalNode;
+import com.metamatrix.query.processor.relational.TupleCollector;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Create;
+import com.metamatrix.query.sql.lang.Criteria;
+import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.Drop;
 import com.metamatrix.query.sql.lang.Insert;
+import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.Update;
 import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.TypeRetrievalUtil;
 
 /** 
  * @since 5.5
  */
-public class TempTableStoreImpl implements TempTableStore{
-    private BufferManager buffer;
+public class TempTableStoreImpl implements TempTableStore {
+	
+    private abstract class UpdateTupleSource implements TupleSource {
+		private final String groupKey;
+		private final TupleSourceID tsId;
+		private final TupleSource ts;
+		protected final Map lookup;
+		private final TupleCollector tc;
+		private final TupleSourceID newTs;
+		protected final Evaluator eval;
+		private final Criteria crit;
+		protected int updateCount = 0;
+		private boolean done;
+
+		private UpdateTupleSource(String groupKey, TupleSourceID tsId, Criteria crit) throws TupleSourceNotFoundException, MetaMatrixComponentException {
+			this.groupKey = groupKey;
+			this.tsId = tsId;
+			this.ts = buffer.getTupleSource(tsId);
+    		List columns = buffer.getTupleSchema(tsId);
+			this.lookup = RelationalNode.createLookupMap(columns);
+			this.newTs = buffer.createTupleSource(columns, TypeRetrievalUtil.getTypeNames(columns), sessionID, TupleSourceType.PROCESSOR);
+			this.tc = new TupleCollector(newTs, buffer);
+			this.eval = new Evaluator(lookup, null, null);
+			this.crit = crit;
+		}
+
+		@Override
+		public List<?> nextTuple() throws MetaMatrixComponentException,
+				MetaMatrixProcessingException {
+			if (done) {
+				return null;
+			}
+			
+			List<?> tuple = null;
+			//still have to worry about blocked exceptions...
+			while ((tuple = ts.nextTuple()) != null) {
+				if (eval.evaluate(crit, tuple)) {
+					tuplePassed(tuple);
+				} else {
+					tupleFailed(tuple);
+				}
+			}
+			tc.close();
+			groupToTupleSourceID.put(groupKey, newTs);
+			try {
+		        buffer.removeTupleSource(tsId);
+		    }catch(TupleSourceNotFoundException e) {
+		    	
+		    }
+		    done = true;
+			return Arrays.asList(updateCount);
+		}
+		
+		protected void addTuple(List<?> tuple) throws MetaMatrixComponentException {
+			try {
+				tc.addTuple(tuple);
+			} catch (TupleSourceNotFoundException e) {
+				throw new MetaMatrixComponentException(e);
+			}
+		}
+
+		protected abstract void tuplePassed(List<?> tuple) throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException;
+		
+		protected abstract void tupleFailed(List<?> tuple) throws MetaMatrixComponentException;
+
+		@Override
+		public List<SingleElementSymbol> getSchema() {
+			return Command.getUpdateCommandSymbol();
+		}
+
+		@Override
+		public void closeSource() throws MetaMatrixComponentException {
+			
+		}
+	}
+
+	private BufferManager buffer;
     private TempMetadataStore tempMetadataStore = new TempMetadataStore();
-    private Map groupToTupleSourceID = new HashMap();
+    private Map<String, TupleSourceID> groupToTupleSourceID = new HashMap<String, TupleSourceID>();
     private String sessionID;
     private TempTableStore parentTempTableStore;
     
@@ -96,7 +179,7 @@ public class TempTableStoreImpl implements TempTableStore{
         }
         groupToTupleSourceID.put(tempTableName, tsId);
     }
-    
+
     public void removeTempTable(Command command) throws MetaMatrixComponentException{
         if(command.getType() == Command.TYPE_DROP) {
             String tempTableName = ((Drop)command).getTable().getName().toUpperCase();
@@ -106,7 +189,7 @@ public class TempTableStoreImpl implements TempTableStore{
     
     public void removeTempTableByName(String tempTableName) throws MetaMatrixComponentException {
         tempMetadataStore.removeTempGroup(tempTableName);
-        TupleSourceID tsId = (TupleSourceID)this.groupToTupleSourceID.remove(tempTableName);
+        TupleSourceID tsId = this.groupToTupleSourceID.remove(tempTableName);
         if(tsId != null) {
             try {
                 buffer.removeTupleSource(tsId);
@@ -119,52 +202,90 @@ public class TempTableStoreImpl implements TempTableStore{
     }
         
     public TupleSource registerRequest(Command command) throws MetaMatrixComponentException, ExpressionEvaluationException, QueryProcessingException{
-        if(!hasTempTable(command)) {
-            return null;
-        }
-        
-        switch (command.getType()) {
-            case Command.TYPE_INSERT:
-            {
-                return addTuple((Insert)command);
+        if (command instanceof Query) {
+            Query query = (Query)command;
+            GroupSymbol group = (GroupSymbol)query.getFrom().getGroups().get(0);
+            if (!group.isTempGroupSymbol()) {
+            	return null;
             }
-            case Command.TYPE_QUERY:
-            {
-                Query query = (Query)command;
-                GroupSymbol group = (GroupSymbol)query.getFrom().getGroups().get(0);
-                TupleSourceID tsId = getTupleSourceID(group.getNonCorrelationName().toUpperCase(), command);
-                try {
-                    return buffer.getTupleSource(tsId);
-                }catch(TupleSourceNotFoundException e) {
-                    throw new MetaMatrixComponentException(e);
-                }
-            }
-            case Command.TYPE_CREATE:
-            {
-                addTempTable(((Create)command).getTable().getName().toUpperCase(), ((Create)command).getColumns(), false);
-                return new UpdateCountTupleSource(0);
-            }
-            case Command.TYPE_DROP:
-            {
-                removeTempTable(command);
-                return new UpdateCountTupleSource(0);
+            TupleSourceID tsId = getTupleSourceID(group.getNonCorrelationName().toUpperCase(), command);
+            try {
+                return buffer.getTupleSource(tsId);
+            }catch(TupleSourceNotFoundException e) {
+                throw new MetaMatrixComponentException(e);
             }
         }
-        throw new AssertionError("unhandled temp table reqest"); //$NON-NLS-1$
+        if (command instanceof ProcedureContainer) {
+        	GroupSymbol group = ((ProcedureContainer)command).getGroup();
+        	if (!group.isTempGroupSymbol()) {
+        		return null;
+        	}
+        	final String groupKey = group.getNonCorrelationName().toUpperCase();
+            final TupleSourceID tsId = getTupleSourceID(groupKey, command);
+        	if (command instanceof Insert) {
+        		return addTuple((Insert)command, tsId);
+        	}
+        	try {
+	        	if (command instanceof Update) {
+	        		final Update update = (Update)command;
+	        		final Criteria crit = update.getCriteria();
+	        		return new UpdateTupleSource(groupKey, tsId, crit) {
+	        			@Override
+	        			protected void tuplePassed(List<?> tuple)
+	        					throws ExpressionEvaluationException,
+	        					BlockedException, MetaMatrixComponentException {
+	        				List<Object> newTuple = new ArrayList<Object>(tuple);
+		        			for (Map.Entry<ElementSymbol, Expression> entry : update.getChangeList().getClauseMap().entrySet()) {
+		        				newTuple.set((Integer)lookup.get(entry.getKey()), eval.evaluate(entry.getValue(), tuple));
+		        			}
+		        			updateCount++;
+		        			addTuple(newTuple);
+	        			}
+	        			
+	        			protected void tupleFailed(java.util.List<?> tuple) throws MetaMatrixComponentException {
+	        				addTuple(tuple);
+	        			}
+	        		};
+	        	}
+	        	if (command instanceof Delete) {
+	        		final Delete delete = (Delete)command;
+	        		final Criteria crit = delete.getCriteria();
+	        		return new UpdateTupleSource(groupKey, tsId, crit) {
+	        			@Override
+	        			protected void tuplePassed(List<?> tuple)
+	        					throws ExpressionEvaluationException,
+	        					BlockedException, MetaMatrixComponentException {
+	        				updateCount++;
+	        			}
+	        			
+	        			protected void tupleFailed(java.util.List<?> tuple) throws MetaMatrixComponentException {
+	        				addTuple(tuple);
+	        			}
+	        		};
+	        	}
+        	} catch (TupleSourceNotFoundException e) {
+        		throw new MetaMatrixComponentException(e);
+        	}
+        }
+    	if (command instanceof Create) {
+    		addTempTable(((Create)command).getTable().getName().toUpperCase(), ((Create)command).getColumns(), false);
+            return new UpdateCountTupleSource(0);	
+    	}
+    	if (command instanceof Drop) {
+            removeTempTable(command);
+            return new UpdateCountTupleSource(0);
+    	}
+        return null;
     }
     
     public void removeTempTables() throws MetaMatrixComponentException{
-        List names = new ArrayList( groupToTupleSourceID.keySet() );
-        Iterator iter = names.iterator();
-
-        while(iter.hasNext()) {
-            removeTempTableByName((String)iter.next());
+        for (String name : new ArrayList<String>( groupToTupleSourceID.keySet() )) {
+            removeTempTableByName(name);
         }
     }
     
     private TupleSourceID getTupleSourceID(String tempTableID, Command command) throws MetaMatrixComponentException, QueryProcessingException{
-       
-        TupleSourceID tsID = (TupleSourceID)groupToTupleSourceID.get(tempTableID);
+        TupleSourceID tsID = groupToTupleSourceID.get(tempTableID);
         if(tsID != null) {
             return tsID;
         }
@@ -195,42 +316,23 @@ public class TempTableStoreImpl implements TempTableStore{
         	throw new QueryProcessingException(QueryExecPlugin.Util.getString("TempTableStore.table_doesnt_exist_error", tempTableID)); //$NON-NLS-1$
         }
         addTempTable(tempTableID, columns, true);       
-        return (TupleSourceID)groupToTupleSourceID.get(tempTableID);
+        return groupToTupleSourceID.get(tempTableID);
     }
     
-    private TupleSource addTuple(Insert insert) throws MetaMatrixComponentException, ExpressionEvaluationException, QueryProcessingException {
+    private TupleSource addTuple(Insert insert, TupleSourceID tsId) throws MetaMatrixComponentException, ExpressionEvaluationException {
         GroupSymbol group = insert.getGroup();
-        TupleSourceID tsId = getTupleSourceID(group.getNonCorrelationName().toUpperCase(), insert);
         int tuplesAdded = 0;
         try {
             int rowCount = buffer.getRowCount(tsId);
             TupleBatch tupleBatch;
-            List elements = ResolverUtil.resolveElementsInGroup(group, new TempMetadataAdapter(null, tempMetadataStore));
+            List<ElementSymbol> elements = ResolverUtil.resolveElementsInGroup(group, new TempMetadataAdapter(null, tempMetadataStore));
             
-            if ( insert.isBulk() ) {
-                List<List<Object>> tuples = getBulkRows(insert);
-                
-                tuplesAdded = tuples.size();
+            List<List<Object>> tuples = getBulkRows(insert, elements);
+            
+            tuplesAdded = tuples.size();
 
-                // Buffer manager has 1 based index for the tuple sources
-                tupleBatch = new TupleBatch((++rowCount), tuples);
-                
-            } else {
-                
-                tuplesAdded = 1;
-                List tuple = new ArrayList(elements.size());
-                for(Iterator i = elements.iterator(); i.hasNext();){
-                    ElementSymbol symbol = (ElementSymbol)i.next();
-                    int index = insert.getVariables().indexOf(symbol);
-                    Object value = null;
-                    if (index != -1) {
-                    	Expression expr = (Expression)insert.getValues().get(index);
-                        value = Evaluator.evaluate(expr);
-                    }
-                    tuple.add(value);
-                }
-                tupleBatch = new TupleBatch(++rowCount, new List[]{tuple});
-            }                        
+            // Buffer manager has 1 based index for the tuple sources
+            tupleBatch = new TupleBatch((++rowCount), tuples);
             
             buffer.addTupleBatch(tsId, tupleBatch);
         } catch (TupleSourceNotFoundException err) {
@@ -244,18 +346,31 @@ public class TempTableStoreImpl implements TempTableStore{
         return new UpdateCountTupleSource(tuplesAdded);
     }
 
-	public static List<List<Object>> getBulkRows(Insert insert) {
-		Constant c = (Constant)insert.getValues().get(0);
-		int bulkRowCount = ((List<?>)c.getValue()).size();
+	public static List<List<Object>> getBulkRows(Insert insert, List<ElementSymbol> elements) throws ExpressionEvaluationException, BlockedException, MetaMatrixComponentException {
+		int bulkRowCount = 1;
+		if (insert.isBulk()) {
+			Constant c = (Constant)insert.getValues().get(0);
+			bulkRowCount = ((List<?>)c.getValue()).size();
+		}
 		
 		List<List<Object>> tuples = new ArrayList<List<Object>>(bulkRowCount);
 		
 		for (int row = 0; row < bulkRowCount; row++) {
 			List<Object> currentRow = new ArrayList<Object>(insert.getValues().size());
-		    for (int i = 0; i < insert.getValues().size(); i++) {
-		    	Constant multiValue = (Constant)insert.getValues().get(i);
-		    	currentRow.add(((List<?>)multiValue.getValue()).get(row));
-		    }
+			for (ElementSymbol symbol : elements) {
+                int index = insert.getVariables().indexOf(symbol);
+                Object value = null;
+                if (index != -1) {
+                	if (insert.isBulk()) {
+	                	Constant multiValue = (Constant)insert.getValues().get(index);
+	    		    	value = ((List<?>)multiValue.getValue()).get(row);
+                	} else {
+                		Expression expr = (Expression)insert.getValues().get(index);
+                        value = Evaluator.evaluate(expr);
+                	}
+                }
+                currentRow.add(value);
+            }
 		    tuples.add(currentRow);
 		}
 		return tuples;
@@ -286,11 +401,11 @@ public class TempTableStoreImpl implements TempTableStore{
         return false;
     }
     
-    public Set getAllTempTables() {
-        return new HashSet(this.groupToTupleSourceID.keySet());
+    public Set<String> getAllTempTables() {
+        return new HashSet<String>(this.groupToTupleSourceID.keySet());
     }
     
     public TupleSourceID getTupleSourceID(String tempTableName) {
-    	return (TupleSourceID)groupToTupleSourceID.get(tempTableName.toUpperCase());
+    	return groupToTupleSourceID.get(tempTableName.toUpperCase());
     } 
 }

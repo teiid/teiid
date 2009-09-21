@@ -71,10 +71,6 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
         }
     }
     
-    public Program getLoopProgram() { //Defect 13291 - added method to support changes to ProcedurePlan
-        return loopProgram;
-    }
-
     /**
      * Returns a deep clone
      */
