@@ -120,6 +120,10 @@ public abstract class TransactionContainer {
 
 	        }
 	        
+            if (test.exceptionExpected() && !test.exceptionOccurred()) {
+            	throw new TransactionRuntimeException("Expected exception, but one did not occur");
+            }
+	        
 	        try {
 		        detail("Start validation: " + test.getTestName());
 
