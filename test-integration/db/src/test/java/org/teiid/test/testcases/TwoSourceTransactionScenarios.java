@@ -199,7 +199,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
                 test.execute("select * from g1 where e1 >= 100 and e1 < 112");
                 test.assertRowCount(12);
                 test.execute("select * from g2 where e1 >= 100 and e1 < 112");
-                test.assertRowCount(12);        
+                test.assertRowCount(0);        
                 test.closeConnection();
           	}
  
@@ -685,8 +685,12 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
                 if (!exceptionOccurred()) {
                     fail("should have failed with time out exception");
                 }
-                else {
-                    assertTrue(getLastException().getMessage().indexOf("Operation timed out before completion") != -1);
+                else if (getLastException() != null){
+                	if (getLastException().getMessage().indexOf("Operation timed out before completion") != -1) {
+                		assertTrue(false);
+                	}
+                } else {
+                	fail("The expected exception was not saved.");
                 }
             } 
             

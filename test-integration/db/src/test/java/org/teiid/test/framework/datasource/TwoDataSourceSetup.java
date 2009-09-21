@@ -19,11 +19,10 @@ public class TwoDataSourceSetup implements DataSourceSetup {
     
    
 	@Override
-	public void setup() throws Exception {
-    // NOTE:  dont close the connections here because in most cases they are reused
-    //			to validate the results
-    //		The connections will be closed at teardown
-    	
+	public void setup() throws Exception {   	
+	    // NOTE:  dont close the connections here because in most cases they are reused
+	    //			to validate the results
+	    //		The connections will be closed at teardown
      	
        System.out.println("Run TwoSource Setup...");
 
@@ -55,9 +54,7 @@ public class TwoDataSourceSetup implements DataSourceSetup {
         test1.assertRowCount(100);
         test1.execute("select * from g2 ");
         test1.assertRowCount(100);  
-        
-        test1.closeConnection();
-        
+         
         AbstractQueryTest test2 = new QueryExecution(ConnectionUtil.getSource("pm2")); //$NON-NLS-1$
         test2.execute("delete from g2"); //$NON-NLS-1$
         test2.execute("delete from g1");         //$NON-NLS-1$
@@ -86,10 +83,8 @@ public class TwoDataSourceSetup implements DataSourceSetup {
         test2.execute("select * from g2 ");
         test2.assertRowCount(100);        
  
-        test2.closeConnection();
-        System.out.println("TwoSource Setup Completed");
-
-        
+         System.out.println("TwoSource Setup Completed");
+       
 
     }
 	

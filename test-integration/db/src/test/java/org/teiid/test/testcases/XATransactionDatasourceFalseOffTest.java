@@ -31,7 +31,6 @@ public class XATransactionDatasourceFalseOffTest extends TwoSourceTransactionSce
     	System.setProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DATASOURCE_CONNECTION);
     	System.setProperty(ConnectionStrategy.AUTOCOMMIT, "false");
     	System.setProperty(ConnectionStrategy.TXN_AUTO_WRAP, "off");
- //   	System.setProperty(ConnectionStrategy.FETCH_SIZE, "true");
     	
 		
 	}
