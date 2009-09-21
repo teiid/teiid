@@ -24,7 +24,7 @@ public class BaseAbstractTransactionTestCase extends TestCase  {
         super(name);
     }
     
-    protected TransactionContainer getTransactionContainter() {
+    protected TransactionContainer getTransactionContainter() throws QueryTestFailedException {
     	return TransactionFactory.create(); 
     }
 
