@@ -1537,7 +1537,7 @@ public class QueryRewriter {
      * @throws QueryValidatorException
      * @since 4.2
      */
-    private Criteria simplifyConvertFunction(SetCriteria crit) throws QueryValidatorException {
+	private Criteria simplifyConvertFunction(SetCriteria crit) throws QueryValidatorException {
         Function leftFunction = (Function) crit.getExpression();
         Expression leftExpr = leftFunction.getArgs()[0];
         String leftExprTypeName = DataTypeManager.getDataTypeName(leftExpr.getType());
@@ -1564,11 +1564,13 @@ public class QueryRewriter {
                 }   
             }
             
-            if (result != null) {
-            	newValues.add(result);
-            } else {
+            if (result == null) {
             	removedSome = true;
             	i.remove();
+            } else if (DataTypeManager.isImplicitConversion(leftExprTypeName, DataTypeManager.getDataTypeName(rightConstant.getType()))) {
+            	newValues.add(result);
+            } else {
+            	convertedAll = false;
             }
         }
         

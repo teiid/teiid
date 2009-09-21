@@ -2276,10 +2276,21 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria(original, expected);
     }
     
-    @Test public void testRewriteLong() {
+    /**
+     * Test ensures that '22.0' is a valid long via bigdecimal
+     */
+    @Test public void testRewriteBigDecimal() {
     	String original = "convert(BQT1.SmallA.LongNum, bigdecimal) = '22.0'"; //$NON-NLS-1$
     	CompareCriteria crit = new CompareCriteria(new ElementSymbol("BQT1.SmallA.LongNum"), CompareCriteria.EQ, new Constant(new Long(22))); //$NON-NLS-1$
     	helpTestRewriteCriteria(original, crit, FakeMetadataFactory.exampleBQTCached()); 
+    }
+
+    /**
+     * Test ensures that we will not attempt to invert the widening conversion
+     */
+    @Test public void testRewriteWideningIn() {
+    	String original = "convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})"; //$NON-NLS-1$
+    	helpTestRewriteCriteria(original, parseCriteria("convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})", FakeMetadataFactory.exampleBQTCached()), FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$ 
     }
     
 }
