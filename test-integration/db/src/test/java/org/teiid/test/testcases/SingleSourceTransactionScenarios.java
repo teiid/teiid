@@ -6,7 +6,6 @@ package org.teiid.test.testcases;
 
 import org.teiid.test.framework.AbstractQueryTransactionTest;
 import org.teiid.test.framework.QueryExecution;
-import org.teiid.test.framework.TransactionQueryTest;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
