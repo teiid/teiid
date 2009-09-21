@@ -35,6 +35,10 @@
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-metadata</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
 			<type>test-jar</type>
 		</dependency>
 		<dependency>
@@ -45,7 +49,6 @@
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-connector-sdk</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
@@ -93,20 +96,17 @@
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-loopback</artifactId>
 			<version>${project.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-text</artifactId>
 			<version>${project.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>connector-text</artifactId>
 			<type>test-jar</type>
 			<version>${project.version}</version>
-			<scope>test</scope>
 		</dependency>
 
 		<dependency>
@@ -119,7 +119,6 @@
 			<artifactId>connector-jdbc</artifactId>
 			<type>test-jar</type>
 			<version>${project.version}</version>
-			<scope>test</scope>
 		</dependency>
 
 		<!-- external dependencies -->
