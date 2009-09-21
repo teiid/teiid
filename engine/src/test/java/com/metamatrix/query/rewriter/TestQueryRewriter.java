@@ -2276,4 +2276,10 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria(original, expected);
     }
     
+    @Test public void testRewriteLong() {
+    	String original = "convert(BQT1.SmallA.LongNum, bigdecimal) = '22.0'"; //$NON-NLS-1$
+    	CompareCriteria crit = new CompareCriteria(new ElementSymbol("BQT1.SmallA.LongNum"), CompareCriteria.EQ, new Constant(new Long(22))); //$NON-NLS-1$
+    	helpTestRewriteCriteria(original, crit, FakeMetadataFactory.exampleBQTCached()); 
+    }
+    
 }
