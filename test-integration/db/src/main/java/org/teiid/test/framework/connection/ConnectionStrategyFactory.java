@@ -47,9 +47,7 @@ public class ConnectionStrategyFactory {
 	    }    
 	    
 	    private void shutdown() {
-            Properties p = System.getProperties();
-            p.remove(ConfigPropertyNames.CONFIG_FILE);
-
+	    	ConfigPropertyLoader.cleanup();
             
             if (driversources != null) {
             	shutDownSources(driversources);

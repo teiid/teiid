@@ -49,6 +49,13 @@ public class ConfigPropertyLoader {
 		    }
 		}
 		
+		public static void cleanup() {
+            Properties p = System.getProperties();
+            p.remove(ConfigPropertyNames.CONFIG_FILE);
+            p.remove(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
+			
+		}
+		
 		public static void main(String[] args) {
 			System.setProperty("test", "value");
 			

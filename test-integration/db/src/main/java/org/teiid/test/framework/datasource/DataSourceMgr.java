@@ -6,6 +6,7 @@ package org.teiid.test.framework.datasource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -55,7 +56,6 @@ public class DataSourceMgr {
 	private Set<String> assignedDataSources = new HashSet<String>();
 	
 	private int lastassigned = 0;
-	private Set<String> excludedDBTypes = null;
 
 
 	private DataSourceMgr() {
@@ -78,14 +78,19 @@ public class DataSourceMgr {
 		return _instance;
 	}
 	
+	/**
+	 * reset is called when a predetermined set of datasources are going to be set
+	 * This is to ensure any exclusions / inclusions are considered for the 
+	 * next executed set of test.
+	 * 
+	 *
+	 * @since
+	 */
 	public static synchronized void reset() {
-		
-		_instance.dstypeMap.clear();
-		_instance.allDatasourcesMap.clear();
+
+		//
 		_instance.modelToDatasourceMap.clear();
 		_instance.assignedDataSources.clear();
-		
-		_instance = null;
 		
 	}
 	
@@ -95,18 +100,9 @@ public class DataSourceMgr {
 	
 	public boolean hasAvailableDataSource(int numRequiredDataSources) {
 		// reset the mapping at the start of each test
-		_instance.modelToDatasourceMap.clear();
-		excludedDBTypes = new HashSet<String>(3);
+		_instance.modelToDatasourceMap.clear();		
 		
-		
-		String excludeprop = ConfigPropertyLoader.getProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
-		
-		if (excludeprop == null || excludeprop.length() == 0) {
-			return (numRequiredDataSources <= numberOfAvailDataSources());
-		}
-		
-		List<String> eprops = StringUtil.split(excludeprop, ",");
-		excludedDBTypes.addAll(eprops);
+		Set excludedDBTypes = getExcludedDBTypes();
 		        
     	int cntexcluded = 0;
 		Iterator<DataSource> it= allDatasourcesMap.values().iterator();
@@ -119,6 +115,21 @@ public class DataSourceMgr {
 		
 		return(numRequiredDataSources <=  (numberOfAvailDataSources() - cntexcluded)); 
 		
+	}
+	
+	private Set getExcludedDBTypes() {
+
+		String excludeprop = ConfigPropertyLoader.getProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
+		
+		if (excludeprop == null || excludeprop.length() == 0) {
+			return  Collections.EMPTY_SET;
+		}
+		Set<String> excludedDBTypes = new HashSet<String>(3);
+
+		List<String> eprops = StringUtil.split(excludeprop, ",");
+		excludedDBTypes.addAll(eprops);
+		return excludedDBTypes;
+	
 	}
 	
 	
@@ -141,7 +152,8 @@ public class DataSourceMgr {
 			return modelToDatasourceMap.get(key);
 		} 
 
-		
+		Set excludedDBTypes = getExcludedDBTypes();
+
 		if (dstypeMap.containsKey(datasourceid)) {
 
 			Map datasources = dstypeMap.get(datasourceid);
