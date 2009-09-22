@@ -94,8 +94,11 @@ public class DataSourceMgr {
 	}
 	
 	public boolean hasAvailableDataSource(int numRequiredDataSources) {
-
+		// reset the mapping at the start of each test
+		_instance.modelToDatasourceMap.clear();
 		excludedDBTypes = new HashSet<String>(3);
+		
+		
 		String excludeprop = ConfigPropertyLoader.getProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
 		
 		if (excludeprop == null || excludeprop.length() == 0) {
