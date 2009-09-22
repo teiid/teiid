@@ -228,7 +228,6 @@
 			 	<classpath>
 			   		<fileset dir="${lib.dir}">
 			   			<include name="*.jar" />
-			   			<include name="jbedsp-datadirect-0.0.1-SNAPSHOT.jar" />
 			   		</fileset>
 			   		<pathelement path="${maven.runtime.classpath}"/>
 			 	</classpath>
@@ -267,6 +266,9 @@
 			 
 
 			 </sql> 
+	   	
+	   	<echo>Executed sql for ${rdbms.type}</echo>
+
 	    	
 	    </target>
 	
