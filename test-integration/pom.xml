@@ -79,6 +79,10 @@
 			<artifactId>teiid-engine</artifactId>
 			<type>test-jar</type>
 		</dependency>
+	    <dependency>
+	      <groupId>org.jboss.teiid</groupId>
+	      <artifactId>teiid-txn-jbossts</artifactId>
+	    </dependency>
 
 		<!-- internal dependencies that are only used by integration testing -->
 		<dependency>
