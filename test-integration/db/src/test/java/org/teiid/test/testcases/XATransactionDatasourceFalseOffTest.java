@@ -30,6 +30,7 @@ import org.teiid.test.framework.connection.ConnectionStrategy;
 
 	@Override
 	protected void setUp() throws Exception {
+		super.setUp();
 		
 		//XATransactions currently doesn't support using sqlserver 
 		//{@see TEIID-559} 

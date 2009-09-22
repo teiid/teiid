@@ -14,6 +14,7 @@ import junit.framework.TestCase;
 
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.connection.ConnectionUtil;
+import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.transaction.TransactionFactory;
 
@@ -23,6 +24,11 @@ public class BaseAbstractTransactionTestCase extends TestCase  {
     public BaseAbstractTransactionTestCase(String name) {
         super(name);
     }
+    
+	@Override
+	protected void setUp() throws Exception {
+		DataSourceMgr.reset();
+	}
     
     protected TransactionContainer getTransactionContainter() throws QueryTestFailedException {
     	return TransactionFactory.create(); 
