@@ -9,7 +9,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.XAConnection;
@@ -18,7 +20,7 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
-import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
@@ -60,6 +62,9 @@ public abstract class ConnectionStrategy {
     public static final String FETCH_SIZE = ExecutionProperties.PROP_FETCH_SIZE;
     
     public static final String EXEC_IN_BATCH = "execute.in.batch"; //$NON-NLS-1$
+    
+    
+    private Map<String, DataSource> datasources = null;
 
     
     public ConnectionStrategy(Properties props) throws QueryTestFailedException {
@@ -101,6 +106,10 @@ public abstract class ConnectionStrategy {
     	return env;
     }
     
+    public Map<String, DataSource> getDataSources() {
+    	return this.datasources;
+    }
+    
     class CloseInterceptor implements InvocationHandler {
 
         Connection conn;
@@ -123,6 +132,8 @@ public abstract class ConnectionStrategy {
    
     void configure() throws QueryTestFailedException  {
     	
+    	datasources = new HashMap<String, DataSource>(3);
+    	
     	String ac = this.env.getProperty(AUTOCOMMIT, "true");
     	this.autoCommit = Boolean.getBoolean(ac);
     	
@@ -140,16 +151,16 @@ public abstract class ConnectionStrategy {
             
             Admin admin = (Admin)c.getAdminAPI();
         
-            boolean update = false;
+ //           boolean update = false;
             Properties p = new Properties();
             if (this.env.getProperty(PROCESS_BATCH) != null) {
                 p.setProperty("metamatrix.buffer.processorBatchSize", this.env.getProperty(PROCESS_BATCH)); //$NON-NLS-1$
-                update = true;
+ //               update = true;
             }
             
             if (this.env.getProperty(CONNECTOR_BATCH) != null) {
                 p.setProperty("metamatrix.buffer.connectorBatchSize", this.env.getProperty(CONNECTOR_BATCH)); //$NON-NLS-1$
-                update = true;
+ //               update = true;
             }
             
             // update the system.
@@ -206,6 +217,8 @@ public abstract class ConnectionStrategy {
 	        	org.teiid.test.framework.datasource.DataSource ds = DataSourceMgr.getInstance().getDatasource(useName, m.getName());
 	        	
 	        	if (ds != null) {
+		        	datasources.put(m.getName(), ds);
+
 	                System.out.println("Setting up Connector Binding of Type: " + ds.getConnectorType()); //$NON-NLS-1$
 
 		        	AdminOptions ao = new AdminOptions(AdminOptions.OnConflict.OVERWRITE);
@@ -232,21 +245,5 @@ public abstract class ConnectionStrategy {
     }
         
  
-    /**
-     *  The datasource_identifier must match one of the mappings in the file
-     *  at {@see} src/main/resources/datasources/datasource_mapping.txt
-     * @param datasource_identifier
-     * @return
-     *
-     * @since
-     */
-//    public XAConnection getXASource(String datasource_identifier) {
-//        return null;
-//    }
-//    
-//    public Connection getSource(String datasource_identifier) {
-//        return null;
-//    }
-    
    
 }

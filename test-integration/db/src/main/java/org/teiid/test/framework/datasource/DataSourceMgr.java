@@ -45,13 +45,14 @@ public class DataSourceMgr {
 
 	private static DataSourceMgr _instance = null;
 	
-	private Map<String, Map<String, DataSource>>dstypeMap = new HashMap<String, Map<String, DataSource>>();  //key=datasourcetype
+	private Map<String, Map<String, DataSource>>dsGroupMap = new HashMap<String, Map<String, DataSource>>();  //key=datasourcetype
 
 	private Map<String, DataSource> allDatasourcesMap = new HashMap<String, DataSource>();  // key=datasource name
 	
 	private Map<String, DataSource> modelToDatasourceMap = new HashMap<String, DataSource>();  // key=modelname + "_" + datasourcename
 																								// key=modelname + "_" + groupname
 	
+	private Set<String> dbTypes = new HashSet<String>(); 
 	// this set is use to track datasources that have already been assigned
 	private Set<String> assignedDataSources = new HashSet<String>();
 	
@@ -87,7 +88,7 @@ public class DataSourceMgr {
 	 * @since
 	 */
 	public static synchronized void reset() {
-
+		if (_instance == null) return;
 		//
 		_instance.modelToDatasourceMap.clear();
 		_instance.assignedDataSources.clear();
@@ -98,26 +99,21 @@ public class DataSourceMgr {
 		return allDatasourcesMap.size();
 	}
 	
-	public boolean hasAvailableDataSource(int numRequiredDataSources) {
-		// reset the mapping at the start of each test
-		_instance.modelToDatasourceMap.clear();		
-		
-		Set excludedDBTypes = getExcludedDBTypes();
-		        
-    	int cntexcluded = 0;
-		Iterator<DataSource> it= allDatasourcesMap.values().iterator();
-		while(it.hasNext()) {
-			DataSource ds = it.next();
-			if (excludedDBTypes.contains(ds.getDBType())) {
-				cntexcluded++;
-			}
-		}
-		
-		return(numRequiredDataSources <=  (numberOfAvailDataSources() - cntexcluded)); 
-		
-	}
+//	public boolean hasAvailableDataSource(int numRequiredDataSources) {
+//		// reset the mapping at the start of each test
+//		_instance.modelToDatasourceMap.clear();		
+//		
+//		Set<String>excludedDBTypes = getExcludedDBTypes();
+//		
+//		Set<String> xSet = new HashSet<String>(dbTypes);
+//		
+//		xSet.removeAll(excludedDBTypes);		
+//		
+//		return(numRequiredDataSources <=  (xSet.size())); 
+//		
+//	}
 	
-	private Set getExcludedDBTypes() {
+	private Set<String> getExcludedDBTypes() {
 
 		String excludeprop = ConfigPropertyLoader.getProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
 		
@@ -154,9 +150,9 @@ public class DataSourceMgr {
 
 		Set excludedDBTypes = getExcludedDBTypes();
 
-		if (dstypeMap.containsKey(datasourceid)) {
+		if (dsGroupMap.containsKey(datasourceid)) {
 
-			Map datasources = dstypeMap.get(datasourceid);
+			Map datasources = dsGroupMap.get(datasourceid);
 			Iterator<DataSource> it= datasources.values().iterator();
 			
 			// need to go thru all the datasources to know if any has already been assigned
@@ -219,13 +215,6 @@ public class DataSourceMgr {
 
 	}
 
-	public Properties getDatasourceProperties(String datasourceid, String modelname)
-			throws QueryTestFailedException {
-		DataSource ds = getDatasource(datasourceid, modelname);
-
-		return ds.getProperties();
-		
-	}
 
 	private void loadDataSourceMappings()
 			throws QueryTestFailedException {
@@ -259,7 +248,7 @@ public class DataSourceMgr {
 		
 		for (Iterator<Element> it = rootElements.iterator(); it.hasNext();) {
 			Element type = it.next();
-			String typename = type.getAttributeValue(Property.Attributes.NAME);
+			String groupname = type.getAttributeValue(Property.Attributes.NAME);
 
 			List<Element> typeElements = type.getChildren();
 			if (typeElements != null) {
@@ -267,9 +256,9 @@ public class DataSourceMgr {
 
 				for (Iterator<Element> typeit = typeElements.iterator(); typeit.hasNext();) {
 					Element e = typeit.next();
-					addDataSource(e, typename, datasources, limitds);				
+					addDataSource(e, groupname, datasources, limitds);				
 				}	
-				dstypeMap.put(typename, datasources);
+				dsGroupMap.put(groupname, datasources);
 				allDatasourcesMap.putAll(datasources);
 
 			}			
@@ -277,19 +266,19 @@ public class DataSourceMgr {
 			
 		}	
 
-		if (dstypeMap == null || dstypeMap.isEmpty()) {
+		if (dsGroupMap == null || dsGroupMap.isEmpty()) {
 			throw new TransactionRuntimeException(
 					"No Datasources were found in the mappings file");
 		}
 		
-		System.out.println("Number of datasource groups loaded " + dstypeMap.size());
+		System.out.println("Number of datasource groups loaded " + dsGroupMap.size());
 		System.out.println("Number of total datasource mappings loaded " + allDatasourcesMap.size());
 
 
 
 	}
 	
-	private static void addDataSource(Element element, String group, Map<String, DataSource> datasources, Set<String> include) {
+	private void addDataSource(Element element, String group, Map<String, DataSource> datasources, Set<String> include) {
 			String name = element.getAttributeValue(Property.Attributes.NAME);
 			
 			Properties props = getProperties(element);
@@ -312,7 +301,7 @@ public class DataSourceMgr {
 						group,
 						props);
 				
-
+				dbTypes.add(ds.getDBType());
 				datasources.put(ds.getName(), ds);
 				System.out.println("Loaded datasource " + ds.getName());
 
@@ -406,7 +395,7 @@ public class DataSourceMgr {
 				throw new RuntimeException("Datasources are not the same");
 			}
 			System.out.println("Value for ds_mysql: "
-					+ mgr.getDatasourceProperties("ds_oracle", "model1"));
+					+ mgr.getDatasource("ds_oracle", "model1").getProperties());
 			
 //			boolean shouldbeavail = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE);
 //			if (!shouldbeavail) {

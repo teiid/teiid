@@ -35,7 +35,7 @@ public class LocalTransaction extends TransactionContainer {
     }
     
     protected void after(TransactionQueryTest test) {
-    	boolean exception = false;
+ //   	boolean exception = false;
         try {            
             if (test.rollbackAllways()|| test.exceptionOccurred()) {
                 test.getConnection().rollback();
@@ -45,7 +45,7 @@ public class LocalTransaction extends TransactionContainer {
                 test.getConnection().commit();
             }
         } catch (SQLException se) {
-        	exception =  true;
+//        	exception =  true;
         	// if exception, try to trigger the rollback
         	try {
         		test.getConnection().rollback();
@@ -58,13 +58,13 @@ public class LocalTransaction extends TransactionContainer {
         } finally {
         	// if an exception occurs and the autocommit is set to true - while doing a transaction
         	// will generate a new exception overriding the first exception
-        	if (!exception) {
-	            try {
-	                test.getConnection().setAutoCommit(true);
-	            } catch (SQLException e) {
-	                throw new RuntimeException(e);
-	            }
-        	}
+//        	if (!exception) {
+//	            try {
+//	                test.getConnection().setAutoCommit(true);
+//	            } catch (SQLException e) {
+//	                throw new RuntimeException(e);
+//	            }
+//        	}
         }
     }   
     

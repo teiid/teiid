@@ -6,9 +6,11 @@ package org.teiid.test.framework;
 
 import java.sql.Connection;
 import java.util.Properties;
+import java.util.Set;
 
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.datasource.DataSourceMgr;
+import org.teiid.test.framework.datasource.DataSourceSetupFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -31,36 +33,25 @@ public abstract class TransactionContainer {
 	    }
 	    
 	    
-	    /**
-	     * Returns <code>true</code> if the test <b>CANNOT</b> be run due to not have the right
-	     * number of datasources available.  
-	     *
-	     */
-	    protected boolean turnOffTest (int numberofDataSources) {
-	    	boolean rtn =  DataSourceMgr.getInstance().hasAvailableDataSource(numberofDataSources);
-	    	if (!rtn) {
-	    		return true;
-	    	}
+	    protected Set getDataSources() {
+	    	Set dss = null;
 	    	
-	    	return false;
-	    } 
-	    	    	    
+	    	
+	    	return dss;
+	    }
+	    
+   	    
 	    protected void before(TransactionQueryTest test){}
 	    
 	    protected void after(TransactionQueryTest test) {}
 	        
 	    public void runTransaction(TransactionQueryTest test) {
-	    	
-	    	if (turnOffTest(test.getNumberRequiredDataSources())) {
-	    		detail("Turn Off Transaction test: " + test.getTestName() + ", doesn't have the number of required datasources");
-		        return;
-
-	    	} 
-	    	
+	    		    	
 	    	detail("Start transaction test: " + test.getTestName());
 
 	        try {  
-	        	test.setupDataSource();
+	        	test.setDataSources(connStrategy.getDataSources());
+	        	test.setupDataSources();
 	        	
 	        	debug("	setConnection");
 	            test.setConnection(getConnection());
@@ -77,12 +68,6 @@ public abstract class TransactionContainer {
 	            // run the test
 	            test.testCase();
 	            
-	        }catch(Throwable e) {
-	        	if (!test.exceptionExpected()) {
-	        		e.printStackTrace();
-	        	}
-	            throw new TransactionRuntimeException(e.getMessage());
-	        }finally {
 	        	debug("	test.after");
 
 	            test.after();
@@ -91,6 +76,14 @@ public abstract class TransactionContainer {
 	            after(test);
 	            
 	            detail("End transaction test: " + test.getTestName());
+
+	            
+	        }catch(Throwable e) {
+	        	if (!test.exceptionExpected()) {
+	        		e.printStackTrace();
+	        	}
+	            throw new TransactionRuntimeException(e.getMessage());
+	        }finally {
 
 	        }
 	        
@@ -136,6 +129,8 @@ public abstract class TransactionContainer {
 	    protected void detail(String message) {
 	    	System.out.println(message);
 	    }
+	    
+
     
 
 }

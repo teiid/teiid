@@ -1,9 +1,12 @@
 package org.teiid.test.framework;
 
 import java.sql.Connection;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.XAConnection;
+
+import org.teiid.test.framework.datasource.DataSource;
 
 /**
  * The TransactionQueryTest interface represents the transaction test framework from which
@@ -27,6 +30,15 @@ public interface TransactionQueryTest {
 	 * @since
 	 */
 	void setConnection(Connection conn);
+	
+	
+	/**
+	 * Called by the @link TransactionContainer to set the datasoures used to create the connector bindings.
+	 * @param datasources
+	 *
+	 * @since
+	 */
+	void setDataSources(Map<String, DataSource> datasources);
 	
 	
 	/**
@@ -64,12 +76,12 @@ public interface TransactionQueryTest {
      
      /**
       * Called by the {@link TransactionContainer} prior to testcase processing so that
-      * the datasource data can be setup for the specific testcase.
+      * the datasources can be setup for the specific testcase.
       * 
       *
       * @since
       */
-     void setupDataSource();
+     void setupDataSources();
 	
     
     /**
