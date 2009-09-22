@@ -5,14 +5,14 @@
 	<artifactId>teiid</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-	<version>6.2.0</version>
+	<version>6.2.1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<ant.version>1.7.0</ant.version>
 		<site.url>http://www.jboss.org/teiid</site.url>
 	</properties>
 	<scm>
-		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/tags/teiid-6.2.0</developerConnection>
+		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
 	</scm>
 	<licenses>
 		<license>
