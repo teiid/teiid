@@ -45,11 +45,7 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
         
         // run test
         getTransactionContainter().runTransaction(userTxn);
-        
-        // there is nothing to verify here..
-        
-        System.out.println("Complete testSingleSourceSelect");
-
+ 
     }
 
 
@@ -76,9 +72,6 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
         
         // run test
         getTransactionContainter().runTransaction(userTxn);       
-        
-        
-        System.out.println("Complete testSingleSourceUpdate");
 
     }
     
@@ -105,10 +98,7 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
         
         // run test
         getTransactionContainter().runTransaction(userTxn);
-        
-         
-        System.out.println("Complete testSingleSourcePreparedUpdate");
-
+ 
     }    
     
     /**
@@ -147,9 +137,6 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
         // run test
         getTransactionContainter().runTransaction(userTxn);      
 
-        
-        System.out.println("Complete testSingleSourceMultipleCommands");
-
     }
         
     /**
@@ -171,8 +158,6 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
         
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-        
-        System.out.println("Complete testSingleSourcePartialProcessing");
 
     }   
     
@@ -223,9 +208,7 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
         
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-        
-        System.out.println("Complete testSingleSourceMultipleCommandsExplicitRollback");
-
+ 
     } 
 
     /**
@@ -264,8 +247,6 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
         
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-        
-        System.out.println("Complete testSingleSourceMultipleCommandsReferentialIntegrityRollback");
 
     }    
 

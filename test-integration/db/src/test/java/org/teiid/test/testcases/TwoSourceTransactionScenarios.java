@@ -52,9 +52,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         
         // run test
         getTransactionContainter().runTransaction(userTxn);
-        
-        System.out.println("Complete testMultipleSourceSelect");
-
+ 
     }
 
     /**
@@ -64,7 +62,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
      * result = commit 
      */    
     public void testMultipleSourceViewSelect() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceVirtualSelect") {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewSelect") {
             public void testCase() throws Exception {
                 execute("select * from vm.g1 where vm.g1.pm1e1 < 100");
                 assertRowCount(100);
@@ -80,9 +78,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
        
         // run test
         getTransactionContainter().runTransaction(userTxn);
-        
-        System.out.println("Complete testMultipleSourceVirtualSelect");
-
+ 
     }    
     
     /**
@@ -92,7 +88,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
      * result = commit 
      */
     public void testMultipleSourceViewUpdate() throws Exception {
-        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceUpdate") {
+        AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewUpdate") {
             public void testCase() throws Exception {
                 execute("insert into vm.g1 (pm1e1, pm1e2, pm2e1, pm2e2) values(500, '500', 500, '500')");
             }
@@ -120,9 +116,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         
         // run test
         getTransactionContainter().runTransaction(userTxn);             
-       
-        System.out.println("Complete testMultipleSourceUpdate");
-
+ 
     }
     
     /**
@@ -161,8 +155,6 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
                
         // run test
         getTransactionContainter().runTransaction(userTxn);    
-        
-        System.out.println("Complete testMultipleSourceViewSelectInto");
 
     }    
     
@@ -209,10 +201,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
       
         // run test
         getTransactionContainter().runTransaction(userTxn);       
-         
-        System.out.println("Complete testMultipleSourceViewBulkRowInsert");
-
-    }   
+     }   
     
     /**
      * Sources = 2
@@ -261,10 +250,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         
         // run test
         getTransactionContainter().runTransaction(userTxn);       
-        
-        
-        System.out.println("Complete testMultipleSourceViewBulkRowInsertRollback");
-
+ 
     } 
 
 
@@ -303,9 +289,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
        
         // run test
         getTransactionContainter().runTransaction(userTxn);       
-         
-        System.out.println("Complete testMultipleSourceViewPreparedUpdate");
-
+ 
     }    
     
     
@@ -368,10 +352,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-        
-        System.out.println("Complete testMultipleSourceMultipleCommands");
-
-
+ 
     }
     
     /**
@@ -420,8 +401,6 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-
-        System.out.println("Complete testMultipleSourceViewMultipleCommands");
 
 
     }   
@@ -484,9 +463,6 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         // run test
         getTransactionContainter().runTransaction(userTxn);      
 
-        
-        System.out.println("Complete testMultipleSourceViewMultipleCommandsRollback");
-
     }    
 
         
@@ -544,8 +520,6 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
  
         };
         getTransactionContainter().runTransaction(userTxn);
-                
-        System.out.println("Complete testMultipleSourceMultipleCommandsCancel");
 
     }
     
@@ -604,8 +578,6 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         // run test
         getTransactionContainter().runTransaction(userTxn);      
 
-        System.out.println("Complete testMultipleSourceMultipleCommandsExplicitRollback");
-
     }
     
     /**
@@ -657,9 +629,6 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-
-         
-        System.out.println("Complete testMultipleSourceMultipleCommandsReferentialIntegrityRollback");
 
     }
 
@@ -713,10 +682,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
  
         };
         getTransactionContainter().runTransaction(userTxn);
-        
-        
-        System.out.println("Complete testMultipleSourceTimeout");
-
+ 
     }    
     
         
@@ -769,9 +735,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         
         // run test
         getTransactionContainter().runTransaction(userTxn);      
-        
-        System.out.println("Complete testMultipleSourceViewPartialProcessingUsingLimit");
-
+ 
     }  
 
     /**
@@ -801,9 +765,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
         
         // run test
         getTransactionContainter().runTransaction(userTxn);  
-        
-        System.out.println("Complete testMultipleSourcePartialProcessingUsingMakedep");
-
+ 
     }        
     
      

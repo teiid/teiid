@@ -18,19 +18,28 @@ import org.teiid.test.framework.connection.ConnectionStrategy;
  * -	Autocommit = True
  * -	TxnAutoWrap = Off
  */
-public class XATransactionDatasourceFalseOffTest extends TwoSourceTransactionScenarios {
-          
+//public class XATransactionDatasourceFalseOffTest extends SingleSourceTransactionScenarios {
+   
+	public class XATransactionDatasourceFalseOffTest extends TwoSourceTransactionScenarios {
+
+	
+	
     public XATransactionDatasourceFalseOffTest(String name) {
 		super(name);
 	}
 
 	@Override
 	protected void setUp() throws Exception {
+		
+		//XATransactions currently doesn't support using sqlserver 
+		//{@see TEIID-559} 
+		System.setProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP, "sqlserver");
+		
     	System.setProperty(ConfigPropertyNames.CONFIG_FILE, "xa-config.properties");
 		
     	System.setProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DATASOURCE_CONNECTION);
     	System.setProperty(ConnectionStrategy.AUTOCOMMIT, "false");
-    	System.setProperty(ConnectionStrategy.TXN_AUTO_WRAP, "off");
+ //   	System.setProperty(ConnectionStrategy.TXN_AUTO_WRAP, "on");
     	
 		
 	}
