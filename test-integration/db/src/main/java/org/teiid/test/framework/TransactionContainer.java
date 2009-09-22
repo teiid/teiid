@@ -7,12 +7,10 @@ package org.teiid.test.framework;
 import java.sql.Connection;
 import java.util.Properties;
 
-import javax.sql.XAConnection;
-
+import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-import org.teiid.test.framework.connection.ConnectionStrategy;
 
 
 
@@ -39,31 +37,14 @@ public abstract class TransactionContainer {
 	     *
 	     */
 	    protected boolean turnOffTest (int numberofDataSources) {
-	    	boolean rtn =  (numberofDataSources > DataSourceMgr.getInstance().numberOfAvailDataSources());
-	    	if (rtn) {
-	    		System.out.println("Required Number of DataSources is " + numberofDataSources + " but availables sources is " + DataSourceMgr.getInstance().numberOfAvailDataSources());
+	    	boolean rtn =  DataSourceMgr.getInstance().hasAvailableDataSource(numberofDataSources);
+	    	if (!rtn) {
+	    		return true;
 	    	}
-	    	return rtn;
+	    	
+	    	return false;
 	    } 
-	    
-	    
-	    /**
-	     * Returns true when what the test says it needs, in regards to types of data sources (i.e., mysql, oracle,etc), 
-	     * is found in the list of defined datatypes
-	     * An example of returning false would be the following:
-	     * <li>The defined datasources consist of oracle and sqlserver</li>
-	     * <li>The test says it only supports mysql and oracle</li>
-	     * Then the required datasources for the test are not available and therefore, the
-	     * test cannot run.
-	     * 
-	     * @return true if the required datasources are available
-	     *
-	     * @since
-	     */
-	    protected boolean hasRequiredSources() {
-	    	return true;
-	    }
-	    	    
+	    	    	    
 	    protected void before(TransactionQueryTest test){}
 	    
 	    protected void after(TransactionQueryTest test) {}
@@ -74,11 +55,7 @@ public abstract class TransactionContainer {
 	    		detail("Turn Off Transaction test: " + test.getTestName() + ", doesn't have the number of required datasources");
 		        return;
 
-	    	} else if (!hasRequiredSources()) {
-	    		detail("Turn Off Transaction test: " + test.getTestName() + ",  required datasource types are not available");
-		        return;
-	    		
-	    	}
+	    	} 
 	    	
 	    	detail("Start transaction test: " + test.getTestName());
 
@@ -112,9 +89,6 @@ public abstract class TransactionContainer {
 	            debug("	after(test)");
 
 	            after(test);
-	            debug("	test.cleanup");
-
-	            test.cleanup();
 	            
 	            detail("End transaction test: " + test.getTestName());
 
@@ -134,17 +108,19 @@ public abstract class TransactionContainer {
 	        }catch(Exception e) {
 	            throw new TransactionRuntimeException(e);
 	        }
+	        
+            debug("	test.cleanup");
+
+            test.cleanup();
+            
+	    	detail("Completed transaction test: " + test.getTestName());
+
+
 	    }
-	    
 	    
 	    protected Connection getConnection() throws QueryTestFailedException {
 	    	return this.connStrategy.getConnection();
-	    }
-	        
-	    protected XAConnection getXAConnection() throws QueryTestFailedException {
-	    	return this.connStrategy.getXAConnection();
-	    }
-	    
+	    }	        
 	    
 	    public Properties getEnvironmentProperties() {
 	    	return props;

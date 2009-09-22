@@ -17,8 +17,14 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class ConnectionStrategyFactory {
 	
 	    private static ConnectionStrategyFactory _instance = null;
+	    /**
+	     *  this strategy represents the connection strategy used to connect to Teiid
+	     *  and is based on the properties loaded by the {@link ConfigPropertyLoader}
+	     */
 	    private ConnectionStrategy strategy = null;
-	    private Map<String, ConnectionStrategy> sources = null;
+	    private Map<String, ConnectionStrategy> driversources = null;
+	    private Map<String, ConnectionStrategy> datasourcesources = null;
+	    private Map<String, ConnectionStrategy> jeesources = null;
 
    	    
 	    private ConnectionStrategyFactory(){
@@ -27,22 +33,10 @@ public class ConnectionStrategyFactory {
 	    public static synchronized ConnectionStrategyFactory getInstance()   {
 	        if (_instance == null) {
 	            _instance = new ConnectionStrategyFactory();
-
-					_instance. init();
-					// TODO Auto-generated catch block
-//					_instance = null;
-//					throw new TransactionRuntimeException(e);
-//				}
 	        }
 	        return _instance;
 	    }
-	    
-	    private void init() {
-	    	if (sources == null) {
-	    		sources = new HashMap<String, ConnectionStrategy>();
-	    	}
-	    }
-	    
+	        
     
 	    public static synchronized void destroyInstance() {
 	        if (_instance != null) {
@@ -57,22 +51,43 @@ public class ConnectionStrategyFactory {
             p.remove(ConfigPropertyNames.CONFIG_FILE);
 
             
-        	for (Iterator it=sources.keySet().iterator(); it.hasNext();  ){
-        		
-        		ConnectionStrategy cs = sources.get(it.next());
-        		try {
-        			cs.shutdown();
-        		} catch (Exception e) {
-        			
-        		}
-        		
-        	}
-        	sources.clear();
-        	sources = null;
+            if (driversources != null) {
+            	shutDownSources(driversources);
+            	driversources = null;
+            }
+            
+            if (datasourcesources != null) {
+            	shutDownSources(datasourcesources);
+            	datasourcesources = null;
+            }
+            
+            if (jeesources != null) {
+            	shutDownSources(jeesources);
+            	jeesources = null;
+            }
         	
-        	strategy.shutdown();
-        	strategy = null;
+        	try {
+        		strategy.shutdown();
+        	} catch (Exception e) {
+        		
+        	} finally {
+        		strategy = null;
+        	}
  
+	    }
+	    
+	    private void shutDownSources(Map<String, ConnectionStrategy> sources) {
+	       	for (Iterator it=sources.keySet().iterator(); it.hasNext();  ){	        		
+	        		ConnectionStrategy cs = sources.get(it.next());
+	        		try {
+	        			cs.shutdown();
+	        		} catch (Exception e) {
+	        			
+	        		}
+	        		
+	        	}
+	        	sources.clear();
+	
 	    }
 	    
 	    public synchronized ConnectionStrategy getConnectionStrategy() throws QueryTestFailedException {
@@ -93,6 +108,7 @@ public class ConnectionStrategyFactory {
 	        }
 	        
 	        if (type.equalsIgnoreCase(ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION)) {
+	        	// pass in null to create new strategy
 	                strategy = createDriverStrategy(null, props);
 	                System.out.println("Created Driver Strategy");
 	        }
@@ -115,16 +131,20 @@ public class ConnectionStrategyFactory {
 	    }
 	    
 	    public synchronized ConnectionStrategy createDriverStrategy(String identifier, Properties props) throws QueryTestFailedException  {
+	    	if (driversources == null) {
+	    		driversources = new HashMap<String, ConnectionStrategy>();
+	    	}
+	    	
 	     	if (identifier == null) {
-	    		return new DriverConnection(props);
+	     			return new DriverConnection(props);
 	     	}
 	     	
 	     	ConnectionStrategy strategy = null;
-	     	if (sources.containsKey(identifier)) {
-	     		strategy = sources.get(identifier);
+	     	if (driversources.containsKey(identifier)) {
+	     		strategy = driversources.get(identifier);
 	     	} else {
 	     		strategy = new DriverConnection(props);
-	     		sources.put(identifier, strategy);
+	     		driversources.put(identifier, strategy);
 	     	}	     	
        	
 	       	return strategy;
@@ -132,16 +152,20 @@ public class ConnectionStrategyFactory {
 	    }
 	    
 	    public synchronized ConnectionStrategy createDataSourceStrategy(String identifier, Properties props) throws QueryTestFailedException  {	     	
+	    	if (datasourcesources == null) {
+	    		datasourcesources = new HashMap<String, ConnectionStrategy>();
+	    	}
+	    	
 	     	if (identifier == null) {
 	    		return new DataSourceConnection(props);
 	     	}
 	     	
 	     	ConnectionStrategy strategy = null;
-	     	if (sources.containsKey(identifier)) {
-	     		strategy = sources.get(identifier);
+	     	if (datasourcesources.containsKey(identifier)) {
+	     		strategy = datasourcesources.get(identifier);
 	     	} else {
 	     		strategy = new DataSourceConnection(props);
-	     		sources.put(identifier, strategy);
+	     		datasourcesources.put(identifier, strategy);
 	     	}
 	       	
 	       	return strategy;
@@ -149,38 +173,26 @@ public class ConnectionStrategyFactory {
 	    }
 	    
 	    public synchronized ConnectionStrategy createJEEStrategy(String identifier, Properties props) throws QueryTestFailedException  {
+	    	if (jeesources == null) {
+	    		jeesources = new HashMap<String, ConnectionStrategy>();
+	    	}
+	    	
 	     	if (identifier == null) {
 	    		return new JEEConnection(props);
 	     	}
 	     	
 	     	ConnectionStrategy strategy = null;
-	     	if (sources.containsKey(identifier)) {
-	     		strategy = sources.get(identifier);
+	     	if (jeesources.containsKey(identifier)) {
+	     		strategy = jeesources.get(identifier);
 	     	} else {
 	     		strategy = new JEEConnection(props);
-	     		sources.put(identifier, strategy);
+	     		jeesources.put(identifier, strategy);
 	     	}
 	       	
 	       	return strategy;
 	    
 	    }
 	    
-//		private final Properties loadProperties(String filename) {
-//			Properties props = null;
-//		    try {
-//		        InputStream in = ConnectionStrategyFactory.class.getResourceAsStream("/"+filename);
-//		        if (in != null) {
-//		        	props = new Properties();
-//		        	props.load(in);
-//		        	return props;
-//		        }
-//		        else {
-//		        	throw new RuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
-//		        }
-//		    } catch (IOException e) {
-//		        throw new RuntimeException("Error loading properties from file '"+filename+ "'" + e.getMessage());
-//		    }
-//		}
 		
 		public static void main(String[] args) {
 			ConnectionStrategyFactory cf = ConnectionStrategyFactory.getInstance();

@@ -18,12 +18,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.jdbc.BaseDataSource;
 import com.metamatrix.jdbc.EmbeddedDataSource;
-import com.metamatrix.jdbc.MMDataSource;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 
-/**
-* 
-*/
 public class DataSourceConnection extends ConnectionStrategy {
 	
 	   public static final String DS_USER = "user"; //$NON-NLS-1$
@@ -130,10 +125,13 @@ public class DataSourceConnection extends ConnectionStrategy {
            ((TeiidDataSource)dataSource).setPortNumber(Integer.parseInt(this.portNumber));            
        }
        
-       if (this.username != null) {
-       	dataSource.setUser(this.username);
-       	dataSource.setPassword(this.pwd);
-       }
+       dataSource.setUser("admin");
+       dataSource.setPassword("teiid");
+       
+//       if (this.username != null) {
+//       	dataSource.setUser(this.username);
+//       	dataSource.setPassword(this.pwd);
+//       }
 	    	   
        
        return ((XADataSource)dataSource).getXAConnection();

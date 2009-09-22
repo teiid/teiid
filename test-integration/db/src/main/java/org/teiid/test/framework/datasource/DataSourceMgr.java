@@ -53,6 +53,9 @@ public class DataSourceMgr {
 	
 	// this set is use to track datasources that have already been assigned
 	private Set<String> assignedDataSources = new HashSet<String>();
+	
+	private int lastassigned = 0;
+	private Set<String> excludedDBTypes = null;
 
 
 	private DataSourceMgr() {
@@ -90,54 +93,31 @@ public class DataSourceMgr {
 		return allDatasourcesMap.size();
 	}
 	
-	/**
-	 * 
-	 * 
-	 * @param dsidentifier is the DataSource identifier that is defined in the config properties
-	 * @param excludeDSBitMask is a bit mask that indicates with DataSources to be excluded
-	 * @param numDSRequired indicates the number of datasources that are required for the test
-	 * @return
-	 *
-	 * @since
-	 */
-	public boolean hasAvailableDataSource(String dsidentifier, int excludeDSBitMask) {
-		
-		// no datasources are excluded
-		if (excludeDSBitMask == DataSource.ExclusionTypeBitMask.NONE_EXCLUDED) {			
-			return true;
-		}
-		
-		if (dstypeMap.containsKey(dsidentifier)) {
-			Map datasources = dstypeMap.get(dsidentifier);
-			Iterator<DataSource> it= datasources.values().iterator();
-			while(it.hasNext()) {
-				DataSource ds = it.next();
-				int dsbitmask = ds.getBitMask();
-				
-				if ((excludeDSBitMask & dsbitmask) == dsbitmask) {
-					
-				} else {
-					return true;
-				}
-				
-			}
-			return false;
-		} else {
-			DataSource ds = allDatasourcesMap.get(dsidentifier);
-			if (ds == null) {
-				return false;
-			}
-			
-			int dsbitmask = ds.getBitMask();
-			if ((excludeDSBitMask & dsbitmask) == dsbitmask) {
-				return false;
-			} 
-			
-			return true;
-			
-		}
+	public boolean hasAvailableDataSource(int numRequiredDataSources) {
 
+		excludedDBTypes = new HashSet<String>(3);
+		String excludeprop = ConfigPropertyLoader.getProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
+		
+		if (excludeprop == null || excludeprop.length() == 0) {
+			return (numRequiredDataSources <= numberOfAvailDataSources());
+		}
+		
+		List<String> eprops = StringUtil.split(excludeprop, ",");
+		excludedDBTypes.addAll(eprops);
+		        
+    	int cntexcluded = 0;
+		Iterator<DataSource> it= allDatasourcesMap.values().iterator();
+		while(it.hasNext()) {
+			DataSource ds = it.next();
+			if (excludedDBTypes.contains(ds.getDBType())) {
+				cntexcluded++;
+			}
+		}
+		
+		return(numRequiredDataSources <=  (numberOfAvailDataSources() - cntexcluded)); 
+		
 	}
+	
 	
 	public DataSource getDatasource(String datasourceid, String modelName)
 			throws QueryTestFailedException {
@@ -168,28 +148,49 @@ public class DataSourceMgr {
 			// because the datasourceid passed in was a group name
 			while(it.hasNext()) {
 				DataSource checkit = it.next();
-				String dskey = modelName + "_"+checkit.getName();
-				if (modelToDatasourceMap.containsKey(dskey)) {
-					return modelToDatasourceMap.get(dskey);
-				} else if (ds == null) {
-					if (!assignedDataSources.contains(checkit.getName())) {
-						ds = checkit;
-						key = dskey;
-					}
-
+				
+				if (excludedDBTypes.contains(checkit.getDBType())) {
+					continue;
 				}
+
+				if (!assignedDataSources.contains(checkit.getName())) {
+					ds = checkit;
+					assignedDataSources.add(ds.getName());
+					break;
+				} 
+
 			}
 			
-			if (ds != null) {
-				assignedDataSources.add(ds.getName());
+			
+			if (ds == null) {
+				int cnt = 0;
+				Iterator<DataSource> itds= datasources.values().iterator();
 				
-				modelToDatasourceMap.put(key, ds);
-				
-			} 
+				// when all the datasources have been assigned, but a new model datasource id is
+				// passed in, need to reassign a previously assigned datasource
+				// This case will happen when more models are defined than there are defined datasources.
+				while(itds.hasNext()) {
+					DataSource datasource = itds.next();
+					if (cnt == this.lastassigned) {
+						ds = datasource;
+						
+						this.lastassigned++;
+						if (lastassigned >= datasources.size()) {
+							this.lastassigned = 0;
+						}
+						
+						break;
+					}
+				}
 
+			}
 
 		} else {
 			ds = allDatasourcesMap.get(datasourceid);
+			
+			if (excludedDBTypes.contains(ds.getDBType())) {
+				ds = null;
+			}
 
 		}
 		if (ds == null) {
@@ -221,7 +222,6 @@ public class DataSourceMgr {
         	List<String> dss = StringUtil.split(limitdsprop, ",");
         	limitds.addAll(dss);
         }
-
 
 		Document doc = null;
 		XMLReaderWriter readerWriter = new XMLReaderWriterImpl();
@@ -277,22 +277,27 @@ public class DataSourceMgr {
 	private static void addDataSource(Element element, String group, Map<String, DataSource> datasources, Set<String> include) {
 			String name = element.getAttributeValue(Property.Attributes.NAME);
 			
-			if (include.size() > 0) {
-				if (!include.contains(name)) {
-					System.out.println("Excluded datasource: " + name);
-					return;
-				}
-			}
 			Properties props = getProperties(element);
 			
 			String dir = props.getProperty(DataSource.DIRECTORY);
+			
+			if (include.size() > 0) {
+				if (!include.contains(dir)) {
+//					System.out.println("Excluded datasource: " + name);
+					return;
+				}
+			}
+			
 			String dsfile = RELATIVE_DIRECTORY + dir + "/connection.properties";
 			Properties dsprops = loadProperties(dsfile);
+			
 			if (dsprops != null) {
 				props.putAll(dsprops);
 				DataSource ds = new DataSource(name,
 						group,
 						props);
+				
+
 				datasources.put(ds.getName(), ds);
 				System.out.println("Loaded datasource " + ds.getName());
 
@@ -388,21 +393,21 @@ public class DataSourceMgr {
 			System.out.println("Value for ds_mysql: "
 					+ mgr.getDatasourceProperties("ds_oracle", "model1"));
 			
-			boolean shouldbeavail = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE);
-			if (!shouldbeavail) {
-				throw new RuntimeException("Should have found one available");
-			}
-			
-			shouldbeavail = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE | DataSource.ExclusionTypeBitMask.MYSQL);
-			if (!shouldbeavail) {
-				throw new RuntimeException("Should have found one available");
-			}
-
-			
-			boolean shouldnot = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE | DataSource.ExclusionTypeBitMask.MYSQL | DataSource.ExclusionTypeBitMask.SQLSERVER);
-			if (shouldnot) {
-				throw new RuntimeException("Should NOT have found one available");
-			}
+//			boolean shouldbeavail = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE);
+//			if (!shouldbeavail) {
+//				throw new RuntimeException("Should have found one available");
+//			}
+//			
+//			shouldbeavail = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE | DataSource.ExclusionTypeBitMask.MYSQL);
+//			if (!shouldbeavail) {
+//				throw new RuntimeException("Should have found one available");
+//			}
+//
+//			
+//			boolean shouldnot = mgr.hasAvailableDataSource("nonxa", DataSource.ExclusionTypeBitMask.ORACLE | DataSource.ExclusionTypeBitMask.MYSQL | DataSource.ExclusionTypeBitMask.SQLSERVER);
+//			if (shouldnot) {
+//				throw new RuntimeException("Should NOT have found one available");
+//			}
 		} catch (QueryTestFailedException e) {
 			e.printStackTrace();
 		}

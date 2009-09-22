@@ -38,11 +38,23 @@ public interface ConfigPropertyNames {
 	
 	/**
 	 * The USE_DATASOURCES_PROP is a comma delimited system property that can be used to limit the
-	 * datasources that are in use for the tests.   Use the name defined in the datasource_mapping.xml.
-	 * This enables one to test between certain datasources without having to remove 
+	 * datasources that are in use for the tests.   Use the directory name defined in the ddl directory. 
+	 * This enables a developers to test a certain datasource without having to remove 
 	 * connection.properties files.
 	 */
 	public static final String USE_DATASOURCES_PROP = "usedatasources";
+		
+	
+	/**
+	 * The EXCLUDE_DATASOURCES_PROP is a comma delimited system property that can be used to exclude
+	 * certain database types.    
+	 * This is done so that whole sets of tests can be excluded when a datasource  has been defined
+	 * for a specific database type.
+	 * Example of this is the XATransactions currently doesn't support using sqlserver (@see TEIID-559)  
+	 */
+	
+	public static final String EXCLUDE_DATASBASE_TYPES_PROP = "excludedatasources";
+
 	
 	
 	/**

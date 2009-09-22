@@ -4,10 +4,12 @@
  */
 package org.teiid.test.framework.transaction;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTest;
+import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 
@@ -54,7 +56,7 @@ public class LocalTransaction extends TransactionContainer {
             
             
         } finally {
-        	// if an exceptio occurs and the autocommit is set to true - while doing a transaction
+        	// if an exception occurs and the autocommit is set to true - while doing a transaction
         	// will generate a new exception overriding the first exception
         	if (!exception) {
 	            try {
@@ -65,4 +67,7 @@ public class LocalTransaction extends TransactionContainer {
         	}
         }
     }   
+    
+
+
 }

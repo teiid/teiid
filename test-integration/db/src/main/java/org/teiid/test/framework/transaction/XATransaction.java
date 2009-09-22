@@ -6,12 +6,14 @@ package org.teiid.test.framework.transaction;
 
 import java.util.Random;
 
+import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTest;
-import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.framework.connection.ConnectionStrategy;
+import org.teiid.test.framework.exception.QueryTestFailedException;
+import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.common.xa.MMXid;
 
@@ -77,4 +79,9 @@ public class XATransaction extends TransactionContainer {
             } 
         }
     }    
+    
+  
+    protected XAConnection getXAConnection() throws QueryTestFailedException {
+    	return this.connStrategy.getXAConnection();
+    }
 }

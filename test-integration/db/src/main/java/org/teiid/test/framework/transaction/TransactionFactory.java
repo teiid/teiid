@@ -36,6 +36,8 @@ public class TransactionFactory {
         	throw new RuntimeException("Property " + ConfigPropertyNames.TRANSACTION_TYPE + " was specified");
         }
         
+        System.out.println("Create TransactionContainer: " + type);
+        
         if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
         	transacton = new LocalTransaction(connstrategy);
         }
