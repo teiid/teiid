@@ -45,9 +45,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
             public int getNumberRequiredDataSources(){
             	return 2;
             }
-            
-          	public void validateTestCase() throws Exception {
-          	}
+
         };        
         
         // run test
@@ -70,8 +68,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
             public int getNumberRequiredDataSources(){
             	return 2;
             }
-         	public void validateTestCase() throws Exception {
-          	}
+
  
         };  
         

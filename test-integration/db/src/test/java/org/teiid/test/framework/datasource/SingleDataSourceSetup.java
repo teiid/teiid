@@ -4,6 +4,8 @@
  */
 package org.teiid.test.framework.datasource;
 
+import java.util.Map;
+
 import org.teiid.test.framework.DataSourceSetup;
 import org.teiid.test.framework.QueryExecution;
 import org.teiid.test.framework.connection.ConnectionUtil;
@@ -16,7 +18,13 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
  * This performs the data setup for SingleSource test cases  
  */
 public class SingleDataSourceSetup implements DataSourceSetup {
+	
+	private Map ds=null;
     
+	public SingleDataSourceSetup(Map datasources) {
+		this.ds = datasources;
+	}
+	
    
 	@Override
 	public void setup() throws Exception {
@@ -28,7 +36,7 @@ public class SingleDataSourceSetup implements DataSourceSetup {
         
     	
         // Only one of the models are needed because pm1 and pm2 point to the same datasource
-        AbstractQueryTest test1 = new QueryExecution(ConnectionUtil.getSource("pm1")); //$NON-NLS-1$
+        AbstractQueryTest test1 = new QueryExecution(ConnectionUtil.getConnection("pm1", ds) ); //$NON-NLS-1$
         test1.execute("delete from g2"); //$NON-NLS-1$
         test1.execute("delete from g1");         //$NON-NLS-1$
         

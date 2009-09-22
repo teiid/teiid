@@ -5,23 +5,26 @@
 package org.teiid.test.framework;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.sql.Connection;
 import java.sql.Statement;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.XAConnection;
 
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
+import org.teiid.test.framework.connection.ConnectionUtil;
+import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceSetupFactory;
+import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
-import com.metamatrix.jdbc.api.ExecutionProperties;
 
 
 /** 
@@ -33,8 +36,10 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
  * 
  */
 public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest implements TransactionQueryTest{
-	Properties executionProperties = null;
-	String testname = "NA";
+	protected Properties executionProperties = null;
+	protected String testname = "NA";
+	
+	protected Map<String, DataSource> datasources = null;
 	
 	
 	public AbstractQueryTransactionTest() {
@@ -48,6 +53,15 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
 	
 	public String getTestName() {
 		return this.testname;
+	}
+	
+    /**
+     * Called to set the datasources used during this test
+     * 
+     * @since
+     */
+	public void setDataSources(Map<String, DataSource> datasources) {
+		this.datasources = datasources;
 	}
 	
 	
@@ -85,19 +99,34 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
     	return true;
     }
 
-	@Override
-	public void setupDataSource() {
+
+    /**
+     * Override <code>setupDataSource</code> if there is different mechinism for
+     * setting up the datasources for the testcase
+     * 
+     * @since
+     */
+    @Override
+	public void setupDataSources() {
     	DataSourceSetup dss = null;
     	try {
     		
-    		dss = DataSourceSetupFactory.createDataSourceSetup(getNumberRequiredDataSources());
+    		dss = DataSourceSetupFactory.createDataSourceSetup(this.datasources);
     		dss.setup();
     	} catch(Exception e) {
     		throw new TransactionRuntimeException(e.getMessage());
     	}
-    }
-	
+    }	
+
+
+	public Connection getSource(String identifier) throws QueryTestFailedException {
+    	return ConnectionUtil.getConnection(identifier, this.datasources);
+    }    
     
+    public XAConnection getXASource(String identifier) throws QueryTestFailedException {
+       	return ConnectionUtil.getXAConnection(identifier, this.datasources);
+     }   
+	
     
 	/**
 	 * Implement testCase(), it is the entry point to the execution of the test.
@@ -136,6 +165,12 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
      */
     public void after() {
     }
+    
+
+	@Override
+	public void validateTestCase() throws Exception {
+		
+	}
     
     
     /**

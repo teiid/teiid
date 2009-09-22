@@ -4,6 +4,8 @@
  */
 package org.teiid.test.framework.datasource;
 
+import java.util.Map;
+
 import org.teiid.test.framework.DataSourceSetup;
 import org.teiid.test.framework.QueryExecution;
 import org.teiid.test.framework.connection.ConnectionUtil;
@@ -16,7 +18,12 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
  * This performs the data setup for SingleSource test cases  
  */
 public class TwoDataSourceSetup implements DataSourceSetup {
+	private Map ds=null;
     
+	public TwoDataSourceSetup(Map datasources) {
+		this.ds = datasources;
+	}
+
    
 	@Override
 	public void setup() throws Exception {   	
@@ -27,7 +34,8 @@ public class TwoDataSourceSetup implements DataSourceSetup {
        System.out.println("Run TwoSource Setup...");
 
     	
-        AbstractQueryTest test1 = new QueryExecution(ConnectionUtil.getSource("pm1")); //$NON-NLS-1$
+        AbstractQueryTest test1 = new QueryExecution(ConnectionUtil.getConnection("pm1", ds));//$NON-NLS-1$
+        		
         test1.execute("delete from g2"); //$NON-NLS-1$
         test1.execute("delete from g1");         //$NON-NLS-1$
         
@@ -55,7 +63,7 @@ public class TwoDataSourceSetup implements DataSourceSetup {
         test1.execute("select * from g2 ");
         test1.assertRowCount(100);  
          
-        AbstractQueryTest test2 = new QueryExecution(ConnectionUtil.getSource("pm2")); //$NON-NLS-1$
+        AbstractQueryTest test2 = new QueryExecution(ConnectionUtil.getConnection("pm2", ds));//$NON-NLS-1$
         test2.execute("delete from g2"); //$NON-NLS-1$
         test2.execute("delete from g1");         //$NON-NLS-1$
         

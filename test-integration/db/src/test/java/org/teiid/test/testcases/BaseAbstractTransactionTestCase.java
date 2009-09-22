@@ -35,12 +35,12 @@ public class BaseAbstractTransactionTestCase extends TestCase  {
     }
 
 
-    public Connection getSource(String identifier) throws QueryTestFailedException {
-    	return ConnectionUtil.getSource(identifier);
-    }    
-    
-    public XAConnection getXASource(String identifier) throws QueryTestFailedException {
-       	return ConnectionUtil.getXASource(identifier);
-     }     
+//    public Connection getSource(String identifier) throws QueryTestFailedException {
+//    	return ConnectionUtil.getSource(identifier);
+//    }    
+//    
+//    public XAConnection getXASource(String identifier) throws QueryTestFailedException {
+//       	return ConnectionUtil.getXASource(identifier);
+//     }     
 
 }

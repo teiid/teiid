@@ -4,8 +4,11 @@
  */
 package org.teiid.test.testcases;
 
+import java.util.Map;
+
 import org.teiid.test.framework.AbstractQueryTransactionTest;
 import org.teiid.test.framework.QueryExecution;
+import org.teiid.test.framework.datasource.DataSource;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -37,10 +40,8 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
                 execute("select * from pm1.g1 where pm1.g1.e1 < 100");
                 assertRowCount(100);
             }
-            
-        	public void validateTestCase() throws Exception {
-        		
-        	}
+
+
         };        
         
         // run test
@@ -68,6 +69,7 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
                 test.closeConnection();
        		
         	}
+
         };        
         
         // run test
@@ -151,9 +153,7 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
                 execute("select * from pm1.g1 where pm1.g1.e1 < 100 limit 10");
                 assertRowCount(10);
             }
-            
-           	public void validateTestCase() throws Exception {
-           	}
+
         };        
         
         // run test
@@ -168,15 +168,7 @@ public class SingleSourceTransactionScenarios extends BaseAbstractTransactionTes
      * result = rollback
      */
     
-    public void testSingleSourceMultipleCommandsExplicitRollback() throws Exception {
-        // now it's empty
-        AbstractQueryTest test = new QueryExecution(getSource("pm1"));
-        		//getSource("pm1"));
-        test.execute("select * from g1 where e1 >= 200 and e1 < 220");
-        test.assertRowCount(0);
-        test.execute("select * from g2 where e1 >= 200 and e1 < 220");
-        test.assertRowCount(0);        
-        test.closeConnection();  
+    public void testSingleSourceMultipleCommandsExplicitRollback() throws Exception { 
 
     	
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testSingleSourceMultipleCommandsExplicitRollback") {
