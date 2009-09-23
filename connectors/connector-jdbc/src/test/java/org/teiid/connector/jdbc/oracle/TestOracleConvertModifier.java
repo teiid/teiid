@@ -511,7 +511,7 @@ public class TestOracleConvertModifier {
 
     @Test public void testTimestampToTime() throws Exception {
         Timestamp ts = TimestampUtil.createTimestamp(103, 10, 1, 12, 5, 2, 0);        
-        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "to_date('1970-01-01 ' || to_char({ts'2003-11-01 12:05:02.0'}, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS')"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest(LANG_FACTORY.createLiteral(ts, Timestamp.class), "time", "case when {ts'2003-11-01 12:05:02.0'} is null then null else to_date('1970-01-01 ' || to_char({ts'2003-11-01 12:05:02.0'}, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') end"); //$NON-NLS-1$ //$NON-NLS-2$
     }    
 
 }

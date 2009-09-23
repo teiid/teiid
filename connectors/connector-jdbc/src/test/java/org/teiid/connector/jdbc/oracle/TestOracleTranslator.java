@@ -150,14 +150,6 @@ public class TestOracleTranslator {
                 input, output, 
                 TRANSLATOR);
     }
-    @Test public void testConversion5() throws Exception {
-        String input = "SELECT convert(convert(TIMESTAMPVALUE, time), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
-        String output = "SELECT to_char(to_date('1970-01-01 ' || to_char(SmallA.TimestampValue, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS'), 'HH24:MI:SS') FROM SmallA";  //$NON-NLS-1$
-
-        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB,
-                input, output, 
-                TRANSLATOR);
-    }
     @Test public void testConversion6() throws Exception {
         String input = "SELECT convert(convert(TIMEVALUE, timestamp), string) FROM BQT1.SMALLA"; //$NON-NLS-1$
         String output = "SELECT to_char(cast(SmallA.TimeValue AS timestamp), 'YYYY-MM-DD HH24:MI:SS.FF') FROM SmallA";  //$NON-NLS-1$
