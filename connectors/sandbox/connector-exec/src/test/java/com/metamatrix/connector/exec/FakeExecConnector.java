@@ -31,39 +31,26 @@ import java.util.Properties;
 import org.teiid.connector.api.ConnectorException;
 
 
-/**
- * Implmentation of text connector.
- */
+
 public class FakeExecConnector extends ExecConnector {
-    
-    
-
      
-    protected void loadExclusionFile(String file)
-    throws ConnectorException
-{
-    try
-    {
-        FileInputStream is = new FileInputStream(file);
-//        
-//        byte data[] = ExtensionModuleManager.getInstance().getSource(file);
-//        java.io.InputStream is = ObjectConverterUtil.convertToInputStream(data);
-        Properties props = new Properties();
-        props.load(is);
-        List exclusionList = new ArrayList(props.size());
-        String key;
-        for(Iterator it = props.keySet().iterator(); it.hasNext(); exclusionList.add(((String)props.get(key)).trim().toLowerCase()))
-        {
-            key = (String)it.next();
-        }
-        this.setExclusionList(exclusionList);
+	protected void loadExclusionFile(String file) throws ConnectorException {
+		try {
+			FileInputStream is = new FileInputStream(file);
+			//        
+			Properties props = new Properties();
+			props.load(is);
+			List exclusionList = new ArrayList(props.size());
+			String key;
+			for (Iterator it = props.keySet().iterator(); it.hasNext(); exclusionList.add(((String) props.get(key)).trim().toLowerCase())) {
+				key = (String) it.next();
+			}
+			this.setExclusionList(exclusionList);
 
-    }
-    catch(IOException err)
-    {
-        throw new ConnectorException(err, ExecPlugin.Util.getString("ExecConnector.Error_loading_exclusion_properties", file)); //$NON-NLS-1$
-    }
-}
+		} catch (IOException err) {
+			throw new ConnectorException(err, ExecPlugin.Util.getString("ExecConnector.Error_loading_exclusion_properties", file)); //$NON-NLS-1$
+		}
+	}
     
     
 }

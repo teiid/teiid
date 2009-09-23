@@ -36,11 +36,6 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.basic.BasicConnector;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.extensionmodule.ExtensionModuleManager;
-import com.metamatrix.common.extensionmodule.exception.ExtensionModuleNotFoundException;
-import com.metamatrix.core.util.ObjectConverterUtil;
-
 /**
  * Implementation of text connector.
  */
@@ -93,44 +88,23 @@ public class ExecConnector extends BasicConnector {
         return new ExecConnection(this.env, exclusionList);
     }
     
-    protected void loadExclusionFile(String file)
-    throws ConnectorException
-{
-    try
-    {
-        if (!ExtensionModuleManager.getInstance().isSourceInUse(file)) {
-            return;
-        }
-        byte data[] = ExtensionModuleManager.getInstance().getSource(file);
-        java.io.InputStream is = ObjectConverterUtil.convertToInputStream(data);
-        Properties props = new Properties();
-        props.load(is);
-        exclusionList = new ArrayList(props.size());
-        String key;
-        for(Iterator it = props.keySet().iterator(); it.hasNext(); exclusionList.add(((String)props.get(key)).trim().toLowerCase()))
-        {
-            key = (String)it.next();
-            logger.logInfo("Exec Connector - exclude: " + props.get(key));//$NON-NLS-1$
-        }
+	protected void loadExclusionFile(String file) throws ConnectorException {
+		try {
+			Properties props = new Properties();
+			props.load(Thread.currentThread().getContextClassLoader().getResourceAsStream(file));
+			exclusionList = new ArrayList(props.size());
+			String key;
+			for (Iterator it = props.keySet().iterator(); it.hasNext(); exclusionList.add(((String) props.get(key)).trim().toLowerCase())) {
+				key = (String) it.next();
+				logger.logInfo("Exec Connector - exclude: " + props.get(key));//$NON-NLS-1$
+			}
 
-    }
-    catch(IOException err)
-    {
-        throw new ConnectorException(err, ExecPlugin.Util.getString("ExecConnector.Error_loading_exclusion_properties", file)); //$NON-NLS-1$
-    }
-    catch(ExtensionModuleNotFoundException err)
-    {
-        throw new ConnectorException(ExecPlugin.Util.getString("ExecConnector.Exclusion_file_not_found", file)); //$NON-NLS-1$
-    }
-    catch(MetaMatrixComponentException err1)
-    {
-        throw new ConnectorException(err1, ExecPlugin.Util.getString("ExecConnector.Unable_to_load_extension_module", file)); //$NON-NLS-1$
-    }
-}
+		} catch (IOException err) {
+			throw new ConnectorException(err, ExecPlugin.Util.getString("ExecConnector.Error_loading_exclusion_properties", file)); //$NON-NLS-1$
+		}
+	}
     
     protected void setExclusionList(List list) {
         this.exclusionList = new ArrayList(list);
     }
-    
-    
 }

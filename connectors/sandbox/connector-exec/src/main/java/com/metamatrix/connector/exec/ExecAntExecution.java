@@ -52,13 +52,9 @@ import org.teiid.connector.basic.BasicExecution;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 
-import com.metamatrix.common.config.CurrentConfiguration;
-import com.metamatrix.common.config.api.Host;
-import com.metamatrix.common.util.CommonPropertyNames;
 import com.metamatrix.common.util.OSPlatformUtil;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.StringUtil;
-import com.metamatrix.core.util.TempDirectory;
 
 /**
  * Represents the execution of a command.
