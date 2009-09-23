@@ -38,20 +38,29 @@ Setting up a Datasource to be used during Testing
 
 2.	CREATE TABLES
 	To create the tables on the defined datasource, run the maven profile to execute the process to create the required tables:
-		a.  to setup all sources at one time, run:   mvn pre-integration-test -P setupdatasources -Dmaven.test.skip=true
-		b.	to setup a specific source, run: mvn pre-integration-test -Ddatasource=<datasourcedir> -Psingledatasource -Dmaven.test.skip=true 
+		a.  to setup all sources at one time, run:   
+				mvn pre-integration-test -P setupdatasources -Dmaven.test.skip=true
+		b.	to setup a specific source, 
+				run: mvn pre-integration-test -Ddatasource=<datasourcedir> -Psingledatasource -Dmaven.test.skip=true 
 				where <datasourcedir> is the name of the directory for the datasource
-
-
+				
+				
+				Example:
 		
+					mvn pre-integration-test -Ddatasource=oracle -Psingledatasource -Dmaven.test.skip=true 
 
 ==========================================
 Executing the db integration tests
 ==========================================
 
-The default profile in the pom.xml is set to compile and run the test.   So running:  mvn install
-will run the test.  
-It will not setup a datasource.   See above "Setting up a Datasource to be used during Testing".
+The default profile in the pom.xml is set to compile and run the test.   The following are options for running tests:
+
+	a.	Run with no regard to which specific datasource to use (only those with connections.properties file are considered):  
+			run:	mvn install
+	b.	To run the tests, but specify which datasource(s) to use:
+			run:	mvn clean install -Dusedatasources=<comma seperated datasource names>
+			Example:  mvn clean install -Dusedatasources=oracle,sqlserver
+			
 
 
 
