@@ -82,5 +82,12 @@ public class TestTempTables {
 		execute("delete from x where ascii(e1) > e2", new List[] {Arrays.asList(5)}); //$NON-NLS-1$
 		execute("select e1 from x order by e1", new List[] {Arrays.asList((String)null)}); //$NON-NLS-1$
 	}
+	
+	@Test public void testDelete1() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("select e1, e2 into x from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		execute("delete from x", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		execute("select e1 from x order by e1", new List[] {}); //$NON-NLS-1$
+	}
 
 }

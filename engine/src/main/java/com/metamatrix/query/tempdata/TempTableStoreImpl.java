@@ -180,13 +180,6 @@ public class TempTableStoreImpl implements TempTableStore {
         groupToTupleSourceID.put(tempTableName, tsId);
     }
 
-    public void removeTempTable(Command command) throws MetaMatrixComponentException{
-        if(command.getType() == Command.TYPE_DROP) {
-            String tempTableName = ((Drop)command).getTable().getName().toUpperCase();
-            removeTempTableByName(tempTableName);
-        }
-    }
-    
     public void removeTempTableByName(String tempTableName) throws MetaMatrixComponentException {
         tempMetadataStore.removeTempGroup(tempTableName);
         TupleSourceID tsId = this.groupToTupleSourceID.remove(tempTableName);
@@ -250,6 +243,11 @@ public class TempTableStoreImpl implements TempTableStore {
 	        	if (command instanceof Delete) {
 	        		final Delete delete = (Delete)command;
 	        		final Criteria crit = delete.getCriteria();
+	        		if (crit == null) {
+	        			int rows = buffer.getRowCount(tsId);
+	                    addTempTable(groupKey, buffer.getTupleSchema(tsId), true);
+	                    return new UpdateCountTupleSource(rows);
+	        		}
 	        		return new UpdateTupleSource(groupKey, tsId, crit) {
 	        			@Override
 	        			protected void tuplePassed(List<?> tuple)
@@ -272,7 +270,8 @@ public class TempTableStoreImpl implements TempTableStore {
             return new UpdateCountTupleSource(0);	
     	}
     	if (command instanceof Drop) {
-            removeTempTable(command);
+    		String tempTableName = ((Drop)command).getTable().getName().toUpperCase();
+            removeTempTableByName(tempTableName);
             return new UpdateCountTupleSource(0);
     	}
         return null;

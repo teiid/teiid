@@ -36,8 +36,6 @@ import com.metamatrix.query.sql.lang.Command;
  */
 public interface TempTableStore {
     
-    void removeTempTable(Command command) throws MetaMatrixComponentException;
-
     void removeTempTables() throws MetaMatrixComponentException;
   
     TempMetadataStore getMetadataStore();
