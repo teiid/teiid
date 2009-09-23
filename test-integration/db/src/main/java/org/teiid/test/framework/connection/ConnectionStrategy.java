@@ -31,26 +31,7 @@ import com.metamatrix.jdbc.api.ExecutionProperties;
 
 public abstract class ConnectionStrategy {
     
-     
-//    public static final String DS_USER = "user"; //$NON-NLS-1$
-//    
-//    // need both user variables because Teiid uses 'user' and connectors use 'username'
-//    public static final String DS_USERNAME = JDBCPropertyNames.USERNAME; //$NON-NLS-1$
-//    public static final String DS_PASSWORD = JDBCPropertyNames.PASSWORD;     //$NON-NLS-1$
-//    
-//    // the driver is only used for making direct connections to the source, the 
-//    // connector type will provide the JDBCPropertyNames.CONNECTION_SOURCE driver class
-//    public static final String DS_DRIVER = "driver"; //$NON-NLS-1$
-//    public static final String DS_DATASOURCE = "datasource"; //$NON-NLS-1$
-// 
-//    public static final String DS_URL = JDBCPropertyNames.URL;     //$NON-NLS-1$
-//    public static final String DS_SERVERNAME = "servername"; //$NON-NLS-1$
-//    public static final String DS_SERVERPORT = "portnumber"; //$NON-NLS-1$
-//   
-//    public static final String DS_DATABASENAME = "databasename"; //$NON-NLS-1$
-//    public static final String DS_APPLICATION_NAME = "application-name"; //$NON-NLS-1$
-//    
-    public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$  
+     public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$  
 	
 	public static final String PROCESS_BATCH = "process-batch"; //$NON-NLS-1$
 	public static final String CONNECTOR_BATCH = "connector-batch"; //$NON-NLS-1$
@@ -69,8 +50,7 @@ public abstract class ConnectionStrategy {
     
     public ConnectionStrategy(Properties props) throws QueryTestFailedException {
     	this.env = props;
-
-    	
+   	
     }
     
     /*
@@ -151,23 +131,15 @@ public abstract class ConnectionStrategy {
             
             Admin admin = (Admin)c.getAdminAPI();
         
- //           boolean update = false;
-            Properties p = new Properties();
-            if (this.env.getProperty(PROCESS_BATCH) != null) {
-                p.setProperty("metamatrix.buffer.processorBatchSize", this.env.getProperty(PROCESS_BATCH)); //$NON-NLS-1$
- //               update = true;
-            }
-            
-            if (this.env.getProperty(CONNECTOR_BATCH) != null) {
-                p.setProperty("metamatrix.buffer.connectorBatchSize", this.env.getProperty(CONNECTOR_BATCH)); //$NON-NLS-1$
- //               update = true;
-            }
-            
-            // update the system.
-//            if (update) {
-//            	admin.s
-//            	admin.updateSystemProperties(p);
+//            Properties p = new Properties();
+//            if (this.env.getProperty(PROCESS_BATCH) != null) {
+//                p.setProperty("metamatrix.buffer.processorBatchSize", this.env.getProperty(PROCESS_BATCH)); //$NON-NLS-1$
 //            }
+//            
+//            if (this.env.getProperty(CONNECTOR_BATCH) != null) {
+//                p.setProperty("metamatrix.buffer.connectorBatchSize", this.env.getProperty(CONNECTOR_BATCH)); //$NON-NLS-1$
+//            }
+            
             setupVDBConnectorBindings(admin);
             
             admin.restart();
@@ -219,7 +191,7 @@ public abstract class ConnectionStrategy {
 	        	if (ds != null) {
 		        	datasources.put(m.getName(), ds);
 
-	                System.out.println("Setting up Connector Binding of Type: " + ds.getConnectorType()); //$NON-NLS-1$
+	                System.out.println("Set up Connector Binding (model:mapping:type): " + m.getName() + ":" + useName + ":"  + ds.getConnectorType()); //$NON-NLS-1$
 
 		        	AdminOptions ao = new AdminOptions(AdminOptions.OnConflict.OVERWRITE);
 		        	ao.addOption(AdminOptions.BINDINGS_IGNORE_DECRYPT_ERROR);
