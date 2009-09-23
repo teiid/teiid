@@ -1,5 +1,5 @@
 /*
- * Copyright © 2000-2008 MetaMatrix, Inc.
+ * Copyright 2000-2008 MetaMatrix, Inc.
  * All rights reserved.
  */
 package org.teiid.rhq.comm.impl;
