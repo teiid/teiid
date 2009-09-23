@@ -614,7 +614,7 @@ public class Request implements QueryProcessor.ProcessorFactory {
         	copy.pushCall(recursionGroup);
         }
         
-        QueryRewriter.rewrite(newCommand, null, metadata, copy);
+        newCommand = QueryRewriter.rewrite(newCommand, null, metadata, copy);
         ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, capabilitiesFinder, analysisRecord, copy);
         return new QueryProcessor(plan, copy, bufferManager, processorDataManager);
 	}

@@ -663,6 +663,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             if(isXMLCommand(subQuery)) {
                 handleValidationError(QueryPlugin.Util.getString(ErrorMessageKeys.VALIDATOR_0034), query);
             }
+            if (subQuery instanceof Query && ((Query)subQuery).getInto() != null) {
+            	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.union_insert"), query); //$NON-NLS-1$
+            }
         }
         
         if (!query.isAll() || query.getOperation() == Operation.EXCEPT || query.getOperation() == Operation.INTERSECT) {

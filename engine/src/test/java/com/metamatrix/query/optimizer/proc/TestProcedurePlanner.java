@@ -71,7 +71,7 @@ public class TestProcedurePlanner extends TestCase {
                                                                  QueryMetadataException {
         QueryMetadataInterface metadata = FakeMetadataFactory.exampleUpdateProc(procedureType, procedure);
 
-        QueryParser parser = new QueryParser();
+        QueryParser parser = QueryParser.getQueryParser();
         Command userCommand = userQuery != null ? parser.parseCommand(userQuery) : parser.parseCommand(procedure);
         QueryResolver.resolveCommand(userCommand, metadata);
 		ValidatorReport report = Validator.validate(userCommand, metadata);
@@ -80,7 +80,7 @@ public class TestProcedurePlanner extends TestCase {
             ValidatorFailure firstFailure = (ValidatorFailure) report.getItems().iterator().next();
             throw new QueryValidatorException(firstFailure.getMessage());
         }
-        QueryRewriter.rewrite(userCommand, null, metadata, null);
+        userCommand = QueryRewriter.rewrite(userCommand, null, metadata, null);
         
         AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
         

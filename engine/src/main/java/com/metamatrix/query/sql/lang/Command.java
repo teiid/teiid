@@ -152,7 +152,7 @@ public abstract class Command implements LanguageObject {
      * is not safe to manipulate (see @link#CommandContainer insead) 
      * @return
      */
-    public List getSubCommands() {
+    public List<Command> getSubCommands() {
         return CommandCollectorVisitor.getCommands(this);
     }
     

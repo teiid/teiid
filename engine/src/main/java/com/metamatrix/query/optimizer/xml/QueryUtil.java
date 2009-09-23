@@ -126,10 +126,10 @@ public class QueryUtil {
      * @throws QueryPlannerException
      * @since 4.3
      */
-    static void rewriteQuery(Command query, QueryMetadataInterface metadata, CommandContext context) 
+    static Command rewriteQuery(Command query, QueryMetadataInterface metadata, CommandContext context) 
         throws QueryPlannerException {
         try {
-            QueryRewriter.rewrite(query, null, metadata, context);
+            return QueryRewriter.rewrite(query, null, metadata, context);
         } catch(QueryValidatorException e) {
             throw new QueryPlannerException(e, e.getMessage());
         }

@@ -55,9 +55,7 @@ public class TestOrderByRewrite extends TestCase {
         
         QueryResolver.resolveCommand(command, FakeMetadataFactory.example1Cached());
         
-        QueryRewriter.rewrite(command, null, FakeMetadataFactory.example1Cached(), null);
-        
-        return command;
+        return QueryRewriter.rewrite(command, null, FakeMetadataFactory.example1Cached(), null);
     }
 
     private void helpCheckElements(OrderBy langObj,

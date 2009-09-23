@@ -111,7 +111,6 @@ public class RelationalPlanner implements CommandPlanner {
         // Check whether command has virtual groups
         Command command = node.getCommand();
         PlanHints hints = (PlanHints)node.getProperty(RelationalPlanner.HINTS);
-        RelationalPlanner.checkForVirtualGroups(command, hints, metadata);
 
         // Distribute make dependent hints as necessary
         if(hints.makeDepGroups != null) {
@@ -206,27 +205,6 @@ public class RelationalPlanner implements CommandPlanner {
             Command nodeCommand = (Command)source.getProperty(NodeConstants.Info.NESTED_COMMAND);
             if(nodeCommand != null && nodeCommand.getProcessorPlan() != null) {
                 source.setProperty(NodeConstants.Info.PROCESSOR_PLAN, nodeCommand.getProcessorPlan());
-            }
-        }
-    }
-
-    /**
-     * Look for any virtual groups in the user's command.  If some exist, then
-     * set the hint for virtual groups to true.  Otherwise, leave the hint at it's
-     * default value which is false.  This allows the buildRules() method later to
-     * leave out a bunch of rules relating to virtual groups if none were used.
-     * @param command Command to check
-     * @param hints Hints to update if virtual groups are used in plan
-     */
-    private static void checkForVirtualGroups(Command command, PlanHints hints, QueryMetadataInterface metadata)
-    throws QueryMetadataException, MetaMatrixComponentException {
-        Collection groups = GroupCollectorVisitor.getGroups(command, true);
-        Iterator groupIter = groups.iterator();
-        while (groupIter.hasNext()) {
-            GroupSymbol group = (GroupSymbol) groupIter.next();
-            if( metadata.isVirtualGroup(group.getMetadataID()) ) {
-                hints.hasVirtualGroups = true;
-                break;
             }
         }
     }

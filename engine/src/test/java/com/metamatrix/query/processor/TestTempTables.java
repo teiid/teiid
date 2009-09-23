@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -52,11 +51,10 @@ public class TestTempTables {
 		dataManager = new TempTableDataManager(fdm, tempStore);
 	}
 
-	@Ignore("need to correct select into query formation")
 	@Test public void testInsertWithQueryExpression() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) select e2, e1 from pm1.g1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
-		execute("update x set e1 = e2 where e2 > 1", new List[] {Arrays.asList(6)}); //$NON-NLS-1$
+		execute("update x set e1 = e2 where e2 > 1", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
 	}
 	
 	@Test public void testOutofOrderInsert() throws Exception {

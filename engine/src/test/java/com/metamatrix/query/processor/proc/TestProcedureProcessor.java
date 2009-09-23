@@ -1603,7 +1603,7 @@ public class TestProcedureProcessor {
         helpTestProcessFailure(false, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements."); //$NON-NLS-1$
      }
     
-    @Test public void testDynamicCommandIncorrectProjectSymbolNames() throws Exception {
+    @Test public void testDynamicCommandPositional() throws Exception {
     	//Tests dynamic query with incorrect number of elements   
         FakeMetadataFacade metadata = FakeMetadataFactory.example1();
         
@@ -1625,7 +1625,9 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
     	
-        helpTestProcessFailure(false, plan, dataMgr, "Couldn't execute the dynamic SQL command \"EXECUTE STRING 'select e1 as x, e2 from pm1.g1'\" with the SQL statement \"'select e1 as x, e2 from pm1.g1'\" due to: No match found for expected symbol 'E1' in the dynamic SQL."); //$NON-NLS-1$
+        helpTestProcess(plan, new List[] {Arrays.asList("First", "5"), //$NON-NLS-1$ //$NON-NLS-2$
+        		Arrays.asList("Second", "15"), //$NON-NLS-1$ //$NON-NLS-2$
+        		Arrays.asList("Third", "51")}, dataMgr); //$NON-NLS-1$ //$NON-NLS-2$
      }
     
     @Test public void testDynamicCommandIncorrectProjectSymbolDatatypes() throws Exception {

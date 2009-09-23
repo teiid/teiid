@@ -473,7 +473,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         tempTables.addAll(current);
         
         for (Iterator i = tempTables.iterator(); i.hasNext();) {
-            removeResults((String)i.next());
+            this.tempTableStore.removeTempTableByName((String)i.next());
         }
         
         this.tempContext.removeLast();
@@ -565,7 +565,6 @@ public class ProcedurePlan extends BaseProcessorPlan {
                 throw new MetaMatrixComponentException(e, ErrorMessageKeys.PROCESSOR_0022, QueryExecPlugin.Util.getString(ErrorMessageKeys.PROCESSOR_0022, (String) null));
     		}
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[]{"removed tuple source", state.tsID, "for result set"}); //$NON-NLS-1$ //$NON-NLS-2$
-            this.tempTableStore.removeTempTableByName(rsKey);
         }
     }
 

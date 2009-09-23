@@ -433,7 +433,7 @@ public class XMLQueryPlanner {
 	        }
         }
         
-        QueryUtil.rewriteQuery(query, planEnv.getGlobalMetadata(), planEnv.context);
+        Command cmd = QueryUtil.rewriteQuery(query, planEnv.getGlobalMetadata(), planEnv.context);
                 
         ProcessorPlan plan = null;
         
@@ -445,7 +445,7 @@ public class XMLQueryPlanner {
         
         try {
             // register with env
-            plan = optimizePlan(query, planEnv);
+            plan = optimizePlan(cmd, planEnv);
         } catch (QueryPlannerException e) {
             if (implicit) {
                 if (debug) {
@@ -488,7 +488,7 @@ public class XMLQueryPlanner {
         }
         
         ResultSetInfo rsInfo = planEnv.getStagingTableResultsInfo(stageGroupName);
-        rsInfo.setCommand(query);
+        rsInfo.setCommand(cmd);
         rsInfo.setPlan(plan);
         
         //set the carinality on the temp group.
@@ -504,7 +504,7 @@ public class XMLQueryPlanner {
         ResultSetInfo rsUnloadInfo = planEnv.getStagingTableResultsInfo(unloadName);
         Command command = wrapStagingTableUnloadQuery(intoGroupSymbol);
         QueryUtil.resolveQuery(command, planEnv.getGlobalMetadata());
-        QueryUtil.rewriteQuery(command, planEnv.getGlobalMetadata(), planEnv.context);
+        command = QueryUtil.rewriteQuery(command, planEnv.getGlobalMetadata(), planEnv.context);
         
         plan = optimizePlan(command, planEnv);
         rsUnloadInfo.setCommand(command);

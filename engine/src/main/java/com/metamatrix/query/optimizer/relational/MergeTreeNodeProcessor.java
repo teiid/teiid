@@ -103,9 +103,7 @@ public class MergeTreeNodeProcessor implements CommandTreeProcessor {
 			Command childCommand = child.getCommand();
 			Command parentCommand = parent.getCommand();
 			
-			Iterator i = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(parentCommand).iterator();
-			while (i.hasNext()) {
-                SubqueryContainer crit = (SubqueryContainer) i.next();
+			for (SubqueryContainer crit : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(parentCommand)) {
 				if (crit.getCommand() == childCommand){
 					//Don't merge these two nodes
 					return;
@@ -124,7 +122,7 @@ public class MergeTreeNodeProcessor implements CommandTreeProcessor {
      * @param childCommand 
      * @param parentCommand
      */
-    private static void mergeTempMetadata(
+    static void mergeTempMetadata(
         Command childCommand,
         Command parentCommand) {
         Map childTempMetadata = childCommand.getTemporaryMetadata();
@@ -155,9 +153,7 @@ public class MergeTreeNodeProcessor implements CommandTreeProcessor {
 	throws QueryMetadataException, MetaMatrixComponentException {
 			
 		PlanNode parentPlan = (PlanNode)parent.getCanonicalPlan();
-		Iterator sourceNodes = NodeEditor.findAllNodes(parentPlan, NodeConstants.Types.SOURCE).iterator();
-		while (sourceNodes.hasNext()){
-			PlanNode sourceNode = (PlanNode)sourceNodes.next();
+		for (PlanNode sourceNode : NodeEditor.findAllNodes(parentPlan, NodeConstants.Types.SOURCE)) {
             if(sourceNode.getChildCount()>0) {
                 continue;
             }

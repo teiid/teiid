@@ -55,6 +55,7 @@ import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
@@ -75,7 +76,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
         
         //variables and values must be resolved separately to account for implicitly defined temp groups
         resolveList(insert.getValues(), metadata, insert.getExternalGroupContexts(), null);
-
+        
         //resolve subquery if there
         if(insert.getQueryExpression() != null) {
         	QueryResolver.setChildMetadata(insert.getQueryExpression(), command);
@@ -83,7 +84,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             QueryResolver.resolveCommand(insert.getQueryExpression(), Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis, false);
         }
 
-        Set groups = new HashSet();
+        Set<GroupSymbol> groups = new HashSet<GroupSymbol>();
         groups.add(insert.getGroup());
         
         if (insert.getVariables().isEmpty()) {
@@ -114,11 +115,21 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             //ensure that the types match
             resolveTypes(insert);
         }
+        
+        if (insert.getQueryExpression() != null && metadata.isVirtualGroup(insert.getGroup().getMetadataID())) {
+        	List<Reference> references = new ArrayList<Reference>(insert.getVariables().size());
+        	for (int i = 0; i < insert.getVariables().size(); i++) {
+        		Reference ref = new Reference(i);
+        		ref.setType(((ElementSymbol)insert.getVariables().get(i)).getType());
+				references.add(ref);
+			}
+        	insert.setValues(references);
+        }
     }
 
     private void resolveVariables(TempMetadataAdapter metadata,
                                   Insert insert,
-                                  Set groups) throws MetaMatrixComponentException,
+                                  Set<GroupSymbol> groups) throws MetaMatrixComponentException,
                                              QueryResolverException {
         try {
             resolveList(insert.getVariables(), metadata, null, groups);
@@ -128,7 +139,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
     }
 
     private void resolveList(Collection elements, TempMetadataAdapter metadata,
-                                  GroupContext externalGroups, Set groups) throws MetaMatrixComponentException,
+                                  GroupContext externalGroups, Set<GroupSymbol> groups) throws MetaMatrixComponentException,
                                              QueryResolverException {
         for (Iterator i = elements.iterator(); i.hasNext();) {
             Expression expr = (Expression)i.next();

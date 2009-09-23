@@ -112,7 +112,7 @@ public class TestMultiSourcePlanToProcessConverter extends TestCase {
         Command command = TestResolver.helpResolve(userSql, wrapper, analysis);               
                 
         // Plan
-        QueryRewriter.rewrite(command, null, wrapper, null);
+        command = QueryRewriter.rewrite(command, null, wrapper, null);
         FakeCapabilitiesFinder fakeFinder = new FakeCapabilitiesFinder();
         fakeFinder.addCapabilities(multiModel, TestOptimizer.getTypicalCapabilities()); 
 

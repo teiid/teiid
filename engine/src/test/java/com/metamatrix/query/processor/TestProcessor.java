@@ -142,58 +142,39 @@ public class TestProcessor {
     
     static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, CommandContext context) {
 		if(DEBUG) System.out.println("\n####################################\n" + command); //$NON-NLS-1$
-
-		// resolve
+		AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
 		try {
 			QueryResolver.resolveCommand(command, metadata);
-		} catch(Throwable e) {
-            throw new MetaMatrixRuntimeException(e);
-		}
         
-        ValidatorReport repo = null;
-        try {
-            repo = Validator.validate(command, metadata);
-        } catch (MetaMatrixComponentException e) {
-            throw new MetaMatrixRuntimeException(e);
-        }
-        Collection failures = new ArrayList();
-        repo.collectInvalidObjects(failures);
-        if (failures.size() > 0){
-            fail("Exception during validation (" + repo); //$NON-NLS-1$
-        }        
-
-		// rewrite
-		try {
+			ValidatorReport repo  = Validator.validate(command, metadata);
+	        Collection failures = new ArrayList();
+	        repo.collectInvalidObjects(failures);
+	        if (failures.size() > 0){
+	            fail("Exception during validation (" + repo); //$NON-NLS-1$
+	        }        
 			command = QueryRewriter.rewrite(command, null, metadata, createCommandContext());
-		} catch(Throwable e) {
-            throw new MetaMatrixRuntimeException(e);
-		}
+	        ProcessorPlan process = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, context);
+			if(DEBUG) System.out.println("\n" + process); //$NON-NLS-1$
+	        //per defect 10022, clone this plan before processing, just to make sure
+	        //a cloned plan with correlated subquery references (or any cloned plan) can be processed
+	        ProcessorPlan cloned = (ProcessorPlan)process.clone();
+	        process = cloned;
+	        
+	        assertNotNull("Output elements of process plan are null", process.getOutputElements()); //$NON-NLS-1$
 
-//		// plan
-		ProcessorPlan process = null;
-        AnalysisRecord analysisRecord = new AnalysisRecord(false, false, DEBUG);
-		try {
-			process = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, context);
-		} catch(Throwable e) {
-            throw new MetaMatrixRuntimeException(e);
+	        // verify we can get child plans for any plan with no problem
+	        process.getChildPlans();
+	        
+			return process;
+        } catch (MetaMatrixComponentException e) {
+            throw new RuntimeException(e);
+		} catch (MetaMatrixProcessingException e) {
+			throw new RuntimeException(e);
 		} finally {
             if(DEBUG) {
                 System.out.println(analysisRecord.getDebugLog());
             }
         }
-		if(DEBUG) System.out.println("\n" + process); //$NON-NLS-1$
-
-        //per defect 10022, clone this plan before processing, just to make sure
-        //a cloned plan with correlated subquery references (or any cloned plan) can be processed
-        ProcessorPlan cloned = (ProcessorPlan)process.clone();
-        process = cloned;
-        
-        assertNotNull("Output elements of process plan are null", process.getOutputElements()); //$NON-NLS-1$
-
-        // verify we can get child plans for any plan with no problem
-        process.getChildPlans();
-        
-		return process;
 	}
 
     public static void helpProcess(ProcessorPlan plan, ProcessorDataManager dataManager, List[] expectedResults) {    

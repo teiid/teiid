@@ -32,6 +32,7 @@ import com.metamatrix.query.sql.LanguageVisitor;
 import com.metamatrix.query.sql.lang.BatchedUpdateCommand;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.ExistsCriteria;
+import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.SetQuery;
 import com.metamatrix.query.sql.lang.SubqueryCompareCriteria;
@@ -201,7 +202,7 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     		modes.add(Mode.NON_EMBEDDED);
     	}
         CommandCollectorVisitor visitor = new CommandCollectorVisitor(modes);
-        final boolean visitCommands = command instanceof SetQuery;
+        final boolean visitCommands = command instanceof SetQuery || command instanceof Insert;
         PreOrderNavigator navigator = new PreOrderNavigator(visitor) {
 
         	@Override

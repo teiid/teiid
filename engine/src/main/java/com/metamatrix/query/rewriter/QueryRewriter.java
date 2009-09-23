@@ -700,7 +700,7 @@ public class QueryRewriter {
 		return translatedCriteria;
 	}
 
-	private Query rewriteQuery(Query query)
+	private Command rewriteQuery(Query query)
              throws QueryValidatorException {
         
         // Rewrite from clause
@@ -778,7 +778,7 @@ public class QueryRewriter {
                 } catch (QueryResolverException err) {
                     throw new QueryValidatorException(err, err.getMessage());
                 } catch (MetaMatrixComponentException err) {
-                    throw new QueryValidatorException(err, err.getMessage());
+                    throw new MetaMatrixRuntimeException(err);
                 }
                 Iterator iter = outerQuery.getSelect().getProjectedSymbols().iterator();
                 HashMap<Expression, SingleElementSymbol> expressionMap = new HashMap<Expression, SingleElementSymbol>();
@@ -818,7 +818,7 @@ public class QueryRewriter {
         }
         
         if (query.getInto() != null) {
-            query = rewriteSelectInto(query);
+            return rewriteSelectInto(query);
         }
         
         return query;
@@ -911,36 +911,42 @@ public class QueryRewriter {
      * @param query
      * @throws QueryValidatorException
      */
-    private Query rewriteSelectInto(Query query) throws QueryValidatorException {
+    private Insert rewriteSelectInto(Query query) throws QueryValidatorException {
         Into into = query.getInto();
-        
         try {
-            List allIntoElements = ResolverUtil.resolveElementsInGroup(into.getGroup(), metadata);
-            boolean needsView = false;
-            
-            for (int i = 0; !needsView && i < allIntoElements.size(); i++) {
-                SingleElementSymbol ses = (SingleElementSymbol)allIntoElements.get(i);
-                if (ses.getType() != ((SingleElementSymbol)query.getSelect().getProjectedSymbols().get(i)).getType()) {
-                    needsView = true;
-                }
-            }
-            
-            if (needsView) {
-                query.setInto(null);
-                query = createInlineViewQuery(into.getGroup(), query);
-                query.setInto(into);
-                return query;
-            }
-            return query;
+            List<ElementSymbol> allIntoElements = deepClone(ResolverUtil.resolveElementsInGroup(into.getGroup(), metadata), ElementSymbol.class);
+            Insert insert = new Insert(into.getGroup(), allIntoElements, Collections.emptyList());
+            query.setInto(null);
+            insert.setQueryExpression(query);
+            return correctDatatypes(insert);
         } catch (QueryMetadataException err) {
-            throw new QueryValidatorException(err, err.getMessage());
-        } catch (QueryResolverException err) {
             throw new QueryValidatorException(err, err.getMessage());
         } catch (MetaMatrixComponentException err) {
             throw new QueryValidatorException(err, err.getMessage());
-        }
-        
+		}
     }
+
+	private Insert correctDatatypes(Insert insert) throws QueryValidatorException {
+		boolean needsView = false;
+		for (int i = 0; !needsView && i < insert.getVariables().size(); i++) {
+		    SingleElementSymbol ses = (SingleElementSymbol)insert.getVariables().get(i);
+		    if (ses.getType() != insert.getQueryExpression().getProjectedSymbols().get(i).getType()) {
+		        needsView = true;
+		    }
+		}
+		if (needsView) {
+		    try {
+				insert.setQueryExpression(createInlineViewQuery(insert.getGroup(), insert.getQueryExpression(), metadata, insert.getVariables()));
+			} catch (QueryResolverException e) {
+				throw new QueryValidatorException(e, e.getMessage());
+			} catch (QueryMetadataException e) {
+				throw new QueryValidatorException(e, e.getMessage());
+			} catch (MetaMatrixComponentException e) {
+				throw new MetaMatrixRuntimeException(e);
+			}
+		}
+		return insert;
+	}
 
     private void correctProjectedTypes(List actualSymbolTypes, Query query) {
         
@@ -1177,7 +1183,7 @@ public class QueryRewriter {
             } catch(CriteriaEvaluationException e) {
                 throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0001, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0001, crit));
             } catch(MetaMatrixComponentException e) {
-                throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0001, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0001, crit));
+                throw new MetaMatrixRuntimeException(e);
             }
         }
         
@@ -2113,7 +2119,7 @@ public class QueryRewriter {
                 }
                 throw new QueryValidatorException(e, e.getMessage());
 			} catch(MetaMatrixComponentException e) {
-                throw new QueryValidatorException(e, ErrorMessageKeys.REWRITER_0005, QueryExecPlugin.Util.getString(ErrorMessageKeys.REWRITER_0005, function));
+                throw new MetaMatrixRuntimeException(e);
 			}
 		} 
         return function;
@@ -2288,30 +2294,12 @@ public class QueryRewriter {
         return storedProcedure;
     }
 
-	private Command rewriteInsert(Insert insert) throws QueryValidatorException {
+	private Insert rewriteInsert(Insert insert) throws QueryValidatorException {
         
         if ( insert.getQueryExpression() != null ) {
-            Query query = null;
-            QueryCommand nested = insert.getQueryExpression();
-            rewriteCommand(nested, true);
-            if(nested instanceof SetQuery) {
-                try {
-                    query = createInlineViewQuery(insert.getGroup(), nested);
-                } catch (QueryMetadataException err) {
-                    throw new QueryValidatorException(err, err.getMessage());
-                } catch (QueryResolverException err) {
-                    throw new QueryValidatorException(err, err.getMessage());
-                } catch (MetaMatrixComponentException err) {
-                    throw new QueryValidatorException(err, err.getMessage());
-                }
-            } else {
-                query = (Query)nested;  
-                query.setOption(insert.getOption());
-            }
-            query.setInto( new Into( insert.getGroup() ) );  
-            return query;
+        	insert.setQueryExpression((QueryCommand)rewriteCommand(insert.getQueryExpression(), true));
+        	return correctDatatypes(insert);
         }
-
         // Evaluate any function / constant trees in the insert values
         List expressions = insert.getValues();
         List evalExpressions = new ArrayList(expressions.size());
@@ -2322,23 +2310,13 @@ public class QueryRewriter {
         }
 
         insert.setValues(evalExpressions);        
-
 		return insert;
 	}
 
-	/**
-	 * Creates an inline view around the target query.
-	 */
-    private Query createInlineViewQuery(GroupSymbol group,
-                                          QueryCommand nested) throws QueryMetadataException, QueryResolverException, MetaMatrixComponentException {
-        List actualSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
-        return createInlineViewQuery(group, nested, metadata, actualSymbols);
-    }
-
-    private static Query createInlineViewQuery(GroupSymbol group,
-                                               QueryCommand nested,
+    public static Query createInlineViewQuery(GroupSymbol group,
+                                               Command nested,
                                                QueryMetadataInterface metadata,
-                                               List actualSymbols) throws QueryMetadataException,
+                                               List<SingleElementSymbol> actualSymbols) throws QueryMetadataException,
                                                                   QueryResolverException,
                                                                   MetaMatrixComponentException {
         Query query = new Query();
@@ -2349,20 +2327,31 @@ public class QueryRewriter {
         from.addClause(new UnaryFromClause(inlineGroup)); 
         TempMetadataStore store = new TempMetadataStore();
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);
-        Query firstProject = nested.getProjectedQuery(); 
-        makeSelectUnique(firstProject.getSelect(), false);
-        
+        if (nested instanceof QueryCommand) {
+	        Query firstProject = ((QueryCommand)nested).getProjectedQuery(); 
+	        makeSelectUnique(firstProject.getSelect(), false);
+        }
         store.addTempGroup(inlineGroup.getName(), nested.getProjectedSymbols());
         inlineGroup.setMetadataID(store.getTempGroupID(inlineGroup.getName()));
         
-        List actualTypes = new ArrayList(nested.getProjectedSymbols().size());
-        
-        for (Iterator i = actualSymbols.iterator(); i.hasNext();) {
-            SingleElementSymbol ses = (SingleElementSymbol)i.next();
+        List<Class<?>> actualTypes = new ArrayList<Class<?>>(nested.getProjectedSymbols().size());
+        for (SingleElementSymbol ses : actualSymbols) {
             actualTypes.add(ses.getType());
         }
-        List selectSymbols = SetQuery.getTypedProjectedSymbols(ResolverUtil.resolveElementsInGroup(inlineGroup, tma), actualTypes);
-        select.addSymbols(deepClone(selectSymbols, SingleElementSymbol.class));
+        List<SingleElementSymbol> selectSymbols = SetQuery.getTypedProjectedSymbols(ResolverUtil.resolveElementsInGroup(inlineGroup, tma), actualTypes);
+        Iterator<SingleElementSymbol> iter = actualSymbols.iterator();
+        for (SingleElementSymbol ses : selectSymbols) {
+        	ses = (SingleElementSymbol)ses.clone();
+        	SingleElementSymbol actual = iter.next();
+        	if (!ses.getShortCanonicalName().equals(actual.getShortCanonicalName())) {
+	        	if (ses instanceof AliasSymbol) {
+	        		((AliasSymbol)ses).setName(actual.getShortName());
+	        	} else {
+	        		ses = new AliasSymbol(actual.getShortName(), ses);
+	        	}
+        	}
+			select.addSymbol(ses);
+		}
         query.setFrom(from); 
         QueryResolver.resolveCommand(query, tma);
         query.setOption(nested.getOption());

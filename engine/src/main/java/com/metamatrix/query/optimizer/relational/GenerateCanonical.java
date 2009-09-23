@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -40,11 +41,13 @@ import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.From;
 import com.metamatrix.query.sql.lang.FromClause;
 import com.metamatrix.query.sql.lang.GroupBy;
+import com.metamatrix.query.sql.lang.Insert;
 import com.metamatrix.query.sql.lang.JoinPredicate;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.Limit;
 import com.metamatrix.query.sql.lang.Option;
 import com.metamatrix.query.sql.lang.OrderBy;
+import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.Query;
 import com.metamatrix.query.sql.lang.QueryCommand;
 import com.metamatrix.query.sql.lang.Select;
@@ -53,6 +56,7 @@ import com.metamatrix.query.sql.lang.StoredProcedure;
 import com.metamatrix.query.sql.lang.SubqueryFromClause;
 import com.metamatrix.query.sql.lang.UnaryFromClause;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
@@ -84,7 +88,7 @@ public final class GenerateCanonical {
 			// update PlanHints to note that it is an update
 			hints.isUpdate = true;
 
-			return GenerateCanonical.createUpdatePlan(command, hints);
+			return GenerateCanonical.createUpdatePlan(command, hints, metadata);
 
 		} else if( command.getType() == Command.TYPE_STORED_PROCEDURE) {
 
@@ -97,30 +101,43 @@ public final class GenerateCanonical {
 
 	private GenerateCanonical() { }
 
-	static PlanNode createUpdatePlan(Command command, PlanHints hints) {
+	static PlanNode createUpdatePlan(Command command, PlanHints hints, QueryMetadataInterface metadata) throws QueryPlannerException, MetaMatrixComponentException {
 
         // Create top project node - define output columns for stored query / procedure
         PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
 
-        Collection groups = GroupCollectorVisitor.getGroups(command, false);
+        Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, false);
         projectNode.addGroups(groups);
 
         // Set output columns
-        List cols = command.getProjectedSymbols();
+        List<SingleElementSymbol> cols = command.getProjectedSymbols();
         projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, cols);
 
         // Define source of data for stored query / procedure
         PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
         sourceNode.setProperty(NodeConstants.Info.ATOMIC_REQUEST, command);
         sourceNode.setProperty(NodeConstants.Info.VIRTUAL_COMMAND, command);
-        List subCommands = command.getSubCommands();
-        if (subCommands.size() == 1) {
-            sourceNode.setProperty(NodeConstants.Info.NESTED_COMMAND, subCommands.iterator().next());
+        if (command instanceof ProcedureContainer) {
+        	ProcedureContainer container = (ProcedureContainer)command;
+	        if (container.getSubCommand() != null) {
+	            sourceNode.setProperty(NodeConstants.Info.NESTED_COMMAND, container.getSubCommand());
+	        }
         }
         sourceNode.addGroups(groups);
 
         GenerateCanonical.attachLast(projectNode, sourceNode);
 
+        //for INTO query, attach source and project nodes
+        if(command instanceof Insert){
+        	Insert insert = (Insert)command;
+        	if (insert.getQueryExpression() != null) {
+	            PlanNode plan = createQueryPlan(insert.getQueryExpression(), hints, metadata);
+	            GenerateCanonical.attachLast(sourceNode, plan);
+	            MergeTreeNodeProcessor.mergeTempMetadata(insert.getQueryExpression(), insert);
+	            projectNode.setProperty(NodeConstants.Info.INTO_GROUP, insert.getGroup());
+        	}
+        }
+        
         return projectNode;
 	}
 
@@ -203,7 +220,7 @@ public final class GenerateCanonical {
     }
 
     private static PlanNode createQueryPlan(Query query, PlanHints hints, QueryMetadataInterface metadata)
-		throws QueryPlannerException, MetaMatrixComponentException {
+		throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
 
         PlanNode plan = null;
 
@@ -212,7 +229,7 @@ public final class GenerateCanonical {
             
             PlanNode dummyRoot = new PlanNode();
             
-    		hints.hasOptionalJoin |= buildTree(fromClause, dummyRoot);
+    		hints.hasOptionalJoin |= buildTree(fromClause, dummyRoot, metadata, hints);
             
             plan = dummyRoot.getFirstChild();
             
@@ -255,33 +272,6 @@ public final class GenerateCanonical {
             plan = attachTupleLimit(plan, query.getLimit(), hints);
         }
 
-        //for SELECT INTO, attach source and project nodes
-        if(query.getInto() != null){
-            // For defect 10976 - find project in current plan and
-            // set top columns
-            List groups = null;
-            PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
-                
-            GenerateCanonical.attachLast(sourceNode, plan);
-            plan = sourceNode;
-
-            if (query.getFrom() != null){
-                groups = query.getFrom().getGroups();
-                sourceNode.addGroups(groups);
-            }
-
-            PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
-            List selectCols = query.getProjectedSymbols();
-            projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, selectCols);
-            projectNode.setProperty(NodeConstants.Info.INTO_GROUP, query.getInto().getGroup());
-
-            if (groups != null){
-                projectNode.addGroups(groups);
-            }
-            GenerateCanonical.attachLast(projectNode, plan);
-            plan = projectNode;
-        }
-
 		return plan;
 	}
 
@@ -310,9 +300,11 @@ public final class GenerateCanonical {
      * @param markJoinsInternal Flag saying whether joins built in this method should be marked
      * as internal
      * @return true if there are optional join nodes
+     * @throws MetaMatrixComponentException 
+     * @throws QueryMetadataException 
      */
-    static boolean buildTree(FromClause clause, PlanNode parent)
-        throws QueryPlannerException {
+    static boolean buildTree(FromClause clause, PlanNode parent, QueryMetadataInterface metadata, PlanHints hints)
+        throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
         
         boolean result = false;
         
@@ -322,6 +314,9 @@ public final class GenerateCanonical {
             // No join required
             UnaryFromClause ufc = (UnaryFromClause)clause;
             GroupSymbol group = ufc.getGroup();
+            if (metadata.isVirtualGroup(group.getMetadataID())) {
+            	hints.hasVirtualGroups = true;
+            }
             Command nestedCommand = ufc.getExpandedCommand();
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
             node.addGroup(group);
@@ -347,7 +342,7 @@ public final class GenerateCanonical {
             // Handle each child
             FromClause[] clauses = new FromClause[] {jp.getLeftClause(), jp.getRightClause()};
             for(int i=0; i<2; i++) {
-                result |= buildTree(clauses[i], node);
+                result |= buildTree(clauses[i], node, metadata, hints);
 
                 // Add groups to joinNode
                 for (PlanNode child : node.getChildren()) {
@@ -361,7 +356,7 @@ public final class GenerateCanonical {
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
             node.addGroup(group);
             node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
-            
+            hints.hasVirtualGroups = true;
             parent.addLastChild(node);
         }
         

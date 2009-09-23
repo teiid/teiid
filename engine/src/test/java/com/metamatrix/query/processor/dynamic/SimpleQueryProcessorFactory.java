@@ -63,7 +63,7 @@ public class SimpleQueryProcessorFactory implements QueryProcessor.ProcessorFact
 			throws MetaMatrixProcessingException, MetaMatrixComponentException {
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		QueryResolver.resolveCommand(command, metadata);
-		QueryRewriter.rewrite(command, null, metadata, commandContext);
+		command = QueryRewriter.rewrite(command, null, metadata, commandContext);
 		ProcessorPlan plan = QueryOptimizer.optimizePlan(command, metadata,
 				idGenerator, finder, AnalysisRecord.createNonRecordingRecord(),
 				commandContext);

@@ -167,9 +167,7 @@ public class QueryOptimizer {
             analysisRecord.println("\nCANONICAL PLAN: \n" + node.getCanonicalPlan()); //$NON-NLS-1$
 		}   
 				
-		Iterator commands = command.getSubCommands().iterator();
-		while (commands.hasNext()) {
-			Command subcommand = (Command) commands.next();
+		for (Command subcommand : command.getSubCommands()) {
 			CommandTreeNode child = new CommandTreeNode();
 			node.addLastChild(child);
             child.setParent(node);
@@ -193,11 +191,7 @@ public class QueryOptimizer {
 		AnalysisRecord analysisRecord,
         CommandContext context) 
 	throws QueryPlannerException, QueryMetadataException, MetaMatrixComponentException {
-
-				
-		Iterator commands = node.getChildren().iterator();
-		while (commands.hasNext()) {
-			CommandTreeNode child = (CommandTreeNode) commands.next();
+		for (CommandTreeNode child : node.getChildren()) {
 			recursiveOptimize(child, idGenerator, metadata, capFinder, analysisRecord, context);
 		}
         

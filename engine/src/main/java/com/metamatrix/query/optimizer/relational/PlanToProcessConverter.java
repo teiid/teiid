@@ -22,7 +22,6 @@
 
 package com.metamatrix.query.optimizer.relational;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -30,8 +29,6 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
-import com.metamatrix.api.exception.query.QueryResolverException;
-import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerID;
 import com.metamatrix.core.id.IntegerIDFactory;
@@ -40,12 +37,12 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.metadata.TempMetadataID;
-import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.relational.plantree.NodeConstants;
 import com.metamatrix.query.optimizer.relational.plantree.PlanNode;
+import com.metamatrix.query.optimizer.relational.plantree.NodeConstants.Info;
 import com.metamatrix.query.optimizer.relational.rules.CapabilitiesUtil;
 import com.metamatrix.query.processor.ProcessorPlan;
 import com.metamatrix.query.processor.relational.AccessNode;
@@ -71,9 +68,7 @@ import com.metamatrix.query.processor.relational.UnionAllNode;
 import com.metamatrix.query.processor.relational.JoinNode.JoinStrategyType;
 import com.metamatrix.query.processor.relational.MergeJoinStrategy.SortOption;
 import com.metamatrix.query.processor.relational.SortUtility.Mode;
-import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.rewriter.QueryRewriter;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.Insert;
@@ -84,7 +79,6 @@ import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
-import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
@@ -169,28 +163,16 @@ public class PlanToProcessConverter {
                 GroupSymbol intoGroup = (GroupSymbol) node.getProperty(NodeConstants.Info.INTO_GROUP);
                 if(intoGroup != null) {
                     try {
-                        // Figure out what elements should be inserted based on what is being projected 
-                        // from child node
-                        List<ElementSymbol> allIntoElements = ResolverUtil.resolveElementsInGroup(intoGroup, metadata);
-                        
+                    	Insert insert = (Insert)node.getFirstChild().getProperty(Info.VIRTUAL_COMMAND);
+                        List<ElementSymbol> allIntoElements = insert.getVariables();
                         
                         Object groupID = intoGroup.getMetadataID();
                         Object modelID = metadata.getModelID(groupID);
                         String modelName = metadata.getFullName(modelID);
                         if (metadata.isVirtualGroup(groupID)) {
-                        	List<Reference> references = new ArrayList<Reference>(allIntoElements.size());
-                        	for (int i = 0; i < allIntoElements.size(); i++) {
-                        		Reference ref = new Reference(i);
-                        		ref.setType(allIntoElements.get(i).getType());
-								references.add(ref);
-							}
-                        	Insert insert = new Insert(intoGroup, allIntoElements, references);
-                        	QueryResolver.resolveCommand(insert, metadata, analysisRecord);
-                        	QueryRewriter.rewrite(insert, null, metadata, context);
-                        	ProcessorPlan plan = QueryOptimizer.optimizePlan(insert, metadata, idGenerator, capFinder, analysisRecord, context);
                         	InsertPlanExecutionNode ipen = new InsertPlanExecutionNode(getID());
-                        	ipen.setProcessorPlan(plan);
-                        	ipen.setReferences(references);
+                        	ipen.setProcessorPlan((ProcessorPlan)node.getFirstChild().getProperty(Info.PROCESSOR_PLAN));
+                        	ipen.setReferences(insert.getValues());
                         	processNode = ipen;
                         } else {
 	                        ProjectIntoNode pinode = new ProjectIntoNode(getID());
@@ -207,10 +189,6 @@ public class PlanToProcessConverter {
 	                        } 
                         }
                     } catch(QueryMetadataException e) {
-                        throw new MetaMatrixComponentException(e);
-                    } catch(QueryResolverException e) {
-                        throw new MetaMatrixComponentException(e);
-                    } catch(QueryValidatorException e) {
                         throw new MetaMatrixComponentException(e);
                     }
 

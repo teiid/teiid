@@ -1945,7 +1945,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteSelectInto() {
         String sql = "select distinct pm1.g1.e1 into #temp from pm1.g1"; //$NON-NLS-1$
-        String expected = "SELECT DISTINCT pm1.g1.e1 INTO #temp FROM pm1.g1"; //$NON-NLS-1$
+        String expected = "INSERT INTO #temp (#TEMP.E1) SELECT DISTINCT pm1.g1.e1 FROM pm1.g1"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
@@ -1955,7 +1955,7 @@ public class TestQueryRewriter {
      */
     @Test public void testRewriteSelectInto1() {
         String sql = "select distinct e2, e2, e3, e4 into pm1.g1 from pm1.g2"; //$NON-NLS-1$
-        String expected = "SELECT PM1_G1_1.E2 AS E2, PM1_G1_1.E2_0, PM1_G1_1.E3, PM1_G1_1.E4 INTO pm1.g1 FROM (SELECT DISTINCT e2, e2 AS E2_0, e3, e4 FROM pm1.g2) AS pm1_g1_1"; //$NON-NLS-1$
+        String expected = "INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4) SELECT PM1_G1_1.E2 AS e1, PM1_G1_1.E2_0 AS e2, PM1_G1_1.E3, PM1_G1_1.E4 FROM (SELECT DISTINCT e2, e2 AS E2_0, e3, e4 FROM pm1.g2) AS pm1_g1_1"; //$NON-NLS-1$
                 
         helpTestRewriteCommand(sql, expected);        
     }
@@ -2020,14 +2020,7 @@ public class TestQueryRewriter {
         procedure += "Select x from temp;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
-        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nSELECT TEMP_1.E2 AS E2, TEMP_1.X, TEMP_1.X_0 INTO temp FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS X_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS temp_1;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
-    }
-    
-    
-    @Test public void testInsertWithQuery() throws Exception {
-        String sql = "insert into pm1.g1 select e1, e2, e3, e4 from pm1.g2 union select e1, e2, e3, e4 from pm1.g2"; //$NON-NLS-1$
-        
-        helpTestRewriteCommand(sql, "SELECT PM1_G1_1.E1, PM1_G1_1.E2, PM1_G1_1.E3, PM1_G1_1.E4 INTO pm1.g1 FROM (SELECT e1, e2, e3, e4 FROM pm1.g2 UNION SELECT e1, e2, e3, e4 FROM pm1.g2) AS pm1_g1_1"); //$NON-NLS-1$
+        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (TEMP.X, TEMP.Y, TEMP.Z) SELECT TEMP_1.E2 AS X, TEMP_1.X AS Y, TEMP_1.X_0 AS Z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS X_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS temp_1;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
     }
     
     @Test public void testRewriteNot() {
