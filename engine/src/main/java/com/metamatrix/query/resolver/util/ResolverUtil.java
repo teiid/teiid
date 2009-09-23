@@ -240,7 +240,7 @@ public class ResolverUtil {
         
 	        Constant reverse = getProperlyTypedConstant(result.getValue(), constant.getType());
 	        
-	        if (constant.equals(reverse)) {
+	        if (((Comparable)constant.getValue()).compareTo(reverse.getValue()) == 0) {
 	            return result;
 	        }
         } catch (QueryResolverException e) {
