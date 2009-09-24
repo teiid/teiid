@@ -33,12 +33,18 @@ public class TwoDataSourceSetup implements DataSourceSetup {
      	
        System.out.println("Run TwoSource Setup...");
 
-    	
+       System.out.println("perform source pm1 set...");
+   	
         AbstractQueryTest test1 = new QueryExecution(ConnectionUtil.getConnection("pm1", ds));//$NON-NLS-1$
         		
+        
+        System.out.println("perform source pm1 set...");
+
         test1.execute("delete from g2"); //$NON-NLS-1$
         test1.execute("delete from g1");         //$NON-NLS-1$
-        
+  
+        System.out.println("removed old data");
+
         test1.execute("select * from g1 ");
         test1.assertRowCount(0);
         test1.execute("select * from g2 ");
@@ -56,17 +62,23 @@ public class TwoDataSourceSetup implements DataSourceSetup {
         for (int i = 0; i < 100; i++) {
             sql1[i] = "insert into g2 (e1, e2) values("+i+",'"+i+"')" ;
         }
+        System.out.println("add new data");
+
         
         test1.executeBatch(sql1);
         test1.execute("select * from g1 ");
         test1.assertRowCount(100);
         test1.execute("select * from g2 ");
         test1.assertRowCount(100);  
-         
+
+        System.out.println("perform source pm2 set...");
+
         AbstractQueryTest test2 = new QueryExecution(ConnectionUtil.getConnection("pm2", ds));//$NON-NLS-1$
         test2.execute("delete from g2"); //$NON-NLS-1$
         test2.execute("delete from g1");         //$NON-NLS-1$
         
+        System.out.println("removed old data");
+
         test2.execute("select * from g1 ");
         test2.assertRowCount(0);
         test2.execute("select * from g2 ");
@@ -84,6 +96,9 @@ public class TwoDataSourceSetup implements DataSourceSetup {
         for (int i = 0; i < 100; i++) {
             sql2[i] = "insert into g2 (e1, e2) values("+i+",'"+i+"')" ;
         }
+        
+        System.out.println("add new data");
+
         
         test2.executeBatch(sql2);
         test2.execute("select * from g1 ");
