@@ -38,10 +38,11 @@ import com.metamatrix.query.sql.LanguageObject;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.symbol.AliasSymbol;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.ExpressionSymbol;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
-import com.metamatrix.query.sql.visitor.ExpressionSymbolCollector;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 import com.metamatrix.query.unittest.FakeMetadataObject;
 
@@ -80,16 +81,17 @@ public class TestOrderByRewrite extends TestCase {
     
     private void helpCheckExpressionsSymbols(OrderBy langObj,
                                              String[] functionsNames) {
-        List symbols = new ArrayList();
+    	int expCount = 0;
         for (Iterator i = langObj.getVariables().iterator(); i.hasNext();) {
-            ExpressionSymbolCollector.getSymbols((LanguageObject)i.next(), symbols);
+        	SingleElementSymbol ses = (SingleElementSymbol)i.next();
+            if (ses instanceof AliasSymbol) {
+            	AliasSymbol aSymbol = (AliasSymbol)ses;
+            	if (aSymbol.getSymbol() instanceof ExpressionSymbol) {
+                    assertEquals("Expression Symbols does not match: ", functionsNames[expCount++], aSymbol.getSymbol().toString()); //$NON-NLS-1$                        		
+            	}
+            }
         }
-        assertEquals("Wrong number of Symbols: ", functionsNames.length, symbols.size()); //$NON-NLS-1$
-
-        for (int i = 0; i < symbols.size(); i++) {
-            ExpressionSymbol symbol = (ExpressionSymbol)symbols.get(i);
-            assertEquals("Expression Symbols does not match: ", functionsNames[i], symbol.toString()); //$NON-NLS-1$            
-        }
+        assertEquals("Wrong number of Symbols: ", functionsNames.length, expCount); //$NON-NLS-1$
     }
     
     public void testNumberedOrderBy1() throws Exception {
