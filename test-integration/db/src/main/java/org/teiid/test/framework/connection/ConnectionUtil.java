@@ -2,13 +2,10 @@ package org.teiid.test.framework.connection;
 
 import java.sql.Connection;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.sql.XAConnection;
 
-import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.datasource.DataSource;
-import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -25,8 +22,16 @@ public class ConnectionUtil {
 				
 		}
 		
-		return ConnectionStrategyFactory.getInstance().createDriverStrategy(identifier,
+		Connection conn = ConnectionStrategyFactory.getInstance().createDriverStrategy(identifier,
 				ds.getProperties()).getConnection();
+		// force autocommit back to true, just in case the last user didnt
+		try {
+			conn.setAutoCommit(true);
+		} catch (Exception sqle) {
+			throw new QueryTestFailedException(sqle);
+		}
+		
+		return conn;
 
 	}
 	
@@ -40,7 +45,7 @@ public class ConnectionUtil {
 			}
 				
 		}
-		
+
 		return ConnectionStrategyFactory.getInstance().createDataSourceStrategy(
 				identifier, ds.getProperties()).getXAConnection();
 
