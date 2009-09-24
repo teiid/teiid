@@ -22,11 +22,11 @@
 
 package com.metamatrix.metadata.runtime.api;
 
-import com.metamatrix.vdb.edit.loader.VdbProcessingException;
+import com.metamatrix.api.exception.MetaMatrixProcessingException;
 /**
  * The base exception from which all Runtime Metadata Exceptions extend.
  */
-public class VirtualDatabaseException extends VdbProcessingException {
+public class VirtualDatabaseException extends MetaMatrixProcessingException {
 
     public static final String NO_MODELS = "1"; //$NON-NLS-1$
     public static final String MODEL_NON_DEPLOYABLE_STATE = "2";  //$NON-NLS-1$
