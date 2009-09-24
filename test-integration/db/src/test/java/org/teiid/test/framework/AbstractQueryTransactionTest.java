@@ -174,13 +174,12 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
     
     
     /**
-     * At end of each test, clean up the connection factory so that it can be 
-     * established at the start of the next test.
+     * At end of each test, perfrom any cleanup that your test requires.
+     * Note:  Do not cleanup any connections.   That is performed by
+     * the {@link TransactionContainer#runTransaction(TransactionQueryTest)} at the end of the test.
      */
     public void cleanup() {
-        ConnectionStrategyFactory.destroyInstance();
-
- //    	this.closeConnection();
+ 
     }
     
 	@Override

@@ -33,12 +33,9 @@ public class TwoDataSourceSetup implements DataSourceSetup {
      	
        System.out.println("Run TwoSource Setup...");
 
-       System.out.println("perform source pm1 set...");
+       System.out.println("perform source pm1 set");
    	
         AbstractQueryTest test1 = new QueryExecution(ConnectionUtil.getConnection("pm1", ds));//$NON-NLS-1$
-        		
-        
-        System.out.println("perform source pm1 set...");
 
         test1.execute("delete from g2"); //$NON-NLS-1$
         test1.execute("delete from g1");         //$NON-NLS-1$

@@ -6,14 +6,9 @@ package org.teiid.test.testcases;
 
 
 
-import java.sql.Connection;
-
-import javax.sql.XAConnection;
-
 import junit.framework.TestCase;
 
 import org.teiid.test.framework.TransactionContainer;
-import org.teiid.test.framework.connection.ConnectionUtil;
 import org.teiid.test.framework.datasource.DataSourceMgr;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.transaction.TransactionFactory;
