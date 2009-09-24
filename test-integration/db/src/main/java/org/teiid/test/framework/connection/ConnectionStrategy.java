@@ -63,6 +63,14 @@ public abstract class ConnectionStrategy {
      */
     public abstract Connection getConnection() throws QueryTestFailedException;
     
+    /**
+     * Implement shutdown of your type of connecton
+     * 
+     *
+     * @since
+     */
+    public abstract void shutdown();
+
     public Connection getAdminConnection() throws QueryTestFailedException{
     	return null;
     }
@@ -72,7 +80,6 @@ public abstract class ConnectionStrategy {
     	return autoCommit;
     }
 
-    public abstract void shutdown();
     
     public XAConnection getXAConnection() throws QueryTestFailedException {
         return null;

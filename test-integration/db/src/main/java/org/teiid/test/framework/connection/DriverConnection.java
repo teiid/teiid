@@ -13,8 +13,6 @@ import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-import com.metamatrix.jdbc.api.ExecutionProperties;
-
 
 
 /** 

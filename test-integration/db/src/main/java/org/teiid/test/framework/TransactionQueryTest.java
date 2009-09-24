@@ -33,7 +33,8 @@ public interface TransactionQueryTest {
 	
 	
 	/**
-	 * Called by the @link TransactionContainer to set the datasoures used to create the connector bindings.
+	 * Called by the @link TransactionContainer to set the datasoures used to create the connector bindings and
+	 * used to create direct connection to the sources.
 	 * @param datasources
 	 *
 	 * @since

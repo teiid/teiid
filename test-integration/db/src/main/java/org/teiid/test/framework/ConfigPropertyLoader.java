@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
+import org.teiid.test.util.PropUtils;
 
 public class ConfigPropertyLoader {
 		
@@ -32,21 +33,8 @@ public class ConfigPropertyLoader {
 		}
 	    
 		private static void loadProperties(String filename) {
-			props = System.getProperties();
-		    try {
-		        InputStream in = ConfigPropertyLoader.class.getResourceAsStream("/"+ filename);
-		        if (in != null) {
-		        	Properties lprops = new Properties();
-		        	lprops.load(in);
-		        	props.putAll(lprops);
-		        	
-		        }
-		        else {
-		        	throw new RuntimeException("Failed to load properties from file '"+filename+ "' configuration file");
-		        }
-		    } catch (IOException e) {
-		        throw new RuntimeException("Error loading properties from file '"+filename+ "'" + e.getMessage());
-		    }
+			props =PropUtils.loadProperties("/"+ filename, System.getProperties());
+
 		}
 		
 		public static void cleanup() {
