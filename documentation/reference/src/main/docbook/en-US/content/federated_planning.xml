@@ -405,8 +405,17 @@ if(warning instanceof PartialResultsWarning) {
       </para>
       <example>
         <title>Retrieving a Query Plan</title>
-        <programlisting>ResultSet rs = statement.executeQuery("select ...");
-com.metamatrix.jdbc.api.Statement mmstatement = (com.metamatrix.jdbc.api.Statement)statement;
+        <programlisting>com.metamatrix.jdbc.api.Statement mmstatement = (com.metamatrix.jdbc.api.Statement)statement;
+String sql = "select ...";
+
+mmstatement.setExecutionProperty(ExecutionProperties.PROP_SQL_OPTIONS, ExecutionProperties.SQL_OPTION_SHOWPLAN);
+//or
+//sql += " OPTION SHOWPLAN";
+//or
+//sql += " OPTION PLANONLY";
+
+ResultSet rs = statement.executeQuery(sql);
+
 PlanNode queryPlan = mmstatement.getPlanDescription();
 System.out.println(XMLOutputVisitor.convertToXML(queryPlan);</programlisting>
       </example>
