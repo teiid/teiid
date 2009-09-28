@@ -39,7 +39,6 @@ import com.google.inject.Inject;
 import com.metamatrix.admin.api.exception.security.InvalidSessionException;
 import com.metamatrix.admin.api.exception.security.MetaMatrixSecurityException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.api.exception.security.AuthorizationException;
 import com.metamatrix.api.exception.security.MetaMatrixAuthenticationException;
 import com.metamatrix.api.exception.security.SessionServiceException;
 import com.metamatrix.common.api.MMURL;

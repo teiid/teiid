@@ -17,7 +17,7 @@ public abstract class SubqueryAwareRelationalNode extends RelationalNode {
 		if (this.evaluator == null) {
 			this.evaluator = new SubqueryAwareEvaluator(elementMap, getDataManager(), getContext(), getBufferManager());
 		} else {
-			this.evaluator.setContext(getContext());
+			this.evaluator.initialize(getContext(), getDataManager());
 		}
 		return this.evaluator;
 	}

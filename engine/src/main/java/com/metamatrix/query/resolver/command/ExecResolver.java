@@ -23,6 +23,7 @@
 package com.metamatrix.query.resolver.command;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -44,6 +45,7 @@ import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.resolver.ProcedureContainerResolver;
+import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.VariableResolver;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
@@ -52,10 +54,13 @@ import com.metamatrix.query.sql.lang.GroupContext;
 import com.metamatrix.query.sql.lang.ProcedureContainer;
 import com.metamatrix.query.sql.lang.SPParameter;
 import com.metamatrix.query.sql.lang.StoredProcedure;
+import com.metamatrix.query.sql.lang.SubqueryContainer;
 import com.metamatrix.query.sql.proc.CreateUpdateProcedureCommand;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.visitor.CommandCollectorVisitor;
+import com.metamatrix.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 /**
@@ -284,6 +289,11 @@ public class ExecResolver extends ProcedureContainerResolver implements Variable
                 SPParameter param = (SPParameter) paramIter.next();
                 Expression expr = param.getExpression();
                 if(expr != null) {
+                    for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr)) {
+                        QueryResolver.setChildMetadata(container.getCommand(), command);
+                        
+                        QueryResolver.resolveCommand(container.getCommand(), Collections.EMPTY_MAP, useMetadataCommands, metadata.getMetadata(), analysis);
+                    }
                     ResolverVisitor.resolveLanguageObject(expr, null, externalGroups, metadata);
                     Class paramType = param.getClassType();
 

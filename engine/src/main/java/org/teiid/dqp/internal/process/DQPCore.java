@@ -91,6 +91,7 @@ import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.tempdata.TempTableStoreImpl;
 import com.metamatrix.server.serverapi.RequestInfo;
 import com.metamatrix.vdb.runtime.VDBKey;
 
@@ -117,6 +118,36 @@ public class DQPCore extends Application implements ClientSideDQP {
 			}
 			return vdbCapabilties;
 		}
+	}
+	
+	static class ClientState {
+		List<RequestID> requests;
+		TempTableStoreImpl tempTableStoreImpl;
+		
+		public ClientState(TempTableStoreImpl tableStoreImpl) {
+			this.tempTableStoreImpl = tableStoreImpl;
+		}
+		
+		public synchronized void addRequest(RequestID requestID) {
+			if (requests == null) {
+				requests = new LinkedList<RequestID>();
+			}
+			requests.add(requestID);
+		}
+		
+		public synchronized List<RequestID> getRequests() {
+			if (requests == null) {
+				return Collections.emptyList();
+			}
+			return new ArrayList<RequestID>(requests);
+		}
+
+		public synchronized void removeRequest(RequestID requestID) {
+			if (requests != null) {
+				requests.remove(requestID);
+			}
+		}
+		
 	}
 	
     //Constants
@@ -151,11 +182,10 @@ public class DQPCore extends Application implements ClientSideDQP {
     private int processorTimeslice = DEFAULT_PROCESSOR_TIMESLICE;
     private boolean processorDebugAllowed;
     
-	private TempTableStoresHolder tempTableStoresHolder;
     private int chunkSize = 0;
     
-	private Map<RequestID, RequestWorkItem> requests = Collections.synchronizedMap(new HashMap<RequestID, RequestWorkItem>());			
-	private Map<String, List<RequestID>> requestsByClients = Collections.synchronizedMap(new HashMap<String, List<RequestID>>());
+	private Map<RequestID, RequestWorkItem> requests = new ConcurrentHashMap<RequestID, RequestWorkItem>();			
+	private Map<String, ClientState> clientState = Collections.synchronizedMap(new HashMap<String, ClientState>());
 	private DQPContextCache contextCache;
     private ServiceLoader loader = new ServiceLoader();
 
@@ -179,27 +209,32 @@ public class DQPCore extends Application implements ClientSideDQP {
      * Return a list of {@link RequestInfo} for the given session
      */
     public List<RequestInfo> getRequestsByClient(String clientConnection) {
-        List<RequestID> ids = this.requestsByClients.get(clientConnection);
-
-        return buildRequestInfos(ids);
+    	ClientState state = getClientState(clientConnection, false);
+    	if (state == null) {
+    		return Collections.emptyList();
+    	}
+        return buildRequestInfos(state.getRequests());
+    }
+    
+    public ClientState getClientState(String key, boolean create) {
+    	synchronized (clientState) {
+    		ClientState state = clientState.get(key);
+    		if (state == null && create) {
+    			state = new ClientState(new TempTableStoreImpl(bufferManager, key, null));
+        		clientState.put(key, state);
+    		}
+    		return state;
+		}
     }
 
     /**
      * Return a list of all {@link RequestInfo} 
      */
     public List<RequestInfo> getRequests() {
-        List<RequestID> copies = null;
-		synchronized(requests) {
-            copies = new ArrayList<RequestID>(requests.keySet());
-        }
-		
-		return buildRequestInfos(copies);
+		return buildRequestInfos(requests.keySet());
     } 
 
-    private List<RequestInfo> buildRequestInfos(List<RequestID> ids) {
-		if(ids == null) {
-			return Collections.emptyList();
-		}
+    private List<RequestInfo> buildRequestInfos(Collection<RequestID> ids) {
 		List<RequestInfo> results = new ArrayList<RequestInfo>();
     	for (RequestID requestID : ids) {
             RequestWorkItem holder = requests.get(requestID);
@@ -246,10 +281,10 @@ public class DQPCore extends Application implements ClientSideDQP {
 	    } else {
 	    	request = new Request();
 	    }
+	    ClientState state = this.getClientState(workContext.getConnectionID(), true);
 	    request.initialize(requestMsg, getEnvironment(), bufferManager,
 				dataTierMgr, vdbCapabilties, transactionService,
-				processorDebugAllowed, this.tempTableStoresHolder
-						.getTempTableStore(workContext.getConnectionID()),
+				processorDebugAllowed, state.tempTableStoreImpl,
 				workContext, chunkSize);
 		
         RequestWorkItem workItem = null;
@@ -266,7 +301,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         }
         
     	logMMCommand(workItem, true, false, 0); //TODO: there is no transaction at this point 
-        addRequest(requestID, workItem);
+        addRequest(requestID, workItem, state);
         
         this.addWork(workItem);      
         return resultsFuture;
@@ -284,26 +319,17 @@ public class DQPCore extends Application implements ClientSideDQP {
 		return resultsFuture;
 	}
 
-	void addRequest(RequestID requestID, RequestWorkItem workItem) {
+	void addRequest(RequestID requestID, RequestWorkItem workItem, ClientState state) {
 		this.requests.put(requestID, workItem);
-        synchronized (requestsByClients) {
-            List<RequestID> clientRequests = this.requestsByClients.get(workItem.getDqpWorkContext().getConnectionID());
-            if (clientRequests == null) {
-            	clientRequests = new LinkedList<RequestID>();
-            	this.requestsByClients.put(workItem.getDqpWorkContext().getConnectionID(), clientRequests);
-            }
-            clientRequests.add(requestID);
-		}
+		state.addRequest(requestID);
 	}
     
     void removeRequest(final RequestWorkItem workItem) {
     	this.requests.remove(workItem.requestID);
-    	synchronized (requestsByClients) {
-        	List<RequestID> clientRequests = this.requestsByClients.get(workItem.getDqpWorkContext().getConnectionID());
-        	if (clientRequests != null) {
-        		clientRequests.remove(workItem.requestID);
-        	}
-		}
+    	ClientState state = getClientState(workItem.getDqpWorkContext().getConnectionID(), false);
+    	if (state != null) {
+    		state.removeRequest(workItem.requestID);
+    	}
     	contextCache.removeRequestScopedCache(workItem.requestID.toString());
     }
            
@@ -414,12 +440,9 @@ public class DQPCore extends Application implements ClientSideDQP {
     	        
         // sometimes there will not be any atomic requests pending, in that
         // situation we still need to clear the master request from our map
-        List<RequestID> requestIds = requestsByClients.get(sessionId);
-        if (requestIds != null) {
-            synchronized (requestsByClients) {
-            	requestIds = new ArrayList<RequestID>(requestIds);
-    		}
-	        for (RequestID reqId : requestIds) {
+        ClientState state = getClientState(sessionId, false);
+        if (state != null) {
+	        for (RequestID reqId : state.getRequests()) {
 	            try {
 	                cancelRequest(reqId);
 	            } catch (MetaMatrixComponentException err) {
@@ -667,8 +690,6 @@ public class DQPCore extends Application implements ClientSideDQP {
         // Create the worker pools to tie the queues together
         processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)); 
  
-        tempTableStoresHolder = new TempTableStoresHolder(bufferManager);
-        
         dataTierMgr = new DataTierManagerImpl(this,
                                             (DataService) env.findService(DQPServiceNames.DATA_SERVICE),
                                             (VDBService) env.findService(DQPServiceNames.VDB_SERVICE),
@@ -761,7 +782,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	public MetadataResult getMetadata(long requestID)
 			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, getEnvironment(), this.tempTableStoresHolder);
+		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, getEnvironment());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, null, true);
 	}
 
@@ -769,7 +790,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 			boolean allowDoubleQuotedVariable)
 			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, getEnvironment(), this.tempTableStoresHolder);
+		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, getEnvironment());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);
 	}
 }

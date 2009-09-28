@@ -82,7 +82,7 @@ public class TestMetaDataProcessor extends TestCase {
         ApplicationEnvironment env = new ApplicationEnvironment();
         FakeVDBService vdbService = new FakeVDBService();
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
-        MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, requestMgr, prepPlanCache, env, null);
+        MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, requestMgr, prepPlanCache, env);
                      
         return mdProc.processMessage(requestID, workContext, null, true).getColumnMetadata();    
     }
@@ -151,7 +151,7 @@ public class TestMetaDataProcessor extends TestCase {
         // Initialize components
         ApplicationEnvironment env = new ApplicationEnvironment();
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
-        MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, new DQPCore(), prepPlanCache, env, null);
+        MetaDataProcessor mdProc = new MetaDataProcessor(mdSvc, new DQPCore(), prepPlanCache, env);
                      
         DQPWorkContext workContext = new DQPWorkContext();
         workContext.setVdbName("MyVDB"); //$NON-NLS-1$
@@ -195,7 +195,7 @@ public class TestMetaDataProcessor extends TestCase {
         while(iter.hasNext()) {
             String type = (String) iter.next();
             Class typeClass = DataTypeManager.getDataTypeClass(type);
-            MetaDataProcessor processor = new MetaDataProcessor(null, null, null, null, null);
+            MetaDataProcessor processor = new MetaDataProcessor(null, null, null, null);
             Map columnMetadata = processor.getDefaultColumn("vdb", "1", "t", "c", typeClass); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
             verifyColumn(columnMetadata, type);            
         }               

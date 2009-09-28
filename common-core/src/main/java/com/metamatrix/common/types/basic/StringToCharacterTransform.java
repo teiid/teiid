@@ -42,7 +42,7 @@ public class StringToCharacterTransform extends Transform {
 			return new Character(' '); 
 		}
 		
-        return new Character( s.charAt(0) );
+        return Character.valueOf(s.charAt(0));
 	}
 
 	/**

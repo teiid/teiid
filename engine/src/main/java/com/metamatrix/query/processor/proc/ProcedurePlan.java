@@ -137,9 +137,8 @@ public class ProcedurePlan extends BaseProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {       
         this.bufferMgr = bufferMgr;
         this.batchSize = bufferMgr.getProcessorBatchSize();
-        tempTableStore = new TempTableStoreImpl(bufferMgr, context.getConnectionID(), (TempTableStore)context.getTempTableStore());
-        this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
         setContext(context);
+        this.dataMgr = dataMgr;
         if (evaluator == null) {
         	this.evaluator = new SubqueryAwareEvaluator(Collections.emptyMap(), getDataManager(), getContext(), this.bufferMgr);
         } 
@@ -199,6 +198,8 @@ public class ProcedurePlan extends BaseProcessorPlan {
 		            context.setValue(entry.getKey(), value);
 				}
     		}
+    		tempTableStore = new TempTableStoreImpl(bufferMgr, getContext().getConnectionID(), null);
+            this.dataMgr = new TempTableDataManager(dataMgr, tempTableStore);
     	}
     	this.evaluatedParams = true;
     }
@@ -316,6 +317,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         if (this.evaluator != null) {
         	this.evaluator.close();
         }
+        this.tempTableStore = null;
     }
 
     public String toString() {
@@ -632,14 +634,14 @@ public class ProcedurePlan extends BaseProcessorPlan {
     }
 
     boolean evaluateCriteria(Criteria condition) throws BlockedException, MetaMatrixProcessingException, MetaMatrixComponentException {
-    	evaluator.setContext(getContext());
+    	evaluator.initialize(getContext(), getDataManager());
 		boolean result = evaluator.evaluate(condition, Collections.emptyList());
 		this.evaluator.close();
 		return result;
     }
     
     Object evaluateExpression(Expression expression) throws BlockedException, MetaMatrixProcessingException, MetaMatrixComponentException {
-    	evaluator.setContext(getContext());
+    	evaluator.initialize(getContext(), getDataManager());
     	Object result = evaluator.evaluate(expression, Collections.emptyList());
     	this.evaluator.close();
     	return result;

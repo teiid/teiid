@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.internal.process.PreparedPlanCache.CacheID;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 
@@ -80,17 +81,15 @@ public class MetaDataProcessor {
     private PreparedPlanCache planCache;
     private ApplicationEnvironment env;
         
-    private TempTableStoresHolder tempTableStoresHolder;
     private String vdbName;
     private String vdbVersion;
     private RequestID requestID;
     
-    public MetaDataProcessor(MetadataService metadataService, DQPCore requestManager, PreparedPlanCache planCache, ApplicationEnvironment env, TempTableStoresHolder tempTableStoresHolder) {
+    public MetaDataProcessor(MetadataService metadataService, DQPCore requestManager, PreparedPlanCache planCache, ApplicationEnvironment env) {
         this.metadataService = metadataService;    
         this.requestManager = requestManager;
         this.planCache = planCache;
         this.env = env;
-        this.tempTableStoresHolder = tempTableStoresHolder;
     }
         
     /**
@@ -128,9 +127,12 @@ public class MetaDataProcessor {
         }
         
         TempTableStore tempTableStore = null;
-        if(tempTableStoresHolder != null) {
+        if(requestManager != null) {
             if (workItem != null) {
-                tempTableStore = tempTableStoresHolder.getTempTableStore(workContext.getConnectionID());
+                ClientState state = requestManager.getClientState(workContext.getConnectionID(), false);
+                if (state != null) {
+                	tempTableStore = state.tempTableStoreImpl;
+                }
             }
         }
         if(tempTableStore != null) {

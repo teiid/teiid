@@ -2690,7 +2690,7 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr);
     }
     
-    @Test public void testTempSubqueryInput() throws Exception {
+    @Test public void testUpdateDeleteTemp() throws Exception {
         String proc = "CREATE VIRTUAL PROCEDURE " + //$NON-NLS-1$
         		"BEGIN " + //$NON-NLS-1$
                 " select e1, e2, e3, e4 into #t1 from pm1.g1;\n" + //$NON-NLS-1$
@@ -2706,6 +2706,25 @@ public class TestProcedureProcessor {
 
         List[] expected = new List[] {
                 Arrays.asList( new Object[] { String.valueOf(1) } ), 
+        };
+        helpTestProcess(plan, expected, dataMgr);
+    }
+    
+    @Test public void testTempSubqueryInput() throws Exception {
+        String proc = "CREATE VIRTUAL PROCEDURE " + //$NON-NLS-1$
+        		"BEGIN " + //$NON-NLS-1$
+        		" create local temporary table t1 (e1 string);\n" + //$NON-NLS-1$
+                " select e1 into t1 from pm1.g1;\n" + //$NON-NLS-1$
+                " select e2 from (exec pm1.sq2((select max(e1) from t1))) x;\n" + //$NON-NLS-1$
+        		"END"; //$NON-NLS-1$
+
+        FakeMetadataFacade metadata = createProcedureMetadata(proc);
+        String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
+        FakeDataManager dataMgr = exampleDataManager2(metadata);
+        ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
+
+        List[] expected = new List[] {
+                Arrays.asList( 51 ),
         };
         helpTestProcess(plan, expected, dataMgr);
     }

@@ -43,13 +43,13 @@ import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 public class TempMetadataStore implements Serializable {
 
     // UPPER CASE TEMP GROUP NAME --> TempMetadataID for group
-    private Map tempGroups;     
+    private Map<String, TempMetadataID> tempGroups;     
     
     /**
      * Constructor for TempMetadataStore.
      */
     public TempMetadataStore() {
-        this(new HashMap());
+        this(new HashMap<String, TempMetadataID>());
     }
 
     /**
@@ -57,9 +57,9 @@ public class TempMetadataStore implements Serializable {
      * the parameter is null, a new empty Map will beused instead.
      * @param data Map of upper case group name to group TempMetadataID object
      */
-    public TempMetadataStore(Map data) {
+    public TempMetadataStore(Map<String, TempMetadataID> data) {
         if (data == null) {
-            tempGroups = new HashMap();
+            tempGroups = new HashMap<String, TempMetadataID>();
         } else {
             tempGroups = data;
         }
@@ -164,7 +164,7 @@ public class TempMetadataStore implements Serializable {
     public TempMetadataID addElementSymbolToTempGroup(String tempGroup, SingleElementSymbol symbol) {
         String tempName = tempGroup.toUpperCase();
         
-        TempMetadataID groupID = (TempMetadataID)this.tempGroups.get(tempName);
+        TempMetadataID groupID = this.tempGroups.get(tempName);
         if (groupID != null) {
             TempMetadataID elementID = createElementSymbol(tempName, symbol, false);
             
@@ -198,7 +198,7 @@ public class TempMetadataStore implements Serializable {
      * @return Metadata ID or null if not found
      */
     public TempMetadataID getTempGroupID(String tempGroup) {
-        return (TempMetadataID) tempGroups.get(tempGroup.toUpperCase());    
+        return tempGroups.get(tempGroup.toUpperCase());    
     }
     
     /**
@@ -213,7 +213,7 @@ public class TempMetadataStore implements Serializable {
         }
         String groupName = tempElement.substring(0, index);
             
-        TempMetadataID groupID = (TempMetadataID) tempGroups.get(groupName.toUpperCase());
+        TempMetadataID groupID = tempGroups.get(groupName.toUpperCase());
         if(groupID != null) {
             Iterator elementIter = groupID.getElements().iterator();
             while(elementIter.hasNext()) { 
@@ -234,7 +234,7 @@ public class TempMetadataStore implements Serializable {
      * @return Metadata ID or null if not found
      */
     public List getTempElementElementIDs(String tempGroup) {
-        TempMetadataID groupID = (TempMetadataID) tempGroups.get(tempGroup.toUpperCase());        
+        TempMetadataID groupID = tempGroups.get(tempGroup.toUpperCase());        
         if(groupID != null) {
             return groupID.getElements();
         }
@@ -243,14 +243,14 @@ public class TempMetadataStore implements Serializable {
     }
     
     public void addElementToTempGroup(String tempGroup, ElementSymbol symbol) {
-        TempMetadataID groupID = (TempMetadataID) tempGroups.get(tempGroup.toUpperCase());        
+        TempMetadataID groupID = tempGroups.get(tempGroup.toUpperCase());        
         if(groupID != null) {
             groupID.addElement((TempMetadataID)symbol.getMetadataID());
         }
     }
     
-    public void removeTempGroup(String tempGroup) {
-        tempGroups.remove(tempGroup.toUpperCase());  
+    public TempMetadataID removeTempGroup(String tempGroup) {
+        return tempGroups.remove(tempGroup.toUpperCase());  
     }
 
 }

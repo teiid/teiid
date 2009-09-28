@@ -26,14 +26,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.mockito.Mockito;
-import org.teiid.connector.xa.api.TransactionContext;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.DataTierTupleSource;
-import org.teiid.dqp.internal.process.RequestWorkItem;
-
 import junit.framework.TestCase;
+
+import org.teiid.dqp.internal.process.DQPCore.ClientState;
 
 import com.metamatrix.api.exception.MetaMatrixException;
 import com.metamatrix.dqp.exception.SourceWarning;
@@ -91,7 +86,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
 	private RequestID addRequest(DQPCore rm, String sessionId, int executionId) {
 		RequestMessage r0 = new RequestMessage("test command"); //$NON-NLS-1$
         RequestID id = new RequestID(sessionId, executionId);
-        addRequest(rm, r0, id, null, null);  //$NON-NLS-1$
+        addRequest(rm, r0, id, null, null);  
 		return id;
 	}
 
@@ -118,7 +113,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         DQPCore rm = new DQPCore();
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);  //$NON-NLS-1$
+        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);  
         assertTrue(workItem.resultsCursor.resultsRequested);
     }
     
@@ -127,7 +122,7 @@ public class TestDQPCoreRequestHandling extends TestCase {
         RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
         RequestID requestID = new RequestID(SESSION_STRING, 1);
 
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);  //$NON-NLS-1$
+        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
                 
         workItem.addSourceFailureDetails(getSourceFailures("Model1", "Binding1", "Warning1")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         workItem.addSourceFailureDetails(getSourceFailures("Model2", "Binding2", "Warning2")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -148,7 +143,8 @@ public class TestDQPCoreRequestHandling extends TestCase {
     	}
         RequestWorkItem workItem = new RequestWorkItem(rm, requestMsg, null, null, id, workContext);
         workItem.setOriginalCommand(originalCommand);
-        rm.addRequest(id, workItem);
+        ClientState state = rm.getClientState(id.getConnectionID(), true);
+        rm.addRequest(id, workItem, state);
         return workItem;
     }
     
