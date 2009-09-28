@@ -17,7 +17,6 @@ import java.util.Properties;
 import javax.sql.XAConnection;
 
 import org.teiid.test.framework.connection.ConnectionStrategy;
-import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 import org.teiid.test.framework.connection.ConnectionUtil;
 import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.datasource.DataSourceSetupFactory;
