@@ -83,6 +83,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
 
 	// State initialized by processor
 	private ProcessorDataManager dataMgr;
+	private ProcessorDataManager parentDataMrg;
     private BufferManager bufferMgr;
     private int batchSize;
 
@@ -139,6 +140,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         this.batchSize = bufferMgr.getProcessorBatchSize();
         setContext(context);
         this.dataMgr = dataMgr;
+        this.parentDataMrg = dataMgr;
         if (evaluator == null) {
         	this.evaluator = new SubqueryAwareEvaluator(Collections.emptyMap(), getDataManager(), getContext(), this.bufferMgr);
         } 
@@ -318,6 +320,7 @@ public class ProcedurePlan extends BaseProcessorPlan {
         	this.evaluator.close();
         }
         this.tempTableStore = null;
+        this.dataMgr = parentDataMrg;
     }
 
     public String toString() {
