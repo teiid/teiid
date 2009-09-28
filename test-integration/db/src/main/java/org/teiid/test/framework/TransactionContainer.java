@@ -16,8 +16,8 @@ public abstract class TransactionContainer {
 	
 		private boolean debug = false;
 		
-	   protected Properties props;
-	   protected ConnectionStrategy connStrategy;
+		protected Properties props;
+		protected ConnectionStrategy connStrategy;
 	    
 	    protected TransactionContainer(){        
 
@@ -58,12 +58,12 @@ public abstract class TransactionContainer {
 
 	    }
 	    
-	    private void runIt(TransactionQueryTest test) {
-	    		    	
+	    private void runIt(TransactionQueryTest test)  {
 	    	detail("Start transaction test: " + test.getTestName());
-
+ 
 	        try {  
-	        	setUp(test);
+	        	
+	           	setUp(test);
 	        	
 	        	debug("	setConnection");
 	            test.setConnection(this.connStrategy.getConnection());
