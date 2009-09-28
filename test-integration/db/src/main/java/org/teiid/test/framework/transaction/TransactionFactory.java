@@ -28,24 +28,28 @@ public class TransactionFactory {
     	ConfigPropertyLoader.loadConfigurationProperties();
 
     	
-    	ConnectionStrategy connstrategy = ConnectionStrategyFactory.getInstance().getConnectionStrategy();
+ //   	ConnectionStrategy connstrategy = ConnectionStrategyFactory.getInstance().getConnectionStrategy();
+    	
+//    	Properties props = ConfigPropertyLoader.getProperties();
              
     	
-        String type = connstrategy.getEnvironment().getProperty(ConfigPropertyNames.TRANSACTION_TYPE, ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION);
+        String type = ConfigPropertyLoader.getProperty(ConfigPropertyNames.TRANSACTION_TYPE);
+        	//connstrategy.getEnvironment().getProperty(ConfigPropertyNames.TRANSACTION_TYPE, ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION);
         if (type == null) {
-        	throw new RuntimeException("Property " + ConfigPropertyNames.TRANSACTION_TYPE + " was specified");
+        	type = ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION;
+//        	throw new RuntimeException("Property " + ConfigPropertyNames.TRANSACTION_TYPE + " was specified");
         }
         
         System.out.println("Create TransactionContainer: " + type);
         
         if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.LOCAL_TRANSACTION)) {
-        	transacton = new LocalTransaction(connstrategy);
+        	transacton = new LocalTransaction();
         }
         else if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.XATRANSACTION)) {
-        	transacton = new XATransaction(connstrategy);
+        	transacton = new XATransaction();
         }
         else if (type.equalsIgnoreCase(ConfigPropertyNames.TRANSACTION_TYPES.JNDI_TRANSACTION)) {
-        	transacton = new JNDITransaction(connstrategy);
+        	transacton = new JNDITransaction();
 
         } else {
         	throw new TransactionRuntimeException("Invalid property value of " + type + " for " + ConfigPropertyNames.TRANSACTION_TYPE );

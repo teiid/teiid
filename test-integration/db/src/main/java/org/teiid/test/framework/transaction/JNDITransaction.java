@@ -9,8 +9,8 @@ import javax.transaction.UserTransaction;
 
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTest;
-import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.framework.connection.ConnectionStrategy;
+import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 
 
@@ -18,8 +18,8 @@ import org.teiid.test.framework.connection.ConnectionStrategy;
 public class JNDITransaction extends TransactionContainer {
     UserTransaction userTxn = null;
     
-    public JNDITransaction(ConnectionStrategy strategy) {
-        super(strategy);
+    public JNDITransaction() {
+        super();
     }
     
     protected void before(TransactionQueryTest test) {

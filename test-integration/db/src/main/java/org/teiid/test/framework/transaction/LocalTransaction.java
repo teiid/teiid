@@ -4,14 +4,11 @@
  */
 package org.teiid.test.framework.transaction;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTest;
-import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-import org.teiid.test.framework.connection.ConnectionStrategy;
 
 
 
@@ -20,8 +17,8 @@ import org.teiid.test.framework.connection.ConnectionStrategy;
  */
 public class LocalTransaction extends TransactionContainer {
 
-    public LocalTransaction(ConnectionStrategy strategy) {
-        super(strategy);
+    public LocalTransaction() {
+        super();
         
     }
     

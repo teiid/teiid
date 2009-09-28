@@ -192,9 +192,9 @@ public class ConnectionStrategyFactory {
 	    }
 	    
 		
-		public static void main(String[] args) {
-			ConnectionStrategyFactory cf = ConnectionStrategyFactory.getInstance();
-
-		}
+//		public static void main(String[] args) {
+//			ConnectionStrategyFactory cf = ConnectionStrategyFactory.getInstance();
+//
+//		}
 	        
 }

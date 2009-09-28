@@ -4,16 +4,12 @@
  */
 package org.teiid.test.framework;
 
-import java.sql.Connection;
 import java.util.Properties;
-import java.util.Set;
 
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-
-
 
 
 public abstract class TransactionContainer {
@@ -23,18 +19,18 @@ public abstract class TransactionContainer {
 	   protected Properties props;
 	   protected ConnectionStrategy connStrategy;
 	    
-	    protected TransactionContainer(ConnectionStrategy strategy){
-	        this.connStrategy = strategy;
-	        this.props = new Properties();
-	        this.props.putAll(this.connStrategy.getEnvironment());
-	        
+	    protected TransactionContainer(){        
 
 	    }
 	    
-	    protected void setupData(TransactionQueryTest test) {
-        	test.setDataSources(connStrategy.getDataSources());
+	    protected void setUp(TransactionQueryTest test) throws QueryTestFailedException  {
+	    	this.connStrategy = ConnectionStrategyFactory.getInstance().getConnectionStrategy();
+	        this.props = new Properties();
+	        this.props.putAll(this.connStrategy.getEnvironment());
+
+	       	test.setDataSources(connStrategy.getDataSources());
         	test.setupDataSources();
-	    	
+   	
 	    }
 	    
 	    protected void before(TransactionQueryTest test){}
@@ -43,22 +39,23 @@ public abstract class TransactionContainer {
 	        
 	    public void runTransaction(TransactionQueryTest test) {
 	    	
-	    	try {
 	    			    		
-		        try {		 
-		        	
-		        	runIt(test);
-		        	
-		        } finally {
-		        	debug("	test.cleanup");
+	        try {		 
+	        	
+	        	runIt(test);
+	        	
+	        } finally {
+	        	debug("	test.cleanup");
+	        	
+	        	try {
+	        		test.cleanup();
+	        	} finally {
+		    		// cleanup all connections created for this test.
+		    		ConnectionStrategyFactory.destroyInstance();
+	        		
+	        	}
+	        }
 
-		        	test.cleanup();
-		        }
-	    		
-	    	} finally {
-	    		// cleanup all connections created for this test.
-	    		ConnectionStrategyFactory.destroyInstance();
-	    	}
 	    }
 	    
 	    private void runIt(TransactionQueryTest test) {
@@ -66,7 +63,7 @@ public abstract class TransactionContainer {
 	    	detail("Start transaction test: " + test.getTestName());
 
 	        try {  
-	        	setupData(test);
+	        	setUp(test);
 	        	
 	        	debug("	setConnection");
 	            test.setConnection(this.connStrategy.getConnection());
@@ -98,8 +95,6 @@ public abstract class TransactionContainer {
 	        		e.printStackTrace();
 	        	}
 	            throw new TransactionRuntimeException(e.getMessage());
-	        }finally {
-
 	        }
 	        
             if (test.exceptionExpected() && !test.exceptionOccurred()) {

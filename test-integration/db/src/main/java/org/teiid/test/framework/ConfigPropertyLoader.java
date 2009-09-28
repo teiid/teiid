@@ -1,14 +1,13 @@
 package org.teiid.test.framework;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
-import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 import org.teiid.test.util.PropUtils;
 
-public class ConfigPropertyLoader {
-		
+
+public class ConfigPropertyLoader {		
+	
+	
 		/**
 		 * The default config file to use when #CONFIG_FILE system property isn't set
 		 */
@@ -29,6 +28,9 @@ public class ConfigPropertyLoader {
 		}
 		
 		public synchronized static Properties getProperties() {
+			if (props == null) {
+				loadConfigurationProperties();
+			}
 			return props;
 		}
 	    
