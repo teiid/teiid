@@ -22,10 +22,10 @@ import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-import org.teiid.test.util.StringUtil;
 
 import com.metamatrix.common.xml.XMLReaderWriter;
 import com.metamatrix.common.xml.XMLReaderWriterImpl;
+import com.metamatrix.core.util.StringUtil;
 
 /**
  * The DataSourceMgr is responsible for loading and managing datasources defined by the datasource
