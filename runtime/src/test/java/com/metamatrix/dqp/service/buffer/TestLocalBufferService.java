@@ -26,7 +26,7 @@ import java.util.Properties;
 
 import junit.framework.TestCase;
 
-import com.metamatrix.common.application.Application;
+import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.buffer.impl.BufferConfig;
 import com.metamatrix.common.buffer.impl.BufferManagerImpl;
@@ -46,7 +46,7 @@ public class TestLocalBufferService extends TestCase {
 
     public void testMissingRequiredProperties() throws Exception {        
         try {
-            Application r = new Application();
+        	ApplicationEnvironment r = new ApplicationEnvironment();
             ConfigurationService cs = new EmbeddedConfigurationService();
             Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest1.properties"); //$NON-NLS-1$
             p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
@@ -70,7 +70,7 @@ public class TestLocalBufferService extends TestCase {
     public void testCheckMemPropertyGotSet() throws Exception {
         EmbeddedBufferService svc = null;
         ConfigurationService cs = null;
-        Application r = new Application();
+        ApplicationEnvironment r = new ApplicationEnvironment();
         cs = new EmbeddedConfigurationService();
         Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest2.properties"); //$NON-NLS-1$
         p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$
@@ -97,7 +97,7 @@ public class TestLocalBufferService extends TestCase {
 
     public void testCheckMemPropertyGotSet2() throws Exception {
         EmbeddedBufferService svc = null;
-        Application r = new Application();
+        ApplicationEnvironment r = new ApplicationEnvironment();
         ConfigurationService cs = new EmbeddedConfigurationService();
         Properties p = EmbeddedTestUtil.getProperties(UnitTestUtil.getTestDataPath() + "/admin/buffertest3.properties"); //$NON-NLS-1$
         p.setProperty(DQPEmbeddedProperties.DQP_WORKDIR, System.getProperty("java.io.tmpdir")+"/teiid/1");         //$NON-NLS-1$ //$NON-NLS-2$

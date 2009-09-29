@@ -50,7 +50,6 @@ import com.metamatrix.common.util.crypto.NullCryptor;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.LogonResult;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
 public class TestCommSockets {
 

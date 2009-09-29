@@ -44,11 +44,12 @@ import org.teiid.dqp.internal.cache.DQPContextCache;
 import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.cache.ResultSetCacheUtil;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
-import com.metamatrix.common.application.Application;
+import com.metamatrix.cache.CacheFactory;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.DQPConfigSource;
@@ -67,7 +68,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.client.MetadataResult;
 import com.metamatrix.dqp.client.ResultsFuture;
@@ -99,7 +99,7 @@ import com.metamatrix.vdb.runtime.VDBKey;
  * Implements the core DQP processing.
  */
 @Singleton
-public class DQPCore extends Application implements ClientSideDQP {
+public class DQPCore implements ClientSideDQP {
 	
 	static class ConnectorCapabilitiesCache  {
 		
@@ -188,12 +188,14 @@ public class DQPCore extends Application implements ClientSideDQP {
 	private Map<String, ClientState> clientState = Collections.synchronizedMap(new HashMap<String, ClientState>());
 	private DQPContextCache contextCache;
     private ServiceLoader loader = new ServiceLoader();
+    private CacheFactory cacheFactory;
+    
+    private ApplicationEnvironment environment = new ApplicationEnvironment();
 
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
      * @throws ApplicationLifecycleException 
      */
-	@Override
     public void stop() throws ApplicationLifecycleException {
 		LogManager.logDetail(LogConstants.CTX_DQP, "Stopping the DQP"); //$NON-NLS-1$
     	processWorkerPool.shutdownNow();
@@ -202,7 +204,11 @@ public class DQPCore extends Application implements ClientSideDQP {
 		} catch (InterruptedException e) {
 		}
     	contextCache.shutdown();
-    	super.stop();
+    	this.environment.stop();
+    	
+    	if (cacheFactory != null) {
+    		cacheFactory.destroy();
+    	}
     }
     
     /**
@@ -282,7 +288,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	    	request = new Request();
 	    }
 	    ClientState state = this.getClientState(workContext.getConnectionID(), true);
-	    request.initialize(requestMsg, getEnvironment(), bufferManager,
+	    request.initialize(requestMsg, environment, bufferManager,
 				dataTierMgr, vdbCapabilties, transactionService,
 				processorDebugAllowed, state.tempTableStoreImpl,
 				workContext, chunkSize);
@@ -636,11 +642,11 @@ public class DQPCore extends Application implements ClientSideDQP {
 			}
             
 			appService.initialize(configSource.getProperties());
-        	installService(serviceName, appService);
+        	this.environment.installService(serviceName, appService);
             LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPLauncher.InstallService_ServiceInstalled", serviceName)); //$NON-NLS-1$
         }
         
-		ConfigurationService cs = (ConfigurationService)this.getEnvironment().findService(DQPServiceNames.CONFIGURATION_SERVICE);
+		ConfigurationService cs = (ConfigurationService)this.environment.findService(DQPServiceNames.CONFIGURATION_SERVICE);
 		Properties p = configSource.getProperties();
 		if (cs != null) {
 			p = cs.getSystemProperties();
@@ -650,8 +656,6 @@ public class DQPCore extends Application implements ClientSideDQP {
     
 	
 	public void start(Properties props) {
-		ApplicationEnvironment env = this.getEnvironment();
-		
 		PropertiesUtils.setBeanProperties(this, props, null);
 		
         this.processorTimeslice = PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_TIMESLICE, DEFAULT_PROCESSOR_TIMESLICE);
@@ -669,7 +673,7 @@ public class DQPCore extends Application implements ClientSideDQP {
         	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(DQPEmbeddedProperties.MAX_RESULTSET_CACHE_SIZE, DEFAULT_MAX_RESULTSET_CACHE_SIZE));
         	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(DQPEmbeddedProperties.MAX_RESULTSET_CACHE_AGE, DEFAULT_MAX_RESULTSET_CACHE_AGE));
         	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(DQPEmbeddedProperties.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
-			this.rsCache = new ResultSetCache(rsCacheProps, ResourceFinder.getCacheFactory());
+			this.rsCache = new ResultSetCache(rsCacheProps, cacheFactory);
         }
 
         //prepared plan cache
@@ -680,20 +684,20 @@ public class DQPCore extends Application implements ClientSideDQP {
         LogManager.logInfo(LogConstants.CTX_DQP, DQPPlugin.Util.getString("DQPCore.Processor_debug_allowed_{0}", this.processorDebugAllowed)); //$NON-NLS-1$
                         
         //get buffer manager
-        BufferService bufferService = (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE);
+        BufferService bufferService = (BufferService) this.environment.findService(DQPServiceNames.BUFFER_SERVICE);
         bufferManager = bufferService.getBufferManager();
         contextCache = bufferService.getContextCache();
 
-        transactionService = (TransactionService )env.findService(DQPServiceNames.TRANSACTION_SERVICE);
-        metadataService = (MetadataService) env.findService(DQPServiceNames.METADATA_SERVICE);
+        transactionService = (TransactionService )this.environment.findService(DQPServiceNames.TRANSACTION_SERVICE);
+        metadataService = (MetadataService) this.environment.findService(DQPServiceNames.METADATA_SERVICE);
 
         // Create the worker pools to tie the queues together
         processWorkerPool = WorkerPoolFactory.newWorkerPool(PROCESS_PLAN_QUEUE_NAME, PropertiesUtils.getIntProperty(props, DQPEmbeddedProperties.PROCESS_POOL_MAX_THREADS, DEFAULT_MAX_PROCESS_WORKERS)); 
  
         dataTierMgr = new DataTierManagerImpl(this,
-                                            (DataService) env.findService(DQPServiceNames.DATA_SERVICE),
-                                            (VDBService) env.findService(DQPServiceNames.VDB_SERVICE),
-                                            (BufferService) env.findService(DQPServiceNames.BUFFER_SERVICE),
+                                            (DataService) this.environment.findService(DQPServiceNames.DATA_SERVICE),
+                                            (VDBService) this.environment.findService(DQPServiceNames.VDB_SERVICE),
+                                            (BufferService) this.environment.findService(DQPServiceNames.BUFFER_SERVICE),
                                             this.maxCodeTables,
                                             this.maxCodeRecords,
                                             this.maxCodeTableRecords);        
@@ -782,7 +786,7 @@ public class DQPCore extends Application implements ClientSideDQP {
 	public MetadataResult getMetadata(long requestID)
 			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, getEnvironment());
+		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, this.environment);
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, null, true);
 	}
 
@@ -790,7 +794,21 @@ public class DQPCore extends Application implements ClientSideDQP {
 			boolean allowDoubleQuotedVariable)
 			throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, getEnvironment());
+		MetaDataProcessor processor = new MetaDataProcessor(this.metadataService, this, this.prepPlanCache, this.environment);
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);
+	}
+	
+	public ApplicationEnvironment getEnvironment() {
+		return environment;
+	}
+	
+	@Inject
+	public void setCacheFactory(CacheFactory cacheFactory) {
+		this.cacheFactory = cacheFactory;
+		this.environment.setCacheFactory(cacheFactory);
+	}
+	
+	public void setEnvironment(ApplicationEnvironment environment) {
+		this.environment = environment;
 	}
 }

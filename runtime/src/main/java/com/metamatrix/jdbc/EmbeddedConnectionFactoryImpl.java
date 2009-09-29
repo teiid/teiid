@@ -41,6 +41,7 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.transport.AdminAuthorizationInterceptor;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
+import org.teiid.transport.SocketListenerStats;
 import org.teiid.transport.SocketTransport;
 
 import com.google.inject.Guice;
@@ -64,7 +65,6 @@ import com.metamatrix.common.util.PropertiesUtils;
 import com.metamatrix.core.MetaMatrixCoreException;
 import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.MixinProxy;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.client.ClientSideDQP;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
@@ -78,7 +78,6 @@ import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.platform.security.api.ILogon;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
 
 /** 
@@ -152,7 +151,6 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
 
         EmbeddedGuiceModule config = new EmbeddedGuiceModule(bootstrapURL, props, this.jmxServer, address);
 		Injector injector = Guice.createInjector(config);
-		ResourceFinder.setInjector(injector);
 		config.setInjector(injector);
 		
 		// start the DQP
@@ -340,9 +338,6 @@ public class EmbeddedConnectionFactoryImpl implements ServerConnectionFactory {
         	this.socketTransport.stop();
         	this.socketTransport = null;
         }
-        
-        // shutdown the cache.
-        ResourceFinder.getCacheFactory().destroy();
         
 		this.restart = restart;
     }

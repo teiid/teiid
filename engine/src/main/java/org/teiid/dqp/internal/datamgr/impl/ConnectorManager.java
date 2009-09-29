@@ -73,7 +73,6 @@ import com.metamatrix.core.util.Assertion;
 import com.metamatrix.core.util.ReflectionHelper;
 import com.metamatrix.core.util.StringUtil;
 import com.metamatrix.dqp.DQPPlugin;
-import com.metamatrix.dqp.ResourceFinder;
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.AtomicRequestID;
 import com.metamatrix.dqp.message.AtomicRequestMessage;
@@ -356,7 +355,7 @@ public class ConnectorManager implements ApplicationService {
         	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_SIZE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_SIZE, DEFAULT_MAX_RESULTSET_CACHE_SIZE)); 
         	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_MAX_AGE, props.getProperty(ConnectorPropertyNames.MAX_RESULTSET_CACHE_AGE, DEFAULT_MAX_RESULTSET_CACHE_AGE)); 
         	rsCacheProps.setProperty(ResultSetCache.RS_CACHE_SCOPE, props.getProperty(ConnectorPropertyNames.RESULTSET_CACHE_SCOPE, ResultSetCache.RS_CACHE_SCOPE_VDB)); 
-    		this.rsCache = createResultSetCache(rsCacheProps);
+    		this.rsCache = new ResultSetCache(rsCacheProps, env.getCacheFactory());
         }
 		this.workItemFactory = new ConnectorWorkItemFactory(this, this.rsCache, synchWorkers);
     	this.state = ConnectorStatus.OPEN;
@@ -479,10 +478,6 @@ public class ConnectorManager implements ApplicationService {
         return new ConnectorWrapper(c);
     }
     
-    protected ResultSetCache createResultSetCache(Properties rsCacheProps) {
-		return new ResultSetCache(rsCacheProps, ResourceFinder.getCacheFactory());
-	}
-
     /**
      * Stop this connector.
      */

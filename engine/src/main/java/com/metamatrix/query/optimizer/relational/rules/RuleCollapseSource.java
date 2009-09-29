@@ -434,17 +434,11 @@ public final class RuleCollapseSource implements OptimizerRule {
         List clauses = from.getClauses();
         FromClause rootClause = (FromClause) clauses.get(0);
        
-        // If only one group, this is as good as we can do
-        if(rootClause instanceof UnaryFromClause) {
-            return;
-        }
-       
         // If all joins are inner joins, move criteria to WHERE and make 
         // FROM a list of groups instead of a tree of JoinPredicates
         if(! hasOuterJoins(rootClause)) {
             from.setClauses(new ArrayList());
             shredJoinTree(rootClause, query);
-
         } // else leave as is
     }    
 

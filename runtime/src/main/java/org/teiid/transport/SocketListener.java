@@ -45,7 +45,6 @@ import com.metamatrix.common.util.LogConstants;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.NamedThreadFactory;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
 /**
  * Server-side class to listen for new connection requests and create a SocketClientConnection for each connection request.

@@ -41,7 +41,6 @@ import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorIdentity;
 import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ExecutionContext;
-import org.teiid.dqp.internal.cache.ResultSetCache;
 import org.teiid.dqp.internal.datamgr.impl.TestConnectorWorkItem.QueueResultsReceiver;
 import org.teiid.dqp.internal.pooling.connector.ConnectionPool;
 import org.teiid.dqp.internal.pooling.connector.FakeSourceConnectionFactory;
@@ -130,6 +129,7 @@ public final class TestConnectorManagerImpl {
         ApplicationEnvironment env = new ApplicationEnvironment();
         env.bindService(DQPServiceNames.METADATA_SERVICE, new FakeMetadataService());
         env.bindService(DQPServiceNames.TRANSACTION_SERVICE, new FakeTransactionService());
+        env.setCacheFactory(new FakeCache.FakeCacheFactory());
         cm.start(env);
 	}
     
@@ -157,13 +157,7 @@ public final class TestConnectorManagerImpl {
     }
     
     @Test public void testCaching() throws Exception {
-    	ConnectorManager cm = new ConnectorManager() {
-    		@Override
-    		protected ResultSetCache createResultSetCache(Properties rsCacheProps) {
-    			assertEquals(String.valueOf(3600000), rsCacheProps.get(ResultSetCache.RS_CACHE_MAX_AGE));
-    			return new ResultSetCache(rsCacheProps, new FakeCache.FakeCacheFactory());
-    		}
-    	};
+    	ConnectorManager cm = new ConnectorManager();
         Properties props = new Properties();
         props.setProperty(ConnectorPropertyNames.CONNECTOR_CLASS, FakeConnector.class.getName());
         props.setProperty(ConnectorPropertyNames.USE_RESULTSET_CACHE, Boolean.TRUE.toString());

@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package com.metamatrix.platform.vm.controller;
+package org.teiid.transport;
 
 import java.io.Serializable;
 

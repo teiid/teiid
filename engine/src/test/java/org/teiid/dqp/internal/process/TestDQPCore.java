@@ -86,11 +86,8 @@ public class TestDQPCore {
         vdbService.addModel(vdbName, vdbVersion, "BQT3", ModelInfo.PRIVATE, false); //$NON-NLS-1$
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
 
-        core = new DQPCore() {
-            public ApplicationEnvironment getEnvironment() {
-                return env; 
-            }
-        };
+        core = new DQPCore();
+        core.setEnvironment(env);
         core.start(new Properties());
     }
     

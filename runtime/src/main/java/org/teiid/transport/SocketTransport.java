@@ -37,7 +37,6 @@ import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
 import com.metamatrix.platform.security.api.service.SessionServiceInterface;
-import com.metamatrix.platform.vm.controller.SocketListenerStats;
 
 /**
  * This class starts a Socket for DQP connections and listens on the port and hands out the connections to the 

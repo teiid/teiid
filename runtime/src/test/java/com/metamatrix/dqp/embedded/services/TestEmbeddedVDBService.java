@@ -30,7 +30,7 @@ import java.util.Properties;
 import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.application.Application;
+import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.config.api.ConnectorBinding;
 import com.metamatrix.common.config.api.ConnectorBindingType;
 import com.metamatrix.common.vdb.api.VDBArchive;
@@ -51,7 +51,7 @@ public class TestEmbeddedVDBService extends TestCase{
     
     protected void setUp() throws Exception {
     	EmbeddedTestUtil.createTestDirectory();
-        Application registry = new Application();
+        ApplicationEnvironment registry = new ApplicationEnvironment();
         configService = new EmbeddedConfigurationService();
         registry.installService(DQPServiceNames.CONFIGURATION_SERVICE, configService);
         vdbService = new EmbeddedVDBService();
@@ -155,7 +155,7 @@ public class TestEmbeddedVDBService extends TestCase{
         vdbService.stopService();
         configService.stopService();
         
-        Application registry = new Application();
+        ApplicationEnvironment registry = new ApplicationEnvironment();
         configService = new EmbeddedConfigurationService();
         configService.setUserPreferences(p);
         configService.initializeService(p);
