@@ -317,7 +317,13 @@ public class Evaluator {
         	valueIter = new CollectionValueIterator(((SetCriteria)criteria).getValues());
         } else if (criteria instanceof DependentSetCriteria){
         	ContextReference ref = (ContextReference)criteria;
-        	HashSet<Object> values = getValues(getContext(criteria), ref);
+    		ValueIteratorSource vis = (ValueIteratorSource)getContext(criteria).getVariableContext().getGlobalValue(ref.getContextSymbol());
+    		HashSet<Object> values;
+    		try {
+    			values = vis.getCachedSet(ref.getValueExpression());
+    		} catch (MetaMatrixProcessingException e) {
+    			throw new CriteriaEvaluationException(e, e.getMessage());
+    		}
         	if (values != null) {
         		return values.contains(leftValue);
         	}
@@ -360,19 +366,6 @@ public class Evaluator {
         }
         
         return Boolean.valueOf(criteria.isNegated());
-	}
-
-	public static HashSet<Object> getValues(CommandContext context,
-			ContextReference ref) throws MetaMatrixComponentException,
-			CriteriaEvaluationException {
-		ValueIteratorSource vis = (ValueIteratorSource)context.getVariableContext().getGlobalValue(ref.getContextSymbol());
-		HashSet<Object> values;
-		try {
-			values = vis.getCachedSet(ref.getValueExpression());
-		} catch (MetaMatrixProcessingException e) {
-			throw new CriteriaEvaluationException(e, e.getMessage());
-		}
-		return values;
 	}
 
 	public boolean evaluate(IsNullCriteria criteria, List tuple)

@@ -133,7 +133,7 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }
     
     public void visit(DependentSetCriteria obj) {
-		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+		evaluationNotPossible(EvaluationLevel.PROCESSING);
     }
     
     public void visit(ExistsCriteria obj) {

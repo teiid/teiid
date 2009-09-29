@@ -69,6 +69,7 @@ import com.metamatrix.query.metadata.TempMetadataAdapter;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.metadata.TempMetadataStore;
 import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.processor.relational.DependentValueSource;
 import com.metamatrix.query.resolver.QueryResolver;
 import com.metamatrix.query.resolver.util.ResolverUtil;
 import com.metamatrix.query.resolver.util.ResolverVisitor;
@@ -144,6 +145,7 @@ import com.metamatrix.query.sql.symbol.ScalarSubquery;
 import com.metamatrix.query.sql.symbol.SearchedCaseExpression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
+import com.metamatrix.query.sql.util.ValueIterator;
 import com.metamatrix.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import com.metamatrix.query.sql.visitor.CriteriaTranslatorVisitor;
 import com.metamatrix.query.sql.visitor.ElementCollectorVisitor;
@@ -1085,10 +1087,35 @@ public class QueryRewriter {
 		    }
 		    rewriteSubqueryContainer((SubqueryContainer)criteria, true);
         } else if (criteria instanceof DependentSetCriteria) {
-            criteria = rewriteCriteria((AbstractSetCriteria)criteria);
+            criteria = rewriteDependentSetCriteria((DependentSetCriteria)criteria);
         }
     	
         return evaluateCriteria(criteria);
+	}
+
+	private Criteria rewriteDependentSetCriteria(DependentSetCriteria dsc)
+			throws QueryValidatorException {
+		if (dataMgr == null) {
+			return rewriteCriteria(dsc);
+		}
+		SetCriteria setCrit = new SetCriteria();
+		setCrit.setExpression(dsc.getExpression());
+		HashSet<Object> values = new HashSet<Object>();
+		try {
+			DependentValueSource dvs = (DependentValueSource)this.context.getVariableContext().getGlobalValue(dsc.getContextSymbol());
+			ValueIterator iter = dvs.getValueIterator(dsc.getValueExpression());
+			while (iter.hasNext()) {
+				values.add(iter.next());
+			}
+		} catch (MetaMatrixComponentException e) {
+			throw new MetaMatrixRuntimeException(e);
+		}
+		List<Constant> constants = new ArrayList<Constant>(values.size());
+		for (Object value : values) {
+			constants.add(new Constant(value, setCrit.getExpression().getType()));
+		}
+		setCrit.setValues(constants);
+		return rewriteCriteria(setCrit);
 	}
     
     /**

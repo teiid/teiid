@@ -25,6 +25,10 @@ package com.metamatrix.query.processor;
 import java.util.Arrays;
 import java.util.List;
 
+import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.api.exception.query.QueryParserException;
+import com.metamatrix.api.exception.query.QueryResolverException;
+import com.metamatrix.api.exception.query.QueryValidatorException;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -498,9 +502,24 @@ public class TestDependentJoins extends TestCase {
     }
     
     public void testCase5130a() throws Exception {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        HardcodedDataManager dataManager = helpTestDependentJoin(false);
+        
+        assertFalse(dataManager.getCommandHistory().contains("SELECT a.stringkey, a.intkey FROM bqt2.smalla AS a WHERE (concat(a.stringkey, 't') IN ('1t', '2')) AND (a.intkey IN (1))")); //$NON-NLS-1$
+    }
+    
+    public void testUnlimitedIn() throws Exception {
+    	helpTestDependentJoin(true);
+    }
+
+	private HardcodedDataManager helpTestDependentJoin(boolean unlimitIn)
+			throws QueryParserException, QueryResolverException,
+			QueryValidatorException, MetaMatrixComponentException {
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        if (unlimitIn) {
+        	caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, -1);
+        }
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
         capFinder.addCapabilities("BQT2", caps); //$NON-NLS-1$
         
@@ -511,8 +530,8 @@ public class TestDependentJoins extends TestCase {
                                                     new String[] {"SELECT g_0.stringkey, g_0.intkey FROM bqt1.smalla AS g_0 WHERE g_0.intkey IN (<dependent values>)", "SELECT g_0.stringkey, g_0.intkey FROM bqt2.smallb AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
  
         TestOptimizer.checkNodeTypes(plan, new int[] { 
-            1,      // Access 
-            1,      // DependentAccess 
+            unlimitIn?2:1,      // Access 
+            unlimitIn?0:1,      // DependentAccess 
             0,      // DependentSelect 
             0,      // DependentProject 
             0,      // DupRemove 
@@ -540,9 +559,8 @@ public class TestDependentJoins extends TestCase {
         };
         
         TestProcessor.helpProcess(plan, dataManager, expected);
-        
-        assertFalse(dataManager.getCommandHistory().contains("SELECT a.stringkey, a.intkey FROM bqt2.smalla AS a WHERE (concat(a.stringkey, 't') IN ('1t', '2')) AND (a.intkey IN (1))")); //$NON-NLS-1$
-    }
+		return dataManager;
+	}
     
     static void sampleData4(FakeDataManager dataMgr) throws Exception {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();

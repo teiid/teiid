@@ -59,7 +59,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 			IDGenerator idGenerator, AnalysisRecord analysisRecord,
 			CapabilitiesFinder capFinder, Set<String> multiSourceModels,
 			String vdbName, VDBService vdbService, String vdbVersion, CommandContext context) {
-		super(metadata, idGenerator, analysisRecord, capFinder, context);
+		super(metadata, idGenerator, analysisRecord, capFinder);
 		this.multiSourceModels = multiSourceModels;
 		this.vdbName = vdbName;
 		this.vdbService = vdbService;

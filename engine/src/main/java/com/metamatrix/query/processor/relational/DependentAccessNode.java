@@ -114,10 +114,6 @@ public class DependentAccessNode extends AccessNode {
 
         Query query = (Query)atomicCommand;
 
-        if (query.getCriteria() == null || maxSetSize < 1) {
-            return super.prepareNextCommand(atomicCommand);
-        }
-
         if (this.criteriaProcessor == null) {
             this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this, query.getCriteria());
         }

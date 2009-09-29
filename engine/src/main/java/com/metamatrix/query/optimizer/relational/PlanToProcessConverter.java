@@ -82,7 +82,6 @@ import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
-import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
 
 public class PlanToProcessConverter {
@@ -90,14 +89,12 @@ public class PlanToProcessConverter {
 	private IDGenerator idGenerator;
 	private AnalysisRecord analysisRecord;
 	private CapabilitiesFinder capFinder;
-	private CommandContext context;
 	
-	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder, CommandContext context) {
+	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder) {
 		this.metadata = metadata;
 		this.idGenerator = idGenerator;
 		this.analysisRecord = analysisRecord;
 		this.capFinder = capFinder;
-		this.context = context;
 	}
 	
     public RelationalPlan convert(PlanNode planNode)
@@ -275,16 +272,9 @@ public class PlanToProcessConverter {
                             //create dependent access node
                             DependentAccessNode depAccessNode = new DependentAccessNode(getID());
                             
-                            int maxSetSize = -1;
                             if(modelID != null){
-                                try {
-                                    // set the max set size for the access node       
-                                    maxSetSize = CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder);   
-                                }catch(QueryMetadataException e) {
-                                    throw new QueryPlannerException(e, QueryExecPlugin.Util.getString(ErrorMessageKeys.OPTIMIZER_0006, modelID));
-                                }
+                                depAccessNode.setMaxSetSize(CapabilitiesUtil.getMaxInCriteriaSize(modelID, metadata, capFinder));   
                             }
-                            depAccessNode.setMaxSetSize(maxSetSize); 
                             processNode = depAccessNode;
                             aNode = depAccessNode;
                         }
@@ -298,8 +288,7 @@ public class PlanToProcessConverter {
                         //-- special handling for temp tables. currently they cannot perform projection
                         try {
                             if (command instanceof Query) {
-                                processNode = correctProjectionForTempTable(node,
-                                                                            aNode);
+                                processNode = correctProjectionForTempTable(node, aNode);
                             }
                         } catch (QueryMetadataException err) {
                             throw new MetaMatrixComponentException(err);

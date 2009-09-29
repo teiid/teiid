@@ -22,15 +22,15 @@
 
 package com.metamatrix.query.processor.relational;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
-import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.common.buffer.BlockedException;
 import com.metamatrix.common.buffer.BufferManager;
 import com.metamatrix.common.buffer.BufferManagerFactory;
-import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.query.parser.QueryParser;
-import com.metamatrix.query.processor.ProcessorDataManager;
+import com.metamatrix.query.processor.FakeDataManager;
+import com.metamatrix.query.processor.TestProcessor;
 import com.metamatrix.query.resolver.TestResolver;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.CompoundCriteria;
@@ -57,14 +57,18 @@ public class TestAccessNode extends TestCase {
         CommandContext context = new CommandContext();
         context.setProcessorID("processorID"); //$NON-NLS-1$
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-        FakePDM dataManager = new FakePDM(expectedCommand);
+        FakeDataManager dataManager = new FakeDataManager(); 
+        TestProcessor.sampleData1(dataManager);
         
         node.initialize(context, bm, dataManager);
         node.setShouldEvaluateExpressions(true);
         // Call open()
         node.open();
-        
-        assertEquals(shouldRegisterRequest, dataManager.registerRequestCalled);
+        if (shouldRegisterRequest) {
+        	assertEquals(Arrays.asList(expectedCommand), dataManager.getQueries());
+        } else {
+        	assertEquals(0, dataManager.getQueries().size());
+        }
     }
     
     public void testOpen_Defect16059() throws Exception {
@@ -91,31 +95,14 @@ public class TestAccessNode extends TestCase {
         CommandContext context = new CommandContext();
         context.setProcessorID("processorID"); //$NON-NLS-1$
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-        FakePDM dataManager = new FakePDM("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5"); //$NON-NLS-1$
+        FakeDataManager dataManager = new FakeDataManager(); 
+        TestProcessor.sampleData1(dataManager);
         node.initialize(context, bm, dataManager);
         // Call open()
         node.open();
-        assertTrue(dataManager.registerRequestCalled);
+        assertEquals(Arrays.asList("SELECT e1, e2 FROM pm1.g1 WHERE e2 = 5"), dataManager.getQueries()); //$NON-NLS-1$
     }
 	
-    private final static class FakePDM implements ProcessorDataManager {
-        private String expectedCommand;
-        private boolean registerRequestCalled = false;
-        private FakePDM(String command) {
-            this.expectedCommand = command;
-        }
-        public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,MetaMatrixComponentException {return null;}
-        public TupleSource registerRequest(Object processorID,Command command,String modelName,String connectorBindingId, int nodeID) throws MetaMatrixComponentException {
-            registerRequestCalled = true;
-            assertEquals(expectedCommand, command.toString());
-            return null;
-        }
-        @Override
-        public void clearCodeTables() {
-        	
-        }
-    }
-    
     public void testShouldExecuteUpdate() throws Exception {
         Update update = new Update();
         

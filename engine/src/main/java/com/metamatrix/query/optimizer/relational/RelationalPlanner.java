@@ -53,7 +53,6 @@ import com.metamatrix.query.sql.symbol.Reference;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
 import com.metamatrix.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
-import com.metamatrix.query.sql.visitor.GroupCollectorVisitor;
 import com.metamatrix.query.sql.visitor.GroupsUsedByElementsVisitor;
 import com.metamatrix.query.util.CommandContext;
 import com.metamatrix.query.util.ErrorMessageKeys;
@@ -146,7 +145,7 @@ public class RelationalPlanner implements CommandPlanner {
         	planToProcessConverter = context.getPlanToProcessConverter();
         }
         if (planToProcessConverter == null) {
-        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder, context);
+        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder);
         }
         
         RelationalPlan result = planToProcessConverter.convert(plan);
