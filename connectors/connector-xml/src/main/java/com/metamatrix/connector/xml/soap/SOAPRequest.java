@@ -72,6 +72,14 @@ public class SOAPRequest extends com.metamatrix.connector.xml.http.HTTPRequest {
                     Source.class, 
                     Service.Mode.PAYLOAD);
             
+            // I should be able to send no value here, but the dispatch throws an exception
+            // if soapAction == null.  We allow the default "" to get sent in that case.
+            // In SOAP 1.1 we must send a SoapAction.
+            String soapAction = (String)exeInfo.getOtherProperties().get("SOAPAction");
+            if(null != soapAction) {
+            	dispatch.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, soapAction);
+            }
+            
             String requestDocument = xmlOutputter.outputString(doc);
             attemptConditionalLog(requestDocument);
             StringReader reader = new StringReader(requestDocument);
