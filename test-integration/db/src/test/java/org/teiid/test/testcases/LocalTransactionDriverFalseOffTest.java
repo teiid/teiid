@@ -27,7 +27,7 @@ public class LocalTransactionDriverFalseOffTest extends TwoSourceTransactionScen
 	protected void setUp() throws Exception {
 		super.setUp();
 		
-		this.addProperty(ConfigPropertyNames.USE_DATASOURCES_PROP, "oracle,sqlserver");
+//		this.addProperty(ConfigPropertyNames.USE_DATASOURCES_PROP, "oracle,sqlserver");
     	
 		this.addProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);
 		
