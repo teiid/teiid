@@ -9,6 +9,7 @@ import java.util.Random;
 import javax.sql.XAConnection;
 import javax.transaction.xa.XAResource;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTest;
 import org.teiid.test.framework.exception.QueryTestFailedException;
@@ -20,8 +21,8 @@ public class XATransaction extends TransactionContainer {
 	private static Random RANDOM = new Random();
 	private MMXid xid;
 	
-    public XATransaction() {
-        super();
+    public XATransaction(ConfigPropertyLoader config) {
+        super(config);
     }
         
     protected void before(TransactionQueryTest test) {

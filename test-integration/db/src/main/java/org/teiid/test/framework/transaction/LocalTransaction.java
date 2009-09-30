@@ -4,11 +4,14 @@
  */
 package org.teiid.test.framework.transaction;
 
+
 import java.sql.SQLException;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTest;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
+
 
 
 
@@ -17,8 +20,8 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  */
 public class LocalTransaction extends TransactionContainer {
 
-    public LocalTransaction() {
-        super();
+    public LocalTransaction(ConfigPropertyLoader config) {
+        super(config);
         
     }
     

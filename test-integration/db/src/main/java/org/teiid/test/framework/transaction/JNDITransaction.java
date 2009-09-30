@@ -7,9 +7,10 @@ package org.teiid.test.framework.transaction;
 import javax.naming.InitialContext;
 import javax.transaction.UserTransaction;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTest;
-import org.teiid.test.framework.connection.ConnectionStrategy;
+import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 
@@ -18,12 +19,12 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 public class JNDITransaction extends TransactionContainer {
     UserTransaction userTxn = null;
     
-    public JNDITransaction() {
-        super();
+    public JNDITransaction(ConfigPropertyLoader config) {
+        super(config);
     }
     
     protected void before(TransactionQueryTest test) {
-        if (this.props.getProperty(ConnectionStrategy.JNDINAME_USERTXN) == null) {
+        if (this.props.getProperty(CONNECTION_STRATEGY_PROPS.JNDINAME_USERTXN) == null) {
             throw new TransactionRuntimeException("No JNDI name found for the User Transaction to look up in application server");
         }
 
@@ -31,7 +32,7 @@ public class JNDITransaction extends TransactionContainer {
  
             // begin the transaction
             InitialContext ctx = new InitialContext();
-            this.userTxn = (UserTransaction)ctx.lookup(this.props.getProperty(ConnectionStrategy.JNDINAME_USERTXN));
+            this.userTxn = (UserTransaction)ctx.lookup(this.props.getProperty(CONNECTION_STRATEGY_PROPS.JNDINAME_USERTXN));
             this.userTxn.begin();
         } catch (Exception e) {
             throw new TransactionRuntimeException(e);
