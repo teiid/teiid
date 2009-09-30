@@ -13,6 +13,7 @@ import javax.sql.XADataSource;
 
 import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.jdbc.TeiidDataSource;
+import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -33,13 +34,11 @@ public class DataSourceConnection extends ConnectionStrategy {
 	// driver class
 	public static final String DS_DRIVER = "driver"; //$NON-NLS-1$
 
-	public static final String DS_SERVERNAME = "servername"; //$NON-NLS-1$
-	public static final String DS_SERVERPORT = "portnumber"; //$NON-NLS-1$
+	public static final String DS_SERVERNAME = "ServerName"; //$NON-NLS-1$
+	public static final String DS_SERVERPORT = "PortNumber"; //$NON-NLS-1$
 	public static final String DS_JNDINAME = "ds-jndiname"; //$NON-NLS-1$
-	public static final String DS_DATABASENAME = "databasename"; //$NON-NLS-1$
+	public static final String DS_DATABASENAME = "DatabaseName"; //$NON-NLS-1$
 	public static final String DS_APPLICATION_NAME = "application-name"; //$NON-NLS-1$
-
-	//	    public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$
 
 	private String driver = null;
 	private String username = null;
@@ -51,9 +50,9 @@ public class DataSourceConnection extends ConnectionStrategy {
 
 	private XAConnection xaConnection;
 
-	public DataSourceConnection(Properties props)
+	public DataSourceConnection(Properties props, DataSourceFactory dsFactory)
 			throws QueryTestFailedException {
-		super(props);
+		super(props, dsFactory);
 	}
 
 	public void validate() {
@@ -73,8 +72,8 @@ public class DataSourceConnection extends ConnectionStrategy {
 
 		this.applName = this.getEnvironment().getProperty(DS_APPLICATION_NAME);
 
-		driver = this.getEnvironment().getProperty(DS_DRIVER);
-		if (driver == null || driver.length() == 0) {
+		this.driver = this.getEnvironment().getProperty(DS_DRIVER);
+		if (this.driver == null || this.driver.length() == 0) {
 			throw new TransactionRuntimeException("Property " + DS_DRIVER
 					+ " was not specified");
 		}
@@ -142,6 +141,7 @@ public class DataSourceConnection extends ConnectionStrategy {
 	}
 
 	public void shutdown() {
+		super.shutdown();
 		try {
 
 			if (this.xaConnection != null) {

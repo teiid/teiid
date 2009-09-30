@@ -20,36 +20,28 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminOptions;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
+import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.datasource.DataSource;
-import org.teiid.test.framework.datasource.DataSourceMgr;
+import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
-
-import com.metamatrix.jdbc.api.ExecutionProperties;
-
 
 
 public abstract class ConnectionStrategy {
     
-     public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$  
-	
-	public static final String PROCESS_BATCH = "process-batch"; //$NON-NLS-1$
-	public static final String CONNECTOR_BATCH = "connector-batch"; //$NON-NLS-1$
+    private Map<String, ConnectionStrategy> driversources = null;
+    private Map<String, ConnectionStrategy> datasourcesources = null;
+    private Map<String, ConnectionStrategy> jeesources = null;
 
-    public static final String AUTOCOMMIT = "autocommit"; //$NON-NLS-1$
-    
-    public static final String TXN_AUTO_WRAP = ExecutionProperties.PROP_TXN_AUTO_WRAP;
-    
-    public static final String FETCH_SIZE = ExecutionProperties.PROP_FETCH_SIZE;
-    
-    public static final String EXEC_IN_BATCH = "execute.in.batch"; //$NON-NLS-1$
-    
     
     private Map<String, DataSource> datasources = null;
-
     
-    public ConnectionStrategy(Properties props) throws QueryTestFailedException {
+    private DataSourceFactory dsFactory;
+    
+    
+    public ConnectionStrategy(Properties props, DataSourceFactory dsFactory) throws QueryTestFailedException {
     	this.env = props;
+    	this.dsFactory = dsFactory;
    	
     }
     
@@ -69,7 +61,36 @@ public abstract class ConnectionStrategy {
      *
      * @since
      */
-    public abstract void shutdown();
+    public void shutdown() {
+        if (driversources != null) {
+        	shutDownSources(driversources);
+        	driversources = null;
+        }
+        
+        if (datasourcesources != null) {
+        	shutDownSources(datasourcesources);
+        	datasourcesources = null;
+        }
+        
+        if (jeesources != null) {
+        	shutDownSources(jeesources);
+        	jeesources = null;
+        }
+    }
+    
+    private void shutDownSources(Map<String, ConnectionStrategy> sources) {
+       	for (Iterator it=sources.keySet().iterator(); it.hasNext();  ){	        		
+        		ConnectionStrategy cs = sources.get(it.next());
+        		try {
+        			cs.shutdown();
+        		} catch (Exception e) {
+        			
+        		}
+        		
+        	}
+        	sources.clear();
+
+    }
 
     public Connection getAdminConnection() throws QueryTestFailedException{
     	return null;
@@ -121,7 +142,7 @@ public abstract class ConnectionStrategy {
     	
     	datasources = new HashMap<String, DataSource>(3);
     	
-    	String ac = this.env.getProperty(AUTOCOMMIT, "true");
+    	String ac = this.env.getProperty(CONNECTION_STRATEGY_PROPS.AUTOCOMMIT, "true");
     	this.autoCommit = Boolean.getBoolean(ac);
     	
         com.metamatrix.jdbc.api.Connection c =null;
@@ -193,7 +214,7 @@ public abstract class ConnectionStrategy {
 	        		useName = mappedName;
 	        	}
 
-	        	org.teiid.test.framework.datasource.DataSource ds = DataSourceMgr.getInstance().getDatasource(useName, m.getName());
+	        	org.teiid.test.framework.datasource.DataSource ds = this.dsFactory.getDatasource(useName, m.getName());
 	        	
 	        	if (ds != null) {
 		        	datasources.put(m.getName(), ds);
@@ -222,6 +243,70 @@ public abstract class ConnectionStrategy {
 
     	
     }
+    
+    public synchronized ConnectionStrategy createDriverStrategy(String identifier, Properties props) throws QueryTestFailedException  {
+    	if (driversources == null) {
+    		driversources = new HashMap<String, ConnectionStrategy>();
+    	}
+    	
+     	if (identifier == null) {
+     			return new DriverConnection(props, dsFactory);
+     	}
+     	
+     	ConnectionStrategy strategy = null;
+     	if (driversources.containsKey(identifier)) {
+     		strategy = driversources.get(identifier);
+     	} else {
+     		strategy = new DriverConnection(props, dsFactory);
+     		driversources.put(identifier, strategy);
+     	}	     	
+   	
+       	return strategy;
+    
+    }
+    
+    public synchronized ConnectionStrategy createDataSourceStrategy(String identifier, Properties props) throws QueryTestFailedException  {	     	
+    	if (datasourcesources == null) {
+    		datasourcesources = new HashMap<String, ConnectionStrategy>();
+    	}
+    	
+     	if (identifier == null) {
+    		return new DataSourceConnection(props, dsFactory);
+     	}
+     	
+     	ConnectionStrategy strategy = null;
+     	if (datasourcesources.containsKey(identifier)) {
+     		strategy = datasourcesources.get(identifier);
+     	} else {
+     		strategy = new DataSourceConnection(props, dsFactory);
+     		datasourcesources.put(identifier, strategy);
+     	}
+       	
+       	return strategy;
+    
+    }
+    
+    public synchronized ConnectionStrategy createJEEStrategy(String identifier, Properties props) throws QueryTestFailedException  {
+    	if (jeesources == null) {
+    		jeesources = new HashMap<String, ConnectionStrategy>();
+    	}
+    	
+     	if (identifier == null) {
+    		return new JEEConnection(props, dsFactory);
+     	}
+     	
+     	ConnectionStrategy strategy = null;
+     	if (jeesources.containsKey(identifier)) {
+     		strategy = jeesources.get(identifier);
+     	} else {
+     		strategy = new JEEConnection(props, dsFactory);
+     		jeesources.put(identifier, strategy);
+     	}
+       	
+       	return strategy;
+    
+    }
+  
         
  
    

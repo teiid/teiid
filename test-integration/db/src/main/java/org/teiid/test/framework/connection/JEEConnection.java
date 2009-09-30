@@ -10,6 +10,7 @@ import java.util.Properties;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
+import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -26,8 +27,8 @@ public class JEEConnection extends ConnectionStrategy{
 	private String jndi_name = null;
 	
 	
-	public JEEConnection(Properties props) throws QueryTestFailedException {
-    	   super(props);
+	public JEEConnection(Properties props, DataSourceFactory dsFactory) throws QueryTestFailedException {
+    	   super(props, dsFactory);
     }
 
     public Connection getConnection() throws QueryTestFailedException {
@@ -53,6 +54,7 @@ public class JEEConnection extends ConnectionStrategy{
     }    
             
     public void shutdown() {
+		super.shutdown();
         // no connection management here; app server takes care of these..
     }
 

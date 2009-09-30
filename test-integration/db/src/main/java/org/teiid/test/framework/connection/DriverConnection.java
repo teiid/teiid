@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -43,8 +44,8 @@ public class DriverConnection extends ConnectionStrategy{
     private Connection connection;
 
         
-    public DriverConnection(Properties props) throws QueryTestFailedException {
-    	   super(props);
+    public DriverConnection(Properties props, DataSourceFactory dsFactory) throws QueryTestFailedException {
+    	   super(props, dsFactory);
     	   validate();
     }
     
@@ -128,6 +129,7 @@ public class DriverConnection extends ConnectionStrategy{
     }
             
     public void shutdown() {
+		super.shutdown();
     	if (this.connection != null) {
     		try {
     			this.connection.close();

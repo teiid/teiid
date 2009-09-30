@@ -11,7 +11,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 // identifier should be the model name that is identfied in the config properties
 public class ConnectionUtil {
-	public static final Connection getConnection(String identifier, Map<String, DataSource> datasources) throws QueryTestFailedException {
+	public static final Connection getConnection(String identifier, Map<String, DataSource> datasources, ConnectionStrategy connstrategy) throws QueryTestFailedException {
 		DataSource ds = null;
 		if (identifier != null) {
 			ds = datasources.get(identifier);
@@ -22,7 +22,7 @@ public class ConnectionUtil {
 				
 		}
 		
-		Connection conn = ConnectionStrategyFactory.getInstance().createDriverStrategy(identifier,
+		Connection conn = connstrategy.createDriverStrategy(identifier,
 				ds.getProperties()).getConnection();
 		// force autocommit back to true, just in case the last user didnt
 		try {
@@ -35,7 +35,7 @@ public class ConnectionUtil {
 
 	}
 	
-	public static final XAConnection getXAConnection(String identifier, Map<String, DataSource> datasources) throws QueryTestFailedException {
+	public static final XAConnection getXAConnection(String identifier, Map<String, DataSource> datasources, ConnectionStrategy connstrategy) throws QueryTestFailedException {
 		DataSource ds = null;
 		if (identifier != null) {
 			ds = datasources.get(identifier);
@@ -46,7 +46,7 @@ public class ConnectionUtil {
 				
 		}
 
-		return ConnectionStrategyFactory.getInstance().createDataSourceStrategy(
+		return connstrategy.createDataSourceStrategy(
 				identifier, ds.getProperties()).getXAConnection();
 
 	}
