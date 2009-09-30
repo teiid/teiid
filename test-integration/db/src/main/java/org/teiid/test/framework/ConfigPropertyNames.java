@@ -1,5 +1,7 @@
 package org.teiid.test.framework;
 
+import com.metamatrix.jdbc.api.ExecutionProperties;
+
 /**
  * The following properties can be set in 2 ways:
  * <li>set as a System property(..)</li>
@@ -64,6 +66,11 @@ public interface ConfigPropertyNames {
     public static final String CONNECTION_TYPE = "connection-type"; //$NON-NLS-1$
     
     
+    /**
+     * {@see #CONNECTION_TYPE} regarding setting the specific connection type to use
+     * @author vanhalbert
+     *
+     */
     public interface CONNECTION_TYPES {
     
 	     // used to create the jdb driver
@@ -74,6 +81,23 @@ public interface ConfigPropertyNames {
 	    public static final String JNDI_CONNECTION = "jndi"; //$NON-NLS-1$
 
 
+    }
+    
+    /**
+     * Connection Props are the {@link CONNECTION_STRATEGY} execution options 
+     * @author vanhalbert
+     *
+     */
+    public interface CONNECTION_STRATEGY_PROPS {
+
+		public static final String TXN_AUTO_WRAP = ExecutionProperties.PROP_TXN_AUTO_WRAP;
+		public static final String AUTOCOMMIT = "autocommit"; //$NON-NLS-1$
+		public static final String FETCH_SIZE = ExecutionProperties.PROP_FETCH_SIZE;
+		public static final String EXEC_IN_BATCH = "execute.in.batch"; //$NON-NLS-1$
+		public static final String CONNECTOR_BATCH = "connector-batch"; //$NON-NLS-1$
+		public static final String PROCESS_BATCH = "process-batch"; //$NON-NLS-1$
+		public static final String JNDINAME_USERTXN = "usertxn-jndiname"; //$NON-NLS-1$  
+    	
     }
 
 }

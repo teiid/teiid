@@ -6,7 +6,9 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
+import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.datasource.DataSource;
+import org.teiid.test.framework.exception.QueryTestFailedException;
 
 /**
  * The TransactionQueryTest interface represents the transaction test framework from which
@@ -31,17 +33,7 @@ public interface TransactionQueryTest {
 	 */
 	void setConnection(Connection conn);
 	
-	
-	/**
-	 * Called by the @link TransactionContainer to set the datasoures used to create the connector bindings and
-	 * used to create direct connection to the sources.
-	 * @param datasources
-	 *
-	 * @since
-	 */
-	void setDataSources(Map<String, DataSource> datasources);
-	
-	
+		
 	/**
 	 * Returns the connection being used in the test.
 	 * @return
@@ -62,6 +54,15 @@ public interface TransactionQueryTest {
 	 */
      void setExecutionProperties(Properties props) ;
      
+     
+     /**
+      * Called to set the current connection strategy being used.
+      * @param connStrategy
+      *
+      * @since
+      */
+     void setConnectionStrategy(ConnectionStrategy connStrategy);
+     
      /**
       * The test case has to specify how many sources its using so that the correct
       * data setup is performed.
@@ -77,12 +78,12 @@ public interface TransactionQueryTest {
      
      /**
       * Called by the {@link TransactionContainer} prior to testcase processing so that
-      * the datasources can be setup for the specific testcase.
+      * the responsibility for performing datasource setup can be done
       * 
       *
       * @since
       */
-     void setupDataSources();
+     void setupDataSource() throws QueryTestFailedException;
 	
     
     /**

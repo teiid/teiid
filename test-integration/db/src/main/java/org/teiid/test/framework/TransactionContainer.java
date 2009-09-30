@@ -8,6 +8,7 @@ import java.util.Properties;
 
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
+import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -16,20 +17,26 @@ public abstract class TransactionContainer {
 	
 		private boolean debug = false;
 		
+		protected ConfigPropertyLoader config = null;
 		protected Properties props;
 		protected ConnectionStrategy connStrategy;
+		protected DataSourceFactory dsfactory;
 	    
-	    protected TransactionContainer(){        
-
+	    protected TransactionContainer(ConfigPropertyLoader propertyconfig){        
+	    	this.config = propertyconfig;
 	    }
 	    
 	    protected void setUp(TransactionQueryTest test) throws QueryTestFailedException  {
-	    	this.connStrategy = ConnectionStrategyFactory.getInstance().getConnectionStrategy();
+	    	this.dsfactory = new DataSourceFactory(config);
+	    	
+	    	this.connStrategy = ConnectionStrategyFactory.createConnectionStrategy(config, dsfactory);
 	        this.props = new Properties();
 	        this.props.putAll(this.connStrategy.getEnvironment());
+	        
+	    	test.setConnectionStrategy(connStrategy);
 
-	       	test.setDataSources(connStrategy.getDataSources());
-        	test.setupDataSources();
+	       	test.setupDataSource();
+
    	
 	    }
 	    
@@ -50,8 +57,14 @@ public abstract class TransactionContainer {
 	        	try {
 	        		test.cleanup();
 	        	} finally {
+			    	
+			   		// cleanup all defined datasources for the last test and
+	        		// any overrides regarding inclusions and exclusions.
+		    		this.dsfactory.cleanup();
+
+			    	
 		    		// cleanup all connections created for this test.
-		    		ConnectionStrategyFactory.destroyInstance();
+		    		connStrategy.shutdown();
 	        		
 	        	}
 	        }
