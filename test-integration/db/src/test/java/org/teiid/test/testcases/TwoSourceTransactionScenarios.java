@@ -296,7 +296,7 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
      * Batching = Full Processing, Single Connector Batch
      * result = commit
      */
-    public void testMultipleSourceMultipleCommands() throws Exception {
+    public void lookat_testMultipleSourceMultipleCommands() throws Exception {
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceMultipleCommands") {
             public void testCase() throws Exception {
                 execute("delete from pm1.g2 where e1 >= ?", new Object[] {new Integer(100)});

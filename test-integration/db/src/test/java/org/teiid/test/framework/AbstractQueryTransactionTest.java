@@ -16,12 +16,13 @@ import java.util.Properties;
 
 import javax.sql.XAConnection;
 
+import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionUtil;
 import org.teiid.test.framework.datasource.DataSource;
+import org.teiid.test.framework.datasource.DataSourceSetup;
 import org.teiid.test.framework.datasource.DataSourceSetupFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
-import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -40,6 +41,8 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
 	
 	protected Map<String, DataSource> datasources = null;
 	
+	protected ConnectionStrategy connStrategy;
+	
 	
 	public AbstractQueryTransactionTest() {
 		super();
@@ -53,18 +56,16 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
 	public String getTestName() {
 		return this.testname;
 	}
+		
 	
-    /**
-     * Called to set the datasources used during this test
-     * 
-     * @since
-     */
-	public void setDataSources(Map<String, DataSource> datasources) {
-		this.datasources = datasources;
+    @Override
+	public void setConnectionStrategy(ConnectionStrategy connStrategy) {
+		this.connStrategy = connStrategy;
+		this.datasources = this.connStrategy.getDataSources();
+		
 	}
-	
-	
-    public void setExecutionProperties(Properties props) {
+
+	public void setExecutionProperties(Properties props) {
        	assertNotNull(props);
         this.executionProperties = props;        
     }
@@ -77,13 +78,13 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
         if (this.executionProperties != null) {  
              if (stmt instanceof com.metamatrix.jdbc.api.Statement) {
                 com.metamatrix.jdbc.api.Statement statement = (com.metamatrix.jdbc.api.Statement)stmt;
-                String txnautowrap = this.executionProperties.getProperty(ConnectionStrategy.TXN_AUTO_WRAP);
+                String txnautowrap = this.executionProperties.getProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP);
                 if (txnautowrap != null) {
-                     statement.setExecutionProperty(ConnectionStrategy.TXN_AUTO_WRAP, txnautowrap);
+                     statement.setExecutionProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, txnautowrap);
                 }
                 
-                if (this.executionProperties.getProperty(ConnectionStrategy.FETCH_SIZE) != null) {
-                    statement.setExecutionProperty(ConnectionStrategy.FETCH_SIZE, this.executionProperties.getProperty(ConnectionStrategy.FETCH_SIZE));
+                if (this.executionProperties.getProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE) != null) {
+                    statement.setExecutionProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE, this.executionProperties.getProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE));
                 }
             }
         }
@@ -102,28 +103,26 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
     /**
      * Override <code>setupDataSource</code> if there is different mechinism for
      * setting up the datasources for the testcase
+     * @throws QueryTestFailedException 
+     * @throws QueryTestFailedException 
      * 
      * @since
      */
     @Override
-	public void setupDataSources() {
-    	DataSourceSetup dss = null;
-    	try {
-    		
-    		dss = DataSourceSetupFactory.createDataSourceSetup(this.datasources);
-    		dss.setup();
-    	} catch(Exception e) {
-    		throw new TransactionRuntimeException(e.getMessage());
-    	}
+    public void setupDataSource() throws QueryTestFailedException {
+    	
+    	DataSourceSetup dss = DataSourceSetupFactory.createDataSourceSetup(this.getNumberRequiredDataSources());
+    	dss.setup(datasources, connStrategy);
+
     }	
 
 
 	public Connection getSource(String identifier) throws QueryTestFailedException {
-    	return ConnectionUtil.getConnection(identifier, this.datasources);
+    	return ConnectionUtil.getConnection(identifier, this.datasources, this.connStrategy);
     }    
     
     public XAConnection getXASource(String identifier) throws QueryTestFailedException {
-       	return ConnectionUtil.getXAConnection(identifier, this.datasources);
+       	return ConnectionUtil.getXAConnection(identifier, this.datasources, this.connStrategy);
      }   
 	
     
@@ -173,7 +172,7 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
     
     
     /**
-     * At end of each test, perfrom any cleanup that your test requires.
+     * At end of each test, perfoom any cleanup that your test requires.
      * Note:  Do not cleanup any connections.   That is performed by
      * the {@link TransactionContainer#runTransaction(TransactionQueryTest)} at the end of the test.
      */

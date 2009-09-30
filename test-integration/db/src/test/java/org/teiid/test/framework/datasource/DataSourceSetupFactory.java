@@ -1,26 +1,23 @@
 package org.teiid.test.framework.datasource;
 
-import java.util.Map;
-
-import org.teiid.test.framework.DataSourceSetup;
-import org.teiid.test.framework.exception.QueryTestFailedException;
+import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 public class DataSourceSetupFactory {
 	
-	public static DataSourceSetup createDataSourceSetup(Map<String, DataSource> datasources) throws QueryTestFailedException {
+	public static DataSourceSetup createDataSourceSetup(int numofsources)  {
 		DataSourceSetup dss = null;
 		
-		switch (datasources.size()) {
+		switch (numofsources) {
 		case 1:
-			dss = new SingleDataSourceSetup(datasources);
+			dss = new SingleDataSourceSetup();
 			break;
 			
 		case 2:
-			dss = new TwoDataSourceSetup(datasources);
+			dss = new TwoDataSourceSetup();
 			break;
 			
 		default:
-			throw new QueryTestFailedException("Number of datasources " + datasources.size() + " is not supported");
+			throw new TransactionRuntimeException("Number of datasources " + numofsources + " is not supported");
 
 		}
 		

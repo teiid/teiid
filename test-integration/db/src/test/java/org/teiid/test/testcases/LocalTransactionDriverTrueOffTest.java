@@ -5,7 +5,7 @@
 package org.teiid.test.testcases;
 
 import org.teiid.test.framework.ConfigPropertyNames;
-import org.teiid.test.framework.connection.ConnectionStrategy;
+import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 
 
 /** 
@@ -25,10 +25,11 @@ public class LocalTransactionDriverTrueOffTest extends TwoSourceTransactionScena
 
 	@Override
 	protected void setUp() throws Exception {
-    	
-    	System.setProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);
-    	System.setProperty(ConnectionStrategy.AUTOCOMMIT, "true");
-    	System.setProperty(ConnectionStrategy.TXN_AUTO_WRAP, "off");
+		super.setUp();
+		
+		this.addProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);
+		this.addProperty(CONNECTION_STRATEGY_PROPS.AUTOCOMMIT, "true");
+		this.addProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, "off");
     	
 		
 	}      
