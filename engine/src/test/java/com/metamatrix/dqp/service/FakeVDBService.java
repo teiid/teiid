@@ -24,8 +24,10 @@ package com.metamatrix.dqp.service;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,51 +39,15 @@ import com.metamatrix.common.application.exception.ApplicationInitializationExce
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
+import com.metamatrix.vdb.runtime.VDBKey;
 
 /**
  */
 public class FakeVDBService extends FakeAbstractService implements VDBService {
     private Map vdbsMap = new HashMap();    // VdbInfo -> Map<Model name (upper), <ModelInfo>>
     private Map bindingNames = new HashMap();   // binding UUID -> binding name
-    
-    private static class VdbInfo {
-        private final String vdbName;
-        private final String vdbVersion;
-        
-        private final String key;
-        
-        public VdbInfo(String name, String version) {
-            this.vdbName = name;
-            this.vdbVersion = version;
-            this.key = name.toUpperCase() + ":" + version; //$NON-NLS-1$
-        }
-        
-        public String getName() {
-            return this.vdbName;
-        }
-        
-        public String getVersion() {
-            return this.vdbVersion;
-        }
-        
-        public boolean equals(Object obj) {
-            if(obj == null) {
-                return false;
-            } else if(obj == this) {
-                return true;
-            } else {
-                return this.key.equals(((VdbInfo)obj).key); 
-            }
-        }
-        
-        public int hashCode() {
-            return this.key.hashCode();
-        }
-        
-        public String toString() {
-            return vdbName + ":" + vdbVersion; //$NON-NLS-1$
-        }
-    }
+    public Collection publicFiles = new HashSet();
+    private boolean defaultPrivate;
     
     private static class FakeModel {
         String modelName;
@@ -90,6 +56,10 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
         List bindingNames = new ArrayList();    // mapped to UUIDs
         List bindingUUIDs = new ArrayList();    // mapped to names
     }
+    
+    public void setDefaultPrivate(boolean defaultPrivate) {
+		this.defaultPrivate = defaultPrivate;
+	}
     
     /**
      * Method for testing - add a model with the specified properties.  The vdb will be created 
@@ -107,7 +77,7 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
         model.multiSource = multiSource;
         model.modelName = modelName;
         
-        VdbInfo vdb = new VdbInfo(vdbName, version);
+        VDBKey vdb = new VDBKey(vdbName, version);
         Map vdbModels = (Map)this.vdbsMap.get(vdb);
         if(vdbModels == null) {
             vdbModels = new HashMap();
@@ -131,7 +101,7 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
         FakeModel model = null;
         
         // Find existing model
-        VdbInfo vdb = new VdbInfo(vdbName, version);
+        VDBKey vdb = new VDBKey(vdbName, version);
         Map vdbModels = (Map)this.vdbsMap.get(vdb);
         if(vdbModels != null) {
             model = (FakeModel) vdbModels.get(modelName.toUpperCase());
@@ -158,14 +128,14 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
      * @see com.metamatrix.dqp.service.VDBService#isActiveVDB(java.lang.String, java.lang.String)
      */
     public boolean isActiveVDB(String vdbName, String vdbVersion) {
-        return vdbsMap.containsKey(new VdbInfo(vdbName, vdbVersion));
+        return vdbsMap.containsKey(new VDBKey(vdbName, vdbVersion));
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.dqp.service.VDBService#getConnectorBinding(java.lang.String, java.lang.String, java.lang.String)
      */
     public List getConnectorBindingNames(String vdbName, String vdbVersion, String modelName) {
-        VdbInfo vdb = new VdbInfo(vdbName, vdbVersion);
+    	VDBKey vdb = new VDBKey(vdbName, vdbVersion);
         Map vdbModels = (Map)this.vdbsMap.get(vdb);
         if(vdbModels != null) {
             FakeModel model = (FakeModel) vdbModels.get(modelName.toUpperCase());
@@ -187,7 +157,7 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
      * @see com.metamatrix.dqp.service.VDBService#getModelVisibility(java.lang.String, java.lang.String, java.lang.String)
      */
     public int getModelVisibility(String vdbName, String vdbVersion, String modelName) {
-        VdbInfo vdb = new VdbInfo(vdbName, vdbVersion);
+    	VDBKey vdb = new VDBKey(vdbName, vdbVersion);
         Map vdbModels = (Map)this.vdbsMap.get(vdb);
         if(vdbModels != null) {
             FakeModel model = (FakeModel) vdbModels.get(modelName.toUpperCase());
@@ -195,7 +165,9 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
                 return model.visibility;
             } 
         }
-        
+        if (defaultPrivate) {
+        	return ModelInfo.PRIVATE;
+        }
         return ModelInfo.PUBLIC;
     }
     
@@ -204,7 +176,10 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
      * @since 4.2
      */
     public int getFileVisibility(String vdbName, String vdbVersion, String pathInVDB) throws MetaMatrixComponentException {
-        return ModelInfo.PUBLIC;
+    	if(this.publicFiles.contains(pathInVDB)) {
+            return ModelInfo.PUBLIC;
+        }
+        return ModelInfo.PRIVATE;
     }
 
     /* (non-Javadoc)
@@ -240,7 +215,7 @@ public class FakeVDBService extends FakeAbstractService implements VDBService {
     public List getMultiSourceModels(String vdbName,
                                      String vdbVersion) throws MetaMatrixComponentException {
 
-        VdbInfo vdb = new VdbInfo(vdbName, vdbVersion);
+    	VDBKey vdb = new VDBKey(vdbName, vdbVersion);
         Map vdbModels = (Map)this.vdbsMap.get(vdb);
         if(vdbModels != null) {
             List multiModels = new ArrayList();

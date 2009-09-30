@@ -34,7 +34,6 @@ import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.query.function.FunctionLibrary;
 import com.metamatrix.query.metadata.TempMetadataID;
 import com.metamatrix.query.resolver.util.ResolverUtil;
-import com.metamatrix.query.resolver.util.ResolverUtil.ResolvedLookup;
 import com.metamatrix.query.sql.lang.Command;
 import com.metamatrix.query.sql.lang.Delete;
 import com.metamatrix.query.sql.lang.Insert;

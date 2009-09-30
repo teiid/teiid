@@ -80,8 +80,8 @@ public class TestDQPCore {
         env.bindService(DQPServiceNames.DATA_SERVICE, new AutoGenDataService());
         env.bindService(DQPServiceNames.TRANSACTION_SERVICE, new FakeTransactionService());
         FakeVDBService vdbService = new FakeVDBService();
+        vdbService.setDefaultPrivate(true);
         vdbService.addBinding(vdbName, vdbVersion, "BQT1", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-        vdbService.addBinding(vdbName, vdbVersion, "BQT2", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         vdbService.addBinding(vdbName, vdbVersion, "BQT3", "mmuuid:blah", "BQT"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         vdbService.addModel(vdbName, vdbVersion, "BQT3", ModelInfo.PRIVATE, false); //$NON-NLS-1$
         env.bindService(DQPServiceNames.VDB_SERVICE, vdbService);
@@ -247,6 +247,10 @@ public class TestDQPCore {
 		helpTestVisibilityFails(xquery);
 	}
     
+	@Test public void testResolvingVisibility() throws Exception {
+		String sql = "SELECT * FROM SmallA"; //$NON-NLS-1$
+    	helpExecute(sql, "a"); //$NON-NLS-1$
+	}
 
     ///////////////////////////Helper method///////////////////////////////////
     private ResultsMessage helpExecute(String sql, String userName) throws Exception {

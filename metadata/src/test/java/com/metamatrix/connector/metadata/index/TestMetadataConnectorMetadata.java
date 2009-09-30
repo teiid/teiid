@@ -28,6 +28,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import org.teiid.connector.metadata.FileRecordImpl;
 import org.teiid.connector.metadata.MetadataConnectorMetadata;
 import org.teiid.connector.metadata.MetadataLiteralCriteria;
@@ -39,10 +41,10 @@ import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.index.IndexConstants;
 import org.teiid.metadata.index.IndexMetadataStore;
 
-import junit.framework.TestCase;
-
+import com.metamatrix.common.vdb.api.ModelInfo;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
 
@@ -78,13 +80,15 @@ public class TestMetadataConnectorMetadata extends TestCase {
         return new MetadataConnectorMetadata(context, new CompositeMetadataStore(Arrays.asList(composite), source));
     }
     
-    public VDBService helpGetVdbService() {
-        return new FakeVDBService();
+    public FakeVDBService helpGetVdbService() {
+        FakeVDBService vdbService = new FakeVDBService();
+        vdbService.setDefaultPrivate(true);
+        return vdbService;
     }
     
     public void testGetFileRecords() throws Exception {
         String entityPath = "/parts/partsmd/PartsSupplier.xmi"; //$NON-NLS-1$
-        FakeVDBService service = (FakeVDBService) helpGetVdbService();
+        FakeVDBService service = helpGetVdbService();
         service.publicFiles.add(entityPath);
         MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(FileRecordImpl.MetadataMethodNames.PATH_IN_VDB_FIELD, entityPath); 
         Map criteria = new HashMap();
@@ -97,8 +101,8 @@ public class TestMetadataConnectorMetadata extends TestCase {
     
     public void testGetPublicModelRecords() throws Exception {
         String modelName = "PartsSupplier"; //$NON-NLS-1$
-        FakeVDBService service = (FakeVDBService) helpGetVdbService();
-        service.publicModels.add(modelName);
+        FakeVDBService service = helpGetVdbService();
+        service.addModel(TEST_VDB_NAME, TEST_VDB_VERSION, modelName, ModelInfo.PUBLIC, false);
         MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName); 
         Map criteria = new HashMap();
         criteria.put(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD.toUpperCase(), literalcriteria);
@@ -112,7 +116,7 @@ public class TestMetadataConnectorMetadata extends TestCase {
     
     public void testGetPrivateModelRecords() throws Exception {
         String modelName = "PartsSupplier"; //$NON-NLS-1$
-        FakeVDBService service = (FakeVDBService) helpGetVdbService();
+        FakeVDBService service = helpGetVdbService();
         //service.publicModels.add(modelName);
         MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName); 
         Map criteria = new HashMap();
@@ -126,7 +130,7 @@ public class TestMetadataConnectorMetadata extends TestCase {
     }
 
     public void testGetWrappedVdbRecords() throws Exception {
-        FakeVDBService service = (FakeVDBService) helpGetVdbService();
+        FakeVDBService service = helpGetVdbService();
         Map criteria = new HashMap();
         MetadataConnectorMetadata metadata = helpGetMetadata(TEST_FILE_NAME, TEST_VDB_NAME, TEST_VDB_VERSION, service);
         Collection records = metadata.getObjects(IndexConstants.INDEX_NAME.VDBS_INDEX, criteria);
@@ -138,8 +142,8 @@ public class TestMetadataConnectorMetadata extends TestCase {
     
     public void testGetRecordsWithFalseCriteria() throws Exception {
         String modelName = "PartsSupplier"; //$NON-NLS-1$
-        FakeVDBService service = (FakeVDBService) helpGetVdbService();
-        service.publicModels.add(modelName);
+        FakeVDBService service = helpGetVdbService();
+        service.addModel(TEST_VDB_NAME, TEST_VDB_VERSION, modelName, ModelInfo.PUBLIC, false);
         MetadataLiteralCriteria literalcriteria = new MetadataLiteralCriteria(AbstractMetadataRecord.MetadataFieldNames.FULL_NAME_FIELD, modelName);
         literalcriteria.setFieldFunction("UPPER"); //$NON-NLS-1$
         Map criteria = new HashMap();
