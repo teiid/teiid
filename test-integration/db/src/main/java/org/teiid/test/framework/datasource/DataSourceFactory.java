@@ -47,14 +47,10 @@ public class DataSourceFactory {
 	private static final String DO_NOT_USE_DEFAULT="${usedatasources}";
 	private ConfigPropertyLoader configprops;
 
-	// contains the names of the datasources when the -Dusedatasources option is
-	// used
+	// contains the names of the datasources when the -Dusedatasources option is used
 	private Map<String, String> useDS = null;
-	private Set<String> excludedDBTypes = null;
-
-	private Set<String> unmappedds = new HashSet<String>();
 	
-	private Map<String, DataSource> allDatasourcesMap = null;
+	private Map<String, DataSource> useDataSources = null;
 
 	// map of the datasources assigned to with model
 	private Map<String, DataSource> modelToDatasourceMap = new HashMap<String, DataSource>(); // key
@@ -81,13 +77,19 @@ public class DataSourceFactory {
 	 * inclusions are considered for the next executed set of test.
 	 * 
 	 * 
+	 * 	1st, check for the usedatasource property, if exist, then only add those specific datasources
+	 * 		to the useDataSources, otherwise add all available.
+	 *  2nd, if the exclude option is used, then remove any excluded datasources from the useDataSources.
+	 *  
 	 * @since
 	 */
 	private void config() {
 		System.out.println("Configure Datasource Factory ");
 		
-		this.allDatasourcesMap = DataSourceMgr.getInstance().getDataSources();
-
+		Map<String, DataSource> availDatasources = DataSourceMgr.getInstance().getDataSources();
+		
+		useDataSources = new HashMap<String, DataSource>(availDatasources.size());
+		
 		String limitdsprop = configprops
 				.getProperty(ConfigPropertyNames.USE_DATASOURCES_PROP);
 		if (limitdsprop != null && limitdsprop.length() > 0 && ! limitdsprop.equalsIgnoreCase(DO_NOT_USE_DEFAULT)) {
@@ -96,22 +98,50 @@ public class DataSourceFactory {
 			List<String> dss = StringUtil.split(limitdsprop, ",");
 
 			useDS = new HashMap<String, String>(dss.size());
+			DataSource ds = null;
 			int i = 1;
 			for (Iterator<String> it = dss.iterator(); it.hasNext(); i++) {
-				useDS.put(String.valueOf(i), it.next());
+				String dssName = it.next();
+				useDS.put(String.valueOf(i), dssName);
+				ds = availDatasources.get(dssName);
+				
+				useDataSources.put(dssName, ds);
+				
 			}
 
+		} else {
+			useDataSources.putAll(availDatasources);
 		}
 
 		String excludeprop = configprops
 				.getProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
+		
+		Set<String> excludedDBTypes = null;
 
 		if (excludeprop != null && excludeprop.length() > 0) {
 			List<String> eprops = StringUtil.split(excludeprop, ",");
 			excludedDBTypes = new HashSet<String>(eprops.size());
 			excludedDBTypes.addAll(eprops);
 			System.out.println("EXCLUDE datasources: " + excludeprop);
+			
+			Iterator<DataSource> it = useDataSources.values().iterator();
+
+			// go thru all the datasources and remove those that are excluded
+			while (it.hasNext()) {
+				DataSource checkit = it.next();
+
+				if (excludedDBTypes.contains(checkit.getDBType())) {
+					it.remove();
+				}
+			}
+			
 		}
+		
+		
+	}
+	
+	public int getNumberAvailableDataSources() {
+		return this.useDataSources.size();
 	}
 
 	public synchronized DataSource getDatasource(String datasourceid,
@@ -138,7 +168,7 @@ public class DataSourceFactory {
 		if (useDS != null) {
 			String dsname = useDS.get(datasourceid);
 			if (dsname != null) {
-				ds = allDatasourcesMap.get(dsname);
+				ds = useDataSources.get(dsname);
 				if (ds == null) {
 					throw new QueryTestFailedException("Datasource name "
 							+ dsname
@@ -158,7 +188,7 @@ public class DataSourceFactory {
 
 		}
 
-		Iterator<DataSource> it = allDatasourcesMap.values().iterator();
+		Iterator<DataSource> it = useDataSources.values().iterator();
 
 		// need to go thru all the datasources to know if any has already been
 		// assigned
@@ -166,10 +196,10 @@ public class DataSourceFactory {
 		while (it.hasNext()) {
 			DataSource checkit = it.next();
 
-			if (excludedDBTypes != null
-					&& excludedDBTypes.contains(checkit.getDBType())) {
-				continue;
-			}
+//			if (excludedDBTypes != null
+//					&& excludedDBTypes.contains(checkit.getDBType())) {
+//				continue;
+//			}
 
 			if (!assignedDataSources.contains(checkit.getName())) {
 				ds = checkit;
@@ -193,7 +223,7 @@ public class DataSourceFactory {
 
 				if (cnt == this.lastassigned) {
 
-					ds = allDatasourcesMap.get(dsname);
+					ds = useDataSources.get(dsname);
 
 					this.lastassigned++;
 					if (lastassigned >= assignedDataSources.size()) {
@@ -221,11 +251,9 @@ public class DataSourceFactory {
 	public void cleanup() {
 
 		modelToDatasourceMap.clear();
-		unmappedds.clear();
 		assignedDataSources.clear();
 
 		useDS = null;
-		excludedDBTypes = null;
 
 	}
 	
@@ -251,9 +279,9 @@ public class DataSourceFactory {
 
 		
 		// the following verifies that order of "use" datasources is applied to request for datasources.
-		System.setProperty(ConfigPropertyNames.USE_DATASOURCES_PROP, "oracle,sqlserver");
-		
 		config = ConfigPropertyLoader.createInstance();
+		
+		config.setProperty(ConfigPropertyNames.USE_DATASOURCES_PROP, "oracle,sqlserver");
 				
 		factory = new DataSourceFactory(config);
 
@@ -289,31 +317,30 @@ public class DataSourceFactory {
 			// the following test verifies that a sqlserver datasource is not
 			// returned (excluded)
 			factory.cleanup();
-			
-			
-			
-			System.setProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP, "sqlserver");
-			
+		
+
 			config = ConfigPropertyLoader.createInstance();
-	
+			config.setProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP, "sqlserver");
+
 			
 			factory = new DataSourceFactory(config);
 
+			int n = factory.getNumberAvailableDataSources();
+			System.out.println("Num avail datasources: " + n);
+
+			for (int i=0; i<n; i++) {
 				
-				DataSource ds1 = factory.getDatasource("1", "model1");
+				String k = String.valueOf(i);
+				DataSource ds1 = factory.getDatasource(k, "model" + k);
 				if (ds1 == null) {
-					throw new RuntimeException("No 1st datasource was found");
+					throw new RuntimeException("No datasource was found for: model:" + k);
 					
 				}
+			}
 				
-				DataSource ds2 = factory.getDatasource("2", "model1");
-				if (ds2 == null) {
-					throw new RuntimeException("No 2nd datasource was found");
-					
-				}
 				
-				DataSource reuse = factory.getDatasource("3", "model1");
-				if (reuse == ds1 || reuse == ds2) {
+				DataSource reuse = factory.getDatasource(String.valueOf(n + 1), "model1");
+				if (reuse != null) {
 					
 				} else {
 					throw new RuntimeException("The process was not able to reassign an already used datasource");

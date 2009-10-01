@@ -1,13 +1,11 @@
 package org.teiid.test.framework;
 
 import java.sql.Connection;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.sql.XAConnection;
 
 import org.teiid.test.framework.connection.ConnectionStrategy;
-import org.teiid.test.framework.datasource.DataSource;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 
 /**

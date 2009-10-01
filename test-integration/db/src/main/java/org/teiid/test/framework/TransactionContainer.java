@@ -6,8 +6,6 @@ package org.teiid.test.framework;
 
 import java.util.Properties;
 
-import net.sf.saxon.functions.Substring;
-
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 import org.teiid.test.framework.datasource.DataSourceFactory;
@@ -39,11 +37,7 @@ public abstract class TransactionContainer {
 	        this.props = new Properties();
 	        this.props.putAll(this.connStrategy.getEnvironment());
 	        
-	    	test.setConnectionStrategy(connStrategy);
-
-	       	test.setupDataSource();
-
-   	
+ 	
 	    }
 	    
 	    protected void before(TransactionQueryTest test){}
@@ -79,12 +73,22 @@ public abstract class TransactionContainer {
 	    }
 	    
 	    private void runIt(TransactionQueryTest test)  {
-	    	
+   	
 	    	detail("Start transaction test: " + test.getTestName());
- 
+
 	        try {  
 	        	
 	           	setUp(test);
+		    	
+		    	if (test.getNumberRequiredDataSources() > this.dsfactory.getNumberAvailableDataSources()) {
+		    		detail(test.getTestName() + " will not be run, it requires " + test.getNumberRequiredDataSources() + 
+		    				" datasources, but only available is " + this.dsfactory.getNumberAvailableDataSources());
+		    		return;
+		    	}
+    	
+		    	test.setConnectionStrategy(connStrategy);
+		       	test.setupDataSource();
+
 	        	
 	        	debug("	setConnection");
 	            test.setConnection(this.connStrategy.getConnection());

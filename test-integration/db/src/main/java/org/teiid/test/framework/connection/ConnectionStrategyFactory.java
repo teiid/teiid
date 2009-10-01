@@ -52,5 +52,15 @@ public class ConnectionStrategyFactory {
 	    	strategy.configure();
 	        return strategy;
 
-	    }	        
+	    }	    
+	    
+		public static void main(String[] args) {
+			//NOTE: to run this test to validate the DataSourceMgr, do the following:
+			//   ---  need 3 datasources,   Oracle, SqlServer and 1 other
+			
+			ConfigPropertyLoader config = ConfigPropertyLoader.createInstance();
+			
+			DataSourceFactory factory = new DataSourceFactory(config);
+
+		}
 }
