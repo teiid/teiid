@@ -205,7 +205,7 @@ public class ResolverUtil {
         
         if(canImplicitlyConvert(sourceTypeName, targetTypeName) 
                         || (sourceExpression instanceof Constant && convertConstant(sourceTypeName, targetTypeName, (Constant)sourceExpression) != null)) {
-            return getConversion(sourceExpression, sourceTypeName, targetTypeName);
+            return getConversion(sourceExpression, sourceTypeName, targetTypeName, true);
         }
 
         //Expression is wrong type and can't convert
@@ -250,9 +250,10 @@ public class ResolverUtil {
         return null;
     }
 
-    private static Expression getConversion(Expression sourceExpression,
+    public static Function getConversion(Expression sourceExpression,
                                             String sourceTypeName,
-                                            String targetTypeName) {
+                                            String targetTypeName,
+                                            boolean implicit) {
         Class<?> srcType = DataTypeManager.getDataTypeClass(sourceTypeName);
 
         FunctionLibrary library = FunctionLibraryManager.getFunctionLibrary();
@@ -261,7 +262,9 @@ public class ResolverUtil {
         Function conversion = new Function(fd.getName(), new Expression[] { sourceExpression, new Constant(targetTypeName) });
         conversion.setType(DataTypeManager.getDataTypeClass(targetTypeName));
         conversion.setFunctionDescriptor(fd);
-        conversion.makeImplicit();
+        if (implicit) {
+        	conversion.makeImplicit();
+        }
 
         return conversion;
     }

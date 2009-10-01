@@ -120,8 +120,7 @@ public class TestQueryRewriter {
             actual = QueryRewriter.rewriteCriteria(origCrit, null, null, null);
             assertEquals("Did not rewrite correctly: ", expectedCrit, actual); //$NON-NLS-1$
         } catch(QueryValidatorException e) { 
-            e.printStackTrace();
-            fail("Exception during rewriting (" + e.getClass().getName() + "): " + e.getMessage());     //$NON-NLS-1$ //$NON-NLS-2$
+        	throw new RuntimeException(e);
         }
         return actual;
     }    
@@ -402,7 +401,8 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("PARSEDATE(pm3.g1.e1, 'yyyyMM') = {d'2003-05-01'}", //$NON-NLS-1$
                                 "pm3.g1.e1 = '200305'" );         //$NON-NLS-1$
     }
-    
+
+    @Ignore(value="we're no longer considering parsedate directly")
     @Test public void testRewriteCrit_parseDate2() {
         helpTestRewriteCriteria("PARSEDATE(pm3.g1.e1, 'yyyyMM') = {d'2003-05-02'}", //$NON-NLS-1$
                                 "1 = 0" );         //$NON-NLS-1$
@@ -1526,7 +1526,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteRecursive() {
         Command c = helpTestRewriteCommand("SELECT e2 FROM vm1.g33", "SELECT e2 FROM vm1.g33"); //$NON-NLS-1$ //$NON-NLS-2$
-        Command innerCommand = (Command) c.getSubCommands().get(0);
+        Command innerCommand = c.getSubCommands().get(0);
         
         assertEquals("Inner command not rewritten", "SELECT e2 FROM pm1.g1 WHERE e2 = 2", innerCommand.toString()); //$NON-NLS-1$ //$NON-NLS-2$
         
@@ -2284,6 +2284,24 @@ public class TestQueryRewriter {
     @Test public void testRewriteWideningIn() {
     	String original = "convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})"; //$NON-NLS-1$
     	helpTestRewriteCriteria(original, parseCriteria("convert(BQT1.SmallA.TimestampValue, time) in ({t'10:00:00'}, {t'11:00:00'})", FakeMetadataFactory.exampleBQTCached()), FakeMetadataFactory.exampleBQTCached()); //$NON-NLS-1$ 
+    }
+    
+    @Test public void testRewriteParseDate() {
+    	String original = "parsedate(BQT1.SmallA.stringkey, 'yymmdd') = {d'1970-01-01'}"; //$NON-NLS-1$
+    	FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	helpTestRewriteCriteria(original, parseCriteria("convert(parsetimestamp(BQT1.SmallA.stringkey, 'yymmdd'), date) = {d'1970-01-01'}", metadata), metadata); //$NON-NLS-1$
+    }
+
+    @Test public void testRewriteFormatTime() {
+    	String original = "formattime(BQT1.SmallA.timevalue, 'hh:mm') = '08:02'"; //$NON-NLS-1$
+    	FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	helpTestRewriteCriteria(original, parseCriteria("formattimestamp(convert(BQT1.SmallA.timevalue, timestamp), 'hh:mm') = '08:02'", metadata), metadata); //$NON-NLS-1$
+    }
+    
+    @Test public void testRewriteTimestampAdd() {
+    	String original = "timestampadd(SQL_TSI_SECOND, 1, BQT1.SmallA.timevalue) = {t'08:02:00'}"; //$NON-NLS-1$
+    	FakeMetadataFacade metadata = FakeMetadataFactory.exampleBQTCached();
+    	helpTestRewriteCriteria(original, parseCriteria("convert(timestampadd(SQL_TSI_SECOND, 1, convert(BQT1.SmallA.timevalue, timestamp)), time) = {t'08:02:00'}", metadata), metadata); //$NON-NLS-1$
     }
     
 }

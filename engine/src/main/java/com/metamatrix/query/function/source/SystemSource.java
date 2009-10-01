@@ -160,17 +160,11 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 		addIfNullFunctions();
         
 		// format 
-		addFormatTimeFunction(SourceSystemFunctions.FORMATTIME, QueryPlugin.Util.getString("SystemSource.Formattime_desc"), "format", QueryPlugin.Util.getString("SystemSource.Formattime_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		addFormatDateFunction(SourceSystemFunctions.FORMATDATE, QueryPlugin.Util.getString("SystemSource.Formatdate_desc"), "format", QueryPlugin.Util.getString("SystemSource.Formatdate_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		addFormatTimestampFunction(SourceSystemFunctions.FORMATTIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"), "format", QueryPlugin.Util.getString("SystemSource.Formattimestamp_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-
+		addFormatTimestampFunction();  
 		addFormatNumberFunctions();
 		
 		// parse
-		addParseTimeFunction(SourceSystemFunctions.PARSETIME, QueryPlugin.Util.getString("SystemSource.Parsetime_desc"), "parseTime", QueryPlugin.Util.getString("SystemSource.Parsetime_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		addParseDateFunction(SourceSystemFunctions.PARSEDATE, QueryPlugin.Util.getString("SystemSource.Parsedate_desc"), "parseDate", QueryPlugin.Util.getString("SystemSource.Parsedate_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		addParseTimestampFunction(SourceSystemFunctions.PARSETIMESTAMP, QueryPlugin.Util.getString("SystemSource.Parsetimestamp_desc"), "parseTimestamp", QueryPlugin.Util.getString("SystemSource.Parsetimestamp_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-		
+		addParseTimestampFunction();
 		addParseNumberFunctions();
         
         // xml functions
@@ -396,14 +390,14 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 
 	private void addTimestampAddFunction() {
 		functions.add(
-			new FunctionMethod(SourceSystemFunctions.TIMESTAMPADD, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_desc"), DATETIME, FUNCTION_CLASS, "timestampAdd", //$NON-NLS-1$ //$NON-NLS-2$ 
+			new FunctionMethod(SourceSystemFunctions.TIMESTAMPADD, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_desc"), DATETIME, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$ 
 				new FunctionParameter[] {
 					new FunctionParameter("interval", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("count", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_arg2")),  //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("timestamp", DataTypeManager.DefaultDataTypes.DATE, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_arg3"))}, //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DATE, QueryPlugin.Util.getString("SystemSource.Timestampadd_d_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
 		functions.add(
-			new FunctionMethod(SourceSystemFunctions.TIMESTAMPADD, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_desc"), DATETIME, FUNCTION_CLASS, "timestampAdd", //$NON-NLS-1$ //$NON-NLS-2$ 
+			new FunctionMethod(SourceSystemFunctions.TIMESTAMPADD, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_desc"), DATETIME, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$  
 				new FunctionParameter[] {
 					new FunctionParameter("interval", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("count", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.Timestampadd_t_arg2")),  //$NON-NLS-1$ //$NON-NLS-2$
@@ -419,13 +413,6 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
 	}
 
     private void addTimestampDiffFunction() {
-        functions.add(
-            new FunctionMethod(SourceSystemFunctions.TIMESTAMPDIFF, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_desc"), DATETIME, FUNCTION_CLASS, "timestampDiff", //$NON-NLS-1$ //$NON-NLS-2$ 
-                new FunctionParameter[] {
-                    new FunctionParameter("interval", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_arg1")),  //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("time1", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_arg2")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("time2", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_arg3"))}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.LONG, QueryPlugin.Util.getString("SystemSource.Timestampdiff_t_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         functions.add(
             new FunctionMethod(SourceSystemFunctions.TIMESTAMPDIFF, QueryPlugin.Util.getString("SystemSource.Timestampdiff_ts_desc"), DATETIME, FUNCTION_CLASS, "timestampDiff", //$NON-NLS-1$ //$NON-NLS-2$ 
                 new FunctionParameter[] {
@@ -805,59 +792,47 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
         nvl.setNullDependent(true);
         functions.add(nvl); 
 	}
-	
-	private void addFormatTimeFunction(String functionName, String description, String methodName, String resultDesc) {
+			
+	private void addFormatTimestampFunction() {
 		functions.add(
-			new FunctionMethod(functionName, description,CONVERSION, FUNCTION_CLASS, methodName,
-				new FunctionParameter[] { 
-					new FunctionParameter("time", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Formattime_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-					new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formattime_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, resultDesc) ) );       //$NON-NLS-1$
-	}
-	
-	private void addFormatDateFunction(String functionName, String description, String methodName, String resultDesc) {
-		functions.add(
-			new FunctionMethod(functionName, description,CONVERSION, FUNCTION_CLASS, methodName,
-				new FunctionParameter[] { 
-					new FunctionParameter("date", DataTypeManager.DefaultDataTypes.DATE, QueryPlugin.Util.getString("SystemSource.Formatdate_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-					new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formatdate_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, resultDesc) ) );       //$NON-NLS-1$
-	}
-		
-	private void addFormatTimestampFunction(String functionName, String description, String methodName, String resultDesc) {
-		functions.add(
-			new FunctionMethod(functionName, description,CONVERSION, FUNCTION_CLASS, methodName,
+			new FunctionMethod(SourceSystemFunctions.FORMATTIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_desc"),CONVERSION, FUNCTION_CLASS, "format", //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter[] { 
 					new FunctionParameter("timestamp", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.Formattimestamp_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formattimestamp_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, resultDesc) ) );       //$NON-NLS-1$
-	}
-			
-	private void addParseTimeFunction(String functionName, String description, String methodName, String resultDesc) {
+				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formattimestamp_result_desc")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 		functions.add(
-			new FunctionMethod(functionName, description,CONVERSION, FUNCTION_CLASS, methodName,
-				new FunctionParameter[] { 
-					new FunctionParameter("time", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsetime_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-					new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsetime_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIME, resultDesc) ) );       //$NON-NLS-1$
-	}
-	
-	private void addParseDateFunction(String functionName, String description, String methodName, String resultDesc) {
+				new FunctionMethod(SourceSystemFunctions.FORMATDATE, QueryPlugin.Util.getString("SystemSource.Formatdate_desc"),CONVERSION, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$
+					new FunctionParameter[] { 
+						new FunctionParameter("date", DataTypeManager.DefaultDataTypes.DATE, QueryPlugin.Util.getString("SystemSource.Formatdate_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+						new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formatdate_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+					new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formatdate_result_desc")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 		functions.add(
-			new FunctionMethod(functionName, description,CONVERSION, FUNCTION_CLASS, methodName,
-				new FunctionParameter[] { 
-					new FunctionParameter("date", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsedate_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-					new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsedate_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DATE, resultDesc) ) );       //$NON-NLS-1$
+				new FunctionMethod(SourceSystemFunctions.FORMATTIME, QueryPlugin.Util.getString("SystemSource.Formattime_desc"),CONVERSION, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$
+					new FunctionParameter[] { 
+						new FunctionParameter("time", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Formattime_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+						new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formattime_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+					new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Formattime_result_desc")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 	}
-		
-	private void addParseTimestampFunction(String functionName, String description, String methodName, String resultDesc) {
+					
+	private void addParseTimestampFunction() {
 		functions.add(
-			new FunctionMethod(functionName, description,CONVERSION, FUNCTION_CLASS, methodName,
+			new FunctionMethod(SourceSystemFunctions.PARSETIMESTAMP, QueryPlugin.Util.getString("SystemSource.Parsetimestamp_desc"),CONVERSION, FUNCTION_CLASS, "parseTimestamp", //$NON-NLS-1$ //$NON-NLS-2$
 				new FunctionParameter[] { 
 					new FunctionParameter("timestamp", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsetimestamp_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
 					new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsetimestamp_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
-				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, resultDesc) ) );       //$NON-NLS-1$
+				new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIMESTAMP, QueryPlugin.Util.getString("SystemSource.Parsetimestamp_result_desc")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+		functions.add(
+				new FunctionMethod(SourceSystemFunctions.PARSETIME, QueryPlugin.Util.getString("SystemSource.Parsetime_desc"),CONVERSION, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$
+					new FunctionParameter[] { 
+						new FunctionParameter("time", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsetime_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+						new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsetime_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+					new FunctionParameter("result", DataTypeManager.DefaultDataTypes.TIME, QueryPlugin.Util.getString("SystemSource.Parsetime_result_desc")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
+		functions.add(
+				new FunctionMethod(SourceSystemFunctions.PARSEDATE, QueryPlugin.Util.getString("SystemSource.Parsedate_desc"),CONVERSION, FunctionMethod.SYNTHETIC, null, null, //$NON-NLS-1$
+					new FunctionParameter[] { 
+						new FunctionParameter("date", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsedate_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+						new FunctionParameter("format", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Parsedate_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+					new FunctionParameter("result", DataTypeManager.DefaultDataTypes.DATE, QueryPlugin.Util.getString("SystemSource.Parsedate_result_desc")) ) );       //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	private void addFormatNumberFunction(String functionName, String description, String methodName, String inputParam, String dataType,  String resultDesc) {

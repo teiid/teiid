@@ -22,6 +22,8 @@
 
 package com.metamatrix.query.function;
 
+import static org.junit.Assert.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -32,7 +34,6 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.TimeZone;
 
-import static org.junit.Assert.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -789,45 +790,6 @@ public class TestFunctionLibrary {
                          helpCreateDescriptor("env", new Class[] {T_STRING})); //$NON-NLS-1$
     }
 
-	@Test public void testInvokeFormatTime1() {
-		helpInvokeMethod("formatTime", new Object[] {TimestampUtil.createTime(3,5,12), new String("h:mm a") }, "3:05 AM");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeFormatTime2() {
-		helpInvokeMethod("formatTime", new Object[] {TimestampUtil.createTime(13, 5,12), new String("K:mm a, z") }, "1:05 PM, GMT-06:00");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeFormatTime3() {
-		helpInvokeMethod("formatTime", new Object[] {TimestampUtil.createTime(13, 5,12), new String("HH:mm:ss z") }, "13:05:12 GMT-06:00");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeFormatTime4() {
-		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/Chicago")); //$NON-NLS-1$
-		helpInvokeMethod("formatTime", new Object[] {TimestampUtil.createTime(13, 5,12), new String("hh a, zzzz") }, "01 PM, Central Standard Time");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeFormatTimeFail() {
-		helpInvokeMethodFail("formatTime", new Object[] {TimestampUtil.createTime(13, 5,12), new String("hh i, www") },  //$NON-NLS-1$ //$NON-NLS-2$
-			new FunctionExecutionException("")); //$NON-NLS-1$
-	}
-		
-	@Test public void testInvokeFormatDate1() {
-		helpInvokeMethod("formatDate", new Object[] {TimestampUtil.createDate(103, 2, 5), new String("yyyy.MM.dd G") }, "2003.03.05 AD");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeFormatDate2() {
-		helpInvokeMethod("formatDate", new Object[] {TimestampUtil.createDate(103, 2, 5), new String("EEE, MMM d, '' yy") }, "Wed, Mar 5, ' 03");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeFormatDate3() {
-		helpInvokeMethod("formatDate", new Object[] {new Date(12345678), new String("yyyy.MMMMM.dd GGG hh:mm aaa") }, "1969.December.31 AD 09:25 PM");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeFormatDateFail() {
-		helpInvokeMethodFail("formatTime", new Object[] {TimestampUtil.createTime(103, 2, 5), new String("yyyy.i.www") },  //$NON-NLS-1$ //$NON-NLS-2$
-			new FunctionExecutionException("")); //$NON-NLS-1$
-	}
-	
 	@Test public void testInvokeFormatTimestamp1() {
 		helpInvokeMethod("formatTimestamp", new Object[] {TimestampUtil.createTimestamp(103, 2, 5, 3, 4, 12, 255), new String("mm/dd/yy h:mm a") }, "04/05/03 3:04 AM");	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
@@ -845,22 +807,6 @@ public class TestFunctionLibrary {
 			new FunctionExecutionException("")); //$NON-NLS-1$
 	}
 	
-	@Test public void testInvokeParseTime1() {
-		helpInvokeMethod("parseTime", new Object[] {new String("3:12 PM"), new String("h:mm a") }, TimestampUtil.createTime(15, 12, 0));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeParseTime2() {
-		helpInvokeMethod("parseTime", new Object[] {new String("03:12:23 CST"), new String("hh:mm:ss z") }, TimestampUtil.createTime(3, 12, 23));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-		
-	@Test public void testInvokeParseDate1() {
-		helpInvokeMethod("parseDate", new Object[] {new String("03/05/03"), new String("MM/dd/yy") }, TimestampUtil.createDate(103, 2, 5));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-	
-	@Test public void testInvokeParseDate2() {
-		helpInvokeMethod("parseDate", new Object[] {new String("05-Mar-03"), new String("dd-MMM-yy") }, TimestampUtil.createDate(103, 2, 5));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-	}
-
 	@Test public void testInvokeParseTimestamp1() {
 		helpInvokeMethod("parseTimestamp", new Object[] {new String("05 Mar 2003 03:12:23 CST"), new String("dd MMM yyyy HH:mm:ss z") }, TimestampUtil.createTimestamp(103, 2, 5, 3, 12, 23, 0));	 //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
@@ -1062,75 +1008,63 @@ public class TestFunctionLibrary {
 			new Integer(5), new String("cat")}, new String("Downtocat"));	 //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	/** date + day --> count=28, inteval=day, result should be 2003-6-12 */
-	@Test public void testInvokeTimestampAddDate1() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_DAY,  //$NON-NLS-1$
-			new Integer(28), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(103, 5, 12));	
-	}	
-
     @Test public void testInvokeTimestampAddDate_ignore_case() {
         helpInvokeMethod("timestampAdd", new Object[] {"sql_TSI_day",  //$NON-NLS-1$ //$NON-NLS-2$
-            new Integer(28), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(103, 5, 12));    
+            new Integer(28), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(103, 5, 12).getTime()));    
     }   
     
-	/** date + day --> count=-28, inteval=day, result should be 2003-4-17 */
-	@Test public void testInvokeTimestampAddDate1a() {
-		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_DAY,  //$NON-NLS-1$
-			new Integer(-28), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(103, 3, 17));	
-	}	
-	
 	/** date + month --> count=18, inteval=month, result should be 2004-11-15 */
 	@Test public void testInvokeTimestampAddDate2() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MONTH,  //$NON-NLS-1$
-			new Integer(18), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(104, 10, 15));	
+			new Integer(18), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(104, 10, 15).getTime()));	
 	}
 
 	/** date + month --> count=-18, inteval=month, result should be 2001-11-15 */
 	@Test public void testInvokeTimestampAddDate2a() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MONTH,  //$NON-NLS-1$
-			new Integer(-18), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(101, 10, 15));	
+			new Integer(-18), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(101, 10, 15).getTime()));	
 	}
 	
 	/** date + week --> count=6, inteval=week, result should be 2003-04-03 */
 	@Test public void testInvokeTimestampAddDate3() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_WEEK,  //$NON-NLS-1$
-			new Integer(-6), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(103, 3, 3));	
+			new Integer(-6), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(103, 3, 3).getTime()));	
 	}
 
 	/** date + quarter --> count=3, inteval=quarter, result should be 2004-2-15 */
 	@Test public void testInvokeTimestampAddDate4() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_QUARTER,  //$NON-NLS-1$
-			new Integer(3), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(104, 1, 15));	
+			new Integer(3), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(104, 1, 15).getTime()));	
 	}
 
 	/** date + year --> count=-1, inteval=year, result should be 2002-5-15 */
 	@Test public void testInvokeTimestampAddDate5() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_YEAR,  //$NON-NLS-1$
-			new Integer(-1), TimestampUtil.createDate(103, 4, 15)}, TimestampUtil.createDate(102, 4, 15));	
+			new Integer(-1), new Timestamp(TimestampUtil.createDate(103, 4, 15).getTime())}, new Timestamp(TimestampUtil.createDate(102, 4, 15).getTime()));	
 	}
 			
 	/** time + minute --> count=23, inteval=3, result should be 03:32:12 */
 	@Test public void testInvokeTimestampAddTime1() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_MINUTE,  //$NON-NLS-1$
-			new Integer(23), TimestampUtil.createTime(3, 9, 12)}, TimestampUtil.createTime(3, 32, 12));	
+			new Integer(23), new Timestamp(TimestampUtil.createTime(3, 9, 12).getTime())}, new Timestamp(TimestampUtil.createTime(3, 32, 12).getTime()));	
 	}
 
 	/** time + hour --> count=21, inteval=4, result should be 00:09:12 and overflow */
 	@Test public void testInvokeTimestampAddTime2() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
-			new Integer(21), TimestampUtil.createTime(3, 9, 12)}, TimestampUtil.createTime(0, 9, 12));	
+			new Integer(21), new Timestamp(TimestampUtil.createTime(3, 9, 12).getTime())}, TimestampUtil.createTimestamp(70, 0, 2, 0, 9, 12, 0));	
 	}
 
 	/** time + hour --> count=2, inteval=4, result should be 01:12:12*/
 	@Test public void testInvokeTimestampAddTime3() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
-			new Integer(2), TimestampUtil.createTime(23, 12, 12)}, TimestampUtil.createTime(1, 12, 12));	
+			new Integer(2), new Timestamp(TimestampUtil.createTime(23, 12, 12).getTime())}, TimestampUtil.createTimestamp(70, 0, 2, 1, 12, 12, 0));	
 	}
 	
 	/** time + second --> count=23, inteval=2, result should be 03:10:01 */
 	@Test public void testInvokeTimestampAddTime4() {
 		helpInvokeMethod("timestampAdd", new Object[] {ReservedWords.SQL_TSI_SECOND,  //$NON-NLS-1$
-			new Integer(49), TimestampUtil.createTime(3, 9, 12)}, TimestampUtil.createTime(3, 10, 1));	
+			new Integer(49), new Timestamp(TimestampUtil.createTime(3, 9, 12).getTime())}, new Timestamp(TimestampUtil.createTime(3, 10, 1).getTime()));	
 	}
 
 	/** timestamp + second --> count=23, inteval=2, result should be 2003-05-15 03:09:35.100  */
@@ -1159,13 +1093,13 @@ public class TestFunctionLibrary {
 	/** time --> interval=hour, time1 = 03:04:45, time2= 05:05:36 return = 2  */
 	@Test public void testInvokeTimestampDiffTime1() {
 		helpInvokeMethod("timestampDiff", new Object[] {ReservedWords.SQL_TSI_HOUR,  //$NON-NLS-1$
-			TimestampUtil.createTime(3, 4, 45), TimestampUtil.createTime(5, 5, 36) }, 
+				new Timestamp(TimestampUtil.createTime(3, 4, 45).getTime()), new Timestamp(TimestampUtil.createTime(5, 5, 36).getTime()) }, 
 			new Long(2));	
 	}
 	
     @Test public void testInvokeTimestampDiffTime1_ignorecase() {
         helpInvokeMethod("timestampDiff", new Object[] {"SQL_tsi_HOUR",  //$NON-NLS-1$ //$NON-NLS-2$
-            TimestampUtil.createTime(3, 4, 45), TimestampUtil.createTime(5, 5, 36) }, 
+        		new Timestamp(TimestampUtil.createTime(3, 4, 45).getTime()), new Timestamp(TimestampUtil.createTime(5, 5, 36).getTime()) }, 
             new Long(2));   
     }
     

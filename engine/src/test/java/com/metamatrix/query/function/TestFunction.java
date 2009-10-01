@@ -188,18 +188,6 @@ public class TestFunction {
                      expected2, actual2); 
     }
     
-    public static void helpTestTimestampDiff(String intervalType, Time timeStamp1, Time timeStamp2, Long expected) {
-        Object actual = FunctionMethods.timestampDiff(intervalType, timeStamp1, timeStamp2);
-        assertEquals("timestampDiff(" + intervalType + ", " + timeStamp1 + ", " + timeStamp2 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                     expected, actual); 
-
-        // test reverse - should be 
-        Long expected2 = new Long(0 - expected.longValue());
-        Object actual2 = FunctionMethods.timestampDiff(intervalType, timeStamp2, timeStamp1);
-        assertEquals("timestampDiff(" + intervalType + ", " + timeStamp2 + ", " + timeStamp1 + ") failed", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                     expected2, actual2); 
-    }
-
     public static void helpTestParseTimestamp(String tsStr, String format, String expected) throws FunctionExecutionException {
         Object actual = FunctionMethods.parseTimestamp(tsStr, format);
         assertEquals("parseTimestamp(" + tsStr + ", " + format + ") failed", expected.toString(), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -856,16 +844,8 @@ public class TestFunction {
         helpTestTimestampCreate(TimestampUtil.createDate(103, 11, 1), TimestampUtil.createTime(23, 59, 59), "2003-12-01 23:59:59.0"); //$NON-NLS-1$
     }
 
-    @Test public void testTimestampAdd1() throws Exception {
-        assertEquals(TimestampUtil.createDate(103, 11, 4), FunctionMethods.timestampAdd(ReservedWords.SQL_TSI_DAY, 3, TimestampUtil.createDate(103, 11, 1))); 
-    }
-
     @Test public void testTimestampAdd2() throws Exception {
     	assertEquals(TimestampUtil.createTimestamp(103, 11, 1, 18, 20, 30, 0), FunctionMethods.timestampAdd(ReservedWords.SQL_TSI_HOUR, 3, TimestampUtil.createTimestamp(103, 11, 1, 15, 20, 30, 0)));
-    }
-
-    @Test public void testTimestampAdd3() throws Exception {
-    	assertEquals(TimestampUtil.createTime(11, 50, 30), FunctionMethods.timestampAdd(ReservedWords.SQL_TSI_MINUTE, 90, TimestampUtil.createTime(10, 20, 30)));
     }
 
     @Test public void testTimestampDiffTimeStamp_FracSec_1() throws Exception {
@@ -1034,19 +1014,17 @@ public class TestFunction {
                               new Long(29));
     }
 
-    @Test public void testTimestampDiffTime_Hour_1() throws Exception {
-        helpTestTimestampDiff(ReservedWords.SQL_TSI_HOUR, 
-                              TimestampUtil.createTime(3, 4, 45),
-                              TimestampUtil.createTime(5, 5, 36),
-                              new Long(2));
-    }
+	@Test public void testTimestampDiffTime_Hour_1() throws Exception {
+		helpTestTimestampDiff(ReservedWords.SQL_TSI_HOUR, new Timestamp(
+				TimestampUtil.createTime(3, 4, 45).getTime()), new Timestamp(
+				TimestampUtil.createTime(5, 5, 36).getTime()), new Long(2));
+	}
 
-    @Test public void testTimestampDiffTime_Hour_2() throws Exception {
-        helpTestTimestampDiff(ReservedWords.SQL_TSI_HOUR, 
-                              TimestampUtil.createTime(5, 0, 30),
-                              TimestampUtil.createTime(3, 0, 31),
-                              new Long(-1));
-    }
+	@Test public void testTimestampDiffTime_Hour_2() throws Exception {
+		helpTestTimestampDiff(ReservedWords.SQL_TSI_HOUR, new Timestamp(
+				TimestampUtil.createTime(5, 0, 30).getTime()), new Timestamp(
+				TimestampUtil.createTime(3, 0, 31).getTime()), new Long(-1));
+	}
 
     @Test public void testParseTimestamp1() throws Exception {
         helpTestParseTimestamp("1993-04-24 3:59:59 PM", "yyyy-MM-dd hh:mm:ss aa", "{ts'1993-04-24 15:59:59.0'}"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -1158,16 +1136,16 @@ public class TestFunction {
         assertEquals(systemProperty+"_lowercase", FunctionMethods.env(context, systemProperty.toUpperCase())); //$NON-NLS-1$
     }
     
-    public void testParseIntStrictness() throws Exception {
-    	assertEquals(Integer.valueOf(1), FunctionMethods.parseInteger("a 1 a", "#")); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test(expected=FunctionExecutionException.class) public void testParseIntStrictness() throws Exception {
+    	FunctionMethods.parseInteger("a 1 a", "#"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    public void testParseDateStrictness() throws Exception {
-    	assertEquals(TimestampUtil.createDate(2007, 1, 1), FunctionMethods.parseDate(" 2007-13-01", "yyyy-MM")); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testParseDateStrictness() throws Exception {
+    	assertEquals(TimestampUtil.createTimestamp(108, 0, 1, 0, 0, 0, 0), FunctionMethods.parseTimestamp(" 2007-13-01", "yyyy-MM")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testParseTimeWhitespace() throws Exception {
-    	assertEquals(TimestampUtil.createTime(15, 0, 0), FunctionMethods.parseTime(" 15:00:00 ", "HH:mm:ss")); //$NON-NLS-1$ //$NON-NLS-2$
+    	assertEquals(TimestampUtil.createTime(15, 0, 0), FunctionMethods.parseTimestamp(" 15:00:00 ", "HH:mm:ss")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testMod() {

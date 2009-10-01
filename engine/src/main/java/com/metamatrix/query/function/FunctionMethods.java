@@ -479,23 +479,6 @@ public final class FunctionMethods {
 		return ts;
 	}
 	
-	public static Object timestampAdd(String intervalType, Integer count, java.sql.Date timestamp) {
-		Calendar cal = TimestampWithTimezone.getCalendar();
-		// Note: if dates are different, for example, days are different, the times
-		// are still different even they may have the same hours, minutes and seconds.
-		cal.setTime(timestamp);
-		addField(intervalType, count, cal);
-		return TimestampWithTimezone.createDate(cal.getTime());
-	}
-	
-	public static Object timestampAdd(String intervalType, Integer count, Time timestamp) {
-		Calendar cal = TimestampWithTimezone.getCalendar();
-		cal.setTime(timestamp);
-		addField(intervalType, count, cal);
-	    return TimestampWithTimezone.createTime(cal.getTime());
-	}
-
-
 	/** Helper method for timestampAdd method
 	 * @param interval Integer
 	 * @param count Integer
@@ -527,10 +510,6 @@ public final class FunctionMethods {
 
 	//	================== Function = timestampdiff =====================
 
-    public static Object timestampDiff(String intervalType, Time timestamp1, Time timestamp2) {
-    	return timestampDiff(intervalType, new Timestamp(timestamp1.getTime()), new Timestamp(timestamp2.getTime()));
-    }
-	
 	/**
      * This method truncates (ignores) figures
      * @param interval
@@ -1055,16 +1034,6 @@ public final class FunctionMethods {
 		}
 	}
 	
-	public static Date parseDate(String date, String format)
-		throws FunctionExecutionException {
-        return TimestampWithTimezone.createDate(parseDateHelper(date, format));
-	}
-
-	public static Time parseTime(String time, String format)
-		throws FunctionExecutionException {
-        return TimestampWithTimezone.createTime(parseDateHelper(time, format));
-	}
-
 	public static Timestamp parseTimestamp(String timestamp, String format)
 		throws FunctionExecutionException {
         return new Timestamp(parseDateHelper(timestamp, format).getTime());

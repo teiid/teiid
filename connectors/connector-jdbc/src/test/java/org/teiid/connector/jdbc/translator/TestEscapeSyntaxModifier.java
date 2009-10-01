@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.connector.jdbc.extension.impl;
+package org.teiid.connector.jdbc.translator;
 
 import java.sql.Timestamp;
 import java.util.Arrays;
@@ -57,9 +57,9 @@ public class TestEscapeSyntaxModifier extends TestCase {
     }
     
     public void testTimestampAdd() {
-        ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral(SQLReservedWords.SQL_TSI_HOUR, String.class); //$NON-NLS-1$
-        ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral(Integer.valueOf(1), Integer.class);//$NON-NLS-1$
-        ILiteral arg3 = CommandBuilder.getLanuageFactory().createLiteral(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), Timestamp.class);//$NON-NLS-1$
+        ILiteral arg1 = CommandBuilder.getLanuageFactory().createLiteral(SQLReservedWords.SQL_TSI_HOUR, String.class); 
+        ILiteral arg2 = CommandBuilder.getLanuageFactory().createLiteral(Integer.valueOf(1), Integer.class);
+        ILiteral arg3 = CommandBuilder.getLanuageFactory().createLiteral(TimestampUtil.createTimestamp(0, 0, 0, 0, 0, 0, 0), Timestamp.class);
         IFunction func = CommandBuilder.getLanuageFactory().createFunction("timestampadd", Arrays.asList( arg1, arg2, arg3), Timestamp.class); //$NON-NLS-1$
                 
         helpTest(func, "{fn timestampadd(SQL_TSI_HOUR, 1, {ts'1899-12-31 00:00:00.0'})}");

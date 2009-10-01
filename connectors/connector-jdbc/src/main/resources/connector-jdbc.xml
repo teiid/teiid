@@ -134,6 +134,16 @@
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="sun.jdbc.odbc.JdbcOdbcDriver" IsRequired="true"   />
             <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:odbc:Driver={MicroSoft Excel Driver (*.xls)};DBQ=&lt;filePathToExcelFile&gt;" IsRequired="true"   />
         </ComponentType>
+        <ComponentType Name="H2 1 Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="org.h2.Driver" IsRequired="true"   />
+            <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:h2://&lt;server&gt;:&lt;9092&gt;/&lt;db-name&gt;" IsRequired="true" PropertyType="String"    IsMasked="false"   />
+            <PropertyDefinition Name="ExtensionTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.h2.H2Translator"  PropertyType="String"   IsExpert="true"  IsMasked="false"   />
+        </ComponentType>
+        <ComponentType Name="HSQLDB 1 Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" CreatedBy="ConfigurationStartup">
+            <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="org.hsqldb.jdbcDriver" IsRequired="true"   />
+            <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:hsqldb:hsql://&lt;server&gt;:&lt;1476&gt;" IsRequired="true" PropertyType="String"    IsMasked="false"   />
+            <PropertyDefinition Name="ExtensionTranslationClass" DisplayName="Extension SQL Translation Class" ShortDescription="" DefaultValue="org.teiid.connector.jdbc.h2.H2Translator"  PropertyType="String"   IsExpert="true"  IsMasked="false"   />
+        </ComponentType>
         <!-- 
         <ComponentType Name="Datadirect DB2 8 Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.928-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.928-06:00">
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="com.metamatrix.jdbcx.db2.DB2DataSource" IsRequired="true"   />

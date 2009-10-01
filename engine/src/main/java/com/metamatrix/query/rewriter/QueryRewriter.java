@@ -2014,92 +2014,140 @@ public class QueryRewriter {
 		}
 		return expression;
 	}
-
+   
+    private static Map<String, Integer> FUNCTION_MAP = new HashMap<String, Integer>();
+    
+    static {
+    	FUNCTION_MAP.put(FunctionLibrary.SPACE.toLowerCase(), 0);
+    	FUNCTION_MAP.put(FunctionLibrary.FROM_UNIXTIME.toLowerCase(), 1);
+    	FUNCTION_MAP.put(FunctionLibrary.NULLIF.toLowerCase(), 2);
+    	FUNCTION_MAP.put(FunctionLibrary.COALESCE.toLowerCase(), 3);
+    	FUNCTION_MAP.put(FunctionLibrary.CONCAT2.toLowerCase(), 4);
+    	FUNCTION_MAP.put(FunctionLibrary.TIMESTAMPADD.toLowerCase(), 5);
+    	FUNCTION_MAP.put(FunctionLibrary.PARSEDATE.toLowerCase(), 6);
+    	FUNCTION_MAP.put(FunctionLibrary.PARSETIME.toLowerCase(), 7);
+    	FUNCTION_MAP.put(FunctionLibrary.FORMATDATE.toLowerCase(), 8);
+    	FUNCTION_MAP.put(FunctionLibrary.FORMATTIME.toLowerCase(), 9);
+    }
+    
 	private Expression rewriteFunction(Function function) throws QueryValidatorException {
 		//rewrite alias functions
-		String actualName =ALIASED_FUNCTIONS.get(function.getName().toLowerCase());
+		String functionLowerName = function.getName().toLowerCase();
+		String actualName =ALIASED_FUNCTIONS.get(functionLowerName);
 		if (actualName != null) {
 			function.setName(actualName);
 		}
 		
-		//space(x) => repeat(' ', x)
-		if (function.getName().equalsIgnoreCase(FunctionLibrary.SPACE)) {
-			Function result = new Function(SourceSystemFunctions.REPEAT,
-					new Expression[] {new Constant(" "), function.getArg(0)}); //$NON-NLS-1$
-			//resolve the function
-			FunctionDescriptor descriptor = 
-	        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.REPEAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER});
-			result.setFunctionDescriptor(descriptor);
-			result.setType(DataTypeManager.DefaultDataClasses.STRING);
-			return rewriteFunction(result);
-		}
-		
-		//from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0)) 
-		if (function.getName().equalsIgnoreCase(FunctionLibrary.FROM_UNIXTIME)) {
-			Function result = new Function(FunctionLibrary.TIMESTAMPADD,
-					new Expression[] {new Constant(ReservedWords.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
-			//resolve the function
-			FunctionDescriptor descriptor = 
-	        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
-			result.setFunctionDescriptor(descriptor);
-			result.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
-			return rewriteFunction(result);
-		}
-		
-		//rewrite nullif(a, b) => case when (a = b) then null else a
-		if (function.getName().equalsIgnoreCase(FunctionLibrary.NULLIF)) {
-			List when = Arrays.asList(new Criteria[] {new CompareCriteria(function.getArg(0), CompareCriteria.EQ, function.getArg(1))});
-			Constant nullConstant = new Constant(null, function.getType());
-			List then = Arrays.asList(new Expression[] {nullConstant});
-			SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
-			caseExpr.setElseExpression(function.getArg(0));
-			caseExpr.setType(function.getType());
-			return rewriteExpressionDirect(caseExpr);
-		}
-		
-		if (function.getName().equalsIgnoreCase(FunctionLibrary.COALESCE)) {
-			Expression[] args = function.getArgs();
-			if (args.length == 2) {
-				Function result = new Function(SourceSystemFunctions.IFNULL,
-						new Expression[] {function.getArg(0), function.getArg(1) });
+		Integer code = FUNCTION_MAP.get(functionLowerName);
+		if (code != null) {
+			switch (code) {
+			case 0: { //space(x) => repeat(' ', x)
+				Function result = new Function(SourceSystemFunctions.REPEAT,
+						new Expression[] {new Constant(" "), function.getArg(0)}); //$NON-NLS-1$
 				//resolve the function
 				FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { function.getType(), function.getType()  });
+		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.REPEAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER});
 				result.setFunctionDescriptor(descriptor);
-				result.setType(function.getType());
-				return rewriteFunction(result);
+				result.setType(DataTypeManager.DefaultDataClasses.STRING);
+				function = result;
+				break;
 			}
-		}
-		
-		//rewrite concat2 - CONCAT2(a, b) ==> CASE WHEN (a is NULL AND b is NULL) THEN NULL ELSE CONCAT( NVL(a, ''), NVL(b, '') )
-		if (function.getName().equalsIgnoreCase(FunctionLibrary.CONCAT2)) {
-			Expression[] args = function.getArgs();
-			Function[] newArgs = new Function[args.length];
+			case 1: {//from_unixtime(a) => timestampadd(SQL_TSI_SECOND, a, new Timestamp(0)) 
+				Function result = new Function(FunctionLibrary.TIMESTAMPADD,
+						new Expression[] {new Constant(ReservedWords.SQL_TSI_SECOND), function.getArg(0), new Constant(new Timestamp(0)) });
+				//resolve the function
+				FunctionDescriptor descriptor = 
+		        	FunctionLibraryManager.getFunctionLibrary().findFunction(FunctionLibrary.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
+				result.setFunctionDescriptor(descriptor);
+				result.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
+				function = result;
+				break;
+			}
+			case 2: {  //rewrite nullif(a, b) => case when (a = b) then null else a
+				List when = Arrays.asList(new Criteria[] {new CompareCriteria(function.getArg(0), CompareCriteria.EQ, function.getArg(1))});
+				Constant nullConstant = new Constant(null, function.getType());
+				List then = Arrays.asList(new Expression[] {nullConstant});
+				SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
+				caseExpr.setElseExpression(function.getArg(0));
+				caseExpr.setType(function.getType());
+				return rewriteExpressionDirect(caseExpr);
+			}
+			case 3: {
+				Expression[] args = function.getArgs();
+				if (args.length == 2) {
+					Function result = new Function(SourceSystemFunctions.IFNULL,
+							new Expression[] {function.getArg(0), function.getArg(1) });
+					//resolve the function
+					FunctionDescriptor descriptor = 
+			        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { function.getType(), function.getType()  });
+					result.setFunctionDescriptor(descriptor);
+					result.setType(function.getType());
+					function = result;
+				}
+				break;
+			}
+			case 4: { //rewrite concat2 - CONCAT2(a, b) ==> CASE WHEN (a is NULL AND b is NULL) THEN NULL ELSE CONCAT( NVL(a, ''), NVL(b, '') )
+				Expression[] args = function.getArgs();
+				Function[] newArgs = new Function[args.length];
 
-			for(int i=0; i<args.length; i++) {
-				newArgs[i] = new Function(SourceSystemFunctions.IFNULL, new Expression[] {args[i], new Constant("")}); //$NON-NLS-1$
-				newArgs[i].setType(args[i].getType());
-				Assertion.assertTrue(args[i].getType() == DataTypeManager.DefaultDataClasses.STRING);
-		        FunctionDescriptor descriptor = 
-		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { args[i].getType(), DataTypeManager.DefaultDataClasses.STRING });
-		        newArgs[i].setFunctionDescriptor(descriptor);
+				for(int i=0; i<args.length; i++) {
+					newArgs[i] = new Function(SourceSystemFunctions.IFNULL, new Expression[] {args[i], new Constant("")}); //$NON-NLS-1$
+					newArgs[i].setType(args[i].getType());
+					Assertion.assertTrue(args[i].getType() == DataTypeManager.DefaultDataClasses.STRING);
+			        FunctionDescriptor descriptor = 
+			        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { args[i].getType(), DataTypeManager.DefaultDataClasses.STRING });
+			        newArgs[i].setFunctionDescriptor(descriptor);
+				}
+				
+				Function concat = new Function(SourceSystemFunctions.CONCAT, newArgs);
+				concat.setType(DataTypeManager.DefaultDataClasses.STRING);
+				FunctionDescriptor descriptor = 
+		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.CONCAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
+				concat.setFunctionDescriptor(descriptor);
+				
+				List when = Arrays.asList(new Criteria[] {new CompoundCriteria(CompoundCriteria.AND, new IsNullCriteria(args[0]), new IsNullCriteria(args[1]))});
+				Constant nullConstant = new Constant(null, DataTypeManager.DefaultDataClasses.STRING);
+				List then = Arrays.asList(new Expression[] {nullConstant});
+				SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
+				caseExpr.setElseExpression(concat);
+				caseExpr.setType(DataTypeManager.DefaultDataClasses.STRING);
+				return rewriteExpressionDirect(caseExpr);
 			}
-			
-			Function concat = new Function(SourceSystemFunctions.CONCAT, newArgs);
-			concat.setType(DataTypeManager.DefaultDataClasses.STRING);
-			FunctionDescriptor descriptor = 
-	        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.CONCAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
-			concat.setFunctionDescriptor(descriptor);
-			
-			List when = Arrays.asList(new Criteria[] {new CompoundCriteria(CompoundCriteria.AND, new IsNullCriteria(args[0]), new IsNullCriteria(args[1]))});
-			Constant nullConstant = new Constant(null, DataTypeManager.DefaultDataClasses.STRING);
-			List then = Arrays.asList(new Expression[] {nullConstant});
-			SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
-			caseExpr.setElseExpression(concat);
-			caseExpr.setType(DataTypeManager.DefaultDataClasses.STRING);
-			return rewriteExpressionDirect(caseExpr);
+			case 5: {
+				if (function.getType() != DataTypeManager.DefaultDataClasses.TIMESTAMP) {
+					FunctionDescriptor descriptor = 
+			        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.TIMESTAMPADD, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.INTEGER, DataTypeManager.DefaultDataClasses.TIMESTAMP });
+					function.setFunctionDescriptor(descriptor);
+					Class<?> type = function.getType();
+					function.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
+					function.getArgs()[2] = ResolverUtil.getConversion(function.getArg(2), DataTypeManager.getDataTypeName(type), DataTypeManager.DefaultDataTypes.TIMESTAMP, false);
+					function = ResolverUtil.getConversion(function, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.getDataTypeName(type), false);
+				}
+				break;
+			}
+			case 6:
+			case 7: {
+				FunctionDescriptor descriptor = 
+		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.PARSETIMESTAMP, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
+				function.setName(SourceSystemFunctions.PARSETIMESTAMP);
+				function.setFunctionDescriptor(descriptor);
+				Class<?> type = function.getType();
+				function.setType(DataTypeManager.DefaultDataClasses.TIMESTAMP);
+				function = ResolverUtil.getConversion(function, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.getDataTypeName(type), false);
+				break;
+			}
+			case 8:
+			case 9: {
+				FunctionDescriptor descriptor = 
+		        	FunctionLibraryManager.getFunctionLibrary().findFunction(SourceSystemFunctions.FORMATTIMESTAMP, new Class[] { DataTypeManager.DefaultDataClasses.TIMESTAMP, DataTypeManager.DefaultDataClasses.STRING });
+				function.setName(SourceSystemFunctions.FORMATTIMESTAMP);
+				function.setFunctionDescriptor(descriptor);
+				function.getArgs()[0] = ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), DataTypeManager.DefaultDataTypes.TIMESTAMP, false);
+				break;
+			}
+			}
 		}
-		
+						
 		Expression[] args = function.getArgs();
 		Expression[] newArgs = new Expression[args.length];
 		        

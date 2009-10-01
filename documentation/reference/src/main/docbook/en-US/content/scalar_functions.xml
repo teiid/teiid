@@ -1343,8 +1343,7 @@
                 (endTime &gt; startTime), a positive number will be returned. If (endTime &lt; startTime), a negative number will be returned. Calculations are approximate and may be less accurate over longer time spans.</para>
             </entry>
             <entry>
-              <para>Interval in {string}; startTime, endTime in {date,
-                time, timestamp}, returns a long.</para>
+              <para>Interval in {string}; startTime, endTime in {timestamp}, returns a long.</para>
             </entry>
           </row>
           <row>

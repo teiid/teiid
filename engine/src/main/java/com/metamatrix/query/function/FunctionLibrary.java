@@ -82,6 +82,11 @@ public class FunctionLibrary {
     public static final String FROM_UNIXTIME = "from_unixtime"; //$NON-NLS-1$
     public static final String TIMESTAMPADD = "timestampadd"; //$NON-NLS-1$
     
+    public static final String PARSETIME = "parsetime"; //$NON-NLS-1$
+    public static final String PARSEDATE = "parsedate"; //$NON-NLS-1$
+    public static final String FORMATTIME = "formattime"; //$NON-NLS-1$
+    public static final String FORMATDATE = "formatdate"; //$NON-NLS-1$
+    
     public static final String NULLIF = "nullif"; //$NON-NLS-1$
     public static final String COALESCE = "coalesce"; //$NON-NLS-1$
 
