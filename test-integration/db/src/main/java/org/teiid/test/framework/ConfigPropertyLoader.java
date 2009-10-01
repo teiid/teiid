@@ -10,6 +10,11 @@ import com.metamatrix.common.util.PropertiesUtils;
 
 /**
  * The ConfigProperteryLoader will load the configuration properties to be used by a test.
+ * These properties only live for the duration of one test.
+ * 
+ * NOTE: System properties set by the VM will be considered long living.   This is so the 
+ * 		-Dusedatasources option can be maintained for the duration of a set of tests. 
+ * 
  * 
  * @author vanhalbert
  *
@@ -20,7 +25,7 @@ public class ConfigPropertyLoader {
 	 * The default config file to use when #CONFIG_FILE system property isn't
 	 * set
 	 */
-	protected static final String DEFAULT_CONFIG_FILE_NAME = "default-config.properties";
+	public static final String DEFAULT_CONFIG_FILE_NAME = "default-config.properties";
 
 	private Properties props = null;
 
@@ -46,15 +51,6 @@ public class ConfigPropertyLoader {
 		}
 
 		loadProperties(filename);
-		
-		
-		Properties p = System.getProperties();
-		p.remove(ConfigPropertyNames.CONFIG_FILE);
-		p.remove(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP);
-		p.remove(ConfigPropertyNames.USE_DATASOURCES_PROP);
-		p.remove(ConfigPropertyNames.CONNECTION_TYPE);
-		p.remove(ConfigPropertyNames.TRANSACTION_TYPE);
-		
 		
 	}
 

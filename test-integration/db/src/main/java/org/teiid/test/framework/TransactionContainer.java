@@ -6,11 +6,15 @@ package org.teiid.test.framework;
 
 import java.util.Properties;
 
+import net.sf.saxon.functions.Substring;
+
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionStrategyFactory;
 import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
+
+import com.metamatrix.core.util.StringUtil;
 
 
 public abstract class TransactionContainer {
@@ -21,6 +25,8 @@ public abstract class TransactionContainer {
 		protected Properties props;
 		protected ConnectionStrategy connStrategy;
 		protected DataSourceFactory dsfactory;
+		
+		protected String testClassName = null;
 	    
 	    protected TransactionContainer(ConfigPropertyLoader propertyconfig){        
 	    	this.config = propertyconfig;
@@ -46,7 +52,8 @@ public abstract class TransactionContainer {
 	        
 	    public void runTransaction(TransactionQueryTest test) {
 	    	
-	    			    		
+	    	this.testClassName =StringUtil.getLastToken(test.getClass().getName(), ".");
+ 		
 	        try {		 
 	        	
 	        	runIt(test);
@@ -72,6 +79,7 @@ public abstract class TransactionContainer {
 	    }
 	    
 	    private void runIt(TransactionQueryTest test)  {
+	    	
 	    	detail("Start transaction test: " + test.getTestName());
  
 	        try {  
@@ -136,13 +144,13 @@ public abstract class TransactionContainer {
 	    
 	    protected void debug(String message) {
 	    	if (debug) {
-	    		System.out.println("[" + this.getClass().getSimpleName() + "] " + message);
+	    		System.out.println("[" + this.testClassName + "] " + message);
 	    	}
 	    	
 	    }
 	    
 	    protected void detail(String message) {
-	    	System.out.println("[" + this.getClass().getSimpleName() + "] " + message);
+	    	System.out.println("[" + this.testClassName + "] " + message);
 	    }
 	    
 
