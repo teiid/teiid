@@ -99,6 +99,7 @@
 		                <additionalClasspathElement>${basedir}/lib/classes12_g.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/sqljdbc4.jar</additionalClasspathElement>
 		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
+		                <additionalClasspathElement>${basedir}/lib/jbedsp-datadirect.jar</additionalClasspathElement>
 
 		          </additionalClasspathElements>
 		          <systemProperties>
@@ -123,7 +124,7 @@
 						<exclude>**/*Abstract*TestCase.java</exclude>
 						<exclude>**/*Abstract*Test.java</exclude>
 			<!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
-						<include>**/Test*$*.java</include>
+						<exclude>**/Test*$*.java</exclude>
 					</excludes>
 
 				</configuration>
@@ -132,6 +133,64 @@
 			</plugins>
 	      </build>
 	    </profile>
+
+	    <profile>
+	      <id>singleclass</id>
+   			<activation>
+      			<property>
+       		 		<name>classname</name>
+      			</property>
+    		</activation>  
+	      <build>
+			<plugins>
+	  <!-- Specify the compiler options and settings -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+					<showDeprecation>false</showDeprecation>
+					<showWarnings>false</showWarnings>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+		          <additionalClasspathElements>
+		                <additionalClasspathElement>${basedir}/lib/classes12_g.jar</additionalClasspathElement>
+		                <additionalClasspathElement>${basedir}/lib/sqljdbc4.jar</additionalClasspathElement>
+		                <additionalClasspathElement>${basedir}/lib/db2jcc4.jar</additionalClasspathElement>
+		                <additionalClasspathElement>${basedir}/lib/jbedsp-datadirect.jar</additionalClasspathElement>
+		          </additionalClasspathElements>
+		          <systemProperties>
+		            <property>
+		              <name>usedatasources</name>
+		              <value>${usedatasources}</value>
+		            </property>
+		          </systemProperties>
+
+
+					<forkMode>always</forkMode>
+<!--
+					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+	-->				
+					<includes>
+						<include>**/${classname}.java</include>
+					</includes>
+					<excludes>
+						<exclude>**/*Abstract*TestCase.java</exclude>
+						<exclude>**/*Abstract*Test.java</exclude>
+			<!-- hack to prevent anonymous inner classes in Tests from being run as tests -->
+						<exclude>**/Test*$*.java</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+
+			</plugins>
+	      </build>
+	    </profile>
+
 
 	    <profile>
 	      <id>setupdatasources</id>
