@@ -84,16 +84,12 @@ public class H2Capabilities extends JDBCCapabilities {
         supportedFunctions.add(SourceSystemFunctions.DAYOFWEEK);
         supportedFunctions.add(SourceSystemFunctions.DAYOFYEAR);
         
-        supportedFunctions.add(SourceSystemFunctions.FORMATDATE); 
-        supportedFunctions.add(SourceSystemFunctions.FORMATTIME); 
         supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
         supportedFunctions.add(SourceSystemFunctions.HOUR);
         supportedFunctions.add(SourceSystemFunctions.MINUTE);
         supportedFunctions.add(SourceSystemFunctions.MONTH);
         supportedFunctions.add(SourceSystemFunctions.MONTHNAME);
         
-        supportedFunctions.add(SourceSystemFunctions.PARSEDATE); 
-        supportedFunctions.add(SourceSystemFunctions.PARSETIME); 
         supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add(SourceSystemFunctions.QUARTER);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
