@@ -27,6 +27,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +58,9 @@ public class LocalServerConnection implements ServerConnection {
 	private ClassLoader classLoader;
 	ClientServiceRegistry clientServices;
 	SessionServiceInterface sessionService;
+	private Timer pingTimer;
+	private ILogon logon;
+	
 	
 
 	public LocalServerConnection(Properties connectionProperties, ClientServiceRegistry clientServices, SessionServiceInterface sessionService) throws CommunicationException, ConnectionException{
@@ -71,11 +76,37 @@ public class LocalServerConnection implements ServerConnection {
 		this.classLoader = Thread.currentThread().getContextClassLoader();
 		
 		this.sessionService = sessionService;
+
+		this.logon = this.getService(ILogon.class);
+		this.pingTimer = new Timer("LocalPing", true); //$NON-NLS-1$
+		
+		schedulePing();
 	}
+	
+	private void schedulePing() {
+		if (this.pingTimer != null) {
+        	this.pingTimer.schedule(new TimerTask() {
+    			@Override
+    			public void run() {
+    				try {
+    					if (isOpen()) {
+    						logon.ping();
+    						return;
+    					} 
+    				} catch (InvalidSessionException e) {
+    					shutdown(false);
+    				} catch (MetaMatrixComponentException e) {
+    					shutdown();
+    				} 
+    				this.cancel();
+    			}
+        	}, PING_INTERVAL, PING_INTERVAL);
+        }
+	}	
 
 	public synchronized LogonResult authenticate(Properties connProps) throws ConnectionException, CommunicationException {
         try {
-        	LogonResult logonResult = getService(ILogon.class).logon(connProps);
+        	LogonResult logonResult = this.logon.logon(connProps);
         	return logonResult;
         } catch (LogonException e) {
             // Propagate the original message as it contains the message we want
@@ -126,26 +157,31 @@ public class LocalServerConnection implements ServerConnection {
 	}
 
 	public void shutdown() {
+		shutdown(true);
+	}
+	
+	private void shutdown(boolean logoff) {
 		if (shutdown) {
 			return;
 		}
 		
-		try {
-			//make a best effort to send the logoff
-			Future<?> writeFuture = getService(ILogon.class).logoff();
-			if (writeFuture != null) {
-				writeFuture.get(5000, TimeUnit.MILLISECONDS);
+		if (logoff) {
+			try {
+				//make a best effort to send the logoff
+				Future<?> writeFuture = this.logon.logoff();
+				if (writeFuture != null) {
+					writeFuture.get(5000, TimeUnit.MILLISECONDS);
+				}
+			} catch (InvalidSessionException e) {
+				//ignore
+			} catch (InterruptedException e) {
+				//ignore
+			} catch (ExecutionException e) {
+				//ignore
+			} catch (TimeoutException e) {
+				//ignore
 			}
-		} catch (InvalidSessionException e) {
-			//ignore
-		} catch (InterruptedException e) {
-			//ignore
-		} catch (ExecutionException e) {
-			//ignore
-		} catch (TimeoutException e) {
-			//ignore
 		}
-		
 		this.shutdown = true;
 	}
 
