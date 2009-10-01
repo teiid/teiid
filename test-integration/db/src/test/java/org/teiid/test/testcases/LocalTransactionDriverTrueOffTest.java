@@ -4,6 +4,7 @@
  */
 package org.teiid.test.testcases;
 
+import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.ConfigPropertyNames;
 import org.teiid.test.framework.ConfigPropertyNames.CONNECTION_STRATEGY_PROPS;
 
@@ -30,7 +31,8 @@ public class LocalTransactionDriverTrueOffTest extends TwoSourceTransactionScena
 		this.addProperty(ConfigPropertyNames.CONNECTION_TYPE, ConfigPropertyNames.CONNECTION_TYPES.DRIVER_CONNECTION);
 		this.addProperty(CONNECTION_STRATEGY_PROPS.AUTOCOMMIT, "true");
 		this.addProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, "off");
-    	
+		this.addProperty(ConfigPropertyNames.CONFIG_FILE, ConfigPropertyLoader.DEFAULT_CONFIG_FILE_NAME);
+   	
 		
 	}      
       
