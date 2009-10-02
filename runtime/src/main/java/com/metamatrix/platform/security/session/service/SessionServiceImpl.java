@@ -345,4 +345,12 @@ public class SessionServiceImpl implements SessionServiceInterface {
 		this.sessionListener = listener;
 	}
 
+	@Override
+	public void setLocalSession(MetaMatrixSessionID sessionID) {
+		MetaMatrixSessionInfo info = this.sessionCache.get(sessionID);
+		if (info != null) {
+			info.setLastPingTime(Long.MAX_VALUE);
+		}
+	}
+
 }

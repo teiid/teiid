@@ -156,4 +156,6 @@ public interface SessionServiceInterface extends ApplicationService {
      */
     public void register(SessionListener listener);
     
+    public void setLocalSession(MetaMatrixSessionID sessionID);
+    
 }

@@ -27,8 +27,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -56,57 +54,25 @@ public class LocalServerConnection implements ServerConnection {
 	private boolean shutdown;
 	private DQPWorkContext workContext;
 	private ClassLoader classLoader;
-	ClientServiceRegistry clientServices;
-	SessionServiceInterface sessionService;
-	private Timer pingTimer;
+	private ClientServiceRegistry clientServices;
+	private SessionServiceInterface sessionService;
 	private ILogon logon;
-	
-	
 
 	public LocalServerConnection(Properties connectionProperties, ClientServiceRegistry clientServices, SessionServiceInterface sessionService) throws CommunicationException, ConnectionException{
-	
 		this.clientServices = clientServices;		
-		
+		this.sessionService = sessionService;
 		//Initialize the workContext
 		workContext = new DQPWorkContext();
 		DQPWorkContext.setWorkContext(workContext);
-		
-		this.result = authenticate(connectionProperties);
-		
 		this.classLoader = Thread.currentThread().getContextClassLoader();
-		
-		this.sessionService = sessionService;
-
 		this.logon = this.getService(ILogon.class);
-		this.pingTimer = new Timer("LocalPing", true); //$NON-NLS-1$
-		
-		schedulePing();
+		this.result = authenticate(connectionProperties);
 	}
 	
-	private void schedulePing() {
-		if (this.pingTimer != null) {
-        	this.pingTimer.schedule(new TimerTask() {
-    			@Override
-    			public void run() {
-    				try {
-    					if (isOpen()) {
-    						logon.ping();
-    						return;
-    					} 
-    				} catch (InvalidSessionException e) {
-    					shutdown(false);
-    				} catch (MetaMatrixComponentException e) {
-    					shutdown();
-    				} 
-    				this.cancel();
-    			}
-        	}, PING_INTERVAL, PING_INTERVAL);
-        }
-	}	
-
 	public synchronized LogonResult authenticate(Properties connProps) throws ConnectionException, CommunicationException {
         try {
         	LogonResult logonResult = this.logon.logon(connProps);
+        	this.sessionService.setLocalSession(logonResult.getSessionID());
         	return logonResult;
         } catch (LogonException e) {
             // Propagate the original message as it contains the message we want
