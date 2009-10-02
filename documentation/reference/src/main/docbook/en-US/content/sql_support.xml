@@ -699,7 +699,7 @@ SELECT a,b,c FROM Src3, temp WHERE Src3.a = temp.b;
           MAKEDEP and MAKENOTDEP are hints used to control
           <link linkend="dependent_join">dependent join</link>
           behavior. They should only be used in situations where the optimizer
-          does not chose the most optimal plan based upon query structure,
+          does not choose the most optimal plan based upon query structure,
           metadata, and costing information.
         </para>
       </note>

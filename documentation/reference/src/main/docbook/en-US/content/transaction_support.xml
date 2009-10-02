@@ -84,7 +84,7 @@
 						</entry>
 					</row>
 					<row>
-						<entry>PESSIMITIC</entry>
+						<entry>PESSIMISTIC</entry>
 						<entry>
 							Will automatically wrap commands in a transaction, but only if
 							the command seems to be

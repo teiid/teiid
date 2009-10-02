@@ -315,7 +315,7 @@ END</programlisting>
       </example>
     </sect2>
     <sect2>
-      <title>Examle Virtual Procedures</title>
+      <title>Example Virtual Procedures</title>
       <para>This example is a LOOP that walks through a cursored table and uses CONTINUE and BREAK.</para>
       <example>
         <title>Virtual Procedure Using LOOP, CONTINUE, BREAK
