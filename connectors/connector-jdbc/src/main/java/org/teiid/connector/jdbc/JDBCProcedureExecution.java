@@ -24,9 +24,7 @@ package org.teiid.connector.jdbc;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
-import java.sql.ParameterMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -37,7 +35,6 @@ import org.teiid.connector.api.ConnectorLogger;
 import org.teiid.connector.api.DataNotAvailableException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ProcedureExecution;
-import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
 import org.teiid.connector.language.ICommand;
@@ -50,8 +47,6 @@ import org.teiid.connector.metadata.runtime.RuntimeMetadata;
  */
 public class JDBCProcedureExecution extends JDBCQueryExecution implements ProcedureExecution {
 
-	private ParameterMetaData parameterMetaData;
-	
     /**
      * @param connection
      * @param sqlTranslator
@@ -82,11 +77,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         try{
             //create parameter index map
             CallableStatement cstmt = getCallableStatement(sql);
-            this.parameterMetaData = cstmt.getParameterMetaData();
             this.results = sqlTranslator.executeStoredProcedure(cstmt, translatedComm);
-            if (results != null) {
-            	initResultSetInfo();
-            }
             addStatementWarnings();
         }catch(SQLException e){
             throw new ConnectorException(e, JDBCPlugin.Util.getString("JDBCQueryExecution.Error_executing_query__1", sql)); //$NON-NLS-1$
@@ -135,12 +126,6 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
 	private void addParameterValue(List<Object> result, int paramIndex,
 			IParameter parameter) throws SQLException {
 		Object value = sqlTranslator.retrieveValue((CallableStatement)this.statement, paramIndex, parameter.getType());
-		if (value != null
-				&& TypeFacility.RUNTIME_TYPES.STRING.equals(value.getClass())
-				&& (trimString || (parameterMetaData != null && parameterMetaData
-						.getParameterType(paramIndex) == Types.CHAR))) {
-			value = trimString((String)value);
-		}
 		result.add(value);
 	}
     

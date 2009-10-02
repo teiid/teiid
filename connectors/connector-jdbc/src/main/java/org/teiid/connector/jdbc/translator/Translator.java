@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -44,11 +45,14 @@ import org.teiid.connector.api.ConnectorCapabilities;
 import org.teiid.connector.api.ConnectorEnvironment;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
+import org.teiid.connector.api.SourceSystemFunctions;
 import org.teiid.connector.api.TypeFacility;
 import org.teiid.connector.jdbc.JDBCCapabilities;
 import org.teiid.connector.jdbc.JDBCPlugin;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
 import org.teiid.connector.language.ICommand;
+import org.teiid.connector.language.IElement;
+import org.teiid.connector.language.IExpression;
 import org.teiid.connector.language.IFunction;
 import org.teiid.connector.language.ILanguageFactory;
 import org.teiid.connector.language.ILanguageObject;
@@ -59,6 +63,7 @@ import org.teiid.connector.language.ISetQuery;
 import org.teiid.connector.language.IParameter.Direction;
 
 import com.metamatrix.common.util.PropertiesUtils;
+import com.metamatrix.core.MetaMatrixRuntimeException;
 import com.metamatrix.core.util.ReflectionHelper;
 
 /**
@@ -135,6 +140,7 @@ public class Translator {
     private volatile boolean initialConnection;
     private String connectionTestQuery;
     private int isValidTimeout = -1;
+    private boolean trimChar;
     
     /**
      * Initialize the SQLTranslator.
@@ -157,7 +163,8 @@ public class Translator {
         this.useComments = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.USE_COMMENTS_SOURCE_QUERY, false);
         this.usePreparedStatements = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.USE_BIND_VARIABLES, false);
     	this.connectionTestQuery = env.getProperties().getProperty(JDBCPropertyNames.CONNECTION_TEST_QUERY, getDefaultConnectionTestQuery());
-    	this.isValidTimeout = PropertiesUtils.getIntProperty(env.getProperties(), JDBCPropertyNames.IS_VALID_TIMEOUT, -1);    		
+    	this.isValidTimeout = PropertiesUtils.getIntProperty(env.getProperties(), JDBCPropertyNames.IS_VALID_TIMEOUT, -1);   
+    	this.trimChar = PropertiesUtils.getBooleanProperty(env.getProperties(), JDBCPropertyNames.TRIM_STRINGS, false);
     }
     
     /**
@@ -206,6 +213,16 @@ public class Translator {
     		parts = translateCommand((ICommand)obj, context);
     	} else if (obj instanceof ILimit) {
     		parts = translateLimit((ILimit)obj, context);
+    	} else if (obj instanceof IElement) {
+    		IElement elem = (IElement)obj;
+    		try {
+    			if (trimChar && elem.getType() == TypeFacility.RUNTIME_TYPES.STRING 
+    					&& ("char".equalsIgnoreCase(elem.getMetadataObject().getNativeType()) || "nchar".equalsIgnoreCase(elem.getMetadataObject().getNativeType()))) { //$NON-NLS-1$ //$NON-NLS-2$
+    				return Arrays.asList(getLanguageFactory().createFunction(SourceSystemFunctions.RTRIM, new IExpression[] {elem}, TypeFacility.RUNTIME_TYPES.STRING));
+    			}
+    		} catch (ConnectorException e) {
+    			throw new MetaMatrixRuntimeException(e);
+    		}
     	}
     	return parts;
     }
@@ -814,7 +831,12 @@ public class Translator {
     	return NullOrder.LOW;
     }
     
+    /**
+     * 
+     * @return true if nulls high|low can be specified
+     */
     public boolean supportsExplicitNullOrdering() {
     	return false;
     }
+    
 }

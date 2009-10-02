@@ -29,39 +29,20 @@ import junit.framework.TestCase;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.jdbc.JDBCPropertyNames;
+import org.teiid.connector.jdbc.MetadataFactory;
 import org.teiid.connector.jdbc.translator.SQLConversionVisitor;
-import org.teiid.connector.jdbc.translator.TranslatedCommand;
 import org.teiid.connector.jdbc.translator.Translator;
-import org.teiid.connector.language.ICommand;
 import org.teiid.connector.language.ILanguageObject;
 import org.teiid.connector.metadata.runtime.RuntimeMetadata;
 import org.teiid.dqp.internal.datamgr.impl.ExecutionContextImpl;
-import org.teiid.dqp.internal.datamgr.impl.FakeExecutionContextImpl;
-import org.teiid.dqp.internal.datamgr.language.LanguageBridgeFactory;
 import org.teiid.dqp.internal.datamgr.language.TestDeleteImpl;
 import org.teiid.dqp.internal.datamgr.language.TestInsertImpl;
 import org.teiid.dqp.internal.datamgr.language.TestProcedureImpl;
 import org.teiid.dqp.internal.datamgr.language.TestSelectImpl;
 import org.teiid.dqp.internal.datamgr.language.TestUpdateImpl;
 import org.teiid.dqp.internal.datamgr.language.TstLanguageBridgeFactory;
-import org.teiid.metadata.index.VDBMetadataFactory;
 
 import com.metamatrix.cdk.api.EnvironmentUtility;
-import com.metamatrix.cdk.api.TranslationUtility;
-import com.metamatrix.core.util.UnitTestUtil;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
-import com.metamatrix.query.resolver.QueryResolver;
-import com.metamatrix.query.rewriter.QueryRewriter;
-import com.metamatrix.query.sql.lang.Command;
-import com.metamatrix.query.sql.lang.From;
-import com.metamatrix.query.sql.lang.GroupBy;
-import com.metamatrix.query.sql.lang.Query;
-import com.metamatrix.query.sql.lang.Select;
-import com.metamatrix.query.sql.symbol.Constant;
-import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.sql.symbol.Expression;
-import com.metamatrix.query.sql.symbol.Function;
-import com.metamatrix.query.sql.symbol.GroupSymbol;
 
 /**
  */
@@ -84,28 +65,23 @@ public class TestSQLConversionVisitor extends TestCase {
     }
 
     public String getTestVDB() {
-        return UnitTestUtil.getTestDataPath() + "/partssupplier/PartsSupplier.vdb"; //$NON-NLS-1$
+        return MetadataFactory.PARTS_VDB;
     }
     
-    public ICommand helpTranslate(String vdbFileName, String sql) {
-        TranslationUtility util = new TranslationUtility(vdbFileName);
-        return util.parseCommand(sql);
-    }
-
     public void helpTestVisitor(String vdb, String input, String expectedOutput) {
         helpTestVisitor(vdb, input, expectedOutput, false);
     }
     
-    public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean useMetadata) {
-        helpTestVisitor(vdb, input, expectedOutput, useMetadata, false);
-    }
-    
-    public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean useMetadata, boolean usePreparedStatement) {
-        // Convert from sql to objects
-        ICommand obj = helpTranslate(vdb, input);
-
+    public void helpTestVisitor(String vdb, String input, String expectedOutput, boolean usePreparedStatement) {
         try {
-			helpTestVisitorWithCommand(expectedOutput, obj, useMetadata, usePreparedStatement);
+            Translator trans = new Translator();
+            Properties p = new Properties();
+            if (usePreparedStatement) {
+            	p.setProperty(JDBCPropertyNames.USE_BIND_VARIABLES, Boolean.TRUE.toString());
+            }
+            trans.initialize(EnvironmentUtility.createEnvironment(p, false));
+
+            MetadataFactory.helpTestVisitor(vdb, input, expectedOutput, trans);
 		} catch (ConnectorException e) {
 			throw new RuntimeException(e);
 		}    	
@@ -123,30 +99,6 @@ public class TestSQLConversionVisitor extends TestCase {
         return visitor.toString();
     }    
     
-    /** 
-     * @param expectedOutput
-     * @param obj
-     * @throws ConnectorException 
-     * @since 4.2
-     */
-    private void helpTestVisitorWithCommand(String expectedOutput,
-                                            ICommand obj,
-                                            boolean useMetadata,
-                                            boolean usePreparedStatement) throws ConnectorException {
-        // Apply function replacement
-        Translator trans = new Translator();
-        Properties p = new Properties();
-        if (usePreparedStatement) {
-        	p.setProperty(JDBCPropertyNames.USE_BIND_VARIABLES, Boolean.TRUE.toString());
-        }
-        trans.initialize(EnvironmentUtility.createEnvironment(p, false));
-        
-        TranslatedCommand tc = new TranslatedCommand(new FakeExecutionContextImpl(), trans);
-        tc.translateCommand(obj);
-
-        assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
-    }
-        
     public void testSimple() {
         helpTestVisitor(getTestVDB(),
             "select part_name from parts", //$NON-NLS-1$
@@ -363,36 +315,10 @@ public class TestSQLConversionVisitor extends TestCase {
             "UPDATE PARTS SET PART_WEIGHT = 'a' WHERE NULL <> NULL"); //$NON-NLS-1$
     }
 
-    public void testGroupByWithFunctions() throws Exception {
-        QueryMetadataInterface metadata = VDBMetadataFactory.getVDBMetadata(getTestVDB());       
-    	        
-        Select select = new Select();
-        select.addSymbol(new ElementSymbol("part_name")); //$NON-NLS-1$
-        From from = new From();
-        from.addGroup(new GroupSymbol("parts")); //$NON-NLS-1$
-        GroupBy groupBy = new GroupBy();
-        Function function = new Function("concat", new Expression[] {new ElementSymbol("part_id"), new Constant("a")});  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-        groupBy.addSymbol(function);
-        Query query = new Query();
-        query.setSelect(select);
-        query.setFrom(from);
-        query.setGroupBy(groupBy);
-
-        QueryResolver.resolveCommand(query, metadata);
-        Command command = QueryRewriter.rewrite(query, null, metadata, null);
-
-        ICommand result =  new LanguageBridgeFactory(metadata).translate(command);
-
-        helpTestVisitorWithCommand("SELECT PARTS.PART_NAME FROM PARTS GROUP BY concat(PARTS.PART_ID, 'a')", result,  //$NON-NLS-1$
-            false, 
-            false);
-    }
-    
     public void testPreparedStatementCreationWithUpdate() {
         helpTestVisitor(getTestVDB(),
                         "update parts set part_weight = 'a' where part_weight < 5", //$NON-NLS-1$
                         "UPDATE PARTS SET PART_WEIGHT = ? WHERE PARTS.PART_WEIGHT < ?", //$NON-NLS-1$
-                        false,
                         true); 
     }
     
@@ -400,7 +326,6 @@ public class TestSQLConversionVisitor extends TestCase {
         helpTestVisitor(getTestVDB(),
                         "insert into parts (part_weight) values (5)", //$NON-NLS-1$
                         "INSERT INTO PARTS (PART_WEIGHT) VALUES (?)", //$NON-NLS-1$
-                        false,
                         true); 
     }
     
@@ -408,7 +333,6 @@ public class TestSQLConversionVisitor extends TestCase {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where part_id not in ('x', 'y') and part_weight < 6", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE (PARTS.PART_ID NOT IN (?, ?)) AND (PARTS.PART_WEIGHT < ?)", //$NON-NLS-1$
-                        false,
                         true); 
     }
     
@@ -416,7 +340,6 @@ public class TestSQLConversionVisitor extends TestCase {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where part_name like '%foo'", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_NAME LIKE ?", //$NON-NLS-1$
-                        false,
                         true); 
     }
     
@@ -428,7 +351,6 @@ public class TestSQLConversionVisitor extends TestCase {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where 'x' = 'y'", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE 1 = ?", //$NON-NLS-1$
-                        false,
                         true); 
     }
     
@@ -440,7 +362,6 @@ public class TestSQLConversionVisitor extends TestCase {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where concat(part_name, 'x') = concat('y', part_weight)", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE concat(PARTS.PART_NAME, 'x') = concat('y', PARTS.PART_WEIGHT)", //$NON-NLS-1$
-                        false,
                         true); 
     }
     
@@ -448,7 +369,6 @@ public class TestSQLConversionVisitor extends TestCase {
         helpTestVisitor(getTestVDB(),
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME='a' THEN 'b' ELSE 'c' END", //$NON-NLS-1$
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE PARTS.PART_WEIGHT = CASE WHEN PARTS.PART_NAME = ? THEN 'b' ELSE 'c' END", //$NON-NLS-1$
-                        false,
                         true); 
     }
 
@@ -477,5 +397,14 @@ public class TestSQLConversionVisitor extends TestCase {
     public void testVisitIProcedureWithComment() throws Exception {
         String expected = "{ /*teiid sessionid:ConnectionID, requestid:RequestID.PartID*/  call sq3(?,?)}"; //$NON-NLS-1$
         assertEquals(expected, getStringWithContext(TestProcedureImpl.example()));
-    }     
+    }  
+    
+    public void testTrimStrings() throws Exception {
+    	Translator trans = new Translator();
+        Properties p = new Properties();
+    	p.setProperty(JDBCPropertyNames.TRIM_STRINGS, Boolean.TRUE.toString());
+        trans.initialize(EnvironmentUtility.createEnvironment(p, false));
+
+        MetadataFactory.helpTestVisitor(MetadataFactory.BQT_VDB, "select stringkey from bqt1.smalla", "SELECT rtrim(SmallA.StringKey) FROM SmallA", trans); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 }

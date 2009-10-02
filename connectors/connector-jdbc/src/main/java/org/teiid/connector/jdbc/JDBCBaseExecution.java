@@ -60,7 +60,6 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
     protected ExecutionContext context;
 
     // Derived from properties
-    protected boolean trimString;
     protected int fetchSize;
     protected int maxResultRows;
 
@@ -81,7 +80,6 @@ public abstract class JDBCBaseExecution extends BasicExecution  {
         this.logger = logger;
         this.context = context;
 
-        trimString = PropertiesUtils.getBooleanProperty(props, JDBCPropertyNames.TRIM_STRINGS, false);
         fetchSize = PropertiesUtils.getIntProperty(props, JDBCPropertyNames.FETCH_SIZE, context.getBatchSize());
         maxResultRows = PropertiesUtils.getIntProperty(props, ConnectorPropertyNames.MAX_RESULT_ROWS, -1);
         //if the connector work needs to throw an excpetion, set the size plus 1

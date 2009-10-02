@@ -29,7 +29,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.teiid.connector.jdbc.JDBCQueryExecution;
 import org.teiid.connector.language.IQuery;
 import org.teiid.connector.language.ISelect;
 import org.teiid.dqp.internal.datamgr.language.LiteralImpl;
@@ -58,31 +57,6 @@ public class TestJDBCExecutionHelper extends TestCase{
         Class[] results = query.getColumnTypes();  
         assertEquals( results[0], expectedResults[0]);
         assertEquals( results[1], expectedResults[1]);     
-    }
-    
-    public void helpTestTrimString(String value, String expected) {
-        String actual = JDBCQueryExecution.trimString(value);
-        assertEquals("Did not get a match, expected=[" + expected + "', actual=[" + actual + "]", expected, actual); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
-    
-    public void testTrimEmpty() {
-        helpTestTrimString("", ""); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testTrimNoWhitespace() {
-        helpTestTrimString("abc", "abc"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testTrimSome() {
-        helpTestTrimString("abc  ", "abc"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testDontTrimLeft() {
-        helpTestTrimString("   abc  ", "   abc"); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testDontTrimInternal() {
-        helpTestTrimString("a b c  ", "a b c"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
 }

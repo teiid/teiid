@@ -2134,7 +2134,8 @@ public class FakeMetadataFactory {
                              DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
                              DataTypeManager.DefaultDataTypes.OBJECT };
         
-        List bqt1SmallAe = createElements(bqt1SmallA, elemNames, elemTypes);
+        List<FakeMetadataObject> bqt1SmallAe = createElements(bqt1SmallA, elemNames, elemTypes);
+        bqt1SmallAe.get(1).putProperty(FakeMetadataObject.Props.NATIVE_TYPE, "char"); //$NON-NLS-1$
         List bqt1SmallBe = createElements(bqt1SmallB, elemNames, elemTypes);
         List bqt1MediumAe = createElements(bqt1MediumA, elemNames, elemTypes);
         List bqt1MediumBe = createElements(bqt1MediumB, elemNames, elemTypes);
@@ -4166,9 +4167,9 @@ public class FakeMetadataFactory {
      * @param types Array of element types
      * @return List Ordered list of elements in the group
      */
-	public static List createElements(FakeMetadataObject group, String[] names, String[] types) { 
+	public static List<FakeMetadataObject> createElements(FakeMetadataObject group, String[] names, String[] types) { 
 		String groupRoot = group.getName() + "."; //$NON-NLS-1$
-		List elements = new ArrayList();
+		List<FakeMetadataObject> elements = new ArrayList<FakeMetadataObject>();
 		
 		for(int i=0; i<names.length; i++) { 
             FakeMetadataObject element = createElement(groupRoot + names[i], group, types[i], i);

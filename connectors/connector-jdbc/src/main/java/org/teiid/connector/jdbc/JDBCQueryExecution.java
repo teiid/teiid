@@ -28,9 +28,7 @@ package org.teiid.connector.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -60,7 +58,6 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     protected ConnectorEnvironment env;
     protected ICommand command;
     protected Class<?>[] columnDataTypes;
-	private boolean[] trimColumn;
 
     // ===========================================================================================================================
     // Constructors
@@ -97,24 +94,11 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 results = pstatement.executeQuery();
             } 
             addStatementWarnings();
-            initResultSetInfo();
-
         } catch (SQLException e) {
             throw new JDBCExecutionException(e, translatedComm);
         }
     }
 
-	protected void initResultSetInfo() throws SQLException {
-		trimColumn = new boolean[columnDataTypes.length];
-		ResultSetMetaData rsmd = results.getMetaData();
-		for(int i=0; i<columnDataTypes.length; i++) {
-			
-		    if(columnDataTypes[i].equals(String.class)) {
-		    	trimColumn[i] = trimString || rsmd.getColumnType(i+1) == Types.CHAR;
-		    }
-		}
-	}
-    
     @Override
     public List<?> next() throws ConnectorException, DataNotAvailableException {
         try {
@@ -125,9 +109,6 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
                 for (int i = 0; i < columnDataTypes.length; i++) {
                     // Convert from 0-based to 1-based
                     Object value = sqlTranslator.retrieveValue(results, i+1, columnDataTypes[i]);
-                    if (trimColumn[i] && value instanceof String) {
-                    	value = trimString((String)value);
-                    }
                     vals.add(value); 
                 }
 
@@ -139,24 +120,6 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
         }
         
         return null;
-    }
-    
-    /**
-     * Expects string to never be null 
-     * @param value Incoming value
-     * @return Right trimmed value  
-     * @since 4.2
-     */
-    public static String trimString(String value) {
-        for(int i=value.length()-1; i>=0; i--) {
-            if(value.charAt(i) != ' ') {
-                // end of trim, return what's left
-                return value.substring(0, i+1);
-            }
-        }
-
-        // All spaces, so trim it all
-        return ""; //$NON-NLS-1$        
     }
     
     /**
