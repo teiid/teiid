@@ -60,6 +60,8 @@ public class ResultSetReader extends StringLineReader {
     boolean firstTime = true;
     int[] columnTypes = null;
     
+    private int rowCount;
+    
     public ResultSetReader(ResultSet in) {
         this.source = in;        
     }
@@ -103,6 +105,7 @@ public class ResultSetReader extends StringLineReader {
             
             // if you get here then we are ready to read the results.
             if (source.next()) {
+            	rowCount++;
                 StringBuffer sb = new StringBuffer();
                 // Walk through column values in this row
                 for (int col = 1; col <= columnCount; col++) {
@@ -132,6 +135,10 @@ public class ResultSetReader extends StringLineReader {
         }        
         return null;
     }
+    
+    public int getRowCount() {
+		return rowCount;
+	}
     
     /**
      * Get the first line from the result set. This is the resultset metadata line where

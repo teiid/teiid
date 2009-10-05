@@ -45,7 +45,7 @@ public class ObjectConverterUtil {
     
     private static final int DEFAULT_READING_SIZE = 8192;
 
-     protected static byte[] convertToByteArray(final java.sql.Blob data) throws MetaMatrixCoreException {
+     protected static byte[] convertBlobToByteArray(final java.sql.Blob data) throws MetaMatrixCoreException {
           try {
               // Open a stream to read the BLOB data
               InputStream l_blobStream = data.getBinaryStream();
@@ -82,7 +82,9 @@ public class ObjectConverterUtil {
         } else if (data instanceof byte[]) {
             return (byte[]) data;
         } else if (data instanceof java.sql.Blob)  {
-            return convertToByteArray((java.sql.Blob) data);
+            return convertBlobToByteArray((java.sql.Blob) data);
+        } else if (data instanceof File) {
+        	return convertFileToByteArray((File)data);
         }
         final Object[] params = new Object[]{data.getClass().getName()};
         throw new MetaMatrixCoreException(CorePlugin.Util.getString("ObjectConverterUtil.Object_type_not_supported_for_object_conversion._3",params)); //$NON-NLS-1$

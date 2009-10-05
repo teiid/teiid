@@ -11,6 +11,7 @@
 
 import java.sql.*;
 import com.metamatrix.script.io.*;
+import com.metamatrix.jdbc.api.*;
 
 protected Connection getConnection() {
     if (currentContext().internalConnection != void && currentContext().internalConnection != null) {
@@ -144,26 +145,8 @@ private checkConnection() {
 /**
  * Execute a Statement and save the ResultSet or update count. 
  */
-void execute(String sql) throws SQLException {       
-    checkConnection();
-    
-    // close last statement and result set if necessary
-    closeStatement();
-    
-    // create new statement
-    currentContext().internalStatement = currentContext().internalConnection.createStatement();
-    try {
-        debug("Executing sql: " + sql);        
-        currentContext().internalResultSet = currentContext().internalStatement.executeQuery(sql);
-        if (interactive()) {
-            record("printResults();\n");
-            printResults();
-        }
-    } catch(SQLException e) {
-        closeStatement();        
-        debug(e);
-        throw e;
-    }
+void execute(String sql) throws SQLException {
+	execute(sql, null);       
 }    
 
 /**
@@ -187,10 +170,7 @@ void executeBatch(String[] cmds) throws SQLException {
     try {
         debug("Executing batch of : " + cmds.length);        
         currentContext().internalUpdatedList = currentContext().internalStatement.executeBatch();
-        if (interactive()) {
-            record("printResults();\n");
-            printResults();
-        }
+        print ("update counts: " + Arrays.toString(currentContext().internalUpdatedList));
     } catch(SQLException e) {
         closeStatement();        
         debug(e);
@@ -229,47 +209,31 @@ void execute(String sql, Object[] params) throws SQLException {
     
     // close last statement and result set if necessary
     closeStatement();
-    
-    if ( (sql.indexOf("?") != -1) && (params == null || params.length == 0)) {
-        throw new SQLException ("Wrong!, No Parameters supplied to statement.");                       
-    }        
-    
-    sqlLow = sql.toLowerCase();
-    
+        
     try {
-        if (sqlLow.startsWith("select")) {    
+        if (params != null) {    
             debug("Executing a prepared Statement:"+sql);        
             currentContext().internalStatement = currentContext().internalConnection.prepareStatement(sql);            
             setStatementDefaults();
             setParameters(params);                
-            currentContext().internalResultSet = currentContext().internalStatement.executeQuery();
-        }
-        else if (sqlLow.startsWith("update") || sqlLow.startsWith("delete") || sqlLow.startsWith("insert")) {            
-            debug("Executing a prepared statement:"+sql);        
-            currentContext().internalStatement = currentContext().internalConnection.prepareStatement(sql);            
-            setStatementDefaults();
-            setParameters(params);                
-            currentContext().internalResultSet = null;
-            int row_affected = currentContext().internalStatement.executeUpdate();            
-            print (row_affected+" rows got affected.");         
-        }
-        else if (sqlLow.startsWith("exec ") ) {
-            sql = sql.substring(4);
-            
-            debug ("Executing a Callable statement:"+sql);
-            currentContext().internalStatement = currentContext().internalConnection.prepareCall("{?=call " + sql + "}");            
-            setStatementDefaults();            
-            setParameters(params);
-            currentContext().internalResultSet = currentContext().internalStatement.executeQuery();        
+            hasResultSet = currentContext().internalStatement.execute();
         }
         else {
-            throw new SQLException("Not a valid statement!, it must start with (Select|Insert|Update|Delete|Stored Proc)");
-        }        
-        
-        if (interactive()) {
-            record("printResults();\n");
-            printResults();
+        	debug("Executing statement:"+sql);        
+            currentContext().internalStatement = currentContext().internalConnection.createStatement();            
+            setStatementDefaults();
+            hasResultSet = currentContext().internalStatement.execute(sql);
         }
+        if (hasResultSet) {
+        	currentContext().internalResultSet = currentContext().internalStatement.getResultSet();
+        	if (interactive()) {
+            	record("printResults();\n");
+            	printResults();
+        	}
+        } else {
+        	currentContext().internalUpdateCount = currentContext().internalStatement.getUpdateCount();
+        	print ("update count:" +currentContext().internalUpdateCount);
+        }        
     } catch(SQLException e) {
         closeStatement();
         debug(e);
@@ -294,6 +258,14 @@ void printResults(File fileName) throws SQLException {
     printResults(currentContext().internalResultSet, fileName);
 }
 
+void showPlan() {
+	PlanNode queryPlan = ((MMResultSet)currentContext().internalStatement).getPlanDescription();
+	if (queryPlan != null) {
+		print(XMLOutputVisitor.convertToXML(queryPlan));
+	} else {
+		print("No plan provided - add OPTION SHOWPLAN");
+	}
+}
 
 void walkResults() {
     rs = currentContext().internalResultSet;
@@ -311,11 +283,10 @@ private void printResults(ResultSet results, boolean comparePrint) throws SQLExc
         print("ResultSet is null");
         return;
     }        
-    row = -1; // -1 to compensate for the header row.
-    BufferedReader in = new BufferedReader(new ResultSetReader(results));
+    ResultSetReader reader = new ResultSetReader(results);
+    BufferedReader in = new BufferedReader(reader);
     String line = in.readLine();
     while(line != null) {
-        row++;
         if (comparePrint) {
             line=line.replaceAll("\"", "\\\\\"");
             print("\""+line+"\",");
@@ -325,7 +296,7 @@ private void printResults(ResultSet results, boolean comparePrint) throws SQLExc
         }
         line = in.readLine();
     }
-    print("Fetched "+row+" rows\n");
+    print("Fetched "+reader.getRowCount()+" rows\n");
 }
 
 private void printResults(ResultSet results, File resultsFile) throws SQLException {
@@ -333,17 +304,16 @@ private void printResults(ResultSet results, File resultsFile) throws SQLExcepti
         print("ResultSet is null");
         return;
     }        
-    row = -1; // -1 to compensate for the header row.
-    BufferedReader in = new BufferedReader(new ResultSetReader(results));
+    ResultSetReader reader = new ResultSetReader(results);
+    BufferedReader in = new BufferedReader(reader);
     PrintWriter writer = new PrintWriter(new FileWriter(resultsFile));
     String line = in.readLine();
     while(line != null) {
-        row++;
         writer.println(line);
         line = in.readLine();
     }
     writer.close();
-    print("Wrote "+row+" rows to File="+resultsFile.getName()+"\n");
+    print("Wrote "+reader.getRowCount()+" rows to File="+resultsFile.getName()+"\n");
 }
 
 void assertRowCount(int expected) {
@@ -368,7 +338,8 @@ private void closeStatement() {
     if(currentContext().internalStatement != void && currentContext().internalStatement != null) {
         Statement stmt = currentContext().internalStatement;
         closeResultSet();
-        
+		currentContext().internalUpdateCount = -1;
+		currentContext().internalUpdatedList = null;        
         try {
             debug("Closing statement...");
             stmt.close();
