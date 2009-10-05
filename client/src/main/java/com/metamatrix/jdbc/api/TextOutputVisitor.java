@@ -161,5 +161,11 @@ public class TextOutputVisitor extends PlanVisitor {
     protected void visitContainerProperty(PlanNode node, String propertyName, Collection propertyValue) {
 
     }
+    
+    public static String convertToText(PlanNode node, int initialTabs) {
+        TextOutputVisitor visitor = new TextOutputVisitor(new DefaultDisplayHelper(), initialTabs);
+        visitor.visit(node);
+        return visitor.getText();
+    }
 
 }

@@ -38,15 +38,22 @@ printResults(File file);
 /** 
  * Prints the previously executed ResultSet to system out, in the form required by the assert call. Usally in 
  * the interactive more the resultset is automatically read, so this applies only in the script mode.
- * @param comparemode - true - print in the format that can be used in the regression tests
- *                    - false - print to console  
+ * @param comparePrint - true - print in the format that can be used in the regression tests
+ *                     - false - print to console  
  */
-printResults(boolean true);
+printResults(boolean comparePrint);
 
 /**
  * Walks the ResultSet, but does not print any results. Good for performance testing. Usally in 
  * the interactive more the resultset is automatically read, so this applies only in the script mode.
  */
-walkResults()  
+walkResults();  
+
+/**
+ * Shows the plan associated with the last executed statement.
+ * @param xml - true - show in xml form
+ *            - false - show in text form  
+ */
+showPlan(boolean xml);
   ]]></programlisting>      
 </appendix>
