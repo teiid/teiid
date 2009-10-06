@@ -21,7 +21,7 @@ public class BaseAbstractTransactionTestCase extends TestCase  {
         super(name);
     }
     
-    
+
     
     @Override
 	protected void setUp() throws Exception {
@@ -32,11 +32,27 @@ public class BaseAbstractTransactionTestCase extends TestCase  {
 
 	}
 
-
+    
+    protected ConfigPropertyLoader getConfig() {
+    	return this.config;
+    }
 
 	protected void addProperty(String key, String value) {
     	config.setProperty(key, value);
     }
+	
+	/**
+	 * Call to assign a specific database type to the model.   When a datasource is requested for this model,
+	 * a datasource of the specific dbtype will be returned.  See {@link DataSourceFactory} for the logic that
+	 * controls this behavior.
+	 * @param modelName
+	 * @param dbtype
+	 *
+	 * @since
+	 */
+	protected void setAssignModelToDatabaseType(String modelName, String dbtype) {
+		config.setModelAssignedToDatabaseType(modelName, dbtype);
+	}
     
     protected TransactionContainer getTransactionContainter() throws QueryTestFailedException {
     	return TransactionFactory.create(config); 
