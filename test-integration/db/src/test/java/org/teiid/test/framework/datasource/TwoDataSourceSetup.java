@@ -6,10 +6,10 @@ package org.teiid.test.framework.datasource;
 
 import java.util.Map;
 
-import org.teiid.test.framework.QueryExecution;
 import org.teiid.test.framework.connection.ConnectionStrategy;
 import org.teiid.test.framework.connection.ConnectionUtil;
 import org.teiid.test.framework.exception.QueryTestFailedException;
+import org.teiid.test.framework.query.QueryExecution;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
