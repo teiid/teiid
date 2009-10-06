@@ -268,7 +268,7 @@
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="sun.jdbc.odbc.JdbcOdbcDriver" IsRequired="true"   />
             <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:odbc:Driver={MicroSoft Excel Driver (*.xls)};DBQ=&lt;filePathToExcelFile&gt;" IsRequired="true"   />
         </ComponentType>
-        <!-- 
+        
         <ComponentType Name="Datadirect DB2 8 Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="JDBC Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.928-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.928-06:00">
             <PropertyDefinition Name="ConnectionSource" DisplayName="Connection Source Class" ShortDescription="Driver, DataSource, or XADataSource class name" DefaultValue="com.metamatrix.jdbcx.db2.DB2DataSource" IsRequired="true"   />
             <PropertyDefinition Name="URL" DisplayName="JDBC URL" ShortDescription="" DefaultValue="jdbc:mmx:db2://&lt;host&gt;:50000;DatabaseName=&lt;databasename&gt;;CollectionID=&lt;collectionid&gt;;PackageName=&lt;packagename&gt;" IsRequired="true"   />            
@@ -294,7 +294,7 @@
             <PropertyDefinition Name="IsXA" DisplayName="Is XA" ShortDescription="Is XA" DefaultValue="true" IsRequired="true" PropertyType="Boolean"   />
             <PropertyDefinition Name="SetCriteriaBatchSize" DisplayName="Max Values in IN Predicate" ShortDescription="Max number of values in an IN Predicate.  Must be &gt;= 0." DefaultValue="250" PropertyType="Integer"  IsExpert="true" />
         </ComponentType>
-        -->                                                                                                                  <ComponentType Name="LDAP Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.946-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.946-06:00">
+                                                                                                                       <ComponentType Name="LDAP Connector" ComponentTypeCode="2" Deployable="true" Deprecated="false" Monitorable="false" SuperComponentType="Connector" ParentComponentType="Connectors" LastChangedBy="ConfigurationStartup" LastChangedDate="2008-10-31T10:26:19.946-06:00" CreatedBy="ConfigurationStartup" CreationDate="2008-10-31T10:26:19.946-06:00">
             <PropertyDefinition Name="ConnectorTypeClassPath" DisplayName="Connector Type Class Path" ShortDescription="Connector Type classpath (defined by system, do not modify)" DefaultValue="extensionjar:connector_patch.jar;extensionjar:connector-ldap-6.2.0-SNAPSHOT.jar;" IsModifiable="false" />
 			<PropertyDefinition Name="SearchDefaultBaseDN" DisplayName="Default Search Base DN" ShortDescription="Default Base DN for LDAP Searches" IsExpert="true" />
             <PropertyDefinition Name="LdapAdminUserDN" DisplayName="Ldap Admin User DN" ShortDescription="User DN for the LDAP admin account." DefaultValue="cn=&lt;&gt;,ou=&lt;&gt;,dc=&lt;&gt;" IsRequired="true"  />
