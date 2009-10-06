@@ -8,8 +8,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import org.teiid.test.framework.AbstractQueryTransactionTest;
-import org.teiid.test.framework.QueryExecution;
+import org.teiid.test.framework.ConfigPropertyNames;
+import org.teiid.test.framework.query.AbstractQueryTransactionTest;
+import org.teiid.test.framework.query.QueryExecution;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
@@ -359,6 +360,10 @@ public class TwoSourceTransactionScenarios extends SingleSourceTransactionScenar
      * result = commit
      */
     public void testMultipleSourceViewMultipleCommands() throws Exception {
+ //   	this.setAssignModelToDatabaseType("pm1", DataSourceFactory.DataBaseTypes.);
+    	
+    	this.addProperty(ConfigPropertyNames.EXCLUDE_DATASBASE_TYPES_PROP, "oracle");
+    	
         AbstractQueryTransactionTest userTxn = new AbstractQueryTransactionTest("testMultipleSourceViewMultipleCommands") {
             public void testCase() throws Exception {
 

@@ -4,11 +4,10 @@
  */
 package org.teiid.test.testcases;
 
-import java.util.Map;
 
-import org.teiid.test.framework.AbstractQueryTransactionTest;
-import org.teiid.test.framework.QueryExecution;
-import org.teiid.test.framework.datasource.DataSource;
+
+import org.teiid.test.framework.query.AbstractQueryTransactionTest;
+import org.teiid.test.framework.query.QueryExecution;
 
 import com.metamatrix.jdbc.api.AbstractQueryTest;
 
