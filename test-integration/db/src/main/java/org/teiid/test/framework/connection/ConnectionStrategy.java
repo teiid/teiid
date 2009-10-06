@@ -79,7 +79,7 @@ public abstract class ConnectionStrategy {
     }
     
     private void shutDownSources(Map<String, ConnectionStrategy> sources) {
-       	for (Iterator it=sources.keySet().iterator(); it.hasNext();  ){	        		
+       	for (Iterator<String> it=sources.keySet().iterator(); it.hasNext();  ){	        		
         		ConnectionStrategy cs = sources.get(it.next());
         		try {
         			cs.shutdown();
@@ -112,6 +112,10 @@ public abstract class ConnectionStrategy {
     
     public Properties getEnvironment() {
     	return env;
+    }
+    
+    public int getNumberAvailableDataSources() {
+    	return this.dsFactory.getNumberAvailableDataSources();
     }
     
     public Map<String, DataSource> getDataSources() {

@@ -62,17 +62,15 @@ public interface TransactionQueryTest {
      void setConnectionStrategy(ConnectionStrategy connStrategy);
      
      /**
-      * The test case has to specify how many sources its using so that the correct
-      * data setup is performed.
-      * @return int is the number of datasources in use
+      * Indicates if the test has the required datasources in order to execute.
+      * If it doesn't have the required datasources, it will be bypassed for execution.
+      * @return true if the test has the required sources to execute
       *
       * @since
       */
-
-     int getNumberRequiredDataSources();
      
-     
-     
+     boolean hasRequiredDataSources();
+   
      
      /**
       * Called by the {@link TransactionContainer} prior to testcase processing so that

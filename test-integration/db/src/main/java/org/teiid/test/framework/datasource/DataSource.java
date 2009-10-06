@@ -49,23 +49,7 @@ public class DataSource {
 		return this.dbtype;
 	}
 	
-	
-	/**
-	 * These types match the "ddl" directories for supported database types
-	 * and it also found in the datasources connection.properties defined by the DB_TYPE property
-	 * @author vanhalbert
-	 *
-	 */
-	public static interface DataSourcTypes{
-		public static String MYSQL = "mysql";
-		public static String ORACLE = "oracle";
-		public static String POSTRES = "postgres";
-		public static String SQLSERVER = "sqlserver";
-		public static String DB2 = "db2";
-		public static String SYBASE = "sybase";
-		public static String DERBY = "derby";		
-		
-	}
+
 		
 
 }

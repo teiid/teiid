@@ -61,12 +61,14 @@ public abstract class TransactionContainer {
 			    	
 			   		// cleanup all defined datasources for the last test and
 	        		// any overrides regarding inclusions and exclusions.
-		    		this.dsfactory.cleanup();
-
+	        		if (dsfactory != null) {
+	        			this.dsfactory.cleanup();
+	        		}
 			    	
 		    		// cleanup all connections created for this test.
-		    		connStrategy.shutdown();
-	        		
+		    		if (connStrategy != null) {
+		    			connStrategy.shutdown();
+		    		}
 	        	}
 	        }
 
@@ -79,15 +81,16 @@ public abstract class TransactionContainer {
 	        try {  
 	        	
 	           	setUp(test);
+		    	test.setConnectionStrategy(connStrategy);
+
 		    	
-		    	if (test.getNumberRequiredDataSources() > this.dsfactory.getNumberAvailableDataSources()) {
-		    		detail(test.getTestName() + " will not be run, it requires " + test.getNumberRequiredDataSources() + 
-		    				" datasources, but only available is " + this.dsfactory.getNumberAvailableDataSources());
+		    	if (!test.hasRequiredDataSources()) {
 		    		return;
 		    	}
+		    	
+		    	
     	
-		    	test.setConnectionStrategy(connStrategy);
-		       	test.setupDataSource();
+		    	test.setupDataSource();
 
 	        	
 	        	debug("	setConnection");

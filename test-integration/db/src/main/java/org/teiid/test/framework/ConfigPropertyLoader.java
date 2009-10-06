@@ -1,5 +1,7 @@
 package org.teiid.test.framework;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.test.framework.exception.TransactionRuntimeException;
@@ -13,7 +15,7 @@ import com.metamatrix.common.util.PropertiesUtils;
  * These properties only live for the duration of one test.
  * 
  * NOTE: System properties set by the VM will be considered long living.   This is so the 
- * 		-Dusedatasources option can be maintained for the duration of a set of tests. 
+ * 		-Dusedatasources ( {@link ConfigPropertyNames#USE_DATASOURCES_PROP} ) option can be maintained for the duration of a set of tests. 
  * 
  * 
  * @author vanhalbert
@@ -28,6 +30,8 @@ public class ConfigPropertyLoader {
 	public static final String DEFAULT_CONFIG_FILE_NAME = "default-config.properties";
 
 	private Properties props = null;
+	
+	private Map<String, String>modelAssignedDatabaseType = new HashMap<String, String>(5);
 
 	private ConfigPropertyLoader() {
 	}
@@ -65,6 +69,14 @@ public class ConfigPropertyLoader {
 
 	public Properties getProperties() {
 		return props;
+	}
+	
+	public Map getModelAssignedDatabaseTypes() {
+		return this.modelAssignedDatabaseType;
+	}
+	
+	public void setModelAssignedToDatabaseType(String modelname, String dbtype) {
+		this.modelAssignedDatabaseType.put(modelname, dbtype);
 	}
 
 	private void loadProperties(String filename) {
