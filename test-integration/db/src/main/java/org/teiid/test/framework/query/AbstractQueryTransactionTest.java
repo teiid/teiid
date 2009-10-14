@@ -10,6 +10,7 @@ import static org.junit.Assert.assertNotNull;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.Properties;
@@ -40,6 +41,8 @@ import com.metamatrix.jdbc.api.AbstractQueryTest;
 public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest implements TransactionQueryTest{
 	protected Properties executionProperties = null;
 	protected String testname = "NA";
+	protected int fetchSize = -1;
+	protected int queryTimeout = -1;
 	
 	protected Map<String, DataSource> datasources = null;
 	
@@ -70,7 +73,17 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
 
 	public void setExecutionProperties(Properties props) {
        	assertNotNull(props);
-        this.executionProperties = props;        
+        this.executionProperties = props;  
+        
+        String fetchSizeStr = executionProperties.getProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE);
+        if ( fetchSizeStr != null ) {
+            try {
+                fetchSize = Integer.parseInt(fetchSizeStr);
+            } catch ( NumberFormatException e ) {
+            	fetchSize = -1;
+            	this.print("Invalid fetch size value: " + fetchSizeStr + ", ignoring");
+            }
+        }
     }
     @Override
     protected void compareResults(BufferedReader resultReader, BufferedReader expectedReader) throws IOException {
@@ -78,19 +91,34 @@ public abstract class AbstractQueryTransactionTest  extends AbstractQueryTest im
     }
     
     @Override protected void assignExecutionProperties(Statement stmt) {
-        if (this.executionProperties != null) {  
-             if (stmt instanceof com.metamatrix.jdbc.api.Statement) {
-                com.metamatrix.jdbc.api.Statement statement = (com.metamatrix.jdbc.api.Statement)stmt;
+        if (stmt instanceof com.metamatrix.jdbc.api.Statement) {
+            com.metamatrix.jdbc.api.Statement statement = (com.metamatrix.jdbc.api.Statement)stmt;
+
+	        if (this.executionProperties != null) {  
                 String txnautowrap = this.executionProperties.getProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP);
                 if (txnautowrap != null) {
                      statement.setExecutionProperty(CONNECTION_STRATEGY_PROPS.TXN_AUTO_WRAP, txnautowrap);
                 }
                 
-                if (this.executionProperties.getProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE) != null) {
-                    statement.setExecutionProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE, this.executionProperties.getProperty(CONNECTION_STRATEGY_PROPS.FETCH_SIZE));
-                }
-            }
-        }
+	        }
+        
+	        if (this.fetchSize > 0) {
+	        	try {
+					statement.setFetchSize(this.fetchSize);
+				} catch (SQLException e) {
+					this.print(e);
+				}
+	        }
+	        
+	        if (this.queryTimeout > 0) {
+	        	try {
+					statement.setQueryTimeout(this.queryTimeout);
+				} catch (SQLException e) {
+					this.print(e);
+				}
+	        }
+    	}
+
                 
     }
     
