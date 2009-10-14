@@ -112,15 +112,15 @@ public abstract class AbstractQueryTest {
             if (params != null && params.length > 0) {
             	if (sql.startsWith("exec ")) { //$NON-NLS-1$
                     sql = sql.substring(5);
-	                this.internalStatement = this.internalConnection.prepareCall("{?=call "+sql+"}"); //$NON-NLS-1$ //$NON-NLS-2$
+	                this.internalStatement = createPrepareCallStatement(sql);
                 } else {
-                	this.internalStatement = this.internalConnection.prepareStatement(sql);
+                	this.internalStatement = createPrepareStatement(sql);
                 }
                 setParameters((PreparedStatement)this.internalStatement, params);
                 assignExecutionProperties(this.internalStatement);
                 result = ((PreparedStatement)this.internalStatement).execute();
             } else {
-	            this.internalStatement = this.internalConnection.createStatement();
+	            this.internalStatement = createStatement();
 	            assignExecutionProperties(this.internalStatement);
 	            result = this.internalStatement.execute(sql);
             }
@@ -138,6 +138,20 @@ public abstract class AbstractQueryTest {
         } 
         return false;
     }
+    
+    protected Statement createPrepareCallStatement(String sql) throws SQLException{
+    	return this.internalConnection.prepareCall("{?=call "+sql+"}");
+    }
+    
+    protected Statement createPrepareStatement(String sql) throws SQLException{
+    	return this.internalConnection.prepareStatement(sql);
+    }
+    
+    protected Statement createStatement() throws SQLException{
+    	return this.internalConnection.createStatement();
+    }
+    
+    
             
     private void setParameters(PreparedStatement stmt, Object[] params) throws SQLException{
         for (int i = 0; i < params.length; i++) {
@@ -163,7 +177,7 @@ public abstract class AbstractQueryTest {
                 }
             }
 
-            this.internalStatement = this.internalConnection.createStatement();
+            this.internalStatement = createStatement();
             assignExecutionProperties(this.internalStatement);
             
             if (timeout != -1) {
