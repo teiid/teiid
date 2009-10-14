@@ -1,5 +1,6 @@
 package org.teiid.test.framework.datasource;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -148,6 +149,8 @@ public class DataSourceFactory {
 			excludedDBTypes = new HashSet<String>(eprops.size());
 			excludedDBTypes.addAll(eprops);
 			System.out.println("EXCLUDE datasources: " + excludeprop);
+		} else {
+			excludedDBTypes = Collections.EMPTY_SET;
 		}
 
 		
@@ -313,13 +316,7 @@ public class DataSourceFactory {
 								+ " was not found in the allDatasources map");
 	
 					}
-				} else {
-					throw new QueryTestFailedException("Model:id " + modelName
-							+ ":" + datasourceid
-							+ " did not map to the  usedatasources: "
-							+ useDS.toString());
-	
-				}
+				} 
 	
 
 		} else {
