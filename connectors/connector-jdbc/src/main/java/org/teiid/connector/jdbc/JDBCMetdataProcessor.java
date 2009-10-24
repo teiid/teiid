@@ -40,7 +40,8 @@ import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
 import org.teiid.connector.metadata.runtime.TableRecordImpl;
-import org.teiid.connector.metadata.runtime.MetadataConstants.PARAMETER_TYPES;
+import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
+import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl.Type;
 
 /**
  * Reads from {@link DatabaseMetaData} and creates metadata through the {@link MetadataFactory}.
@@ -101,6 +102,7 @@ public class JDBCMetdataProcessor {
 		if (importProcedures) {
 			getProcedures(metadataFactory, metadata);
 		}
+		
 	}
 
 	private void getProcedures(MetadataFactory metadataFactory,
@@ -128,36 +130,19 @@ public class JDBCMetdataProcessor {
 					record = column;
 					column.setNativeType(columns.getString(7));
 				} else {
-					record = metadataFactory.addProcedureParameter(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), getParameterType(columnType), procedure);
+					record = metadataFactory.addProcedureParameter(columnName, TypeFacility.getDataTypeNameFromSQLType(sqlType), Type.values()[columnType], procedure);
 				}
 				record.setPrecision(columns.getInt(8));
 				record.setLength(columns.getInt(9));
 				record.setScale(columns.getInt(10));
 				record.setRadix(columns.getInt(11));
-				record.setNullType(columns.getShort(12));
-				String remarks = columns.getString(13);
-				if (remarks != null) {
-					metadataFactory.addAnnotation(remarks, record);
-				}
+				record.setNullType(NullType.values()[columns.getShort(12)]);
+				record.setAnnotation(columns.getString(13));
 			}
 		}
 		procedures.close();
 	}
 	
-	private static short getParameterType(short type) {
-		switch (type) {
-		case DatabaseMetaData.procedureColumnIn:
-			return PARAMETER_TYPES.IN_PARM;
-		case DatabaseMetaData.procedureColumnInOut:
-			return PARAMETER_TYPES.INOUT_PARM;
-		case DatabaseMetaData.procedureColumnOut:
-			return PARAMETER_TYPES.OUT_PARM;
-		case DatabaseMetaData.procedureColumnReturn:
-			return PARAMETER_TYPES.RETURN_VALUE;
-		}
-		throw new AssertionError();
-	}
-
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata) throws SQLException, ConnectorException {
 		logger.logDetail("JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
@@ -172,9 +157,7 @@ public class JDBCMetdataProcessor {
 			table.setNameInSource(fullName);
 			table.setSupportsUpdate(true);
 			String remarks = tables.getString(5);
-			if (remarks != null) {
-				metadataFactory.addAnnotation(remarks, table);
-			}
+			table.setAnnotation(remarks);
 			tableMap.put(fullName, new TableInfo(tableCatalog, tableSchema, tableName, table));
 		}
 		tables.close();
@@ -204,12 +187,10 @@ public class JDBCMetdataProcessor {
 			ColumnRecordImpl column = metadataFactory.addColumn(columnName, TypeFacility.getDataTypeNameFromSQLType(type), tableInfo.table);
 			column.setNativeType(columns.getString(6));
 			column.setRadix(columns.getInt(10));
-			column.setNullType(columns.getInt(11));
+			column.setNullType(NullType.values()[columns.getShort(11)]);
 			column.setUpdatable(true);
 			String remarks = columns.getString(12);
-			if (remarks != null) {
-				metadataFactory.addAnnotation(remarks, column);
-			}
+			column.setAnnotation(remarks);
 			column.setCharOctetLength(columns.getInt(16));
 			if (rsColumns >= 23) {
 				column.setAutoIncrementable("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
@@ -378,5 +359,9 @@ public class JDBCMetdataProcessor {
 	public void setImportProcedures(boolean importProcedures) {
 		this.importProcedures = importProcedures;
 	}
-
+	
+	public void setImportApproximateIndexes(boolean importApproximateIndexes) {
+		this.importApproximateIndexes = importApproximateIndexes;
+	}
+	
 }

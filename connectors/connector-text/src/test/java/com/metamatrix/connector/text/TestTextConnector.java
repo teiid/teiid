@@ -25,7 +25,6 @@ package com.metamatrix.connector.text;
 import static org.junit.Assert.*;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -71,9 +70,8 @@ public class TestTextConnector {
         datatypes.put(DataTypeManager.DefaultDataTypes.TIMESTAMP, new DatatypeRecordImpl());
         MetadataFactory metadata = new MetadataFactory("SummitData", datatypes, new Properties()); //$NON-NLS-1$
         connector.getConnectorMetadata(metadata); 
-        assertFalse(metadata.getProcedures().iterator().hasNext());
-        Iterator<TableRecordImpl> tableIter = metadata.getTables().iterator();
-        TableRecordImpl group = tableIter.next();
+        assertEquals(0, metadata.getMetadataStore().getProcedures().size());
+        TableRecordImpl group = metadata.getMetadataStore().getTables().get("summitdata.summitdata"); //$NON-NLS-1$
         assertEquals("SUMMITDATA", group.getName()); //$NON-NLS-1$
         assertEquals("SummitData.SUMMITDATA", group.getFullName()); //$NON-NLS-1$
         assertEquals(14, group.getColumns().size());

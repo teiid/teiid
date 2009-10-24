@@ -58,20 +58,6 @@ public class TestCriteriaDesc extends TestCase {
     	vdbPath = ProxyObjectFactory.getStateCollegeVDBLocation();
     }
     
-    public TestCriteriaDesc() {
-    	super();
-    	System.setProperty("metamatrix.config.none", "true");
-    }
-    
-    /**
-     * Constructor for CriteriaDescTest.
-     * @param arg0
-     */
-    public TestCriteriaDesc(String arg0) {
-        super(arg0);
-        System.setProperty("metamatrix.config.none", "true");
-    }
-
     public void testGetCriteriaDescForColumn() throws Exception {  
     	//case 1: values provided
     	assertNotNull("vdb path is null", vdbPath);
