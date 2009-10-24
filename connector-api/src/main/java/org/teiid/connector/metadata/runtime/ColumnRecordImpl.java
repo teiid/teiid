@@ -22,11 +22,29 @@
 
 package org.teiid.connector.metadata.runtime;
 
+
 /**
  * ColumnRecordImpl
  */
 public class ColumnRecordImpl extends BaseColumn implements Comparable<ColumnRecordImpl> {
 
+	public enum SearchType {
+		Unsearchable,
+		Like_Only {
+			@Override
+			public String toString() {
+				return "Like Only"; //$NON-NLS-1$ 
+			}
+		},
+		All_Except_Like {
+			@Override
+			public String toString() {
+				return "All Except Like"; //$NON-NLS-1$
+			}
+		},
+		Searchable
+	}
+	
     private boolean selectable = true;
     private boolean updatable;
     private boolean autoIncrementable;
@@ -34,144 +52,82 @@ public class ColumnRecordImpl extends BaseColumn implements Comparable<ColumnRec
     private boolean signed;
     private boolean currency;
     private boolean fixedLength;
-    private boolean tranformationInputParameter;
-    private int searchType;
-    private Object minValue;
-    private Object maxValue;
+    private SearchType searchType;
+    private String minValue;
+    private String maxValue;
     private String nativeType;
     private String format;
     private int charOctetLength;
     private int distinctValues = -1;
     private int nullValues = -1;
 
-    //==================================================================================
-    //                     I N T E R F A C E   M E T H O D S
-    //==================================================================================
-
     @Override
     public int compareTo(ColumnRecordImpl record) {
     	return this.getPosition() - record.getPosition();
     }
     
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getCharOctetLength()
-     */
     public int getCharOctetLength() {
         return charOctetLength;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getMaxValue()
-     */
-    public Object getMaxValue() {
+    public String getMaxValue() {
         return maxValue;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getMinValue()
-     */
-    public Object getMinValue() {
+    public String getMinValue() {
         return minValue;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getSearchTye()
-     */
-    public int getSearchType() {
+    public SearchType getSearchType() {
+    	if (searchType == null) {
+    		return this.getDatatype().getSearchType();
+    	}
         return searchType;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getFormat()
-     */
     public String getFormat() {
         return format;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isAutoIncrementable()
-     */
     public boolean isAutoIncrementable() {
         return autoIncrementable;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isCaseSensitive()
-     */
     public boolean isCaseSensitive() {
         return caseSensitive;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isCurrency()
-     */
     public boolean isCurrency() {
         return currency;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isFixedLength()
-     */
     public boolean isFixedLength() {
         return fixedLength;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isTranformationInputParameter()
-     * @since 4.2
-     */
-    public boolean isTranformationInputParameter() {
-        return tranformationInputParameter;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isSelectable()
-     */
     public boolean isSelectable() {
         return selectable;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isSigned()
-     */
     public boolean isSigned() {
         return signed;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#isUpdatable()
-     */
     public boolean isUpdatable() {
         return updatable;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getNativeType()
-     * @since 4.2
-     */
     public String getNativeType() {
         return nativeType;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getDistinctValues()
-     * @since 4.3
-     */
     public int getDistinctValues() {
         return this.distinctValues;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnRecord#getNullValues()
-     * @since 4.3
-     */
     public int getNullValues() {
         return this.nullValues;
     }
-
-    // ==================================================================================
-    //                      P U B L I C   M E T H O D S
-    // ==================================================================================
 
     /**
      * @param b
@@ -211,21 +167,21 @@ public class ColumnRecordImpl extends BaseColumn implements Comparable<ColumnRec
     /**
      * @param object
      */
-    public void setMaxValue(Object object) {
+    public void setMaxValue(String object) {
         maxValue = object;
     }
 
     /**
      * @param object
      */
-    public void setMinValue(Object object) {
+    public void setMinValue(String object) {
         minValue = object;
     }
 
     /**
      * @param s
      */
-    public void setSearchType(int s) {
+    public void setSearchType(SearchType s) {
         searchType = s;
     }
 
@@ -281,13 +237,6 @@ public class ColumnRecordImpl extends BaseColumn implements Comparable<ColumnRec
         this.nativeType = nativeType;
     }
 
-    /**
-     * @param b
-     */
-    public void setTransformationInputParameter(boolean b) {
-        this.tranformationInputParameter = b;
-    }
-    
     public String toString() {
         StringBuffer sb = new StringBuffer(100);
         sb.append(getClass().getSimpleName());
@@ -297,9 +246,7 @@ public class ColumnRecordImpl extends BaseColumn implements Comparable<ColumnRec
         sb.append(getNameInSource());
         sb.append(", uuid="); //$NON-NLS-1$
         sb.append(getUUID());
-        sb.append(", pathInModel="); //$NON-NLS-1$
-        sb.append(getPath());
         return sb.toString();
     }
-
+    
 }

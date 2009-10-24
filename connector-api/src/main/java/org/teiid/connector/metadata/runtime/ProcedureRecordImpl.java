@@ -30,6 +30,13 @@ import java.util.List;
  */
 public class ProcedureRecordImpl extends AbstractMetadataRecord {
     
+	public enum Type {
+		Function,
+		UDF,
+		StoredProc,
+		StoredQuery
+	}
+	
 	private List<String> parameterIDs;
     private boolean isFunction;
     private boolean isVirtual;
@@ -38,46 +45,36 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord {
     private List<ProcedureParameterRecordImpl> parameters;
     private ColumnSetRecordImpl resultSet;
     private String queryPlan;
-
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.ProcedureRecord#getParameterIDs()
-     */
+    
     public List<String> getParameterIDs() {
         return parameterIDs;
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.ProcedureRecord#isFunction()
-     */
     public boolean isFunction() {
         return isFunction;
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.ProcedureRecord#isVirtual()
-     */
     public boolean isVirtual() {
         return this.isVirtual;
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.ProcedureRecord#getResultSetID()
-     */
     public String getResultSetID() {
         return resultSetID;
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.ProcedureRecord#getType()
-     */
-    public short getType() {
-        return this.getProcedureType();
+    public Type getType() {
+    	if (isFunction()) {
+        	if (isVirtual()) {
+        		return Type.UDF;
+        	}
+        	return Type.Function;
+        }
+        if (isVirtual()) {
+            return Type.StoredQuery;
+        }
+        return Type.StoredProc;
     }
     
-    /** 
-     * @see com.metamatrix.modeler.core.metadata.runtime.ProcedureRecord#getUpdateCount()
-     * @since 5.5.3
-     */
     public int getUpdateCount() {
         return this.updateCount;
     }
@@ -128,16 +125,6 @@ public class ProcedureRecordImpl extends AbstractMetadataRecord {
     
     public void setUpdateCount(int count) {
     	this.updateCount = count;
-    }
-
-    protected short getProcedureType() {
-        if (isFunction()) {
-            return MetadataConstants.PROCEDURE_TYPES.FUNCTION;
-        }
-        if (isVirtual()) {
-            return MetadataConstants.PROCEDURE_TYPES.STORED_QUERY;
-        }
-        return MetadataConstants.PROCEDURE_TYPES.STORED_PROCEDURE;
     }
 
 	public void setResultSet(ColumnSetRecordImpl resultSet) {

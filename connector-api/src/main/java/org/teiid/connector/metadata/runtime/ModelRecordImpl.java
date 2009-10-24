@@ -22,99 +22,50 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import com.metamatrix.core.vdb.ModelType;
 
 /**
  * ModelRecordImpl
  */
 public class ModelRecordImpl extends AbstractMetadataRecord {
 
-    private int modelType;
-    private int maxSetSize;
+	public enum Type {
+		Physical,
+		Virtual,
+		Type,
+		VDB_Archive() {
+			@Override
+			public String toString() {
+				return "VDB Archive"; //$NON-NLS-1$
+			}
+		},
+		Unknown,
+		Function,
+		Configuration,
+		Metamodel,
+		Extension,
+		Logical,
+		Materialization
+	}
+	
+    private Type modelType;
     private boolean isVisible = true;
-    private boolean supportsDistinct;
-    private boolean supportsJoin;
-    private boolean supportsOrderBy;
-    private boolean supportsOuterJoin;
-    private boolean supportsWhereAll;
     private String primaryMetamodelUri;
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#getPrimaryMetamodelUri()
-     */
     public String getPrimaryMetamodelUri() {
         return primaryMetamodelUri;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#getMaxSetSize()
-     */
-    public int getMaxSetSize() {
-        return maxSetSize;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#isVisible()
-     */
     public boolean isVisible() {
         return isVisible;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#supportsDistinct()
-     */
-    public boolean supportsDistinct() {
-        return supportsDistinct;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#supportsJoin()
-     */
-    public boolean supportsJoin() {
-        return supportsJoin;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#supportsOrderBy()
-     */
-    public boolean supportsOrderBy() {
-        return supportsOrderBy;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#supportsOuterJoin()
-     */
-    public boolean supportsOuterJoin() {
-        return supportsOuterJoin;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#supportsWhereAll()
-     */
-    public boolean supportsWhereAll() {
-        return supportsWhereAll;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#getModelType()
-     */
-    public int getModelType() {
+    public Type getModelType() {
         return modelType;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ModelRecord#isPhysical()
-     */
     public boolean isPhysical() {
-        if (getModelType() == ModelType.PHYSICAL) {
-            return true;
-        }
-        return false;
+        return getModelType() == Type.Physical;
     }
-
-    // ==================================================================================
-    //                      P U B L I C   M E T H O D S
-    // ==================================================================================
 
     /**
      * @param string
@@ -133,49 +84,7 @@ public class ModelRecordImpl extends AbstractMetadataRecord {
     /**
      * @param i
      */
-    public void setMaxSetSize(int i) {
-        maxSetSize = i;
-    }
-
-    /**
-     * @param b
-     */
-    public void setSupportsDistinct(boolean b) {
-        supportsDistinct = b;
-    }
-
-    /**
-     * @param b
-     */
-    public void setSupportsJoin(boolean b) {
-        supportsJoin = b;
-    }
-
-    /**
-     * @param b
-     */
-    public void setSupportsOrderBy(boolean b) {
-        supportsOrderBy = b;
-    }
-
-    /**
-     * @param b
-     */
-    public void setSupportsOuterJoin(boolean b) {
-        supportsOuterJoin = b;
-    }
-
-    /**
-     * @param b
-     */
-    public void setSupportsWhereAll(boolean b) {
-        supportsWhereAll = b;
-    }
-
-    /**
-     * @param i
-     */
-    public void setModelType(int i) {
+    public void setModelType(Type i) {
         modelType = i;
     }
 
@@ -188,8 +97,6 @@ public class ModelRecordImpl extends AbstractMetadataRecord {
         sb.append(getNameInSource());
         sb.append(", uuid="); //$NON-NLS-1$
         sb.append(getUUID());
-        sb.append(", pathInModel="); //$NON-NLS-1$
-        sb.append(getPath());
         return sb.toString();
     }
 

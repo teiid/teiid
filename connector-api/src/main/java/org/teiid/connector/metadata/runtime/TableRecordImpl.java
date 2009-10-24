@@ -23,116 +23,104 @@
 package org.teiid.connector.metadata.runtime;
 
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * TableRecordImpl
  */
 public class TableRecordImpl extends ColumnSetRecordImpl {
 
+	public enum Type {
+		Table,
+		View,
+		Document,
+		XmlMappingClass,
+		XmlStagingTable,
+		MaterializedTable
+	}
+	
     private int cardinality;
-    private int tableType;
-    private String primaryKeyID;
+    private Type tableType;
     private String materializedTableID;
     private String materializedStageTableID;
     private boolean isVirtual;
     private boolean isSystem;
     private boolean isMaterialized;
     private boolean supportsUpdate;
+    private List<ForeignKeyRecordImpl> foriegnKeys;
+    private List<KeyRecord> indexes;
+    private List<KeyRecord> uniqueKeys;
+    private List<KeyRecord> accessPatterns;
+    private KeyRecord primaryKey;
+
+    //view information
+	private String selectTransformation;
     private String insertPlan;
     private String updatePlan;
     private String deletePlan;
-    private Collection<ForeignKeyRecordImpl> foriegnKeys;
-    private Collection<ColumnSetRecordImpl> indexes;
-    private Collection<ColumnSetRecordImpl> uniqueKeys;
-    private Collection<ColumnSetRecordImpl> accessPatterns;
-    private ColumnSetRecordImpl primaryKey;
-    private TransformationRecordImpl selectTransformation;
     private String materializedStageTableName;
     private String materializedTableName;
-    
-    public TableRecordImpl() {
-		super((short)-1);
-	}
-    
-    //==================================================================================
-    //                     I N T E R F A C E   M E T H O D S
-    //==================================================================================
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#getCardinality()
-     */
+    //XML specific
+    private List<String> bindings;
+	private List<String> schemaPaths;
+	private String resourcePath;
+	
+    public List<String> getBindings() {
+		return bindings;
+	}
+
+	public void setBindings(List<String> bindings) {
+		this.bindings = bindings;
+	}
+
+	public List<String> getSchemaPaths() {
+		return schemaPaths;
+	}
+
+	public void setSchemaPaths(List<String> schemaPaths) {
+		this.schemaPaths = schemaPaths;
+	}
+
     public int getCardinality() {
         return cardinality;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#getPrimaryKeyID()
-     */
-    public String getPrimaryKeyID() {
-        return primaryKeyID;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#isVirtual()
-     */
     public boolean isVirtual() {
         return isVirtual;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#isMaterialized()
-     * @since 4.2
-     */
     public boolean isMaterialized() {
         return isMaterialized;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#isPhysical()
-     */
     public boolean isPhysical() {
         return !isVirtual();
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#isSystem()
-     */
     public boolean isSystem() {
         return isSystem;
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#getTableType()
-     */
-    public int getTableType() {
+    public Type getTableType() {
+    	if (tableType == null) {
+    		return Type.Table;
+    	}
         return tableType;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#getMaterializedStageTableID()
-     * @since 4.2
-     */
     public String getMaterializedStageTableID() {
         return this.materializedStageTableID;
     }
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#getMaterializedTableID()
-     * @since 4.2
-     */
+
     public String getMaterializedTableID() {
         return this.materializedTableID;
     }
 
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.TableRecord#supportsUpdate()
-     */
     public boolean supportsUpdate() {
         return supportsUpdate;
     }
-
-    // ==================================================================================
-    //                      P U B L I C   M E T H O D S
-    // ==================================================================================
 
     /**
      * @param i
@@ -144,15 +132,8 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
     /**
      * @param i
      */
-    public void setTableType(int i) {
+    public void setTableType(Type i) {
         tableType = i;
-    }
-
-    /**
-     * @param object
-     */
-    public void setPrimaryKeyID(String keyID) {
-        primaryKeyID = keyID;
     }
 
     /**
@@ -224,52 +205,51 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
 		this.deletePlan = deletePlan;
 	}
     
-    public Collection<ForeignKeyRecordImpl> getForeignKeys() {
+    public List<ForeignKeyRecordImpl> getForeignKeys() {
     	return this.foriegnKeys;
     }
     
-    public void setForiegnKeys(Collection<ForeignKeyRecordImpl> foriegnKeys) {
+    public void setForiegnKeys(List<ForeignKeyRecordImpl> foriegnKeys) {
 		this.foriegnKeys = foriegnKeys;
 	}
     
-    public Collection<ColumnSetRecordImpl> getIndexes() {
+    public List<KeyRecord> getIndexes() {
     	return this.indexes;
     }
     
-    public void setIndexes(Collection<ColumnSetRecordImpl> indexes) {
+    public void setIndexes(List<KeyRecord> indexes) {
 		this.indexes = indexes;
 	}
     
-    public Collection<ColumnSetRecordImpl> getUniqueKeys() {
+    public List<KeyRecord> getUniqueKeys() {
     	return this.uniqueKeys;
     }
     
-    public void setUniqueKeys(Collection<ColumnSetRecordImpl> uniqueKeys) {
+    public void setUniqueKeys(List<KeyRecord> uniqueKeys) {
 		this.uniqueKeys = uniqueKeys;
 	}
     
-    public Collection<ColumnSetRecordImpl> getAccessPatterns() {
+    public List<KeyRecord> getAccessPatterns() {
     	return this.accessPatterns;
     }
     
-    public void setAccessPatterns(Collection<ColumnSetRecordImpl> accessPatterns) {
+    public void setAccessPatterns(List<KeyRecord> accessPatterns) {
 		this.accessPatterns = accessPatterns;
 	}
     
-    public ColumnSetRecordImpl getPrimaryKey() {
+    public KeyRecord getPrimaryKey() {
     	return this.primaryKey;
     }
     
-    public void setPrimaryKey(ColumnSetRecordImpl primaryKey) {
+    public void setPrimaryKey(KeyRecord primaryKey) {
 		this.primaryKey = primaryKey;
 	}
     
-    public TransformationRecordImpl getSelectTransformation() {
+    public String getSelectTransformation() {
 		return selectTransformation;
 	}
     
-    public void setSelectTransformation(
-			TransformationRecordImpl selectTransformation) {
+    public void setSelectTransformation(String selectTransformation) {
 		this.selectTransformation = selectTransformation;
 	}
     
@@ -289,6 +269,26 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
 		this.materializedTableName = materializedTableName;
 	}
 
+	public void setResourcePath(String resourcePath) {
+		this.resourcePath = resourcePath;
+	}
+
+	public String getResourcePath() {
+		return resourcePath;
+	}
+	
+	public Collection<KeyRecord> getAllKeys() { 
+		Collection<KeyRecord> keys = new LinkedList<KeyRecord>();
+		if (getPrimaryKey() != null) {
+			keys.add(getPrimaryKey());
+		}
+		keys.addAll(getForeignKeys());
+		keys.addAll(getAccessPatterns());
+		keys.addAll(getIndexes());
+		keys.addAll(getUniqueKeys());
+		return keys;
+	}
+	
     public String toString() {
         StringBuffer sb = new StringBuffer(100);
         sb.append(getClass().getSimpleName());
@@ -298,8 +298,6 @@ public class TableRecordImpl extends ColumnSetRecordImpl {
         sb.append(getNameInSource());
         sb.append(", uuid="); //$NON-NLS-1$
         sb.append(getUUID());
-        sb.append(", pathInModel="); //$NON-NLS-1$
-        sb.append(getPath());
         return sb.toString();
     }
 

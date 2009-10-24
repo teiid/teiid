@@ -23,7 +23,6 @@
 package org.teiid.connector.metadata.runtime;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,63 +33,42 @@ import java.util.Set;
 import org.teiid.connector.DataPlugin;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.TypeFacility;
-import org.teiid.connector.metadata.runtime.MetadataConstants.PARAMETER_TYPES;
-import org.teiid.connector.metadata.runtime.MetadataConstants.RECORD_TYPE;
+import org.teiid.connector.metadata.runtime.ModelRecordImpl.Type;
 
 import com.metamatrix.core.id.UUIDFactory;
-import com.metamatrix.core.vdb.ModelType;
 
-public class MetadataFactory implements ConnectorMetadata {
-	
-	private transient UUIDFactory factory = new UUIDFactory();
-	private transient Map<String, DatatypeRecordImpl> dataTypes;
-	private transient Properties importProperties;
+/**
+ * Allows connectors to build metadata for use by the engine.
+ * 
+ * TODO: add support for datatype import
+ * TODO: add support for unique constraints
+ */
+public class MetadataFactory {
 	
 	private ModelRecordImpl model;
-	private Collection<TableRecordImpl> tables = new ArrayList<TableRecordImpl>();
-	private Collection<ProcedureRecordImpl> procedures = new ArrayList<ProcedureRecordImpl>();
-	private Collection<AnnotationRecordImpl> annotations = new ArrayList<AnnotationRecordImpl>();
-	private Collection<PropertyRecordImpl> properties = new ArrayList<PropertyRecordImpl>();
-	
+	private UUIDFactory factory = new UUIDFactory();
+	private Map<String, DatatypeRecordImpl> dataTypes;
+	private Properties importProperties;
+	private MetadataStore store = new MetadataStore();
 	private Set<String> uniqueNames = new HashSet<String>();
 	
 	public MetadataFactory(String modelName, Map<String, DatatypeRecordImpl> dataTypes, Properties importProperties) {
 		this.dataTypes = dataTypes;
 		this.importProperties = importProperties;
 		model = new ModelRecordImpl();
-		model.setFullName(modelName);
-		model.setModelType(ModelType.PHYSICAL);
-		model.setRecordType(RECORD_TYPE.MODEL);
+		model.setName(modelName);
+		model.setModelType(Type.Physical);
 		model.setPrimaryMetamodelUri("http://www.metamatrix.com/metamodels/Relational"); //$NON-NLS-1$
 		setUUID(model);	
+		store.addModel(model);
+	}
+	
+	public MetadataStore getMetadataStore() {
+		return store;
 	}
 	
 	public Properties getImportProperties() {
 		return importProperties;
-	}
-	
-	@Override
-	public ModelRecordImpl getModel() {
-		return model;
-	}
-	
-	@Override
-	public Collection<TableRecordImpl> getTables() {
-		return tables;
-	}
-	
-	@Override
-	public Collection<ProcedureRecordImpl> getProcedures() {
-		return procedures;
-	}
-	
-	@Override
-	public Collection<AnnotationRecordImpl> getAnnotations() {
-		return annotations;
-	}
-	
-	public Collection<PropertyRecordImpl> getProperties() {
-		return properties;
 	}
 	
 	private void setUUID(AbstractMetadataRecord record) {
@@ -98,10 +76,9 @@ public class MetadataFactory implements ConnectorMetadata {
 	}
 
 	private void setValuesUsingParent(String name,
-			AbstractMetadataRecord parent, AbstractMetadataRecord child) throws ConnectorException {
-		child.setFullName(parent.getFullName() + "." + name); //$NON-NLS-1$
-		child.setParentUUID(parent.getUUID());
-		if (!uniqueNames.add(child.getRecordType() + "/" + child.getFullName())) { //$NON-NLS-1$
+			AbstractMetadataRecord parent, AbstractMetadataRecord child, String recordType) throws ConnectorException {
+		child.setFullName(parent.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name);
+		if (!uniqueNames.add(recordType + "/" + child.getFullName())) { //$NON-NLS-1$
 			throw new ConnectorException(DataPlugin.Util.getString("MetadataFactory.duplicate_name", child)); //$NON-NLS-1$
 		}
 	}
@@ -114,16 +91,15 @@ public class MetadataFactory implements ConnectorMetadata {
 	 */
 	public TableRecordImpl addTable(String name) throws ConnectorException {
 		TableRecordImpl table = new TableRecordImpl();
-		setValuesUsingParent(name, model, table);
-		table.setRecordType(RECORD_TYPE.TABLE);
+		table.setTableType(TableRecordImpl.Type.Table);
+		setValuesUsingParent(name, model, table, "table"); //$NON-NLS-1$
 		table.setColumns(new LinkedList<ColumnRecordImpl>());
-		table.setAccessPatterns(new LinkedList<ColumnSetRecordImpl>());
-		table.setIndexes(new LinkedList<ColumnSetRecordImpl>());
-		table.setExtensionProperties(new LinkedList<PropertyRecordImpl>());
+		table.setAccessPatterns(new LinkedList<KeyRecord>());
+		table.setIndexes(new LinkedList<KeyRecord>());
 		table.setForiegnKeys(new LinkedList<ForeignKeyRecordImpl>());
-		table.setUniqueKeys(new LinkedList<ColumnSetRecordImpl>());
+		table.setUniqueKeys(new LinkedList<KeyRecord>());
 		setUUID(table);
-		this.tables.add(table);
+		this.store.addTable(table);
 		return table;
 	}
 	
@@ -137,15 +113,13 @@ public class MetadataFactory implements ConnectorMetadata {
 	 */
 	public ColumnRecordImpl addColumn(String name, String type, ColumnSetRecordImpl table) throws ConnectorException {
 		ColumnRecordImpl column = new ColumnRecordImpl();
-		setValuesUsingParent(name, table, column);
-		column.setRecordType(RECORD_TYPE.COLUMN);
+		setValuesUsingParent(name, table, column, "column"); //$NON-NLS-1$
 		table.getColumns().add(column);
 		column.setPosition(table.getColumns().size()); //1 based indexing
 		DatatypeRecordImpl datatype = setColumnType(type, column);
 		column.setCaseSensitive(datatype.isCaseSensitive());
 		column.setAutoIncrementable(datatype.isAutoIncrement());
 		column.setSigned(datatype.isSigned());		
-		column.setExtensionProperties(new LinkedList<PropertyRecordImpl>());
 		setUUID(column);
 		return column;
 	}
@@ -159,28 +133,10 @@ public class MetadataFactory implements ConnectorMetadata {
 		column.setDatatype(datatype);
 		column.setDatatypeUUID(datatype.getUUID());
 		column.setLength(datatype.getLength());
-		column.setNullType(datatype.getNullType());
 		column.setPrecision(datatype.getPrecisionLength());
 		column.setRadix(datatype.getRadix());
 		column.setRuntimeType(datatype.getRuntimeTypeName());
 		return datatype;
-	}
-	
-	/**
-	 * Add an annotation of description to a record.  Only one annotation should be added per record.
-	 * @param annotation
-	 * @param record
-	 * @return
-	 */
-	public AnnotationRecordImpl addAnnotation(String annotation, AbstractMetadataRecord record) {
-		AnnotationRecordImpl annotationRecordImpl = new AnnotationRecordImpl();
-		annotationRecordImpl.setRecordType(RECORD_TYPE.ANNOTATION);
-		setUUID(annotationRecordImpl);
-		annotationRecordImpl.setParentUUID(record.getUUID());
-		annotationRecordImpl.setDescription(annotation);
-		record.setAnnotation(annotationRecordImpl);
-		annotations.add(annotationRecordImpl);
-		return annotationRecordImpl;
 	}
 	
 	/**
@@ -192,19 +148,37 @@ public class MetadataFactory implements ConnectorMetadata {
 	 * @throws ConnectorException
 	 */
 	public ColumnSetRecordImpl addPrimaryKey(String name, List<String> columnNames, TableRecordImpl table) throws ConnectorException {
-		ColumnSetRecordImpl primaryKey = new ColumnSetRecordImpl(MetadataConstants.KEY_TYPES.PRIMARY_KEY);
+		KeyRecord primaryKey = new KeyRecord(KeyRecord.Type.Primary);
+		primaryKey.setTable(table);
 		primaryKey.setColumns(new ArrayList<ColumnRecordImpl>(columnNames.size()));
-		primaryKey.setRecordType(RECORD_TYPE.PRIMARY_KEY);
-		setValuesUsingParent(name, table, primaryKey);
+		setValuesUsingParent(name, table, primaryKey, "pk"); //$NON-NLS-1$
 		setUUID(primaryKey);
 		assignColumns(columnNames, table, primaryKey);
 		table.setPrimaryKey(primaryKey);
-		table.setPrimaryKeyID(primaryKey.getUUID());
 		return primaryKey;
 	}
 	
 	/**
-	 * Adds an index or unique key constraint to the given table.
+	 * Adds an access pattern to the given table.
+	 * @param name
+	 * @param columnNames
+	 * @param table
+	 * @return
+	 * @throws ConnectorException
+	 */
+	public KeyRecord addAccessPattern(String name, List<String> columnNames, TableRecordImpl table) throws ConnectorException {
+		KeyRecord ap = new KeyRecord(KeyRecord.Type.AccessPattern);
+		ap.setTable(table);
+		ap.setColumns(new ArrayList<ColumnRecordImpl>(columnNames.size()));
+		setValuesUsingParent(name, table, ap, "index"); //$NON-NLS-1$
+		setUUID(ap);
+		assignColumns(columnNames, table, ap);
+		table.getAccessPatterns().add(ap);
+		return ap;
+	}	
+	
+	/**
+	 * Adds an index to the given table.
 	 * @param name
 	 * @param nonUnique true indicates that an index is being added.
 	 * @param columnNames
@@ -212,21 +186,17 @@ public class MetadataFactory implements ConnectorMetadata {
 	 * @return
 	 * @throws ConnectorException
 	 */
-	public ColumnSetRecordImpl addIndex(String name, boolean nonUnique, List<String> columnNames, TableRecordImpl table) throws ConnectorException {
-		ColumnSetRecordImpl index = new ColumnSetRecordImpl(nonUnique?MetadataConstants.KEY_TYPES.INDEX:MetadataConstants.KEY_TYPES.UNIQUE_KEY);
+	public KeyRecord addIndex(String name, boolean nonUnique, List<String> columnNames, TableRecordImpl table) throws ConnectorException {
+		KeyRecord index = new KeyRecord(nonUnique?KeyRecord.Type.NonUnique:KeyRecord.Type.Index);
+		index.setTable(table);
 		index.setColumns(new ArrayList<ColumnRecordImpl>(columnNames.size()));
-		index.setRecordType(nonUnique?MetadataConstants.RECORD_TYPE.INDEX:MetadataConstants.RECORD_TYPE.UNIQUE_KEY);
-		setValuesUsingParent(name, table, index);
+		setValuesUsingParent(name, table, index, "index"); //$NON-NLS-1$
 		setUUID(index);
 		assignColumns(columnNames, table, index);
-		if (nonUnique) {
-			table.getIndexes().add(index);
-		} else {
-			table.getUniqueKeys().add(index);
-		}
+		table.getIndexes().add(index);
 		return index;
 	}
-	
+		
 	/**
 	 * Adds a foreign key to the given table.  The column names should be in key order.
 	 * @param name
@@ -238,38 +208,18 @@ public class MetadataFactory implements ConnectorMetadata {
 	 */
 	public ForeignKeyRecordImpl addForiegnKey(String name, List<String> columnNames, TableRecordImpl pkTable, TableRecordImpl table) throws ConnectorException {
 		ForeignKeyRecordImpl foreignKey = new ForeignKeyRecordImpl();
+		foreignKey.setTable(table);
 		foreignKey.setColumns(new ArrayList<ColumnRecordImpl>(columnNames.size()));
-		foreignKey.setRecordType(RECORD_TYPE.FOREIGN_KEY);
-		setValuesUsingParent(name, table, foreignKey);
+		setValuesUsingParent(name, table, foreignKey, "fk"); //$NON-NLS-1$
 		setUUID(foreignKey);
+		if (pkTable.getPrimaryKey() == null) {
+			throw new ConnectorException("No primary key defined for table " + pkTable); //$NON-NLS-1$
+		}
 		foreignKey.setPrimaryKey(pkTable.getPrimaryKey());
-		foreignKey.setUniqueKeyID(pkTable.getPrimaryKeyID());
+		foreignKey.setUniqueKeyID(pkTable.getPrimaryKey().getUUID());
 		assignColumns(columnNames, table, foreignKey);
 		table.getForeignKeys().add(foreignKey);
 		return foreignKey;
-	}
-	
-	/**
-	 * Adds an extension property to the given record.
-	 * @param name
-	 * @param value
-	 * @param record
-	 * @return
-	 * @throws ConnectorException 
-	 */
-	public PropertyRecordImpl addExtensionProperty(String name, String value, AbstractMetadataRecord record) throws ConnectorException {
-		PropertyRecordImpl property = new PropertyRecordImpl();
-		property.setRecordType(RECORD_TYPE.PROPERTY);
-		setValuesUsingParent(name, record, property);
-		setUUID(property);
-		property.setPropertyName(name);
-		property.setPropertyValue(value);
-		properties.add(property);
-		if (record.getExtensionProperties() == null) {
-			record.setExtensionProperties(new LinkedList<PropertyRecordImpl>());
-		}
-		record.getExtensionProperties().add(property);
-		return property;
 	}
 	
 	/**
@@ -280,27 +230,25 @@ public class MetadataFactory implements ConnectorMetadata {
 	 */
 	public ProcedureRecordImpl addProcedure(String name) throws ConnectorException {
 		ProcedureRecordImpl procedure = new ProcedureRecordImpl();
-		procedure.setRecordType(RECORD_TYPE.CALLABLE);
-		setValuesUsingParent(name, this.model, procedure);
+		setValuesUsingParent(name, this.model, procedure, "proc"); //$NON-NLS-1$
 		setUUID(procedure);
 		procedure.setParameters(new LinkedList<ProcedureParameterRecordImpl>());
-		this.procedures.add(procedure);
+		this.store.addProcedure(procedure);
 		return procedure;
 	}
 	
 	/**
-	 * 
+	 * Add a procedure parameter.
 	 * @param name
-	 * @param type should be one of {@link PARAMETER_TYPES}
-	 * @param parameterType should be one of {@link TypeFacility.RUNTIME_NAMES}
+	 * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
+	 * @param parameterType should be one of {@link ProcedureParameterRecordImpl.Type}
 	 * @param procedure
 	 * @return
 	 * @throws ConnectorException 
 	 */
-	public ProcedureParameterRecordImpl addProcedureParameter(String name, String type, short parameterType, ProcedureRecordImpl procedure) throws ConnectorException {
+	public ProcedureParameterRecordImpl addProcedureParameter(String name, String type, ProcedureParameterRecordImpl.Type parameterType, ProcedureRecordImpl procedure) throws ConnectorException {
 		ProcedureParameterRecordImpl param = new ProcedureParameterRecordImpl();
-		param.setRecordType(RECORD_TYPE.CALLABLE_PARAMETER);
-		setValuesUsingParent(name, procedure, param);
+		setValuesUsingParent(name, procedure, param, "param"); //$NON-NLS-1$
 		setUUID(param);
 		param.setType(parameterType);
 		setColumnType(type, param);
@@ -310,7 +258,7 @@ public class MetadataFactory implements ConnectorMetadata {
 	}
 	
 	/**
-	 * 
+	 * Add a procedure resultset column to the given procedure.
 	 * @param name
 	 * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
 	 * @param procedure
@@ -319,9 +267,8 @@ public class MetadataFactory implements ConnectorMetadata {
 	 */
 	public ColumnRecordImpl addProcedureResultSetColumn(String name, String type, ProcedureRecordImpl procedure) throws ConnectorException {
 		if (procedure.getResultSet() == null) {
-			ColumnSetRecordImpl resultSet = new ColumnSetRecordImpl((short)-1);
-			resultSet.setRecordType(RECORD_TYPE.RESULT_SET);
-			setValuesUsingParent("RESULT_SET", procedure, resultSet); //$NON-NLS-1$
+			ColumnSetRecordImpl resultSet = new ColumnSetRecordImpl();
+			setValuesUsingParent("RESULT_SET", procedure, resultSet, "rs"); //$NON-NLS-1$ //$NON-NLS-2$
 			setUUID(resultSet);
 			procedure.setResultSet(resultSet);
 			procedure.setResultSetID(resultSet.getUUID());

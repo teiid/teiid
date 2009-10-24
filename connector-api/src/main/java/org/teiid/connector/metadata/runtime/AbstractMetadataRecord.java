@@ -23,74 +23,52 @@
 package org.teiid.connector.metadata.runtime;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.Properties;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.metamatrix.core.util.EquivalenceUtil;
-import com.metamatrix.core.util.FileUtils;
-import com.metamatrix.core.util.HashCodeUtil;
 
 /**
  * AbstractMetadataRecord
  */
 public abstract class AbstractMetadataRecord implements Serializable {
 	    
-    /**
-	 * Constants for names of accessor methods that map to fields stored on the MetadataRecords.
-	 * Note the names do not have "get" on them, this is also the nameInSource
-	 * of the attributes on SystemPhysicalModel.
-	 * @since 4.3
-	 */
-	public static interface MetadataFieldNames {
-	    String RECORD_TYPE_FIELD    = "Recordtype"; //$NON-NLS-1$
-	    String NAME_FIELD           = "Name"; //$NON-NLS-1$
-	    String FULL_NAME_FIELD      = "FullName"; //$NON-NLS-1$
-	    String MODEL_NAME_FIELD     = "ModelName"; //$NON-NLS-1$        
-	    String UUID_FIELD           = "UUID"; //$NON-NLS-1$
-	    String NAME_IN_SOURCE_FIELD = "NameInSource"; //$NON-NLS-1$
-	    String PARENT_UUID_FIELD    = "ParentUUID"; //$NON-NLS-1$
-	}
-
     public final static char NAME_DELIM_CHAR = '.';
     
-	private String pathString;
-	private String modelName;
-    private char recordType;
-    
-    private String uuid;
-    private String parentUUID;
-    private String nameInSource;
+    private String uuid; //globally unique id
+    private String name; //contextually unique name
     private String fullName;
-	private String name;
+    
+    private String nameInSource;
 	
-	private Collection<PropertyRecordImpl> extensionProperties;
-	private transient Properties properties;
-	private AnnotationRecordImpl annotation;
+	private LinkedHashMap<String, String> properties;
+	private String annotation;
 	
 	public String getUUID() {
 		return uuid;
 	}
+	
 	public void setUUID(String uuid) {
 		this.uuid = uuid;
 	}
-	public String getParentUUID() {
-		return parentUUID;
-	}
-	public void setParentUUID(String parentUUID) {
-		this.parentUUID = parentUUID;
-	}
+	
 	public String getNameInSource() {
 		return nameInSource;
 	}
+	
 	public void setNameInSource(String nameInSource) {
 		this.nameInSource = nameInSource;
 	}
+	
 	public String getFullName() {
         return this.fullName == null ? this.name : this.fullName;
 	}
+	
 	public void setFullName(String fullName) {
 		this.fullName = fullName;
 	}
+	
 	public String getName() {
     	if(this.name == null || this.name.trim().length() == 0) {
 			int nmIdx = this.fullName != null ? this.fullName.lastIndexOf(NAME_DELIM_CHAR) : -1;
@@ -102,45 +80,21 @@ public abstract class AbstractMetadataRecord implements Serializable {
     	}
 		return name;
 	}	
+	
 	public void setName(String name) {
 		this.name = name;
 	}
-    
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.MetadataRecord#getModelName()
-     */
+	
     public String getModelName() {
-    	if(this.modelName == null) {
-			int prntIdx = getFullName() != null ? getFullName().indexOf(NAME_DELIM_CHAR) : -1;
-			if (prntIdx <= 0) {
-				this.modelName = getFullName();
-			} else {
-				this.modelName = getFullName() != null ? getFullName().substring(0, prntIdx) : null;
-			}
-    	}
-
-    	return this.modelName;
+		int prntIdx = fullName.indexOf(NAME_DELIM_CHAR);
+		return fullName.substring(0, prntIdx);
     }
 
-    /*
-     * @see com.metamatrix.modeler.core.metadata.runtime.MetadataRecord#getPathString()
-     */
-    public String getPathString() {
-		if(this.pathString == null) {
-			this.pathString = getFullName() != null ? getFullName().replace(NAME_DELIM_CHAR, FileUtils.SEPARATOR) : null;			
-		}
-		return this.pathString;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.MetadataRecord#getPath()
-     */
-    public String getPath() {
-        return getPathString();
+    public String toString() {
+        return uuid + ": " + name; //$NON-NLS-1$
     }
     
     /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.MetadataRecord#getParentFullName()
      * @deprecated the returned value may be incorrect in the case of an XML element (see defects #11326 and #11362)
      */
     public String getParentFullName() {
@@ -150,55 +104,36 @@ public abstract class AbstractMetadataRecord implements Serializable {
         }
         return getFullName().substring(0, prntIdx);
     }
-
+    
     /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.MetadataRecord#getParentPathString()
-     * @deprecated the returned value may be incorrect in the case of an XML element (see defects #11326 and #11362)
+     * Return the extension properties for this record - may be null
+     * if {@link #setProperties(LinkedHashMap)} or {@link #setProperty(String, String)}
+     * has not been called
+     * @return
      */
-    public String getParentPathString() {
-        String parentFullName = getParentFullName();
-        return parentFullName != null ? parentFullName.replace(NAME_DELIM_CHAR, FileUtils.SEPARATOR) : null;
-    }
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.MetadataRecord#getRecordType()
-     */
-    public char getRecordType() {
-        return this.recordType;
-    }
-
-    /**
-     * @param c
-     */
-    public void setRecordType(char c) {
-        recordType = c;
-    }
-
-    public String toString() {
-        return getFullName();
-    }
-    
-    public Collection<PropertyRecordImpl> getExtensionProperties() {
-		return extensionProperties;
+    public Map<String, String> getProperties() {
+    	if (properties == null) {
+    		return Collections.emptyMap();
+    	}
+    	return properties;
 	}
     
-    public void setExtensionProperties(Collection<PropertyRecordImpl> properties) {
-		this.extensionProperties = properties;
-	}
+    public void setProperty(String key, String value) {
+    	if (this.properties == null) {
+    		this.properties = new LinkedHashMap<String, String>();
+    	}
+    	this.properties.put(key, value);
+    }
     
-    public Properties getProperties() {
-		return properties;
-	}
-    
-    public void setProperties(Properties properties) {
+    public void setProperties(LinkedHashMap<String, String> properties) {
 		this.properties = properties;
 	}
 
-    public AnnotationRecordImpl getAnnotation() {
+    public String getAnnotation() {
 		return annotation;
 	}
     
-    public void setAnnotation(AnnotationRecordImpl annotation) {
+    public void setAnnotation(String annotation) {
 		this.annotation = annotation;
 	}
 
@@ -211,35 +146,17 @@ public abstract class AbstractMetadataRecord implements Serializable {
             return true;
         }
 
-        if(obj == null || obj.getClass() != this.getClass()) {
+        if(obj.getClass() != this.getClass()) {
             return false;
         }
 
         AbstractMetadataRecord other = (AbstractMetadataRecord)obj;
 
-        if(this.getRecordType() != other.getRecordType()) { return false; }        
-        if(!EquivalenceUtil.areEqual(this.getUUID(), other.getUUID())) { return false; }
-        if(!EquivalenceUtil.areEqual(this.getParentUUID(), other.getParentUUID())) { return false; }
-        if(!EquivalenceUtil.areEqual(this.getFullName(), other.getFullName())) { return false; }
-        if(!EquivalenceUtil.areEqual(this.getNameInSource(), other.getNameInSource())) { return false; }
-
-        return true;
+        return EquivalenceUtil.areEqual(this.getUUID(), other.getUUID());
     }
 
-    /**
-     * WARNING: The hash code relies on the variables
-     * in the record, so changing the variables will change the hash code, causing
-     * a select to be lost in a hash structure.  Do not hash a record if you plan
-     * to change it.
-     */
     public int hashCode() {
-        int myHash = 0;
-        myHash = HashCodeUtil.hashCode(myHash, this.recordType);
-        myHash = HashCodeUtil.hashCode(myHash, this.getFullName());
-        myHash = HashCodeUtil.hashCode(myHash, this.getUUID());
-        myHash = HashCodeUtil.hashCode(myHash, this.getParentUUID());
-        myHash = HashCodeUtil.hashCode(myHash, this.getNameInSource());
-        return myHash;
+        return this.uuid.hashCode();
     }
         
 }

@@ -22,42 +22,34 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import java.io.Serializable;
-import java.util.Collection;
+public class KeyRecord extends ColumnSetRecordImpl {
 
-public interface ConnectorMetadata extends Serializable {
+	public enum Type {
+		Primary,
+		Foreign,
+		Unique, //constraint
+		NonUnique,
+		AccessPattern,
+		Index,
+	}
+	
+	private Type type;
+	private TableRecordImpl table;
 
-	/**
-	 * Get the model that this metadata represents.  The model name is treated as 
-	 * a top level schema for all source metadata.
-	 * @return
-	 */
-	ModelRecordImpl getModel();
+	public KeyRecord(Type type) {
+		this.type = type;
+	}
 	
-	/**
-	 * Get the tables defined for this model
-	 * @return
-	 */
-	Collection<TableRecordImpl> getTables();
+	public Type getType() {
+		return type;
+	}
 	
-	/**
-	 * Get the procedures defined for this model
-	 * @return
-	 */
-	Collection<ProcedureRecordImpl> getProcedures();
+	public TableRecordImpl getTable() {
+		return table;
+	}
 	
-	/**
-	 * Get the annotations defined for this model
-	 * @return
-	 */
-	Collection<AnnotationRecordImpl> getAnnotations();
-	
-	/**
-	 * Get the extension properties defined for this model
-	 * @return
-	 */
-	Collection<PropertyRecordImpl> getProperties();
-	
-	//costing
+	public void setTable(TableRecordImpl table) {
+		this.table = table;
+	}
 	
 }

@@ -22,25 +22,27 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import java.util.List;
+import org.teiid.connector.metadata.runtime.BaseColumn.NullType;
+import org.teiid.connector.metadata.runtime.ColumnRecordImpl.SearchType;
+
 
 
 /**
  * ColumnRecordImpl
  */
 public class DatatypeRecordImpl extends AbstractMetadataRecord {
-
-    /**
-	 * Constants for names of accessor methods that map to fields stored  on the DatatypeRecords.
-	 * Note the names do not have "get" on them, this is also the nameInsource
-	 * of the attributes on SystemPhysicalModel.
-	 * @since 4.3
-	 */
-	public static interface MetadataFieldNames {
 	
-	    String DATA_TYPE_UUID = "DatatypeID";  //$NON-NLS-1$
-	    String BASE_TYPE_UUID = "BasetypeID";  //$NON-NLS-1$
-	    String RUN_TYPE_NAME = "RuntimeTypeName";  //$NON-NLS-1$
+	public enum Type {
+		Basic,
+		UserDefined,
+		ResultSet
+	}
+	
+	public enum Variety {
+		Atomic,
+		List,
+		Union,
+		Complex
 	}
 
 	/** Delimiter used to separate the URI string from the URI fragment */
@@ -55,26 +57,18 @@ public class DatatypeRecordImpl extends AbstractMetadataRecord {
     private boolean isSigned;
     private boolean isAutoIncrement;
     private boolean isCaseSensitive;
-    private short type;
-    private short searchType;
-    private short nullType;
+    private Type type;
+    private SearchType searchType;
+    private NullType nullType;
     private String javaClassName = DEFAULT_JAVA_CLASS_NAME;
     private String runtimeTypeName;
     private String datatypeID;
     private String basetypeID;
     private String primitiveTypeID;
-    private short varietyType;
-    private List varietyProps;
+    private Variety varietyType;
 
-    //==================================================================================
-    //                     I N T E R F A C E   M E T H O D S
-    //==================================================================================
-
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.MetadataRecord#getName()
-     */
     public String getName() {
-        final String fullName = super.getFullName();
+        final String fullName = super.getName();
         int indx = fullName.lastIndexOf(URI_REFERENCE_DELIMITER);
         if (indx > -1) {
             return fullName.substring(indx+1);
@@ -86,134 +80,70 @@ public class DatatypeRecordImpl extends AbstractMetadataRecord {
         return fullName;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.MetadataRecord#getModelName()
-     */
-    public String getModelName() {
-        final String fullName = super.getFullName();
-        int indx = fullName.lastIndexOf(URI_REFERENCE_DELIMITER);
-        if (indx > -1) {
-            return fullName.substring(0, indx);
-        }
-        indx = fullName.lastIndexOf(AbstractMetadataRecord.NAME_DELIM_CHAR);
-        if (indx > -1) {
-            return fullName.substring(0, indx);
-        }
-        return fullName;
-    }
-
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getLength()
-     */
     public int getLength() {
         return this.length;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getPrecisionLength()
-     */
     public int getPrecisionLength() {
         return this.precisionLength;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getScale()
-     */
     public int getScale() {
         return this.scale;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getRadix()
-     */
     public int getRadix() {
         return this.radix;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#isSigned()
-     */
     public boolean isSigned() {
         return this.isSigned;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#isAutoIncrement()
-     */
     public boolean isAutoIncrement() {
         return this.isAutoIncrement;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#isCaseSensitive()
-     */
     public boolean isCaseSensitive() {
         return this.isCaseSensitive;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getType()
-     */
-    public short getType() {
+    public Type getType() {
         return this.type;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#isBuiltin()
-     */
     public boolean isBuiltin() {
-        if ( getType() == MetadataConstants.DATATYPE_TYPES.BASIC ) {
-            return true;
-        }
-        return false;
+        return getType() == Type.Basic;
     }
 
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getSearchType()
-     */
-    public short getSearchType() {
+    public SearchType getSearchType() {
         return this.searchType;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getNullType()
-     */
-    public short getNullType() {
+    public NullType getNullType() {
+    	if (this.nullType == null) {
+    		return NullType.Unknown;
+    	}
         return this.nullType;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getJavaClassName()
-     */
     public String getJavaClassName() {
         return this.javaClassName;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getRuntimeTypeName()
-     */
     public String getRuntimeTypeName() {
         return this.runtimeTypeName;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getDatatypeID()
-     */
     public String getDatatypeID() {
         return this.datatypeID;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getBasetypeID()
-     */
     public String getBasetypeID() {
         return this.basetypeID;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getBasetypeName()
-     */
     public String getBasetypeName() {
         if ( this.basetypeID != null ) {
             final int i = getBasetypeID().lastIndexOf(URI_REFERENCE_DELIMITER);
@@ -224,31 +154,13 @@ public class DatatypeRecordImpl extends AbstractMetadataRecord {
         return null;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getPrimitiveTypeID()
-     * @since 4.3
-     */
     public String getPrimitiveTypeID() {
         return this.primitiveTypeID;
     }
 
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getVarietyType()
-     */
-    public short getVarietyType() {
+    public Variety getVarietyType() {
         return this.varietyType;
     }
-
-    /**
-     * @see com.metamatrix.modeler.core.metadata.runtime.DatatypeRecord#getVarietyProps()
-     */
-    public List getVarietyProps() {
-        return this.varietyProps;
-    }
-
-    // ==================================================================================
-    //                      P U B L I C   M E T H O D S
-    // ==================================================================================
 
     /**
      * @param string
@@ -302,7 +214,7 @@ public class DatatypeRecordImpl extends AbstractMetadataRecord {
     /**
      * @param s
      */
-    public void setNullType(short s) {
+    public void setNullType(NullType s) {
         nullType = s;
     }
 
@@ -337,14 +249,14 @@ public class DatatypeRecordImpl extends AbstractMetadataRecord {
     /**
      * @param s
      */
-    public void setSearchType(short s) {
+    public void setSearchType(SearchType s) {
         searchType = s;
     }
 
     /**
      * @param s
      */
-    public void setType(short s) {
+    public void setType(Type s) {
         type = s;
     }
 
@@ -356,16 +268,9 @@ public class DatatypeRecordImpl extends AbstractMetadataRecord {
     }
 
     /**
-     * @param list
-     */
-    public void setVarietyProps(List list) {
-        varietyProps = list;
-    }
-
-    /**
      * @param s
      */
-    public void setVarietyType(short s) {
+    public void setVarietyType(Variety s) {
         varietyType = s;
     }
 
@@ -384,7 +289,6 @@ public class DatatypeRecordImpl extends AbstractMetadataRecord {
         sb.append(getUUID());
         sb.append(", datatypeID="); //$NON-NLS-1$
         sb.append(getDatatypeID());
-
         return sb.toString();
     }
 

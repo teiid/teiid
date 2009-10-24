@@ -22,82 +22,21 @@
 
 package org.teiid.connector.metadata.runtime;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * ColumnSetRecordImpl
  */
 public class ColumnSetRecordImpl extends AbstractMetadataRecord {
-    
-    private List<String> columnIDs;
-    private short type;
+	
     private List<ColumnRecordImpl> columns;
     
-    public ColumnSetRecordImpl(short type) {
-    	this.type = type;
-    }
-
     public List<ColumnRecordImpl> getColumns() {
     	return columns;
     }
 
-    /** 
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnSetRecord#getColumnIDs()
-     */
-    public List<String> getColumnIDs() {
-        return columnIDs;
-    }
-    
-    /** 
-     * Retrieves a list of ColumnRecordImpls containing only id and position information (used by System Tables)
-     */
-    public List<ColumnRecordImpl> getColumnIdEntries() {
-    	int count = getColumnCount();
-        final List<ColumnRecordImpl> entryRecords = new ArrayList<ColumnRecordImpl>(count);
-        for (int i = 0; i < count; i++) {
-            final String uuid  = getUUID(i);
-            ColumnRecordImpl impl = new ColumnRecordImpl();
-            entryRecords.add( impl );
-            impl.setUUID(uuid);
-            impl.setPosition(i+1);
-        }
-        return entryRecords;
-    }
-    
-    private int getColumnCount() {
-    	if (columnIDs != null) {
-    		return columnIDs.size();
-    	}
-    	if (columns != null) {
-    		return columns.size();
-    	}
-    	return 0;
-    }
-    
-    private String getUUID(int index) {
-    	if (columnIDs != null) {
-    		return columnIDs.get(index);
-    	}
-		return columns.get(index).getUUID();
-    }
-
-    /** 
-     * @see com.metamatrix.modeler.core.metadata.runtime.ColumnSetRecord#getType()
-     */
-    public short getType() {
-        return type;
-    }
-
-    /**
-     * @param list
-     */
-    public void setColumnIDs(List<String> list) {
-        columnIDs = list;
-    }
-    
     public void setColumns(List<ColumnRecordImpl> columns) {
 		this.columns = columns;
 	}
-    
+
 }

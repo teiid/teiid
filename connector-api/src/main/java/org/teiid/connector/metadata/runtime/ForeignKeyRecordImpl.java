@@ -25,29 +25,18 @@ package org.teiid.connector.metadata.runtime;
 /**
  * ForeignKeyRecordImpl
  */
-public class ForeignKeyRecordImpl extends ColumnSetRecordImpl {
+public class ForeignKeyRecordImpl extends KeyRecord {
 
     private String uniqueKeyID;
-    private ColumnSetRecordImpl primaryKey;
+    private KeyRecord primaryKey;
     
     public ForeignKeyRecordImpl() {
-		super(MetadataConstants.KEY_TYPES.FOREIGN_KEY);
+		super(Type.Foreign);
 	}
     
-    //==================================================================================
-    //                     I N T E R F A C E   M E T H O D S
-    //==================================================================================
-
-    /* (non-Javadoc)
-     * @see com.metamatrix.modeler.core.metadata.runtime.ForeignKeyRecord#getPrimaryKeyID()
-     */
     public String getUniqueKeyID() {
         return uniqueKeyID;
     }
-
-    // ==================================================================================
-    //                      P U B L I C   M E T H O D S
-    // ==================================================================================
 
     /**
      * @param object
@@ -56,11 +45,11 @@ public class ForeignKeyRecordImpl extends ColumnSetRecordImpl {
         uniqueKeyID = keyID;
     }    
     
-    public ColumnSetRecordImpl getPrimaryKey() {
+    public KeyRecord getPrimaryKey() {
     	return this.primaryKey;
     }
     
-    public void setPrimaryKey(ColumnSetRecordImpl primaryKey) {
+    public void setPrimaryKey(KeyRecord primaryKey) {
 		this.primaryKey = primaryKey;
 	}
 }

@@ -22,19 +22,29 @@
 
 package org.teiid.connector.metadata.runtime;
 
+
 /**
  * ProcedureParameterRecordImpl
  */
 public class ProcedureParameterRecordImpl extends BaseColumn {
 
-	private short type;
+	public enum Type {
+		Unknown,
+		In,
+		InOut,
+		ResultSet,
+		Out,
+		ReturnValue
+	}
+	
+	private Type type;
 	private boolean optional;
 	
-	public void setType(short type) {
+	public void setType(Type type) {
 		this.type = type;
 	}
 	
-	public short getType() {
+	public Type getType() {
 		return type;
 	}
 	

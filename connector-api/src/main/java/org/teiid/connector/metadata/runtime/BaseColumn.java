@@ -22,20 +22,31 @@
 
 package org.teiid.connector.metadata.runtime;
 
-public class BaseColumn extends AbstractMetadataRecord {
+public abstract class BaseColumn extends AbstractMetadataRecord {
+	
+	public enum NullType {
+		No_Nulls {
+			@Override
+			public String toString() {
+				return "No Nulls"; //$NON-NLS-1$
+			}
+		},
+		Nullable,
+		Unknown		
+	}
 	
 	private String datatypeUUID;
     private String runtimeType;
-    private Object defaultValue;
+    private String defaultValue;
     private int length;
     private int scale;
     private int radix;
     private int precision;
-    private int nullType;
+    private NullType nullType;
     private int position;
     private DatatypeRecordImpl datatype;
 
-    public Object getDefaultValue() {
+    public String getDefaultValue() {
         return defaultValue;
     }
 
@@ -67,7 +78,10 @@ public class BaseColumn extends AbstractMetadataRecord {
         return position;
     }
 
-    public int getNullType() {
+    public NullType getNullType() {
+    	if (nullType == null) {
+    		return NullType.Unknown;
+    	}
         return nullType;
     }
 
@@ -87,7 +101,7 @@ public class BaseColumn extends AbstractMetadataRecord {
 		radix = i;
 	}
 
-    public void setNullType(int i) {
+    public void setNullType(NullType i) {
         nullType = i;
     }
 
@@ -103,7 +117,7 @@ public class BaseColumn extends AbstractMetadataRecord {
 		datatypeUUID = string;
 	}
 
-	public void setDefaultValue(Object object) {
+	public void setDefaultValue(String object) {
 		defaultValue = object;
 	}
 
