@@ -26,9 +26,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.metadata.CompositeMetadataStore;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
-import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
@@ -76,7 +76,7 @@ public class FakeMetadataService extends FakeAbstractService implements Metadata
     }
 
 	@Override
-	public IObjectSource getMetadataObjectSource(String vdbName,
+	public CompositeMetadataStore getMetadataObjectSource(String vdbName,
 			String vdbVersion) throws MetaMatrixComponentException {
 		return null;
 	}

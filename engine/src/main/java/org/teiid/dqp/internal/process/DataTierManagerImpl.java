@@ -22,11 +22,30 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.sql.rowset.serial.SerialBlob;
+import javax.sql.rowset.serial.SerialClob;
+
+import org.teiid.connector.metadata.runtime.ColumnRecordImpl;
+import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
+import org.teiid.connector.metadata.runtime.ForeignKeyRecordImpl;
+import org.teiid.connector.metadata.runtime.KeyRecord;
+import org.teiid.connector.metadata.runtime.MetadataStore;
+import org.teiid.connector.metadata.runtime.ModelRecordImpl;
+import org.teiid.connector.metadata.runtime.ProcedureParameterRecordImpl;
+import org.teiid.connector.metadata.runtime.ProcedureRecordImpl;
+import org.teiid.connector.metadata.runtime.TableRecordImpl;
 import org.teiid.dqp.internal.process.CodeTableCache.CacheKey;
+import org.teiid.metadata.CompositeMetadataStore;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.MetaMatrixProcessingException;
@@ -35,6 +54,8 @@ import com.metamatrix.common.buffer.TupleBatch;
 import com.metamatrix.common.buffer.TupleSource;
 import com.metamatrix.common.comm.api.ResultsReceiver;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.vdb.api.ModelInfo;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.embedded.DQPEmbeddedProperties;
@@ -46,44 +67,324 @@ import com.metamatrix.dqp.message.RequestID;
 import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.BufferService;
 import com.metamatrix.dqp.service.DataService;
+import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBService;
 import com.metamatrix.dqp.util.LogConstants;
+import com.metamatrix.metadata.runtime.api.MetadataSourceUtil;
 import com.metamatrix.query.processor.ProcessorDataManager;
 import com.metamatrix.query.processor.QueryProcessor;
 import com.metamatrix.query.sql.ReservedWords;
 import com.metamatrix.query.sql.lang.Command;
+import com.metamatrix.query.sql.lang.Query;
+import com.metamatrix.query.sql.lang.StoredProcedure;
+import com.metamatrix.query.sql.lang.UnaryFromClause;
+import com.metamatrix.query.sql.symbol.GroupSymbol;
+import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.util.CommandContext;
 
 public class DataTierManagerImpl implements ProcessorDataManager {
+	
+	private enum SystemTables {
+		VIRTUALDATABASES,
+		MODELS,
+		GROUPS,
+		DATATYPES,
+		ELEMENTS,
+		KEYS,
+		PROCEDURES,
+		KEYELEMENTS,
+		PROCEDUREPARAMS,
+		MODELPROPERTIES,
+		GROUPPROPERTIES,
+		DATATYPEPROPERTIES,
+		ELEMENTPROPERTIES,
+		KEYPROPERTIES,
+		PROCEDUREPROPERTIES,
+		PROCEDUREPARAMPROPERTIES,
+		REFERENCEKEYCOLUMNS
+	}
+	
+	private enum SystemProcs {
+		GETCHARACTERVDBRESOURCE,
+		GETBINARYVDBRESOURCE,
+		GETVDBRESOURCEPATHS
+	}
+	
+	private class CollectionTupleSource implements TupleSource {
+		
+		private Iterator<List<Object>> tuples;
+		private List<SingleElementSymbol> schema;
+		
+		public CollectionTupleSource(Iterator<List<Object>> tuples,
+				List<SingleElementSymbol> schema) {
+			this.tuples = tuples;
+			this.schema = schema;
+		}
+
+		@Override
+		public List<?> nextTuple() throws MetaMatrixComponentException,
+				MetaMatrixProcessingException {
+			if (tuples.hasNext()) {
+				return tuples.next();
+			}
+			return null;
+		}
+		
+		@Override
+		public List<SingleElementSymbol> getSchema() {
+			return schema;
+		}
+		
+		@Override
+		public void closeSource() throws MetaMatrixComponentException {
+			
+		}
+	}
 
 	// Resources
 	private DQPCore requestMgr;
     private DataService dataService;
     private VDBService vdbService;
     private BufferService bufferService;
+    private MetadataService metadataService;
 
 	// Processor state
     private CodeTableCache codeTableCache;
     
     public DataTierManagerImpl(DQPCore requestMgr,
-        DataService dataService, VDBService vdbService, BufferService bufferService, 
+        DataService dataService, VDBService vdbService, BufferService bufferService, MetadataService metadataService, 
         int maxCodeTables, int maxCodeRecords, int maxCodeTableRecords) {
 
 		this.requestMgr = requestMgr;
         this.dataService = dataService;
         this.vdbService = vdbService;
         this.bufferService = bufferService;
+        this.metadataService = metadataService;
 
         this.codeTableCache = new CodeTableCache(maxCodeTables, maxCodeRecords, maxCodeTableRecords);
 	}
 
+	@SuppressWarnings("unchecked")
 	public TupleSource registerRequest(Object processorId, Command command,
 			String modelName, String connectorBindingId, int nodeID) throws MetaMatrixComponentException, MetaMatrixProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
+		
+		if(CoreConstants.SYSTEM_MODEL.equals(modelName)) {
+			String vdbName = workItem.getDqpWorkContext().getVdbName();
+			String vdbVersion = workItem.getDqpWorkContext().getVdbVersion();
+			CompositeMetadataStore metadata = this.metadataService.getMetadataObjectSource(vdbName, vdbVersion);
+			Collection rows = new ArrayList();
+			if (command instanceof Query) {
+				Query query = (Query)command;
+				UnaryFromClause ufc = (UnaryFromClause)query.getFrom().getClauses().get(0);
+				GroupSymbol group = ufc.getGroup();
+				final SystemTables sysTable = SystemTables.valueOf(group.getNonCorrelationName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
+				switch (sysTable) {
+				case VIRTUALDATABASES:
+					rows.add(Arrays.asList(vdbName, vdbVersion));
+					break;
+				case MODELS:
+				case MODELPROPERTIES:
+					for (MetadataStore store : metadata.getMetadataStores()) {
+						for (ModelRecordImpl model : store.getModels().values()) {
+							if(checkVisibility(vdbName, vdbVersion, model.getName())) {
+								if (sysTable == SystemTables.MODELS) {
+									rows.add(Arrays.asList(model.getName(), model.isPhysical(), model.getUUID(), model.getAnnotation(), model.getPrimaryMetamodelUri()));
+								} else {
+									for (Map.Entry<String, String> entry : model.getProperties().entrySet()) {
+										rows.add(Arrays.asList(model.getName(), entry.getKey(), entry.getValue(), model.getUUID()));
+									}
+								}
+					        }
+						}
+					}
+					break;
+				case DATATYPES:
+				case DATATYPEPROPERTIES:
+					rows = new LinkedHashSet(); //System types are duplicated in each indexed vdb... 
+					for (MetadataStore store : metadata.getMetadataStores()) {
+						for (DatatypeRecordImpl datatype : store.getDatatypes()) {
+							if (sysTable == SystemTables.DATATYPES) {
+								rows.add(Arrays.asList(datatype.getName(), datatype.isBuiltin(), datatype.isBuiltin(), datatype.getName(), datatype.getJavaClassName(), datatype.getScale(), 
+										datatype.getLength(), datatype.getNullType().toString(), datatype.isSigned(), datatype.isAutoIncrement(), datatype.isCaseSensitive(), datatype.getPrecisionLength(), 
+										datatype.getRadix(), datatype.getSearchType().toString(), datatype.getUUID(), datatype.getRuntimeTypeName(), datatype.getBasetypeName(), datatype.getAnnotation()));
+							} else {
+								for (Map.Entry<String, String> entry : datatype.getProperties().entrySet()) {
+									rows.add(Arrays.asList(datatype.getName(), entry.getKey(), entry.getValue(), datatype.getUUID()));
+								}
+							}
+						}
+					}
+					break;
+				case PROCEDURES:
+				case PROCEDUREPROPERTIES:
+				case PROCEDUREPARAMS:
+				case PROCEDUREPARAMPROPERTIES:
+					for (MetadataStore store : metadata.getMetadataStores()) {
+						for (ProcedureRecordImpl proc : store.getProcedures().values()) {
+							if(!checkVisibility(vdbName, vdbVersion, proc.getModelName())) {
+								continue;
+							}
+							switch (sysTable) {
+							case PROCEDURES:
+								ModelRecordImpl model = store.getModels().get(proc.getModelName().toLowerCase());
+								rows.add(Arrays.asList(proc.getModelName(), proc.getName(), proc.getNameInSource(), proc.getResultSetID() != null, model.getUUID(), proc.getUUID(), proc.getAnnotation(), proc.getFullName()));
+								break;
+							case PROCEDUREPROPERTIES:
+								for (Map.Entry<String, String> entry : proc.getProperties().entrySet()) {
+									rows.add(Arrays.asList(proc.getModelName(), proc.getName(), entry.getKey(), entry.getValue(), proc.getUUID()));
+								}
+								break;
+							default:
+								for (ProcedureParameterRecordImpl param : proc.getParameters()) {
+									if (sysTable == SystemTables.PROCEDUREPARAMS) {
+										rows.add(Arrays.asList(proc.getModelName(), proc.getFullName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), param.getType().toString(), param.isOptional(), 
+												param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
+									} else {
+										for (Map.Entry<String, String> entry : param.getProperties().entrySet()) {
+											rows.add(Arrays.asList(proc.getModelName(), proc.getFullName(), param.getName(), entry.getKey(), entry.getValue(), param.getUUID()));
+										}
+									}
+								}
+								if (proc.getResultSetID() != null) {
+									for (ColumnRecordImpl param : proc.getResultSet().getColumns()) {
+										if (sysTable == SystemTables.PROCEDUREPARAMS) {
+											rows.add(Arrays.asList(proc.getModelName(), proc.getFullName(), param.getName(), param.getDatatype().getRuntimeTypeName(), param.getPosition(), ProcedureParameterRecordImpl.Type.ResultSet.toString(), false, 
+													param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID()));
+										} else {
+											for (Map.Entry<String, String> entry : param.getProperties().entrySet()) {
+												rows.add(Arrays.asList(proc.getModelName(), proc.getFullName(), param.getName(), entry.getKey(), entry.getValue(), param.getUUID()));
+											}
+										}
+									}
+								}
+								break;
+							}
+						}
+					}
+					break;				
+				default:
+					for (MetadataStore store : metadata.getMetadataStores()) {
+						for (TableRecordImpl table : store.getTables().values()) {
+							if(!checkVisibility(vdbName, vdbVersion, table.getModelName())) {
+								continue;
+							}
+							switch (sysTable) {
+							case GROUPS:
+								rows.add(Arrays.asList(table.getModelName(), table.getFullName(), table.getName(), table.getTableType().toString(), table.getNameInSource(), 
+										table.isPhysical(), table.getName().toUpperCase(), table.supportsUpdate(), table.getUUID(), table.getCardinality(), table.getAnnotation(), table.isSystem(), table.isMaterialized()));
+								break;
+							case GROUPPROPERTIES:
+								for (Map.Entry<String, String> entry : table.getProperties().entrySet()) {
+									rows.add(Arrays.asList(table.getModelName(), table.getFullName(), entry.getKey(), entry.getValue(), table.getName(), table.getName().toUpperCase(), table.getUUID()));
+								}
+								break;
+							case ELEMENTS:
+								for (ColumnRecordImpl column : table.getColumns()) {
+									if (column.getDatatype() == null) {
+										continue; //some mapping classes don't set the datatype
+									}
+									rows.add(Arrays.asList(table.getModelName(), table.getName(), table.getFullName(), column.getName(), column.getPosition(), column.getNameInSource(), 
+											column.getDatatype().getRuntimeTypeName(), column.getScale(), column.getLength(), column.isFixedLength(), column.isSelectable(), column.isUpdatable(),
+											column.isCaseSensitive(), column.isSigned(), column.isCurrency(), column.isAutoIncrementable(), column.getNullType().toString(), column.getMinValue(), 
+											column.getMaxValue(), column.getSearchType().toString(), column.getFormat(), column.getDefaultValue(), column.getDatatype().getJavaClassName(), column.getPrecision(), 
+											column.getCharOctetLength(), column.getRadix(), table.getName().toUpperCase(), column.getName().toUpperCase(), column.getUUID(), column.getAnnotation()));
+								}
+								break;
+							case ELEMENTPROPERTIES:
+								for (ColumnRecordImpl column : table.getColumns()) {
+									for (Map.Entry<String, String> entry : column.getProperties().entrySet()) {
+										rows.add(Arrays.asList(table.getModelName(), table.getFullName(), column.getName(), entry.getKey(), entry.getValue(), table.getName(), column.getName().toUpperCase(), 
+												table.getName().toUpperCase(), column.getUUID()));
+									}	
+								}
+								break;
+							case KEYS:
+								for (KeyRecord key : table.getAllKeys()) {
+									rows.add(Arrays.asList(table.getModelName(), table.getFullName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
+											false, table.getName(), table.getName().toUpperCase(), (key instanceof ForeignKeyRecordImpl)?((ForeignKeyRecordImpl)key).getUniqueKeyID():null, key.getUUID()));
+								}
+								break;
+							case KEYPROPERTIES:
+								for (KeyRecord key : table.getAllKeys()) {
+									for (Map.Entry<String, String> entry : key.getProperties().entrySet()) {
+										rows.add(Arrays.asList(table.getModelName(), table.getFullName(), key.getName(), entry.getKey(), entry.getValue(), table.getName(), table.getName().toUpperCase(), 
+												key.getUUID()));
+									}
+								}
+								break;
+							case KEYELEMENTS:
+								for (KeyRecord key : table.getAllKeys()) {
+									int postition = 1;
+									for (ColumnRecordImpl column : key.getColumns()) {
+										rows.add(Arrays.asList(table.getModelName(), table.getFullName(), column.getName(), key.getName(), key.getType().toString(), table.getName(), table.getName().toUpperCase(), 
+												(key instanceof ForeignKeyRecordImpl)?((ForeignKeyRecordImpl)key).getUniqueKeyID():null, key.getUUID(), postition++));
+									}
+								}
+								break;
+							case REFERENCEKEYCOLUMNS:
+								for (ForeignKeyRecordImpl key : table.getForeignKeys()) {
+									int postition = 0;
+									for (ColumnRecordImpl column : key.getColumns()) {
+										TableRecordImpl pkTable = key.getPrimaryKey().getTable();
+										rows.add(Arrays.asList(null, vdbName, pkTable.getFullName(), key.getPrimaryKey().getColumns().get(postition).getName(), null, vdbName, table.getFullName(), column.getName(),
+												++postition, 3, 3, key.getName(), key.getPrimaryKey().getName(), 5));
+									}
+								}
+								break;
+							}
+						}
+					}
+					break;
+				}
+			} else {					
+				StoredProcedure proc = (StoredProcedure)command;
+				GroupSymbol group = proc.getGroup();
+				final SystemProcs sysTable = SystemProcs.valueOf(group.getCanonicalName().substring(CoreConstants.SYSTEM_MODEL.length() + 1));
+				switch (sysTable) {
+				case GETVDBRESOURCEPATHS:
+			        Set<String> filePaths = metadata.getMetadataSource().getEntries();
+			        for (String filePath : filePaths) {
+			        	if (vdbService.getFileVisibility(vdbName, vdbVersion, filePath) != ModelInfo.PUBLIC) {
+			        		continue;
+			        	}
+			        	rows.add(Arrays.asList(filePath, filePath.endsWith(".INDEX"))); //$NON-NLS-1$
+			        }
+					break;
+				case GETBINARYVDBRESOURCE:
+					String filePath = (String)proc.getParameter(0).getValue();
+					if (metadata.getMetadataSource().getEntries().contains(filePath) && vdbService.getFileVisibility(vdbName, vdbVersion, filePath) == ModelInfo.PUBLIC) {
+						try {
+							rows.add(Arrays.asList(new SerialBlob(MetadataSourceUtil.getFileContentAsString(filePath, metadata.getMetadataSource()).getBytes())));
+						} catch (SQLException e) {
+							throw new MetaMatrixComponentException(e);
+						}
+					}
+					break;
+				case GETCHARACTERVDBRESOURCE:
+					filePath = (String)proc.getParameter(0).getValue();
+					if (metadata.getMetadataSource().getEntries().contains(filePath) && vdbService.getFileVisibility(vdbName, vdbVersion, filePath) == ModelInfo.PUBLIC) {
+						try {
+							rows.add(Arrays.asList(new SerialClob(MetadataSourceUtil.getFileContentAsString(filePath, metadata.getMetadataSource()).toCharArray())));
+						} catch (SQLException e) {
+							throw new MetaMatrixComponentException(e);
+						}
+					}
+					break;
+				}
+			}
+			return new CollectionTupleSource(rows.iterator(), command.getProjectedSymbols());
+		}
+		
 		AtomicRequestMessage aqr = createRequest(processorId, command, modelName, connectorBindingId, nodeID);
         DataTierTupleSource tupleSource = new DataTierTupleSource(aqr.getCommand().getProjectedSymbols(), aqr, this, aqr.getConnectorID(), workItem);
         tupleSource.open();
         return tupleSource;
+	}
+	
+	private boolean checkVisibility(String vdbName, String vdbVersion,
+			String modelName) throws MetaMatrixComponentException {
+		return vdbService.getModelVisibility(vdbName, vdbVersion, modelName) == ModelInfo.PUBLIC;
 	}
 
 	private AtomicRequestMessage createRequest(Object processorId,

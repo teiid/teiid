@@ -29,6 +29,7 @@ import java.util.List;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.api.exception.query.QueryMetadataException;
 import com.metamatrix.api.exception.query.QueryPlannerException;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.core.id.IDGenerator;
 import com.metamatrix.core.id.IntegerID;
 import com.metamatrix.core.id.IntegerIDFactory;
@@ -288,7 +289,7 @@ public class PlanToProcessConverter {
                         //-- special handling for temp tables. currently they cannot perform projection
                         try {
                             if (command instanceof Query) {
-                                processNode = correctProjectionForTempTable(node, aNode);
+                                processNode = correctProjectionInternalTables(node, aNode, (Query)command);
                             }
                         } catch (QueryMetadataException err) {
                             throw new MetaMatrixComponentException(err);
@@ -406,20 +407,23 @@ public class PlanToProcessConverter {
 		return processNode;
 	}
 
-    private RelationalNode correctProjectionForTempTable(PlanNode node,
-                                                                AccessNode aNode) throws QueryMetadataException,
+    private RelationalNode correctProjectionInternalTables(PlanNode node,
+                                                                AccessNode aNode, Query query) throws QueryMetadataException,
                                                                                                        MetaMatrixComponentException {
         if (node.getGroups().size() != 1) {
             return aNode;
         }
         GroupSymbol group = node.getGroups().iterator().next();
-        if (!group.isTempTable()) {
+        if (!group.isTempTable() && !CoreConstants.SYSTEM_MODEL.equals(metadata.getFullName(metadata.getModelID(group.getMetadataID())))) {
             return aNode;
         }
         List projectSymbols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
-        List acutalColumns = ResolverUtil.resolveElementsInGroup(group, metadata);
+        List<ElementSymbol> acutalColumns = ResolverUtil.resolveElementsInGroup(group, metadata);
+        if (projectSymbols.equals(acutalColumns)) {
+        	return aNode;
+        }
         node.setProperty(NodeConstants.Info.OUTPUT_COLS, acutalColumns);
-        if (node.getParent().getType() == NodeConstants.Types.PROJECT) {
+        if (node.getParent() != null && node.getParent().getType() == NodeConstants.Types.PROJECT) {
             //if the parent is already a project, just correcting the output cols is enough
             return aNode;
         }

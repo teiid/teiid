@@ -46,7 +46,7 @@ import org.teiid.connector.api.ConnectorPropertyNames;
 import org.teiid.connector.api.ExecutionContext;
 import org.teiid.connector.api.ConnectorAnnotations.ConnectionPooling;
 import org.teiid.connector.api.ConnectorAnnotations.SynchronousWorkers;
-import org.teiid.connector.metadata.runtime.ConnectorMetadata;
+import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.connector.metadata.runtime.MetadataFactory;
 import org.teiid.connector.xa.api.XAConnector;
 import org.teiid.dqp.internal.cache.DQPContextCache;
@@ -141,7 +141,7 @@ public class ConnectorManager implements ApplicationService {
 		return classloader;
 	}
     
-    public ConnectorMetadata getMetadata(String modelName, Properties importProperties) throws ConnectorException {
+    public MetadataStore getMetadata(String modelName, Properties importProperties) throws ConnectorException {
     	MetadataFactory factory;
 		try {
 			factory = new MetadataFactory(modelName, this.metadataService.getBuiltinDatatypes(), importProperties);
@@ -156,7 +156,7 @@ public class ConnectorManager implements ApplicationService {
 		} finally {
 			currentThread.setContextClassLoader(threadContextLoader);
 		}
-		return factory;
+		return factory.getMetadataStore();
 	}
     
     public SourceCapabilities getCapabilities(RequestID requestID, Serializable executionPayload, DQPWorkContext message) throws ConnectorException {

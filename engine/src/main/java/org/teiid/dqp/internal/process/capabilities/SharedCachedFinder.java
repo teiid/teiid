@@ -26,13 +26,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
+import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.DQPPlugin;
+import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 
 /**
  */
 public class SharedCachedFinder implements CapabilitiesFinder {
+
+	private static BasicSourceCapabilities SYSTEM_CAPS = new BasicSourceCapabilities();
 
     private CapabilitiesFinder internalFinder;
     
@@ -48,6 +52,7 @@ public class SharedCachedFinder implements CapabilitiesFinder {
     public SharedCachedFinder(CapabilitiesFinder internalFinder, Map<String, SourceCapabilities> sharedCache) {
         this.internalFinder = internalFinder;
         this.capabilityCache = sharedCache;
+        userCache.put(CoreConstants.SYSTEM_MODEL, SYSTEM_CAPS);
     }
 
     /**

@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Properties;
 
 import org.teiid.adminapi.ConnectionPool;
-import org.teiid.connector.metadata.runtime.ConnectorMetadata;
+import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
@@ -90,7 +90,7 @@ public interface DataService extends ApplicationService {
      * @return
      * @throws MetaMatrixComponentException 
      */
-    ConnectorMetadata getConnectorMetadata(String vdbName, String vdbVersion, String modelName, Properties importProperties) throws MetaMatrixComponentException;
+    MetadataStore getConnectorMetadata(String vdbName, String vdbVersion, String modelName, Properties importProperties) throws MetaMatrixComponentException;
                
     /**
      * Start the Connector Binding by the name given, if it is already added and not srarted. 

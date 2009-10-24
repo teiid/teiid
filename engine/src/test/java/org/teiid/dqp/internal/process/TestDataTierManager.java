@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import junit.framework.TestCase;
+import org.teiid.connector.metadata.runtime.MetadataStore;
 
-import org.teiid.connector.metadata.runtime.ConnectorMetadata;
+import junit.framework.TestCase;
 
 import com.metamatrix.api.exception.ComponentNotFoundException;
 import com.metamatrix.api.exception.MetaMatrixComponentException;
@@ -53,6 +53,7 @@ import com.metamatrix.dqp.message.RequestMessage;
 import com.metamatrix.dqp.service.ConnectorStatus;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.FakeBufferService;
+import com.metamatrix.dqp.service.FakeMetadataService;
 import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.platform.security.api.MetaMatrixSessionID;
 import com.metamatrix.platform.security.api.SessionToken;
@@ -111,6 +112,7 @@ public class TestDataTierManager extends TestCase {
                                   dataService,
                                   vdbService,
                                   bs,
+                                  new FakeMetadataService(),
                                   20,
                                   1000,
                                   1000);
@@ -394,10 +396,11 @@ public class TestDataTierManager extends TestCase {
                 throw new MetaMatrixComponentException("Force fail on executeRequest for call # " + calls); //$NON-NLS-1$
             }            
 		}
-	    @Override
-	    public ConnectorMetadata getConnectorMetadata(String vdbName,
-	    		String vdbVersion, String modelName, Properties importProperties) {
-	    	throw new UnsupportedOperationException();
-	    }
+		@Override
+		public MetadataStore getConnectorMetadata(String vdbName,
+				String vdbVersion, String modelName, Properties importProperties)
+				throws MetaMatrixComponentException {
+			throw new UnsupportedOperationException();
+		}
     }
 }

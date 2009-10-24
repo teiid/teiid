@@ -698,6 +698,7 @@ public class DQPCore implements ClientSideDQP {
                                             (DataService) this.environment.findService(DQPServiceNames.DATA_SERVICE),
                                             (VDBService) this.environment.findService(DQPServiceNames.VDB_SERVICE),
                                             (BufferService) this.environment.findService(DQPServiceNames.BUFFER_SERVICE),
+                                            metadataService,
                                             this.maxCodeTables,
                                             this.maxCodeRecords,
                                             this.maxCodeTableRecords);        
