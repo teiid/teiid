@@ -115,7 +115,7 @@ public class TestConnectorShell extends CommandShellTest {
         start();
         setScriptFile();
         String result = connectorShell.execute("runAll"); //$NON-NLS-1$
-        assertEquals("Test " + UnitTestUtil.getTestDataPath() + File.separator + "script.txt.test1 failed.  CompareResults Error: Expected 1 records but received 2\nTest " + UnitTestUtil.getTestDataPath() + File.separator +"script.txt.testBadData failed.  CompareResults Error: Value mismatch at row 1 and column 2: expected = XX, actual = ABCDEFGHIJ\nTests run: 16 test failures: 2", result); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        assertEquals("Test " + UnitTestUtil.getTestDataPath() + File.separator + "script.txt.test1 failed.  CompareResults Error: Expected 1 records but received 2\nTest " + UnitTestUtil.getTestDataPath() + File.separator +"script.txt.testBadData failed.  CompareResults Error: Value mismatch at row 1 and column 2: expected = XX, actual = ABCDEFGHIJ\nTests run: 14 test failures: 2", result); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
     public void testSetProperty() {
@@ -167,10 +167,6 @@ public class TestConnectorShell extends CommandShellTest {
         return connectorShell;
     }
     
-    public void testTabsInResults() {
-        runTest("testTabsInResults"); //$NON-NLS-1$
-    }
-
     public void testLoadArchive() {
         runTest("testLoadArchive"); //$NON-NLS-1$
     }
@@ -182,10 +178,6 @@ public class TestConnectorShell extends CommandShellTest {
         assertTrue("failed to create archive file", f.exists());
     }
     
-    public void testBracketsInResult() {
-        runTest("testBracketsInResult"); //$NON-NLS-1$
-    }
-
     public void testHelp() {
         runTest("testHelp"); //$NON-NLS-1$
     }

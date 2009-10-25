@@ -22,6 +22,8 @@
 
 package com.metamatrix.jdbc;
 
+import static junit.framework.Assert.*;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,67 +31,25 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 
-import junit.extensions.TestSetup;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.jdbc.api.AbstractMMQueryTestCase;
 import com.metamatrix.jdbc.util.ResultSetUtil;
 
 /**
  */
-public class TestCase3473 extends TestCase {
+public class TestCase3473 extends AbstractMMQueryTestCase {
 
-    
     private static final String DQP_CONFIG_FILE = UnitTestUtil.getTestDataPath() + "/3473/3473.properties;user=test"; //$NON-NLS-1$
 
-    static Connection conn = null;
-    static String primaryUrl = "jdbc:metamatrix:test@" + DQP_CONFIG_FILE + ";version=1"; //$NON-NLS-1$ //$NON-NLS-2$
-    // URL for local DQP
-    static String serverUrl = primaryUrl + ";logLevel=1;partialResultsMode=false"; //$NON-NLS-1$
-    
-    // URL for integration test
-    private static MMDatabaseMetaData dbmd = null;
+    private MMDatabaseMetaData dbmd = null;
  
-
-
-    public TestCase3473(String name) {
-        super(name);
-    }
-
-
-    public static Test suite() {
-        TestSuite suite = new TestSuite("TestMM3473"); //$NON-NLS-1$
-        suite.addTestSuite(TestCase3473.class);
-        return new TestSetup(suite) {
-
-			@Override
-			protected void setUp() throws Exception {
-                Class.forName("org.teiid.jdbc.TeiidDriver"); //$NON-NLS-1$
-                conn = DriverManager.getConnection(serverUrl);
-                dbmd = (MMDatabaseMetaData)conn.getMetaData();
-			}
-
-			@Override
-			protected void tearDown() throws Exception {
-	            try{
-	                if (conn != null) {
-	                    conn.close();
-	                }
-
-	            } catch(Exception ce){
-	                fail("Unable to close MMConnection." + ce.getMessage()); //$NON-NLS-1$
-	            }            
-			}
-        };
-    }
-
     ////////////////////Query Related Methods///////////////////////////
 
     public static final short ALWAYS_NULL = 0;
@@ -105,6 +65,12 @@ public class TestCase3473 extends TestCase {
     private FileOutputStream actualOut = null;
     private BufferedReader expectedIn = null;
     private PrintStream stream = null;
+    
+    @Before public void setUp() throws SQLException {
+    	Connection conn = getConnection("test", DQP_CONFIG_FILE); //$NON-NLS-1$
+    	dbmd = (MMDatabaseMetaData)conn.getMetaData();
+    }
+    
     private void initResultSetStreams(String testName) {
         if (REPLACE_EXPECTED) {
             File actual = new File(UnitTestUtil.getTestDataPath() + "/3473/"+testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -168,11 +134,10 @@ public class TestCase3473 extends TestCase {
     
 
 
-    public void testGetCrossReference() throws Exception {
+    @Test public void testGetCrossReference() throws Exception {
         initResultSetStreams("testGetCrossReference"); //$NON-NLS-1$
         ResultSet rs = null;
         try { 
-            DatabaseMetaData dbmd = conn.getMetaData();
             stream.println("getCrossReference1"); //$NON-NLS-1$
             rs = dbmd.getCrossReference(null,null, "test.all_databases", null,null, "test.all_models");//$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -206,11 +171,10 @@ public class TestCase3473 extends TestCase {
         closeResultSetTestStreams();  
     }
         
-    public void testGetImportedKeys() throws Exception {
+    @Test public void testGetImportedKeys() throws Exception {
         initResultSetStreams("testGetImportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try { 
-            DatabaseMetaData dbmd = conn.getMetaData();
             stream.println("getImportedKeys1"); //$NON-NLS-1$
             rs = dbmd.getImportedKeys(null,null, "test.all_models"); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -235,11 +199,10 @@ public class TestCase3473 extends TestCase {
         closeResultSetTestStreams();
     }
 
-    public void testGetExportedKeys() throws Exception {
+    @Test public void testGetExportedKeys() throws Exception {
         initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
             rs = dbmd.getExportedKeys(null,null, "test.all_models"); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
@@ -262,11 +225,10 @@ public class TestCase3473 extends TestCase {
     }
        
         
-    public void testGetPrimaryKeys() throws Exception {
+    @Test public void testGetPrimaryKeys() throws Exception {
         initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
             rs = dbmd.getPrimaryKeys(null,null, "test.all_models"); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
@@ -289,11 +251,8 @@ public class TestCase3473 extends TestCase {
         closeResultSetTestStreams();
     }
     
-
-    
-    public void testGetTables() throws Exception{
+    @Test public void testGetTables() throws Exception{
         initResultSetStreams("testGetTables"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
         ResultSet rs = dbmd.getTables(null, null, null, null); 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();

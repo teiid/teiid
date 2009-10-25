@@ -124,29 +124,6 @@ quitScript {
 	quit
 }
 
-testTabsInResults {
-	loadFromScript object.bsh
-	select toString from table1;
-	result [
-toString
-hey
-result [
-1\t2\n3\t4\n5\t6
-	]
-}
-
-testBracketsInResult {
-	loadFromScript object2.bsh
-	select toString from table1;
-	result [
-toString
-hey
-there
-some data]
-some more data}
-	]
-}
-
 testHelp {
 	help
 	result [

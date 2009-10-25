@@ -512,7 +512,7 @@ public class TestMMDatabaseMetaData {
                 count++;
                 //System.out.println("table="+rs.getString(1));
             }
-            assertEquals(25, count);
+            assertEquals(17, count);
             
             //System.out.println(((com.metamatrix.jdbc.api.Statement)stmt).getDebugLog());
 
@@ -530,7 +530,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = null;
         try {
             //List expected = getExpectedColumns();
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getColumns(null, null, "System.VirtualDatabases", "Name"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -549,7 +549,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetCatalogs"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getCatalogs();
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -568,7 +568,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetCrossReference"); //$NON-NLS-1$
         ResultSet rs = null;
         try { 
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             stream.println("getCrossReference1"); //$NON-NLS-1$
             rs = dbmd.getCrossReference(null, null, "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -600,7 +600,6 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetImportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try { 
-            DatabaseMetaData dbmd = conn.getMetaData();
             stream.println("getImportedKeys1"); //$NON-NLS-1$
             rs = dbmd.getImportedKeys(null, null, "BQT1.SmallA"); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -630,7 +629,6 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
             rs = dbmd.getExportedKeys(null, null, "BQT1.SmallA"); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
@@ -657,8 +655,6 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetIndexInfo"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
-            //ResultSet rs = dbmd.getIndexInfo(null, null, "BQT1.SmallA", true, true); //$NON-NLS-1$
             rs = dbmd.getIndexInfo(null, null, "System.KeyElements", true, true); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
@@ -685,7 +681,6 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
             //ResultSet rs = dbmd.getPrimaryKeys(null, null, "SYSTEM.VIRTUALDATABASES"); //$NON-NLS-1$
             
             // This is only a way to do unit test. Actually, the primary key of BQT.smallA
@@ -718,7 +713,6 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetProcedureColumns"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
             rs = dbmd.getProcedureColumns(null, null, null, null);
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
@@ -745,7 +739,6 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetProcedures"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
             rs = dbmd.getProcedures(null, null, null);
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
@@ -772,7 +765,6 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetSchemas"); //$NON-NLS-1$
         ResultSet rs = null;    
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
             rs = dbmd.getSchemas();
 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -789,7 +781,6 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetColumns() throws Exception {
         initResultSetStreams("testGetColumns"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
         stream.println("getColumns1"); //$NON-NLS-1$
         ResultSet rs = dbmd.getColumns(null, null, null, null);
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -803,7 +794,6 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetColumns2() throws Exception {
         initResultSetStreams("testGetColumns2"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
         
       stream.println("getColumns2"); //$NON-NLS-1$
       ResultSet rs = dbmd.getColumns(null, "QT_Ora%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -819,7 +809,6 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetColumns3() throws Exception {
         initResultSetStreams("testGetColumns3"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
         
       stream.println("getColumns3"); //$NON-NLS-1$
       ResultSet rs = dbmd.getColumns(null, "Foo%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -835,7 +824,6 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetColumns4() throws Exception {
         initResultSetStreams("testGetColumns4"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
         
         stream.println("getColumns4"); //$NON-NLS-1$
          ResultSet rs = dbmd.getColumns("foo", "Foo%", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
@@ -852,7 +840,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetColumnPrivileges() throws Exception {
         initResultSetStreams("testGetColumnPrivileges"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getColumnPrivileges(null, "Parts", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         
@@ -871,7 +859,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetColumnPrivilegesResultSetMetaData() throws Exception {
         initResultSetStreams("testGetColumnPrivilegesResultSetMetaData"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getColumnPrivileges(null, "Parts", "%", "%"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -884,7 +872,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetTablePrivileges() throws Exception {
         initResultSetStreams("testGetTablePrivileges"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getTablePrivileges(null, "Parts", "%"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -899,7 +887,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetTablePrivilegesResultSetMetaData() throws Exception {
         initResultSetStreams("testGetTablePrivilegesResultSetMetaData"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getTablePrivileges(null, "Parts", "%"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -915,7 +903,7 @@ public class TestMMDatabaseMetaData {
         ResultSet rs = null;
         try {
             //List expected = getExpectedColumns();
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getTables(null, null, "SYSTEM.VIRTUALDATABASES", null); //$NON-NLS-1$ 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -934,7 +922,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetTables_specificTableTypes"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             
             String[] tables = new String[] { "Table" }; //$NON-NLS-1$
             
@@ -956,7 +944,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetTables_specificTableMultipleTypes"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             
             String[] tables = new String[] { "Table", "View" }; //$NON-NLS-1$ //$NON-NLS-2$
             
@@ -976,7 +964,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetTables() throws Exception{
         initResultSetStreams("testGetTables"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getTables(null, null, null, null); 
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();
@@ -999,7 +987,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetTables_allTables"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getTables(null, null, null, null); 
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             
@@ -1019,7 +1007,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetTableTypes"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getTableTypes();
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -1038,7 +1026,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetTypeInfo_TotalNumber"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getTypeInfo();
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -1055,7 +1043,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetUDTs() throws Exception{
         initResultSetStreams("testGetUDTs"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getUDTs(null, null, "%blob%", null); //$NON-NLS-1$
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs.close();
@@ -1078,7 +1066,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetUDTs_specificTypeName"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getUDTs(null, null, "%blob%", null); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
             assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -1095,7 +1083,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetVersionColumns() throws Exception {
         initResultSetStreams("testGetVersionColumns"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getVersionColumns(null, null, null);
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         rs = dbmd.getVersionColumns(null, "Foo%", null); //$NON-NLS-1$ 
@@ -1116,7 +1104,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetBestRowIdentifier"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getBestRowIdentifier(null, null, "SYSTEM.VIRTUALDATABASES", //$NON-NLS-1$
                 DatabaseMetaData.bestRowTemporary, true);
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -1142,7 +1130,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetSuperTables() throws Exception {
         initResultSetStreams("testSuperTables"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getSuperTables(null, "Parts", "%"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -1155,7 +1143,7 @@ public class TestMMDatabaseMetaData {
     @Test
     public void testGetSuperTypes() throws Exception {
         initResultSetStreams("testGetSuperTypes"); //$NON-NLS-1$
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet rs = dbmd.getSuperTypes(null, "Parts", "%"); //$NON-NLS-1$ //$NON-NLS-2$
         ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         assertEquals("Actual data did not match expected", //$NON-NLS-1$
@@ -1167,7 +1155,7 @@ public class TestMMDatabaseMetaData {
     
     @Test
     public void testGetColumnsWithEscape() throws Exception {
-        DatabaseMetaData dbmd = conn.getMetaData();
+        
         ResultSet columns = dbmd.getColumns(null, "QT\\_Ora9DS", "BQT1.SmallA", "IntKey"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         columns.next();
         assertEquals("QT_Ora9DS", columns.getString(2));//$NON-NLS-1$  
@@ -1179,7 +1167,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetCrossReference"); //$NON-NLS-1$
         ResultSet rs = null;
         try { 
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             stream.println("getCrossReference1"); //$NON-NLS-1$
             rs = dbmd.getCrossReference(null, "QT\\_Ora9DS", "BQT1.SmallA", null, null, "BQT1.SmallB");//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -1211,7 +1199,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetExportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getExportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 
@@ -1238,7 +1226,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetImportedKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try { 
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             stream.println("getImportedKeys1"); //$NON-NLS-1$
             rs = dbmd.getImportedKeys(null, "QT\\_Ora9DS", "BQT1.SmallA"); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -1268,7 +1256,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetIndexInfo"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             //ResultSet rs = dbmd.getIndexInfo(null, null, "BQT1.SmallA", true, true); //$NON-NLS-1$
             rs = dbmd.getIndexInfo(null, "QT\\_Ora9DS", "System.KeyElements", true, true); //$NON-NLS-1$ //$NON-NLS-2$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
@@ -1296,7 +1284,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetPrimaryKeys"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             //ResultSet rs = dbmd.getPrimaryKeys(null, null, "SYSTEM.VIRTUALDATABASES"); //$NON-NLS-1$
             
             // This is only a way to do unit test. Actually, the primary key of BQT.smallA
@@ -1329,7 +1317,7 @@ public class TestMMDatabaseMetaData {
         initResultSetStreams("testGetProcedures"); //$NON-NLS-1$
         ResultSet rs = null;
         try {
-            DatabaseMetaData dbmd = conn.getMetaData();
+            
             rs = dbmd.getProcedures(null, "QT\\_Ora9DS", null); //$NON-NLS-1$
             ResultSetUtil.printResultSet(rs, MAX_COL_WIDTH, true, stream);
         } finally { 

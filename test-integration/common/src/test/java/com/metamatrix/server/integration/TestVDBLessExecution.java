@@ -88,8 +88,7 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	this.internalResultSet = metadata.getTables(null, null, "%ElementProperties", null); //$NON-NLS-1$
     	assertResults(new String[] {
     			"TABLE_CAT[string]    TABLE_SCHEM[string]    TABLE_NAME[string]    TABLE_TYPE[string]    REMARKS[string]    TYPE_CAT[string]    TYPE_SCHEM[string]    TYPE_NAME[string]    SELF_REFERENCING_COL_NAME[string]    REF_GENERATION[string]    ISPHYSICAL[boolean]", //$NON-NLS-1$
-    			"null    VDBLess    System.DataTypeElementProperties    SYSTEM TABLE    null    null    null    null    null    null    false", //$NON-NLS-1$
-    			"null    VDBLess    System.ElementProperties    SYSTEM TABLE    null    null    null    null    null    null    false" //$NON-NLS-1$
+    			"null    VDBLess    System.ElementProperties    SYSTEM TABLE    null    null    null    null    null    null    true" //$NON-NLS-1$
 
     	});
     	closeConnection();
@@ -101,8 +100,8 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	this.internalResultSet = metadata.getColumns(null, null, "SummitData%", "%"); //$NON-NLS-1$ //$NON-NLS-2$
     	assertResults(new String[] {
     			"TABLE_CAT[string]    TABLE_SCHEM[string]    TABLE_NAME[string]    COLUMN_NAME[string]    DATA_TYPE[short]    TYPE_NAME[string]    COLUMN_SIZE[integer]    BUFFER_LENGTH[string]    DECIMAL_DIGITS[integer]    NUM_PREC_RADIX[integer]    NULLABLE[integer]    REMARKS[string]    COLUMN_DEF[string]    SQL_DATA_TYPE[string]    SQL_DATETIME_SUB[string]    CHAR_OCTET_LENGTH[integer]    ORDINAL_POSITION[integer]    IS_NULLABLE[string]    SCOPE_CATALOG[string]    SCOPE_SCHEMA[string]    SCOPE_TABLE[string]    SOURCE_DATA_TYPE[string]    IS_AUTOINCREMENT[string]", //$NON-NLS-1$
-    			"null    VDBLess    SummitData.EXAMPLE    TRADEID    12    string    4000    null    0    0    0    null    null    null    null    0    1    YES    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    SummitData.EXAMPLE    NOTIONAL    4    integer    10    null    0    0    0    null    null    null    null    0    2    YES    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    SummitData.EXAMPLE    TRADEID    12    string    4000    null    0    0    2    null    null    null    null    0    1         null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    SummitData.EXAMPLE    NOTIONAL    4    integer    10    null    0    0    2    null    null    null    null    0    2         null    null    null    null    NO", //$NON-NLS-1$
     	});
     	closeConnection();
     }
@@ -113,23 +112,23 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
     	this.internalResultSet = metadata.getColumns(null, null, "%smalla", "%"); //$NON-NLS-1$ //$NON-NLS-2$
     	assertResults(new String[] {
     			"TABLE_CAT[string]    TABLE_SCHEM[string]    TABLE_NAME[string]    COLUMN_NAME[string]    DATA_TYPE[short]    TYPE_NAME[string]    COLUMN_SIZE[integer]    BUFFER_LENGTH[string]    DECIMAL_DIGITS[integer]    NUM_PREC_RADIX[integer]    NULLABLE[integer]    REMARKS[string]    COLUMN_DEF[string]    SQL_DATA_TYPE[string]    SQL_DATETIME_SUB[string]    CHAR_OCTET_LENGTH[integer]    ORDINAL_POSITION[integer]    IS_NULLABLE[string]    SCOPE_CATALOG[string]    SCOPE_SCHEMA[string]    SCOPE_TABLE[string]    SOURCE_DATA_TYPE[string]    IS_AUTOINCREMENT[string]", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    INTKEY    4    integer    10    null    0    10    0    null    null    null    null    0    1    YES    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    STRINGKEY    12    string    4000    null    0    0    0    null    null    null    null    20    2    YES    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    INTNUM    4    integer    10    null    0    10    1    null    null    null    null    0    3    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    STRINGNUM    12    string    4000    null    0    0    1    null    null    null    null    20    4    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    FLOATNUM    7    float    20    null    0    2    1    null    null    null    null    0    5    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    LONGNUM    -5    long    19    null    0    10    1    null    null    null    null    0    6    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    DOUBLENUM    8    double    20    null    0    2    1    null    null    null    null    0    7    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    BYTENUM    5    short    5    null    0    10    1    null    null    null    null    0    8    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    DATEVALUE    91    date    10    null    0    10    1    null    null    null    null    0    9    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    TIMEVALUE    92    time    8    null    0    10    1    null    null    null    null    0    10    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    TIMESTAMPVALUE    93    timestamp    29    null    0    10    1    null    null    null    null    0    11    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    BOOLEANVALUE    5    short    5    null    0    10    1    null    null    null    null    0    12    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    CHARVALUE    12    string    4000    null    0    0    1    null    null    null    null    2    13    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    SHORTVALUE    5    short    5    null    0    10    1    null    null    null    null    0    14    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    BIGINTEGERVALUE    -5    long    19    null    0    10    1    null    null    null    null    0    15    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    BIGDECIMALVALUE    2    bigdecimal    20    null    0    10    1    null    null    null    null    0    16    NO    null    null    null    null    NO", //$NON-NLS-1$
-    			"null    VDBLess    Derby.SMALLA    OBJECTVALUE    12    string    4000    null    0    0    1    null    null    null    null    4096    17    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    INTKEY    4    integer    10    null    0    10    0        null    null    null    0    1    YES    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    STRINGKEY    12    string    4000    null    0    0    0        null    null    null    20    2    YES    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    INTNUM    4    integer    10    null    0    10    1        null    null    null    0    3    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    STRINGNUM    12    string    4000    null    0    0    1        null    null    null    20    4    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    FLOATNUM    7    float    20    null    0    2    1        null    null    null    0    5    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    LONGNUM    -5    long    19    null    0    10    1        null    null    null    0    6    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    DOUBLENUM    8    double    20    null    0    2    1        null    null    null    0    7    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    BYTENUM    5    short    5    null    0    10    1        null    null    null    0    8    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    DATEVALUE    91    date    10    null    0    10    1        null    null    null    0    9    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    TIMEVALUE    92    time    8    null    0    10    1        null    null    null    0    10    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    TIMESTAMPVALUE    93    timestamp    29    null    0    10    1        null    null    null    0    11    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    BOOLEANVALUE    5    short    5    null    0    10    1        null    null    null    0    12    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    CHARVALUE    12    string    4000    null    0    0    1        null    null    null    2    13    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    SHORTVALUE    5    short    5    null    0    10    1        null    null    null    0    14    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    BIGINTEGERVALUE    -5    long    19    null    0    10    1        null    null    null    0    15    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    BIGDECIMALVALUE    2    bigdecimal    20    null    0    10    1        null    null    null    0    16    NO    null    null    null    null    NO", //$NON-NLS-1$
+    			"null    VDBLess    Derby.SMALLA    OBJECTVALUE    12    string    4000    null    0    0    1        null    null    null    4096    17    NO    null    null    null    null    NO", //$NON-NLS-1$
     	});
     	closeConnection();
     }
@@ -204,6 +203,43 @@ public class TestVDBLessExecution extends AbstractMMQueryTestCase {
 				"null    VDBLess    Derby.SYSSTATISTICS    false    null    SYSSTATISTICS_INDEX1    0    2    REFERENCEID    null    0    1    null", //$NON-NLS-1$
 				"null    VDBLess    Derby.SYSTRIGGERS    false    null    SYSTRIGGERS_INDEX3    0    1    TABLEID    null    0    1    null", //$NON-NLS-1$
 				"null    VDBLess    Derby.SYSTRIGGERS    false    null    SYSTRIGGERS_INDEX3    0    2    CREATIONTIMESTAMP    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SMALLA    true    null    SQL060110103634070    0    1    INTKEY    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SMALLB    true    null    SQL060110103635170    0    1    INTKEY    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.FLIGHTS    true    null    SQL090709161814150    0    1    FLIGHT_ID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.FLIGHTS    true    null    SQL090709161814150    0    2    SEGMENT_NUMBER    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.FLTAVAIL    true    null    SQL090709161840270    0    1    FLIGHT_ID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.FLTAVAIL    true    null    SQL090709161840270    0    2    SEGMENT_NUMBER    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSALIASES    true    null    SYSALIASES_INDEX1    0    1    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSALIASES    true    null    SYSALIASES_INDEX1    0    2    ALIAS    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSALIASES    true    null    SYSALIASES_INDEX1    0    3    NAMESPACE    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSALIASES    true    null    SYSALIASES_INDEX2    0    1    ALIASID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSALIASES    true    null    SYSALIASES_INDEX3    0    1    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSALIASES    true    null    SYSALIASES_INDEX3    0    2    SPECIFICNAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSCHECKS    true    null    SYSCHECKS_INDEX1    0    1    CONSTRAINTID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSCOLUMNS    true    null    SYSCOLUMNS_INDEX1    0    1    REFERENCEID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSCOLUMNS    true    null    SYSCOLUMNS_INDEX1    0    2    COLUMNNAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSCONGLOMERATES    true    null    SYSCONGLOMERATES_INDEX2    0    1    CONGLOMERATENAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSCONGLOMERATES    true    null    SYSCONGLOMERATES_INDEX2    0    2    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSCONSTRAINTS    true    null    SYSCONSTRAINTS_INDEX1    0    1    CONSTRAINTID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSCONSTRAINTS    true    null    SYSCONSTRAINTS_INDEX2    0    1    CONSTRAINTNAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSCONSTRAINTS    true    null    SYSCONSTRAINTS_INDEX2    0    2    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSFILES    true    null    SYSFILES_INDEX1    0    1    FILENAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSFILES    true    null    SYSFILES_INDEX1    0    2    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSFILES    true    null    SYSFILES_INDEX2    0    1    FILEID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSFOREIGNKEYS    true    null    SYSFOREIGNKEYS_INDEX1    0    1    CONSTRAINTID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSKEYS    true    null    SYSKEYS_INDEX1    0    1    CONSTRAINTID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSSCHEMAS    true    null    SYSSCHEMAS_INDEX1    0    1    SCHEMANAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSSCHEMAS    true    null    SYSSCHEMAS_INDEX2    0    1    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSSTATEMENTS    true    null    SYSSTATEMENTS_INDEX1    0    1    STMTID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSSTATEMENTS    true    null    SYSSTATEMENTS_INDEX2    0    1    STMTNAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSSTATEMENTS    true    null    SYSSTATEMENTS_INDEX2    0    2    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSTABLES    true    null    SYSTABLES_INDEX1    0    1    TABLENAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSTABLES    true    null    SYSTABLES_INDEX1    0    2    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSTABLES    true    null    SYSTABLES_INDEX2    0    1    TABLEID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSTRIGGERS    true    null    SYSTRIGGERS_INDEX1    0    1    TRIGGERID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSTRIGGERS    true    null    SYSTRIGGERS_INDEX2    0    1    TRIGGERNAME    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSTRIGGERS    true    null    SYSTRIGGERS_INDEX2    0    2    SCHEMAID    null    0    1    null", //$NON-NLS-1$
+				"null    VDBLess    Derby.SYSVIEWS    true    null    SYSVIEWS_INDEX1    0    1    TABLEID    null    0    1    null", //$NON-NLS-1$
     	});
     	closeConnection();
     }
