@@ -30,7 +30,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import org.teiid.metadata.RuntimeMetadataPlugin;
 
 
 import com.metamatrix.common.log.LogManager;
@@ -42,11 +41,6 @@ import com.metamatrix.internal.core.xml.xmi.XMIHeaderReader;
 
 public class ModelFileUtil {
 	
-	public interface XmiHeaderCache {
-		XMIHeader getCachedXmiHeader(File resource);
-		void setXmiHeaderToCache(File resource, XMIHeader header);
-	}
-	
 	public static final String MANIFEST_MODEL_NAME = "MetaMatrix-VdbManifestModel.xmi"; //$NON-NLS-1$
 	public static final String DOT_PROJECT = ".project"; //$NON-NLS-1$
 	public static final String FILE_COLON = "file:";  //$NON-NLS-1$
@@ -57,12 +51,6 @@ public class ModelFileUtil {
 	public static final String EXTENSION_ECORE = "ecore"; //$NON-NLS-1$
 	public static final String EXTENSION_WSDL = "wsdl"; //$NON-NLS-1$
 	    
-    private static XmiHeaderCache CACHE;
-
-	public static void setCache(XmiHeaderCache cache) {
-		ModelFileUtil.CACHE = cache;
-	}
-
 	/**
 	 * Return true if the File represents a MetaMatrix model file or an xsd file 
 	 * this method does not check if the file exists in a project with
@@ -196,23 +184,11 @@ public class ModelFileUtil {
      */
     public static XMIHeader getXmiHeader( final File resource ) {
         if (resource != null && resource.isFile() && resource.exists() && resource.canRead() ) {
-            //check cache
-            if(CACHE != null) {
-                XMIHeader header = CACHE.getCachedXmiHeader(resource);
-                if(header != null) {
-                    return header;
-                }
-            }
-            
             if(isVdbArchiveFile(resource)) {
                 return getXmiHeaderForVdbArchive(resource);
             }
             try {
                 XMIHeader header = XMIHeaderReader.readHeader(resource);
-                //add to cache
-                if(CACHE != null) {
-                    CACHE.setXmiHeaderToCache(resource, header);
-                }
                 return header;
             } catch (MetaMatrixCoreException e) {
             	LogManager.logWarning(RuntimeMetadataPlugin.PLUGIN_ID, e, e.getMessage());

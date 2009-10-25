@@ -23,44 +23,44 @@
 package org.teiid.metadata.index;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
 
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.core.MetaMatrixRuntimeException;
+import com.metamatrix.core.util.LRUCache;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
-import com.metamatrix.query.metadata.MetadataStore;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 public class VDBMetadataFactory {
 	
+	public static LRUCache<URL, QueryMetadataInterface> VDB_CACHE = new LRUCache<URL, QueryMetadataInterface>(10);
+	
 	public static QueryMetadataInterface getVDBMetadata(String vdbFile) {
-		MetadataSource source;
 		try {
-			source = new VDBArchive(new FileInputStream(vdbFile));
+			return getVDBMetadata(new File(vdbFile).toURI().toURL());
 		} catch (IOException e) {
 			throw new MetaMatrixRuntimeException(e);
 		}
-		IndexMetadataStore selector;
-		try {
-			selector = new IndexMetadataStore(source);
-		} catch (IOException e) {
-			throw new MetaMatrixRuntimeException(e);
-		}
-        return new TransformationMetadata(new CompositeMetadataStore(Arrays.asList(selector), source)); 
     }
 	
 	public static QueryMetadataInterface getVDBMetadata(URL vdbURL) throws IOException {
+		QueryMetadataInterface vdb = VDB_CACHE.get(vdbURL);
+		if (vdb != null) {
+			return vdb;
+		}
 		MetadataSource source = new VDBArchive(vdbURL.openStream());
-		IndexMetadataStore selector = new IndexMetadataStore(source);
-        return new TransformationMetadata(new CompositeMetadataStore(Arrays.asList(selector), source)); 
+		IndexMetadataFactory selector = new IndexMetadataFactory(source);
+        vdb = new TransformationMetadata(new CompositeMetadataStore(Arrays.asList(selector.getMetadataStore()), source));
+        VDB_CACHE.put(vdbURL, vdb);
+        return vdb;
     }	
 	
 	public static QueryMetadataInterface getVDBMetadata(String[] vdbFile) {
@@ -73,7 +73,7 @@ public class VDBMetadataFactory {
 	        	if (i == 0) {
 	        		source = tempSource;
 	        	}
-				selectors.add(new IndexMetadataStore(tempSource));
+				selectors.add(new IndexMetadataFactory(tempSource).getMetadataStore());
 			} catch (IOException e) {
 				throw new MetaMatrixRuntimeException(e);
 			}        

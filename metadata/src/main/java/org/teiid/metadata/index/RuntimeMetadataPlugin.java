@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.metadata;
+package org.teiid.metadata.index;
 
 import java.util.ResourceBundle;
 

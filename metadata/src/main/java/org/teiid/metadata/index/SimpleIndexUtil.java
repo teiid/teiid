@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.connector.metadata.runtime.MetadataConstants;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.internal.core.index.Index;
 
@@ -248,10 +247,9 @@ public class SimpleIndexUtil {
 	 * @throws MetamatrixCoreException If there is an error looking up indexes
 	 * @since 4.2
 	 */
-    public static Index[] getIndexes(final String indexName, final IndexMetadataStore selector) {
+    public static Index[] getIndexes(final String indexName, Index[] indexes) {
 		ArgCheck.isNotEmpty(indexName);
         // The the index file name for the record type
-        final Index[] indexes = selector.getIndexes();
         final List<Index> tmp = new ArrayList<Index>(indexes.length);
         for (int i = 0; i < indexes.length; i++) {
             Index coreIndex = indexes[i];

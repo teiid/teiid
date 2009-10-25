@@ -22,7 +22,6 @@
 
 package org.teiid.metadata.index;
 
-import org.teiid.connector.metadata.runtime.MetadataConstants;
 
 /**
  * IndexConstants
