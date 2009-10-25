@@ -79,10 +79,6 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
         return vdb;
     }
         
-    private boolean isSystemModel(String modelName) {
-        return modelName.equalsIgnoreCase(SYSTEM_PHYSICAL_MODEL_NAME);
-    }
-    
     private ModelInfo getModel(VDBDefn vdb, String modelName) {
         Collection c = vdb.getModels();
         Iterator it = c.iterator();
@@ -103,13 +99,6 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
     public List getConnectorBindingNames(String vdbName, String vdbVersion, String modelName) 
         throws MetaMatrixComponentException {
 
-        // If the request for System model, we have a single name always
-        if (isSystemModel(modelName)) {
-            List list = new ArrayList();
-            list.add(SYSTEM_PHYSICAL_MODEL_NAME);
-            return list;
-        }
-        
         // Otherwise get these from the database. 
         VDBArchive vdb = getVDB(vdbName, vdbVersion);
         BasicVDBDefn def = vdb.getConfigurationDef();
@@ -143,11 +132,6 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
     public int getModelVisibility(String vdbName, String vdbVersion, String modelName) 
         throws MetaMatrixComponentException {
         
-        // If this is system Model
-        if (isSystemModel(modelName)) {
-            return ModelInfo.PRIVATE;
-        }
-        
         // If this is any of the Public System Models, like JDBC,ODBC system models
         if(SystemVdbUtility.isSystemModelWithSystemTableType(modelName)){
             return ModelInfo.PUBLIC;
@@ -174,11 +158,6 @@ public class EmbeddedVDBService extends EmbeddedBaseDQPService implements VDBSer
 
     	String modelName = StringUtil.getFirstToken(StringUtil.getLastToken(pathInVDB, "/"), "."); //$NON-NLS-1$ //$NON-NLS-2$
 
-        // If this is system Model
-        if (isSystemModel(modelName)) {
-            return ModelInfo.PRIVATE;
-        }
-        
         // If this is any of the Public System Models, like JDBC,ODBC system models
         if(SystemVdbUtility.isSystemModelWithSystemTableType(modelName)){
             return ModelInfo.PUBLIC;

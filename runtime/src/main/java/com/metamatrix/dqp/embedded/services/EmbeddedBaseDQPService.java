@@ -32,7 +32,6 @@ import com.metamatrix.common.application.exception.ApplicationInitializationExce
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.VDBArchive;
 import com.metamatrix.common.vdb.api.VDBDefn;
-import com.metamatrix.core.CoreConstants;
 import com.metamatrix.dqp.embedded.DQPEmbeddedPlugin;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
@@ -44,8 +43,6 @@ import com.metamatrix.vdb.runtime.VDBKey;
  * @since 4.3
  */
 public abstract class EmbeddedBaseDQPService implements ApplicationService {
-    public static final String SYSTEM_PHYSICAL_MODEL_NAME = CoreConstants.SYSTEM_PHYSICAL_MODEL_NAME;
-    
     private boolean started = false;
     private boolean initialized = false;    
     private ApplicationEnvironment environment;

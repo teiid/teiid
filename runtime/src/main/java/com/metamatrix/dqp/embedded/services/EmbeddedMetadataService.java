@@ -26,20 +26,19 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
-import org.teiid.metadata.QueryMetadataCache;
+import org.teiid.metadata.CompositeMetadataStore;
+import org.teiid.metadata.TransformationMetadata;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
-import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.dqp.service.ConfigurationService;
 import com.metamatrix.dqp.service.DQPServiceNames;
 import com.metamatrix.dqp.service.DataService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.dqp.service.VDBLifeCycleListener;
 import com.metamatrix.dqp.service.VDBService;
-import com.metamatrix.query.metadata.QueryMetadataInterface;
 
 
 /** 
@@ -90,7 +89,7 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
      * @see com.metamatrix.dqp.service.MetadataService#lookupMetadata(java.lang.String, java.lang.String)
      * @since 4.3
      */
-    public QueryMetadataInterface lookupMetadata(String vdbName, String vdbVersion) 
+    public TransformationMetadata lookupMetadata(String vdbName, String vdbVersion) 
         throws MetaMatrixComponentException {
     	VDBService vdbService = ((VDBService)lookupService(DQPServiceNames.VDB_SERVICE));
     	DataService dataService = ((DataService)lookupService(DQPServiceNames.DATA_SERVICE));
@@ -98,9 +97,8 @@ public class EmbeddedMetadataService extends EmbeddedBaseDQPService implements M
     }
     
 
-	public IObjectSource getMetadataObjectSource(String vdbName, String vdbVersion) throws MetaMatrixComponentException {
-		VDBService vdbService = (VDBService)lookupService(DQPServiceNames.VDB_SERVICE);
-		return this.metadataCache.getCompositeMetadataObjectSource(vdbName, vdbVersion, vdbService);	
+	public CompositeMetadataStore getMetadataObjectSource(String vdbName, String vdbVersion) throws MetaMatrixComponentException {
+		return lookupMetadata(vdbName, vdbVersion).getMetadataStore();
 	}
 	
 	@Override

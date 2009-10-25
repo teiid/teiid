@@ -81,17 +81,6 @@ public class TestEmbeddedVDBService extends TestCase{
         }
     }
     
-    public void testSystemModelConnectorBinding() throws Exception {        
-        Properties p = EmbeddedTestUtil.getProperties(); 
-        configService.setUserPreferences(p);
-        configService.initializeService(p);
-        
-        // asking "vdb.name" and stored "vdb.name"
-        List names = vdbService.getConnectorBindingNames("QT_Ora9DS", "1", EmbeddedBaseDQPService.SYSTEM_PHYSICAL_MODEL_NAME); //$NON-NLS-1$ //$NON-NLS-2$ 
-        assertEquals(1, names.size());
-        assertEquals(EmbeddedBaseDQPService.SYSTEM_PHYSICAL_MODEL_NAME, (String)names.get(0)); 
-    }
-
     // new VDB connector binding scope names
     //---------------------------------------
     //          |         stored            |

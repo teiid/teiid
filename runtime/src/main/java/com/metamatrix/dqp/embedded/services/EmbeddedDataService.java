@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.teiid.adminapi.ConnectionPool;
 import org.teiid.connector.api.ConnectorException;
 import org.teiid.connector.api.ConnectorPropertyNames;
-import org.teiid.connector.metadata.runtime.ConnectorMetadata;
+import org.teiid.connector.metadata.runtime.MetadataStore;
 import org.teiid.dqp.internal.datamgr.impl.ConnectorManager;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 
@@ -129,7 +129,7 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
     }
     
     @Override
-    public ConnectorMetadata getConnectorMetadata(String vdbName,
+    public MetadataStore getConnectorMetadata(String vdbName,
     		String vdbVersion, String modelName, Properties importProperties) throws MetaMatrixComponentException {
     	VDBService vdbService = (VDBService)this.lookupService(DQPServiceNames.VDB_SERVICE);
     	List<String> bindingNames = vdbService.getConnectorBindingNames(vdbName, vdbVersion, modelName);
@@ -363,9 +363,6 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         getConfigurationService().register(this.listener);
 
         try {                
-            // Start System Model connector Binding
-            startConnectorBinding(SYSTEM_PHYSICAL_MODEL_NAME);
-                        
             // Loop through the available ACTIVE VDBS and only start those
             // connector bindings that are ACTIVE VDBS.
             List otherBindings = new ArrayList();
@@ -462,13 +459,8 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         
         ConnectorBinding binding = (ConnectorBinding)loadedConnectorBindingsMap.get(deployedConnectorBindingName);
         if (binding == null) {
-            if (SYSTEM_PHYSICAL_MODEL_NAME.equals(deployedConnectorBindingName)) {
-                binding = getSystemModelBinding();
-            }
-            else {
-                // if connector binding not found load from the configuration service.
-                binding = getConfigurationService().getConnectorBinding(deployedConnectorBindingName);
-            }
+            // if connector binding not found load from the configuration service.
+            binding = getConfigurationService().getConnectorBinding(deployedConnectorBindingName);
         }
         return binding;
     }    
@@ -569,13 +561,4 @@ public class EmbeddedDataService extends EmbeddedBaseDQPService implements DataS
         return value;
     }    
     
-    /**
-     * Create a Connector Binding for the System Model. 
-     * @return
-     * @since 4.3
-     */
-    ConnectorBinding getSystemModelBinding() {
-        return new DefaultIndexConnectorBinding();          
-    }    
-        
 }
