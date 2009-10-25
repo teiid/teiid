@@ -20,7 +20,6 @@ import java.util.HashMap;
 import org.teiid.core.index.IDocument;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.index.IQueryResult;
-import org.teiid.metadata.index.CharOperation;
 
 import com.metamatrix.core.util.LRUCache;
 

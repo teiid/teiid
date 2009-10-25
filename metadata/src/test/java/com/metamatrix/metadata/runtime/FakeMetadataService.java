@@ -28,14 +28,10 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.connector.metadata.IndexFile;
-import org.teiid.connector.metadata.MetadataConnectorConstants;
-import org.teiid.connector.metadata.MultiObjectSource;
-import org.teiid.connector.metadata.PropertyFileObjectSource;
 import org.teiid.connector.metadata.runtime.DatatypeRecordImpl;
 import org.teiid.metadata.CompositeMetadataStore;
 import org.teiid.metadata.TransformationMetadata;
-import org.teiid.metadata.index.IndexMetadataStore;
+import org.teiid.metadata.index.IndexMetadataFactory;
 
 import com.metamatrix.api.exception.MetaMatrixComponentException;
 import com.metamatrix.common.application.ApplicationEnvironment;
@@ -43,9 +39,7 @@ import com.metamatrix.common.application.ApplicationService;
 import com.metamatrix.common.application.exception.ApplicationInitializationException;
 import com.metamatrix.common.application.exception.ApplicationLifecycleException;
 import com.metamatrix.common.vdb.api.VDBArchive;
-import com.metamatrix.connector.metadata.internal.IObjectSource;
 import com.metamatrix.core.util.TempDirectoryMonitor;
-import com.metamatrix.dqp.service.FakeVDBService;
 import com.metamatrix.dqp.service.MetadataService;
 import com.metamatrix.metadata.runtime.api.MetadataSource;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
@@ -57,7 +51,7 @@ public class FakeMetadataService implements ApplicationService, MetadataService 
     public FakeMetadataService(URL vdbFile) throws IOException {
         TempDirectoryMonitor.turnOn();
     	MetadataSource source = new VDBArchive(vdbFile.openStream());
-    	compositeMetadataStore = new CompositeMetadataStore(Arrays.asList(new IndexMetadataStore(source)), source);
+    	compositeMetadataStore = new CompositeMetadataStore(Arrays.asList(new IndexMetadataFactory(source).getMetadataStore()), source);
     }
 
     public void clear() {
@@ -80,16 +74,8 @@ public class FakeMetadataService implements ApplicationService, MetadataService 
 		return new TransformationMetadata(compositeMetadataStore);
 	}
 
-	public IObjectSource getMetadataObjectSource(String vdbName,String vdbVersion) throws MetaMatrixComponentException {
-		
-		// build up sources to be used by the index connector
-		IObjectSource indexFile = new IndexFile(compositeMetadataStore, vdbName, vdbVersion, new FakeVDBService());
-
-		PropertyFileObjectSource propertyFileSource = new PropertyFileObjectSource();
-		IObjectSource multiObjectSource = new MultiObjectSource(indexFile, MetadataConnectorConstants.PROPERTIES_FILE_EXTENSION,propertyFileSource);
-
-		// return an adapter object that has access to all sources
-		return multiObjectSource;	
+	public CompositeMetadataStore getMetadataObjectSource(String vdbName,String vdbVersion) throws MetaMatrixComponentException {
+		return compositeMetadataStore;
 	}
 	
 	@Override

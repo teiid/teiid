@@ -13,7 +13,6 @@ package org.teiid.internal.core.index;
 
 import java.util.Arrays;
 
-import org.teiid.metadata.index.CharOperation;
 
 
 /**
