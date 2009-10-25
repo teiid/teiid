@@ -1792,6 +1792,96 @@
         </tgroup>
       </informaltable>
     </sect2>
+    <sect2>
+      <title>System.ProcedureParamProperties</title>
+      <para>This supplies information on procedure parameters.
+      </para>
+      <informaltable frame="all">
+        <tgroup cols="3">
+          <thead>
+            <row>
+              <entry>
+                <para>Column Name</para>
+              </entry>
+              <entry>
+                <para>Type</para>
+              </entry>
+              <entry>
+                <para>Description</para>
+              </entry>
+            </row>
+          </thead>
+          <tbody>
+            <row>
+              <entry>
+                <para>ModelName</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Model name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>ProcedureName</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Procedure name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>ProcedureParamName</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Parameter name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Name</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Property name</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Value</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>Property value</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>UID</para>
+              </entry>
+              <entry>
+                <para>string</para>
+              </entry>
+              <entry>
+                <para>param unique id</para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </sect2>    
   </sect1>
   <sect1>
     <title>

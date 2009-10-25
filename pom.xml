@@ -336,11 +336,6 @@
 				<version>${project.version}</version>
 				<scope>test</scope>
 			</dependency>
-			<dependency>
-				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-connector-metadata</artifactId>
-				<version>${project.version}</version>
-			</dependency>
       
       <!-- External dependencies -->
 			<dependency>
@@ -458,7 +453,6 @@
 		<module>runtime</module>
 		<module>adminshell</module>
 		<module>test-integration</module>
-		<module>connector-metadata</module>
 		<module>cache-jbosscache</module>
 		<module>hibernate-dialect</module>
 	</modules>

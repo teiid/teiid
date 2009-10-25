@@ -74,7 +74,7 @@ public abstract class ResourceNameUtil {
     public static final String RELATIONAL_NAME                  = "Relational"; //$NON-NLS-1$
     public static final String RELATIONSHIP_NAME                = "Relationship"; //$NON-NLS-1$
     public static final String SIMPLEDATATYPES_INSTANCE_NAME    = "SimpleDatatypes-instance"; //$NON-NLS-1$
-    public static final String SYSTEM_NAME                      = "System"; //$NON-NLS-1$    
+    public static final String SYSTEM_NAME                      = CoreConstants.SYSTEM_MODEL;    
     public static final String SYSTEMADMIN_NAME                 = CoreConstants.SYSTEM_ADMIN_MODEL_NAME;
     public static final String SYSTEMADMINPHYSICAL_NAME         = CoreConstants.SYSTEM_ADMIN_PHYSICAL_MODEL_NAME;
     public static final String SYSTEMPHYSICAL_NAME              = CoreConstants.SYSTEM_PHYSICAL_MODEL_NAME;

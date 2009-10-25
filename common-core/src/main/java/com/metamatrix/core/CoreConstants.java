@@ -50,6 +50,8 @@ public interface CoreConstants {
     interface Trace {
         String PROXIES = "proxies"; //$NON-NLS-1$
     }
+
+    public static final String SYSTEM_MODEL = "System"; //$NON-NLS-1$
     
     public static final String SYSTEM_VDB = "System.vdb"; //$NON-NLS-1$
 

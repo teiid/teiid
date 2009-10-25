@@ -123,7 +123,6 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     
     final private static class RUNTIME_MODEL{
         public final static String VIRTUAL_MODEL_NAME = "System"; //$NON-NLS-1$
-        public final static String JDBC_SYSTEM_MODEL_NAME = "System.JDBC"; //$NON-NLS-1$
     }
 
     private static final String TYPE_MAPPING;
@@ -187,7 +186,7 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
     private final static String QUERY_REFERENCE_KEYS =
       new StringBuffer("SELECT PKTABLE_CAT, PKTABLE_SCHEM, PKTABLE_NAME, PKCOLUMN_NAME, FKTABLE_CAT, FKTABLE_SCHEM") //$NON-NLS-1$
         .append(", FKTABLE_NAME, FKCOLUMN_NAME, KEY_SEQ, UPDATE_RULE, DELETE_RULE, FK_NAME, PK_NAME, DEFERRABILITY FROM ") //$NON-NLS-1$
-        .append(RUNTIME_MODEL.JDBC_SYSTEM_MODEL_NAME).append(".ReferenceKeyColumns").toString(); //$NON-NLS-1$
+        .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".ReferenceKeyColumns").toString(); //$NON-NLS-1$
     
     private final static String QUERY_CROSS_REFERENCES = new StringBuffer(QUERY_REFERENCE_KEYS)
     	.append(",").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND UCASE(v.Name) LIKE ?") //$NON-NLS-1$ //$NON-NLS-2$//$NON-NLS-3$
@@ -227,12 +226,12 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
 
     private static final String QUERY_INDEX_INFO =
       new StringBuffer("SELECT NULL AS TABLE_CAT, v.Name AS TABLE_SCHEM, GroupFullName AS TABLE_NAME") //$NON-NLS-1$
-        .append(", convert(0, boolean) AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, KeyName AS INDEX_NAME") //$NON-NLS-1$
+        .append(", case when KeyType = 'Index' then TRUE else FALSE end AS NON_UNIQUE, NULL AS INDEX_QUALIFIER, KeyName AS INDEX_NAME") //$NON-NLS-1$
         .append(", 0 AS TYPE, convert(Position, short) AS ORDINAL_POSITION, k.Name AS COLUMN_NAME") //$NON-NLS-1$
         .append(", NULL AS ASC_OR_DESC, 0 AS CARDINALITY, 1 AS PAGES, NULL AS FILTER_CONDITION") //$NON-NLS-1$
         .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".KeyElements k CROSS JOIN ") //$NON-NLS-1$ //$NON-NLS-2$
         .append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".VirtualDatabases v")  //$NON-NLS-1$
-        .append(" WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND KeyType LIKE 'Index' AND UCASE(GroupFullName) LIKE ?") //$NON-NLS-1$//$NON-NLS-2$
+        .append(" WHERE UCASE(v.Name)").append(LIKE_ESCAPE).append("AND KeyType IN ('Index', ?) AND UCASE(GroupFullName) LIKE ?") //$NON-NLS-1$//$NON-NLS-2$
         .append(" ORDER BY NON_UNIQUE, TYPE, INDEX_NAME, ORDINAL_POSITION").toString(); //$NON-NLS-1$
     
     private static final String QUERY_MODELS =
@@ -1074,7 +1073,8 @@ public class MMDatabaseMetaData extends WrapperImpl implements com.metamatrix.jd
             prepareQuery = driverConnection.prepareStatement(QUERY_INDEX_INFO); 
 
             prepareQuery.setObject(1, schema.toUpperCase());
-            prepareQuery.setObject(2, table.toUpperCase());
+            prepareQuery.setObject(2, unique?null:"NonUnique"); //$NON-NLS-1$
+            prepareQuery.setObject(3, table.toUpperCase());
 
             // make a query against runtimemetadata and get results
             results = (MMResultSet) prepareQuery.executeQuery();
