@@ -20,14 +20,17 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.internal.process.capabilities;
+package org.teiid.dqp.internal.process;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 
 import junit.framework.TestCase;
 
 import org.mockito.Mockito;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.internal.process.SharedCachedFinder;
 
 import com.metamatrix.dqp.internal.datamgr.ConnectorID;
 import com.metamatrix.dqp.message.RequestMessage;
@@ -70,7 +73,7 @@ public class TestConnectorCapabilitiesFinder extends TestCase {
         basicSourceCapabilities.setFunctionSupport(functionName, true);
         Mockito.stub(dataService.getCapabilities(request, workContext, id)).toReturn(basicSourceCapabilities);
         
-        ConnectorCapabilitiesFinder finder = new ConnectorCapabilitiesFinder(vdbService, dataService, request, workContext);
+        SharedCachedFinder finder = new SharedCachedFinder(vdbService, dataService, request, workContext, new HashMap<String, SourceCapabilities>());
         
         // Test
         SourceCapabilities actual = finder.findCapabilities(modelName);

@@ -28,6 +28,8 @@ import org.junit.Test;
 
 import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
+import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -50,13 +52,8 @@ public class TestAggregatePushdown {
 		return caps;
 	}
 
-    private FakeCapabilitiesFinder getAggregatesFinder() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = getAggregateCapabilities();
-        capFinder.addCapabilities("m1", caps); //$NON-NLS-1$
-        capFinder.addCapabilities("m2", caps); //$NON-NLS-1$
-
-        return capFinder;
+    public static CapabilitiesFinder getAggregatesFinder() {
+    	return new DefaultCapabilitiesFinder(getAggregateCapabilities());
     }
 
     @Test public void testCase6327() {

@@ -513,7 +513,7 @@ public class TestCapabilitiesUtil extends TestCase {
         finder.addCapabilities("pm1", sourceCaps); //$NON-NLS-1$
 
         // Test capabilities util
-        boolean actual = CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, finder);
+        boolean actual = CapabilitiesUtil.supportsSelectExpression(modelID, metadata, finder);
         assertEquals("Got wrong answer for supports", supports, actual); //$NON-NLS-1$
     }    
     

@@ -121,6 +121,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.CRITERIA_IN, true);
         caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
@@ -144,6 +145,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -184,6 +186,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
@@ -679,6 +682,7 @@ public class TestSubqueryPushdown {
         caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);

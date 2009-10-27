@@ -22,7 +22,9 @@
 
 package com.metamatrix.query.optimizer;
 
-import junit.framework.TestCase;
+import org.junit.Test;
+
+import static junit.framework.Assert.*;
 
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -33,174 +35,90 @@ import com.metamatrix.query.processor.relational.SortNode;
 import com.metamatrix.query.unittest.FakeMetadataFacade;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
-public class TestRuleMergeVirtual extends TestCase {
+public class TestRuleMergeVirtual {
     
-    public void testSimpleMergeGroupBy() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-         
+    @Test public void testSimpleMergeGroupBy() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT MAX(e2) AS x FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeGroupBy1() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-         
+    @Test public void testSimpleMergeGroupBy1() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
-                                          "SELECT DISTINCT e1, MAX(e2) AS x FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                          "SELECT v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, MAX(g_0.e2) AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });                                    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
 
     /**
      * Same as above but all required symbols are selected
      */
-    public void testSimpleMergeGroupBy2() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+    @Test public void testSimpleMergeGroupBy2() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x, e1 FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      metadata, null, capFinder,
+                                      metadata, null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT DISTINCT MAX(e2) AS x, e1 FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeGroupBy3() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+    @Test public void testSimpleMergeGroupBy3() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      metadata, null, capFinder,
+                                      metadata, null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT DISTINCT MAX(e2) AS x, e1 FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeGroupBy4() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-         
+    @Test public void testSimpleMergeGroupBy4() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x, x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
-                                          "SELECT MAX(e2) AS x FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
+                                          "SELECT v_0.c_0, v_0.c_0 FROM (SELECT MAX(g_0.e2) AS c_0 FROM pm1.g1 AS g_0 GROUP BY g_0.e1) AS v_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });                                    
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeGroupBy5() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-         
+    @Test public void testSimpleMergeGroupBy5() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z where z.x = 1", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT MAX(e2) AS x FROM pm1.g1 GROUP BY e1 HAVING MAX(e2) = 1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeGroupBy6() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
-         
+    @Test public void testSimpleMergeGroupBy6() {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT x FROM (SELECT e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z where z.x = 1", //$NON-NLS-1$
-                                      FakeMetadataFactory.example1Cached(), null, capFinder,
+                                      FakeMetadataFactory.example1Cached(), null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT MAX(e2) AS x FROM pm1.g1 GROUP BY e1 HAVING MAX(e2) = 1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeGroupBy7() {
-        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
-        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        caps.setCapabilitySupport(Capability.QUERY_SELECT_DISTINCT, true);
-        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+    @Test public void testSimpleMergeGroupBy7() {
         FakeMetadataFacade metadata = FakeMetadataFactory.example1Cached();
          
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT distinct x, e1 FROM (SELECT distinct e1, max(e2) as x FROM pm1.g1 GROUP BY e1) AS z", //$NON-NLS-1$
-                                      metadata, null, capFinder,
+                                      metadata, null, TestAggregatePushdown.getAggregatesFinder(),
                                       new String[] {
                                           "SELECT DISTINCT MAX(e2) AS x, e1 FROM pm1.g1 GROUP BY e1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeUnion() {
+    @Test public void testSimpleMergeUnion() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -215,7 +133,7 @@ public class TestRuleMergeVirtual extends TestCase {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeUnion1() {
+    @Test public void testSimpleMergeUnion1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -233,7 +151,7 @@ public class TestRuleMergeVirtual extends TestCase {
     /**
      * Same as above, but the expression will prevent the source removal
      */
-    public void testSimpleMergeUnion2() {
+    @Test public void testSimpleMergeUnion2() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -263,7 +181,7 @@ public class TestRuleMergeVirtual extends TestCase {
         });                                    
     }
     
-    public void testSimpleMergeUnion3() {
+    @Test public void testSimpleMergeUnion3() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_UNION, true);
@@ -293,7 +211,7 @@ public class TestRuleMergeVirtual extends TestCase {
         });                                    
     }
     
-    public void testSimpleMergeWithLimit() {
+    @Test public void testSimpleMergeWithLimit() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -307,7 +225,7 @@ public class TestRuleMergeVirtual extends TestCase {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
-    public void testSimpleMergeWithLimit1() {
+    @Test public void testSimpleMergeWithLimit1() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
@@ -341,7 +259,7 @@ public class TestRuleMergeVirtual extends TestCase {
     /**
      * Note that the merge is not performed since it would create an expression in the group by clause
      */
-    public void testViewPreservationWithGroupByExpression() throws Exception {
+    @Test public void testViewPreservationWithGroupByExpression() throws Exception {
         String sql = "SELECT gbl_date " + //$NON-NLS-1$
             "FROM " + //$NON-NLS-1$
             "(SELECT a.intkey as x, convert(a.TimestampValue, date) AS gbl_date, b.intkey as y " + //$NON-NLS-1$
@@ -351,6 +269,7 @@ public class TestRuleMergeVirtual extends TestCase {
         // Create capabilities
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
@@ -370,7 +289,7 @@ public class TestRuleMergeVirtual extends TestCase {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);         
     } 
     
-    public void testSortAliasWithSameName() throws Exception { 
+    @Test public void testSortAliasWithSameName() throws Exception { 
         String sql = "select e1 from (select distinct pm1.g1.e1 as e1 from pm1.g1) x order by e1"; //$NON-NLS-1$
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();

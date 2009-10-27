@@ -407,24 +407,9 @@ public class TestJoinOptimization {
         String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (bqt1.smalla.stringkey = bqt2.smalla.intkey and bqt2.smalla.intkey = null)"; //$NON-NLS-1$
 
         // Plan query
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT bqt1.smalla.intkey FROM bqt1.smalla"}); //$NON-NLS-1$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(), new String[] {"SELECT bqt1.smalla.intkey, null FROM bqt1.smalla"}); //$NON-NLS-1$
 
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // Join
-            0,      // MergeJoin
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });        
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
     }
     
     @Test public void testPushMultiGroupJoinCriteria() throws Exception {
@@ -884,6 +869,7 @@ public class TestJoinOptimization {
 
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);        
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);

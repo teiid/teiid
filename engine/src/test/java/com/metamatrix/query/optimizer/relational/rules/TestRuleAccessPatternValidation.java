@@ -34,7 +34,7 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.TestOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
+import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.optimizer.relational.GenerateCanonical;
 import com.metamatrix.query.optimizer.relational.OptimizerRule;
 import com.metamatrix.query.optimizer.relational.PlanHints;
@@ -130,12 +130,7 @@ public class TestRuleAccessPatternValidation extends TestCase {
 				System.out.println("EXECUTING " + rule); //$NON-NLS-1$
 			}
 
-            CapabilitiesFinder finder = new CapabilitiesFinder() {
-                private SourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
-                public SourceCapabilities findCapabilities(String modelName) throws MetaMatrixComponentException {
-                    return caps;
-                }
-            };             
+            CapabilitiesFinder finder = new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities());             
             plan = rule.execute(plan, metadata, finder, rules, new AnalysisRecord(false, false, debug), null);
 			if(debug) {
 				System.out.println("\nAFTER: \n" + plan); //$NON-NLS-1$

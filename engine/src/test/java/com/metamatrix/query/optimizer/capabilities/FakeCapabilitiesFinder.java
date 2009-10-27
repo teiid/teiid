@@ -31,7 +31,7 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
  */
 public class FakeCapabilitiesFinder implements CapabilitiesFinder {
 
-    private Map caps = new HashMap();
+    private Map<String, SourceCapabilities> caps = new HashMap<String, SourceCapabilities>();
 
     /**
      * 
@@ -47,7 +47,7 @@ public class FakeCapabilitiesFinder implements CapabilitiesFinder {
      * @see com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder#findCapabilities(java.lang.String)
      */
     public SourceCapabilities findCapabilities(String connectorBindingID) throws MetaMatrixComponentException {
-        return (SourceCapabilities) caps.get(connectorBindingID);
+        return caps.get(connectorBindingID);
     }
     
     public String toString() {

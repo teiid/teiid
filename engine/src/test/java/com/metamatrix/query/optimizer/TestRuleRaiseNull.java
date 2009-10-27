@@ -68,24 +68,9 @@ public class TestRuleRaiseNull extends TestCase {
         String sql = "select * from ( select intkey as cola, null as colb, intnum as colc from bqt1.smalla union all select null, intkey, intnum from bqt2.smalla) as X where X.cola = 1";  //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQT(),
-                                      new String[] {"SELECT intkey, intnum FROM bqt1.smalla WHERE intkey = 1"} ); //$NON-NLS-1$
+                                      new String[] {"SELECT intkey, null, intnum FROM bqt1.smalla WHERE intkey = 1"} ); //$NON-NLS-1$
         
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });          
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);          
         
     }
     
@@ -101,46 +86,16 @@ public class TestRuleRaiseNull extends TestCase {
         String sql = "select b.intkey from (select intkey from bqt1.smalla) a full outer join (select intkey from bqt1.smallb where 1 = 0) b on (a.intkey = b.intkey)"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(),  
-                                                    new String[]{"SELECT BQT1.SmallA.IntKey FROM bqt1.smalla"}); //$NON-NLS-1$
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });
+                                                    new String[]{"SELECT null FROM bqt1.smalla"}); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
     public void testRaiseNullWithOuterJoin() {
         String sql = "select b.intkey from (select intkey from bqt1.smalla) a left outer join (select intkey from bqt1.smallb where 1 = 0) b on (a.intkey = b.intkey)"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(),  
-                                                    new String[]{"SELECT BQT1.SmallA.IntKey FROM bqt1.smalla"}); //$NON-NLS-1$
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });
+                                                    new String[]{"SELECT null FROM bqt1.smalla"}); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
     public void testRaiseNullWithOuterJoin1() {
@@ -178,7 +133,7 @@ public class TestRuleRaiseNull extends TestCase {
         String sql = "select b.intkey, b.x from (select intkey, intnum as x from bqt1.smalla where 1 = 0 union all select intnum as a, null from bqt1.smalla union all select 1 as z, intkey as b from bqt1.smallb) b"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(),  
-                                                    new String[]{"SELECT intkey FROM bqt1.smallb", "SELECT IntNum FROM bqt1.smalla"}); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[]{"SELECT 1, intkey FROM bqt1.smallb", "SELECT IntNum, null FROM bqt1.smalla"}); //$NON-NLS-1$ //$NON-NLS-2$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -190,7 +145,7 @@ public class TestRuleRaiseNull extends TestCase {
             0,      // MergeJoinStrategy
             0,      // Null
             0,      // PlanExecution
-            2,      // Project
+            0,      // Project
             0,      // Select
             0,      // Sort
             1       // UnionAll
@@ -209,23 +164,8 @@ public class TestRuleRaiseNull extends TestCase {
         String sql = "select b.intkey, b.x from (select intkey, intnum as x from bqt1.smalla where 1 = 0 union all select 1 as z, intkey as b from bqt1.smallb) b inner join bqt1.smalla on b.intkey = bqt1.smalla.intkey"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.exampleBQTCached(),  
-                                                    new String[]{"SELECT g_0.intkey FROM bqt1.smallb AS g_0, bqt1.smalla AS g_1 WHERE g_1.IntKey = 1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
-        TestOptimizer.checkNodeTypes(plan, new int[] {
-            1,      // Access
-            0,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            1,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        });
+                                                    new String[]{"SELECT 1, g_0.intkey FROM bqt1.smallb AS g_0, bqt1.smalla AS g_1 WHERE g_1.IntKey = 1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     
     public void testRaiseNullWithUnion5() {
@@ -261,12 +201,12 @@ public class TestRuleRaiseNull extends TestCase {
     
     public void testPushCriteriaThroughUnion9() {
         TestOptimizer.helpPlan("select * from vm1.u8 where const = 's1'", TestOptimizer.example1(), //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g1" } );     //$NON-NLS-1$
+            new String[] { "SELECT 's1', e1 FROM pm1.g1" } );     //$NON-NLS-1$
     }
 
     public void testPushCriteriaThroughUnion10() {
         TestOptimizer.helpPlan("select * from vm1.u8 where const = 's3'", TestOptimizer.example1(), //$NON-NLS-1$
-            new String[] { "SELECT e1 FROM pm1.g3" } );     //$NON-NLS-1$
+            new String[] { "SELECT 's3', e1 FROM pm1.g3" } );     //$NON-NLS-1$
     }
     
     public void testRaiseNullWithOuterJoinAndHaving() {
@@ -411,7 +351,7 @@ public class TestRuleRaiseNull extends TestCase {
         String sql = "select pm1.g1.e1 from pm1.g1, (select e1 from pm1.g1 where (1 = 0) union all select e1 as x from pm1.g2) x where pm1.g1.e1 <> x.e1"; //$NON-NLS-1$
         
         RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(),  
-                                                    new String[]{"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 <> g_1.e1"}); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[]{"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1 WHERE g_0.e1 <> g_1.e1"}); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     

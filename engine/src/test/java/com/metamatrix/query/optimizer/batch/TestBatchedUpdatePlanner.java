@@ -24,7 +24,6 @@ package com.metamatrix.query.optimizer.batch;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 import junit.framework.TestCase;
@@ -39,6 +38,8 @@ import com.metamatrix.query.analysis.AnalysisRecord;
 import com.metamatrix.query.metadata.QueryMetadataInterface;
 import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import com.metamatrix.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.parser.QueryParser;
 import com.metamatrix.query.processor.ProcessorPlan;
@@ -126,13 +127,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
     }
     
     public static CapabilitiesFinder getGenericFinder() {
-        CapabilitiesFinder finder = new CapabilitiesFinder() {
-            private SourceCapabilities caps = new FakeCapabilities(true);
-            public SourceCapabilities findCapabilities(String modelName) throws MetaMatrixComponentException {
-                return caps;
-            }
-        };
-        return finder;
+        return new DefaultCapabilitiesFinder(new FakeCapabilities(true));
     }
 
     private BatchedUpdatePlan helpPlan(String[] sql, QueryMetadataInterface md) throws QueryParserException, QueryResolverException, QueryValidatorException, MetaMatrixComponentException, QueryPlannerException, QueryMetadataException {
@@ -195,8 +190,8 @@ public class TestBatchedUpdatePlanner extends TestCase {
                         "DELETE FROM pm1.g1 WHERE e2 > 5000", //$NON-NLS-1$
                         "UPDATE pm1.g1 set e2 = -1 WHERE e2 = 4999" //$NON-NLS-1$
         };
-        FakeFinder finder = new FakeFinder();
-        finder.setCapabilities("pm1", new FakeCapabilities(false)); //$NON-NLS-1$
+        FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
+        finder.addCapabilities("pm1", new FakeCapabilities(false)); //$NON-NLS-1$
         boolean[] expectedBatching = {false, false, false, false};
         helpTestPlanner(sql, expectedBatching, finder);
     }
@@ -209,9 +204,9 @@ public class TestBatchedUpdatePlanner extends TestCase {
                         "UPDATE pm2.g1 set e2 = -1 WHERE e2 = 4999", //$NON-NLS-1$
                         "DELETE FROM pm1.g2 WHERE e2 = 50" //$NON-NLS-1$
         };
-        FakeFinder finder = new FakeFinder();
-        finder.setCapabilities("pm1", new FakeCapabilities(false)); //$NON-NLS-1$
-        finder.setCapabilities("pm2", new FakeCapabilities(true)); //$NON-NLS-1$
+        FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
+        finder.addCapabilities("pm1", new FakeCapabilities(false)); //$NON-NLS-1$
+        finder.addCapabilities("pm2", new FakeCapabilities(true)); //$NON-NLS-1$
         boolean[] expectedBatching = {false, false, true, false};
         helpTestPlanner(sql, expectedBatching, finder);
     }
@@ -230,15 +225,7 @@ public class TestBatchedUpdatePlanner extends TestCase {
         public Object getSourceProperty(Capability propertyName) {return null;}
         
     }
-    private static final class FakeFinder implements CapabilitiesFinder {
-        private HashMap caps = new HashMap();
-        private void setCapabilities(String modelName, SourceCapabilities cap) {
-            caps.put(modelName, cap);
-        }
-        public SourceCapabilities findCapabilities(String modelName) throws MetaMatrixComponentException {
-            return (SourceCapabilities)caps.get(modelName);
-        }
-}
+    
     private static final boolean DEBUG = false;
     
 }

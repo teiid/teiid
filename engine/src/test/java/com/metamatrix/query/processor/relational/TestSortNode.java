@@ -322,7 +322,7 @@ public class TestSortNode {
     	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
         es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-        TupleSourceID tsid = bm.createTupleSource(Arrays.asList(es1), new String[] {DataTypeManager.DefaultDataTypes.INTEGER}, "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        TupleSourceID tsid = bm.createTupleSource(Arrays.asList(es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
         bm.addTupleBatch(tsid, new TupleBatch(1, new List[] {Arrays.asList(1)}));
     	SortUtility su = new SortUtility(tsid, Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.DUP_REMOVE, bm, "test", true); //$NON-NLS-1$
     	TupleSourceID out = su.sort();

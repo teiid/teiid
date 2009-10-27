@@ -195,6 +195,15 @@ public class TestProcedureRelational {
         TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), null, false);
     }
     
+    /**
+     * Will fail missing param2 assignment 
+     */
+    @Test public void testProcAsTable5(){
+        String sql = "select param1, param2, e1, e2 from pm1.vsp26 where param1=e2 and param2 = 'a'"; //$NON-NLS-1$
+
+        TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, TestOptimizer.getGenericFinder(), null, false);
+    }
+    
     @Test public void testProcAsTableInJoin(){
         String sql = "select param1, param2, pm1.vsp26.e2 from pm1.vsp26, pm1.g1 where param1 = pm1.g1.e2 and param2 = pm1.g1.e1 order by param1, param2, e2"; //$NON-NLS-1$
 

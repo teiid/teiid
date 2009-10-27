@@ -5567,6 +5567,7 @@ public class TestProcessor {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);

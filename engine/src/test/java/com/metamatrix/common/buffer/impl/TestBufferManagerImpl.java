@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -58,6 +59,7 @@ import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.SQLXMLImpl;
 import com.metamatrix.common.types.XMLType;
 import com.metamatrix.core.util.UnitTestUtil;
+import com.metamatrix.query.sql.symbol.ElementSymbol;
 
 /**
  */
@@ -87,11 +89,10 @@ public class TestBufferManagerImpl {
 
         List expectedRows = new ArrayList();
 
-        List schema = new ArrayList();
-        schema.add("col"); //$NON-NLS-1$
-        String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.STRING};
+        List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("col")); //$NON-NLS-1$
+        schema.get(0).setType(DataTypeManager.DefaultDataClasses.STRING);
         
-        TupleSourceID tsID = mgr.createTupleSource(schema, schemaTypes, null, TupleSourceType.PROCESSOR);        
+        TupleSourceID tsID = mgr.createTupleSource(schema, null, TupleSourceType.PROCESSOR);        
         
         long batchSize = -1;
         for(int b=0; b<numBatches; b++) {
@@ -211,9 +212,10 @@ public class TestBufferManagerImpl {
 
         XMLType xml1 = new XMLType(new SQLXMLImpl("<foo/>")); //$NON-NLS-1$
         XMLType xml2 = new XMLType(new SQLXMLImpl("<bar/>")); //$NON-NLS-1$
-        List schema = new ArrayList();
-        schema.add("xml"); //$NON-NLS-1$        
-        final TupleSourceID id = mgr.createTupleSource(schema, new String[] {DataTypeManager.DefaultDataTypes.XML}, "GROUP1", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("col")); //$NON-NLS-1$
+        schema.get(0).setType(DataTypeManager.DefaultDataClasses.XML);
+                
+        final TupleSourceID id = mgr.createTupleSource(schema, "GROUP1", TupleSourceType.PROCESSOR); //$NON-NLS-1$
         
         List xmlList1 = new ArrayList();
         xmlList1.add(xml1);
@@ -232,7 +234,7 @@ public class TestBufferManagerImpl {
         
         assertNotNull(mgr.getStreamable(id, xml1.getReferenceStreamId()));
         
-        final TupleSourceID id1 = mgr.createTupleSource(schema, new String[] {DataTypeManager.DefaultDataTypes.XML}, "GROUP1", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        final TupleSourceID id1 = mgr.createTupleSource(schema, "GROUP1", TupleSourceType.PROCESSOR); //$NON-NLS-1$
         
         TupleBatch batch1 = new TupleBatch(1, new List[] {xmlList1, xmlList2});
         mgr.addTupleBatch(id1, batch1);
@@ -246,9 +248,10 @@ public class TestBufferManagerImpl {
          final BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
         // save the lob
-        List schema = new ArrayList();
-        schema.add("xml"); //$NON-NLS-1$        
-        final TupleSourceID id = mgr.createTupleSource(schema, new String[] {DataTypeManager.DefaultDataTypes.XML}, "GROUP1", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+	     List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("col")); //$NON-NLS-1$
+	     schema.get(0).setType(DataTypeManager.DefaultDataClasses.XML);
+           
+        final TupleSourceID id = mgr.createTupleSource(schema, "GROUP1", TupleSourceType.PROCESSOR); //$NON-NLS-1$
         
         ByteLobChunkStream stream = new ByteLobChunkStream(new FileInputStream(UnitTestUtil.getTestDataPath()+"/LicenseMappingExample.xml"), 11); //$NON-NLS-1$
         int i = 1;
@@ -306,12 +309,11 @@ public class TestBufferManagerImpl {
     @Test public void testPinning1() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
-        List schema = new ArrayList();
-        schema.add("val"); //$NON-NLS-1$
-        schema.add("col"); //$NON-NLS-1$
+        List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("val"), new ElementSymbol("col")); //$NON-NLS-1$ //$NON-NLS-2$
+        schema.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        schema.get(1).setType(DataTypeManager.DefaultDataClasses.STRING);
         String group = "test"; //$NON-NLS-1$
-        String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING};
-        TupleSourceID tsID = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+        TupleSourceID tsID = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
         
         // Add some batches, 1000 at a time
         int maxRows = 4000;
@@ -337,12 +339,12 @@ public class TestBufferManagerImpl {
     @Test public void testUnpinOfUnpinnedBatch() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
-        List schema = new ArrayList();
-        schema.add("val"); //$NON-NLS-1$
-        schema.add("col"); //$NON-NLS-1$
+        List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("val"), new ElementSymbol("col")); //$NON-NLS-1$ //$NON-NLS-2$
+        schema.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        schema.get(1).setType(DataTypeManager.DefaultDataClasses.STRING);
+
         String group = "test"; //$NON-NLS-1$
-        String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING};
-        TupleSourceID tsID = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+        TupleSourceID tsID = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
         
         // Add some batches, 1000 at a time
         int maxRows = 4000;
@@ -399,9 +401,9 @@ public class TestBufferManagerImpl {
     @Test public void testDeadlockOnMultiThreadClean() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
 
-        List schema = new ArrayList();
-        schema.add("val"); //$NON-NLS-1$
-        String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.STRING};
+        List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("col")); //$NON-NLS-1$
+        schema.get(0).setType(DataTypeManager.DefaultDataClasses.STRING);
+        
         String group = "test"; //$NON-NLS-1$
         int count = 20;
         int pins = 50;
@@ -414,7 +416,7 @@ public class TestBufferManagerImpl {
                
         // Setup
         for(int t=0; t<count; t++) {
-            ids[t] = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+            ids[t] = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
             for(int i=1; i<(batches*rowsPerBatch); i=i+rowsPerBatch) {                
                 mgr.addTupleBatch(ids[t], exampleBigBatch(i, i+rowsPerBatch-1, rowSize));
             }                            
@@ -437,12 +439,12 @@ public class TestBufferManagerImpl {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
-            List schema = new ArrayList();
-            schema.add("val"); //$NON-NLS-1$
-            schema.add("col"); //$NON-NLS-1$
+            List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("val"), new ElementSymbol("col")); //$NON-NLS-1$ //$NON-NLS-2$
+            schema.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+            schema.get(1).setType(DataTypeManager.DefaultDataClasses.STRING);
+
             String group = "test"; //$NON-NLS-1$
-            String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING};
-            tsID = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+            tsID = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
             
             // Add some batches, 1000  at a time
             int maxRows = 10000;
@@ -476,11 +478,10 @@ public class TestBufferManagerImpl {
      */
     @Test public void testDefect_18499() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
-        List schema = new ArrayList();
-        schema.add("col"); //$NON-NLS-1$
-        String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.STRING};
+        List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("col")); //$NON-NLS-1$
+        schema.get(0).setType(DataTypeManager.DefaultDataClasses.STRING);
         
-        TupleSourceID tsID = mgr.createTupleSource(schema, schemaTypes, null, TupleSourceType.PROCESSOR);
+        TupleSourceID tsID = mgr.createTupleSource(schema, null, TupleSourceType.PROCESSOR);
         mgr.addTupleBatch(tsID, exampleBigBatch(1, 1000, 512));
         mgr.setStatus(tsID, TupleSourceStatus.FULL);
         TupleSource ts = mgr.getTupleSource(tsID);
@@ -499,12 +500,12 @@ public class TestBufferManagerImpl {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
-            List schema = new ArrayList();
-            schema.add("val"); //$NON-NLS-1$
-            schema.add("col"); //$NON-NLS-1$
+            List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("val"), new ElementSymbol("col")); //$NON-NLS-1$ //$NON-NLS-2$
+            schema.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+            schema.get(1).setType(DataTypeManager.DefaultDataClasses.STRING);
+
             String group = "test"; //$NON-NLS-1$
-            String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING};
-            tsID = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+            tsID = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
             
             // Add some batches, 1000  at a time
             int maxRows = 10000;
@@ -527,20 +528,16 @@ public class TestBufferManagerImpl {
     @Test public void testDefect19325() throws Exception{
         BufferManagerImpl mgr = (BufferManagerImpl)getTestBufferManager(1, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
-        List schema = new ArrayList();
-        schema.add("val"); //$NON-NLS-1$
-        schema.add("col"); //$NON-NLS-1$
+        List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("val"), new ElementSymbol("col")); //$NON-NLS-1$ //$NON-NLS-2$
+        schema.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        schema.get(1).setType(DataTypeManager.DefaultDataClasses.STRING);
+
         String group = "test1"; //$NON-NLS-1$
-        String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING};
-        tsID = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+        tsID = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
         
         TupleSourceID tsID2 = null;
-        schema = new ArrayList();
-        schema.add("val"); //$NON-NLS-1$
-        schema.add("col"); //$NON-NLS-1$
         group = "test2"; //$NON-NLS-1$
-        schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING};
-        tsID2 = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+        tsID2 = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
 
         // Add some batches, 1000  at a time
         int maxRows = 50000;
@@ -564,12 +561,12 @@ public class TestBufferManagerImpl {
         BufferManager mgr = getTestBufferManager(50, createFakeDatabaseStorageManager());
         TupleSourceID tsID = null;
         try {
-            List schema = new ArrayList();
-            schema.add("val"); //$NON-NLS-1$
-            schema.add("col"); //$NON-NLS-1$
+            List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("val"), new ElementSymbol("col")); //$NON-NLS-1$ //$NON-NLS-2$
+            schema.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+            schema.get(1).setType(DataTypeManager.DefaultDataClasses.STRING);
+
             String group = "test"; //$NON-NLS-1$
-            String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING};
-            tsID = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+            tsID = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
             
             // Add some batches
             int maxRows = 10000;
@@ -597,12 +594,12 @@ public class TestBufferManagerImpl {
     @Test public void testPinning2() throws Exception {
         BufferManager mgr = getTestBufferManager(1, createFakeDatabaseStorageManager());
         
-        List schema = new ArrayList();
-        schema.add("val"); //$NON-NLS-1$
-        schema.add("col"); //$NON-NLS-1$
+        List<ElementSymbol> schema = Arrays.asList(new ElementSymbol("val"), new ElementSymbol("col")); //$NON-NLS-1$ //$NON-NLS-2$
+        schema.get(0).setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        schema.get(1).setType(DataTypeManager.DefaultDataClasses.STRING);
+
         String group = "test"; //$NON-NLS-1$
-        String[] schemaTypes = new String[] {DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING};
-        TupleSourceID tsID = mgr.createTupleSource(schema, schemaTypes, group, TupleSourceType.PROCESSOR);
+        TupleSourceID tsID = mgr.createTupleSource(schema, group, TupleSourceType.PROCESSOR);
         
         // Add some batches, 1000 at a time
         int maxRows = 4000;

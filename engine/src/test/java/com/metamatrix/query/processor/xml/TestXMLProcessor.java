@@ -65,7 +65,6 @@ import com.metamatrix.query.optimizer.QueryOptimizer;
 import com.metamatrix.query.optimizer.capabilities.BasicSourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder;
 import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import com.metamatrix.query.optimizer.capabilities.SourceCapabilities;
 import com.metamatrix.query.optimizer.capabilities.SourceCapabilities.Capability;
 import com.metamatrix.query.optimizer.xml.TestXMLPlanner;
 import com.metamatrix.query.parser.ParseInfo;
@@ -10064,7 +10063,7 @@ public class TestXMLProcessor extends TestCase {
         caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, true);
         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
-        CapabilitiesFinder capFinder = new SimpleCapabilitiesFinder(caps); 
+        CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
         
         helpTestProcess("SELECT * FROM xmltest.doc12260", expectedDoc, metadata, dataMgr, true, MetaMatrixComponentException.class, null, capFinder); //$NON-NLS-1$
     }
@@ -11914,13 +11913,4 @@ public class TestXMLProcessor extends TestCase {
         }
     }
 
-    private static final class SimpleCapabilitiesFinder implements CapabilitiesFinder{
-        private SourceCapabilities caps;
-        SimpleCapabilitiesFinder(SourceCapabilities caps){
-            this.caps = caps;
-        }    
-        public SourceCapabilities findCapabilities(String modelName) {
-            return caps;
-        }    
-    }
 }

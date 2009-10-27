@@ -46,10 +46,10 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Create capabilities
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -70,10 +70,10 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Create capabilities
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
-        caps.setCapabilitySupport(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, true);
         caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
         caps.setFunctionSupport("convert", true); //$NON-NLS-1$
         capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
@@ -222,6 +222,7 @@ public class TestExpressionsInGroupBy extends TestCase {
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
         caps.setCapabilitySupport(Capability.QUERY_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);

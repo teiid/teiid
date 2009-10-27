@@ -25,17 +25,19 @@ package com.metamatrix.query.processor;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import com.metamatrix.query.optimizer.TestOptimizer;
+import com.metamatrix.query.optimizer.TestOptimizer.ComparisonMode;
+import com.metamatrix.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import com.metamatrix.query.unittest.FakeMetadataFactory;
 
-public class TestSetProcessing extends TestCase {
+public class TestSetProcessing {
     
-    public void testExcept() {
+    @Test public void testExcept() throws Exception {
         String sql = "select e1, e2 from pm1.g2 except select e1, 1 from pm1.g2"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0"}); //$NON-NLS-1$  //$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), new String[] {"SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  //$NON-NLS-2$
         
         List<?>[] expected = new List[] {
             Arrays.asList(new Object[] {"a", 0}), //$NON-NLS-1$
@@ -48,10 +50,10 @@ public class TestSetProcessing extends TestCase {
         TestProcessor.helpProcess(plan, manager, expected);
     }
     
-    public void testIntersect() {
+    @Test public void testIntersect() throws Exception {
         String sql = "select e1, e2 from pm1.g2 intersect select e1, 1 from pm1.g2"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0"}); //$NON-NLS-1$  //$NON-NLS-2$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), new String[] {"SELECT pm1.g2.e1 FROM pm1.g2", "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$  //$NON-NLS-2$
         
         List<?>[] expected = new List[] {
             Arrays.asList(new Object[] {null, 1}),
@@ -63,10 +65,10 @@ public class TestSetProcessing extends TestCase {
         TestProcessor.helpProcess(plan, manager, expected);
     }
     
-    public void testIntersectExcept() {
+    @Test public void testIntersectExcept() {
         String sql = "select e1, e2 from pm1.g2 except select e1, 1 from pm1.g2 intersect select 'a', e2 from pm1.g2"; //$NON-NLS-1$
         
-        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", "SELECT g_0.e2 FROM pm1.g2 AS g_0"}); //$NON-NLS-1$  //$NON-NLS-2$ //$NON-NLS-3$
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, FakeMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, 1 FROM pm1.g2 AS g_0", "SELECT g_0.e1, g_0.e2 FROM pm1.g2 AS g_0", "SELECT 'a', g_0.e2 FROM pm1.g2 AS g_0"}); //$NON-NLS-1$  //$NON-NLS-2$ //$NON-NLS-3$
         
         List<?>[] expected = new List[] {
             Arrays.asList(new Object[] {null, 1}),
