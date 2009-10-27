@@ -49,13 +49,11 @@ import com.metamatrix.query.sql.lang.Criteria;
 import com.metamatrix.query.sql.lang.JoinType;
 import com.metamatrix.query.sql.lang.SetQuery.Operation;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
-import com.metamatrix.query.sql.symbol.Constant;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
 import com.metamatrix.query.sql.util.SymbolMap;
-import com.metamatrix.query.sql.visitor.EvaluatableVisitor;
 import com.metamatrix.query.util.CommandContext;
 
 public final class RuleRaiseAccess implements OptimizerRule {
@@ -368,11 +366,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
             return false;
         }
         
-        if(inSelectClause && !(expr instanceof ElementSymbol)) {
-			if (!CapabilitiesUtil.supportsSelectLiterals(modelID, metadata, capFinder) 
-        		&& (expr instanceof Constant || EvaluatableVisitor.willBecomeConstant(expr))) {
-        		return false;
-        	}
+        if(inSelectClause && !(expr instanceof ElementSymbol || expr instanceof AggregateSymbol) 
+        		&& !CapabilitiesUtil.supportsSelectExpression(modelID, metadata, capFinder)) {
+    		return false;
         }                
          
         // By default, no reason we can't push

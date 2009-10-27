@@ -66,7 +66,6 @@ import com.metamatrix.query.sql.symbol.ElementSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.GroupSymbol;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 /** 
  * @since 5.5
@@ -91,7 +90,7 @@ public class TempTableStoreImpl implements TempTableStore {
 			this.ts = buffer.getTupleSource(tsId);
     		List columns = buffer.getTupleSchema(tsId);
 			this.lookup = RelationalNode.createLookupMap(columns);
-			this.newTs = buffer.createTupleSource(columns, TypeRetrievalUtil.getTypeNames(columns), sessionID, TupleSourceType.PROCESSOR);
+			this.newTs = buffer.createTupleSource(columns, sessionID, TupleSourceType.PROCESSOR);
 			this.tc = new TupleCollector(newTs, buffer);
 			this.eval = new Evaluator(lookup, null, null);
 			this.crit = crit;
@@ -170,7 +169,7 @@ public class TempTableStoreImpl implements TempTableStore {
         //add metadata
         tempMetadataStore.addTempGroup(tempTableName, columns, false, true);
         //create tuple source
-        TupleSourceID tsId = buffer.createTupleSource(columns, TypeRetrievalUtil.getTypeNames(columns), sessionID, TupleSourceType.PROCESSOR);
+        TupleSourceID tsId = buffer.createTupleSource(columns, sessionID, TupleSourceType.PROCESSOR);
         try {
             buffer.setStatus(tsId, TupleSourceStatus.FULL);
         }catch(TupleSourceNotFoundException e) {

@@ -31,7 +31,6 @@ import com.metamatrix.common.buffer.IndexedTupleSource;
 import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 class SourceState {
 
@@ -66,7 +65,7 @@ class SourceState {
     }
     
     TupleSourceID createSourceTupleSource() throws MetaMatrixComponentException {
-    	return this.source.getBufferManager().createTupleSource(source.getElements(), TypeRetrievalUtil.getTypeNames(source.getElements()), source.getConnectionID(), TupleSourceType.PROCESSOR);
+    	return this.source.getBufferManager().createTupleSource(source.getElements(), source.getConnectionID(), TupleSourceType.PROCESSOR);
     }
     
     public List saveNext() throws MetaMatrixComponentException, MetaMatrixProcessingException {

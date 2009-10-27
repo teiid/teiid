@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -48,12 +49,14 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.lob.LobChunk;
 import com.metamatrix.common.log.LogManager;
+import com.metamatrix.common.types.DataTypeManager;
 import com.metamatrix.common.types.Streamable;
 import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.dqp.DQPPlugin;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
+import com.metamatrix.query.sql.symbol.Expression;
 
 /**
  * <p>Default implementation of BufferManager.  This buffer manager implementation
@@ -242,18 +245,18 @@ public class BufferManagerImpl implements BufferManager {
 
     /**
      * Register a new tuple source and return a unique ID for it.
-     * @param schema List of ElementSymbol
      * @param groupName Group name
      * @param tupleSourceType Type of tuple source as defined in BufferManager constants
+     * @param schema List of ElementSymbol
      * @return New unique ID for this tuple source
      * @throws MetaMatrixComponentException If internal server error occurs
      */
-    public TupleSourceID createTupleSource(List schema, String[] types, String groupName, TupleSourceType tupleSourceType)
+    public TupleSourceID createTupleSource(List schema, String groupName, TupleSourceType tupleSourceType)
     throws MetaMatrixComponentException {
 
         TupleSourceID newID = new TupleSourceID(String.valueOf(this.currentTuple.getAndIncrement()), this.lookup);
         TupleGroupInfo tupleGroupInfo = getGroupInfo(groupName);
-		TupleSourceInfo info = new TupleSourceInfo(newID, schema, types, tupleGroupInfo, tupleSourceType);
+		TupleSourceInfo info = new TupleSourceInfo(newID, schema, getTypeNames(schema), tupleGroupInfo, tupleSourceType);
         tupleGroupInfo.getTupleSourceIDs().add(newID);
 		tupleSourceMap.put(newID, info);
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
@@ -261,6 +264,21 @@ public class BufferManagerImpl implements BufferManager {
         }
 
         return newID;
+    }
+    
+    /**
+     * Gets the data type names for each of the input expressions, in order.
+     * @param expressions List of Expressions
+     * @return
+     * @since 4.2
+     */
+    public static String[] getTypeNames(List expressions) {
+        String[] types = new String[expressions.size()];
+        for (ListIterator i = expressions.listIterator(); i.hasNext();) {
+            Expression expr = (Expression)i.next();
+            types[i.previousIndex()] = DataTypeManager.getDataTypeName(expr.getType());
+        }
+        return types;
     }
 
     /**

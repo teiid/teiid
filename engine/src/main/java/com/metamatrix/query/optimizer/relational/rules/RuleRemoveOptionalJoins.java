@@ -244,6 +244,9 @@ public class RuleRemoveOptionalJoins implements
      */
     static boolean useNonDistinctRows(PlanNode parent) {
 		while (parent != null) {
+			if (parent.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
+				return false;
+			}
 			switch (parent.getType()) {
 				case NodeConstants.Types.DUP_REMOVE: {
 					return false;

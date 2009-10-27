@@ -34,8 +34,6 @@ import java.util.Set;
 import javax.transaction.SystemException;
 
 import org.teiid.connector.xa.api.TransactionContext;
-import org.teiid.dqp.internal.process.capabilities.ConnectorCapabilitiesFinder;
-import org.teiid.dqp.internal.process.capabilities.SharedCachedFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
@@ -192,15 +190,12 @@ public class Request implements QueryProcessor.ProcessorFactory {
         	return;
         }
     	// Prepare dependencies for running the optimizer        
-        CapabilitiesFinder baseFinder =
-            new ConnectorCapabilitiesFinder(
+        this.capabilitiesFinder =
+            new SharedCachedFinder(
                 this.vdbService,
                 (DataService) this.env.findService(DQPServiceNames.DATA_SERVICE),
-                requestMsg, workContext);        
+                requestMsg, workContext, connectorCapabilitiesCache);        
         
-        // Wrap the finder with a cache
-        this.capabilitiesFinder = new SharedCachedFinder(baseFinder, connectorCapabilitiesCache);
-    	
         MetadataService metadataService = (MetadataService) this.env.findService(DQPServiceNames.METADATA_SERVICE);
         if(metadataService == null){
         	//should not come here. Per defect 15087, 

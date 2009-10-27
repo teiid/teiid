@@ -168,7 +168,7 @@ public class CommandContext implements Cloneable {
     
     public void setSessionFunctionEvaluated(boolean sessionFunctionEvaluated) {
     	if (parent != null) {
-    		parent.setCollectNodeStatistics(sessionFunctionEvaluated);
+    		parent.setSessionFunctionEvaluated(sessionFunctionEvaluated);
     	} else {
     		this.sessionFunctionEvaluated = sessionFunctionEvaluated;
     	}

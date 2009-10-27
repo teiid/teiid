@@ -40,7 +40,6 @@ import com.metamatrix.core.log.MessageLevel;
 import com.metamatrix.dqp.util.LogConstants;
 import com.metamatrix.query.execution.QueryExecPlugin;
 import com.metamatrix.query.util.CommandContext;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 /**
  * TODO: combine overlapping responsibilities with RequestWorkItem
@@ -85,7 +84,7 @@ public class QueryProcessor {
 
 		// Add data manager to all nodes in tree
 		this.processPlan.initialize(context, this.dataMgr, bufferMgr);
-        this.resultsID = bufferMgr.createTupleSource(processPlan.getOutputElements(), TypeRetrievalUtil.getTypeNames(processPlan.getOutputElements()), context.getConnectionID(), TupleSourceType.PROCESSOR);
+        this.resultsID = bufferMgr.createTupleSource(processPlan.getOutputElements(), context.getConnectionID(), TupleSourceType.PROCESSOR);
     }
     
     public CommandContext getContext() {

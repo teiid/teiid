@@ -31,7 +31,6 @@ import com.metamatrix.common.buffer.TupleSourceID;
 import com.metamatrix.common.buffer.TupleSourceNotFoundException;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceStatus;
 import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 public class BatchCollector {
 
@@ -45,7 +44,7 @@ public class BatchCollector {
     public BatchCollector(RelationalNode sourceNode) throws MetaMatrixComponentException {
         this.sourceNode = sourceNode;
         List sourceElements = sourceNode.getElements();
-        tsID = sourceNode.getBufferManager().createTupleSource(sourceElements, TypeRetrievalUtil.getTypeNames(sourceElements), sourceNode.getConnectionID(), TupleSourceType.PROCESSOR);
+        tsID = sourceNode.getBufferManager().createTupleSource(sourceElements, sourceNode.getConnectionID(), TupleSourceType.PROCESSOR);
     }
 
     public TupleSourceID collectTuples() throws MetaMatrixComponentException, MetaMatrixProcessingException {

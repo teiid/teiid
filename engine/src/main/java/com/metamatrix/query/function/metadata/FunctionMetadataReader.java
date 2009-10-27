@@ -106,9 +106,7 @@ public class FunctionMetadataReader {
 			}
 			return methods;
 		} catch (JDOMException e) {
-			IOException ex = new IOException();
-			ex.initCause(e);
-			throw ex;
+			throw new IOException(e);
 		}
 	}
 

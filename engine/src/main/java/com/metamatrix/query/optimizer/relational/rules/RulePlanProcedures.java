@@ -183,7 +183,7 @@ public class RulePlanProcedures implements OptimizerRule {
                 }
                 
                 public void visit(DependentSetCriteria obj) {
-                    if (checkForInput(obj.getExpression())) {
+                    if (!obj.isNegated() && checkForInput(obj.getExpression())) {
                         addInputNode((Reference)obj.getExpression());
                     }
                 }
@@ -197,9 +197,9 @@ public class RulePlanProcedures implements OptimizerRule {
                     return inputs.contains(ref.getExpression());
                 }
                 
-                boolean checkForAnyInput(LanguageObject expr) {
-                    for (Iterator refs = ReferenceCollectorVisitor.getReferences(expr).iterator(); refs.hasNext();) {
-                        if (checkForInput((Expression)refs.next())) {
+				boolean checkForAnyInput(LanguageObject expr) {
+                	for (Reference ref : ReferenceCollectorVisitor.getReferences(expr)) {
+                        if (checkForInput(ref)) {
                             return true;
                         }
                     }

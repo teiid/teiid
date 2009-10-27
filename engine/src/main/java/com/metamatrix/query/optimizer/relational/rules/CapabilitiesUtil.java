@@ -222,7 +222,7 @@ public class CapabilitiesUtil {
     	return supports(Capability.QUERY_SELECT_DISTINCT, modelID, metadata, capFinder);
     }
 
-    public static boolean supportsSelectLiterals(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static boolean supportsSelectExpression(Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, MetaMatrixComponentException {
     	return supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder);
     }

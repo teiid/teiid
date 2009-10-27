@@ -102,7 +102,7 @@ public class XMLUtil {
      * Creates a buffer manager's id for XML based data. 
      */
     public static TupleSourceID createXMLTupleSource(BufferManager bufferMgr, String tupleGroupName) throws MetaMatrixComponentException {
-        TupleSourceID sourceID = bufferMgr.createTupleSource(getOutputElements(), new String[]{DataTypeManager.DefaultDataTypes.XML}, tupleGroupName, TupleSourceType.PROCESSOR);
+        TupleSourceID sourceID = bufferMgr.createTupleSource(getOutputElements(), tupleGroupName, TupleSourceType.PROCESSOR);
         return sourceID;
     }
     

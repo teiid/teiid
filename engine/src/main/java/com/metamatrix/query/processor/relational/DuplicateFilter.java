@@ -37,7 +37,6 @@ import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.query.function.aggregate.AggregateFunction;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.ElementSymbol;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 /**
  */
@@ -50,7 +49,6 @@ public class DuplicateFilter implements AggregateFunction {
 
     // Derived and static - can be reused
     private List elements;
-    private String[] elementTypes;
     private List sortTypes;
 
     // Temporary state - should be reset
@@ -84,7 +82,6 @@ public class DuplicateFilter implements AggregateFunction {
         element.setType(inputType);
         elements = new ArrayList();
         elements.add(element);
-        elementTypes = TypeRetrievalUtil.getTypeNames(elements);
 
         sortTypes = new ArrayList();
         sortTypes.add(Boolean.valueOf(OrderBy.ASC));
@@ -107,7 +104,7 @@ public class DuplicateFilter implements AggregateFunction {
 
         try {
             if(collectionID == null) {
-                collectionID = mgr.createTupleSource(elements, elementTypes, groupName, TupleSourceType.PROCESSOR);
+                collectionID = mgr.createTupleSource(elements, groupName, TupleSourceType.PROCESSOR);
                 this.tupleCollector = new TupleCollector(collectionID, mgr);
             }
 

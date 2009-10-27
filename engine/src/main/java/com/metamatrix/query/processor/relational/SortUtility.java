@@ -42,7 +42,6 @@ import com.metamatrix.common.buffer.BufferManager.TupleSourceType;
 import com.metamatrix.core.util.Assertion;
 import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 /**
  */
@@ -66,7 +65,6 @@ public class SortUtility {
     //init state
     private int batchSize;
     protected List schema;
-    private String[] schemaTypes;
     protected int[] sortCols;
 	private ListNestedSortComparator comparator;
 
@@ -153,7 +151,7 @@ public class SortUtility {
     }
 
 	private TupleSourceID createTupleSource() throws MetaMatrixComponentException {
-		return bufferManager.createTupleSource(this.schema, this.schemaTypes, this.groupName, TupleSourceType.PROCESSOR);
+		return bufferManager.createTupleSource(this.schema, this.groupName, TupleSourceType.PROCESSOR);
 	}
 
     protected void initialSort() throws BlockedOnMemoryException, TupleSourceNotFoundException, MetaMatrixComponentException {
@@ -405,7 +403,6 @@ public class SortUtility {
 
     private void initialize() throws TupleSourceNotFoundException, MetaMatrixComponentException {
         this.schema = this.bufferManager.getTupleSchema(this.sourceID);
-        this.schemaTypes = TypeRetrievalUtil.getTypeNames(schema);
         this.batchSize = bufferManager.getProcessorBatchSize();
         int distinctIndex = sortElements != null? sortElements.size() - 1:0;
         if (useAllColumns && mode != Mode.SORT) {

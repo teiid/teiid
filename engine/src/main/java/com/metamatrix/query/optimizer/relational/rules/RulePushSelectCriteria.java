@@ -450,14 +450,11 @@ public final class RulePushSelectCriteria implements OptimizerRule {
      * @param elements
      * @return
      */
-    static boolean satisfyAccessPatterns(List aps, Collection elements) {
-        for (Iterator i = aps.iterator(); i.hasNext();) {
-            AccessPattern ap = (AccessPattern)i.next();
-            if (ap.getCurrentElements().containsAll(elements)) {
-                ap.getUnsatisfied().removeAll(elements);
-                if (ap.getUnsatisfied().isEmpty()) {
-                    return true;
-                }
+    static boolean satisfyAccessPatterns(List<AccessPattern> aps, Collection elements) {
+    	for (AccessPattern ap : aps) {
+            ap.getUnsatisfied().removeAll(elements);
+            if (ap.getUnsatisfied().isEmpty()) {
+                return true;
             }
         }
         return false;

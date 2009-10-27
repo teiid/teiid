@@ -53,7 +53,6 @@ import com.metamatrix.query.sql.lang.OrderBy;
 import com.metamatrix.query.sql.symbol.AggregateSymbol;
 import com.metamatrix.query.sql.symbol.Expression;
 import com.metamatrix.query.sql.symbol.SingleElementSymbol;
-import com.metamatrix.query.util.TypeRetrievalUtil;
 
 public class GroupingNode extends RelationalNode {
 
@@ -148,7 +147,7 @@ public class GroupingNode extends RelationalNode {
         // Determine expressions to build (all grouping expressions + expressions used by aggregates)   
         collectExpressions();
 
-        this.collectionID = getBufferManager().createTupleSource(collectedExpressions, TypeRetrievalUtil.getTypeNames(collectedExpressions), getConnectionID(), TupleSourceType.PROCESSOR);
+        this.collectionID = getBufferManager().createTupleSource(collectedExpressions, getConnectionID(), TupleSourceType.PROCESSOR);
 
         initializeFunctionAccumulators();
 	}

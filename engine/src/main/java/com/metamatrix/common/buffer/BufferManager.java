@@ -100,13 +100,13 @@ public interface BufferManager {
 	 * Creates a tuple source based on a schema and properties describing
 	 * hints about the source
      * @param elements Elements of the tuple source
-     * @param groupName Tuple source group name
-     * @param tupleSourceType Type of tuple source
+	 * @param groupName Tuple source group name
+	 * @param tupleSourceType Type of tuple source
      * @return Identifier for tuple source
      * @throws MetaMatrixComponentException indicating a non-business-related
      * exception (such as a communication exception)
 	 */
-	TupleSourceID createTupleSource(List elements, String[] types, String groupName, TupleSourceType tupleSourceType) 
+	TupleSourceID createTupleSource(List elements, String groupName, TupleSourceType tupleSourceType) 
     throws MetaMatrixComponentException;
 	
 	/**

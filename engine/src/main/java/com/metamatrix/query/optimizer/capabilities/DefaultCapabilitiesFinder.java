@@ -28,17 +28,23 @@ import com.metamatrix.api.exception.MetaMatrixComponentException;
  */
 public class DefaultCapabilitiesFinder implements CapabilitiesFinder {
 
+	private SourceCapabilities capabilities;
     /**
      * 
      */
     public DefaultCapabilitiesFinder() {
+    	this.capabilities = new BasicSourceCapabilities();
+    }
+    
+    public DefaultCapabilitiesFinder(SourceCapabilities capabilities) {
+    	this.capabilities = capabilities;
     }
 
     /* (non-Javadoc)
      * @see com.metamatrix.query.optimizer.capabilities.CapabilitiesFinder#findCapabilities(java.lang.Object)
      */
     public SourceCapabilities findCapabilities(String modelName) throws MetaMatrixComponentException {
-        return new BasicSourceCapabilities();
+        return capabilities;
     }
 
 }
